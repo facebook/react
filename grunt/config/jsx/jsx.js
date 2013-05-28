@@ -11,6 +11,15 @@ var debug = {
   outputDir: "build/modules"
 };
 
+var jasmine = {
+  rootIDs: [
+    "all"
+  ],
+  configFile: debug.configFile,
+  sourceDir: "vendor/jasmine",
+  outputDir: "build/jasmine"
+};
+
 var test = {
   rootIDs: rootIDs.concat([
     "test/all.js",
@@ -30,6 +39,7 @@ var release = {
 
 module.exports = {
   debug: debug,
+  jasmine: jasmine,
   test: test,
   release: release
 };

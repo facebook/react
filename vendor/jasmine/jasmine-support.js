@@ -1,5 +1,4 @@
-var global = Function("return this")();
-var jasmine = global.jasmine;
+var jasmine = require("./jasmine");
 var spec = false; // TODO
 
 // Add some matcher for mock functions
@@ -126,9 +125,3 @@ if (typeof WeakMap !== "undefined") {
     return (mismatchKeys.length == 0 && mismatchValues.length == 0);
   };
 }
-
-var HtmlReporter = require("./HtmlReporter").HtmlReporter;
-var PrintReporter = require("./PrintReporter").PrintReporter;
-
-jasmine.getEnv().addReporter(new HtmlReporter);
-jasmine.getEnv().addReporter(new PrintReporter);

@@ -45,9 +45,11 @@ server.listen(port, function(req, res) {
     break;
 
   case "jasmine.css":
-  case "jasmine.js":
-  case "jasmine-html.js":
     file = "../vendor/jasmine/" + file;
+    break;
+
+  case "jasmine.js":
+    file = "../build/" + file;
     break;
   }
 

@@ -1,3 +1,5 @@
+var jasmine = require("./jasmine");
+
 exports.HtmlReporter =
 jasmine.HtmlReporter = function(_doc) {
   var self = this;
