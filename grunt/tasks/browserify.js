@@ -12,7 +12,6 @@ module.exports = function() {
   // More/better assertions
   // grunt.config.requires('outfile');
   // grunt.config.requires('entries');
-  config.requires = config.requires || {};
   config.transforms = config.transforms || [];
   config.after = config.after || [];
   if (typeof config.after === 'function') {
@@ -24,9 +23,20 @@ module.exports = function() {
   var bundle = browserify(entries);
 
   // Make sure the things that need to be exposed are.
-  // TODO: support a blob pattern maybe?
-  for (var name in config.requires) {
-    bundle.require(config.requires[name], { expose: name });
+  var requires = config.requires || {};
+  if (requires instanceof Array) {
+    grunt.file.expand({
+      nonull: true, // Keep IDs that don't expand to anything.
+      cwd: "src"
+    }, requires).forEach(function(name) {
+      bundle.require("./build/modules/" + name, {
+        expose: name.replace(/\.js$/i, "")
+      });
+    });
+  } else if (typeof requires === "object") {
+    Object.keys(requires).forEach(function(name) {
+      bundle.require(requires[name], { expose: name });
+    });
   }
 
   // Extract other options

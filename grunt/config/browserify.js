@@ -90,7 +90,9 @@ var jasmine = {
 var test = {
   entries: [
     "./build/modules/test/all.js",
-    "./build/modules/**/__tests__/*-test.js"
+  ],
+  requires: [
+    "**/__tests__/*-test.js"
   ],
   outfile: './build/react-test.js',
   debug: false,
