@@ -9,8 +9,8 @@ module.exports = function() {
 
   var args = [
     "bin/jsx",
-    "src",
-    "build/modules"
+    config.sourceDir,
+    config.outputDir
   ];
 
   var rootIDs = expand({
