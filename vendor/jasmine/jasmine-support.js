@@ -37,7 +37,7 @@ var _xit = jasmine.Env.prototype.xit;
 jasmine.Env.prototype.it = function(desc, func) {
   // If spec is provided, only run matching specs
   if (!spec || desc.match(new RegExp(spec, 'i'))) {
-    return _it.bind(this, desc, func)();
+    return _it.call(this, desc, func);
   } else {
     return this.xit(desc, func);
   }
@@ -50,7 +50,7 @@ jasmine.Env.prototype.xit = function(desc, func) {
       this.reporter.subReporters_[0].totalCount += matches.length;
     }
   }
-  return _xit.bind(this, desc, func)();
+  return _xit.call(this, desc, func);
 }
 
 // Mainline Jasmine sets __Jasmine_been_here_before__ on each object to detect
