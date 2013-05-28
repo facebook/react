@@ -35,11 +35,6 @@ server.listen(port, function(req, res) {
   var file = req.url.replace(/^\/+/, "");
 
   switch (file) {
-  case "":
-  default:
-    file = "index.html";
-    break;
-
   case "react-test.js":
     file = "../build/" + file;
     break;
@@ -50,6 +45,14 @@ server.listen(port, function(req, res) {
 
   case "jasmine.js":
     file = "../build/" + file;
+    break;
+
+  case "frame.html":
+    break;
+
+  case "":
+  default:
+    file = "index.html";
     break;
   }
 

@@ -2,8 +2,15 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="jasmine.css" />
+    <style type="text/css">
+      iframe {
+        visibility: hidden;
+        position: absolute;
+        left: -1000px;
+        top: -1000px;
+      }
+    </style>
     <script src="jasmine.js"></script>
-    <script src="react-test.js"></script>
     <script>
       window.onload = function() {
         require("jasmine").getEnv().execute();
@@ -11,5 +18,43 @@
     </script>
   </head>
   <body>
+    <iframe src="frame.html" test="core/__tests__/ReactBind-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactComponent-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactComponentLifeCycle-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponent-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponentDOMMinimalism-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponentMixin-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponentSpec-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponentState-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactCompositeComponentTransferProps-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactDOM-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactDOMIDOperations-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactEvent-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactIdentity-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactInstanceHandles-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactMountDestruction-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactMultiChildReconcile-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactMultiChildText-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactNativeComponent-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactProps-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/ReactStateSetters-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/refs-destruction-test"></iframe>
+    <iframe src="frame.html" test="core/__tests__/refs-test"></iframe>
+    <iframe src="frame.html" test="domUtils/__tests__/CSSPropertyOperations-test"></iframe>
+    <iframe src="frame.html" test="domUtils/__tests__/DOMPropertyOperations-test"></iframe>
+    <iframe src="frame.html" test="eventPlugins/__tests__/AnalyticsEventPlugin-test"></iframe>
+    <iframe src="frame.html" test="eventPlugins/__tests__/ResponderEventPlugin-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/ImmutableObject-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/OrderedMap-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/Transaction-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/joinClasses-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/keyMirror-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/mapChildren-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/memoizeStringOnly-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/mergeFuncs-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/objFilter-test"></iframe>
+    <iframe src="frame.html" test="utils/__tests__/objMap-test"></iframe>
+    <iframe src="frame.html" test="vendor/error/__tests__/erx-test"></iframe>
+    <iframe src="frame.html" test="vendor/error/__tests__/ex-test"></iframe>
   </body>
 </html>

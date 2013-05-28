@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script>
+      jasmine = parent.jasmine;
+      jasmine.exposeFrom(window);
+
+      console = parent.console;
+      callPhantom = parent.callPhantom;
+    </script>
+    <script src="react-test.js"></script>
+  </head>
+  <body>
+    <script>
+      require(window.frameElement.getAttribute("test"));
+    </script>
+  </body>
+</html>
