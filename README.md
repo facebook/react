@@ -6,7 +6,7 @@ React is a JavaScript library for building user interfaces.
 * **Efficient:** React minimizes interactions with the DOM by using a mock representation of the DOM.
 * **Flexible:** React works with the libraries and frameworks that you already know.
 
-[Learn how to use React in your own project.](http://facebook.github.io/docs/getting-started.html)
+[Learn how to use React in your own project.](http://facebook.github.io/react/docs/getting-started.html)
 
 ## Examples
 
@@ -41,7 +41,7 @@ The fastest way to get started is to serve JavaScript from the CDN:
 <script src="http://fb.me/JSXTransformer-0.3.0.js"></script>
 ```
 
-We've also built a [starter kit](#) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.3.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
