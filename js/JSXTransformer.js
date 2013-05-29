@@ -729,7 +729,294 @@ function transform(visitors, source, options) {
 exports.transform = transform;
 
 })()
-},{"./utils":8,"esprima":9,"source-map":10}],9:[function(require,module,exports){
+},{"./utils":8,"source-map":9,"esprima":10}],11:[function(require,module,exports){
+(function(){/**
+ * Copyright 2013 Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/*global exports:true*/
+"use strict";
+var catchup = require('../lib/utils').catchup;
+var append = require('../lib/utils').append;
+var move = require('../lib/utils').move;
+
+var knownTags = {
+  a: true,
+  abbr: true,
+  address: true,
+  applet: true,
+  area: true,
+  article: true,
+  aside: true,
+  audio: true,
+  b: true,
+  base: true,
+  bdi: true,
+  bdo: true,
+  blockquote: true,
+  body: true,
+  br: true,
+  button: true,
+  canvas: true,
+  circle: true,
+  ellipse: true,
+  caption: true,
+  cite: true,
+  code: true,
+  col: true,
+  colgroup: true,
+  command: true,
+  data: true,
+  datalist: true,
+  dd: true,
+  del: true,
+  details: true,
+  dfn: true,
+  dialog: true,
+  div: true,
+  dl: true,
+  dt: true,
+  em: true,
+  embed: true,
+  fieldset: true,
+  figcaption: true,
+  figure: true,
+  footer: true,
+  form: true,
+  g: true,
+  h1: true,
+  h2: true,
+  h3: true,
+  h4: true,
+  h5: true,
+  h6: true,
+  head: true,
+  header: true,
+  hgroup: true,
+  hr: true,
+  html: true,
+  i: true,
+  iframe: true,
+  img: true,
+  input: true,
+  ins: true,
+  kbd: true,
+  keygen: true,
+  label: true,
+  legend: true,
+  li: true,
+  line: true,
+  link: true,
+  map: true,
+  mark: true,
+  marquee: true,
+  menu: true,
+  meta: true,
+  meter: true,
+  nav: true,
+  noscript: true,
+  object: true,
+  ol: true,
+  optgroup: true,
+  option: true,
+  output: true,
+  p: true,
+  path: true,
+  param: true,
+  pre: true,
+  progress: true,
+  q: true,
+  rect: true,
+  rp: true,
+  rt: true,
+  ruby: true,
+  s: true,
+  samp: true,
+  script: true,
+  section: true,
+  select: true,
+  small: true,
+  source: true,
+  span: true,
+  strong: true,
+  style: true,
+  sub: true,
+  summary: true,
+  sup: true,
+  svg: true,
+  table: true,
+  tbody: true,
+  td: true,
+  text: true,
+  textarea: true,
+  tfoot: true,
+  th: true,
+  thead: true,
+  time: true,
+  title: true,
+  tr: true,
+  track: true,
+  u: true,
+  ul: true,
+  'var': true,
+  video: true,
+  wbr: true
+};
+
+function safeTrim(string) {
+  return string.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
+}
+
+// Replace all trailing whitespace characters with a single space character
+function trimWithSingleSpace(string) {
+  return string.replace(/^[ \t\xA0]{2,}/, ' ').
+    replace(/[ \t\xA0]{2,}$/, ' ').replace(/^\s+$/, '');
+}
+
+/**
+ * Special handling for multiline string literals
+ * print lines:
+ *
+ *   line
+ *   line
+ *
+ * as:
+ *
+ *   "line "+
+ *   "line"
+ */
+function renderXJSLiteral(object, isLast, state, start, end) {
+  /** Added blank check filtering and triming*/
+  var trimmedChildValue = safeTrim(object.value);
+
+  if (trimmedChildValue) {
+    // head whitespace
+    append(object.value.match(/^[\t ]*/)[0], state);
+    if (start) {
+      append(start, state);
+    }
+
+    var trimmedChildValueWithSpace = trimWithSingleSpace(object.value);
+
+    /**
+     */
+    var initialLines = trimmedChildValue.split(/\r\n|\n|\r/);
+
+    var lines = initialLines.filter(function(line) {
+      return safeTrim(line).length > 0;
+    });
+
+    var hasInitialNewLine = initialLines[0] !== lines[0];
+    var hasFinalNewLine =
+      initialLines[initialLines.length - 1] !== lines[lines.length - 1];
+
+    var numLines = lines.length;
+    lines.forEach(function (line, ii) {
+      var lastLine = ii === numLines - 1;
+      var trimmedLine = safeTrim(line);
+      if (trimmedLine === '' && !lastLine) {
+        append(line, state);
+      } else {
+        var preString = '';
+        var postString = '';
+        var leading = '';
+
+        if (ii === 0) {
+          if (hasInitialNewLine) {
+            preString = ' ';
+            leading = '\n';
+          }
+          if (trimmedChildValueWithSpace.substring(0, 1) === ' ') {
+            // If this is the first line, and the original content starts with
+            // whitespace, place a single space at the beginning.
+            preString = ' ';
+          }
+        } else {
+          leading = line.match(/^[ \t]*/)[0];
+        }
+        if (!lastLine || trimmedChildValueWithSpace.substr(
+             trimmedChildValueWithSpace.length - 1, 1) === ' ' ||
+             hasFinalNewLine
+             ) {
+          // If either not on the last line, or the original content ends with
+          // whitespace, place a single character at the end.
+          postString = ' ';
+        }
+
+        append(
+          leading +
+          JSON.stringify(
+            preString + trimmedLine + postString
+          ) +
+          (lastLine ? '' : '+') +
+          line.match(/[ \t]*$/)[0],
+          state);
+      }
+      if (!lastLine) {
+        append('\n', state);
+      }
+    });
+  } else {
+    if (start) {
+      append(start, state);
+    }
+    append('""', state);
+  }
+  if (end) {
+    append(end, state);
+  }
+
+  // add comma before trailing whitespace
+  if (!isLast) {
+    append(',', state);
+  }
+
+  // tail whitespace
+  append(object.value.match(/[ \t]*$/)[0], state);
+  move(object.range[1], state);
+}
+
+function renderXJSExpression(traverse, object, isLast, path, state) {
+  // Plus 1 to skip `{`.
+  move(object.range[0] + 1, state);
+  traverse(object.value, path, state);
+  if (!isLast) {
+    // If we need to append a comma, make sure to do so after the expression.
+    catchup(object.value.range[1], state);
+    append(',', state);
+  }
+  // Minus 1 to skip `}`.
+  catchup(object.range[1] - 1, state);
+  move(object.range[1], state);
+  return false;
+}
+
+function quoteAttrName(attr) {
+  // Quote invalid JS identifiers.
+  if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
+    return "'" + attr + "'";
+  }
+  return attr;
+}
+
+exports.knownTags = knownTags;
+exports.renderXJSExpression = renderXJSExpression;
+exports.renderXJSLiteral = renderXJSLiteral;
+exports.quoteAttrName = quoteAttrName;
+
+})()
+},{"../lib/utils":8}],10:[function(require,module,exports){
 (function(){/*
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
   Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
@@ -6879,294 +7166,7 @@ parseYieldExpression: true
 /* vim: set sw=4 ts=4 et tw=80 : */
 
 })()
-},{}],11:[function(require,module,exports){
-(function(){/**
- * Copyright 2013 Facebook, Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-/*global exports:true*/
-"use strict";
-var catchup = require('../lib/utils').catchup;
-var append = require('../lib/utils').append;
-var move = require('../lib/utils').move;
-
-var knownTags = {
-  a: true,
-  abbr: true,
-  address: true,
-  applet: true,
-  area: true,
-  article: true,
-  aside: true,
-  audio: true,
-  b: true,
-  base: true,
-  bdi: true,
-  bdo: true,
-  blockquote: true,
-  body: true,
-  br: true,
-  button: true,
-  canvas: true,
-  circle: true,
-  ellipse: true,
-  caption: true,
-  cite: true,
-  code: true,
-  col: true,
-  colgroup: true,
-  command: true,
-  data: true,
-  datalist: true,
-  dd: true,
-  del: true,
-  details: true,
-  dfn: true,
-  dialog: true,
-  div: true,
-  dl: true,
-  dt: true,
-  em: true,
-  embed: true,
-  fieldset: true,
-  figcaption: true,
-  figure: true,
-  footer: true,
-  form: true,
-  g: true,
-  h1: true,
-  h2: true,
-  h3: true,
-  h4: true,
-  h5: true,
-  h6: true,
-  head: true,
-  header: true,
-  hgroup: true,
-  hr: true,
-  html: true,
-  i: true,
-  iframe: true,
-  img: true,
-  input: true,
-  ins: true,
-  kbd: true,
-  keygen: true,
-  label: true,
-  legend: true,
-  li: true,
-  line: true,
-  link: true,
-  map: true,
-  mark: true,
-  marquee: true,
-  menu: true,
-  meta: true,
-  meter: true,
-  nav: true,
-  noscript: true,
-  object: true,
-  ol: true,
-  optgroup: true,
-  option: true,
-  output: true,
-  p: true,
-  path: true,
-  param: true,
-  pre: true,
-  progress: true,
-  q: true,
-  rect: true,
-  rp: true,
-  rt: true,
-  ruby: true,
-  s: true,
-  samp: true,
-  script: true,
-  section: true,
-  select: true,
-  small: true,
-  source: true,
-  span: true,
-  strong: true,
-  style: true,
-  sub: true,
-  summary: true,
-  sup: true,
-  svg: true,
-  table: true,
-  tbody: true,
-  td: true,
-  text: true,
-  textarea: true,
-  tfoot: true,
-  th: true,
-  thead: true,
-  time: true,
-  title: true,
-  tr: true,
-  track: true,
-  u: true,
-  ul: true,
-  'var': true,
-  video: true,
-  wbr: true
-};
-
-function safeTrim(string) {
-  return string.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
-}
-
-// Replace all trailing whitespace characters with a single space character
-function trimWithSingleSpace(string) {
-  return string.replace(/^[ \t\xA0]{2,}/, ' ').
-    replace(/[ \t\xA0]{2,}$/, ' ').replace(/^\s+$/, '');
-}
-
-/**
- * Special handling for multiline string literals
- * print lines:
- *
- *   line
- *   line
- *
- * as:
- *
- *   "line "+
- *   "line"
- */
-function renderXJSLiteral(object, isLast, state, start, end) {
-  /** Added blank check filtering and triming*/
-  var trimmedChildValue = safeTrim(object.value);
-
-  if (trimmedChildValue) {
-    // head whitespace
-    append(object.value.match(/^[\t ]*/)[0], state);
-    if (start) {
-      append(start, state);
-    }
-
-    var trimmedChildValueWithSpace = trimWithSingleSpace(object.value);
-
-    /**
-     */
-    var initialLines = trimmedChildValue.split(/\r\n|\n|\r/);
-
-    var lines = initialLines.filter(function(line) {
-      return safeTrim(line).length > 0;
-    });
-
-    var hasInitialNewLine = initialLines[0] !== lines[0];
-    var hasFinalNewLine =
-      initialLines[initialLines.length - 1] !== lines[lines.length - 1];
-
-    var numLines = lines.length;
-    lines.forEach(function (line, ii) {
-      var lastLine = ii === numLines - 1;
-      var trimmedLine = safeTrim(line);
-      if (trimmedLine === '' && !lastLine) {
-        append(line, state);
-      } else {
-        var preString = '';
-        var postString = '';
-        var leading = '';
-
-        if (ii === 0) {
-          if (hasInitialNewLine) {
-            preString = ' ';
-            leading = '\n';
-          }
-          if (trimmedChildValueWithSpace.substring(0, 1) === ' ') {
-            // If this is the first line, and the original content starts with
-            // whitespace, place a single space at the beginning.
-            preString = ' ';
-          }
-        } else {
-          leading = line.match(/^[ \t]*/)[0];
-        }
-        if (!lastLine || trimmedChildValueWithSpace.substr(
-             trimmedChildValueWithSpace.length - 1, 1) === ' ' ||
-             hasFinalNewLine
-             ) {
-          // If either not on the last line, or the original content ends with
-          // whitespace, place a single character at the end.
-          postString = ' ';
-        }
-
-        append(
-          leading +
-          JSON.stringify(
-            preString + trimmedLine + postString
-          ) +
-          (lastLine ? '' : '+') +
-          line.match(/[ \t]*$/)[0],
-          state);
-      }
-      if (!lastLine) {
-        append('\n', state);
-      }
-    });
-  } else {
-    if (start) {
-      append(start, state);
-    }
-    append('""', state);
-  }
-  if (end) {
-    append(end, state);
-  }
-
-  // add comma before trailing whitespace
-  if (!isLast) {
-    append(',', state);
-  }
-
-  // tail whitespace
-  append(object.value.match(/[ \t]*$/)[0], state);
-  move(object.range[1], state);
-}
-
-function renderXJSExpression(traverse, object, isLast, path, state) {
-  // Plus 1 to skip `{`.
-  move(object.range[0] + 1, state);
-  traverse(object.value, path, state);
-  if (!isLast) {
-    // If we need to append a comma, make sure to do so after the expression.
-    catchup(object.value.range[1], state);
-    append(',', state);
-  }
-  // Minus 1 to skip `}`.
-  catchup(object.range[1] - 1, state);
-  move(object.range[1], state);
-  return false;
-}
-
-function quoteAttrName(attr) {
-  // Quote invalid JS identifiers.
-  if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
-    return "'" + attr + "'";
-  }
-  return attr;
-}
-
-exports.knownTags = knownTags;
-exports.renderXJSExpression = renderXJSExpression;
-exports.renderXJSLiteral = renderXJSLiteral;
-exports.quoteAttrName = quoteAttrName;
-
-})()
-},{"../lib/utils":8}],10:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
@@ -7671,7 +7671,7 @@ exports.visitSuperCall = visitSuperCall;
 exports.visitPrivateProperty = visitPrivateProperty;
 
 })()
-},{"../lib/utils":8,"../lib/docblock":4,"esprima":9,"base62":15}],6:[function(require,module,exports){
+},{"../lib/utils":8,"../lib/docblock":4,"esprima":10,"base62":15}],6:[function(require,module,exports){
 (function(){/**
  * Copyright 2013 Facebook, Inc.
  *
@@ -7872,7 +7872,7 @@ visitReactTag.test = function(object, path, state) {
 exports.visitReactTag = visitReactTag;
 
 })()
-},{"../lib/utils":8,"./xjs":11,"esprima":9}],7:[function(require,module,exports){
+},{"../lib/utils":8,"./xjs":11,"esprima":10}],7:[function(require,module,exports){
 (function(){/**
  * Copyright 2013 Facebook, Inc.
  *
@@ -7942,7 +7942,7 @@ visitReactDisplayName.test = function(object, path, state) {
 exports.visitReactDisplayName = visitReactDisplayName;
 
 })()
-},{"../lib/utils":8,"esprima":9}],15:[function(require,module,exports){
+},{"../lib/utils":8,"esprima":10}],15:[function(require,module,exports){
 var Base62 = (function (my) {
   my.chars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
@@ -9492,185 +9492,7 @@ function amdefine(module, require) {
 module.exports = amdefine;
 
 })(require("__browserify_process"),"/../node_modules/source-map/node_modules/amdefine/amdefine.js")
-},{"path":22,"__browserify_process":21}],22:[function(require,module,exports){
-(function(process){function filter (xs, fn) {
-    var res = [];
-    for (var i = 0; i < xs.length; i++) {
-        if (fn(xs[i], i, xs)) res.push(xs[i]);
-    }
-    return res;
-}
-
-// resolves . and .. elements in a path array with directory names there
-// must be no slashes, empty elements, or device names (c:\) in the array
-// (so also no leading and trailing slashes - it does not distinguish
-// relative and absolute paths)
-function normalizeArray(parts, allowAboveRoot) {
-  // if the path tries to go above the root, `up` ends up > 0
-  var up = 0;
-  for (var i = parts.length; i >= 0; i--) {
-    var last = parts[i];
-    if (last == '.') {
-      parts.splice(i, 1);
-    } else if (last === '..') {
-      parts.splice(i, 1);
-      up++;
-    } else if (up) {
-      parts.splice(i, 1);
-      up--;
-    }
-  }
-
-  // if the path is allowed to go above the root, restore leading ..s
-  if (allowAboveRoot) {
-    for (; up--; up) {
-      parts.unshift('..');
-    }
-  }
-
-  return parts;
-}
-
-// Regex to split a filename into [*, dir, basename, ext]
-// posix version
-var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
-
-// path.resolve([from ...], to)
-// posix version
-exports.resolve = function() {
-var resolvedPath = '',
-    resolvedAbsolute = false;
-
-for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
-  var path = (i >= 0)
-      ? arguments[i]
-      : process.cwd();
-
-  // Skip empty and invalid entries
-  if (typeof path !== 'string' || !path) {
-    continue;
-  }
-
-  resolvedPath = path + '/' + resolvedPath;
-  resolvedAbsolute = path.charAt(0) === '/';
-}
-
-// At this point the path should be resolved to a full absolute path, but
-// handle relative paths to be safe (might happen when process.cwd() fails)
-
-// Normalize the path
-resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
-    return !!p;
-  }), !resolvedAbsolute).join('/');
-
-  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
-};
-
-// path.normalize(path)
-// posix version
-exports.normalize = function(path) {
-var isAbsolute = path.charAt(0) === '/',
-    trailingSlash = path.slice(-1) === '/';
-
-// Normalize the path
-path = normalizeArray(filter(path.split('/'), function(p) {
-    return !!p;
-  }), !isAbsolute).join('/');
-
-  if (!path && !isAbsolute) {
-    path = '.';
-  }
-  if (path && trailingSlash) {
-    path += '/';
-  }
-  
-  return (isAbsolute ? '/' : '') + path;
-};
-
-
-// posix version
-exports.join = function() {
-  var paths = Array.prototype.slice.call(arguments, 0);
-  return exports.normalize(filter(paths, function(p, index) {
-    return p && typeof p === 'string';
-  }).join('/'));
-};
-
-
-exports.dirname = function(path) {
-  var dir = splitPathRe.exec(path)[1] || '';
-  var isWindows = false;
-  if (!dir) {
-    // No dirname
-    return '.';
-  } else if (dir.length === 1 ||
-      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
-    // It is just a slash or a drive letter with a slash
-    return dir;
-  } else {
-    // It is a full dirname, strip trailing slash
-    return dir.substring(0, dir.length - 1);
-  }
-};
-
-
-exports.basename = function(path, ext) {
-  var f = splitPathRe.exec(path)[2] || '';
-  // TODO: make this comparison case-insensitive on windows?
-  if (ext && f.substr(-1 * ext.length) === ext) {
-    f = f.substr(0, f.length - ext.length);
-  }
-  return f;
-};
-
-
-exports.extname = function(path) {
-  return splitPathRe.exec(path)[3] || '';
-};
-
-exports.relative = function(from, to) {
-  from = exports.resolve(from).substr(1);
-  to = exports.resolve(to).substr(1);
-
-  function trim(arr) {
-    var start = 0;
-    for (; start < arr.length; start++) {
-      if (arr[start] !== '') break;
-    }
-
-    var end = arr.length - 1;
-    for (; end >= 0; end--) {
-      if (arr[end] !== '') break;
-    }
-
-    if (start > end) return [];
-    return arr.slice(start, end - start + 1);
-  }
-
-  var fromParts = trim(from.split('/'));
-  var toParts = trim(to.split('/'));
-
-  var length = Math.min(fromParts.length, toParts.length);
-  var samePartsLength = length;
-  for (var i = 0; i < length; i++) {
-    if (fromParts[i] !== toParts[i]) {
-      samePartsLength = i;
-      break;
-    }
-  }
-
-  var outputParts = [];
-  for (var i = samePartsLength; i < fromParts.length; i++) {
-    outputParts.push('..');
-  }
-
-  outputParts = outputParts.concat(toParts.slice(samePartsLength));
-
-  return outputParts.join('/');
-};
-
-})(require("__browserify_process"))
-},{"__browserify_process":21}],16:[function(require,module,exports){
+},{"path":22,"__browserify_process":21}],16:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -10090,7 +9912,185 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":19}],23:[function(require,module,exports){
+},{"amdefine":19}],22:[function(require,module,exports){
+(function(process){function filter (xs, fn) {
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (fn(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length; i >= 0; i--) {
+    var last = parts[i];
+    if (last == '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Regex to split a filename into [*, dir, basename, ext]
+// posix version
+var splitPathRe = /^(.+\/(?!$)|\/)?((?:.+?)?(\.[^.]*)?)$/;
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+var resolvedPath = '',
+    resolvedAbsolute = false;
+
+for (var i = arguments.length; i >= -1 && !resolvedAbsolute; i--) {
+  var path = (i >= 0)
+      ? arguments[i]
+      : process.cwd();
+
+  // Skip empty and invalid entries
+  if (typeof path !== 'string' || !path) {
+    continue;
+  }
+
+  resolvedPath = path + '/' + resolvedPath;
+  resolvedAbsolute = path.charAt(0) === '/';
+}
+
+// At this point the path should be resolved to a full absolute path, but
+// handle relative paths to be safe (might happen when process.cwd() fails)
+
+// Normalize the path
+resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+var isAbsolute = path.charAt(0) === '/',
+    trailingSlash = path.slice(-1) === '/';
+
+// Normalize the path
+path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+  
+  return (isAbsolute ? '/' : '') + path;
+};
+
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    return p && typeof p === 'string';
+  }).join('/'));
+};
+
+
+exports.dirname = function(path) {
+  var dir = splitPathRe.exec(path)[1] || '';
+  var isWindows = false;
+  if (!dir) {
+    // No dirname
+    return '.';
+  } else if (dir.length === 1 ||
+      (isWindows && dir.length <= 3 && dir.charAt(1) === ':')) {
+    // It is just a slash or a drive letter with a slash
+    return dir;
+  } else {
+    // It is a full dirname, strip trailing slash
+    return dir.substring(0, dir.length - 1);
+  }
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPathRe.exec(path)[2] || '';
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPathRe.exec(path)[3] || '';
+};
+
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+})(require("__browserify_process"))
+},{"__browserify_process":21}],23:[function(require,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
