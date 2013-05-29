@@ -10,7 +10,7 @@ next: component-basics.html
 JSX is a JavaScript XML syntax extension recommended (but not required) for use
 with React.
 
-JSX makes code that deeply nested React components more readable, and writing it
+JSX makes code that deeply nests React components more readable, and writing it
 feels like writing HTML. React documentation examples make use of JSX.
 
 ## The Transform
