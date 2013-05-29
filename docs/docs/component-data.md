@@ -130,7 +130,7 @@ Now we are done. `LikeApp` renders an unliked link which, when clicked, will:
 4. Trigger an update to the DOM.
 
 It's worth noting that React will handle new return values of `render()` by
-making the mininal set of mutations necessary to bring the DOM up-to-date. In
+making the minimal set of mutations necessary to bring the DOM up-to-date. In
 this case, only the `textContent` of the rendered link will be mutated.
 
 In summary:
