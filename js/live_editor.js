@@ -2,8 +2,22 @@
  * @jsx React.DOM
  */
 
+
+var IS_MOBILE = (
+  navigator.userAgent.match(/Android/i)
+    || navigator.userAgent.match(/webOS/i)
+    || navigator.userAgent.match(/iPhone/i)
+    || navigator.userAgent.match(/iPad/i)
+    || navigator.userAgent.match(/iPod/i)
+    || navigator.userAgent.match(/BlackBerry/i)
+    || navigator.userAgent.match(/Windows Phone/i)
+);
+
 var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
   componentDidMount: function(root) {
+    if (IS_MOBILE) {
+      return;
+    }
     this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), {
       mode: 'javascript',
       lineNumbers: false,
@@ -21,9 +35,17 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
   },
   render: function() {
     // wrap in a div to fully contain CodeMirror
+    var editor;
+
+    if (IS_MOBILE) {
+      editor = React.DOM.pre( {style:{overflow: 'scroll'}}, this.props.codeText);
+    } else {
+      editor = React.DOM.textarea( {ref:"editor"}, this.props.codeText);
+    }
+
     return (
       React.DOM.div( {className:this.props.className}, 
-        React.DOM.textarea( {ref:"editor"}, this.props.codeText)
+        editor
       )
     );
   }
