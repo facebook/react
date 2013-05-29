@@ -1,6 +1,7 @@
 --- 
-markdown: redcarpet
 name: React
+markdown: redcarpet
+baseurl: /react
 react_version: 0.3.0
 redcarpet: 
   extensions: 
@@ -11,4 +12,3 @@ exclude:
 - Gemfile.lock
 - README.md
 - Rakefile
-baseurl: /react
