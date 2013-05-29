@@ -12,7 +12,7 @@ We will do our best to keep `master` in good shape, with tests passing at all ti
 
 ### Pull Requests
 
-The core team will be monitoring for pull requests. When we get one, we will pull it in an apply it to Facebook's codebase and run our test suite to ensure nothing breaks. From here, we'll need to get another person to sign off on the changes. For API changes we may need to fix internal uses, which could cause some delay. We'll do our best to provide updates and feedback throughout the process.
+The core team will be monitoring for pull requests. When we get one, we'll run some Facebook-specific integration tests on it first. From here, we'll need to get another person to sign off on the changes and then merge the pull request. For API changes we may need to fix internal uses, which could cause some delay. We'll do our best to provide updates and feedback throughout the process.
 
 *Before* submitting a pull request, please make sure the following is done…
 
