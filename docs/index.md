@@ -78,7 +78,7 @@ id: home
 <hr class="home-divider" />
 <section class="home-bottom-section">
   <div class="buttons-unit">
-    <a href="/getting-started.html" class="button">Get Started</a>
-    <a href="/download.html" class="button">Download React v{{site.react_version}}</a>
+    <a href="docs/getting-started.html" class="button">Get Started</a>
+    <a href="downloads.html" class="button">Download React v{{site.react_version}}</a>
   </div>
 </section>
