@@ -7,7 +7,7 @@ var grunt = require('grunt');
 
 var BOWER_PATH = '../react-bower/';
 var BOWER_GLOB = [BOWER_PATH + '*'];
-var BOWER_FILES = ['React.js', 'React.min.js', 'JSXTransformer.js'];
+var BOWER_FILES = ['react.js', 'react.min.js', 'JSXTransformer.js'];
 var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
 
