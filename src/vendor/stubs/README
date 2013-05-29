@@ -1,8 +1,0 @@
-This project defines stubs for platform-specific explicit dependencies used by
-other upstream modules.
-
-Do not check this project into www or m downstreams.
-
-All downstreams that want to use the any static_upstream project who has a
-dependency on something in this project should implement their own versions of
-the modules in this project.
