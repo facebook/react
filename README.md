@@ -36,9 +36,9 @@ The fastest way to get started is to serve JavaScript from the CDN:
 
 ```html
 <!-- The core React library -->
-<script src="http://fbcdn.com/javascript/react/0.6.0/react.min.js"></script>
+<script src="http://fb.me/react-0.3.0.min.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fbcdn.com/javascript/react/0.6.0/JSXTransformer.js"></script>
+<script src="http://fb.me/JSXTransformer-0.3.0.js"></script>
 ```
 
 We've also built a [starter kit](#) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.

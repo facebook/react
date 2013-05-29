@@ -14,13 +14,13 @@ Download the starter kit to get everything you need to
 
 ## Individual Downloads
 
-#### <a href="http://fb/me/react-{{site.react_version}}.min.js">React Core {{site.react_version}} (production)</a>
+#### <a href="http://fb.me/react-{{site.react_version}}.min.js">React Core {{site.react_version}} (production)</a>
 The compressed, production version of React core
 
-#### <a href="http://fb/me/react-{{site.react_version}}.js">React Core {{site.react_version}} (development)</a>
+#### <a href="http://fb.me/react-{{site.react_version}}.js">React Core {{site.react_version}} (development)</a>
 The uncompressed, development version of React core with inline documentation.
 
-#### <a href="http://fb/me/JSXTransformer-{{site.react_version}}.js">JSX Transform</a>
+#### <a href="http://fb.me/JSXTransformer-{{site.react_version}}.js">JSX Transform</a>
 The JSX transformer used to support [XML syntax](/react/docs/syntax.html) in JavaScript.
 
 ## Bower
