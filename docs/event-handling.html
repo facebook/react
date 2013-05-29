@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Event Handling</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Event Handling" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/event-handling.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Getting started</h3>
+    <ul>
+      <li><a href="/react/docs/getting-started.html">Getting Started</a></li>
+      <li><a href="/react/docs/tutorial.html">Tutorial</a></li>
+      <li><a href="/react/docs/common-questions.html">Common Questions</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-docs-section">
+    <h3>Reference</h3>
+    <ul>
+      <li><a href="/react/docs/syntax.html">JSX Syntax</a></li>
+      <li><a href="/react/docs/component-basics.html">Component Basics</a></li>
+      <li><a href="/react/docs/component-data.html">Component Data</a></li>
+      <li><a href="/react/docs/component-lifecycle.html">Component Lifecycle</a></li>
+      <li><a href="/react/docs/event-handling.html" class="active">Event Handling</a></li>
+      <li><a href="/react/docs/advanced-components.html">Advanced Components</a></li>
+      <li><a href="/react/docs/api.html">API</a></li>
+    </ul>
+  </div>
+</div>
+
+
+  <div class="inner-content">
+    <h1>Event Handling</h1>
+    <div class="subHeader">How do events work with React components?</div>
+    <p>Events in React work the way they do with HTML, except the event names are
+camelCased.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Clicker</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">me</span><span class="o">!&lt;</span><span class="err">/span&gt;;</span>
+  <span class="p">},</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="s1">&#39;You clicked me!&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>When <code>&lt;Clicker&gt;</code> is clicked, the <code>handleClick()</code> function will get fired. Under
+the hood, React uses top-level event delegation to achieve high performance.</p>
+
+<h2>Automatically Binding Callbacks</h2>
+
+<p>Just like any callback in JavaScript, if you want to refer to the component as
+<code>this</code> from the callback, you need to bind the callback to the component:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Clicker</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">handleClick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+</span>    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">me</span><span class="o">!&lt;</span><span class="err">/span&gt;;</span>
+  <span class="p">},</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">ALERT_MESSAGE</span><span class="p">);</span>
+  <span class="p">},</span>
+  <span class="nx">ALERT_MESSAGE</span><span class="o">:</span> <span class="s1">&#39;You clicked me!&#39;</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>React provides a convenient and <em>efficient</em> way to bind methods using
+<code>React.autoBind()</code>:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Clicker</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">me</span><span class="o">!&lt;</span><span class="err">/span&gt;;</span>
+</span>  <span class="p">},</span>
+<span class="hll">  <span class="nx">handleClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="nx">alert</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">ALERT_MESSAGE</span><span class="p">);</span>
+</span><span class="hll">  <span class="p">}),</span>
+</span>  <span class="nx">ALERT_MESSAGE</span><span class="o">:</span> <span class="s1">&#39;You clicked me!&#39;</span>
+<span class="p">});</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>Binding a function allocates memory to create a new bound function. Since
+<code>render()</code> may be invoked many times, it is a bad place to bind functions.
+<code>React.autoBind()</code> sidesteps this issue by only binding once at instantiation
+time.</p>
+</blockquote>
+
+<h2>DOM Events</h2>
+
+<p>React uses <a href="http://davidwalsh.name/event-delegate">top-level event delegation</a>
+to achieve high performance when implementing DOM events. For each type of DOM
+event, React adds a single top-level listener and determines which event
+handlers to execute by simulating event capturing and bubbling.</p>
+
+<p>DOM event handlers are called with a normalized <code>AbstractEvent</code> object that has
+cross-browser compatible implementations of <code>stopPropagation</code> and
+<code>preventDefault()</code>. If you need access to the raw browser event, you can use the
+<code>nativeEvent</code> property.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>The <code>AbstractEvent</code> object is JSON serializable so that React applications can
+be executed inside web workers.</p>
+</blockquote>
+
+<h3>Touch Events</h3>
+
+<p>If you want to use touch events, you must configure React&#39;s event system to
+initialize them:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Invoke before calling `React.renderComponent()`.</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
+</code></pre></div>
+<h2>Custom Events</h2>
+
+<p>Notice that event listeners are attached by simply passing them into components
+as props. For DOM components, events are handled using top-level event
+delegation. For composite components, event handling is up to the component&#39;s
+implementation.</p>
+
+<p>Here is an example of a toggle link that fires a custom <code>onToggle</code> event:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ToggleLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">isEnabled</span><span class="o">:</span> <span class="kc">false</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Toggle</span><span class="o">&lt;</span><span class="err">/a&gt;;</span>
+  <span class="p">},</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">willEnable</span> <span class="o">=</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">isEnabled</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onToggle</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onToggle</span><span class="p">(</span><span class="nx">willEnable</span><span class="p">)</span>
+    <span class="p">}</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">isEnabled</span><span class="o">:</span> <span class="nx">willEnable</span><span class="p">});</span>
+  <span class="p">})</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">handleToggle</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">enabled</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">alert</span><span class="p">(</span><span class="nx">enabled</span> <span class="o">?</span> <span class="s1">&#39;Enabled.&#39;</span> <span class="o">:</span> <span class="s1">&#39;Disabled.&#39;</span><span class="p">);</span>
+<span class="p">};</span>
+<span class="kd">var</span> <span class="nx">myToggleLink</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">ToggleLink</span> <span class="nx">onToggle</span><span class="o">=</span><span class="p">{</span><span class="nx">handleToggle</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/component-lifecycle.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/advanced-components.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+</body>
+</html>
+

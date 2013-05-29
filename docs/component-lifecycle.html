@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Component Lifecycle</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Component Lifecycle" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/component-lifecycle.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Getting started</h3>
+    <ul>
+      <li><a href="/react/docs/getting-started.html">Getting Started</a></li>
+      <li><a href="/react/docs/tutorial.html">Tutorial</a></li>
+      <li><a href="/react/docs/common-questions.html">Common Questions</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-docs-section">
+    <h3>Reference</h3>
+    <ul>
+      <li><a href="/react/docs/syntax.html">JSX Syntax</a></li>
+      <li><a href="/react/docs/component-basics.html">Component Basics</a></li>
+      <li><a href="/react/docs/component-data.html">Component Data</a></li>
+      <li><a href="/react/docs/component-lifecycle.html" class="active">Component Lifecycle</a></li>
+      <li><a href="/react/docs/event-handling.html">Event Handling</a></li>
+      <li><a href="/react/docs/advanced-components.html">Advanced Components</a></li>
+      <li><a href="/react/docs/api.html">API</a></li>
+    </ul>
+  </div>
+</div>
+
+
+  <div class="inner-content">
+    <h1>Component Lifecycle</h1>
+    <div class="subHeader">What happens when I render a React component?</div>
+    <h2>Mounting</h2>
+
+<p><a href="component-basics.html">We have previously seen</a> how to render components into
+existing DOM elements on the page:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/div&gt;, document.body);</span>
+</code></pre></div>
+<p>In this one simple line, we have accomplished the following:</p>
+
+<ul>
+<li>A <code>&lt;div&gt;</code> (defined by <code>React.DOM.div</code>) component is instantiated.</li>
+<li>The component is <strong>mounted</strong> into <code>document.body</code>.</li>
+</ul>
+
+<p><strong>Mounting</strong> is the process of initializing a React component by creating its
+DOM nodes and inserting the them into a supplied container node.</p>
+
+<p>At this point, the entire page consists of a single <code>&lt;div&gt;</code> with &quot;Hello,
+world!&quot;.</p>
+
+<h2>Updating</h2>
+
+<p>Let&#39;s add a second call to <code>React.renderComponent()</code> after three
+seconds:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/div&gt;, document.body);</span>
+<span class="hll"><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Goodbye</span><span class="p">,</span> <span class="nx">world</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;, document.body);</span>
+</span><span class="hll"><span class="p">},</span> <span class="mi">3000</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The second call to <code>React.renderComponent()</code> will trigger the following:</p>
+
+<ul>
+<li>The <code>&lt;div&gt;</code> component will check the new props to see if anything changed.</li>
+<li>The set of changes are used to <strong>update</strong> the DOM node as necessary.</li>
+</ul>
+
+<p><strong>Updating</strong> is the process of mutating the rendered DOM nodes and occurs
+whenever either props or state has changed. This ensures that the rendered DOM
+is consistent with the data.</p>
+
+<h2>Unmounting</h2>
+
+<p>Let&#39;s add one final call to <code>React.renderComponent()</code> after another three
+seconds:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/div&gt;, document.body);</span>
+<span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Goodbye</span><span class="p">,</span> <span class="nx">world</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;, document.body);</span>
+<span class="p">},</span> <span class="mi">3000</span><span class="p">);</span>
+<span class="hll"><span class="nx">setTimeout</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="s2">&quot;/images/fin.png&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</span><span class="hll"><span class="p">},</span> <span class="mi">6000</span><span class="p">);</span>
+</span></code></pre></div>
+<p>The third call to <code>React.renderComponent()</code> will trigger the following:</p>
+
+<ul>
+<li>An <code>&lt;img&gt;</code> (defined by <code>React.DOM.img</code>) component is instantiated.</li>
+<li>React will compare the <code>&lt;div&gt;</code> component with the <code>&lt;img&gt;</code> component.</li>
+<li>Since the component class is different, the <code>&lt;div&gt;</code> component will be
+<strong>unmounted</strong>.</li>
+<li>The <code>&lt;img&gt;</code> component will then be mounted into <code>document.body</code>.</li>
+</ul>
+
+<p><strong>Unmounting</strong> is the process of releasing resources that have been allocated by
+a component. This allows user interfaces built with React to live long without
+memory leaks.</p>
+
+<p>Components can also be unmounted using
+<code>React.unmountAndReleaseReactRootNode()</code>:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">unmountAndReleaseReactRootNode</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<p>This will unmount any components mounted immediately within <code>document.body</code>.</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/component-data.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/event-handling.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+</body>
+</html>
+

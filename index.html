@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | A JavaScript library for building user interfaces</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | A JavaScript library for building user interfaces" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/index.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+    <div class="hero">
+      <div class="wrap">
+        <div class="text"><strong>React</strong></div>
+        <div class="minitext">
+          A JavaScript library for building user interfaces
+        </div>
+
+        <div class="buttons-unit">
+          <a href="/react/docs/getting-started.html" class="button">Get Started</a>
+          <a href="/react/downloads.html" class="button">Download React v0.3.0</a>
+        </div>
+      </div>
+    </div>
+    
+
+    <section class="content wrap">
+  <p><section class="light home-section">
+  <div class="marketing-row">
+    <div class="marketing-col">
+      <h3>Declarative</h3>
+      <p>
+        React uses a declarative paradigm that makes it easier to reason about
+        your application.
+      </p>
+    </div>
+    <div class="marketing-col">
+      <h3>Efficient</h3>
+      <p>
+        React minimizes interactions with the DOM by using a mock representation
+        of the DOM.
+      </p>
+    </div>
+    <div class="marketing-col">
+      <h3>Flexible</h3>
+      <p>
+        React works with the libraries and frameworks that you already know.
+      </p>
+    </div>
+  </div>
+</section>
+<hr class="home-divider" />
+<section class="home-section">
+  <div id="examples">
+    <div class="example">
+      <h3>A Simple Component</h3>
+      <p>
+        React components implement a <code>render()</code> method that takes input data and
+        returns what to display. This example constructs the component using an
+        XML-like syntax called JSX. Input data is passed to the component as XML
+        attributes, and <code>render()</code> accesses this data via <code>this.props</code>.
+      </p>
+      <div id="helloExample"></div>
+    </div>
+    <div class="example">
+      <h3>A Stateful Component</h3>
+      <p>
+        In addition to taking data from its creator (accessed via <code>this.props</code>),
+        a component can maintain internal state data (accessed via
+        <code>this.state</code>). When a component&#39;s state data changes, the rendered
+        markup will be updated by re-invoking <code>render()</code>.
+      </p>
+      <div id="timerExample"></div>
+    </div>
+    <div class="example">
+      <h3>An Application</h3>
+      <p>
+        Using properties and state, we can put together a small Todo
+        application. React provides an interface to the DOM via <code>refs</code>. Although
+        event handlers appear to be rendered inline, they will be
+        collected and implemented using event delegation.
+      </p>
+      <div id="todoExample"></div>
+    </div>
+    <div class="example">
+      <h3>A Component Using External Plugins</h3>
+      <p>
+        React is flexible and provides hooks that allow you to interface with
+        other libraries and frameworks. This example uses Showdown, an external
+        Markdown library, to convert the textarea&#39;s value in real-time.
+      </p>
+      <div id="markdownExample"></div>
+    </div>
+  </div>
+  <script type="text/javascript" src="js/examples/hello.js"></script>
+  <script type="text/javascript" src="js/examples/timer.js"></script>
+  <script type="text/javascript" src="js/examples/todo.js"></script>
+  <script type="text/javascript" src="js/examples/markdown.js"></script>
+</section>
+<hr class="home-divider" />
+<section class="home-bottom-section">
+  <div class="buttons-unit">
+    <a href="/getting-started.html" class="button">Get Started</a>
+    <a href="/download.html" class="button">Download React v0.3.0</a>
+  </div>
+</section></p>
+
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+</body>
+</html>
+

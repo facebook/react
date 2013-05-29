@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Getting Started</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Getting Started" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/getting-started.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Getting started</h3>
+    <ul>
+      <li><a href="/react/docs/getting-started.html" class="active">Getting Started</a></li>
+      <li><a href="/react/docs/tutorial.html">Tutorial</a></li>
+      <li><a href="/react/docs/common-questions.html">Common Questions</a></li>
+    </ul>
+  </div>
+
+  <div class="nav-docs-section">
+    <h3>Reference</h3>
+    <ul>
+      <li><a href="/react/docs/syntax.html">JSX Syntax</a></li>
+      <li><a href="/react/docs/component-basics.html">Component Basics</a></li>
+      <li><a href="/react/docs/component-data.html">Component Data</a></li>
+      <li><a href="/react/docs/component-lifecycle.html">Component Lifecycle</a></li>
+      <li><a href="/react/docs/event-handling.html">Event Handling</a></li>
+      <li><a href="/react/docs/advanced-components.html">Advanced Components</a></li>
+      <li><a href="/react/docs/api.html">API</a></li>
+    </ul>
+  </div>
+</div>
+
+
+  <div class="inner-content">
+    <h1>Getting Started</h1>
+    <div class="subHeader"></div>
+    <p>Download the starter kit to get started.</p>
+
+<div class="buttons-unit downloads">
+  <a href="/react/downloads/react-0.3.0.zip" class="button">
+    Download Starter Kit 0.3.0
+  </a>
+</div>
+
+<h2>Hello, world!</h2>
+
+<p>In the root directory of the starter kit, create a <code>helloworld.html</code> with the following contents.</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/JSXTransformer.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+      <span class="cm">/** @jsx React.DOM */</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+        <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+      <span class="p">);</span>
+    <span class="nt">&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<p>The XML syntax inside of JavaScript is called JSX; check out the <a href="syntax.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> and include <code>JSXTransformer.js</code> to actually perform the transformation in the browser.</p>
+
+<h3>Separate File</h3>
+
+<p>Your React JSX file can live in a separate file. Create the following <code>src/helloworld.js</code>.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Then reference it from <code>helloworld.html</code>:</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<h3>Offline Transform</h3>
+
+<p>First install the command-line tools (requires <a href="http://npmjs.org/">npm</a>):</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">npm install -g react-tools
+</code></pre></div>
+<p>Then, translate your <code>src/helloworld.js</code> file to plain JavaScript:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">jsx --watch src/ build/
+</code></pre></div>
+<p>The file <code>build/helloworld.js</code> is autogenerated whenever you make a change.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+<span class="hll">  <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">h1</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Hello, world!&#39;</span><span class="p">),</span>
+</span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementyById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Update your HTML file as below:</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Hello React!<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">    <span class="c">&lt;!-- No need for JSXTransformer! --&gt;</span>
+</span>  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+<span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span>  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<h2>Want CommonJS?</h2>
+
+<p>If you want to use React within a module system, <a href="http://github.com/facebook/react">fork our repo</a>, <code>npm install</code> and run <code>grunt</code>. A nice set of CommonJS modules will be generated. Our <code>jsx</code> build tool can be integrated into most packaging systems (not just CommonJS) quite easily.</p>
+
+<h2>Next Steps</h2>
+
+<p>Check out <a href="tutorial.html">the tutorial</a> and the other examples in the <code>/examples</code> directory to learn more. Good luck, and welcome!</p>
+
+
+    <div class="docs-prevnext">
+      
+      
+        <a class="docs-next" href="/react/docs/tutorial.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+</body>
+</html>
+
