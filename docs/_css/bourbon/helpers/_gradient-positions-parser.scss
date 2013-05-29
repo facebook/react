@@ -1,0 +1,13 @@
+@function _gradient-positions-parser($gradient-type, $gradient-positions) {
+  @if $gradient-positions
+  and ($gradient-type == linear)
+  and (type-of($gradient-positions) != color) {
+    $gradient-positions: _linear-positions-parser($gradient-positions);
+  }
+  @else if $gradient-positions
+  and ($gradient-type == radial)
+  and (type-of($gradient-positions) != color) {
+    $gradient-positions: _radial-positions-parser($gradient-positions);
+  }
+  @return $gradient-positions;
+}

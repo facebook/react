@@ -1,0 +1,20 @@
+{
+  "node": true,
+
+  "boss": true,
+  "curly": true,
+  "devel": true,
+  "eqnull": true,
+  "expr": true,
+  "funcscope": true,
+  "globalstrict": true,
+  "loopfunc": true,
+  "newcap": false,
+  "noempty": true,
+  "nonstandard": true,
+  "onecase": true,
+  "regexdash": true,
+  "trailing": true,
+  "undef": true,
+  "unused": "vars"
+}

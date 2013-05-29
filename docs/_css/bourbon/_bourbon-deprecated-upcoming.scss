@@ -1,0 +1,13 @@
+//************************************************************************//
+// These mixins/functions are deprecated
+// They will be removed in the next MAJOR version release
+//************************************************************************//
+@mixin box-shadow ($shadows...) {
+  @include prefixer(box-shadow, $shadows, spec);
+  @warn "box-shadow is deprecated and will be removed in the next major version release";
+}
+
+@mixin background-size ($lengths...) {
+  @include prefixer(background-size, $lengths, spec);
+  @warn "background-size is deprecated and will be removed in the next major version release";
+}

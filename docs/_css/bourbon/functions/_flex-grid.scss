@@ -1,0 +1,39 @@
+// Flexible grid
+@function flex-grid($columns, $container-columns: $fg-max-columns) {
+  $width: $columns * $fg-column + ($columns - 1) * $fg-gutter;
+  $container-width: $container-columns * $fg-column + ($container-columns - 1) * $fg-gutter;
+  @return percentage($width / $container-width);
+}
+
+// Flexible gutter
+@function flex-gutter($container-columns: $fg-max-columns, $gutter: $fg-gutter) {
+  $container-width: $container-columns * $fg-column + ($container-columns - 1) * $fg-gutter;
+  @return percentage($gutter / $container-width);
+}
+
+// The $fg-column, $fg-gutter and $fg-max-columns variables must be defined in your base stylesheet to properly use the flex-grid function.
+// This function takes the fluid grid equation (target / context = result) and uses columns to help define each.
+//
+// The calculation presumes that your column structure will be missing the last gutter:
+//
+//   -- column -- gutter -- column -- gutter -- column
+//
+//  $fg-column: 60px;             // Column Width
+//  $fg-gutter: 25px;             // Gutter Width
+//  $fg-max-columns: 12;          // Total Columns For Main Container
+//
+//  div {
+//    width: flex-grid(4);        // returns (315px / 995px) = 31.65829%;
+//    margin-left: flex-gutter(); // returns (25px / 995px) = 2.51256%;
+//
+//    p {
+//      width: flex-grid(2, 4);  // returns (145px / 315px) = 46.031746%;
+//      float: left;
+//      margin: flex-gutter(4);  // returns (25px / 315px) = 7.936508%;
+//    }
+//
+//    blockquote {
+//      float: left;
+//      width: flex-grid(2, 4); // returns (145px / 315px) = 46.031746%;
+//    }
+//  }

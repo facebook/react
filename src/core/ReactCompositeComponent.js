@@ -1,0 +1,836 @@
+/**
+ * Copyright 2013 Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * @providesModule ReactCompositeComponent
+ */
+
+"use strict";
+
+var ReactComponent = require('ReactComponent');
+var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactOwner = require('ReactOwner');
+var ReactPropTransferer = require('ReactPropTransferer');
+
+var invariant = require('invariant');
+var keyMirror = require('keyMirror');
+var merge = require('merge');
+var mixInto = require('mixInto');
+
+/**
+ * Policies that describe methods in `ReactCompositeComponentInterface`.
+ */
+var SpecPolicy = keyMirror({
+  /**
+   * These methods may be defined only once by the class specification or mixin.
+   */
+  DEFINE_ONCE: null,
+  /**
+   * These methods may be defined by both the class specification and mixins.
+   * Subsequent definitions will be chained. These methods must return void.
+   */
+  DEFINE_MANY: null,
+  /**
+   * These methods are overriding the base ReactCompositeComponent class.
+   */
+  OVERRIDE_BASE: null
+});
+
+/**
+ * Composite components are higher-level components that compose other composite
+ * or native components.
+ *
+ * To create a new type of `ReactCompositeComponent`, pass a specification of
+ * your new class to `React.createClass`. The only requirement of your class
+ * specification is that you implement a `render` method.
+ *
+ *   var MyComponent = React.createClass({
+ *     render: function() {
+ *       return <div>Hello World</div>;
+ *     }
+ *   });
+ *
+ * The class specification supports a specific protocol of methods that have
+ * special meaning (e.g. `render`). See `ReactCompositeComponentInterface` for
+ * more the comprehensive protocol. Any other properties and methods in the
+ * class specification will available on the prototype.
+ *
+ * @interface ReactCompositeComponentInterface
+ * @internal
+ */
+var ReactCompositeComponentInterface = {
+
+  /**
+   * An array of Mixin objects to include when defining your component.
+   *
+   * @type {array}
+   * @optional
+   */
+  mixins: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Definition of props for this component.
+   *
+   * @type {array}
+   * @optional
+   */
+  props: SpecPolicy.DEFINE_ONCE,
+
+
+
+  // ==== Definition methods ====
+
+  /**
+   * Invoked once before the component is mounted. The return value will be used
+   * as the initial value of `this.state`.
+   *
+   *   getInitialState: function() {
+   *     return {
+   *       isOn: false,
+   *       fooBaz: new BazFoo()
+   *     }
+   *   }
+   *
+   * @return {object}
+   * @optional
+   */
+  getInitialState: SpecPolicy.DEFINE_ONCE,
+
+  /**
+   * Uses props from `this.props` and state from `this.state` to render the
+   * structure of the component.
+   *
+   * No guarantees are made about when or how often this method is invoked, so
+   * it must not have side effects.
+   *
+   *   render: function() {
+   *     var name = this.props.name;
+   *     return <div>Hello, {name}!</div>;
+   *   }
+   *
+   * @return {ReactComponent}
+   * @nosideeffects
+   * @required
+   */
+  render: SpecPolicy.DEFINE_ONCE,
+
+
+
+  // ==== Delegate methods ====
+
+  /**
+   * Invoked when the component is initially created and about to be mounted.
+   * This may have side effects, but any external subscriptions or data created
+   * by this method must be cleaned up in `componentWillUnmount`.
+   *
+   * @optional
+   */
+  componentWillMount: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Invoked when the component has been mounted and has a DOM representation.
+   * However, there is no guarantee that the DOM node is in the document.
+   *
+   * Use this as an opportunity to operate on the DOM when the component has
+   * been mounted (initialized and rendered) for the first time.
+   *
+   * @param {DOMElement} rootNode DOM element representing the component.
+   * @optional
+   */
+  componentDidMount: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Invoked before the component receives new props.
+   *
+   * Use this as an opportunity to react to a prop transition by updating the
+   * state using `this.setState`. Current props are accessed via `this.props`.
+   *
+   *   componentWillReceiveProps: function(nextProps) {
+   *     this.setState({
+   *       likesIncreasing: nextProps.likeCount > this.props.likeCount
+   *     });
+   *   }
+   *
+   * NOTE: There is no equivalent `componentWillReceiveState`. An incoming prop
+   * transition may cause a state change, but the opposite is not true. If you
+   * need it, you are probably looking for `componentWillUpdate`.
+   *
+   * @param {object} nextProps
+   * @optional
+   */
+  componentWillReceiveProps: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Invoked while deciding if the component should be updated as a result of
+   * receiving new props and state.
+   *
+   * Use this as an opportunity to `return false` when you're certain that the
+   * transition to the new props and state will not require a component update.
+   *
+   *   shouldComponentUpdate: function(nextProps, nextState) {
+   *     return !equal(nextProps, this.props) || !equal(nextState, this.state);
+   *   }
+   *
+   * @param {object} nextProps
+   * @param {?object} nextState
+   * @return {boolean} True if the component should update.
+   * @optional
+   */
+  shouldComponentUpdate: SpecPolicy.DEFINE_ONCE,
+
+  /**
+   * Invoked when the component is about to update due to a transition from
+   * `this.props` and `this.state` to `nextProps` and `nextState`.
+   *
+   * Use this as an opportunity to perform preparation before an update occurs.
+   *
+   * NOTE: You **cannot** use `this.setState()` in this method.
+   *
+   * @param {object} nextProps
+   * @param {?object} nextState
+   * @param {ReactReconcileTransaction} transaction
+   * @optional
+   */
+  componentWillUpdate: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Invoked when the component's DOM representation has been updated.
+   *
+   * Use this as an opportunity to operate on the DOM when the component has
+   * been updated.
+   *
+   * @param {object} prevProps
+   * @param {?object} prevState
+   * @param {DOMElement} rootNode DOM element representing the component.
+   * @optional
+   */
+  componentDidUpdate: SpecPolicy.DEFINE_MANY,
+
+  /**
+   * Invoked when the component is about to be removed from its parent and have
+   * its DOM representation destroyed.
+   *
+   * Use this as an opportunity to deallocate any external resources.
+   *
+   * NOTE: There is no `componentDidUnmount` since your component will have been
+   * destroyed by that point.
+   *
+   * @optional
+   */
+  componentWillUnmount: SpecPolicy.DEFINE_MANY,
+
+
+
+  // ==== Advanced methods ====
+
+  /**
+   * Updates the component's currently mounted DOM representation.
+   *
+   * By default, this implements React's rendering and reconciliation algorithm.
+   * Sophisticated clients may wish to override this.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   * @overridable
+   */
+  updateComponent: SpecPolicy.OVERRIDE_BASE
+
+};
+
+/**
+ * Mapping from class specification keys to special processing functions.
+ *
+ * Although these are declared in the specification when defining classes
+ * using `React.createClass`, they will not be on the component's prototype.
+ */
+var RESERVED_SPEC_KEYS = {
+  displayName: function(Constructor, displayName) {
+    Constructor.displayName = displayName;
+  },
+  mixins: function(Constructor, mixins) {
+    if (mixins) {
+      for (var i = 0; i < mixins.length; i++) {
+        mixSpecIntoComponent(Constructor, mixins[i]);
+      }
+    }
+  },
+  props: function(Constructor, props) {
+    Constructor.propDeclarations = props;
+  }
+};
+
+/**
+ * Custom version of `mixInto` which handles policy validation and reserved
+ * specification keys when building `ReactCompositeComponent` classses.
+ */
+function mixSpecIntoComponent(Constructor, spec) {
+  var proto = Constructor.prototype;
+  for (var name in spec) {
+    if (!spec.hasOwnProperty(name)) {
+      continue;
+    }
+    var property = spec[name];
+    var specPolicy = ReactCompositeComponentInterface[name];
+
+    // Disallow overriding of base class methods unless explicitly allowed.
+    if (ReactCompositeComponentMixin.hasOwnProperty(name)) {
+      invariant(
+        specPolicy === SpecPolicy.OVERRIDE_BASE,
+        'ReactCompositeComponentInterface: You are attempting to override ' +
+        '`%s` from your class specification. Ensure that your method names ' +
+        'do not overlap with React methods.',
+        name
+      );
+    }
+
+    // Disallow using `React.autoBind` on internal methods.
+    if (specPolicy != null) {
+      invariant(
+        !property || !property.__reactAutoBind,
+        'ReactCompositeComponentInterface: You are attempting to use ' +
+        '`React.autoBind` on `%s`, a method that is internal to React.' +
+        'Internal methods are called with the component as the context.',
+        name
+      );
+    }
+
+    // Disallow defining methods more than once unless explicitly allowed.
+    if (proto.hasOwnProperty(name)) {
+      invariant(
+        specPolicy === SpecPolicy.DEFINE_MANY,
+        'ReactCompositeComponentInterface: You are attempting to define ' +
+        '`%s` on your component more than once. This conflict may be due ' +
+        'to a mixin.',
+        name
+      );
+    }
+
+    if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
+      RESERVED_SPEC_KEYS[name](Constructor, property);
+    } else if (property && property.__reactAutoBind) {
+      if (!proto.__reactAutoBindMap) {
+        proto.__reactAutoBindMap = {};
+      }
+      proto.__reactAutoBindMap[name] = property.__reactAutoBind;
+    } else if (proto.hasOwnProperty(name)) {
+      // For methods which are defined more than once, call the existing methods
+      // before calling the new property.
+      proto[name] = createChainedFunction(proto[name], property);
+    } else {
+      proto[name] = property;
+    }
+  }
+}
+
+/**
+ * Creates a function that invokes two functions and ignores their return vales.
+ *
+ * @param {function} one Function to invoke first.
+ * @param {function} two Function to invoke second.
+ * @return {function} Function that invokes the two argument functions.
+ * @private
+ */
+function createChainedFunction(one, two) {
+  return function chainedFunction(a, b, c, d, e, tooMany) {
+    invariant(
+      typeof tooMany === 'undefined',
+      'Chained function can only take a maximum of 5 arguments.'
+    );
+    one.call(this, a, b, c, d, e);
+    two.call(this, a, b, c, d, e);
+  };
+}
+
+/**
+ * `ReactCompositeComponent` maintains an auxiliary life cycle state in
+ * `this._compositeLifeCycleState` (which can be null).
+ *
+ * This is different from the life cycle state maintained by `ReactComponent` in
+ * `this._lifeCycleState`.
+ */
+var CompositeLifeCycle = keyMirror({
+  /**
+   * Components in the process of being mounted respond to state changes
+   * differently.
+   */
+  MOUNTING: null,
+  /**
+   * Components in the process of being unmounted are guarded against state
+   * changes.
+   */
+  UNMOUNTING: null,
+  /**
+   * Components that are mounted and receiving new props respond to state
+   * changes differently.
+   */
+  RECEIVING_PROPS: null,
+  /**
+   * Components that are mounted and receiving new state are guarded against
+   * additional state changes.
+   */
+  RECEIVING_STATE: null
+});
+
+/**
+ * @lends {ReactCompositeComponent.prototype}
+ */
+var ReactCompositeComponentMixin = {
+
+  /**
+   * Base constructor for all composite component.
+   *
+   * @param {?object} initialProps
+   * @param {*} children
+   * @final
+   * @internal
+   */
+  construct: function(initialProps, children) {
+    ReactComponent.Mixin.construct.call(this, initialProps, children);
+    this.state = null;
+    this._pendingState = null;
+    this._compositeLifeCycleState = null;
+  },
+
+  /**
+   * Initializes the component, renders markup, and registers event listeners.
+   *
+   * @param {string} rootID DOM ID of the root node.
+   * @param {ReactReconcileTransaction} transaction
+   * @return {?string} Rendered markup to be inserted into the DOM.
+   * @final
+   * @internal
+   */
+  mountComponent: function(rootID, transaction) {
+    ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
+
+    // Unset `this._lifeCycleState` until after this method is finished.
+    this._lifeCycleState = ReactComponent.LifeCycle.UNMOUNTED;
+    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+
+    if (this.constructor.propDeclarations) {
+      this._assertValidProps(this.props);
+    }
+
+    if (this.__reactAutoBindMap) {
+      this._bindAutoBindMethods();
+    }
+
+    this.state = this.getInitialState ? this.getInitialState() : null;
+    this._pendingState = null;
+
+    if (this.componentWillMount) {
+      this.componentWillMount();
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingState` without triggering a re-render.
+      if (this._pendingState) {
+        this.state = this._pendingState;
+        this._pendingState = null;
+      }
+    }
+
+    if (this.componentDidMount) {
+      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+    }
+
+    this._renderedComponent = this._renderValidatedComponent();
+
+    // Done with mounting, `setState` will now trigger UI changes.
+    this._compositeLifeCycleState = null;
+    this._lifeCycleState = ReactComponent.LifeCycle.MOUNTED;
+
+    return this._renderedComponent.mountComponent(rootID, transaction);
+  },
+
+  /**
+   * Releases any resources allocated by `mountComponent`.
+   *
+   * @final
+   * @internal
+   */
+  unmountComponent: function() {
+    this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
+    if (this.componentWillUnmount) {
+      this.componentWillUnmount();
+    }
+    this._compositeLifeCycleState = null;
+
+    ReactComponent.Mixin.unmountComponent.call(this);
+    this._renderedComponent.unmountComponent();
+    this._renderedComponent = null;
+
+    if (this.refs) {
+      this.refs = null;
+    }
+
+    // Some existing components rely on this.props even after they've been
+    // destroyed (in event handlers).
+    // TODO: this.props = null;
+    // TODO: this.state = null;
+  },
+
+  /**
+   * Updates the rendered DOM nodes given a new set of props.
+   *
+   * @param {object} nextProps Next set of properties.
+   * @param {ReactReconcileTransaction} transaction
+   * @final
+   * @internal
+   */
+  receiveProps: function(nextProps, transaction) {
+    if (this.constructor.propDeclarations) {
+      this._assertValidProps(nextProps);
+    }
+    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+
+    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
+    if (this.componentWillReceiveProps) {
+      this.componentWillReceiveProps(nextProps, transaction);
+    }
+    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
+    // When receiving props, calls to `setState` by `componentWillReceiveProps`
+    // will set `this._pendingState` without triggering a re-render.
+    var nextState = this._pendingState || this.state;
+    this._pendingState = null;
+    this._receivePropsAndState(nextProps, nextState, transaction);
+    this._compositeLifeCycleState = null;
+  },
+
+  /**
+   * Sets a subset of the state. Always use this or `replaceState` to mutate
+   * state. You should treat `this.state` as immutable.
+   *
+   * There is no guarantee that `this.state` will be immediately updated, so
+   * accessing `this.state` after calling this method may return the old value.
+   *
+   * @param {object} partialState Next partial state to be merged with state.
+   * @final
+   * @protected
+   */
+  setState: function(partialState) {
+    // Merge with `_pendingState` if it exists, otherwise with existing state.
+    this.replaceState(merge(this._pendingState || this.state, partialState));
+  },
+
+  /**
+   * Replaces all of the state. Always use this or `setState` to mutate state.
+   * You should treat `this.state` as immutable.
+   *
+   * There is no guarantee that `this.state` will be immediately updated, so
+   * accessing `this.state` after calling this method may return the old value.
+   *
+   * @param {object} completeState Next state.
+   * @final
+   * @protected
+   */
+  replaceState: function(completeState) {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED ||
+      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+      'replaceState(...): Can only update a mounted (or mounting) component.'
+    );
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'replaceState(...): Cannot update while unmounting component or during ' +
+      'an existing state transition (such as within `render`).'
+    );
+
+    this._pendingState = completeState;
+
+    // Do not trigger a state transition if we are in the middle of mounting or
+    // receiving props because both of those will already be doing this.
+    if (compositeLifeCycleState !== CompositeLifeCycle.MOUNTING &&
+        compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_PROPS) {
+      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
+
+      var nextState = this._pendingState;
+      this._pendingState = null;
+
+      var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
+      transaction.perform(
+        this._receivePropsAndState,
+        this,
+        this.props,
+        nextState,
+        transaction
+      );
+      ReactComponent.ReactReconcileTransaction.release(transaction);
+
+      this._compositeLifeCycleState = null;
+    }
+  },
+
+  /**
+   * Receives next props and next state, and negotiates whether or not the
+   * component should update as a result.
+   *
+   * @param {object} nextProps Next object to set as props.
+   * @param {?object} nextState Next object to set as state.
+   * @param {ReactReconcileTransaction} transaction
+   * @private
+   */
+  _receivePropsAndState: function(nextProps, nextState, transaction) {
+    if (!this.shouldComponentUpdate ||
+        this.shouldComponentUpdate(nextProps, nextState)) {
+      // Will set `this.props` and `this.state`.
+      this._performComponentUpdate(nextProps, nextState, transaction);
+    } else {
+      // If it's determined that a component should not update, we still want
+      // to set props and state.
+      this.props = nextProps;
+      this.state = nextState;
+    }
+  },
+
+  /**
+   * Merges new props and state, notifies delegate methods of update and
+   * performs update.
+   *
+   * @param {object} nextProps Next object to set as properties.
+   * @param {?object} nextState Next object to set as state.
+   * @param {ReactReconcileTransaction} transaction
+   * @private
+   */
+  _performComponentUpdate: function(nextProps, nextState, transaction) {
+    var prevProps = this.props;
+    var prevState = this.state;
+
+    if (this.componentWillUpdate) {
+      this.componentWillUpdate(nextProps, nextState, transaction);
+    }
+
+    this.props = nextProps;
+    this.state = nextState;
+
+    this.updateComponent(transaction);
+
+    if (this.componentDidUpdate) {
+      transaction.getReactOnDOMReady().enqueue(
+        this,
+        this.componentDidUpdate.bind(this, prevProps, prevState)
+      );
+    }
+  },
+
+  /**
+   * Updates the component's currently mounted DOM representation.
+   *
+   * By default, this implements React's rendering and reconciliation algorithm.
+   * Sophisticated clients may wish to override this.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   * @overridable
+   */
+  updateComponent: function(transaction) {
+    var currentComponent = this._renderedComponent;
+    var nextComponent = this._renderValidatedComponent();
+    if (currentComponent.constructor === nextComponent.constructor) {
+      if (!nextComponent.props.isStatic) {
+        currentComponent.receiveProps(nextComponent.props, transaction);
+      }
+    } else {
+      // These two IDs are actually the same! But nothing should rely on that.
+      var thisID = this._rootNodeID;
+      var currentComponentID = currentComponent._rootNodeID;
+      currentComponent.unmountComponent();
+      var nextMarkup = nextComponent.mountComponent(thisID, transaction);
+      ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+        currentComponentID,
+        nextMarkup
+      );
+      this._renderedComponent = nextComponent;
+    }
+  },
+
+  /**
+   * Forces an update. This should only be invoked when it is known with
+   * certainty that we are **not** in a DOM transaction.
+   *
+   * You may want to call this when you know that some deeper aspect of the
+   * component's state has changed but `setState` was not called.
+   *
+   * This will not invoke `shouldUpdateComponent`, but it will invoke
+   * `componentWillUpdate` and `componentDidUpdate`.
+   *
+   * @final
+   * @protected
+   */
+  forceUpdate: function() {
+    var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
+    transaction.perform(
+      this._performComponentUpdate,
+      this,
+      this.props,
+      this.state,
+      transaction
+    );
+    ReactComponent.ReactReconcileTransaction.release(transaction);
+  },
+
+  /**
+   * @private
+   */
+  _renderValidatedComponent: function() {
+    ReactCurrentOwner.current = this;
+    var renderedComponent = this.render();
+    ReactCurrentOwner.current = null;
+    invariant(
+      ReactComponent.isValidComponent(renderedComponent),
+      '%s.render(): A valid ReactComponent must be returned.',
+      this.constructor.displayName || 'ReactCompositeComponent'
+    );
+    return renderedComponent;
+  },
+
+  /**
+   * @param {object} props
+   * @private
+   */
+  _assertValidProps: function(props) {
+    var propDeclarations = this.constructor.propDeclarations;
+    var componentName = this.constructor.displayName;
+    for (var propName in propDeclarations) {
+      var checkProp = propDeclarations[propName];
+      if (checkProp) {
+        checkProp(props, propName, componentName);
+      }
+    }
+  },
+
+  /**
+   * @private
+   */
+  _bindAutoBindMethods: function() {
+    for (var autoBindKey in this.__reactAutoBindMap) {
+      if (!this.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
+        continue;
+      }
+      var method = this.__reactAutoBindMap[autoBindKey];
+      this[autoBindKey] = this._bindAutoBindMethod(method);
+    }
+  },
+
+  /**
+   * Binds a method to the component.
+   *
+   * @param {function} method Method to be bound.
+   * @private
+   */
+  _bindAutoBindMethod: function(method) {
+    var component = this;
+    var hasWarned = false;
+    function autoBound(a, b, c, d, e, tooMany) {
+      invariant(
+        typeof tooMany === 'undefined',
+        'React.autoBind(...): Methods can only take a maximum of 5 arguments.'
+      );
+      if (component._lifeCycleState === ReactComponent.LifeCycle.MOUNTED) {
+        return method.call(component, a, b, c, d, e);
+      } else if (!hasWarned) {
+        hasWarned = true;
+        if (__DEV__) {
+          console.warn(
+            'React.autoBind(...): Attempted to invoke an auto-bound method ' +
+            'on an unmounted instance of `%s`. You either have a memory leak ' +
+            'or an event handler that is being run after unmounting.',
+            component.constructor.displayName || 'ReactCompositeComponent'
+          );
+        }
+      }
+    }
+    return autoBound;
+  }
+
+};
+
+var ReactCompositeComponentBase = function() {};
+mixInto(ReactCompositeComponentBase, ReactComponent.Mixin);
+mixInto(ReactCompositeComponentBase, ReactOwner.Mixin);
+mixInto(ReactCompositeComponentBase, ReactPropTransferer.Mixin);
+mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
+
+/**
+ * Module for creating composite components.
+ *
+ * @class ReactCompositeComponent
+ * @extends ReactComponent
+ * @extends ReactOwner
+ * @extends ReactPropTransferer
+ */
+var ReactCompositeComponent = {
+
+  LifeCycle: CompositeLifeCycle,
+
+  Base: ReactCompositeComponentBase,
+
+  /**
+   * Creates a composite component class given a class specification.
+   *
+   * @param {object} spec Class specification (which must define `render`).
+   * @return {function} Component constructor function.
+   * @public
+   */
+  createClass: function(spec) {
+    var Constructor = function(initialProps, children) {
+      this.construct(initialProps, children);
+    };
+    Constructor.prototype = new ReactCompositeComponentBase();
+    Constructor.prototype.constructor = Constructor;
+    mixSpecIntoComponent(Constructor, spec);
+    invariant(
+      Constructor.prototype.render,
+      'createClass(...): Class specification must implement a `render` method.'
+    );
+
+    var ConvenienceConstructor = function(props, children) {
+      return new Constructor(props, children);
+    };
+    ConvenienceConstructor.componentConstructor = Constructor;
+    ConvenienceConstructor.originalSpec = spec;
+    return ConvenienceConstructor;
+  },
+
+  /**
+   * Marks the provided method to be automatically bound to the component.
+   * This means the method's context will always be the component.
+   *
+   *   React.createClass({
+   *     handleClick: React.autoBind(function() {
+   *       this.setState({jumping: true});
+   *     }),
+   *     render: function() {
+   *       return <a onClick={this.handleClick}>Jump</a>;
+   *     }
+   *   });
+   *
+   * @param {function} method Method to be bound.
+   * @public
+   */
+  autoBind: function(method) {
+    function unbound() {
+      invariant(
+        false,
+        'React.autoBind(...): Attempted to invoke an auto-bound method that ' +
+        'was not correctly defined on the class specification.'
+      );
+    }
+    unbound.__reactAutoBind = method;
+    return unbound;
+  }
+
+};
+
+module.exports = ReactCompositeComponent;
