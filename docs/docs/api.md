@@ -9,15 +9,23 @@ prev: advanced-components.html
 
 `React` is the entry point to the React framework. If you're using one of the prebuilt packages it's available as a global; if you're using CommonJS modules you can `require()` it.
 
-### DOM
+#### React.DOM
 
 `React.DOM` provides all of the standard HTML tags needed to build a React app. You generally don't use it directly; instead, just include it as part of the `/** @jsx React.DOM */` docblock.
 
-### initializeTouchEvents(boolean shouldUseTouch)
+#### React.initializeTouchEvents
+
+```javascript
+initializeTouchEvents(boolean shouldUseTouch)
+```
 
 Configure React's event system to handle touch events on mobile devices.
 
-### function autoBind(function method)
+#### React.autoBind
+
+```javascript
+function autoBind(function method)
+```
 
 Marks the provided function to be automatically bound to each React component instance created. This allows React components to define automatically bound methods and ensure that when called they will always reference their current instance.
 
@@ -35,11 +43,19 @@ React.createClass({
 });
 ```
 
-### function createClass(object specification)
+#### React.createClass
+
+```javascript
+function createClass(object specification)
+```
 
 Creates a component given a specification. A component implements a `render` method which returns a single child. That child may have an arbitrarily deep child structure. One thing that makes components different than a standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
 
-### ReactComponent renderComponent(ReactComponent container, DOMElement mountPoint)
+#### React.renderComponent
+
+```javascript
+ReactComponent renderComponent(ReactComponent container, DOMElement mountPoint)
+```
 
 Renders a React component into the DOM in the supplied `container`.
 
@@ -55,25 +71,45 @@ If you find that you need the underlying browser event for some reason, simply u
 
 Component classses created by `createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming `ReactComponent`s.
 
-### DOMElement getDOMNode()
+#### getDOMNode
+
+```javascript
+DOMElement getDOMNode()
+```
 
 If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.
 
-### setProps(object nextProps)
+#### setProps
+
+```javascript
+setProps(object nextProps)
+```
 
 When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `renderComponent()`. Simply call `setProps()` to change its properties and trigger a re-render.
 
 **Note:** This method can only be called on a root-level component. That is, it's only available on the component passed directly to `renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
 
-### replaceProps(object nextProps)
+#### replaceProps
+
+```javascript
+replaceProps(object nextProps)
+```
 
 Like `setProps()` but deletes any pre-existing props that are not in nextProps.
 
-### ReactComponent transferPropsTo(ReactComponent targetComponent)
+#### transferPropsTo
+
+```javascript
+ReactComponent transferPropsTo(ReactComponent targetComponent)
+```
 
 Transfer properties from this component to a target component that have not already been set on the target component. This is usually used to pass down properties to the returned root component. `targetComponent`, now updated with some new props is returned as a convenience.
 
-### setState(object nextState)
+#### setState
+
+```javascript
+setState(object nextState)
+```
 
 Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
 
@@ -81,24 +117,34 @@ Merges nextState with the current state. This is the primary method you use to t
 
 **Note:** `setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the existing value.
 
-### replaceState(object nextState)
+#### replaceState
+
+```javascript
+replaceState(object nextState)
+```
 
 Like `setState()` but deletes any pre-existing state keys that are not in nextState.
 
-### forceUpdate()
+#### forceUpdate()
+
+```javascript
+forceUpdate()
+```
 
 If your `render()` method reads from something other than `this.props` or `this.state` you'll need to tell React when it needs to re-run `render()`. Use `forceUpdate()` to cause React to automatically re-render. This will cause `render()` to be called on the component and all of its children but React will only update the DOM if the markup changes.
 
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your application much simpler and more efficient.
 
-### object getInitialState()
-### componentWillMount()
-### componentDidMount(DOMElement domNode)
-### componentWillReceiveProps(object nextProps)
-### boolean shouldComponentUpdate(object nextProps, object nextState)
-### componentWillUpdate(object nextProps, object nextState)
-### ReactComponent render()
-### componentDidUpdate(object prevProps, object prevState, DOMElement domNode)
-### componentWillUnmount()
+```javascript
+object getInitialState()
+componentWillMount()
+componentDidMount(DOMElement domNode)
+componentWillReceiveProps(object nextProps)
+boolean shouldComponentUpdate(object nextProps, object nextState)
+componentWillUpdate(object nextProps, object nextState)
+ReactComponent render()
+componentDidUpdate(object prevProps, object prevState, DOMElement domNode)
+componentWillUnmount()
+```
 
-These are overridable lifecycle methods; see the [lifecycle methods](lifecycle.html) documentation for more information.
+See the [advanced components](advanced-components.html) documentation for more details on these lifecycle methods.
