@@ -183,6 +183,100 @@ implementation.</p>
 <span class="p">};</span>
 <span class="kd">var</span> <span class="nx">myToggleLink</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">ToggleLink</span> <span class="nx">onToggle</span><span class="o">=</span><span class="p">{</span><span class="nx">handleToggle</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
+<h3>Common Patterns</h3>
+
+<p>With React your event handlers should be quite small. Large event handlers may
+be symptomatic of code that should be moved into helpers or into <code>render()</code>.
+Here are some common usage patterns for event handlers.</p>
+
+<h4>Updating State</h4>
+
+<p>The most common thing to do in response to a user action is to call
+<code>this.setState()</code> to update the component&#39;s state, which will in turn trigger
+an update to the rendered component.</p>
+
+<h4>Server Requests</h4>
+
+<p>Many event handlers will issue a server request to read or write some data in
+response to an event. The response handler for the request will often call
+<code>this.setState()</code>.</p>
+
+<h4>Invoke a Callback</h4>
+
+<p>Your component will often be a small, reusable building block that does not know
+how to respond to a user action. In these situations, we delegate the
+responsibility to the owner by exposing a handler on <code>this.props</code>. This is what
+the <code>ToggleLink</code> example above is doing.</p>
+
+<h4>Inter-component Communication</h4>
+
+<p>A common scenario involves communicating to <strong>Component A</strong> that a user action
+has occurred on <strong>Component B</strong>. To solve this problem, a common parent to
+both components should listen for the event on <strong>Component B</strong>, update its
+internal state, and pass that data into <strong>Component A</strong>.</p>
+
+<p>For example, say we have two components: <strong>Clicker</strong>, a component that fires an
+<code>onCountChange</code> custom event, and <strong>ClickCountLabel</strong>, a component that displays
+the number of clicks that have happened:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Clicker</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="mi">0</span><span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">me</span><span class="o">!&lt;</span><span class="err">/span&gt;;</span>
+  <span class="p">},</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">});</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onCountChange</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onCountChange</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">})</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">ClickCountLabel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">You</span> <span class="nx">have</span> <span class="nx">clicked</span> <span class="o">&lt;</span><span class="nx">strong</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">count</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/strong&gt; times.&lt;/p&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">ClickApp</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Clicker</span> <span class="nx">onCountChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCountChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ClickCountLabel</span> <span class="nx">count</span><span class="o">=</span><span class="p">{</span><span class="nx">count</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">},</span>
+  <span class="nx">handleCountChange</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Somehow update `count`.</span>
+  <span class="p">})</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>In order to communicate the click count from <code>Clicker</code> to <code>ClickCountLabel</code>, we
+modify <code>ClickApp</code> to maintain state that will be passed into <code>ClickCountLabel</code>:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ClickApp</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="mi">0</span><span class="p">};</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="kd">var</span> <span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
+</span>    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Clicker</span> <span class="nx">onCountChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCountChange</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ClickCountLabel</span> <span class="nx">count</span><span class="o">=</span><span class="p">{</span><span class="nx">count</span><span class="p">}</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">},</span>
+  <span class="nx">handleCountChange</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">count</span><span class="p">)</span> <span class="p">{</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">count</span><span class="o">:</span> <span class="nx">count</span><span class="p">});</span>
+</span>  <span class="p">})</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Now when <code>Clicker</code> fires the <code>onCountChange</code> event, the <code>ClickCountLabel</code> will
+get updated!</p>
+
 
     <div class="docs-prevnext">
       

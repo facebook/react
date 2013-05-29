@@ -82,16 +82,18 @@
 
 <p><code>React</code> is the entry point to the React framework. If you&#39;re using one of the prebuilt packages it&#39;s available as a global; if you&#39;re using CommonJS modules you can <code>require()</code> it.</p>
 
-<h3>DOM</h3>
+<h4>React.DOM</h4>
 
 <p><code>React.DOM</code> provides all of the standard HTML tags needed to build a React app. You generally don&#39;t use it directly; instead, just include it as part of the <code>/** @jsx React.DOM */</code> docblock.</p>
 
-<h3>initializeTouchEvents(boolean shouldUseTouch)</h3>
-
+<h4>React.initializeTouchEvents</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kr">boolean</span> <span class="nx">shouldUseTouch</span><span class="p">)</span>
+</code></pre></div>
 <p>Configure React&#39;s event system to handle touch events on mobile devices.</p>
 
-<h3>function autoBind(function method)</h3>
-
+<h4>React.autoBind</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span> <span class="nx">method</span><span class="p">)</span>
+</code></pre></div>
 <p>Marks the provided function to be automatically bound to each React component instance created. This allows React components to define automatically bound methods and ensure that when called they will always reference their current instance.</p>
 
 <p>Example:</p>
@@ -105,12 +107,14 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<h3>function createClass(object specification)</h3>
-
+<h4>React.createClass</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
+</code></pre></div>
 <p>Creates a component given a specification. A component implements a <code>render</code> method which returns a single child. That child may have an arbitrarily deep child structure. One thing that makes components different than a standard prototypal classes is that you don&#39;t need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.</p>
 
-<h3>ReactComponent renderComponent(ReactComponent container, DOMElement mountPoint)</h3>
-
+<h4>React.renderComponent</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">container</span><span class="p">,</span> <span class="nx">DOMElement</span> <span class="nx">mountPoint</span><span class="p">)</span>
+</code></pre></div>
 <p>Renders a React component into the DOM in the supplied <code>container</code>.</p>
 
 <p>If the React component was previously rendered into <code>container</code>, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.</p>
@@ -125,61 +129,59 @@
 
 <p>Component classses created by <code>createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming <code>ReactComponent</code>s.</p>
 
-<h3>DOMElement getDOMNode()</h3>
-
+<h4>getDOMNode</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
+</code></pre></div>
 <p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.</p>
 
-<h3>setProps(object nextProps)</h3>
-
+<h4>setProps</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+</code></pre></div>
 <p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>renderComponent()</code>. Simply call <code>setProps()</code> to change its properties and trigger a re-render.</p>
 
 <p><strong>Note:</strong> This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
 
-<h3>replaceProps(object nextProps)</h3>
-
+<h4>replaceProps</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+</code></pre></div>
 <p>Like <code>setProps()</code> but deletes any pre-existing props that are not in nextProps.</p>
 
-<h3>ReactComponent transferPropsTo(ReactComponent targetComponent)</h3>
-
+<h4>transferPropsTo</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
+</code></pre></div>
 <p>Transfer properties from this component to a target component that have not already been set on the target component. This is usually used to pass down properties to the returned root component. <code>targetComponent</code>, now updated with some new props is returned as a convenience.</p>
 
-<h3>setState(object nextState)</h3>
-
+<h4>setState</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+</code></pre></div>
 <p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.</p>
 
 <p><strong>Note:</strong> <em>NEVER</em> mutate <code>this.state</code> directly. As calling <code>setState()</code> afterwards may replace the mutation you made. Treat <code>this.state</code> as if it were immutable.</p>
 
 <p><strong>Note:</strong> <code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
 
-<h3>replaceState(object nextState)</h3>
-
+<h4>replaceState</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+</code></pre></div>
 <p>Like <code>setState()</code> but deletes any pre-existing state keys that are not in nextState.</p>
 
-<h3>forceUpdate()</h3>
-
+<h4>forceUpdate()</h4>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">()</span>
+</code></pre></div>
 <p>If your <code>render()</code> method reads from something other than <code>this.props</code> or <code>this.state</code> you&#39;ll need to tell React when it needs to re-run <code>render()</code>. Use <code>forceUpdate()</code> to cause React to automatically re-render. This will cause <code>render()</code> to be called on the component and all of its children but React will only update the DOM if the markup changes.</p>
 
 <p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your application much simpler and more efficient.</p>
-
-<h3>object getInitialState()</h3>
-
-<h3>componentWillMount()</h3>
-
-<h3>componentDidMount(DOMElement domNode)</h3>
-
-<h3>componentWillReceiveProps(object nextProps)</h3>
-
-<h3>boolean shouldComponentUpdate(object nextProps, object nextState)</h3>
-
-<h3>componentWillUpdate(object nextProps, object nextState)</h3>
-
-<h3>ReactComponent render()</h3>
-
-<h3>componentDidUpdate(object prevProps, object prevState, DOMElement domNode)</h3>
-
-<h3>componentWillUnmount()</h3>
-
-<p>These are overridable lifecycle methods; see the <a href="lifecycle.html">lifecycle methods</a> documentation for more information.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
+<span class="nx">componentWillMount</span><span class="p">()</span>
+<span class="nx">componentDidMount</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">domNode</span><span class="p">)</span>
+<span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">()</span>
+<span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">DOMElement</span> <span class="nx">domNode</span><span class="p">)</span>
+<span class="nx">componentWillUnmount</span><span class="p">()</span>
+</code></pre></div>
+<p>See the <a href="advanced-components.html">advanced components</a> documentation for more details on these lifecycle methods.</p>
 
 
     <div class="docs-prevnext">
