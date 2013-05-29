@@ -1,0 +1,42 @@
+#!/usr/bin/env node
+"use strict";
+
+var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
+var transform = require('../vendor/fbtransform/lib/transform').transform;
+var debranch = require("../vendor/woodchipper").debranch;
+
+require("commoner").resolve(function(id) {
+  var context = this;
+
+  // Note that the result of context.getProvidedP() is cached for the
+  // duration of the build, so it is both consistent and cheap to
+  // evaluate multiple times.
+  return context.getProvidedP().then(function(idToPath) {
+    // If a module declares its own identifier using @providesModule
+    // then that identifier will be a key in the idToPath object.
+    if (idToPath.hasOwnProperty(id)) {
+      return context.readFileP(idToPath[id]);
+    }
+
+    // Otherwise assume the identifier maps directly to a path in the
+    // filesystem.
+    return context.readModuleP(id);
+  });
+
+}).process(function(id, source) {
+  var context = this;
+
+  // This is where JSX, ES6, etc. desugaring happens.
+  source = transform(visitors.react, source).code;
+
+  return context.makePromise(function(callback) {
+    var constants = context.config.constants || {};
+
+    // Debranching means removing any obviously dead code after
+    // replacing constant conditional expressions with literal
+    // (boolean) values.
+    debranch(constants, source, function(source) {
+      callback(null, source);
+    });
+  });
+});

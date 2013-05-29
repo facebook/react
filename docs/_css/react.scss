@@ -1,0 +1,630 @@
+@import 'bourbon/bourbon';
+@import '_variables';
+@import '_typography';
+@import '_solarized';
+
+$skinnyContentWidth: 650px;
+$contentWidth: 920px;
+$contentPadding: 20px;
+$columnWidth: 280px;
+$columnGutter: 40px;
+$twoColumnWidth: 2 * $columnWidth + $columnGutter;
+
+
+
+// basic reset
+* {
+  @include box-sizing(border-box);
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: $pageBg;
+}
+
+
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}
+
+
+.container {
+  padding-top: 50px;
+  min-width: $contentWidth + (2 * $contentPadding);
+}
+
+.wrap {
+  width: $contentWidth + (2 * $contentPadding);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.skinnyWrap {
+  width: $skinnyContentWidth + (2 * $contentPadding);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+hr {
+  height: 0;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #eee;
+}
+
+ul,
+li {
+  margin-left: 20px;
+}
+
+// Main Nav
+
+.nav-main {
+  @include clearfix;
+  background: $darkestColor;
+  color: $lightTextColor;
+  position: fixed;
+  top: 0;
+  height: 50px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, .5);
+  width: 100%;
+  z-index: 100;
+
+  a {
+    color: $lightColor;
+    text-decoration: none;
+  }
+
+  .nav-site {
+    float: right;
+    margin: 0;
+
+    li {
+      margin: 0;
+    }
+
+    a {
+      padding: 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 50px;
+      display: inline-block;
+      height: 50px;
+      color: $mediumTextColor;
+
+      &:hover {
+        color: $lightTextColor;
+      }
+
+      &.active {
+        color: $lightTextColor;
+        border-bottom: 3px solid $primary;
+        background: #333;
+      }
+    }
+  }
+
+  .nav-home {
+    color: #00d8ff;
+    font-size: 24px;
+    line-height: 50px;
+  }
+
+  .nav-logo {
+    @include retina-image('../img/logo_small', 38px 38px);
+    vertical-align: middle;
+  }
+
+  ul {
+    display: inline;
+  }
+
+  li {
+    display: inline;
+  }
+}
+
+// Hero!
+
+.hero {
+  height: 300px;
+  // background: $darkColor url(../img/header.png) no-repeat center;
+  background: $darkColor;
+  padding-top: 50px;
+  color: $lightColor;
+  font-weight: 300;
+
+  .text {
+    font-size: 64px;
+    text-align: center;
+  }
+
+  .minitext {
+    font-size: 16px;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  strong {
+    color: $blueColor;
+    font-weight: 400;
+  }
+}
+
+.buttons-unit {
+  margin-top: 60px;
+  text-align: center;
+
+  a {
+    color: $blueColor;
+  }
+
+  .button {
+    font-size: 24px;
+    background: $primary;
+    color: $lightTextColor;
+
+    &:active {
+      background: darken($primary, 5%);
+    }
+  }
+}
+
+// Downloads
+
+.buttons-unit.downloads {
+  margin: 30px 0;
+}
+
+// Docs Nav
+
+.nav-docs {
+  color: $darkColor;
+  font-size: 14px;
+  // position: fixed;
+  float: left;
+  top: 100px;
+  width: 180px;
+
+  ul {
+    list-style: none;
+    margin: 0;
+  }
+  li {
+    margin: 0;
+  }
+  h3 {
+    text-transform: uppercase;
+    font-size: 14px;
+  }
+  a {
+    color: $mediumestColor;
+    display: block;
+
+    &:hover {
+      text-decoration: none;
+      color: $primary;
+    }
+
+    &.active {
+      color: $primary;
+    }
+  }
+
+  .nav-docs-section {
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #eee;
+    padding: 12px 0;
+
+    &:first-child {
+       padding-top: 0;
+       border-top: 0;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+  }
+
+}
+
+// Home Page specifics
+
+.home-section {
+  margin: 50px 0;
+}
+
+.home-divider {
+  border-top-color: #bbb;
+  margin: 0 auto;
+  width: 400px;
+}
+
+.marketing-row {
+  @include clearfix;
+  margin: 50px 0;
+}
+
+.marketing-col {
+  float: left;
+  margin-right: 40px;
+  width: $columnWidth;
+
+  h3 {
+    color: $darkColor;
+    font-size: 24px;
+    font-weight: normal;
+    text-transform: uppercase;
+  }
+  p {
+    font-size: 16px;
+  }
+}
+
+.marketing-col:last-child {
+  margin-right: 0;
+}
+
+#examples {
+  h3 {
+    color: $darkColor;
+    font-size: 24px;
+    font-weight: normal;
+    margin-bottom: 5px;
+  }
+
+  p {
+    margin: 0 0 25px 0;
+    max-width: $twoColumnWidth;
+  }
+
+  .example {
+    margin-top: 60px;
+  }
+
+  #todoExample {
+    font-size: 14px;
+    ul {
+      list-style-type: square;
+      margin: 0 0 10px 0;
+    }
+    input {
+      border: 1px solid #ccc;
+      font: 14px proxima-nova, $helvetica;
+      padding: 3px;
+      width: 150px;
+    }
+    button {
+      font: 14px proxima-nova, $helvetica;
+      margin-left: 5px;
+      padding: 4px 10px;
+    }
+  }
+
+  #markdownExample {
+    textarea {
+      border: 1px solid #ccc;
+      font: 14px proxima-nova, $helvetica;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+  }
+}
+
+.home-bottom-section {
+  margin-bottom: 100px;
+}
+
+.docs-nextprev {
+  @include clearfix;
+}
+
+.docs-prev {
+  float: left;
+}
+
+.docs-next {
+  float: right;
+}
+
+footer {
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 36px;
+  margin-bottom: 18px;
+  overflow: auto;
+}
+
+section.black content {
+  padding-bottom: 18px;
+}
+
+/**
+ * Docs
+ */
+
+.documentationContent {
+  @include clearfix;
+
+  .subHeader {
+    font-size: 24px;
+  }
+
+  // H2s form documentation topic dividers. Extra space helps.
+  h2 {
+    margin-top: 30px;
+  }
+
+  padding-top: 20px;
+
+  // Make a notice box out of blockquotes in the documetation:
+  blockquote {
+      padding: 15px 30px 15px 15px;
+      margin: 20px 0;
+      background-color: rgba(204, 122, 111, 0.09999999999999998);
+      border-left: 5px solid rgba(191, 87, 73, 0.19999999999999996);
+    h4 {
+      margin-top: 0;
+    }
+    p:last-child {
+      margin-bottom: 0;
+    }
+    // Treat first child as the title - promote to H4.
+    p:first-child {
+      font-weight: bold;
+      font-size: 17.5px;
+      line-height: 20px;
+      margin-top: 0;
+      text-rendering: optimizelegibility;
+    }
+  }
+}
+
+.docs-prevnext {
+  padding-top: 40px;
+  padding-bottom: 40px;
+}
+
+
+/* Button */
+
+.button {
+  @include background(linear-gradient($buttonGreyTop, $buttonGreyBottom));
+  // border: 1px solid $darkestColor;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 18px;
+  font-weight: 400;
+  margin: 0 12px;
+  // word-spacing: -2px;
+  // letter-spacing: 1px;
+  display: inline-block;
+  color: $lightTextColor;
+  text-decoration: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:active {
+    box-shadow: none;
+  }
+}
+
+.hero {
+  .button {
+    box-shadow: 1px 3px 3px rgba(0, 0, 0, .3);
+  }
+}
+
+.button.blue {
+  @include background(linear-gradient($buttonBlueTop, $buttonBlueBottom));
+}
+
+
+/* Row */
+
+.row {
+  padding-bottom: 4px;
+}
+
+.row .span4 {
+  width: 33.33%;
+  display: table-cell;
+}
+
+.row .span8 {
+  width: 66.66%;
+  display: table-cell;
+}
+
+.row .span6 {
+  width: 50%;
+  display: table-cell;
+}
+
+
+/* Content */
+
+p {
+  margin: 10px 0;
+}
+
+.highlight {
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.inner-content {
+  float: right;
+  width: $skinnyContentWidth;
+}
+
+.nosidebar .inner-content {
+  float: none;
+  margin: 0 auto;
+}
+
+/* Code Mirror */
+
+div.CodeMirror pre, div.CodeMirror-linenumber, code {
+  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+div.CodeMirror-linenumber:after {
+  content: '.';
+}
+
+.CodeMirror, div.CodeMirror-gutters, div.highlight {
+  border: none;
+}
+
+small code,
+li code,
+p code {
+  color: #555;
+  background-color: rgba(0, 0, 0, .04);
+  padding: 1px 3px;
+}
+
+.cm-s-default span.cm-string-2 {
+  color: inherit;
+}
+
+.playground {
+  @include clearfix;
+}
+
+.playground::before {
+  border-bottom: none !important;
+  border-radius: 3px 3px 0 0;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #c2c0bc;
+  background-color: #f1ede4;
+  content: 'Live editor';
+}
+
+.playground::before,
+.playgroundCode,
+.playgroundPreview {
+  border: 1px solid rgba(16,16,16,0.1);
+}
+
+.playgroundCode {
+  border-radius: 0 3px 3px 3px;
+  float: left;
+  overflow: hidden;
+  width: $twoColumnWidth;
+}
+
+.playgroundPreview {
+  background-color: white;
+  border-radius: 3px;
+  float: right;
+  padding: 15px 20px;
+  width: $columnWidth;
+}
+
+.MarkdownEditor textarea {
+  width: 100%;
+  height: 100px
+}
+
+.hll {
+  background-color: #f7ebc6;
+  border-left: 5px solid #f7d87c;
+  display: block;
+  margin-left: -14px;
+  margin-right: -14px;
+  padding-left: 9px;
+}
+
+/* Codemirror doesn't support <jsx> syntax. Instead of highlighting it
+   as error, just ignore it */
+.highlight .javascript .err {
+  background-color: transparent;
+  color: inherit;
+}
+
+.highlight {
+  position: relative;
+  margin-bottom: 14px;
+  padding: 30px 14px 14px;
+  border: none;
+  border-radius: 0;
+  overflow: auto;
+}
+
+
+.highlight pre {
+  padding: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  background-color: transparent;
+  border: 0;
+}
+
+.highlight pre code {
+  font-size: inherit;
+}
+
+.highlight pre .lineno {
+  display: inline-block;
+  width: 22px;
+  padding-right: 5px;
+  margin-right: 10px;
+  color: #bebec5;
+  text-align: right;
+}
+
+/* Echo out a label for the example */
+
+.highlight:after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #c2c0bc;
+  background-color: #f1ede4;
+  content: "Code";
+}
+
+.downloadCenter {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
+.downloadSection:hover {
+  text-decoration: none !important;
+}
+
+@media screen and (max-width: 960px) {
+  .nav-main {
+    position: static;
+  }
+  .container {
+    padding-top: 0;
+  }
+}

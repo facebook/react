@@ -1,0 +1,103 @@
+//************************************************************************//
+// Background property for adding multiple backgrounds using shorthand
+// notation.
+//************************************************************************//
+
+@mixin background(
+  $background-1       , $background-2: false,
+  $background-3: false, $background-4: false,
+  $background-5: false, $background-6: false,
+  $background-7: false, $background-8: false,
+  $background-9: false, $background-10: false,
+  $fallback: false
+) {
+  $backgrounds: compact($background-1, $background-2,
+                $background-3, $background-4,
+                $background-5, $background-6,
+                $background-7, $background-8,
+                $background-9, $background-10);
+
+  $fallback-color: false;
+  @if (type-of($fallback) == color) or ($fallback == "transparent") {
+    $fallback-color: $fallback;
+  }
+  @else {
+    $fallback-color: _extract-background-color($backgrounds);
+  }
+
+  @if $fallback-color {
+    background-color: $fallback-color;
+  }
+  background: _background-add-prefix($backgrounds, webkit);
+  background: _background-add-prefix($backgrounds);
+}
+
+@function _extract-background-color($backgrounds) {
+  $final-bg-layer: nth($backgrounds, length($backgrounds));
+  @if type-of($final-bg-layer) == list {
+    @for $i from 1 through length($final-bg-layer) {
+      $value: nth($final-bg-layer, $i);
+      @if type-of($value) == color {
+        @return $value;
+      }
+    }
+  }
+  @return false;
+}
+
+@function _background-add-prefix($backgrounds, $vendor: false) {
+  $backgrounds-prefixed: ();
+
+  @for $i from 1 through length($backgrounds) {
+    $shorthand: nth($backgrounds, $i); // Get member for current index
+    $type: type-of($shorthand); // Get type of variable - List (gradient) or String (image)
+
+    // If shorthand is a list (gradient)
+    @if $type == list {
+      $first-member: nth($shorthand, 1); // Get first member of shorthand
+
+      // Linear Gradient
+      @if index(linear radial, nth($first-member, 1)) {
+        $gradient-type: nth($first-member, 1); // linear || radial
+        $gradient-args:      false;
+        $gradient-positions: false;
+        $shorthand-start:    false;
+        @if type-of($first-member) == list { // Linear gradient plus additional shorthand values - lg(red,orange)repeat,...
+          $gradient-positions: nth($first-member, 2);
+          $gradient-args:      nth($first-member, 3);
+          $shorthand-start: 2;
+        }
+        @else { // Linear gradient only - lg(red,orange),...
+          $gradient-positions: nth($shorthand, 2);
+          $gradient-args:      nth($shorthand, 3); // Get gradient (red, blue)
+        }
+
+        $gradient-positions: _gradient-positions-parser($gradient-type, $gradient-positions);
+        $gradient: _render-gradients($gradient-positions, $gradient-args, $gradient-type, $vendor);
+
+        // Append any additional shorthand args to gradient
+        @if $shorthand-start {
+          @for $j from $shorthand-start through length($shorthand) {
+            $gradient: join($gradient, nth($shorthand, $j), space);
+          }
+        }
+        $backgrounds-prefixed: append($backgrounds-prefixed, $gradient, comma);
+      }
+      // Image with additional properties
+      @else {
+        $backgrounds-prefixed: append($backgrounds-prefixed, $shorthand, comma);
+      }
+    }
+    // If shorthand is a simple string (color or image)
+    @else if $type == string {
+      $backgrounds-prefixed: join($backgrounds-prefixed, $shorthand, comma);
+    }
+  }
+  @return $backgrounds-prefixed;
+}
+
+//Examples:
+  //@include background(linear-gradient(top, orange, red));
+  //@include background(radial-gradient(circle at 40% 40%, orange, red));
+  //@include background(url("/images/a.png") no-repeat, linear-gradient(orange, red));
+  //@include background(url("image.png") center center, linear-gradient(orange, red), url("image.png"));

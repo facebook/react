@@ -1,0 +1,6 @@
+{
+    "debug": false,
+    "constants": {
+        "__DEV__": false
+    }
+}
