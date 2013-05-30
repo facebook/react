@@ -37,7 +37,7 @@ var TodoList = Backbone.Collection.extend({
   model: Todo,
 
   // Save all of the todo items under the `"todos"` namespace.
-  localStorage: new Store('todos-backbone'),
+  localStorage: new Store('todos-react-backbone'),
 
   // Filter down the list of all todo items that are finished.
   completed: function() {
@@ -46,39 +46,24 @@ var TodoList = Backbone.Collection.extend({
     });
   },
 
-  // Filter down the list to only todo items that are still not finished.
-  remaining: function() {
-    return this.without.apply( this, this.completed() );
-  },
-
   // We keep the Todos in sequential order, despite being saved by unordered
   // GUID in the database. This generates the next order number for new items.
-  nextOrder: function() {
-    if ( !this.length ) {
+  nextOrder: function () {
+    if (!this.length) {
       return 1;
     }
     return this.last().get('order') + 1;
   },
 
   // Todos are sorted by their original insertion order.
-  comparator: function( todo ) {
+  comparator: function (todo) {
     return todo.get('order');
   }
 });
 
 var Utils = {
-  // https://gist.github.com/1308368
-  uuid: function(a,b){for(b=a='';a++<36;b+=a*51&52?(a^15?8^Math.random()*(a^20?16:4):4).toString(16):'-');return b},
   pluralize: function( count, word ) {
     return count === 1 ? word : word + 's';
-  },
-  store: function( namespace, data ) {
-    if ( arguments.length > 1 ) {
-      return localStorage.setItem( namespace, JSON.stringify( data ) );
-    } else {
-      var store = localStorage.getItem( namespace );
-      return ( store && JSON.parse( store ) ) || [];
-    }
   }
 };
 
@@ -87,16 +72,12 @@ var Utils = {
 var ENTER_KEY = 13;
 
 var TodoItem = React.createClass({
-  getInitialState: function() {
-    return {editValue: this.props.todo.get('title')};
-  },
-  onKeyUp: React.autoBind(function(event) {
-    this.setState({editValue: event.target.value});
-    var val = event.target.value.trim();
-    if (event.nativeEvent.keyCode !== ENTER_KEY || !val) {
-      return;
+  handleSubmit: React.autoBind(function(event) {
+    var val = this.refs.editField.getDOMNode().value;
+    if (val) {
+      this.props.onSave(val);
     }
-    this.props.onSave(val);
+    return false;
   }),
   onEdit: React.autoBind(function() {
     this.props.onEdit();
@@ -104,7 +85,7 @@ var TodoItem = React.createClass({
   }),
   render: function() {
     return (
-        <li class={cx({completed: this.props.todo.get('completed'), editing: this.props.editing})}>
+      <li class={cx({completed: this.props.todo.get('completed'), editing: this.props.editing})}>
         <div class="view">
           <input
             class="toggle"
@@ -115,7 +96,9 @@ var TodoItem = React.createClass({
           <label onDoubleClick={this.onEdit}>{this.props.todo.get('title')}</label>
           <button class="destroy" onClick={this.props.onDestroy} />
         </div>
-        <input ref="editField" class="edit" value={this.state.editValue} onKeyUp={this.onKeyUp} />
+        <form onSubmit={this.handleSubmit}>
+          <input ref="editField" class="edit" value={this.props.todo.get('title')} />
+        </form>
       </li>
     );
   }
@@ -143,24 +126,35 @@ var TodoFooter = React.createClass({
 
 var TodoApp = React.createClass({
   getInitialState: function() {
-    return {newTodoValue: '', editing: {}};
+    return {editing: null};
   },
   // Here is "the backbone integration." Just tell React whenever there *might* be a change
   // and we'll reconcile.
-  componentWillMount: function() {
+  componentDidMount: function() {
     this.props.todos.on('add change remove', this.forceUpdate, this);
+    this.props.todos.fetch();
+  },
+  componentDidUpdate: function() {
+    // If saving were expensive we'd listen for mutation events on Backbone and do this manually.
+    // however, since saving isn't expensive this is an elegant way to keep it reactively up-to-date.
+    this.props.todos.map(function(todo) {
+      todo.save();
+    });
   },
   componentWillUnmount: function() {
     this.props.todos.off(null, null, this);
   },
-  handleKeyUp: React.autoBind(function(event) {
-    this.setState({newTodoValue: event.target.value});
-    var val = event.target.value.trim();
-    if (event.nativeEvent.keyCode !== ENTER_KEY || !val) {
-      return;
+  handleSubmit: React.autoBind(function() {
+    var val = this.refs.newField.getDOMNode().value.trim();
+    if (val) {
+      this.props.todos.create({
+        title: val,
+        completed: false,
+        order: this.props.todos.nextOrder()
+      });
+      this.refs.newField.getDOMNode().value = '';
     }
-    this.props.todos.add(new Todo({id: Utils.uuid(), title: val, completed: false}));
-    this.setState({newTodoValue: ''});
+    return false;
   }),
   toggleAll: function(event) {
     var checked = event.nativeEvent.target.checked;
@@ -168,32 +162,26 @@ var TodoApp = React.createClass({
       todo.set('completed', checked);
     });
   },
-  toggle: function(todo) {
-    todo.set('completed', !todo.get('completed'));
-  },
   destroy: function(todo) {
     this.props.todos.remove(todo);
   },
   edit: function(todo) {
-    var editing = {};
-    editing[todo.get('id')] = true;
-    this.setState({editing: editing});
+    this.setState({editing: todo.get('id')});
   },
   save: function(todo, text) {
     todo.set('title', text);
-    this.setState({editing: {}});
+    this.setState({editing: null});
   },
   clearCompleted: function() {
-    this.props.todos.completed().map(this.props.todos.remove.bind(this.props.todos));
-  },
-  componentDidUpdate: function() {
-    Utils.store('todos-react', this.props.todos);
+    this.props.todos.completed().map(function(todo) {
+      todo.destroy();
+    });
   },
   render: function() {
     var footer = null;
     var main = null;
     var todoItems = this.props.todos.map(function(todo) {
-      return <TodoItem todo={todo} onToggle={this.toggle.bind(this, todo)} onDestroy={this.destroy.bind(this, todo)} onEdit={this.edit.bind(this, todo)} editing={this.state.editing[todo.get('id')]} onSave={this.save.bind(this, todo)} />;
+      return <TodoItem todo={todo} onToggle={todo.toggle.bind(todo)} onDestroy={this.destroy.bind(this, todo)} onEdit={this.edit.bind(this, todo)} editing={this.state.editing === todo.get('id')} onSave={this.save.bind(this, todo)} />;
     }.bind(this));
 
     var activeTodoCount = this.props.todos.filter(function(todo) { return !todo.get('completed') }).length;
@@ -219,7 +207,9 @@ var TodoApp = React.createClass({
         <section class="todoapp">
           <header class="header">
             <h1>todos</h1>
-            <input class="new-todo" placeholder="What needs to be done?" autofocus="autofocus" onKeyUp={this.handleKeyUp} value={this.state.newTodoValue} />
+            <form onSubmit={this.handleSubmit}>
+              <input ref="newField" class="new-todo" placeholder="What needs to be done?" autofocus="autofocus" />
+            </form>
           </header>
           {main}
           {footer}
@@ -233,4 +223,4 @@ var TodoApp = React.createClass({
     );
   }
 });
-React.renderComponent(<TodoApp todos={new TodoList(Utils.store('todos-react'))} />, document.getElementById('todoapp'));
+React.renderComponent(<TodoApp todos={new TodoList()} />, document.getElementById('todoapp'));
