@@ -26,6 +26,7 @@
   <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
   <script type="text/javascript" src="/react/js/showdown.js"></script>
+  <script type="text/javascript" src="/react/js/menu.js"></script>
 </head>
 <body>
 
@@ -37,12 +38,19 @@
           <img class="nav-logo" alt="" src="/react/img/logo_small.png">
           React
         </a>
-        <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html">docs</a></li>
-          <li><a href="/react/support.html" class="active">support</a></li>
-          <li><a href="/react/downloads.html">download</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
-        </ul>
+        <button class="button nav-toggle">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <nav class="nav-site" role="navigation">
+          <ul>
+            <li><a href="/react/docs/getting-started.html">docs</a></li>
+            <li><a href="/react/support.html" class="active">support</a></li>
+            <li><a href="/react/downloads.html">download</a></li>
+            <li><a href="http://github.com/facebook/react">github</a>
+          </ul>
+        </nav>
         <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
       </div>
     </div>
