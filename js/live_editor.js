@@ -111,9 +111,19 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } catch (e) { }
 
     try {
-      eval(this.getDesugaredCode());
+      if (this.props.renderCode) {
+        React.renderComponent(
+          React.DOM.pre(null, this.getDesugaredCode()),
+          mountNode
+        );
+      } else {
+        eval(this.getDesugaredCode());
+      }
     } catch (e) {
-      React.renderComponent(React.DOM.div( {content:e.toString(), className:{playgroundError: true}}, null ), mountNode);
+      React.renderComponent(
+        React.DOM.div( {content:e.toString(), className:{playgroundError: true}}, null ),
+        mountNode
+      );
     }
   }
 });

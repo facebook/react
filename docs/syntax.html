@@ -78,11 +78,24 @@
   <div class="inner-content">
     <h1>JSX Syntax</h1>
     <div class="subHeader">Writing JavaScript with XML syntax.</div>
-    <p>JSX is a JavaScript XML syntax extension recommended (but not required) for use
+    <p>JSX is a JavaScript XML syntax transform recommended (but not required) for use
 with React.</p>
 
-<p>JSX makes code that deeply nests React components more readable, and writing it
-feels like writing HTML. React documentation examples make use of JSX.</p>
+<h2>Why JSX?</h2>
+
+<p>First of all, <strong>don&#39;t use JSX if you don&#39;t like it!</strong></p>
+
+<p>React works out of the box without JSX. Simply construct your markup using the
+functions on <code>React.DOM</code>. For example, here&#39;s how to construct a simple link:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">a</span><span class="p">({</span><span class="nx">href</span><span class="o">:</span> <span class="s1">&#39;http://facebook.github.io/react&#39;</span><span class="p">},</span> <span class="s1">&#39;React&#39;</span><span class="p">);</span>
+</code></pre></div>
+<p>We recommend using JSX for many reasons:</p>
+
+<ul>
+<li>It&#39;s easier to visualize the structure of the DOM.</li>
+<li>Designers are more comfortable making changes.</li>
+<li>It&#39;s familiar for those who have used MXML or XAML.</li>
+</ul>
 
 <h2>The Transform</h2>
 
@@ -103,8 +116,11 @@ attributes into function calls and objects, respectively.</p>
 <span class="c1">// Output (JS):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">},</span> <span class="nx">Profile</span><span class="p">({},</span> <span class="s1">&#39;click&#39;</span><span class="p">));</span>
 </code></pre></div>
-<p>The <a href="getting-started.html">Getting Started</a> guide shows how to setup JSX
-compilation.</p>
+<p>Use the <a href="/react/jsx-compiler.html">JSX Compiler</a> to try out JSX and see how it
+desguars into native JavaScript.</p>
+
+<p>If you want to use JSX, the <a href="getting-started.html">Getting Started</a> guide shows
+how to setup compilation.</p>
 
 <blockquote>
 <p>Note:</p>

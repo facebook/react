@@ -96,6 +96,10 @@
 <li><strong>Markdown formatting:</strong> users can use Markdown to format their text</li>
 </ul>
 
+<h2>Want to skip all this and just see the source?</h2>
+
+<p><a href="https://github.com/petehunt/react-tutorial">It&#39;s all on GitHub.</a></p>
+
 <h2>Getting started</h2>
 
 <p>For this tutorial we&#39;ll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:</p>
@@ -465,12 +469,13 @@
 <span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span><span class="o">&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="o">/&gt;</span>
-</span><span class="hll">      <span class="o">&lt;</span><span class="err">/form&gt;</span>
-</span>    <span class="p">);</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
+</span>      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Let&#39;s make the form interactive. When the user presses enter, we should clear the form, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for this event and just clear the form.</p>
+<p>Let&#39;s make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for the form&#39;s submit event and clear it.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial16.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -492,6 +497,7 @@
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
 <span class="hll">          <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
 </span>        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
@@ -541,16 +547,16 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;commentBox&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">CommentForm</span>
-          <span class="nx">onCommentSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCommentSubmit</span><span class="p">}</span>
-        <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">CommentForm</span>
+<span class="hll">          <span class="nx">onCommentSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCommentSubmit</span><span class="p">}</span>
+</span>        <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Let&#39;s call the callback from the <code>CommentForm</code> when the user presses enter:</p>
+<p>Let&#39;s call the callback from the <code>CommentForm</code> when the user submits the form:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleSubmit</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -569,6 +575,7 @@
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
           <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
         <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
