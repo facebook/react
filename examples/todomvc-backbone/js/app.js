@@ -66,29 +66,6 @@ var TodoList = Backbone.Collection.extend({
   }
 });
 
-// Create our global collection of **Todos**.
-var Todos = new TodoList();
-
-var TodoFilter;
-
-var Workspace = Backbone.Router.extend({
-  routes:{
-    '*filter': 'setFilter'
-  },
-
-  setFilter: function( param ) {
-    // Set the current filter to be used
-    TodoFilter = param.trim() || '';
-
-    // Trigger a collection filter event, causing hiding/unhiding
-    // of Todo view items
-    Todos.trigger('filter');
-  }
-});
-
-var TodoRouter = new Workspace();
-Backbone.history.start();
-
 var Utils = {
   // https://gist.github.com/1308368
   uuid: function(a,b){for(b=a='';a++<36;b+=a*51&52?(a^15?8^Math.random()*(a^20?16:4):4).toString(16):'-');return b},
@@ -111,7 +88,7 @@ var ENTER_KEY = 13;
 
 var TodoItem = React.createClass({
   getInitialState: function() {
-    return {editValue: this.props.todo.title};
+    return {editValue: this.props.todo.get('title')};
   },
   onKeyUp: React.autoBind(function(event) {
     this.setState({editValue: event.target.value});
@@ -127,16 +104,16 @@ var TodoItem = React.createClass({
   }),
   render: function() {
     return (
-      <li class={cx({completed: this.props.todo.completed, editing: this.props.editing})}>
+        <li class={cx({completed: this.props.todo.get('completed'), editing: this.props.editing})}>
         <div class="view">
           <input
             class="toggle"
             type="checkbox"
-            checked={this.props.todo.completed ? 'checked' : null}
+            checked={this.props.todo.get('completed') ? 'checked' : null}
             onChange={this.props.onToggle}
           />
-        <label onDoubleClick={this.onEdit}>{this.props.todo.title}</label>
-           <button class="destroy" onClick={this.props.onDestroy} />
+          <label onDoubleClick={this.onEdit}>{this.props.todo.get('title')}</label>
+          <button class="destroy" onClick={this.props.onDestroy} />
         </div>
         <input ref="editField" class="edit" value={this.state.editValue} onKeyUp={this.onKeyUp} />
       </li>
@@ -166,7 +143,15 @@ var TodoFooter = React.createClass({
 
 var TodoApp = React.createClass({
   getInitialState: function() {
-    return {todos: Utils.store('todos-react'), newTodoValue: '', editing: {}};
+    return {newTodoValue: '', editing: {}};
+  },
+  // Here is "the backbone integration." Just tell React whenever there *might* be a change
+  // and we'll reconcile.
+  componentWillMount: function() {
+    this.props.todos.on('add change remove', this.forceUpdate, this);
+  },
+  componentWillUnmount: function() {
+    this.props.todos.off(null, null, this);
   },
   handleKeyUp: React.autoBind(function(event) {
     this.setState({newTodoValue: event.target.value});
@@ -174,48 +159,48 @@ var TodoApp = React.createClass({
     if (event.nativeEvent.keyCode !== ENTER_KEY || !val) {
       return;
     }
-    var todos = this.state.todos;
-    todos.push({id: Utils.uuid(), title: val, completed: false});
-    this.setState({todos: todos, newTodoValue: ''});
+    this.props.todos.add(new Todo({id: Utils.uuid(), title: val, completed: false}));
+    this.setState({newTodoValue: ''});
   }),
   toggleAll: function(event) {
     var checked = event.nativeEvent.target.checked;
-    this.state.todos.map(function(todo) {
-      todo.completed = checked;
+    this.props.todos.map(function(todo) {
+      todo.set('completed', checked);
     });
-    this.setState({todos: this.state.todos});
   },
   toggle: function(todo) {
-    todo.completed = !todo.completed;
-    this.setState({todos: this.state.todos});
+    todo.set('completed', !todo.get('completed'));
   },
   destroy: function(todo) {
-    this.setState({todos: this.state.todos.filter(function(candidate) { return candidate.id !== todo.id; })});
+    this.props.todos.remove(todo);
   },
   edit: function(todo) {
-    this.state.todos.map(function(todo) { this.state.editing[todo.id] = false; }.bind(this));
-    this.state.editing[todo.id] = true;
-    this.setState({editing: this.state.editing});
+    var editing = {};
+    editing[todo.get('id')] = true;
+    this.setState({editing: editing});
   },
   save: function(todo, text) {
-    todo.title = text;
-    this.state.editing[todo.id] = false;
-    this.setState({todos: this.state.todos, editing: this.state.editing});
+    todo.set('title', text);
+    this.setState({editing: {}});
   },
   clearCompleted: function() {
-    this.setState({todos: this.state.todos.filter(function(todo) { return !todo.completed })});
+    this.props.todos.filter(function(todo) {
+      return todo.get('completed');
+    }).map(this.props.todos.remove.bind(this.props.todos));
+  },
+  componentDidUpdate: function() {
+    Utils.store('todos-react', this.props.todos);
   },
   render: function() {
-    Utils.store(this.props.localStorageKey || 'todos-react', this.state.todos);
     var footer = null;
     var main = null;
-    var todoItems = this.state.todos.map(function(todo) {
-      return <TodoItem todo={todo} onToggle={this.toggle.bind(this, todo)} onDestroy={this.destroy.bind(this, todo)} onEdit={this.edit.bind(this, todo)} editing={this.state.editing[todo.id]} onSave={this.save.bind(this, todo)} />;
+    var todoItems = this.props.todos.map(function(todo) {
+      return <TodoItem todo={todo} onToggle={this.toggle.bind(this, todo)} onDestroy={this.destroy.bind(this, todo)} onEdit={this.edit.bind(this, todo)} editing={this.state.editing[todo.get('id')]} onSave={this.save.bind(this, todo)} />;
     }.bind(this));
 
-    var activeTodoCount = this.state.todos.filter(function(todo) { return !todo.completed }).length;
+    var activeTodoCount = this.props.todos.filter(function(todo) { return !todo.get('completed') }).length;
     var completedCount = todoItems.length - activeTodoCount;
-	if (activeTodoCount || completedCount) {
+	  if (activeTodoCount || completedCount) {
       footer = <TodoFooter count={activeTodoCount} completedCount={completedCount} onClearCompleted={this.clearCompleted.bind(this)} />;
     }
 
@@ -250,5 +235,4 @@ var TodoApp = React.createClass({
     );
   }
 });
-
-React.renderComponent(<TodoApp />, document.getElementById('todoapp'));
+React.renderComponent(<TodoApp todos={new TodoList(Utils.store('todos-react'))} />, document.getElementById('todoapp'));
