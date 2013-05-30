@@ -36,32 +36,29 @@ var getDocblock = require('../lib/utils').getDocblock;
  * });
  */
 function visitReactDisplayName(traverse, object, path, state) {
-  object.declarations.forEach(function(dec) {
-    if (dec.type === Syntax.VariableDeclarator &&
-        dec.id.type === Syntax.Identifier &&
-        dec.init &&
-        dec.init.type === Syntax.CallExpression &&
-        dec.init.callee.type === Syntax.MemberExpression &&
-        dec.init.callee.object.type === Syntax.Identifier &&
-        dec.init.callee.object.name === 'React' &&
-        dec.init.callee.property.type === Syntax.Identifier &&
-        dec.init.callee.property.name === 'createClass' &&
-        dec.init['arguments'].length === 1 &&
-        dec.init['arguments'][0].type === Syntax.ObjectExpression) {
+  if (object.type === Syntax.VariableDeclarator &&
+      object.id.type === Syntax.Identifier &&
+      object.init &&
+      object.init.type === Syntax.CallExpression &&
+      object.init.callee.type === Syntax.MemberExpression &&
+      object.init.callee.object.type === Syntax.Identifier &&
+      object.init.callee.object.name === 'React' &&
+      object.init.callee.property.type === Syntax.Identifier &&
+      object.init.callee.property.name === 'createClass' &&
+      object.init['arguments'].length === 1 &&
+      object.init['arguments'][0].type === Syntax.ObjectExpression) {
 
-      var displayName = dec.id.name;
-      catchup(dec.init['arguments'][0].range[0] + 1, state);
-      append("displayName: '" + displayName + "',", state);
-    }
-  });
+    var displayName = object.id.name;
+    catchup(object.init['arguments'][0].range[0] + 1, state);
+    append("displayName: '" + displayName + "',", state);
+  }
 }
-
 
 /**
  * Will only run on @jsx files for now.
  */
 visitReactDisplayName.test = function(object, path, state) {
-  return object.type === Syntax.VariableDeclaration && !!getDocblock(state).jsx;
+  return object.type === Syntax.VariableDeclarator && !!getDocblock(state).jsx;
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;
