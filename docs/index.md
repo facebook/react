@@ -6,17 +6,16 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Declarative</h3>
+      <h3>The &quot;V&quot; in MVC</h3>
       <p>
-        React uses a declarative paradigm that makes it easier to reason about
-        your application.
+        Write reusable UI components in JavaScript. Read and write to any data source.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Efficient</h3>
+      <h3>Fast &amp; Declarative</h3>
       <p>
-        React minimizes interactions with the DOM by using a mock representation
-        of the DOM.
+        Describe how you want your component to look. React will automatically compute
+        the fastest way to keep the UI up-to-date when the data changes.
       </p>
     </div>
     <div class="marketing-col">
@@ -35,7 +34,8 @@ id: home
       <p>
         React components implement a `render()` method that takes input data and
         returns what to display. This example constructs the component using an
-        XML-like syntax called JSX. Input data is passed to the component as XML
+        XML-like syntax called JSX, but <strong>JSX is optional; you don&apos;t
+        need to use it</strong>. Input data is passed to the component as XML
         attributes, and `render()` accesses this data via `this.props`.
       </p>
       <div id="helloExample"></div>
@@ -46,7 +46,8 @@ id: home
         In addition to taking data from its creator (accessed via `this.props`),
         a component can maintain internal state data (accessed via
         `this.state`). When a component's state data changes, the rendered
-        markup will be updated by re-invoking `render()`.
+        markup will be updated by re-invoking `render()`. <strong>This example
+        doesn&apos;t use JSX</strong>, but you could if you wanted to.
       </p>
       <div id="timerExample"></div>
     </div>

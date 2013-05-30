@@ -3,7 +3,6 @@
  */
 
 var TIMER_COMPONENT = "\
-/** @jsx React.DOM */\n\
 var Timer = React.createClass({\n\
   getInitialState: function() {\n\
     return {secondsElapsed: 0};\n\
@@ -15,15 +14,13 @@ var Timer = React.createClass({\n\
     setInterval(this.tick, 1000);\n\
   },\n\
   render: function() {\n\
-    return (\n\
-      <div>\n\
-        {'Seconds Elapsed: ' + this.state.secondsElapsed}\n\
-      </div>\n\
+    return React.DOM.div({},\n\
+      'Seconds Elapsed: ' + this.state.secondsElapsed\n\
     );\n\
   }\n\
 });\n\
 \n\
-React.renderComponent(<Timer />, mountNode);\
+React.renderComponent(Timer({}), mountNode);\
 ";
 
 React.renderComponent(
