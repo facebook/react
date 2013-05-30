@@ -1,12 +1,12 @@
---- 
+---
 markdown: redcarpet
 name: React
-redcarpet: 
-  extensions: 
+redcarpet:
+  extensions:
   - fenced_code_blocks
-react_version: 0.3.0
+react_version: 0.3.1
 pygments: true
-exclude: 
+exclude:
 - Gemfile
 - Gemfile.lock
 - README.md
