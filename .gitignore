@@ -14,6 +14,7 @@ docs/css/react.css
 docs/js/JSXTransformer.js
 docs/js/react.min.js
 docs/js/docs.js
+docs/js/jsx-compiler.js
 docs/js/live_editor.js
 docs/js/examples
 docs/downloads
