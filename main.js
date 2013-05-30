@@ -1,6 +1,6 @@
 'use strict';
 
-var React = require('./build/React');
+var React = require('./build/react');
 var visitors = require('./vendor/fbtransform/visitors').transformVisitors;
 var transform = require('./vendor/fbtransform/lib/transform').transform;
 
