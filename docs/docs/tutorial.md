@@ -20,6 +20,10 @@ It'll also have a few neat features:
 * **Live updates:** as other users comment we'll pop them into the comment view in real time
 * **Markdown formatting:** users can use Markdown to format their text
 
+## Want to skip all this and just see the source?
+
+[It's all on GitHub.](https://github.com/petehunt/react-tutorial)
+
 ## Getting started
 
 For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
