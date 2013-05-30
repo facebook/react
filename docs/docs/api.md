@@ -3,6 +3,7 @@ id: docs-api
 title: React API
 layout: docs
 prev: advanced-components.html
+next: mixins.html
 ---
 
 ## React
