@@ -3,7 +3,6 @@ id: docs-mixins
 title: Mixins
 layout: docs
 prev: api.html
-next: common-questions.html
 ---
 
 Mixins allow code to be shared between multiple React components. They're pretty similar to mixins in Python or traits in PHP. Let's look at a simple example:
