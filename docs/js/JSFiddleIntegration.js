@@ -1,3 +1,10 @@
-var tag = document.querySelector('script[type="application/javascript;version=1.7"]');
+(function() {
+var tag = document.querySelector(
+  'script[type="application/javascript;version=1.7"]'
+);
+if (!tag || tag.textContent.indexOf('window.onload=function(){') !== -1) {
+  alert('Bad JSFiddle configuration, please fork the original React JSFiddle');
+}
 tag.setAttribute('type', 'text/jsx');
-tag.textContent = '/** @jsx React.DOM */' + tag.textContent.substr(12, tag.textContent.length - 17);
+tag.textContent = tag.textContent.replace(/^\/\/<!\[CDATA\[/, '');
+})();
