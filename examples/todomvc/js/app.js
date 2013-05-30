@@ -31,24 +31,19 @@ function cx(obj) {
   return s;
 }
 
-var ENTER_KEY = 13;
-
 var TodoItem = React.createClass({
-  getInitialState: function() {
-    return {editValue: this.props.todo.title};
-  },
-  onKeyUp: function(event) {
-    this.setState({editValue: event.target.value});
-    var val = event.target.value.trim();
-    if (event.nativeEvent.keyCode !== ENTER_KEY || !val) {
-      return;
+  handleSubmit: React.autoBind(function() {
+    var val = this.refs.editField.getDOMNode().value.trim();
+    if (val) {
+      this.props.onSave(val);
+      this.refs.editField.getDOMNode().value = '';
     }
-    this.props.onSave(val);
-  },
-  onEdit: function() {
+    return false;
+  }),
+  handleEdit: React.autoBind(function() {
     this.props.onEdit();
     this.refs.editField.getDOMNode().focus();
-  },
+  }),
   render: function() {
     return (
       <li class={cx({completed: this.props.todo.completed, editing: this.props.editing})}>
@@ -59,10 +54,13 @@ var TodoItem = React.createClass({
             checked={this.props.todo.completed ? 'checked' : null}
             onChange={this.props.onToggle}
           />
-          <label onDoubleClick={this.onEdit.bind(this)}>{this.props.todo.title}</label>
+          <label onDoubleClick={this.handleEdit}>{this.props.todo.title}</label>
           <button class="destroy" onClick={this.props.onDestroy} />
         </div>
-        <input ref="editField" class="edit" value={this.state.editValue} onKeyUp={this.onKeyUp.bind(this)} />
+        <form onSubmit={this.handleSubmit}>
+          <input ref="editField" class="edit" value={this.props.todo.title} />
+          <input type="submit" class="submitButton" />
+        </form>
       </li>
     );
   }
@@ -91,26 +89,25 @@ var TodoFooter = React.createClass({
 var TodoApp = React.createClass({
   getInitialState: function() {
     return {
-      todos: Utils.store('todos-react'),
-      newTodoValue: '',
+      todos: Utils.store('react-todos'),
       editing: {}
     };
   },
 
-  handleKeyUp: function(event) {
-    this.setState({newTodoValue: event.target.value});
-    var val = event.target.value.trim();
-    if (event.nativeEvent.keyCode !== ENTER_KEY || !val) {
-      return;
+  handleSubmit: React.autoBind(function() {
+    var val = this.refs.newField.getDOMNode().value.trim();
+    if (val) {
+      var todos = this.state.todos;
+      todos.push({
+        id: Utils.uuid(),
+        title: val,
+        completed: false
+      });
+      this.setState({todos: todos});
+      this.refs.newField.getDOMNode().value = '';
     }
-    var todos = this.state.todos;
-    todos.push({
-      id: Utils.uuid(),
-      title: val,
-      completed: false
-    });
-    this.setState({todos: todos, newTodoValue: ''});
-  },
+    return false;
+  }),
 
   toggleAll: function(event) {
     var checked = event.nativeEvent.target.checked;
@@ -154,7 +151,7 @@ var TodoApp = React.createClass({
   },
 
   render: function() {
-    Utils.store(this.props.localStorageKey || 'todos-react', this.state.todos);
+    Utils.store('react-todos', this.state.todos);
     var footer = null;
     var main = null;
     var todoItems = this.state.todos.map(function(todo) {
@@ -200,13 +197,15 @@ var TodoApp = React.createClass({
         <section class="todoapp">
           <header class="header">
             <h1>todos</h1>
-            <input
-              class="new-todo"
-              placeholder="What needs to be done?"
-              autofocus="autofocus"
-              onKeyUp={this.handleKeyUp.bind(this)}
-              value={this.state.newTodoValue}
-            />
+            <form onSubmit={this.handleSubmit}>
+              <input
+                ref="newField"
+                class="new-todo"
+                placeholder="What needs to be done?"
+                autofocus="autofocus"
+              />
+              <input type="submit" class="submitButton" />
+            </form>
           </header>
           {main}
           {footer}
