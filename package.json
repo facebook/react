@@ -16,7 +16,7 @@
     "README.md",
     "main.js",
     "bin/jsx",
-    "build/React.js",
+    "build/react.js",
     "vendor/fbtransform/",
     "vendor/woodchipper.js"
   ],
