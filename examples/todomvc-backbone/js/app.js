@@ -178,12 +178,12 @@ var TodoApp = React.createClass({
     }
     return false;
   }),
-  toggleAll: function(event) {
+  toggleAll: React.autoBind(function(event) {
     var checked = event.nativeEvent.target.checked;
     this.props.todos.map(function(todo) {
       todo.set('completed', checked);
     });
-  },
+  }),
   destroy: function(todo) {
     this.props.todos.remove(todo);
   },
@@ -194,11 +194,11 @@ var TodoApp = React.createClass({
     todo.set('title', text);
     this.setState({editing: null});
   },
-  clearCompleted: function() {
+  clearCompleted: React.autoBind(function() {
     this.props.todos.completed().map(function(todo) {
       todo.destroy();
     });
-  },
+  }),
   render: function() {
     var footer = null;
     var main = null;
@@ -209,13 +209,13 @@ var TodoApp = React.createClass({
     var activeTodoCount = this.props.todos.remaining().length;
     var completedCount = todoItems.length - activeTodoCount;
 	  if (activeTodoCount || completedCount) {
-      footer = <TodoFooter count={activeTodoCount} completedCount={completedCount} onClearCompleted={this.clearCompleted.bind(this)} />;
+      footer = <TodoFooter count={activeTodoCount} completedCount={completedCount} onClearCompleted={this.clearCompleted} />;
     }
 
     if (todoItems.length) {
       main = (
         <section class="main">
-          <input class="toggle-all" type="checkbox" onChange={this.toggleAll.bind(this)} />
+          <input class="toggle-all" type="checkbox" onChange={this.toggleAll} />
           <label class="toggle-all-label">Mark all as complete</label>
           <ul class="todo-list">
             {todoItems}
