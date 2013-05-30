@@ -46,6 +46,10 @@ var TodoList = Backbone.Collection.extend({
     });
   },
 
+  remaining: function() {
+    return this.without.apply(this, this.completed());
+  },
+
   // We keep the Todos in sequential order, despite being saved by unordered
   // GUID in the database. This generates the next order number for new items.
   nextOrder: function () {
@@ -184,7 +188,7 @@ var TodoApp = React.createClass({
       return <TodoItem todo={todo} onToggle={todo.toggle.bind(todo)} onDestroy={this.destroy.bind(this, todo)} onEdit={this.edit.bind(this, todo)} editing={this.state.editing === todo.get('id')} onSave={this.save.bind(this, todo)} />;
     }.bind(this));
 
-    var activeTodoCount = this.props.todos.filter(function(todo) { return !todo.get('completed') }).length;
+    var activeTodoCount = this.props.todos.remaining().length;
     var completedCount = todoItems.length - activeTodoCount;
 	  if (activeTodoCount || completedCount) {
       footer = <TodoFooter count={activeTodoCount} completedCount={completedCount} onClearCompleted={this.clearCompleted.bind(this)} />;
