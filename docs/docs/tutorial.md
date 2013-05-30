@@ -418,7 +418,7 @@ var CommentBox = React.createClass({
       this.props.pollInterval
     );
   },
-  componentUnMount: function() {
+  componentWillUnmount: function() {
     if (this.intervalID) {
       clearInterval(this.intervalID);
     }
@@ -534,7 +534,7 @@ var CommentBox = React.createClass({
       this.props.pollInterval
     );
   },
-  componentUnMount: function() {
+  componentWillUnmount: function() {
     if (this.intervalID) {
       clearInterval(this.intervalID);
     }
@@ -617,7 +617,7 @@ var CommentBox = React.createClass({
       this.props.pollInterval
     );
   },
-  componentUnMount: function() {
+  componentWillUnmount: function() {
     if (this.intervalID) {
       clearInterval(this.intervalID);
     }
@@ -678,7 +678,7 @@ var CommentBox = React.createClass({
       this.props.pollInterval
     );
   },
-  componentUnMount: function() {
+  componentWillUnmount: function() {
     if (this.intervalID) {
       clearInterval(this.intervalID);
     }
