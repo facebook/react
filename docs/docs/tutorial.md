@@ -501,7 +501,7 @@ When a user submits a comment, we will need to refresh the list of comments to i
 
 We need to pass data from the child component to its parent. We do this by passing a `callback` in props from parent to child:
 
-```javascript{13-15,30}
+```javascript{13-15,32}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
