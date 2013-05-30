@@ -7,11 +7,25 @@ prev: common-questions.html
 next: component-basics.html
 ---
 
-JSX is a JavaScript XML syntax extension recommended (but not required) for use
+JSX is a JavaScript XML syntax transform recommended (but not required) for use
 with React.
 
-JSX makes code that deeply nests React components more readable, and writing it
-feels like writing HTML. React documentation examples make use of JSX.
+## Why JSX?
+
+First of all, **don't use JSX if you don't like it!**
+
+React works out of the box without JSX. Simply construct your markup using the
+functions on `React.DOM`. For example, here's how to construct a simple link:
+
+```javascript
+var link = React.DOM.a({href: 'http://facebook.github.io/react'}, 'React');
+```
+
+We recommend using JSX for many reasons:
+
+- It's easier to visualize the structure of the DOM.
+- Designers are more comfortable making changes.
+- It's familiar for those who have used MXML or XAML.
 
 ## The Transform
 

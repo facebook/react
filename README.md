@@ -1,9 +1,9 @@
-# [React](http://facebook.github.io/react)
+# [React](http://facebook.github.io/react) [![Build Status](https://travis-ci.org/facebook/react.png?branch=master)](https://travis-ci.org/facebook/react)
 
 React is a JavaScript library for building user interfaces.
 
 * **Declarative:** React uses a declarative paradigm that makes it easier to reason about your application.
-* **Efficient:** React minimizes interactions with the DOM by using a mock representation of the DOM.
+* **Efficient:** React computes the minimal set of changes necessary to keep your DOM up-to-date.
 * **Flexible:** React works with the libraries and frameworks that you already know.
 
 [Learn how to use React in your own project.](http://facebook.github.io/react/docs/getting-started.html)

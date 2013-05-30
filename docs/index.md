@@ -3,6 +3,7 @@ layout: page
 title: A JavaScript library for building user interfaces
 id: home
 ---
+
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
@@ -15,8 +16,8 @@ id: home
     <div class="marketing-col">
       <h3>Efficient</h3>
       <p>
-        React minimizes interactions with the DOM by using a mock representation
-        of the DOM.
+        React computes the minimal set of changes necessary to keep your DOM
+        up-to-date.
       </p>
     </div>
     <div class="marketing-col">
@@ -34,19 +35,21 @@ id: home
       <h3>A Simple Component</h3>
       <p>
         React components implement a `render()` method that takes input data and
-        returns what to display. This example constructs the component using an
-        XML-like syntax called JSX. Input data is passed to the component as XML
-        attributes, and `render()` accesses this data via `this.props`.
+        returns what to display. This example uses an XML-like syntax called
+        JSX. Input data that is passed into the component can be accessed by
+        `render()` via `this.props`.<br />
+        <strong>JSX is optional and not required to use React.</strong>
       </p>
       <div id="helloExample"></div>
     </div>
     <div class="example">
       <h3>A Stateful Component</h3>
       <p>
-        In addition to taking data from its creator (accessed via `this.props`),
-        a component can maintain internal state data (accessed via
-        `this.state`). When a component's state data changes, the rendered
-        markup will be updated by re-invoking `render()`.
+        In addition to taking input data (accessed via `this.props`), a
+        component can maintain internal state data (accessed via `this.state`).
+        When a component's state data changes, the rendered markup will be
+        updated by re-invoking `render()`.<br />
+        <strong>This example demonstrates use of React without JSX.</strong>
       </p>
       <div id="timerExample"></div>
     </div>
