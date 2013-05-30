@@ -128,14 +128,34 @@ var TodoFooter = React.createClass({
   }
 });
 
+// An example generic Mixin that you can add to any component that should react to changes in a Backbone component.
+// The use cases we've identified thus far are for Collections -- since they trigger a change event whenever
+// any of their constituent items are changed there's no need to reconcile for regular models.
+// One caveat: this relies on getBackboneModels() to always return the same model instances throughout the
+// lifecycle of the component. If you're using this mixin correctly (it should be near the top of your
+// component hierarchy) this should not be an issue.
+var BackboneMixin = {
+  componentDidMount: function() {
+    // Whenever there may be a change in the Backbone data, trigger a reconcile.
+    this.getBackboneModels().map(function(model) {
+      model.on('add change remove', this.forceUpdate, this);
+    }.bind(this));
+  },
+  componentWillUnmount: function() {
+    // Ensure that we clean up any dangling references when the component is destroyed.
+    this.getBackboneModels().map(function(model) {
+      model.off(null, null, this);
+    }.bind(this));
+  }
+};
+
 var TodoApp = React.createClass({
+  mixins: [BackboneMixin],
   getInitialState: function() {
     return {editing: null};
   },
-  // Here is "the backbone integration." Just tell React whenever there *might* be a change
-  // and we'll reconcile.
   componentDidMount: function() {
-    this.props.todos.on('add change remove', this.forceUpdate, this);
+    // Additional functionality for todomvc: fetch() the collection on init
     this.props.todos.fetch();
   },
   componentDidUpdate: function() {
@@ -145,8 +165,8 @@ var TodoApp = React.createClass({
       todo.save();
     });
   },
-  componentWillUnmount: function() {
-    this.props.todos.off(null, null, this);
+  getBackboneModels: function() {
+    return [this.props.todos];
   },
   handleSubmit: React.autoBind(function() {
     var val = this.refs.newField.getDOMNode().value.trim();
