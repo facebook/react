@@ -3,19 +3,21 @@ layout: page
 title: A JavaScript library for building user interfaces
 id: home
 ---
+
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>The &quot;V&quot; in MVC</h3>
+      <h3>Declarative</h3>
       <p>
-        Write reusable UI components in JavaScript. Read and write to any data source.
+        React uses a declarative paradigm that makes it easier to reason about
+        your application.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Fast &amp; Declarative</h3>
+      <h3>Efficient</h3>
       <p>
-        Describe how you want your component to look. React will automatically compute
-        the fastest way to keep the UI up-to-date when the data changes.
+        React computes the minimal set of changes necessary to keep your DOM
+        up-to-date.
       </p>
     </div>
     <div class="marketing-col">
@@ -33,21 +35,21 @@ id: home
       <h3>A Simple Component</h3>
       <p>
         React components implement a `render()` method that takes input data and
-        returns what to display. This example constructs the component using an
-        XML-like syntax called JSX, but <strong>JSX is optional; you don&apos;t
-        need to use it</strong>. Input data is passed to the component as XML
-        attributes, and `render()` accesses this data via `this.props`.
+        returns what to display. This example uses an XML-like syntax called
+        JSX. Input data that is passed into the component can be accessed by
+        `render()` via `this.props`.<br />
+        <strong>JSX is optional and not required to use React.</strong>
       </p>
       <div id="helloExample"></div>
     </div>
     <div class="example">
       <h3>A Stateful Component</h3>
       <p>
-        In addition to taking data from its creator (accessed via `this.props`),
-        a component can maintain internal state data (accessed via
-        `this.state`). When a component's state data changes, the rendered
-        markup will be updated by re-invoking `render()`. <strong>This example
-        doesn&apos;t use JSX</strong>, but you could if you wanted to.
+        In addition to taking input data (accessed via `this.props`), a
+        component can maintain internal state data (accessed via `this.state`).
+        When a component's state data changes, the rendered markup will be
+        updated by re-invoking `render()`.<br />
+        <strong>This example demonstrates use of React without JSX.</strong>
       </p>
       <div id="timerExample"></div>
     </div>
