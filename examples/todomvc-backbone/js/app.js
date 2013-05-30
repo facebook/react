@@ -184,9 +184,7 @@ var TodoApp = React.createClass({
     this.setState({editing: {}});
   },
   clearCompleted: function() {
-    this.props.todos.filter(function(todo) {
-      return todo.get('completed');
-    }).map(this.props.todos.remove.bind(this.props.todos));
+    this.props.todos.completed().map(this.props.todos.remove.bind(this.props.todos));
   },
   componentDidUpdate: function() {
     Utils.store('todos-react', this.props.todos);
