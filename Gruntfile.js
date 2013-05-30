@@ -5,6 +5,7 @@ var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var wrapupTask = require('./grunt/tasks/wrapup');
 var phantomTask = require('./grunt/tasks/phantom');
+var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 
 module.exports = function(grunt) {
@@ -16,6 +17,7 @@ module.exports = function(grunt) {
     browserify: require('./grunt/config/browserify'),
     wrapup: require('./grunt/config/wrapup'),
     phantom: require('./grunt/config/phantom'),
+    npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
     jshint: require('./grunt/config/jshint'),
     compare_size: require('./grunt/config/compare_size')
@@ -44,6 +46,8 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('phantom', phantomTask);
 
+  grunt.registerMultiTask('npm', npmTask);
+
   grunt.registerTask('build:basic', ['jsx:debug', 'browserify:basic']);
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
   grunt.registerTask('build:min', ['jsx:release', 'browserify:min']);
@@ -54,6 +58,7 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test', ['build:test', 'phantom:run']);
+  grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
   // in order so we can take advantage of that and only run jsx:debug once.
