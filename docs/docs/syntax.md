@@ -13,7 +13,7 @@ with React.
 JSX makes code that deeply nests React components more readable, and writing it
 feels like writing HTML. React documentation examples make use of JSX.
 
-## Why JSX? It seems like a terrible idea.
+## Why JSX?
 
 First of all, **don't use JSX if you don't like it!** All of React's features
 work just fine without using JSX. Simply construct your markup using the functions
