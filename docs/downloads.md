@@ -26,7 +26,7 @@ The JSX transformer used to support [XML syntax](/react/docs/syntax.html) in Jav
 ## Bower
 
 ```sh
-$ bower install react
+$ bower install --save react
 ```
 
 ## NPM

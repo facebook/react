@@ -46,7 +46,7 @@ We've also built a [starter kit](http://facebook.github.io/react/downloads/react
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
 ```sh
-bower install react
+bower install --save react
 ```
 
 ## Contribute
