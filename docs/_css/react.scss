@@ -6,8 +6,8 @@
 $skinnyContentWidth: 650px;
 $contentWidth: 920px;
 $contentPadding: 20px;
-$columnWidth: 280px;
-$columnGutter: 40px;
+$columnWidth: (280px / $contentWidth) * 100%;
+$columnGutter: (40px / $contentWidth) * 100%;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
 
 
@@ -35,13 +35,9 @@ html {
 }
 
 
-.container {
-  padding-top: 50px;
-  min-width: $contentWidth + (2 * $contentPadding);
-}
-
 .wrap {
-  width: $contentWidth + (2 * $contentPadding);
+  width: 90%;
+  max-width: $contentWidth + (2 * $contentPadding);
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
@@ -73,16 +69,34 @@ li {
   @include clearfix;
   background: $darkestColor;
   color: $lightTextColor;
-  position: fixed;
-  top: 0;
   height: 50px;
   box-shadow: 0 0 5px rgba(0, 0, 0, .5);
   width: 100%;
   z-index: 100;
+  clear: none;
 
   a {
     color: $lightColor;
     text-decoration: none;
+  }
+  
+  .nav-toggle {
+    display: none;
+    float: right;
+    margin-top: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    .icon-bar {
+      display: block;
+      background-color: #f5f5f5;
+      width: 18px;
+      height: 2px;
+      border-radius: 1px;
+      box-shadow: 0 1px 0 rgba(0, 0, 0, .25);
+    }
+    .icon-bar + .icon-bar {
+      margin-top: 3px;
+    }
   }
 
   .nav-site {
@@ -118,6 +132,7 @@ li {
     color: #00d8ff;
     font-size: 24px;
     line-height: 50px;
+    float: left;
   }
 
   .nav-logo {
@@ -137,10 +152,10 @@ li {
 // Hero!
 
 .hero {
-  height: 300px;
   // background: $darkColor url(../img/header.png) no-repeat center;
   background: $darkColor;
   padding-top: 50px;
+  padding-bottom: 50px;
   color: $lightColor;
   font-weight: 300;
 
@@ -176,6 +191,18 @@ li {
 
     &:active {
       background: darken($primary, 5%);
+    }
+  }
+  
+  @media (max-width: 600px) {
+    .button {
+      width: auto;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .button + .button {
+        margin-top: 10px;
     }
   }
 }
@@ -248,7 +275,7 @@ li {
 .home-divider {
   border-top-color: #bbb;
   margin: 0 auto;
-  width: 400px;
+  max-width: 400px;
 }
 
 .marketing-row {
@@ -258,7 +285,7 @@ li {
 
 .marketing-col {
   float: left;
-  margin-right: 40px;
+  margin-right: $columnGutter;
   width: $columnWidth;
 
   h3 {
@@ -269,6 +296,12 @@ li {
   }
   p {
     font-size: 16px;
+  }
+  
+  @media (max-width: 768px) {
+      float: none;
+      margin-right: 0;
+      width: auto;
   }
 }
 
@@ -287,6 +320,9 @@ li {
   p {
     margin: 0 0 25px 0;
     max-width: $twoColumnWidth;
+    @media (max-width: 768px) {
+      max-width: none;
+    }
   }
 
   .example {
@@ -344,6 +380,14 @@ footer {
   margin-top: 36px;
   margin-bottom: 18px;
   overflow: auto;
+  
+  @media (max-width: 580px) {
+    .left,
+    .right {
+      text-align: center;
+      float: none;
+    }
+  }
 }
 
 section.black content {
@@ -359,6 +403,27 @@ section.black content {
 
   .subHeader {
     font-size: 24px;
+  }
+  
+  .inner-content {
+    width: $twoColumnWidth;
+    max-width: none;
+  }
+  
+  .nav-docs {
+    width: $columnWidth;
+    max-width: none;
+  }
+  
+  @media (max-width: 600px) {
+    .inner-content,
+    .nav-docs {
+      float: none;
+      width: auto;
+    }
+    .nav-docs {
+      display: none;
+    }
   }
 
   // H2s form documentation topic dividers. Extra space helps.
@@ -471,7 +536,7 @@ p {
 
 .inner-content {
   float: right;
-  width: $skinnyContentWidth;
+  max-width: $skinnyContentWidth;
 }
 
 .nosidebar .inner-content {
@@ -541,6 +606,17 @@ p code {
   float: right;
   padding: 15px 20px;
   width: $columnWidth;
+}
+
+@media (max-width: 768px) {
+  .playgroundCode,
+  .playgroundPreview {
+    width: auto;
+    float: none;
+  }
+  .playgroundCode + .playgroundPreview {
+    margin-top: 20px;
+  }
 }
 
 .MarkdownEditor textarea {
@@ -620,11 +696,51 @@ p code {
   text-decoration: none !important;
 }
 
-@media screen and (max-width: 960px) {
+// responsive menu
+@media (max-width: 768px) {
   .nav-main {
-    position: static;
-  }
-  .container {
-    padding-top: 0;
+    min-height: 50px;
+    height: auto;
+    
+    .nav-toggle {
+      display: block;
+      float: right;
+    }
+    
+    .nav-site {
+      max-height: 0;
+      overflow: hidden;
+      clear: both;
+      float: none;
+      -moz-transition: all .3s ease;
+      -ms-transition: all .3s ease;
+      -o-transition: all .3s ease;
+      -webkit-transition: all 0.3s ease;
+      transition: all 0.3s ease;
+      
+      ul {
+        padding-bottom: 8px;
+        box-shadow: inner 0 0 30px rgba(0, 0, 0, .75);
+      }
+      a {
+        line-height: 32px;
+        display: block;
+        height: auto;
+        
+        &.active {
+          border-bottom: none;
+          border-radius: 5px;
+        }
+      }
+    }
+    .nav-site.open {
+      max-height: 999px;
+    }
+    
+    ul,
+    li {
+      display: block;
+      margin: 0;
+    }
   }
 }
