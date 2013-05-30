@@ -73,8 +73,6 @@ var Utils = {
 
 // Begin React stuff
 
-var ENTER_KEY = 13;
-
 var TodoItem = React.createClass({
   handleSubmit: React.autoBind(function(event) {
     var val = this.refs.editField.getDOMNode().value;
