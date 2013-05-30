@@ -113,7 +113,7 @@ var ReactPlayground = React.createClass({
     try {
       if (this.props.renderCode) {
         React.renderComponent(
-          React.DOM.pre(null, this.getDesugaredCode()),
+          <pre>{this.getDesugaredCode()}</pre>,
           mountNode
         );
       } else {
