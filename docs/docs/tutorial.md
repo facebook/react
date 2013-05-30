@@ -449,13 +449,14 @@ var CommentForm = React.createClass({
       <form class="commentForm">
         <input type="text" placeholder="Your name" />
         <input type="text" placeholder="Say something..." />
+        <input type="submit" />
       </form>
     );
   }
 });
 ```
 
-Let's make the form interactive. When the user presses enter, we should clear the form, submit a request to the server, and refresh the list of comments. To start, let's listen for this event and just clear the form.
+Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
 ```javascript{3-12,15,20}
 // tutorial16.js
@@ -479,6 +480,7 @@ var CommentForm = React.createClass({
           placeholder="Say something..."
           ref="text"
         />
+        <input type="submit" />
       </form>
     );
   }
@@ -541,7 +543,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Let's call the callback from the `CommentForm` when the user presses enter:
+Let's call the callback from the `CommentForm` when the user submits the form:
 
 ```javascript{6}
 // tutorial18.js
@@ -562,6 +564,7 @@ var CommentForm = React.createClass({
           placeholder="Say something..."
           ref="text"
         />
+        <input type="submit" />
       </form>
     );
   }
