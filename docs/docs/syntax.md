@@ -52,8 +52,11 @@ var app = <Nav color="blue"><Profile>click</Profile></Nav>;
 var app = Nav({color:'blue'}, Profile({}, 'click'));
 ```
 
-The [Getting Started](getting-started.html) guide shows how to setup JSX
-compilation.
+Use the [JSX Compiler](/react/jsx-compiler.html) to try out JSX and see how it
+desguars into native JavaScript.
+
+If you want to use JSX, the [Getting Started](getting-started.html) guide shows
+how to setup compilation.
 
 > Note:
 >

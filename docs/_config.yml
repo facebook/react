@@ -1,14 +1,14 @@
---- 
+---
 pygments: true
 name: React
 react_version: 0.3.0
-exclude: 
+exclude:
 - Gemfile
 - Gemfile.lock
 - README.md
 - Rakefile
-redcarpet: 
-  extensions: 
+redcarpet:
+  extensions:
   - fenced_code_blocks
 markdown: redcarpet
 baseurl: /react

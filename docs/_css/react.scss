@@ -3,6 +3,12 @@
 @import '_typography';
 @import '_solarized';
 
+@mixin code-typography {
+  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
 $skinnyContentWidth: 650px;
 $contentWidth: 920px;
 $contentPadding: 20px;
@@ -396,6 +402,26 @@ section.black content {
   padding-bottom: 40px;
 }
 
+/* JSX Compiler */
+
+.jsxCompiler {
+  margin: 0 auto;
+  padding-top: 20px;
+  width: 1220px;
+
+  #jsxCompiler {
+    margin-top: 20px;
+  }
+
+  .playgroundPreview {
+    padding: 14px;
+    width: 600px;
+
+    pre {
+      @include code-typography;
+    }
+  }
+}
 
 /* Button */
 
@@ -482,9 +508,7 @@ p {
 /* Code Mirror */
 
 div.CodeMirror pre, div.CodeMirror-linenumber, code {
-  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
-  font-size: 13px;
-  line-height: 20px;
+  @include code-typography;
 }
 
 div.CodeMirror-linenumber:after {
