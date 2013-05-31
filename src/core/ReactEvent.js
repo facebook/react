@@ -211,6 +211,7 @@ function listenAtTopLevel(touchNotMouse) {
   trapBubbledEvent(topLevelTypes.topKeyUp, 'keyup', mountAt);
   trapBubbledEvent(topLevelTypes.topKeyPress, 'keypress', mountAt);
   trapBubbledEvent(topLevelTypes.topKeyDown, 'keydown', mountAt);
+  trapBubbledEvent(topLevelTypes.topInput, 'input', mountAt);
   trapBubbledEvent(topLevelTypes.topChange, 'change', mountAt);
   trapBubbledEvent(
     topLevelTypes.topDOMCharacterDataModified,

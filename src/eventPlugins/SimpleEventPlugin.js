@@ -108,6 +108,12 @@ var SimpleEventPlugin = {
         captured: keyOf({onKeyDownCapture: true})
       }
     },
+    input: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onInput: true}),
+        captured: keyOf({onInputCapture: true})
+      }
+    },
     focus: {
       phasedRegistrationNames: {
         bubbled: keyOf({onFocus: true}),
@@ -220,6 +226,7 @@ SimpleEventPlugin.topLevelTypesToAbstract = {
   topKeyUp:       SimpleEventPlugin.abstractEventTypes.keyUp,
   topKeyPress:    SimpleEventPlugin.abstractEventTypes.keyPress,
   topKeyDown:     SimpleEventPlugin.abstractEventTypes.keyDown,
+  topInput:       SimpleEventPlugin.abstractEventTypes.input,
   topFocus:       SimpleEventPlugin.abstractEventTypes.focus,
   topBlur:        SimpleEventPlugin.abstractEventTypes.blur,
   topScroll:      SimpleEventPlugin.abstractEventTypes.scroll,

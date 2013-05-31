@@ -32,6 +32,7 @@ var topLevelTypes = keyMirror({
   topDOMCharacterDataModified: null,
   topDoubleClick: null,
   topFocus: null,
+  topInput: null,
   topKeyDown: null,
   topKeyPress: null,
   topKeyUp: null,
