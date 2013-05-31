@@ -453,18 +453,19 @@ var CommentForm = React.createClass({
 
 Let's make the form interactive. When the user presses enter, we should clear the form, submit a request to the server, and refresh the list of comments. To start, let's listen for this event and just clear the form.
 
-```javascript{3-12,15,20}
+```javascript{3-13,16,21}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: React.autoBind(function() {
     var author = this.refs.author.getDOMNode().value.trim();
     var text = this.refs.text.getDOMNode().value.trim();
     if (!text || !author) {
-      return;
+      return false;
     }
     // TODO: send request to the server
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
+    return false;
   }),
   render: function() {
     return (
@@ -483,7 +484,9 @@ var CommentForm = React.createClass({
 
 #### Events
 
-React attaches event handlers to components using a camelCase naming convention. We attach an onSubmit handler to the form that clears the form fields when the form is submitted with valid input.
+React attaches event handlers to components using a camelCase naming convention. We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
+
+We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it &ndash; read more about [event handling](event-handling.html).)
 
 `React.autoBind()` is a simple way to ensure that a method is always bound to its component. Inside the method, `this` will be bound to the component instance.
 
@@ -548,6 +551,7 @@ var CommentForm = React.createClass({
     this.props.onCommentSubmit({author: author, text: text});
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
+    return false;
   }),
   render: function() {
     return (
