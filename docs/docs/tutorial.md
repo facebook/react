@@ -483,7 +483,7 @@ var CommentForm = React.createClass({
 
 #### Events
 
-React attaches event handlers to components using a camelCase naming convention. We attach an onSubmit handler to the form that clear the form fields if the user has entered text in both.
+React attaches event handlers to components using a camelCase naming convention. We attach an onSubmit handler to the form that clears the form fields when the form is submitted with valid input.
 
 `React.autoBind()` is a simple way to ensure that a method is always bound to its component. Inside the method, `this` will be bound to the component instance.
 
