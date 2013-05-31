@@ -98,12 +98,12 @@ var TodoApp = React.createClass({
     var val = this.refs.newField.getDOMNode().value.trim();
     if (val) {
       var todos = this.state.todos;
-      todos.push({
+      var newTodo = {
         id: Utils.uuid(),
         title: val,
         completed: false
-      });
-      this.setState({todos: todos});
+      };
+      this.setState({todos: todos.concat([newTodo])});
       this.refs.newField.getDOMNode().value = '';
     }
     return false;
