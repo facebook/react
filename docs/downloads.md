@@ -37,6 +37,10 @@ $ npm install -g react-tools
 
 ## Release Notes
 
+**0.3.2** Improve compatibility of JSX Transformer; make `react-tools` compatible with [browserify](https://github.com/substack/node-browserify)
+
+**0.3.1** Fix `react-tools` module
+
 **0.3** Initial public release.
 
 **0.2** Standardize API & refactor component lifecycle. Normalize DOM interactions.

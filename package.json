@@ -1,10 +1,13 @@
 {
   "name": "react-tools",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "keywords": [
-    "clientside"
+    "react",
+    "jsx",
+    "transformer",
+    "view"
   ],
-  "homepage": "https://facebook.github.io/react",
+  "homepage": "http://facebook.github.io/react",
   "bugs": "https://github.com/facebook/react/issues",
   "licenses": [
     {
