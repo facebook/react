@@ -36,8 +36,7 @@ var getDocblock = require('../lib/utils').getDocblock;
  * });
  */
 function visitReactDisplayName(traverse, object, path, state) {
-  if (object.type === Syntax.VariableDeclarator &&
-      object.id.type === Syntax.Identifier &&
+  if (object.id.type === Syntax.Identifier &&
       object.init &&
       object.init.type === Syntax.CallExpression &&
       object.init.callee.type === Syntax.MemberExpression &&
