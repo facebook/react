@@ -89,7 +89,7 @@ The first thing you'll notice is the XML-ish syntax in your JavaScript. We have 
 var CommentBox = React.createClass({
   render: function() {
     return (
-      ReactDOM.div({
+      React.DOM.div({
         className: 'commentBox',
         children: 'Hello, world! I am a CommentBox.'
       })
@@ -158,7 +158,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to "ReactDOM.tagName" expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
+Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to "React.DOM.tagName" expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
 
 ## Component Properties
 
