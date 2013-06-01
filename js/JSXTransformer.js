@@ -1,5 +1,5 @@
 /**
- * JSXTransformer v0.3.1
+ * JSXTransformer v0.3.2
  */
 (function(e){if("function"==typeof bootstrap)bootstrap("jsxtransformer",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeJSXTransformer=e}else"undefined"!=typeof window?window.JSXTransformer=e():global.JSXTransformer=e()})(function(){var define,ses,bootstrap,module,exports;
 return (function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
@@ -7911,32 +7911,28 @@ var getDocblock = require('../lib/utils').getDocblock;
  * });
  */
 function visitReactDisplayName(traverse, object, path, state) {
-  object.declarations.forEach(function(dec) {
-    if (dec.type === Syntax.VariableDeclarator &&
-        dec.id.type === Syntax.Identifier &&
-        dec.init &&
-        dec.init.type === Syntax.CallExpression &&
-        dec.init.callee.type === Syntax.MemberExpression &&
-        dec.init.callee.object.type === Syntax.Identifier &&
-        dec.init.callee.object.name === 'React' &&
-        dec.init.callee.property.type === Syntax.Identifier &&
-        dec.init.callee.property.name === 'createClass' &&
-        dec.init['arguments'].length === 1 &&
-        dec.init['arguments'][0].type === Syntax.ObjectExpression) {
+  if (object.id.type === Syntax.Identifier &&
+      object.init &&
+      object.init.type === Syntax.CallExpression &&
+      object.init.callee.type === Syntax.MemberExpression &&
+      object.init.callee.object.type === Syntax.Identifier &&
+      object.init.callee.object.name === 'React' &&
+      object.init.callee.property.type === Syntax.Identifier &&
+      object.init.callee.property.name === 'createClass' &&
+      object.init['arguments'].length === 1 &&
+      object.init['arguments'][0].type === Syntax.ObjectExpression) {
 
-      var displayName = dec.id.name;
-      catchup(dec.init['arguments'][0].range[0] + 1, state);
-      append("displayName: '" + displayName + "',", state);
-    }
-  });
+    var displayName = object.id.name;
+    catchup(object.init['arguments'][0].range[0] + 1, state);
+    append("displayName: '" + displayName + "',", state);
+  }
 }
-
 
 /**
  * Will only run on @jsx files for now.
  */
 visitReactDisplayName.test = function(object, path, state) {
-  return object.type === Syntax.VariableDeclaration && !!getDocblock(state).jsx;
+  return object.type === Syntax.VariableDeclarator && !!getDocblock(state).jsx;
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;
