@@ -24,6 +24,7 @@ var ReactDOMForm = require('ReactDOMForm');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginHub = require('EventPluginHub');
+var InputEventPlugin = require('InputEventPlugin');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
@@ -40,7 +41,8 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'SimpleEventPlugin': SimpleEventPlugin,
-    'EnterLeaveEventPlugin': EnterLeaveEventPlugin
+    'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
+    'InputEventPlugin': InputEventPlugin
   });
 
   /*
