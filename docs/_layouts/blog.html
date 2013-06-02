@@ -3,7 +3,8 @@ layout: default
 sectionid: blog
 ---
 
-<section class="content wrap nosidebar">
+<section class="content wrap documentationContent">
+  {% include nav_blog.html %}
   <div class="inner-content">
     {% for page in site.posts %}
       {% include blog_post.html %}
