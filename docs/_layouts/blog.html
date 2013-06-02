@@ -5,6 +5,9 @@ sectionid: blog
 
 <section class="content wrap nosidebar">
   <div class="inner-content">
-    {% include blog_post.html %}
+    {% for page in site.posts %}
+      {% include blog_post.html %}
+    {% endfor %}
   </div>
 </section>
+
