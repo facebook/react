@@ -44,6 +44,11 @@ var TodoItem = React.createClass({
     this.props.onEdit();
     this.refs.editField.getDOMNode().focus();
   }),
+  handleKey: React.autoBind(function(event) {
+    if (event.nativeEvent.keyCode === 27) {
+      this.handleSubmit();
+    }
+  }),
   render: function() {
     return (
       <li class={cx({completed: this.props.todo.completed, editing: this.props.editing})}>
@@ -58,7 +63,13 @@ var TodoItem = React.createClass({
           <button class="destroy" onClick={this.props.onDestroy} />
         </div>
         <form onSubmit={this.handleSubmit}>
-          <input ref="editField" class="edit" value={this.props.todo.title} />
+          <input
+            ref="editField"
+            class="edit"
+            value={this.props.todo.title}
+            onBlur={this.handleSubmit}
+            onKeyDown={this.handleKey}
+          />
           <input type="submit" class="submitButton" />
         </form>
       </li>
