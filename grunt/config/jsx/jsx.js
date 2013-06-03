@@ -6,7 +6,18 @@ var rootIDs = [
 
 var debug = {
   rootIDs: rootIDs,
-  configFile: "grunt/config/jsx/debug.json"
+  configFile: "grunt/config/jsx/debug.json",
+  sourceDir: "src",
+  outputDir: "build/modules"
+};
+
+var jasmine = {
+  rootIDs: [
+    "all"
+  ],
+  configFile: debug.configFile,
+  sourceDir: "vendor/jasmine",
+  outputDir: "build/jasmine"
 };
 
 var test = {
@@ -14,16 +25,21 @@ var test = {
     "test/all.js",
     "**/__tests__/*.js"
   ]),
-  configFile: debug.configFile
+  configFile: debug.configFile,
+  sourceDir: "src",
+  outputDir: "build/modules"
 };
 
 var release = {
   rootIDs: rootIDs,
-  configFile: "grunt/config/jsx/release.json"
+  configFile: "grunt/config/jsx/release.json",
+  sourceDir: "src",
+  outputDir: "build/modules"
 };
 
 module.exports = {
   debug: debug,
+  jasmine: jasmine,
   test: test,
   release: release
 };

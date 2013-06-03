@@ -1,3 +1,5 @@
+var jasmine = require("jasmine");
+
 jasmine.HtmlReporter.ReporterView = function(dom) {
   this.startedAt = new Date();
   this.runningSpecCount = 0;
