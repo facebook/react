@@ -4,34 +4,66 @@
     <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
     <title>Basic Example with external JSX</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
+    <style type="text/css" media="screen">
+      .codeBox {
+        padding: 7px;
+        overflow:scroll;
+        background-color: #eee;
+        font-weight:normal;
+      }
+    </style>
+    <script type="text/javascript" charset="utf-8">
+      window.setTimeout(function() {
+        var chromeClientCLI = window.chromeClientCLI;
+        var errorBox = window.errorBox;
+        var chromeErrorFooter = window.chromeErrorFooter;
+        var chromeInstructions = window.chromeInstructions;
+        var isChrome = !!window.chrome;
+        chromeClientCLI.innerText =
+          'open -a "Google Chrome" --new \\\n' +
+          '   ' + window.location.href + ' \\\n' +
+          '   --args --allow-file-access-from-files --user-data-dir=/tmp';
+
+        errorBox.innerText =
+          isChrome ? 'To run in Chrome, do one of the following:' :
+          'Errors loading page: Check the console.'
+        chromeErrorFooter.innerText =
+          isChrome ? 'If page still does not load, check console.' : '';
+
+        if (!isChrome) {
+          chromeInstructions.innerText = "";
+        }
+      }, 0);
+
+    </script>
   </head>
+
   <body>
     <h1>Basic Example with external JSX</h1>
     <div id="container">
       <p>
-        If you can see this, React is not working right. This is probably because you&apos;re viewing
-        this on your file system instead of a web server. Try running
-        <pre>
-          python -m SimpleHTTPServer
-        </pre>
-        and going to <a href="http://localhost:8080/">http://localhost:8080/</a>.
+        <h4 id="errorBox" style="color: #733"></h4>
+        <ol id="chromeInstructions">
+          <li>
+            Open this page on a Mac via the terminal command:
+            <pre id="chromeClientCLI" class="codeBox">
+          </li>
+          <h4><i>OR</i></h4>
+          <li>
+            Serve this page from a web server
+            <pre id="chromeServerCLI" class="codeBox">
+cd /Path/To/This/File
+python -m SimpleHTTPServer
+open -a "Google Chrome"  <a href="http://localhost:8080/">http://localhost:8080/</a>.  </pre>
+          </li>
+        </ol>
+        <h4 id="chromeErrorFooter" style="color: #733"></h4>
       </p>
     </div>
-    <h4>Example Details</h4>
-    <ul>
-      <li>
-        This is built with
+    <p>
+    Example Details: This is built with
         <a href="https://github.com/substack/node-browserify">browserify</a>.
-      </li>
-      <li>
-        This is written with JSX in a separate file and transformed in the browser.
-      </li>
-    </ul>
-    <p>
-    </p>
-    <p>
-      Learn more at
-      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+        A separate JSX file is transformed in the browser.
     </p>
     <script src="../../build/react.js"></script>
     <script src="../../build/JSXTransformer.js"></script>
