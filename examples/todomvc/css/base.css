@@ -419,3 +419,7 @@ body {
   top: 0;
   padding: 10px;
 }
+
+.submitButton {
+  display: none;
+}

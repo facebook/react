@@ -1,3 +1,5 @@
+var jasmine = require("./jasmine");
+
 jasmine.HtmlReporter.SuiteView = function(suite, dom, views) {
   this.suite = suite;
   this.dom = dom;

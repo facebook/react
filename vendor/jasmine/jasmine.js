@@ -1,12 +1,10 @@
-var isCommonJS = typeof window == "undefined" && typeof exports == "object";
-
 /**
  * Top level namespace for Jasmine, a lightweight JavaScript BDD/spec/testing framework.
  *
  * @namespace
  */
 var jasmine = {};
-if (isCommonJS) exports.jasmine = jasmine;
+exports = module.exports = jasmine;
 /**
  * @private
  */
@@ -480,7 +478,7 @@ jasmine.log = function() {
 var spyOn = function(obj, methodName) {
   return jasmine.getEnv().currentSpec.spyOn(obj, methodName);
 };
-if (isCommonJS) exports.spyOn = spyOn;
+exports.spyOn = spyOn;
 
 /**
  * Creates a Jasmine spec that will be added to the current suite.
@@ -498,7 +496,7 @@ if (isCommonJS) exports.spyOn = spyOn;
 var it = function(desc, func) {
   return jasmine.getEnv().it(desc, func);
 };
-if (isCommonJS) exports.it = it;
+exports.it = it;
 
 /**
  * Creates a <em>disabled</em> Jasmine spec.
@@ -511,7 +509,7 @@ if (isCommonJS) exports.it = it;
 var xit = function(desc, func) {
   return jasmine.getEnv().xit(desc, func);
 };
-if (isCommonJS) exports.xit = xit;
+exports.xit = xit;
 
 /**
  * Starts a chain for a Jasmine expectation.
@@ -525,7 +523,7 @@ if (isCommonJS) exports.xit = xit;
 var expect = function(actual) {
   return jasmine.getEnv().currentSpec.expect(actual);
 };
-if (isCommonJS) exports.expect = expect;
+exports.expect = expect;
 
 /**
  * Defines part of a jasmine spec.  Used in cominbination with waits or waitsFor in asynchrnous specs.
@@ -535,7 +533,7 @@ if (isCommonJS) exports.expect = expect;
 var runs = function(func) {
   jasmine.getEnv().currentSpec.runs(func);
 };
-if (isCommonJS) exports.runs = runs;
+exports.runs = runs;
 
 /**
  * Waits a fixed time period before moving to the next block.
@@ -546,7 +544,7 @@ if (isCommonJS) exports.runs = runs;
 var waits = function(timeout) {
   jasmine.getEnv().currentSpec.waits(timeout);
 };
-if (isCommonJS) exports.waits = waits;
+exports.waits = waits;
 
 /**
  * Waits for the latchFunction to return true before proceeding to the next block.
@@ -558,7 +556,7 @@ if (isCommonJS) exports.waits = waits;
 var waitsFor = function(latchFunction, optional_timeoutMessage, optional_timeout) {
   jasmine.getEnv().currentSpec.waitsFor.apply(jasmine.getEnv().currentSpec, arguments);
 };
-if (isCommonJS) exports.waitsFor = waitsFor;
+exports.waitsFor = waitsFor;
 
 /**
  * A function that is called before each spec in a suite.
@@ -570,7 +568,7 @@ if (isCommonJS) exports.waitsFor = waitsFor;
 var beforeEach = function(beforeEachFunction) {
   jasmine.getEnv().beforeEach(beforeEachFunction);
 };
-if (isCommonJS) exports.beforeEach = beforeEach;
+exports.beforeEach = beforeEach;
 
 /**
  * A function that is called after each spec in a suite.
@@ -582,7 +580,7 @@ if (isCommonJS) exports.beforeEach = beforeEach;
 var afterEach = function(afterEachFunction) {
   jasmine.getEnv().afterEach(afterEachFunction);
 };
-if (isCommonJS) exports.afterEach = afterEach;
+exports.afterEach = afterEach;
 
 /**
  * Defines a suite of specifications.
@@ -602,7 +600,7 @@ if (isCommonJS) exports.afterEach = afterEach;
 var describe = function(description, specDefinitions) {
   return jasmine.getEnv().describe(description, specDefinitions);
 };
-if (isCommonJS) exports.describe = describe;
+exports.describe = describe;
 
 /**
  * Disables a suite of specifications.  Used to disable some suites in a file, or files, temporarily during development.
@@ -613,7 +611,7 @@ if (isCommonJS) exports.describe = describe;
 var xdescribe = function(description, specDefinitions) {
   return jasmine.getEnv().xdescribe(description, specDefinitions);
 };
-if (isCommonJS) exports.xdescribe = xdescribe;
+exports.xdescribe = xdescribe;
 
 
 // Provide the XMLHttpRequest class for IE 5.x-6.x:

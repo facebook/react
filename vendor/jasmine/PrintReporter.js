@@ -1,3 +1,4 @@
+var jasmine = require("./jasmine");
 var diff = require('./diff');
 
 var red = '\u001b[1;41m';
@@ -54,7 +55,7 @@ PrintReporter.prototype.reportRunnerResults = function(runner) {
     this.failCount + " fail"
   ].join("  "));
 
-  require("test/phantom").exit(this.failCount);
+  require("./phantom").exit(this.failCount);
 };
 
 

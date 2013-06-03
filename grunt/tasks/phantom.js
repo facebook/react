@@ -37,6 +37,14 @@ function run(config, done) {
     args.push("--debug");
   }
 
+  args.push("--tests");
+  var tests = grunt.file.expand({
+    nonull: true,
+    cwd: "src"
+  }, config.tests || []).forEach(function(file) {
+    args.push(file.replace(/\.js$/i, ""));
+  });
+
   var child = spawn({
     cmd: phantomjs,
     args: args

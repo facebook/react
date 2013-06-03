@@ -81,7 +81,7 @@ var ReactPlayground = React.createClass({
         />;
     } else if (this.state.mode === this.MODES.JS) {
       content =
-        <div class={{playgroundJS: true, playgroundStage: true}}>
+        <div class="playgroundJS playgroundStage">
             {this.getDesugaredCode()}
         </div>;
     }
@@ -111,9 +111,19 @@ var ReactPlayground = React.createClass({
     } catch (e) { }
 
     try {
-      eval(this.getDesugaredCode());
+      if (this.props.renderCode) {
+        React.renderComponent(
+          <pre>{this.getDesugaredCode()}</pre>,
+          mountNode
+        );
+      } else {
+        eval(this.getDesugaredCode());
+      }
     } catch (e) {
-      React.renderComponent(<div content={e.toString()} class={{playgroundError: true}} />, mountNode);
+      React.renderComponent(
+        <div content={e.toString()} class="playgroundError" />,
+        mountNode
+      );
     }
   }
 });

@@ -100,6 +100,7 @@ describe('ImmutableObject', function() {
   });
 
   testDev('should prevent shallow field addition when strict', function() {
+    if (window.callPhantom) return;
     expect(function() {
       var io = new ImmutableObject({oldField: 'asdf'});
       io.newField = 'this will not work';
@@ -107,6 +108,7 @@ describe('ImmutableObject', function() {
   });
 
   testDev('should prevent shallow field mutation when strict', function() {
+    if (window.callPhantom) return;
     expect(function() {
       var io = new ImmutableObject({oldField: 'asdf'});
       io.oldField = 'this will not work!';
@@ -114,6 +116,7 @@ describe('ImmutableObject', function() {
   });
 
   testDev('should prevent deep field addition when strict', function() {
+    if (window.callPhantom) return;
     expect(function() {
       var io =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});
@@ -122,6 +125,7 @@ describe('ImmutableObject', function() {
   });
 
   testDev('should prevent deep field mutation when strict', function() {
+    if (window.callPhantom) return;
     expect(function() {
       var io =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});

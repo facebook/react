@@ -4,7 +4,7 @@ title: Advanced Components
 description: How to build advanced composite components.
 layout: docs
 prev: event-handling.html
-next: api.html
+next: mixins.html
 ---
 
 Composite components extend a `ReactCompositeComponent` base class that provides

@@ -1,3 +1,5 @@
+var jasmine = require("./jasmine");
+
 jasmine.HtmlReporter.SpecView = function(spec, dom, views) {
   this.spec = spec;
   this.dom = dom;
