@@ -1,0 +1,10 @@
+<div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+    {% for post in site.posts %}
+      <li><a href="/react{{ post.url }}"{% if page.title == post.title %} class="active"{% endif %}>{{ post.title }}</a></li>
+    {% endfor %}
+    </ul>
+  </div>
+</div>

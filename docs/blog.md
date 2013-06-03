@@ -1,0 +1,4 @@
+---
+title: Blog
+layout: blog
+---
