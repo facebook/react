@@ -1,6 +1,7 @@
 ---
 markdown: redcarpet
 name: React
+description: A JavaScript library for building user interfaces
 redcarpet:
   extensions:
   - fenced_code_blocks
@@ -11,4 +12,5 @@ exclude:
 - Gemfile.lock
 - README.md
 - Rakefile
+url: http://facebook.github.io
 baseurl: /react
