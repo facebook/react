@@ -12,14 +12,41 @@ if (!Fp.bind) {
   Fp.bind = function(context) {
     var func = this;
     var args = slice.call(arguments, 1);
-    return args.length > 0 ? function() {
-      return func.apply(
-        context || this,
-        args.concat(slice.call(arguments))
-      );
-    } : function() {
-      return func.apply(context || this, arguments);
-    };
+    var bound;
+
+    if (func.prototype) {
+      if (args.length > 0) {
+        bound = function() {
+          return func.apply(
+            !(this instanceof func) && context || this,
+            args.concat(slice.call(arguments))
+          );
+        };
+      } else {
+        bound = function() {
+          return func.apply(
+            !(this instanceof func) && context || this,
+            arguments
+          );
+        };
+      }
+
+      bound.prototype = Object.create(func.prototype);
+
+    } else if (args.length > 0) {
+      bound = function() {
+        return func.apply(
+          context || this,
+          args.concat(slice.call(arguments))
+        );
+      };
+    } else {
+      bound = function() {
+        return func.apply(context || this, arguments);
+      };
+    }
+
+    return bound;
   };
 }
 
