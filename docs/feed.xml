@@ -12,7 +12,7 @@ layout: none
 			<item>
 				<title>{{ post.title }}</title>
 				<description>{{ post.content | xml_escape }}</description>
-				<pubDate>{{ post.date | date: "%a, %d %b %Y %H:%M:%S %z" }}</pubDate>
+				<pubDate>{{ post.date | date_to_xmlschema }}</pubDate>
 				<link>{{ site.url }}{{ site.baseurl }}{{ post.url }}</link>
 				<guid isPermaLink="true">{{ site.url }}{{ site.baseurl }}{{ post.url }}</guid>
 			</item>
