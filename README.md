@@ -32,22 +32,7 @@ You'll notice that we used an XML-like syntax; [we call it JSX](http://facebook.
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN:
-
-```html
-<!-- The core React library -->
-<script src="http://fb.me/react-0.3.0.min.js"></script>
-<!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.3.0.js"></script>
-```
-
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.3.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
-
-If you'd like to use [bower](http://bower.io), it's as easy as:
-
-```sh
-bower install --save react
-```
+[Look at our Getting Started documentation](http://facebook.github.io/react/docs/getting-started.html)
 
 ## Contribute
 
