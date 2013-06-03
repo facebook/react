@@ -751,11 +751,7 @@ p code {
       overflow: hidden;
       clear: both;
       float: none;
-      -moz-transition: all .3s ease;
-      -ms-transition: all .3s ease;
-      -o-transition: all .3s ease;
-      -webkit-transition: all 0.3s ease;
-      transition: all 0.3s ease;
+      @include transition(all 0.3s ease);
       
       ul {
         padding-bottom: 8px;
