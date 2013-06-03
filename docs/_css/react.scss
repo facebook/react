@@ -428,7 +428,22 @@ section.black content {
       width: auto;
     }
     .nav-docs {
-      display: none;
+      margin-bottom: 20px;
+      h3 {
+        line-height: 20px;
+        margin: 5px 0;
+      }
+      ul {
+        overflow: auto;
+      }
+      li {
+        width: 50%;
+        float: left;
+      }
+      @media (max-width: 320px) {
+        width: 100%;
+        float: none;
+      }
     }
   }
 
