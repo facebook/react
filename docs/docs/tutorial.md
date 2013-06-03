@@ -331,7 +331,7 @@ So far, each component has rendered itself once based on its props. `props` are 
 
 When the server fetches data, we will be changing the comment data we have. Let's add an array of comment data to the `CommentBox` component as its state:
 
-```javascript{3-5}
+```javascript{3-5,10}
 // tutorial12.js
 var CommentBox = React.createClass({
   getInitialState: function() {
