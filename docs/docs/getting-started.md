@@ -4,6 +4,16 @@ title: Getting Started
 layout: docs
 next: tutorial.html
 ---
+
+## JSFiddle
+
+The easiest way to start hacking on React is using the following JSFiddle Hello Worlds
+
+ * **[React JSFiddle](http://jsfiddle.net/vjeux/kb3gN/)**
+ * [React JSFiddle without JSX](http://jsfiddle.net/vjeux/VkebS/)
+
+## Starter Kit
+
 Download the starter kit to get started.
 
 <div class="buttons-unit downloads">
@@ -11,8 +21,6 @@ Download the starter kit to get started.
     Download Starter Kit {{site.react_version}}
   </a>
 </div>
-
-## Hello, world!
 
 In the root directory of the starter kit, create a `helloworld.html` with the following contents.
 
