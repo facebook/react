@@ -6,6 +6,13 @@ sectionid: blog
 <section class="content wrap documentationContent">
   {% include nav_blog.html %}
   <div class="inner-content">
-    {% include blog_post.html %}
+    <h1>{{ page.title }}</h1>
+    <p class="meta">{{ page.date | date: "%B %e, %Y" }} by {{ page.author }}</p>
+
+    <hr>
+
+    <div class="post">
+      {{ content }}
+    </div>
   </div>
 </section>

@@ -3,7 +3,7 @@
 
 <div id="post">
 {% if content != '' %}
-  {{ content }}
+  {{ page.excerpt }}
 {% else %}
   {{ page.content }}
 {% endif %}

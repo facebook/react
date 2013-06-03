@@ -505,6 +505,12 @@ p {
   margin: 0 auto;
 }
 
+/* Blog */
+
+.post-list-item + .post-list-item {
+  margin-top: 60px;
+}
+
 /* Code Mirror */
 
 div.CodeMirror pre, div.CodeMirror-linenumber, code {
