@@ -49,6 +49,8 @@ If you'd like to use [bower](http://bower.io), it's as easy as:
 bower install --save react
 ```
 
+You can play around using this [base JSFiddle](http://jsfiddle.net/vjeux/25Rhk/)
+
 ## Contribute
 
 The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, then keep reading. If you're not interested in helping right now that's ok too :) Any feedback you have about using React would be greatly appreciated.
