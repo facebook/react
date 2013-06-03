@@ -19,26 +19,6 @@
 
 var console = require("./console");
 var global = Function("return this")();
-var Ap = Array.prototype;
-var slice = Ap.slice;
-var Fp = Function.prototype;
-
-if (!Fp.bind) {
-  // PhantomJS doesn't support Function.prototype.bind natively, so
-  // polyfill it whenever this module is required.
-  Fp.bind = function(context) {
-    var func = this;
-    var args = slice.call(arguments, 1);
-    return args.length > 0 ? function() {
-      return func.apply(
-        context || this,
-        args.concat(slice.call(arguments))
-      );
-    } : function() {
-      return func.apply(context || this, arguments);
-    };
-  };
-}
 
 if (global.callPhantom) {
     // Phantom's onConsoleMessage support is lacking (only one argument

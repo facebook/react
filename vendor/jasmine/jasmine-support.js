@@ -1,5 +1,4 @@
-var global = Function("return this")();
-var jasmine = global.jasmine;
+var jasmine = require("./jasmine");
 var spec = false; // TODO
 
 // Add some matcher for mock functions
@@ -38,7 +37,7 @@ var _xit = jasmine.Env.prototype.xit;
 jasmine.Env.prototype.it = function(desc, func) {
   // If spec is provided, only run matching specs
   if (!spec || desc.match(new RegExp(spec, 'i'))) {
-    return _it.bind(this, desc, func)();
+    return _it.call(this, desc, func);
   } else {
     return this.xit(desc, func);
   }
@@ -51,7 +50,7 @@ jasmine.Env.prototype.xit = function(desc, func) {
       this.reporter.subReporters_[0].totalCount += matches.length;
     }
   }
-  return _xit.bind(this, desc, func)();
+  return _xit.call(this, desc, func);
 }
 
 // Mainline Jasmine sets __Jasmine_been_here_before__ on each object to detect
@@ -126,9 +125,3 @@ if (typeof WeakMap !== "undefined") {
     return (mismatchKeys.length == 0 && mismatchValues.length == 0);
   };
 }
-
-var HtmlReporter = require("./HtmlReporter").HtmlReporter;
-var PrintReporter = require("./PrintReporter").PrintReporter;
-
-jasmine.getEnv().addReporter(new HtmlReporter);
-jasmine.getEnv().addReporter(new PrintReporter);

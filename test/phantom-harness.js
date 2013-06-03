@@ -19,35 +19,57 @@ fs.changeWorkingDirectory(cwd);
 // Hard to believe PhantomJS has no option parsing module.
 var port = 8080;
 var debug = false;
-var lastArg;
+var tests = [];
+var rest = [];
 while (argv.length > 0) {
   var arg = argv.pop();
   if (arg === "--port") {
-    port = +lastArg;
+    port = +rest.pop();
   } else if (arg === "--debug") {
     debug = true;
+  } else if (arg === "--tests") {
+    while (rest.length > 0)
+      tests.push(rest.pop());
   }
-  lastArg = arg;
+  rest.push(arg);
 }
+
+// Dynamically interpolate the individual test <iframe>s.
+var indexHtml = fs.read("index.html").replace(
+  /<body>([\s\S]*?)<\/body>/im,
+  function(outer, inner) {
+    return "<body>" + tests.map(function(test) {
+      return '\n    <iframe src="frame.html" test=' +
+        JSON.stringify(test) + '></iframe>';
+    }).join("") + inner + "</body>";
+  }
+);
 
 var server = require("webserver").create();
 server.listen(port, function(req, res) {
   var file = req.url.replace(/^\/+/, "");
+  var content;
 
   switch (file) {
-  case "":
-  default:
-    file = "index.html";
-    break;
-
   case "react-test.js":
     file = "../build/" + file;
     break;
 
   case "jasmine.css":
-  case "jasmine.js":
-  case "jasmine-html.js":
     file = "../vendor/jasmine/" + file;
+    break;
+
+  case "jasmine.js":
+    file = "../build/" + file;
+    break;
+
+  case "frame.html":
+    break;
+
+  case "":
+  default:
+    file = "index.html";
+    content = indexHtml; // Prevents calling fs.read again.
     break;
   }
 
@@ -60,7 +82,7 @@ server.listen(port, function(req, res) {
   }
 
   res.statusCode = 200;
-  res.write(fs.read(file));
+  res.write(content || fs.read(file));
   res.close();
 });
 

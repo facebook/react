@@ -76,10 +76,23 @@ var transformer = {
   after: [simpleBannerify]
 };
 
+var jasmine = {
+  entries: [
+    "./build/jasmine/all.js"
+  ],
+  requires: {
+    "jasmine": "./build/jasmine/all.js"
+  },
+  outfile: "./build/jasmine.js",
+  debug: false
+};
+
 var test = {
   entries: [
     "./build/modules/test/all.js",
-    "./build/modules/**/__tests__/*-test.js"
+  ],
+  requires: [
+    "**/__tests__/*-test.js"
   ],
   outfile: './build/react-test.js',
   debug: false,
@@ -88,6 +101,7 @@ var test = {
 
 module.exports = {
   basic: basic,
+  jasmine: jasmine,
   test: test,
   min: min,
   transformer: transformer
