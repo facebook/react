@@ -12,3 +12,4 @@ exclude:
 - README.md
 - Rakefile
 baseurl: /react
+permalink: /blog/:year/:month/:day/:title.html
