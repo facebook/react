@@ -33,10 +33,10 @@ function cx(obj) {
 
 var TodoItem = React.createClass({
   handleSubmit: React.autoBind(function() {
-    var val = this.refs.editField.getDOMNode().value.trim();
+    var val = this.state.editText;
     if (val) {
       this.props.onSave(val);
-      this.refs.editField.getDOMNode().value = '';
+      this.setState({editField: ''});
     }
     return false;
   }),
@@ -48,7 +48,16 @@ var TodoItem = React.createClass({
     if (event.nativeEvent.keyCode === 27) {
       this.handleSubmit();
     }
+    this.setState({editText: event.target.value});
   }),
+  getInitialState: function() {
+    return {editText: this.props.todo.title};
+  },
+  componentWillReceiveProps: function(nextProps) {
+    if (nextProps.todo.title !== this.props.todo.title) {
+      this.setState(this.getInitialState());
+    }
+  },
   render: function() {
     return (
       <li class={cx({completed: this.props.todo.completed, editing: this.props.editing})}>
@@ -66,9 +75,9 @@ var TodoItem = React.createClass({
           <input
             ref="editField"
             class="edit"
-            value={this.props.todo.title}
+            value={this.state.editText}
             onBlur={this.handleSubmit}
-            onKeyDown={this.handleKey}
+            onKeyUp={this.handleKey}
           />
           <input type="submit" class="submitButton" />
         </form>
