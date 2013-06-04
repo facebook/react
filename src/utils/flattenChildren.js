@@ -51,8 +51,7 @@ var flattenChildrenImpl = function(res, children, nameSoFar) {
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
-      key = child && child.mountInContainerNode &&
-            (child._key || child.props.key);
+      key = child && (child._key || (child.props && child.props.key));
       escapedKey = key ? escapeTextForBrowser(key) : ('' + i);
       flattenChildrenImpl(
         res,
