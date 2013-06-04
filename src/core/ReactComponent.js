@@ -235,14 +235,6 @@ var ReactComponent = {
      * @public
      */
     replaceProps: function(props) {
-      invariant(
-        !this.props[OWNER],
-        'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
-        'component with an owner. This is an anti-pattern since props will ' +
-        'get reactively updated when rendered. Instead, change the owner\'s ' +
-        '`render` method to pass the correct value as props to the component ' +
-        'where it is created.'
-      );
       var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
       transaction.perform(this.receiveProps, this, props, transaction);
       ReactComponent.ReactReconcileTransaction.release(transaction);

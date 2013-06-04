@@ -375,34 +375,6 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
-  it('should throw when calling setProps() on an owned component', function() {
-    /**
-     * calls setProps in an componentDidMount.
-     */
-    var PropsUpdaterInOnDOMReady = React.createClass({
-      componentDidMount: function() {
-        this.refs.theSimpleComponent.setProps({
-          value: this.props.valueToUseInOnDOMReady
-        });
-      },
-      render: function() {
-        return (
-          <input
-            value={this.props.valueToUseInitially}
-            ref="theSimpleComponent">
-          </input>
-        );
-      }
-    });
-    var instance =
-      <PropsUpdaterInOnDOMReady
-        valueToUseInitially="hello"
-        valueToUseInOnDOMReady="goodbye"
-      />;
-    expect(ReactTestUtils.renderIntoDocument.bind(ReactTestUtils, instance))
-      .toThrow();
-  });
-
   it('should allow state updates in componentDidMount', function() {
     /**
      * calls setState in an componentDidMount.
