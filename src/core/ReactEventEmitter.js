@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactEvent
+ * @providesModule ReactEventEmitter
  */
 
 "use strict";
@@ -33,9 +33,9 @@ var listen = NormalizedEventListener.listen;
 var capture = NormalizedEventListener.capture;
 
 /**
- * `ReactEvent` is used to attach top-level event listeners. For example:
+ * `ReactEventEmitter` is used to attach top-level event listeners. For example:
  *
- *   ReactEvent.putListener('myID', 'onClick', myFunction);
+ *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
  *
  * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  */
@@ -43,36 +43,32 @@ var capture = NormalizedEventListener.capture;
 /**
  * Overview of React and the event system:
  *
- *                    .
- * +-------------+    .
- * |    DOM      |    .
- * +-------------+    .                          +-----------+
- *       +            .                +--------+|SimpleEvent|
- *       |            .                |         |Plugin     |
- * +-----|-------+    .                v         +-----------+
- * |     |       |    .     +--------------+                    +------------+
- * |     +------------.---->|EventPluginHub|                    |    Event   |
- * |             |    .     |              |     +-----------+  | Propagators|
- * | ReactEvent  |    .     |              |     |TapEvent   |  |------------|
- * |             |    .     |              |<---+|Plugin     |  |other plugin|
- * |     +------------.---------+          |     +-----------+  |  utilities |
- * |     |       |    .     |   |          |                    +------------+
- * |     |       |    .     +---|----------+
- * |     |       |    .         |       ^        +-----------+
- * |     |       |    .         |       |        |Enter/Leave|
- * +-----| ------+    .         |       +-------+|Plugin     |
- *       |            .         v                +-----------+
- *       +            .      +--------+
- * +-------------+    .      |callback|
- * | application |    .      |registry|
- * |-------------|    .      +--------+
- * |             |    .
- * |             |    .
- * |             |    .
- * |             |    .
- * +-------------+    .
- *                    .
- *    React Core      .  General Purpose Event Plugin System
+ *                   .
+ * +------------+    .
+ * |    DOM     |    .
+ * +------------+    .                         +-----------+
+ *       +           .               +--------+|SimpleEvent|
+ *       |           .               |         |Plugin     |
+ * +-----|------+    .               v         +-----------+
+ * |     |      |    .    +--------------+                    +------------+
+ * |     +-----------.--->|EventPluginHub|                    |    Event   |
+ * |            |    .    |              |     +-----------+  | Propagators|
+ * | ReactEvent |    .    |              |     |TapEvent   |  |------------|
+ * |  Emitter   |    .    |              |<---+|Plugin     |  |other plugin|
+ * |            |    .    |              |     +-----------+  |  utilities |
+ * |     +-----------.---------+         |                    +------------+
+ * |     |      |    .    +----|---------+
+ * +-----|------+    .         |      ^        +-----------+
+ *       |           .         |      |        |Enter/Leave|
+ *       +           .         |      +-------+|Plugin     |
+ * +-------------+   .         v               +-----------+
+ * | application |   .    +----------+
+ * |-------------|   .    | callback |
+ * |             |   .    | registry |
+ * |             |   .    +----------+
+ * +-------------+   .
+ *                   .
+ *    React Core     .  General Purpose Event Plugin System
  */
 
 /**
@@ -98,21 +94,6 @@ var capture = NormalizedEventListener.capture;
 
 var _isListening = false;
 
-var EVENT_LISTEN_MISUSE;
-var WORKER_DISABLE;
-
-if (__DEV__) {
-  EVENT_LISTEN_MISUSE =
-    'You must register listeners at the top of the document, only once - ' +
-    'and only in the main UI thread of a browser - if you are attempting ' +
-    'listen in a worker, the framework is probably doing something wrong ' +
-    'and you should report this immediately.';
-  WORKER_DISABLE =
-    'Cannot disable event listening in Worker thread. This is likely a ' +
-    'bug in the framework. Please report immediately.';
-}
-
-
 /**
  * Traps top-level events that bubble. Delegates to the main dispatcher
  * `handleTopLevel` after performing some basic normalization via
@@ -122,7 +103,9 @@ function trapBubbledEvent(topLevelType, handlerBaseName, onWhat) {
   listen(
     onWhat,
     handlerBaseName,
-    ReactEvent.TopLevelCallbackCreator.createTopLevelCallback(topLevelType)
+    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      topLevelType
+    )
   );
 }
 
@@ -133,7 +116,9 @@ function trapCapturedEvent(topLevelType, handlerBaseName, onWhat) {
   capture(
     onWhat,
     handlerBaseName,
-    ReactEvent.TopLevelCallbackCreator.createTopLevelCallback(topLevelType)
+    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      topLevelType
+    )
   );
 }
 
@@ -160,7 +145,7 @@ function registerDocumentResizeListener() {
 }
 
 /**
- * Summary of `ReactEvent` event handling:
+ * Summary of `ReactEventEmitter` event handling:
  *
  *  - We trap low level 'top-level' events.
  *
@@ -241,8 +226,8 @@ function listenAtTopLevel(touchNotMouse) {
 }
 
 /**
- * This is the heart of `ReactEvent`. It simply streams the top-level native
- * events to `EventPluginHub`.
+ * This is the heart of `ReactEventEmitter`. It simply streams the top-level
+ * native events to `EventPluginHub`.
  *
  * @param {object} topLevelType Record from `EventConstants`.
  * @param {Event} nativeEvent A Standard Event with fixed `target` property.
@@ -273,11 +258,11 @@ function setEnabled(enabled) {
     'setEnabled(...): Cannot toggle event listening in a Worker thread. This ' +
     'is likely a bug in the framework. Please report immediately.'
   );
-  ReactEvent.TopLevelCallbackCreator.setEnabled(enabled);
+  ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
 }
 
 function isEnabled() {
-  return ReactEvent.TopLevelCallbackCreator.isEnabled();
+  return ReactEventEmitter.TopLevelCallbackCreator.isEnabled();
 }
 
 /**
@@ -299,13 +284,13 @@ function ensureListening(touchNotMouse, TopLevelCallbackCreator) {
     'This is likely a bug in the framework. Please report immediately.'
   );
   if (!_isListening) {
-    ReactEvent.TopLevelCallbackCreator = TopLevelCallbackCreator;
+    ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
     listenAtTopLevel(touchNotMouse);
     _isListening = true;
   }
 }
 
-var ReactEvent = {
+var ReactEventEmitter = {
   TopLevelCallbackCreator: null, // Injectable callback creator.
   handleTopLevel: handleTopLevel,
   setEnabled: setEnabled,
@@ -319,4 +304,4 @@ var ReactEvent = {
   trapCapturedEvent: trapCapturedEvent
 };
 
-module.exports = ReactEvent;
+module.exports = ReactEventEmitter;

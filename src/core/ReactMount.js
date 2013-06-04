@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 
@@ -86,7 +86,7 @@ var ReactMount = {
    * @private
    */
   prepareTopLevelEvents: function(TopLevelCallbackCreator) {
-    ReactEvent.ensureListening(
+    ReactEventEmitter.ensureListening(
       ReactMount.useTouchEvents,
       TopLevelCallbackCreator
     );

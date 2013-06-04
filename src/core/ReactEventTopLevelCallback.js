@@ -19,7 +19,7 @@
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getDOMNodeID = require('getDOMNodeID');
@@ -63,9 +63,12 @@ var ReactEventTopLevelCallback = {
         fixedNativeEvent.target
       ) || ExecutionEnvironment.global;
       var renderedTargetID = getDOMNodeID(renderedTarget);
-      var event = fixedNativeEvent;
-      var target = renderedTarget;
-      ReactEvent.handleTopLevel(topLevelType, event, renderedTargetID, target);
+      ReactEventEmitter.handleTopLevel(
+        topLevelType,
+        fixedNativeEvent,
+        renderedTargetID,
+        renderedTarget
+      );
     };
   }
 
