@@ -194,6 +194,53 @@ describe('ReactCompositeComponent', function() {
     expect(retValAfterMountWithCrazyScope).toBe(RETURN_VALUE_AFTER_MOUNT);
   });
 
+  it('should normalize props with default values', function() {
+    var Component = React.createClass({
+      props: {key: ReactProps.string.isRequired},
+      getDefaultProps: function() {
+        return {key: 'testKey'};
+      },
+      getInitialState: function() {
+        return {key: this.props.key + 'State'};
+      },
+      render: function() {
+        return <span>{this.props.key}</span>;
+      }
+    });
+
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    reactComponentExpect(instance).scalarPropsEqual({key: 'testKey'});
+    reactComponentExpect(instance).scalarStateEqual({key: 'testKeyState'});
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component key={null} />);
+    }).toThrow(
+      'Invariant Violation: Required prop `key` was not specified in ' +
+      '`Component`.'
+    );
+  });
+
+  it('should check default prop values', function() {
+    var Component = React.createClass({
+      props: {key: ReactProps.string.isRequired},
+      getDefaultProps: function() {
+        return {key: null};
+      },
+      render: function() {
+        return <span>{this.props.key}</span>;
+      }
+    });
+
+    var instance = <Component />;
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: Required prop `key` was not specified in ' +
+      '`Component`.'
+    );
+  });
+
   it('should check declared prop types', function() {
     var Component = React.createClass({
       props: {
