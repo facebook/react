@@ -734,9 +734,16 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _renderValidatedComponent: function() {
+    var renderedComponent;
     ReactCurrentOwner.current = this;
-    var renderedComponent = this.render();
-    ReactCurrentOwner.current = null;
+    try {
+      renderedComponent = this.render();
+    } catch (error) {
+      // IE8 requires `catch` in order to use `finally`.
+      throw error;
+    } finally {
+      ReactCurrentOwner.current = null;
+    }
     invariant(
       ReactComponent.isValidComponent(renderedComponent),
       '%s.render(): A valid ReactComponent must be returned.',

@@ -23,6 +23,7 @@ var MorphingComponent;
 var MorphingAutoBindComponent;
 var ChildUpdates;
 var React;
+var ReactCurrentOwner;
 var ReactProps;
 var ReactTestUtils;
 
@@ -35,6 +36,7 @@ describe('ReactCompositeComponent', function() {
     cx = require('cx');
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
+    ReactCurrentOwner = require('ReactCurrentOwner');
     ReactProps = require('ReactProps');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -300,6 +302,23 @@ describe('ReactCompositeComponent', function() {
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
       'mounted components.'
     );
+  });
+
+  it('should cleanup even if render() fatals', function() {
+    var BadComponent = React.createClass({
+      render: function() {
+        throw new Error();
+      }
+    });
+    var instance = <BadComponent />;
+
+    expect(ReactCurrentOwner.current).toBe(null);
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow();
+
+    expect(ReactCurrentOwner.current).toBe(null);
   });
 
 });
