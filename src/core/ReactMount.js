@@ -106,11 +106,15 @@ var ReactMount = {
   renderComponent: function(nextComponent, container) {
     var prevComponent = instanceByReactRootID[getReactRootID(container)];
     if (prevComponent) {
-      var nextProps = nextComponent.props;
-      ReactMount.scrollMonitor(container, function() {
-        prevComponent.replaceProps(nextProps);
-      });
-      return prevComponent;
+      if (prevComponent.constructor === nextComponent.constructor) {
+        var nextProps = nextComponent.props;
+        ReactMount.scrollMonitor(container, function() {
+          prevComponent.replaceProps(nextProps);
+        });
+        return prevComponent;
+      } else {
+        ReactMount.unmountAndReleaseReactRootNode(container);
+      }
     }
 
     ReactMount.prepareTopLevelEvents(ReactEventTopLevelCallback);
