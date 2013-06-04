@@ -19,20 +19,19 @@
 "use strict";
 
 /**
- * CSS properties for which we do not append "px".
+ * CSS properties which accept numbers but are not in units of "px".
  */
-var isNumber = {
+var isUnitlessNumber = {
   fillOpacity: true,
   fontWeight: true,
   opacity: true,
   orphans: true,
-  textDecoration: true,
   zIndex: true,
   zoom: true
 };
 
 var CSSProperty = {
-  isNumber: isNumber
+  isUnitlessNumber: isUnitlessNumber
 };
 
 module.exports = CSSProperty;
