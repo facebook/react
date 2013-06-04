@@ -317,9 +317,9 @@ ReactNativeComponent.Mixin = {
    * @internal
    */
   unmountComponent: function() {
+    ReactEvent.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
     this.unmountMultiChild();
-    ReactEvent.deleteAllListeners(this._rootNodeID);
   }
 
 };
