@@ -708,6 +708,17 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   forceUpdate: function() {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED,
+      'forceUpdate(...): Can only force an update on mounted components.'
+    );
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'forceUpdate(...): Cannot force an update while unmounting component ' +
+      'or during an existing state transition (such as within `render`).'
+    );
     var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
     transaction.perform(
       this._performComponentUpdate,

@@ -270,4 +270,36 @@ describe('ReactCompositeComponent', function() {
     }).not.toThrow();
   });
 
+  it('should not allow `forceUpdate` on unmounted components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Component />;
+    expect(function() {
+      instance.forceUpdate();
+    }).toThrow(
+      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
+      'mounted components.'
+    );
+
+    React.renderComponent(instance, container);
+    expect(function() {
+      instance.forceUpdate();
+    }).not.toThrow();
+
+    React.unmountAndReleaseReactRootNode(container);
+    expect(function() {
+      instance.forceUpdate();
+    }).toThrow(
+      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
+      'mounted components.'
+    );
+  });
+
 });
