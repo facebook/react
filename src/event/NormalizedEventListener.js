@@ -16,8 +16,6 @@
  * @providesModule NormalizedEventListener
  */
 
-"use strict";
-
 var EventListener = require('EventListener');
 
 /**
@@ -26,25 +24,23 @@ var EventListener = require('EventListener');
  * @private
  */
 function normalizeEvent(eventParam) {
-  var normalized = eventParam || window.event;
+  var nativeEvent = eventParam || window.event;
   // In some browsers (OLD FF), setting the target throws an error. A good way
   // to tell if setting the target will throw an error, is to check if the event
   // has a `target` property. Safari events have a `target` but it's not always
   // normalized. Even if a `target` property exists, it's good to only set the
   // target property if we realize that a change will actually take place.
-  var hasTargetProperty = 'target' in normalized;
-  var eventTarget = normalized.target || normalized.srcElement || window;
+  var hasTargetProperty = 'target' in nativeEvent;
+  var eventTarget = nativeEvent.target || nativeEvent.srcElement || window;
   // Safari may fire events on text nodes (Node.TEXT_NODE is 3)
   // @see http://www.quirksmode.org/js/events_properties.html
   var textNodeNormalizedTarget =
     (eventTarget.nodeType === 3) ? eventTarget.parentNode : eventTarget;
-  if (!hasTargetProperty || normalized.target !== textNodeNormalizedTarget) {
-    // Create an object that inherits from the native event so that we can set
-    // `target` on it. (It is read-only and setting it throws in strict mode).
-    normalized = Object.create(normalized);
-    normalized.target = textNodeNormalizedTarget;
+  if (!hasTargetProperty || nativeEvent.target !== textNodeNormalizedTarget) {
+    // TODO: Normalize the object via `merge()` to work with strict mode.
+    nativeEvent.target = textNodeNormalizedTarget;
   }
-  return normalized;
+  return nativeEvent;
 }
 
 function createNormalizedCallback(cb) {
