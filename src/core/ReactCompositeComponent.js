@@ -396,7 +396,8 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   construct: function(initialProps, children) {
-    ReactComponent.Mixin.construct.call(this, initialProps, children);
+    // Children can be either an array or more than one argument
+    ReactComponent.Mixin.construct.apply(this, arguments);
     this.state = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
@@ -784,9 +785,7 @@ var ReactCompositeComponent = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(initialProps, children) {
-      this.construct(initialProps, children);
-    };
+    var Constructor = function() {};
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
     mixSpecIntoComponent(Constructor, spec);
@@ -796,7 +795,9 @@ var ReactCompositeComponent = {
     );
 
     var ConvenienceConstructor = function(props, children) {
-      return new Constructor(props, children);
+      var instance = new Constructor();
+      instance.construct.apply(instance, arguments);
+      return instance;
     };
     ConvenienceConstructor.componentConstructor = Constructor;
     ConvenienceConstructor.originalSpec = spec;
