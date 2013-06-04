@@ -26,7 +26,7 @@ function mapChildren(children, mapFunction, context) {
     var child = children[ii];
     var key = child._key;
     var mappedChild = mapFunction.call(context, child, key, ii);
-    mappedChild._key = key;
+    mappedChild.props.key = key;
     mappedChildren.push(mappedChild);
   }
   return mappedChildren;

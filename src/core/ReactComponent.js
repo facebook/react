@@ -72,7 +72,7 @@ function isEmptyChild(child) {
 
 function assignKey(setKey, child, index) {
   if (ReactComponent.isValidComponent(child)) {
-    var key = child._key || child.props.key;
+    var key = child.props.key;
     if (__DEV__) {
       if (!HAS_WARNED && !key) {
         HAS_WARNED = true;
@@ -300,7 +300,7 @@ var ReactComponent = {
 
         } else if (!isEmptyChild(child)) {
 
-          if (ReactComponent.isValidComponent(child) && !child._key) {
+          if (ReactComponent.isValidComponent(child)) {
             // This is a static node and therefore safe to key by index.
             // No warning necessary.
             child._key = child.props.key || ('' + (i - 1));

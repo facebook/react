@@ -80,4 +80,75 @@ describe('ReactIdentity', function() {
       .toEqual('.reactRoot[0].:2.:chipmunk');
   });
 
+  it('should let restructured components retain their uniqueness', function() {
+    var instance0 = <span />;
+    var instance1 = <span />;
+    var instance2 = <span />;
+    var wrapped = <div>{instance0} {instance1}</div>;
+    var unwrappedAndAdded =
+      <div>
+        {instance2}
+        {wrapped.props.children[0]}
+        {wrapped.props.children[1]}
+      </div>;
+
+    expect(function() {
+
+      React.renderComponent(unwrappedAndAdded, document.createElement('div'));
+
+    }).not.toThrow();
+  });
+
+  it('should retain keys during updates in composite components', function() {
+
+    var TestComponent = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var TestContainer = React.createClass({
+
+      getInitialState: function() {
+        return { swapped: false };
+      },
+
+      swap: function() {
+        this.setState({ swapped: true });
+      },
+
+      render: function() {
+        return (
+          <TestComponent>
+            {this.state.swapped ? this.props.second : this.props.first}
+            {this.state.swapped ? this.props.first : this.props.second}
+          </TestComponent>
+        );
+      }
+
+    });
+
+    var instance0 = <span key="A" />;
+    var instance1 = <span key="B" />;
+
+    var wrapped = <TestContainer first={instance0} second={instance1} />;
+
+    React.renderComponent(wrapped, document.createElement('div'));
+
+    var beforeKey = wrapped
+      ._renderedComponent
+      ._renderedComponent
+      .props.children[0]._key;
+
+    wrapped.swap();
+
+    var afterKey = wrapped
+      ._renderedComponent
+      ._renderedComponent
+      .props.children[0]._key;
+
+    expect(beforeKey).not.toEqual(afterKey);
+
+  });
+
 });
