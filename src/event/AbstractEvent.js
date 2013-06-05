@@ -48,6 +48,7 @@ function AbstractEvent(
     abstractTargetID,  // Allows the abstract target to differ from native.
     originatingTopLevelEventType,
     nativeEvent,
+    eventTarget,
     data) {
   this.type = abstractEventType;
   this.abstractTargetID = abstractTargetID || '';
@@ -55,7 +56,7 @@ function AbstractEvent(
   this.nativeEvent = nativeEvent;
   this.data = data;
   // TODO: Deprecate storing target - doesn't always make sense for some types
-  this.target = nativeEvent && nativeEvent.target;
+  this.target = eventTarget;
 
   /**
    * As a performance optimization, we tag the existing event with the listeners
@@ -91,7 +92,7 @@ AbstractEvent.prototype.destructor = function() {
  * `PooledClass` that our copy constructor accepts five arguments (this is just
  * a performance optimization). These objects are instantiated frequently.
  */
-PooledClass.addPoolingTo(AbstractEvent, PooledClass.fiveArgumentPooler);
+PooledClass.addPoolingTo(AbstractEvent, PooledClass.sixArgumentPooler);
 
 AbstractEvent.prototype.stopPropagation = function() {
   this.isPropagationStopped = true;

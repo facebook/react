@@ -232,7 +232,7 @@ var deleteAllListeners = function(domID) {
  * @param {string} renderedTargetID string ID of `renderedTarget`.
  */
 var extractAbstractEvents =
-  function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
+  function(topLevelType, nativeEvent, target, renderedTargetID, renderedTarget) {
     var abstractEvents;
     var plugins = injection.plugins;
     var len = plugins.length;
@@ -244,6 +244,7 @@ var extractAbstractEvents =
         possiblePlugin.extractAbstractEvents(
           topLevelType,
           nativeEvent,
+          target,
           renderedTargetID,
           renderedTarget
         );

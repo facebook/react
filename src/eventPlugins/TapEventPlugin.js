@@ -51,6 +51,7 @@ var abstractEventTypes = {
 var extractAbstractEvents = function(
     topLevelType,
     nativeEvent,
+    target,
     renderedTargetID,
     renderedTarget) {
 
@@ -66,7 +67,8 @@ var extractAbstractEvents = function(
       type,
       abstractTargetID,
       topLevelType,
-      nativeEvent
+      nativeEvent,
+      target
     );
   }
   if (isStartish(topLevelType)) {

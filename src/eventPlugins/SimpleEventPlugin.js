@@ -164,46 +164,51 @@ var SimpleEventPlugin = {
   /**
    * @see EventPluginHub.extractAbstractEvents
    */
-  extractAbstractEvents:
-    function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
-      var data;
-      var abstractEventType =
-        SimpleEventPlugin.topLevelTypesToAbstract[topLevelType];
-      if (!abstractEventType) {
-        return null;
-      }
-      switch(topLevelType) {
-        case topLevelTypes.topMouseWheel:
-          data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
-          break;
-        case topLevelTypes.topScroll:
-          data = AbstractEvent.normalizeScrollDataFromTarget(renderedTarget);
-          break;
-        case topLevelTypes.topClick:
-        case topLevelTypes.topDoubleClick:
-        case topLevelTypes.topChange:
-        case topLevelTypes.topDOMCharacterDataModified:
-        case topLevelTypes.topMouseDown:
-        case topLevelTypes.topMouseUp:
-        case topLevelTypes.topMouseMove:
-        case topLevelTypes.topTouchMove:
-        case topLevelTypes.topTouchStart:
-        case topLevelTypes.topTouchEnd:
-          data = AbstractEvent.normalizePointerData(nativeEvent);
-          break;
-        default:
-          data = null;
-      }
-      var abstractEvent = AbstractEvent.getPooled(
-        abstractEventType,
-        renderedTargetID,
-        topLevelType,
-        nativeEvent,
-        data
-      );
-      EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-      return abstractEvent;
+  extractAbstractEvents: function(
+      topLevelType,
+      nativeEvent,
+      target,
+      renderedTargetID,
+      renderedTarget) {
+    var data;
+    var abstractEventType =
+      SimpleEventPlugin.topLevelTypesToAbstract[topLevelType];
+    if (!abstractEventType) {
+      return null;
     }
+    switch(topLevelType) {
+      case topLevelTypes.topMouseWheel:
+        data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
+        break;
+      case topLevelTypes.topScroll:
+        data = AbstractEvent.normalizeScrollDataFromTarget(renderedTarget);
+        break;
+      case topLevelTypes.topClick:
+      case topLevelTypes.topDoubleClick:
+      case topLevelTypes.topChange:
+      case topLevelTypes.topDOMCharacterDataModified:
+      case topLevelTypes.topMouseDown:
+      case topLevelTypes.topMouseUp:
+      case topLevelTypes.topMouseMove:
+      case topLevelTypes.topTouchMove:
+      case topLevelTypes.topTouchStart:
+      case topLevelTypes.topTouchEnd:
+        data = AbstractEvent.normalizePointerData(nativeEvent);
+        break;
+      default:
+        data = null;
+    }
+    var abstractEvent = AbstractEvent.getPooled(
+      abstractEventType,
+      renderedTargetID,
+      topLevelType,
+      nativeEvent,
+      target,
+      data
+    );
+    EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
+    return abstractEvent;
+  }
 };
 
 SimpleEventPlugin.topLevelTypesToAbstract = {

@@ -141,6 +141,7 @@ if (__DEV__) {
 function extractAbstractEvents(
     topLevelType,
     nativeEvent,
+    target,
     renderedTargetID,
     renderedTarget) {
   var currentEvent = topLevelTypesToAnalyticsEvent[topLevelType];

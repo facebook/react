@@ -144,16 +144,16 @@ function trapCapturedEvent(topLevelType, handlerBaseName, onWhat) {
  * reflows.
  */
 function registerDocumentScrollListener() {
-  listen(window, 'scroll', function(nativeEvent) {
-    if (nativeEvent.target === window) {
+  listen(window, 'scroll', function(nativeEvent, target) {
+    if (target === window) {
       BrowserEnv.refreshAuthoritativeScrollValues();
     }
   });
 }
 
 function registerDocumentResizeListener() {
-  listen(window, 'resize', function(nativeEvent) {
-    if (nativeEvent.target === window) {
+  listen(window, 'resize', function(nativeEvent, target) {
+    if (target === window) {
       BrowserEnv.refreshAuthoritativeScrollValues();
     }
   });
@@ -252,11 +252,13 @@ function listenAtTopLevel(touchNotMouse) {
 function handleTopLevel(
     topLevelType,
     nativeEvent,
+    target,
     renderedTargetID,
     renderedTarget) {
   var abstractEvents = EventPluginHub.extractAbstractEvents(
     topLevelType,
     nativeEvent,
+    target,
     renderedTargetID,
     renderedTarget
   );
