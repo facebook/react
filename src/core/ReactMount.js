@@ -196,10 +196,14 @@ var ReactMount = {
   unmountAndReleaseReactRootNode: function(container) {
     var reactRootID = getReactRootID(container);
     var component = instanceByReactRootID[reactRootID];
-    // TODO: Consider throwing if no `component` was found.
-    component.unmountComponentFromNode(container);
-    delete instanceByReactRootID[reactRootID];
-    delete containersByReactRootID[reactRootID];
+    if (component) {
+      component.unmountComponentFromNode(container);
+      delete instanceByReactRootID[reactRootID];
+      delete containersByReactRootID[reactRootID];
+      return true;
+    } else {
+      return false;
+    }
   },
 
   /**
