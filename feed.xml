@@ -30,7 +30,7 @@ see as an advantage over templates for a few reasons:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;JavaScript is a flexible, powerful programming language&lt;/strong&gt; with the ability
 to build abstractions. This is incredibly important in large applications.&lt;/li&gt;
-&lt;li&gt;By unifying your markup with it&amp;#39;s corresponding view logic, React can actually
+&lt;li&gt;By unifying your markup with its corresponding view logic, React can actually
 make views &lt;strong&gt;easier to extend and maintain&lt;/strong&gt;.&lt;/li&gt;
 &lt;li&gt;By baking an understanding of markup and content into JavaScript, there&amp;#39;s
 &lt;strong&gt;no manual string concatenation&lt;/strong&gt; and therefore less surface area for XSS
