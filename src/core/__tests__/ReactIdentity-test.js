@@ -26,7 +26,7 @@ var reactComponentExpect;
 describe('ReactIdentity', function() {
 
   beforeEach(function() {
-    require('mock-modules').autoMockOff().dumpCache();
+    require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
