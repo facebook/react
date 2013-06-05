@@ -5,7 +5,7 @@
 
 @mixin code-typography {
   font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 20px;
 }
 
@@ -42,7 +42,7 @@ html {
 
 
 .container {
-  padding-top: 50px;
+  padding-top: 40px;
   min-width: $contentWidth + (2 * $contentPadding);
 }
 
@@ -64,8 +64,7 @@ html {
 
 hr {
   height: 0;
-  border-top: 1px solid #ccc;
-  border-bottom: 1px solid #eee;
+  border-bottom: 3px solid #eee;
 }
 
 ul,
@@ -77,12 +76,11 @@ li {
 
 .nav-main {
   @include clearfix;
-  background: $darkestColor;
+  background: $topNavColor;
   color: $lightTextColor;
   position: fixed;
   top: 0;
   height: 50px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, .5);
   width: 100%;
   z-index: 100;
 
@@ -114,14 +112,14 @@ li {
 
       &.active {
         color: $lightTextColor;
-        border-bottom: 3px solid $primary;
+        border-bottom: 4px solid $primary;
         background: #333;
       }
     }
   }
 
   .nav-home {
-    color: #00d8ff;
+    color: $logoColor;
     font-size: 24px;
     line-height: 50px;
   }
@@ -144,11 +142,11 @@ li {
 
 .hero {
   height: 300px;
-  // background: $darkColor url(../img/header.png) no-repeat center;
-  background: $darkColor;
-  padding-top: 50px;
+  background: $underTopNav;
+  box-shadow: inset 0 -9px 9px -9px rgba(0, 0, 0, 0.55);
   color: $lightColor;
   font-weight: 300;
+  padding-top: 50px;
 
   .text {
     font-size: 64px;
@@ -156,23 +154,23 @@ li {
   }
 
   .minitext {
-    font-size: 16px;
+    font-size: 20px;
+    margin-top: 10px;
     text-align: center;
-    text-transform: uppercase;
   }
 
   strong {
-    color: $blueColor;
+    color: $logoColor;
     font-weight: 400;
   }
 }
 
 .buttons-unit {
-  margin-top: 60px;
+  margin-top: 30px;
   text-align: center;
 
   a {
-    color: $blueColor;
+    color: $logoColor;
   }
 
   .button {
@@ -180,6 +178,9 @@ li {
     background: $primary;
     color: $lightTextColor;
 
+    &:hover {
+      background: darken($primary, 2%);
+    }
     &:active {
       background: darken($primary, 5%);
     }
@@ -252,7 +253,6 @@ li {
 }
 
 .home-divider {
-  border-top-color: #bbb;
   margin: 0 auto;
   width: 400px;
 }
@@ -372,7 +372,7 @@ section.black content {
     margin-top: 30px;
   }
 
-  padding-top: 20px;
+  padding-top: 50px;
 
   // Make a notice box out of blockquotes in the documetation:
   blockquote {
@@ -427,8 +427,7 @@ section.black content {
 
 .button {
   @include background(linear-gradient($buttonGreyTop, $buttonGreyBottom));
-  // border: 1px solid $darkestColor;
-  border-radius: 4px;
+  border-radius: 3px;
   padding: 8px 16px;
   font-size: 18px;
   font-weight: 400;
@@ -436,10 +435,7 @@ section.black content {
   // word-spacing: -2px;
   // letter-spacing: 1px;
   display: inline-block;
-  color: $lightTextColor;
-  text-decoration: none;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, .3);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+  color: $lighterTextColor;
   text-decoration: none;
 
   &:hover {
@@ -453,7 +449,7 @@ section.black content {
 
 .hero {
   .button {
-    box-shadow: 1px 3px 3px rgba(0, 0, 0, .3);
+    // box-shadow: 0px 2px 2px rgba(0, 0, 0, .2);
   }
 }
 
@@ -525,6 +521,13 @@ div.CodeMirror-linenumber:after {
   border: none;
 }
 
+/**
+ * Make extra room for the top bar.
+ */
+.CodeMirror {
+  padding-top: 15px;
+}
+
 small code,
 li code,
 p code {
@@ -541,25 +544,21 @@ p code {
   @include clearfix;
 }
 
-.playground::before {
-  border-bottom: none !important;
-  border-radius: 3px 3px 0 0;
+.playgroundCode::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
   padding: 3px 7px;
   font-size: 12px;
   font-weight: bold;
   color: #c2c0bc;
   background-color: #f1ede4;
-  content: 'Live editor';
-}
-
-.playground::before,
-.playgroundCode,
-.playgroundPreview {
-  border: 1px solid rgba(16,16,16,0.1);
+  content: "LIVE EDITOR";
 }
 
 .playgroundCode {
-  border-radius: 0 3px 3px 3px;
+  position: relative;
   float: left;
   overflow: hidden;
   width: $twoColumnWidth;
@@ -567,11 +566,35 @@ p code {
 
 .playgroundPreview {
   background-color: white;
-  border-radius: 3px;
   float: right;
   padding: 15px 20px;
   width: $columnWidth;
 }
+
+
+/* Base class */
+
+.playgroundPreview {
+  position: relative;
+  padding: 39px 14px 14px;
+  background-color: #f1f1f1;
+}
+
+/* Echo out a label for the example */
+
+.playgroundPreview:after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  padding: 3px 7px;
+  font-size: 12px;
+  font-weight: bold;
+  color: #a0a0a0;
+  background-color: #ececec;
+  content: "Example";
+}
+
 
 .MarkdownEditor textarea {
   width: 100%;
@@ -579,8 +602,8 @@ p code {
 }
 
 .hll {
-  background-color: #f7ebc6;
-  border-left: 5px solid #f7d87c;
+  background-color: rgba(81, 151, 90, 0.03);
+  border-left: 5px solid rgba(81, 151, 90, 0.18);
   display: block;
   margin-left: -14px;
   margin-right: -14px;
