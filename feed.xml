@@ -37,7 +37,7 @@ make views &lt;strong&gt;easier to extend and maintain&lt;/strong&gt;.&lt;/li&gt
 vulnerabilities.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;We&amp;#39;ve also created &lt;a href=&quot;facebook.github.io/react/docs/syntax.html&quot;&gt;JSX&lt;/a&gt;, an optional
+&lt;p&gt;We&amp;#39;ve also created &lt;a href=&quot;http://facebook.github.io/react/docs/syntax.html&quot;&gt;JSX&lt;/a&gt;, an optional
 syntax extension, in case you prefer the readability of HTML to raw JavaScript.&lt;/p&gt;
 
 &lt;h2&gt;Reactive updates are dead simple.&lt;/h2&gt;
