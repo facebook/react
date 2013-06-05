@@ -34,6 +34,7 @@ var responderAbstractEventTypes;
 var spies;
 
 var DUMMY_NATIVE_EVENT = {};
+var DUMMY_TARGET = {};
 var DUMMY_RENDERED_TARGET = {};
 
 var onStartShouldSetResponder = function(id, cb, capture) {
@@ -82,6 +83,7 @@ var extractForTouchStart = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topTouchStart,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -91,6 +93,7 @@ var extractForTouchMove = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topTouchMove,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -100,6 +103,7 @@ var extractForTouchEnd = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topTouchEnd,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -109,6 +113,7 @@ var extractForMouseDown = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topMouseDown,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -118,6 +123,7 @@ var extractForMouseMove = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topMouseMove,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -128,6 +134,7 @@ var extractForMouseUp = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topMouseUp,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );
@@ -137,6 +144,7 @@ var extractForScroll = function(renderedTargetID) {
   return ResponderEventPlugin.extractAbstractEvents(
     topLevelTypes.topScroll,
     DUMMY_NATIVE_EVENT,
+    DUMMY_TARGET,
     renderedTargetID,
     DUMMY_RENDERED_TARGET
   );

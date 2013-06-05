@@ -193,7 +193,7 @@ var ReactTestUtils = {
     var virtualHandler =
       ReactEvent.TopLevelCallbackCreator.createTopLevelCallback(topLevelType);
     fakeNativeEvent.target = node;
-    virtualHandler(fakeNativeEvent);
+    virtualHandler(fakeNativeEvent, node);
   },
 
   /**
@@ -214,7 +214,7 @@ var ReactTestUtils = {
     fakeNativeEvent.target = node;
     /* jsdom is returning nodes without id's - fixing that issue here. */
     node.id = reactRootID;
-    virtualHandler(fakeNativeEvent);
+    virtualHandler(fakeNativeEvent, node);
   },
 
   nativeTouchData: function(x, y) {

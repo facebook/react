@@ -169,7 +169,7 @@ var abstractEventTypes = {
  * @return {Accumulation<AbstractEvent>} Extracted events.
  */
 var setResponderAndExtractTransfer =
-  function(topLevelType, nativeEvent, renderedTargetID) {
+  function(topLevelType, nativeEvent, target, renderedTargetID) {
     var type;
     var shouldSetEventType =
       isStartish(topLevelType) ? abstractEventTypes.startShouldSetResponder :
@@ -182,6 +182,7 @@ var setResponderAndExtractTransfer =
       bubbleShouldSetFrom,
       topLevelType,
       nativeEvent,
+      target,
       AbstractEvent.normalizePointerData(nativeEvent)
     );
     EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
@@ -196,7 +197,8 @@ var setResponderAndExtractTransfer =
       abstractEventTypes.responderGrant,
       wantsResponderID,
       topLevelType,
-      nativeEvent
+      nativeEvent,
+      target
     );
 
     EventPropagators.accumulateDirectDispatches(grantEvent);
@@ -213,7 +215,8 @@ var setResponderAndExtractTransfer =
           terminateType,
           responderID,
           topLevelType,
-          nativeEvent
+          nativeEvent,
+          target
         );
         EventPropagators.accumulateDirectDispatches(terminateEvent);
         extracted = accumulate(extracted, [grantEvent, terminateEvent]);
@@ -223,7 +226,8 @@ var setResponderAndExtractTransfer =
           abstractEventTypes.responderReject,
           wantsResponderID,
           topLevelType,
-          nativeEvent
+          nativeEvent,
+          target
         );
         EventPropagators.accumulateDirectDispatches(rejectEvent);
         extracted = accumulate(extracted, rejectEvent);
@@ -254,7 +258,7 @@ function canTriggerTransfer(topLevelType) {
 }
 
 var extractAbstractEvents =
-  function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
+  function(topLevelType, nativeEvent, target, renderedTargetID, renderedTarget) {
     var extracted;
     // Must have missed an end event - reset the state here.
     if (responderID && isStartish(topLevelType)) {
@@ -269,8 +273,8 @@ var extractAbstractEvents =
       var transfer = setResponderAndExtractTransfer(
         topLevelType,
         nativeEvent,
-        renderedTargetID,
-        renderedTarget
+        target,
+        renderedTargetID
       );
       if (transfer) {
         extracted = accumulate(extracted, transfer);
@@ -288,6 +292,7 @@ var extractAbstractEvents =
         responderID,
         topLevelType,
         nativeEvent,
+        target,
         data
       );
       EventPropagators.accumulateDirectDispatches(gesture);

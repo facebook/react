@@ -49,6 +49,7 @@ var abstractEventTypes = {
 var extractAbstractEvents = function(
     topLevelType,
     nativeEvent,
+    target,
     renderedTargetID,
     renderedTarget) {
 
@@ -72,7 +73,7 @@ var extractAbstractEvents = function(
   }
 
   // Nothing pertains to our managed components.
-  if (from === to ) {
+  if (from === to) {
     return;
   }
 
@@ -82,13 +83,15 @@ var extractAbstractEvents = function(
     abstractEventTypes.mouseLeave,
     fromID,
     topLevelType,
-    nativeEvent
+    nativeEvent,
+    target
   );
   var enter = AbstractEvent.getPooled(
     abstractEventTypes.mouseEnter,
     toID,
     topLevelType,
-    nativeEvent
+    nativeEvent,
+    target
   );
   EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
   return [leave, enter];

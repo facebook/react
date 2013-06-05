@@ -47,14 +47,14 @@ var twoArgumentPooler = function(a1, a2) {
   }
 };
 
-var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
+var sixArgumentPooler = function(a1, a2, a3, a4, a5, a6) {
   var Klass = this;
   if (Klass.instancePool.length) {
     var instance = Klass.instancePool.pop();
-    Klass.call(instance, a1, a2, a3, a4, a5);
+    Klass.call(instance, a1, a2, a3, a4, a5, a6);
     return instance;
   } else {
-    return new Klass(a1, a2, a3, a4, a5);
+    return new Klass(a1, a2, a3, a4, a5, a6);
   }
 };
 
@@ -95,7 +95,7 @@ var PooledClass = {
   addPoolingTo: addPoolingTo,
   oneArgumentPooler: oneArgumentPooler,
   twoArgumentPooler: twoArgumentPooler,
-  fiveArgumentPooler: fiveArgumentPooler
+  sixArgumentPooler: sixArgumentPooler
 };
 
 module.exports = PooledClass;

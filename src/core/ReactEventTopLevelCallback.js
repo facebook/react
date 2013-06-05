@@ -55,17 +55,21 @@ var ReactEventTopLevelCallback = {
    *   framework are called `renderedTarget`/`renderedTargetID` respectively.
    */
   createTopLevelCallback: function(topLevelType) {
-    return function(fixedNativeEvent) {
+    return function(nativeEvent, target) {
       if (!_topLevelListenersEnabled) {
         return;
       }
       var renderedTarget = ReactInstanceHandles.getFirstReactDOM(
-        fixedNativeEvent.target
+        target
       ) || ExecutionEnvironment.global;
       var renderedTargetID = getDOMNodeID(renderedTarget);
-      var event = fixedNativeEvent;
-      var target = renderedTarget;
-      ReactEvent.handleTopLevel(topLevelType, event, renderedTargetID, target);
+      ReactEvent.handleTopLevel(
+        topLevelType,
+        nativeEvent,
+        target,
+        renderedTargetID,
+        renderedTarget
+      );
     };
   }
 
