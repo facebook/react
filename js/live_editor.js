@@ -81,7 +81,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
         );
     } else if (this.state.mode === this.MODES.JS) {
       content =
-        React.DOM.div( {className:{playgroundJS: true, playgroundStage: true}}, 
+        React.DOM.div( {className:"playgroundJS playgroundStage"}, 
             this.getDesugaredCode()
         );
     }
@@ -121,7 +121,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       }
     } catch (e) {
       React.renderComponent(
-        React.DOM.div( {content:e.toString(), className:{playgroundError: true}}, null ),
+        React.DOM.div( {content:e.toString(), className:"playgroundError"}, null ),
         mountNode
       );
     }

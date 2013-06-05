@@ -12,6 +12,7 @@
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
   <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
   <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
@@ -41,6 +42,7 @@
           <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/">blog</a></li>
           <li><a href="http://github.com/facebook/react">github</a>
         </ul>
         <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
@@ -155,7 +157,7 @@
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-      <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span>
         <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;commentBox&#39;</span><span class="p">,</span>
         <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;Hello, world! I am a CommentBox.&#39;</span>
       <span class="p">})</span>
@@ -217,7 +219,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Notice how we&#39;re mixing HTML tags and components we&#39;ve built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to &quot;ReactDOM.tagName&quot; expressions and leave everything else alone. This is to prevent the pollution of the global namespace.</p>
+<p>Notice how we&#39;re mixing HTML tags and components we&#39;ve built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to &quot;React.DOM.tagName&quot; expressions and leave everything else alone. This is to prevent the pollution of the global namespace.</p>
 
 <h2>Component Properties</h2>
 
@@ -374,8 +376,8 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;commentBox&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">CommentForm</span> <span class="o">/&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">CommentForm</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>

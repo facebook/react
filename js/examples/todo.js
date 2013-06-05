@@ -14,15 +14,15 @@ var TodoList = React.createClass({\n\
 });\n\
 \n\
 var TodoCreate = React.createClass({\n\
-  handleSubmit: function() {\n\
+  handleSubmit: React.autoBind(function() {\n\
     var textInput = this.refs.textInput.getDOMNode();\n\
     this.props.onCreate(textInput.value);\n\
     textInput.value = '';\n\
     return false;\n\
-  },\n\
+  }),\n\
   render: function() {\n\
     return (\n\
-      <form onSubmit={this.handleSubmit.bind(this)}>\n\
+      <form onSubmit={this.handleSubmit}>\n\
         <input type=\"text\" ref=\"textInput\" />\n\
         <button>Add</button>\n\
       </form>\n\
@@ -34,15 +34,15 @@ var TodoApp = React.createClass({\n\
   getInitialState: function() {\n\
     return {items: []};\n\
   },\n\
-  onItemCreate: function(value) {\n\
+  onItemCreate: React.autoBind(function(value) {\n\
     this.setState({items: this.state.items.concat([value])});\n\
-  },\n\
+  }),\n\
   render: function() {\n\
     return (\n\
       <div>\n\
         <h3>TODO</h3>\n\
         <TodoList items={this.state.items} />\n\
-        <TodoCreate onCreate={this.onItemCreate.bind(this)} />\n\
+        <TodoCreate onCreate={this.onItemCreate} />\n\
       </div>\n\
     );\n\
   }\n\

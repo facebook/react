@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+	<channel>
+		<title>React</title>
+		<description>A JavaScript library for building user interfaces</description>
+		<link>http://facebook.github.io/react</link>
+		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
+		
+			<item>
+				<title>Why did we build React?</title>
+				<description>&lt;p&gt;There are a lot of JavaScript MVC frameworks out there. Why did we build React
+and why would you want to use it?&lt;/p&gt;
+
+&lt;h2&gt;React isn&amp;#39;t an MVC framework.&lt;/h2&gt;
+
+&lt;p&gt;React is a library for building composable user interfaces. It encourages
+the creation of reusable UI components which present data that changes over
+time.&lt;/p&gt;
+
+&lt;h2&gt;React doesn&amp;#39;t use templates.&lt;/h2&gt;
+
+&lt;p&gt;Traditionally, web application UIs are built using templates or HTML directives.
+These templates dictate the full set of abstractions that you are allowed to use
+to build your UI.&lt;/p&gt;
+
+&lt;p&gt;React approaches building user interfaces differently by breaking them into
+&lt;strong&gt;components&lt;/strong&gt;. This means React uses JavaScript to generate markup, which we
+see as an advantage over templates for a few reasons:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;JavaScript is a flexible, powerful programming language&lt;/strong&gt; with the ability
+to build abstractions. This is incredibly important in large applications.&lt;/li&gt;
+&lt;li&gt;By unifying your markup with it&amp;#39;s corresponding view logic, React can actually
+make views &lt;strong&gt;easier to extend and maintain&lt;/strong&gt;.&lt;/li&gt;
+&lt;li&gt;By baking an understanding of markup and content into JavaScript, there&amp;#39;s
+&lt;strong&gt;no manual string concatenation&lt;/strong&gt; and therefore less surface area for XSS
+vulnerabilities.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also created &lt;a href=&quot;facebook.github.io/react/docs/syntax.html&quot;&gt;JSX&lt;/a&gt;, an optional
+syntax extension, in case you prefer the readability of HTML to raw JavaScript.&lt;/p&gt;
+
+&lt;h2&gt;Reactive updates are dead simple.&lt;/h2&gt;
+
+&lt;p&gt;React really shines when your data changes over time.&lt;/p&gt;
+
+&lt;p&gt;In a traditional JavaScript application, you need to look at what data changed
+and imperatively make changes to the DOM to keep it up-to-date. Even AngularJS,
+which provides a declarative interface via directives and data binding &lt;a href=&quot;http://docs.angularjs.org/guide/directive#reasonsbehindthecompilelinkseparation&quot;&gt;requires
+a linking function to manually update DOM nodes&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;React takes a different approach.&lt;/p&gt;
+
+&lt;p&gt;When your component is first initialized, the &lt;code&gt;render&lt;/code&gt; method is called,
+generating a lightweight representation of your view. From that representation,
+a string of markup is produced, and injected into the document. When your data
+changes, the &lt;code&gt;render&lt;/code&gt; method is called again. In order to perform updates as
+efficiently as possible, we diff the return value from the previous call to
+&lt;code&gt;render&lt;/code&gt; with the new one, and generate a minimal set of changes to be applied
+to the DOM.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The data returned from &lt;code&gt;render&lt;/code&gt; is neither a string nor a DOM node -- it&amp;#39;s a
+lightweight description of what the DOM should look like.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We call this process &lt;strong&gt;reconciliation&lt;/strong&gt;. Check out
+&lt;a href=&quot;http://jsfiddle.net/fv6RD/3/&quot;&gt;this jsFiddle&lt;/a&gt; to see an example of
+reconciliation in action.&lt;/p&gt;
+
+&lt;p&gt;Because this re-render is so fast (around 1ms for TodoMVC), the developer
+doesn&amp;#39;t need to explicitly specify data bindings. We&amp;#39;ve found this approach
+makes it easier to build apps.&lt;/p&gt;
+
+&lt;h2&gt;HTML is just the beginning.&lt;/h2&gt;
+
+&lt;p&gt;Because React has its own lightweight representation of the document, we can do
+some pretty cool things with it:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Facebook has dynamic charts that render to &lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt; instead of HTML.&lt;/li&gt;
+&lt;li&gt;Instagram is a &amp;quot;single page&amp;quot; web app built entirely with React and
+&lt;code&gt;Backbone.Router&lt;/code&gt;. Designers regularly contribute React code with JSX.&lt;/li&gt;
+&lt;li&gt;We&amp;#39;ve built internal prototypes that run React apps in a web worker and use
+React to drive &lt;strong&gt;native iOS views&lt;/strong&gt; via an Objective-C bridge.&lt;/li&gt;
+&lt;li&gt;You can run React
+&lt;a href=&quot;http://github.com/petehunt/react-server-rendering&quot;&gt;on the server&lt;/a&gt;
+for SEO, performance, code sharing and overall flexibility.&lt;/li&gt;
+&lt;li&gt;Events behave in a consistent, standards-compliant way in all browsers
+(including IE8) and automatically use
+&lt;a href=&quot;http://davidwalsh.name/event-delegate&quot;&gt;event delegation&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Head on over to
+&lt;a href=&quot;http://facebook.github.io/react&quot;&gt;facebook.github.io/react&lt;/a&gt; to check
+out what we have built. Our documentation is geared towards building
+apps with the framework, but if you are interested in the
+nuts and bolts
+&lt;a href=&quot;http://facebook.github.io/react/support.html&quot;&gt;get in touch&lt;/a&gt; with us!&lt;/p&gt;
+
+&lt;p&gt;Thanks for reading!&lt;/p&gt;
+</description>
+				<pubDate>2013-06-05T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/06/05/why-react.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/06/05/why-react.html</guid>
+			</item>
+		
+			<item>
+				<title>JSFiddle Integration</title>
+				<description>&lt;p&gt;&lt;a href=&quot;http://jsfiddle.net&quot;&gt;JSFiddle&lt;/a&gt; just announced support for React. This is an exciting news as it makes collaboration on snippets of code a lot easier. You can play around this &lt;strong&gt;&lt;a href=&quot;http://jsfiddle.net/vjeux/kb3gN/&quot;&gt;base React JSFiddle&lt;/a&gt;&lt;/strong&gt;, fork it and share it! A &lt;a href=&quot;http://jsfiddle.net/vjeux/VkebS/&quot;&gt;fiddle without JSX&lt;/a&gt; is also available.&lt;/p&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; align=&quot;center&quot;&gt;&lt;p&gt;React (by Facebook) is now available on JSFiddle. &lt;a href=&quot;http://t.co/wNQf9JPv5u&quot; title=&quot;http://facebook.github.io/react/&quot;&gt;facebook.github.io/react/&lt;/a&gt;&lt;/p&gt;&amp;mdash; JSFiddle (@jsfiddle) &lt;a href=&quot;https://twitter.com/jsfiddle/status/341114115781177344&quot;&gt;June 2, 2013&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+</description>
+				<pubDate>2013-06-02T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/06/02/jsfiddle-integration.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/06/02/jsfiddle-integration.html</guid>
+			</item>
+		
+	</channel>
+</rss>
