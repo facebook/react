@@ -11,14 +11,14 @@ var MarkdownEditor = React.createClass({\n\
   getInitialState: function() {\n\
     return {value: 'Type some *markdown* here!'};\n\
   },\n\
-  handleKeyUp: React.autoBind(function() {\n\
+  handleInput: React.autoBind(function() {\n\
     this.setState({value: this.refs.textarea.getDOMNode().value});\n\
   }),\n\
   render: function() {\n\
     return (\n\
       <div className=\"MarkdownEditor\">\n\
         <h3>Input</h3>\n\
-        <textarea onKeyUp={this.handleKeyUp} ref=\"textarea\">\n\
+        <textarea onInput={this.handleInput} ref=\"textarea\">\n\
           {this.state.value}\n\
         </textarea>\n\
         <h3>Output</h3>\n\
