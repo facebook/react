@@ -69,7 +69,7 @@ React and JSX are independent technologies, but JSX was primarily built with
 React in mind. The two valid uses of JSX are:
 
 - To construct instances of React DOM components (`React.DOM.*`).
-- To construct instances of composite components created with
+- To construct instances of custom components created with
   `React.createClass()`.
 
 **React DOM Components**
@@ -83,7 +83,7 @@ var app = <div className="appClass">Hello, React!</div>;
 
 **React Component Components**
 
-To construct an instance of a composite component, create a variable that
+To construct an instance of a custom component, create a variable that
 references the class.
 
 ```javascript
