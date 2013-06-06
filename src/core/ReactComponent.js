@@ -480,24 +480,4 @@ var ReactComponent = {
 
 };
 
-function logDeprecated(msg) {
-  if (__DEV__) {
-    throw new Error(msg);
-  } else {
-    console && console.warn && console.warn(msg);
-  }
-}
-
-/**
- * @deprecated
- */
-ReactComponent.Mixin.update = function(props) {
-  logDeprecated('this.update() is deprecated. Use this.setProps()');
-  this.setProps(props);
-};
-ReactComponent.Mixin.updateAll = function(props) {
-  logDeprecated('this.updateAll() is deprecated. Use this.replaceProps()');
-  this.replaceProps(props);
-};
-
 module.exports = ReactComponent;
