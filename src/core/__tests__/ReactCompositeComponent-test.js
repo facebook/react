@@ -23,6 +23,7 @@ var MorphingComponent;
 var MorphingAutoBindComponent;
 var ChildUpdates;
 var React;
+var ReactCurrentOwner;
 var ReactProps;
 var ReactTestUtils;
 
@@ -35,6 +36,7 @@ describe('ReactCompositeComponent', function() {
     cx = require('cx');
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
+    ReactCurrentOwner = require('ReactCurrentOwner');
     ReactProps = require('ReactProps');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -194,6 +196,53 @@ describe('ReactCompositeComponent', function() {
     expect(retValAfterMountWithCrazyScope).toBe(RETURN_VALUE_AFTER_MOUNT);
   });
 
+  it('should normalize props with default values', function() {
+    var Component = React.createClass({
+      props: {key: ReactProps.string.isRequired},
+      getDefaultProps: function() {
+        return {key: 'testKey'};
+      },
+      getInitialState: function() {
+        return {key: this.props.key + 'State'};
+      },
+      render: function() {
+        return <span>{this.props.key}</span>;
+      }
+    });
+
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    reactComponentExpect(instance).scalarPropsEqual({key: 'testKey'});
+    reactComponentExpect(instance).scalarStateEqual({key: 'testKeyState'});
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component key={null} />);
+    }).toThrow(
+      'Invariant Violation: Required prop `key` was not specified in ' +
+      '`Component`.'
+    );
+  });
+
+  it('should check default prop values', function() {
+    var Component = React.createClass({
+      props: {key: ReactProps.string.isRequired},
+      getDefaultProps: function() {
+        return {key: null};
+      },
+      render: function() {
+        return <span>{this.props.key}</span>;
+      }
+    });
+
+    var instance = <Component />;
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: Required prop `key` was not specified in ' +
+      '`Component`.'
+    );
+  });
+
   it('should check declared prop types', function() {
     var Component = React.createClass({
       props: {
@@ -221,6 +270,55 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component key="string" />);
     }).not.toThrow();
+  });
+
+  it('should not allow `forceUpdate` on unmounted components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Component />;
+    expect(function() {
+      instance.forceUpdate();
+    }).toThrow(
+      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
+      'mounted components.'
+    );
+
+    React.renderComponent(instance, container);
+    expect(function() {
+      instance.forceUpdate();
+    }).not.toThrow();
+
+    React.unmountAndReleaseReactRootNode(container);
+    expect(function() {
+      instance.forceUpdate();
+    }).toThrow(
+      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
+      'mounted components.'
+    );
+  });
+
+  it('should cleanup even if render() fatals', function() {
+    var BadComponent = React.createClass({
+      render: function() {
+        throw new Error();
+      }
+    });
+    var instance = <BadComponent />;
+
+    expect(ReactCurrentOwner.current).toBe(null);
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow();
+
+    expect(ReactCurrentOwner.current).toBe(null);
   });
 
 });

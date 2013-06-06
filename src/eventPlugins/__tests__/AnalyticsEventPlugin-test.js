@@ -23,7 +23,7 @@ require('mock-modules')
     .dontMock('AnalyticsEventPluginFactory')
     .dontMock('EventPluginHub')
     .dontMock('React')
-    .dontMock('ReactEvent')
+    .dontMock('ReactEventEmitter')
     .dontMock('ReactEventTopLevelCallback')
     .dontMock('ReactInstanceHandles')
     .dontMock('ReactTestUtils');
@@ -32,11 +32,11 @@ var AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
 var EventPluginHub = require('EventPluginHub');
 var mocks = require('mocks');
 var React = require('React');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 var ReactTestUtils = require('ReactTestUtils');
 
-ReactEvent.ensureListening(false, ReactEventTopLevelCallback);
+ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
 
 describe('AnalyticsEventPlugin', function() {
   it('should count events correctly', function() {

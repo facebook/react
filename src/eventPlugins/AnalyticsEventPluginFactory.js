@@ -99,7 +99,7 @@ var analyticsData = {};
 var topLevelTypesToAnalyticsEvent = {
   topClick:       'click',
   topDoubleClick: 'doubleClick',
-  topMouseWheel:  'mouseWheel',
+  wheel:          'wheel',
   topTouchStart:  'touchStart',
   topTouchEnd:    'touchEnd',
   topTouchMove:   'touchMove',
@@ -117,7 +117,7 @@ if (__DEV__) {
   var analyticsEventNameToTopLevelType = {
     'click':        topLevelTypes.topClick,
     'doubleClick':  topLevelTypes.topDoubleClick,
-    'mouseWheel':   topLevelTypes.topMouseWheel,
+    'wheel':        topLevelTypes.wheel,
     'touchStart':   topLevelTypes.topTouchStart,
     'touchEnd':     topLevelTypes.topTouchEnd,
     'touchMove':    topLevelTypes.topTouchMove,
@@ -136,20 +136,25 @@ if (__DEV__) {
  * This plugin does not really extract any abstract events. Rather it just looks
  * at the top level event and bumps up counters as appropriate
  *
- * @see EventPluginHub.extractAbstractEvents
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {DOMEventTarget} topLevelTarget The listening component root node.
+ * @param {string} topLevelTargetID ID of `topLevelTarget`.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of `AbstractEvent`s.
+ * @see {EventPluginHub.extractAbstractEvents}
  */
 function extractAbstractEvents(
     topLevelType,
-    nativeEvent,
-    renderedTargetID,
-    renderedTarget) {
+    topLevelTarget,
+    topLevelTargetID,
+    nativeEvent) {
   var currentEvent = topLevelTypesToAnalyticsEvent[topLevelType];
-  if (!currentEvent || !renderedTarget || !renderedTarget.attributes) {
+  if (!currentEvent || !topLevelTarget || !topLevelTarget.attributes) {
     return null;
   }
 
-  var analyticsIDAttribute = renderedTarget.attributes[ANALYTICS_ID];
-  var analyticsEventsAttribute = renderedTarget.attributes[ANALYTICS_EVENTS];
+  var analyticsIDAttribute = topLevelTarget.attributes[ANALYTICS_ID];
+  var analyticsEventsAttribute = topLevelTarget.attributes[ANALYTICS_EVENTS];
   if(!analyticsIDAttribute || !analyticsEventsAttribute) {
     return null;
   }

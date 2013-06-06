@@ -44,14 +44,12 @@ var MAX_POOL_SIZE = 20;
  * unreliable native event.
  */
 function AbstractEvent(
-    abstractEventType,
-    abstractTargetID,  // Allows the abstract target to differ from native.
-    originatingTopLevelEventType,
+    reactEventType,
+    reactTargetID, // Allows the abstract target to differ from native.
     nativeEvent,
     data) {
-  this.type = abstractEventType;
-  this.abstractTargetID = abstractTargetID || '';
-  this.originatingTopLevelEventType = originatingTopLevelEventType;
+  this.reactEventType = reactEventType;
+  this.reactTargetID = reactTargetID || '';
   this.nativeEvent = nativeEvent;
   this.data = data;
   // TODO: Deprecate storing target - doesn't always make sense for some types
@@ -263,12 +261,10 @@ AbstractEvent.persistentCloneOf = function(abstractEvent) {
     throwIf(!(abstractEvent instanceof AbstractEvent), CLONE_TYPE_ERR);
   }
   return new AbstractEvent(
-    abstractEvent.type,
-    abstractEvent.abstractTargetID,
-    abstractEvent.originatingTopLevelEventType,
+    abstractEvent.reactEventType,
+    abstractEvent.reactTargetID,
     abstractEvent.nativeEvent,
-    abstractEvent.data,
-    abstractEvent.target
+    abstractEvent.data
   );
 };
 

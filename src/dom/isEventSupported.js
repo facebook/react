@@ -20,9 +20,14 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var testNode;
+var testNode, useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
   testNode = document.createElement('div');
+  useHasFeature =
+    document.implementation &&
+    document.implementation.hasFeature &&
+    // `hasFeature` always returns true in Firefox 19+.
+    document.implementation.hasFeature('', '') !== true;
 }
 
 /**
@@ -44,6 +49,7 @@ function isEventSupported(eventNameSuffix, capture) {
     return false;
   }
   var element = document.createElement('div');
+
   var eventName = 'on' + eventNameSuffix;
   var isSupported = eventName in element;
 
@@ -55,6 +61,12 @@ function isEventSupported(eventNameSuffix, capture) {
     }
     element.removeAttribute(eventName);
   }
+
+  if (!isSupported && useHasFeature && eventNameSuffix === 'wheel') {
+    // This is the only way to test support for the `wheel` event in IE9+.
+    isSupported = document.implementation.hasFeature('Events.wheel', '3.0');
+  }
+
   element = null;
   return isSupported;
 }

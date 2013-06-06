@@ -20,7 +20,7 @@
 var ReactComponent = require('ReactComponent');
 var ReactTestUtils = require('ReactTestUtils');
 
-var copyProperties = require('copyProperties');
+var mergeInto = require('mergeInto');
 
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpect) {
@@ -35,7 +35,7 @@ function reactComponentExpect(instance) {
   this.toBeValidReactComponent();
 }
 
-copyProperties(reactComponentExpect.prototype, {
+mergeInto(reactComponentExpect.prototype, {
   // Getters -------------------------------------------------------------------
 
   /**

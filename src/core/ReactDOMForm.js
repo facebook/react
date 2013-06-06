@@ -20,7 +20,7 @@
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var EventConstants = require('EventConstants');
 
 // Store a reference to the <form> `ReactNativeComponent`.
@@ -41,7 +41,7 @@ var ReactDOMForm = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function(node) {
-    ReactEvent.trapBubbledEvent(
+    ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topSubmit,
       'submit',
       node

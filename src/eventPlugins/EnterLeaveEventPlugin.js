@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule EnterLeaveEventPlugin
+ * @typechecks
  */
 
 "use strict";
@@ -36,28 +37,32 @@ var abstractEventTypes = {
 };
 
 /**
- * For almost every interaction we care about, there will be a top level
- * `mouseOver` and `mouseOut` event that occur so we can usually only pay
- * attention to one of the two (we'll pay attention to the `mouseOut` event) to
- * avoid extracting a duplicate event. However, there's one interaction where
- * there will be no `mouseOut` event to rely on - mousing from outside the
- * browser *into* the chrome. We detect this scenario and only in that case, we
- * use the `mouseOver` event.
+ * For almost every interaction we care about, there will be a top-level
+ * `mouseover` and `mouseout` event that occurs so only pay attention to one of
+ * the two (to avoid duplicate events). We use the `mouseout` event.
  *
- * @see EventPluginHub.extractAbstractEvents
+ * However, there's one interaction where there will be no `mouseout` event to
+ * rely on - mousing from outside the browser *into* the chrome. We detect this
+ * scenario and only in that case, we use the `mouseover` event.
+ *
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {DOMEventTarget} topLevelTarget The listening component root node.
+ * @param {string} topLevelTargetID ID of `topLevelTarget`.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of `AbstractEvent`s.
+ * @see {EventPluginHub.extractAbstractEvents}
  */
 var extractAbstractEvents = function(
     topLevelType,
-    nativeEvent,
-    renderedTargetID,
-    renderedTarget) {
-
+    topLevelTarget,
+    topLevelTargetID,
+    nativeEvent) {
   if (topLevelType === topLevelTypes.topMouseOver &&
       (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
-    return;
+    return null;
   }
   if (topLevelType !== topLevelTypes.topMouseOut &&
-     topLevelType !== topLevelTypes.topMouseOver){
+      topLevelType !== topLevelTypes.topMouseOver) {
     return null;  // Must not be a mouse in or mouse out - ignoring.
   }
 
@@ -65,32 +70,33 @@ var extractAbstractEvents = function(
   if (topLevelType === topLevelTypes.topMouseOut) {
     to = getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
       ExecutionEnvironment.global;
-    from = renderedTarget;
+    from = topLevelTarget;
   } else {
-    to = renderedTarget;
+    to = topLevelTarget;
     from = ExecutionEnvironment.global;
   }
 
   // Nothing pertains to our managed components.
-  if (from === to ) {
-    return;
+  if (from === to) {
+    return null;
   }
 
   var fromID = from ? getDOMNodeID(from) : '';
   var toID = to ? getDOMNodeID(to) : '';
+
   var leave = AbstractEvent.getPooled(
     abstractEventTypes.mouseLeave,
     fromID,
-    topLevelType,
     nativeEvent
   );
   var enter = AbstractEvent.getPooled(
     abstractEventTypes.mouseEnter,
     toID,
-    topLevelType,
     nativeEvent
   );
+
   EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
+
   return [leave, enter];
 };
 

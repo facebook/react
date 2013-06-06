@@ -56,6 +56,7 @@ describe('Primitive Types', function() {
   it("should not throw for valid values", function() {
     expect(typeCheck(Props.array, [])).not.toThrow();
     expect(typeCheck(Props.bool, false)).not.toThrow();
+    expect(typeCheck(Props.func, function() {})).not.toThrow();
     expect(typeCheck(Props.number, 0)).not.toThrow();
     expect(typeCheck(Props.object, {})).not.toThrow();
     expect(typeCheck(Props.string, '')).not.toThrow();

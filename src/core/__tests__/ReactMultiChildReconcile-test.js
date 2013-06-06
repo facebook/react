@@ -41,12 +41,11 @@ var stripEmptyValues = function(obj) {
 };
 
 /**
- * Children are currently named '{<providedKey>}' so we can retrieve the
- * originally provided key by stripping out the braces. This relies on a tiny
- * implementation detail of the rendering system.
+ * These children are wrapped in an array and therefore their keys are prefixed.
+ * This relies on a tiny implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {
-  return childName.substr(1, childName.length - 2);
+  return childName.substr(3);
 };
 
 /**

@@ -22,7 +22,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -32,8 +32,8 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-var putListener = ReactEvent.putListener;
-var registrationNames = ReactEvent.registrationNames;
+var putListener = ReactEventEmitter.putListener;
+var registrationNames = ReactEventEmitter.registrationNames;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
@@ -317,9 +317,9 @@ ReactNativeComponent.Mixin = {
    * @internal
    */
   unmountComponent: function() {
+    ReactEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
     this.unmountMultiChild();
-    ReactEvent.deleteAllListeners(this._rootNodeID);
   }
 
 };

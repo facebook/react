@@ -60,10 +60,10 @@ var SimpleEventPlugin = {
         captured: keyOf({onClickCapture: true})
       }
     },
-    mouseWheel: {
+    wheel: {
       phasedRegistrationNames: {
-        bubbled: keyOf({onMouseWheel: true}),
-        captured: keyOf({onMouseWheelCapture: true})
+        bubbled: keyOf({onWheel: true}),
+        captured: keyOf({onWheelCapture: true})
       }
     },
     touchStart: {
@@ -155,6 +155,7 @@ var SimpleEventPlugin = {
   /**
    * Same as the default implementation, except cancels the event when return
    * value is false.
+   *
    * @param {AbstractEvent} AbstractEvent to handle
    * @param {function} Application-level callback
    * @param {string} domID DOM id to pass to the callback.
@@ -168,48 +169,55 @@ var SimpleEventPlugin = {
   },
 
   /**
-   * @see EventPluginHub.extractAbstractEvents
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   * @return {*} An accumulation of `AbstractEvent`s.
+   * @see {EventPluginHub.extractAbstractEvents}
    */
-  extractAbstractEvents:
-    function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
-      var data;
-      var abstractEventType =
-        SimpleEventPlugin.topLevelTypesToAbstract[topLevelType];
-      if (!abstractEventType) {
-        return null;
-      }
-      switch(topLevelType) {
-        case topLevelTypes.topMouseWheel:
-          data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
-          break;
-        case topLevelTypes.topScroll:
-          data = AbstractEvent.normalizeScrollDataFromTarget(renderedTarget);
-          break;
-        case topLevelTypes.topClick:
-        case topLevelTypes.topDoubleClick:
-        case topLevelTypes.topChange:
-        case topLevelTypes.topDOMCharacterDataModified:
-        case topLevelTypes.topMouseDown:
-        case topLevelTypes.topMouseUp:
-        case topLevelTypes.topMouseMove:
-        case topLevelTypes.topTouchMove:
-        case topLevelTypes.topTouchStart:
-        case topLevelTypes.topTouchEnd:
-          data = AbstractEvent.normalizePointerData(nativeEvent);
-          break;
-        default:
-          data = null;
-      }
-      var abstractEvent = AbstractEvent.getPooled(
-        abstractEventType,
-        renderedTargetID,
-        topLevelType,
-        nativeEvent,
-        data
-      );
-      EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-      return abstractEvent;
+  extractAbstractEvents: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    var data;
+    var abstractEventType =
+      SimpleEventPlugin.topLevelTypesToAbstract[topLevelType];
+    if (!abstractEventType) {
+      return null;
     }
+    switch(topLevelType) {
+      case topLevelTypes.topWheel:
+        data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
+        break;
+      case topLevelTypes.topScroll:
+        data = AbstractEvent.normalizeScrollDataFromTarget(topLevelTarget);
+        break;
+      case topLevelTypes.topClick:
+      case topLevelTypes.topDoubleClick:
+      case topLevelTypes.topChange:
+      case topLevelTypes.topDOMCharacterDataModified:
+      case topLevelTypes.topMouseDown:
+      case topLevelTypes.topMouseUp:
+      case topLevelTypes.topMouseMove:
+      case topLevelTypes.topTouchMove:
+      case topLevelTypes.topTouchStart:
+      case topLevelTypes.topTouchEnd:
+        data = AbstractEvent.normalizePointerData(nativeEvent);
+        break;
+      default:
+        data = null;
+    }
+    var abstractEvent = AbstractEvent.getPooled(
+      abstractEventType,
+      topLevelTargetID,
+      nativeEvent,
+      data
+    );
+    EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
+    return abstractEvent;
+  }
 };
 
 SimpleEventPlugin.topLevelTypesToAbstract = {
@@ -218,7 +226,7 @@ SimpleEventPlugin.topLevelTypesToAbstract = {
   topMouseMove:   SimpleEventPlugin.abstractEventTypes.mouseMove,
   topClick:       SimpleEventPlugin.abstractEventTypes.click,
   topDoubleClick: SimpleEventPlugin.abstractEventTypes.doubleClick,
-  topMouseWheel:  SimpleEventPlugin.abstractEventTypes.mouseWheel,
+  topWheel:       SimpleEventPlugin.abstractEventTypes.wheel,
   topTouchStart:  SimpleEventPlugin.abstractEventTypes.touchStart,
   topTouchEnd:    SimpleEventPlugin.abstractEventTypes.touchEnd,
   topTouchMove:   SimpleEventPlugin.abstractEventTypes.touchMove,

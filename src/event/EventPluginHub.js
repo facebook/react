@@ -194,15 +194,16 @@ function recordAllRegistrationNames(eventType, PluginModule) {
  * @param {AbstractEvent} abstractEvent to look at
  */
 function getPluginModuleForAbstractEvent(abstractEvent) {
-  if (abstractEvent.type.registrationName) {
-    return registrationNames[abstractEvent.type.registrationName];
+  var reactEventType = abstractEvent.reactEventType;
+  if (reactEventType.registrationName) {
+    return registrationNames[reactEventType.registrationName];
   } else {
-    for (var phase in abstractEvent.type.phasedRegistrationNames) {
-      if (!abstractEvent.type.phasedRegistrationNames.hasOwnProperty(phase)) {
+    for (var phase in reactEventType.phasedRegistrationNames) {
+      if (!reactEventType.phasedRegistrationNames.hasOwnProperty(phase)) {
         continue;
       }
       var PluginModule = registrationNames[
-        abstractEvent.type.phasedRegistrationNames[phase]
+        reactEventType.phasedRegistrationNames[phase]
       ];
       if (PluginModule) {
         return PluginModule;
@@ -223,36 +224,36 @@ var deleteAllListeners = function(domID) {
  * Accepts the stream of top level native events, and gives every registered
  * plugin an opportunity to extract `AbstractEvent`s with annotated dispatches.
  *
- * @param {Enum} topLevelType Record from `EventConstants`.
- * @param {Event} nativeEvent A Standard Event with fixed `target` property.
- * @param {Element} renderedTarget Element of interest to the framework, usually
- *  the same as `nativeEvent.target` but occasionally an element immediately
- *  above `nativeEvent.target` (the first DOM node recognized as one "rendered"
- *  by the framework at hand.)
- * @param {string} renderedTargetID string ID of `renderedTarget`.
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {DOMEventTarget} topLevelTarget The listening component root node.
+ * @param {string} topLevelTargetID ID of `topLevelTarget`.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of `AbstractEvent`s.
  */
-var extractAbstractEvents =
-  function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
-    var abstractEvents;
-    var plugins = injection.plugins;
-    var len = plugins.length;
-    for (var i = 0; i < len; i++) {
-      // Not every plugin in the ordering may be loaded at runtime.
-      var possiblePlugin = plugins[i];
-      var extractedAbstractEvents =
-        possiblePlugin &&
-        possiblePlugin.extractAbstractEvents(
-          topLevelType,
-          nativeEvent,
-          renderedTargetID,
-          renderedTarget
-        );
+var extractAbstractEvents = function(
+    topLevelType,
+    topLevelTarget,
+    topLevelTargetID,
+    nativeEvent) {
+  var abstractEvents;
+  var plugins = injection.plugins;
+  for (var i = 0, l = plugins.length; i < l; i++) {
+    // Not every plugin in the ordering may be loaded at runtime.
+    var possiblePlugin = plugins[i];
+    if (possiblePlugin) {
+      var extractedAbstractEvents = possiblePlugin.extractAbstractEvents(
+        topLevelType,
+        topLevelTarget,
+        topLevelTargetID,
+        nativeEvent
+      );
       if (extractedAbstractEvents) {
         abstractEvents = accumulate(abstractEvents, extractedAbstractEvents);
       }
     }
-    return abstractEvents;
-  };
+  }
+  return abstractEvents;
+};
 
 var enqueueAbstractEvents = function(abstractEvents) {
   if (abstractEvents) {
