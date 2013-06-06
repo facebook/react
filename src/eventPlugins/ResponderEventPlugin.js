@@ -162,14 +162,13 @@ var abstractEventTypes = {
  */
 
 /**
- * @param {TopLevelTypes} topLevelType Top level event type being examined.
- * @param {DOMEvent} nativeEvent Native DOM event.
+ * @param {string} topLevelType Record from `EventConstants`.
  * @param {string} renderedTargetID ID of deepest React rendered element.
- *
- * @return {Accumulation<AbstractEvent>} Extracted events.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of extracted `AbstractEvent`s.
  */
 var setResponderAndExtractTransfer =
-  function(topLevelType, nativeEvent, renderedTargetID) {
+  function(topLevelType, renderedTargetID, nativeEvent) {
     var type;
     var shouldSetEventType =
       isStartish(topLevelType) ? abstractEventTypes.startShouldSetResponder :
@@ -235,7 +234,6 @@ var setResponderAndExtractTransfer =
     return extracted;
   };
 
-
 /**
  * A transfer is a negotiation between a currently set responder and the next
  * element to claim responder status. Any start event could trigger a transfer
@@ -253,51 +251,60 @@ function canTriggerTransfer(topLevelType) {
          (isPressing && isMoveish(topLevelType));
 }
 
-var extractAbstractEvents =
-  function(topLevelType, nativeEvent, renderedTargetID, renderedTarget) {
-    var extracted;
-    // Must have missed an end event - reset the state here.
-    if (responderID && isStartish(topLevelType)) {
-      responderID = null;
+/**
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {DOMEventTarget} topLevelTarget The listening component root node.
+ * @param {string} topLevelTargetID ID of `topLevelTarget`.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of `AbstractEvent`s.
+ * @see {EventPluginHub.extractAbstractEvents}
+ */
+var extractAbstractEvents = function(
+    topLevelType,
+    topLevelTarget,
+    topLevelTargetID,
+    nativeEvent) {
+  var extracted;
+  // Must have missed an end event - reset the state here.
+  if (responderID && isStartish(topLevelType)) {
+    responderID = null;
+  }
+  if (isStartish(topLevelType)) {
+    isPressing = true;
+  } else if (isEndish(topLevelType)) {
+    isPressing = false;
+  }
+  if (canTriggerTransfer(topLevelType)) {
+    var transfer = setResponderAndExtractTransfer(
+      topLevelType,
+      topLevelTargetID,
+      nativeEvent
+    );
+    if (transfer) {
+      extracted = accumulate(extracted, transfer);
     }
-    if (isStartish(topLevelType)) {
-      isPressing = true;
-    } else if (isEndish(topLevelType)) {
-      isPressing = false;
-    }
-    if (canTriggerTransfer(topLevelType)) {
-      var transfer = setResponderAndExtractTransfer(
-        topLevelType,
-        nativeEvent,
-        renderedTargetID,
-        renderedTarget
-      );
-      if (transfer) {
-        extracted = accumulate(extracted, transfer);
-      }
-    }
-    // Now that we know the responder is set correctly, we can dispatch
-    // responder type events (directly to the responder).
-    var type = isMoveish(topLevelType) ? abstractEventTypes.responderMove :
-      isEndish(topLevelType) ? abstractEventTypes.responderRelease :
-      isStartish(topLevelType) ? abstractEventTypes.responderStart : null;
-    if (type) {
-      var data = AbstractEvent.normalizePointerData(nativeEvent);
-      var gesture = AbstractEvent.getPooled(
-        type,
-        responderID,
-        topLevelType,
-        nativeEvent,
-        data
-      );
-      EventPropagators.accumulateDirectDispatches(gesture);
-      extracted = accumulate(extracted, gesture);
-    }
-    if (type === abstractEventTypes.responderRelease) {
-      responderID = null;
-    }
-    return extracted;
-  };
+  }
+  // Now that we know the responder is set correctly, we can dispatch
+  // responder type events (directly to the responder).
+  var type = isMoveish(topLevelType) ? abstractEventTypes.responderMove :
+    isEndish(topLevelType) ? abstractEventTypes.responderRelease :
+    isStartish(topLevelType) ? abstractEventTypes.responderStart : null;
+  if (type) {
+    var data = AbstractEvent.normalizePointerData(nativeEvent);
+    var gesture = AbstractEvent.getPooled(
+      type,
+      responderID,
+      nativeEvent,
+      data
+    );
+    EventPropagators.accumulateDirectDispatches(gesture);
+    extracted = accumulate(extracted, gesture);
+  }
+  if (type === abstractEventTypes.responderRelease) {
+    responderID = null;
+  }
+  return extracted;
+};
 
 /**
  * Event plugin for formalizing the negotiation between claiming locks on

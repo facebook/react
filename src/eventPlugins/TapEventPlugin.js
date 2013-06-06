@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule TapEventPlugin
+ * @typechecks
  */
 
 "use strict";
@@ -46,26 +47,27 @@ var abstractEventTypes = {
 };
 
 /**
- * @see EventPluginHub.extractAbstractEvents
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {DOMEventTarget} topLevelTarget The listening component root node.
+ * @param {string} topLevelTargetID ID of `topLevelTarget`.
+ * @param {object} nativeEvent Native browser event.
+ * @return {*} An accumulation of `AbstractEvent`s.
+ * @see {EventPluginHub.extractAbstractEvents}
  */
 var extractAbstractEvents = function(
     topLevelType,
-    nativeEvent,
-    renderedTargetID,
-    renderedTarget) {
-
+    topLevelTarget,
+    topLevelTargetID,
+    nativeEvent) {
   if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
     return;
   }
   var abstractEvent;
   var dist = eventDistance(startCoords, nativeEvent);
   if (isEndish(topLevelType) && dist < tapMoveThreshold) {
-    var type = abstractEventTypes.touchTap;
-    var abstractTargetID = renderedTargetID;
     abstractEvent = AbstractEvent.getPooled(
-      type,
-      abstractTargetID,
-      topLevelType,
+      abstractEventTypes.touchTap,
+      topLevelTargetID,
       nativeEvent
     );
   }

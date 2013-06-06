@@ -14,33 +14,44 @@
  * limitations under the License.
  *
  * @providesModule ReactEventEmitter
+ * @typechecks
  */
 
 "use strict";
 
 var BrowserEnv = require('BrowserEnv');
 var EventConstants = require('EventConstants');
+var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var NormalizedEventListener = require('NormalizedEventListener');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 
-var registrationNames = EventPluginHub.registrationNames;
-var topLevelTypes = EventConstants.topLevelTypes;
-var listen = NormalizedEventListener.listen;
-var capture = NormalizedEventListener.capture;
-
 /**
- * `ReactEventEmitter` is used to attach top-level event listeners. For example:
+ * Summary of `ReactEventEmitter` event handling:
  *
- *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
+ *  - We trap low level 'top-level' events.
  *
- * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
- */
-
-/**
+ *  - We dedupe cross-browser event names into these 'top-level types' so that
+ *    `DOMMouseScroll` or `mouseWheel` both become `topMouseWheel`.
+ *
+ *  - At this point we have native browser events with the top-level type that
+ *    was used to catch it at the top-level.
+ *
+ *  - We continuously stream these native events (and their respective top-level
+ *    types) to the event plugin system `EventPluginHub` and ask the plugin
+ *    system if it was able to extract `AbstractEvent` objects. `AbstractEvent`
+ *    objects are the events that applications actually deal with - they are not
+ *    native browser events but cross-browser wrappers.
+ *
+ *  - When returning the `AbstractEvent` objects, `EventPluginHub` will make
+ *    sure each abstract event is annotated with "dispatches", which are the
+ *    sequence of listeners (and IDs) that care about the event.
+ *
+ *  - These `AbstractEvent` objects are fed back into the event plugin system,
+ *    which in turn executes these dispatches.
+ *
  * Overview of React and the event system:
  *
  *                   .
@@ -72,6 +83,64 @@ var capture = NormalizedEventListener.capture;
  */
 
 /**
+ * Whether or not `ensureListening` has been invoked.
+ * @type {boolean}
+ * @private
+ */
+var _isListening = false;
+
+/**
+ * Traps top-level events by using event bubbling.
+ *
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {DOMEventTarget} element Element on which to attach listener.
+ * @internal
+ */
+function trapBubbledEvent(topLevelType, handlerBaseName, element) {
+  EventListener.listen(
+    element,
+    handlerBaseName,
+    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      topLevelType
+    )
+  );
+}
+
+/**
+ * Traps a top-level event by using event capturing.
+ *
+ * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} handlerBaseName Event name (e.g. "click").
+ * @param {DOMEventTarget} element Element on which to attach listener.
+ * @internal
+ */
+function trapCapturedEvent(topLevelType, handlerBaseName, element) {
+  EventListener.capture(
+    element,
+    handlerBaseName,
+    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      topLevelType
+    )
+  );
+}
+
+/**
+ * Listens to window scroll and resize events. We cache scroll values so that
+ * application code can access them without triggering reflows.
+ *
+ * NOTE: Scroll events do not bubble.
+ *
+ * @private
+ * @see http://www.quirksmode.org/dom/events/scroll.html
+ */
+function registerScrollValueMonitoring() {
+  var refresh = BrowserEnv.refreshAuthoritativeScrollValues;
+  EventListener.listen(window, 'scroll', refresh);
+  EventListener.listen(window, 'resize', refresh);
+}
+
+/**
  * We listen for bubbled touch events on the document object.
  *
  * Firefox v8.01 (and possibly others) exhibited strange behavior when mounting
@@ -89,96 +158,19 @@ var capture = NormalizedEventListener.capture;
  * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
  * they bubble to document.
  *
- * @see http://www.quirksmode.org/dom/events/keys.html.
- */
-
-var _isListening = false;
-
-/**
- * Traps top-level events that bubble. Delegates to the main dispatcher
- * `handleTopLevel` after performing some basic normalization via
- * `TopLevelCallbackCreator.createTopLevelCallback`.
- */
-function trapBubbledEvent(topLevelType, handlerBaseName, onWhat) {
-  listen(
-    onWhat,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
- * Traps a top-level event by using event capturing.
- */
-function trapCapturedEvent(topLevelType, handlerBaseName, onWhat) {
-  capture(
-    onWhat,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
- * Listens to document scroll and window resize events that may change the
- * document scroll values. We store those results so as to discourage
- * application code from asking the DOM itself which could trigger additional
- * reflows.
- */
-function registerDocumentScrollListener() {
-  listen(window, 'scroll', function(nativeEvent) {
-    if (nativeEvent.target === window) {
-      BrowserEnv.refreshAuthoritativeScrollValues();
-    }
-  });
-}
-
-function registerDocumentResizeListener() {
-  listen(window, 'resize', function(nativeEvent) {
-    if (nativeEvent.target === window) {
-      BrowserEnv.refreshAuthoritativeScrollValues();
-    }
-  });
-}
-
-/**
- * Summary of `ReactEventEmitter` event handling:
- *
- *  - We trap low level 'top-level' events.
- *
- *  - We dedupe cross-browser event names into these 'top-level types' so that
- *    `DOMMouseScroll` or `mouseWheel` both become `topMouseWheel`.
- *
- *  - At this point we have native browser events with the top-level type that
- *    was used to catch it at the top-level.
- *
- *  - We continuously stream these native events (and their respective top-level
- *    types) to the event plugin system `EventPluginHub` and ask the plugin
- *    system if it was able to extract `AbstractEvent` objects. `AbstractEvent`
- *    objects are the events that applications actually deal with - they are not
- *    native browser events but cross-browser wrappers.
- *
- *  - When returning the `AbstractEvent` objects, `EventPluginHub` will make
- *    sure each abstract event is annotated with "dispatches", which are the
- *    sequence of listeners (and IDs) that care about the event.
- *
- *  - These `AbstractEvent` objects are fed back into the event plugin system,
- *    which in turn executes these dispatches.
- *
+ * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
  * @private
+ * @see http://www.quirksmode.org/dom/events/keys.html.
  */
 function listenAtTopLevel(touchNotMouse) {
   invariant(
     !_isListening,
     'listenAtTopLevel(...): Cannot setup top-level listener more than once.'
   );
+  var topLevelTypes = EventConstants.topLevelTypes;
   var mountAt = document;
 
-  registerDocumentScrollListener();
-  registerDocumentResizeListener();
+  registerScrollValueMonitoring();
   trapBubbledEvent(topLevelTypes.topMouseOver, 'mouseover', mountAt);
   trapBubbledEvent(topLevelTypes.topMouseDown, 'mousedown', mountAt);
   trapBubbledEvent(topLevelTypes.topMouseUp, 'mouseup', mountAt);
@@ -226,82 +218,111 @@ function listenAtTopLevel(touchNotMouse) {
 }
 
 /**
- * This is the heart of `ReactEventEmitter`. It simply streams the top-level
- * native events to `EventPluginHub`.
+ * `ReactEventEmitter` is used to attach top-level event listeners. For example:
  *
- * @param {object} topLevelType Record from `EventConstants`.
- * @param {Event} nativeEvent A Standard Event with fixed `target` property.
- * @param {DOMElement} renderedTarget Element of interest to the framework.
- * @param {string} renderedTargetID string ID of `renderedTarget`.
+ *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
+ *
+ * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
+ *
  * @internal
  */
-function handleTopLevel(
-    topLevelType,
-    nativeEvent,
-    renderedTargetID,
-    renderedTarget) {
-  var abstractEvents = EventPluginHub.extractAbstractEvents(
-    topLevelType,
-    nativeEvent,
-    renderedTargetID,
-    renderedTarget
-  );
-
-  // The event queue being processed in the same cycle allows preventDefault.
-  EventPluginHub.enqueueAbstractEvents(abstractEvents);
-  EventPluginHub.processAbstractEventQueue();
-}
-
-function setEnabled(enabled) {
-  invariant(
-    ExecutionEnvironment.canUseDOM,
-    'setEnabled(...): Cannot toggle event listening in a Worker thread. This ' +
-    'is likely a bug in the framework. Please report immediately.'
-  );
-  ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
-}
-
-function isEnabled() {
-  return ReactEventEmitter.TopLevelCallbackCreator.isEnabled();
-}
-
-/**
- * Ensures that top-level event delegation listeners are listening at `mountAt`.
- * There are issues with listening to both touch events and mouse events on the
- * top-level, so we make the caller choose which one to listen to. (If there's a
- * touch top-level listeners, anchors don't receive clicks for some reason, and
- * only in some cases).
- *
- * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
- * @param {object} TopLevelCallbackCreator Module that can create top-level
- *   callback handlers.
- * @internal
- */
-function ensureListening(touchNotMouse, TopLevelCallbackCreator) {
-  invariant(
-    ExecutionEnvironment.canUseDOM,
-    'ensureListening(...): Cannot toggle event listening in a Worker thread. ' +
-    'This is likely a bug in the framework. Please report immediately.'
-  );
-  if (!_isListening) {
-    ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
-    listenAtTopLevel(touchNotMouse);
-    _isListening = true;
-  }
-}
-
 var ReactEventEmitter = {
-  TopLevelCallbackCreator: null, // Injectable callback creator.
-  handleTopLevel: handleTopLevel,
-  setEnabled: setEnabled,
-  isEnabled: isEnabled,
-  ensureListening: ensureListening,
-  registrationNames: registrationNames,
+
+  /**
+   * React references `ReactEventTopLevelCallback` using this property in order
+   * to allow dependency injection via `ensureListening`.
+   */
+  TopLevelCallbackCreator: null,
+
+  /**
+   * Ensures that top-level event delegation listeners are installed.
+   *
+   * There are issues with listening to both touch events and mouse events on
+   * the top-level, so we make the caller choose which one to listen to. (If
+   * there's a touch top-level listeners, anchors don't receive clicks for some
+   * reason, and only in some cases).
+   *
+   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
+   * @param {object} TopLevelCallbackCreator
+   */
+  ensureListening: function(touchNotMouse, TopLevelCallbackCreator) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'ensureListening(...): Cannot toggle event listening in a Worker ' +
+      'thread. This is likely a bug in the framework. Please report ' +
+      'immediately.'
+    );
+    if (!_isListening) {
+      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
+      listenAtTopLevel(touchNotMouse);
+      _isListening = true;
+    }
+  },
+
+  /**
+   * Sets whether or not any created callbacks should be enabled.
+   *
+   * @param {boolean} enabled True if callbacks should be enabled.
+   */
+  setEnabled: function(enabled) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
+      'This is likely a bug in the framework. Please report immediately.'
+    );
+    if (ReactEventEmitter.TopLevelCallbackCreator) {
+      ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
+    }
+  },
+
+  /**
+   * @return {boolean} True if callbacks are enabled.
+   */
+  isEnabled: function() {
+    return !!(
+      ReactEventEmitter.TopLevelCallbackCreator &&
+      ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
+    );
+  },
+
+  /**
+   * Streams a fired top-level event to `EventPluginHub` where plugins have the
+   * opportunity to create `ReactEvent`s to be dispatched.
+   *
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   */
+  handleTopLevel: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    var abstractEvents = EventPluginHub.extractAbstractEvents(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent
+    );
+
+    // Event queue being processed in the same cycle allows `preventDefault`.
+    EventPluginHub.enqueueAbstractEvents(abstractEvents);
+    EventPluginHub.processAbstractEventQueue();
+  },
+
+  registrationNames: EventPluginHub.registrationNames,
+
   putListener: EventPluginHub.putListener,
+
   getListener: EventPluginHub.getListener,
+
   deleteAllListeners: EventPluginHub.deleteAllListeners,
+
   trapBubbledEvent: trapBubbledEvent,
+
   trapCapturedEvent: trapCapturedEvent
+
 };
 
 module.exports = ReactEventEmitter;

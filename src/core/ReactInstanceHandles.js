@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactInstanceHandles
+ * @typechecks
  */
 
 "use strict";
@@ -57,13 +58,13 @@ function isValidID(id) {
 /**
  * True if the supplied `node` is rendered by React.
  *
- * @param {DOMElement} node DOM Element to check.
+ * @param {DOMEventTarget} node DOM Element to check.
  * @return {boolean} True if the DOM Element appears to be rendered by React.
  * @private
  */
 function isRenderedByReact(node) {
   var id = getDOMNodeID(node);
-  return id && id.charAt(0) === SEPARATOR;
+  return id ? id.charAt(0) === SEPARATOR : false;
 }
 
 /**
@@ -140,8 +141,8 @@ var ReactInstanceHandles = {
    * Traverses up the ancestors of the supplied node to find a node that is a
    * DOM representation of a React component.
    *
-   * @param {DOMElement} node
-   * @return {?DOMElement}
+   * @param {?DOMEventTarget} node
+   * @return {?DOMEventTarget}
    * @internal
    */
   getFirstReactDOM: function(node) {
@@ -159,9 +160,9 @@ var ReactInstanceHandles = {
    * Finds a node with the supplied `id` inside of the supplied `ancestorNode`.
    * Exploits the ID naming scheme to perform the search quickly.
    *
-   * @param {DOMElement} ancestorNode Search from this root.
+   * @param {DOMEventTarget} ancestorNode Search from this root.
    * @pararm {string} id ID of the DOM representation of the component.
-   * @return {?DOMElement} DOM element with the supplied `id`, if one exists.
+   * @return {?DOMEventTarget} DOM node with the supplied `id`, if one exists.
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
@@ -228,7 +229,7 @@ var ReactInstanceHandles = {
    * contains the React component with the supplied DOM ID.
    *
    * @param {string} id DOM ID of a React component.
-   * @return {string} DOM ID of the React component that is the root.
+   * @return {?string} DOM ID of the React component that is the root.
    * @internal
    */
   getReactRootIDFromNodeID: function(id) {

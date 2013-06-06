@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactEventTopLevelCallback
+ * @typechecks
  */
 
 "use strict";
@@ -23,51 +24,59 @@ var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getDOMNodeID = require('getDOMNodeID');
+var getEventTarget = require('getEventTarget');
 
+/**
+ * @type {boolean}
+ * @private
+ */
 var _topLevelListenersEnabled = true;
 
+/**
+ * Top-level callback creator used to implement event handling using delegation.
+ * This is used via dependency injection in `ReactEventEmitter.ensureListening`.
+ */
 var ReactEventTopLevelCallback = {
 
   /**
-   * @param {boolean} enabled Whether or not all callbacks that have ever been
-   * created with this module should be enabled.
+   * Sets whether or not any created callbacks should be enabled.
+   *
+   * @param {boolean} enabled True if callbacks should be enabled.
    */
   setEnabled: function(enabled) {
     _topLevelListenersEnabled = !!enabled;
   },
 
+  /**
+   * @return {boolean} True if callbacks are enabled.
+   */
   isEnabled: function() {
     return _topLevelListenersEnabled;
   },
 
   /**
-   * For a given `topLevelType`, creates a callback that could be added as a
-   * listener to the document. That top level callback will simply fix the
-   * native events before invoking `handleTopLevel`.
+   * Creates a callback for the supplied `topLevelType` that could be added as
+   * a listener to the document. The callback computes a `topLevelTarget` which
+   * should be the root node of a mounted React component where the listener
+   * is attached.
    *
-   * - Raw native events cannot be trusted to describe their targets correctly
-   *   so we expect that the argument to the nested function has already been
-   *   fixed.  But the `target` property may not be something of interest to
-   *   React, so we find the most suitable target.  But even at that point, DOM
-   *   Elements (the target ) can't be trusted to describe their IDs correctly
-   *   so we obtain the ID in a reliable manner and pass it to
-   *   `handleTopLevel`. The target/id that we found to be relevant to our
-   *   framework are called `renderedTarget`/`renderedTargetID` respectively.
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @return {function} Callback for handling top-level events.
    */
   createTopLevelCallback: function(topLevelType) {
-    return function(fixedNativeEvent) {
+    return function(nativeEvent) {
       if (!_topLevelListenersEnabled) {
         return;
       }
-      var renderedTarget = ReactInstanceHandles.getFirstReactDOM(
-        fixedNativeEvent.target
+      var topLevelTarget = ReactInstanceHandles.getFirstReactDOM(
+        getEventTarget(nativeEvent)
       ) || ExecutionEnvironment.global;
-      var renderedTargetID = getDOMNodeID(renderedTarget);
+      var topLevelTargetID = getDOMNodeID(topLevelTarget) || '';
       ReactEventEmitter.handleTopLevel(
         topLevelType,
-        fixedNativeEvent,
-        renderedTargetID,
-        renderedTarget
+        topLevelTarget,
+        topLevelTargetID,
+        nativeEvent
       );
     };
   }

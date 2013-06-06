@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule getDOMNodeID
+ * @typechecks
  */
 
 "use strict";
@@ -23,8 +24,8 @@
  * control whose name or ID is "id". However, not all DOM nodes support
  * `getAttributeNode` (document - which is not a form) so that is checked first.
  *
- * @param {Element} domNode DOM node element to return ID of.
- * @returns {string} The ID of `domNode`.
+ * @param {DOMElement|DOMWindow|DOMDocument} domNode DOM node.
+ * @returns {string} ID of the supplied `domNode`.
  */
 function getDOMNodeID(domNode) {
   if (domNode.getAttributeNode) {
