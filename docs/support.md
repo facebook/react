@@ -16,6 +16,6 @@ Many developers and users idle on Freenode.net's IRC network in **[#reactjs on f
 
 ## Twitter
 
-<a href="https://twitter.com/search?q=%23reactjs"><strong>#reactjs</strong> hash tag on Twitter</a> is used to keep up with the latest React news.
+[**#reactjs** hash tag on Twitter](https://twitter.com/search?q=%23reactjs) is used to keep up with the latest React news.
 
 <center><a class="twitter-timeline" data-dnt="true" data-chrome="nofooter noheader transparent" href="https://twitter.com/search?q=%23reactjs" data-widget-id="342522405270470656"></a></center>
