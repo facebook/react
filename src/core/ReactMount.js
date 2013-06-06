@@ -196,18 +196,19 @@ var ReactMount = {
    * Unmounts and destroys the React component rendered in the `container`.
    *
    * @param {DOMElement} container DOM element containing a React component.
+   * @return {boolean} True if a component was found in and unmounted from
+   *                   `container`
    */
   unmountAndReleaseReactRootNode: function(container) {
     var reactRootID = getReactRootID(container);
     var component = instanceByReactRootID[reactRootID];
-    if (component) {
-      component.unmountComponentFromNode(container);
-      delete instanceByReactRootID[reactRootID];
-      delete containersByReactRootID[reactRootID];
-      return true;
-    } else {
+    if (!component) {
       return false;
     }
+    component.unmountComponentFromNode(container);
+    delete instanceByReactRootID[reactRootID];
+    delete containersByReactRootID[reactRootID];
+    return true;
   },
 
   /**
