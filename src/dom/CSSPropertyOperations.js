@@ -42,7 +42,7 @@ var CSSPropertyOperations = {
    * Undefined values are ignored so that declarative programming is easier.
    *
    * @param {object} styles
-   * @return {string}
+   * @return {?string}
    */
   createMarkupForStyles: function(styles) {
     var serialized = '';
@@ -51,12 +51,12 @@ var CSSPropertyOperations = {
         continue;
       }
       var styleValue = styles[styleName];
-      if (typeof styleValue !== 'undefined') {
+      if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
         serialized += dangerousStyleValue(styleName, styleValue) + ';';
       }
     }
-    return serialized;
+    return serialized || null;
   },
 
   /**

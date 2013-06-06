@@ -58,7 +58,7 @@ var injection = {
  */
 function listenerAtPhase(id, abstractEvent, propagationPhase) {
   var registrationName =
-    abstractEvent.type.phasedRegistrationNames[propagationPhase];
+    abstractEvent.reactEventType.phasedRegistrationNames[propagationPhase];
   return getListener(id, registrationName);
 }
 
@@ -92,9 +92,9 @@ function accumulateDirectionalDispatches(domID, upwards, abstractEvent) {
  * have a different target.
  */
 function accumulateTwoPhaseDispatchesSingle(abstractEvent) {
-  if (abstractEvent && abstractEvent.type.phasedRegistrationNames) {
+  if (abstractEvent && abstractEvent.reactEventType.phasedRegistrationNames) {
     injection.InstanceHandle.traverseTwoPhase(
-      abstractEvent.abstractTargetID,
+      abstractEvent.reactTargetID,
       accumulateDirectionalDispatches,
       abstractEvent
     );
@@ -105,11 +105,12 @@ function accumulateTwoPhaseDispatchesSingle(abstractEvent) {
 /**
  * Accumulates without regard to direction, does not look for phased
  * registration names. Same as `accumulateDirectDispatchesSingle` but without
- * requiring that the `abstractTargetID` be the same as the dispatched ID.
+ * requiring that the `reactTargetID` be the same as the dispatched ID.
  */
 function accumulateDispatches(id, ignoredDirection, abstractEvent) {
-  if (abstractEvent && abstractEvent.type.registrationName) {
-    var listener = getListener(id, abstractEvent.type.registrationName);
+  if (abstractEvent && abstractEvent.reactEventType.registrationName) {
+    var registrationName = abstractEvent.reactEventType.registrationName;
+    var listener = getListener(id, registrationName);
     if (listener) {
       abstractEvent._dispatchListeners =
         accumulate(abstractEvent._dispatchListeners, listener);
@@ -120,12 +121,12 @@ function accumulateDispatches(id, ignoredDirection, abstractEvent) {
 
 /**
  * Accumulates dispatches on an `AbstractEvent`, but only for the
- * `abstractTargetID`.
+ * `reactTargetID`.
  * @param {AbstractEvent} abstractEvent
  */
 function accumulateDirectDispatchesSingle(abstractEvent) {
-  if (abstractEvent && abstractEvent.type.registrationName) {
-    accumulateDispatches(abstractEvent.abstractTargetID, null, abstractEvent);
+  if (abstractEvent && abstractEvent.reactEventType.registrationName) {
+    accumulateDispatches(abstractEvent.reactTargetID, null, abstractEvent);
   }
 }
 

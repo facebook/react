@@ -92,6 +92,19 @@ var ReactCompositeComponentInterface = {
   // ==== Definition methods ====
 
   /**
+   * Invoked when the component is mounted and whenever new props are received.
+   * Values in the returned mapping will be set on `this.props` if that prop is
+   * not specified (i.e. using an `in` check).
+   *
+   * This method is invoked before `getInitialState` and therefore cannot rely
+   * on `this.state` or use `this.setState`.
+   *
+   * @return {object}
+   * @optional
+   */
+  getDefaultProps: SpecPolicy.DEFINE_ONCE,
+
+  /**
    * Invoked once before the component is mounted. The return value will be used
    * as the initial value of `this.state`.
    *
@@ -396,7 +409,8 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   construct: function(initialProps, children) {
-    ReactComponent.Mixin.construct.call(this, initialProps, children);
+    // Children can be either an array or more than one argument
+    ReactComponent.Mixin.construct.apply(this, arguments);
     this.state = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
@@ -418,9 +432,7 @@ var ReactCompositeComponentMixin = {
     this._lifeCycleState = ReactComponent.LifeCycle.UNMOUNTED;
     this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
-    if (this.constructor.propDeclarations) {
-      this._assertValidProps(this.props);
-    }
+    this._processProps(this.props);
 
     if (this.__reactAutoBindMap) {
       this._bindAutoBindMethods();
@@ -488,9 +500,7 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   receiveProps: function(nextProps, transaction) {
-    if (this.constructor.propDeclarations) {
-      this._assertValidProps(nextProps);
-    }
+    this._processProps(nextProps);
     ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
 
     this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
@@ -569,6 +579,35 @@ var ReactCompositeComponentMixin = {
       ReactComponent.ReactReconcileTransaction.release(transaction);
 
       this._compositeLifeCycleState = null;
+    }
+  },
+
+  /**
+   * Processes props by setting default values for unspecified props and
+   * asserting that the props are valid.
+   *
+   * @param {object} props
+   * @private
+   */
+  _processProps: function(props) {
+    var propName;
+    if (this.getDefaultProps) {
+      var defaultProps = this.getDefaultProps();
+      for (propName in defaultProps) {
+        if (!(propName in props)) {
+          props[propName] = defaultProps[propName];
+        }
+      }
+    }
+    var propDeclarations = this.constructor.propDeclarations;
+    if (propDeclarations) {
+      var componentName = this.constructor.displayName;
+      for (propName in propDeclarations) {
+        var checkProp = propDeclarations[propName];
+        if (checkProp) {
+          checkProp(props, propName, componentName);
+        }
+      }
     }
   },
 
@@ -669,6 +708,17 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   forceUpdate: function() {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED,
+      'forceUpdate(...): Can only force an update on mounted components.'
+    );
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'forceUpdate(...): Cannot force an update while unmounting component ' +
+      'or during an existing state transition (such as within `render`).'
+    );
     var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
     transaction.perform(
       this._performComponentUpdate,
@@ -684,30 +734,22 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _renderValidatedComponent: function() {
+    var renderedComponent;
     ReactCurrentOwner.current = this;
-    var renderedComponent = this.render();
-    ReactCurrentOwner.current = null;
+    try {
+      renderedComponent = this.render();
+    } catch (error) {
+      // IE8 requires `catch` in order to use `finally`.
+      throw error;
+    } finally {
+      ReactCurrentOwner.current = null;
+    }
     invariant(
       ReactComponent.isValidComponent(renderedComponent),
       '%s.render(): A valid ReactComponent must be returned.',
       this.constructor.displayName || 'ReactCompositeComponent'
     );
     return renderedComponent;
-  },
-
-  /**
-   * @param {object} props
-   * @private
-   */
-  _assertValidProps: function(props) {
-    var propDeclarations = this.constructor.propDeclarations;
-    var componentName = this.constructor.displayName;
-    for (var propName in propDeclarations) {
-      var checkProp = propDeclarations[propName];
-      if (checkProp) {
-        checkProp(props, propName, componentName);
-      }
-    }
   },
 
   /**
@@ -784,9 +826,7 @@ var ReactCompositeComponent = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(initialProps, children) {
-      this.construct(initialProps, children);
-    };
+    var Constructor = function() {};
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
     mixSpecIntoComponent(Constructor, spec);
@@ -796,7 +836,9 @@ var ReactCompositeComponent = {
     );
 
     var ConvenienceConstructor = function(props, children) {
-      return new Constructor(props, children);
+      var instance = new Constructor();
+      instance.construct.apply(instance, arguments);
+      return instance;
     };
     ConvenienceConstructor.componentConstructor = Constructor;
     ConvenienceConstructor.originalSpec = spec;

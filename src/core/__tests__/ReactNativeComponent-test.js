@@ -239,4 +239,30 @@ describe('ReactNativeComponent', function() {
     });
   });
 
+  describe('unmountComponent', function() {
+    it("should clean up listeners", function() {
+      var React = require('React');
+      var ReactEventEmitter = require('ReactEventEmitter');
+
+      var container = document.createElement('div');
+      document.documentElement.appendChild(container);
+
+      var callback = function() {};
+      var instance = <div onClick={callback} />;
+      React.renderComponent(instance, container);
+
+      var rootNode = instance.getDOMNode();
+      var rootNodeID = rootNode.id;
+      expect(
+        ReactEventEmitter.getListener(rootNodeID, 'onClick')
+      ).toBe(callback);
+
+      React.unmountAndReleaseReactRootNode(container);
+
+      expect(
+        ReactEventEmitter.getListener(rootNodeID, 'onClick')
+      ).toBe(undefined);
+    });
+  });
+
 });

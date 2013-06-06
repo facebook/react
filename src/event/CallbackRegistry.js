@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule CallbackRegistry
+ * @typechecks
  */
 
 "use strict";
@@ -22,18 +23,21 @@ var listenerBank = {};
 
 /**
  * Stores "listeners" by `registrationName`/`id`. There should be at most one
- * "listener" per `registrationName/id` in the `listenerBank`.
- * Access listeners via `listenerBank[registrationName][id]`
+ * "listener" per `registrationName`/`id` in the `listenerBank`.
  *
- * @constructor CallbackRegistry
+ * Access listeners via `listenerBank[registrationName][id]`.
+ *
+ * @class CallbackRegistry
+ * @internal
  */
 var CallbackRegistry = {
 
   /**
-   * Stores `listener` at `listenerBank[registrationName][id]. Is idempotent.
-   * @param {string} domID The id of the DOM node.
-   * @param {string} registrationName The name of listener (`onClick` etc).
-   * @param {Function} listener The callback to to store.
+   * Stores `listener` at `listenerBank[registrationName][id]`. Is idempotent.
+   *
+   * @param {string} id ID of the DOM node.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @param {?function} listener The callback to store.
    */
   putListener: function(id, registrationName, listener) {
     var bankForRegistrationName =
@@ -42,9 +46,9 @@ var CallbackRegistry = {
   },
 
   /**
-   * @param {string} id.
-   * @param {string} registrationName Name of registration (`onClick` etc).
-   * @return {Function?} The Listener
+   * @param {string} id ID of the DOM node.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @return {?function} The stored callback.
    */
   getListener: function(id, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];
@@ -52,9 +56,10 @@ var CallbackRegistry = {
   },
 
   /**
-   * Deletes the listener from the registration bank.
-   * @param {string} id
-   * @param {string} registrationName (`onClick` etc).
+   * Deletes a listener from the registration bank.
+   *
+   * @param {string} id ID of the DOM node.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(id, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];
@@ -63,10 +68,13 @@ var CallbackRegistry = {
     }
   },
 
-  // This is needed for tests only. Do not use in real life
+  /**
+   * This is needed for tests only. Do not use!
+   */
   __purge: function() {
     listenerBank = {};
   }
+
 };
 
 module.exports = CallbackRegistry;

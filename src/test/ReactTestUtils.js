@@ -19,7 +19,7 @@
 var EventConstants = require('EventConstants');
 var React = require('React');
 var ReactComponent = require('ReactComponent');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
 
 var ge = require('ge');
@@ -191,7 +191,9 @@ var ReactTestUtils = {
    */
   simulateEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     var virtualHandler =
-      ReactEvent.TopLevelCallbackCreator.createTopLevelCallback(topLevelType);
+      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+        topLevelType
+      );
     fakeNativeEvent.target = node;
     virtualHandler(fakeNativeEvent);
   },
@@ -209,7 +211,9 @@ var ReactTestUtils = {
       throw new Error('Simulating event on non-rendered component');
     }
     var virtualHandler =
-      ReactEvent.TopLevelCallbackCreator.createTopLevelCallback(topLevelType);
+      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+        topLevelType
+      );
     var node = ge(reactRootID);
     fakeNativeEvent.target = node;
     /* jsdom is returning nodes without id's - fixing that issue here. */

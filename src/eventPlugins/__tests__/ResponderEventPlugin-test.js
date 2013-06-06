@@ -167,8 +167,9 @@ var existsInExtraction = function(extracted, test) {
 function assertGrantEvent(id, extracted) {
   var test = function(abstractEvent) {
     return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.type === responderAbstractEventTypes.responderGrant &&
-      abstractEvent.abstractTargetID === id;
+      abstractEvent.reactEventType ===
+        responderAbstractEventTypes.responderGrant &&
+      abstractEvent.reactTargetID === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
@@ -177,8 +178,9 @@ function assertGrantEvent(id, extracted) {
 function assertResponderMoveEvent(id, extracted) {
   var test = function(abstractEvent) {
     return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.type === responderAbstractEventTypes.responderMove &&
-      abstractEvent.abstractTargetID === id;
+      abstractEvent.reactEventType ===
+        responderAbstractEventTypes.responderMove &&
+      abstractEvent.reactTargetID === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
@@ -187,8 +189,9 @@ function assertResponderMoveEvent(id, extracted) {
 function assertTerminateEvent(id, extracted) {
   var test = function(abstractEvent) {
     return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.type === responderAbstractEventTypes.responderTerminate &&
-      abstractEvent.abstractTargetID === id;
+      abstractEvent.reactEventType ===
+        responderAbstractEventTypes.responderTerminate &&
+      abstractEvent.reactTargetID === id;
   };
   expect(ResponderEventPlugin.getResponderID()).not.toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
@@ -197,8 +200,9 @@ function assertTerminateEvent(id, extracted) {
 function assertRelease(id, extracted) {
   var test = function(abstractEvent) {
     return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.type === responderAbstractEventTypes.responderRelease &&
-      abstractEvent.abstractTargetID === id;
+      abstractEvent.reactEventType ===
+        responderAbstractEventTypes.responderRelease &&
+      abstractEvent.reactTargetID === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(null);
   expect(existsInExtraction(extracted, test)).toBe(true);

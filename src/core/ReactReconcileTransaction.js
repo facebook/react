@@ -21,7 +21,7 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
-var ReactEvent = require('ReactEvent');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactOnDOMReady = require('ReactOnDOMReady');
 var Transaction = require('Transaction');
@@ -50,21 +50,21 @@ var SELECTION_RESTORATION = {
  */
 var EVENT_SUPPRESSION = {
   /**
-   * @return {boolean} The enabled status of `ReactEvent` before the
+   * @return {boolean} The enabled status of `ReactEventEmitter` before the
    * reconciliation.
    */
   initialize: function() {
-    var currentlyEnabled = ReactEvent.isEnabled();
-    ReactEvent.setEnabled(false);
+    var currentlyEnabled = ReactEventEmitter.isEnabled();
+    ReactEventEmitter.setEnabled(false);
     return currentlyEnabled;
   },
 
   /**
-   * @param {boolean} previouslyEnabled The enabled status of `ReactEvent`
+   * @param {boolean} previouslyEnabled Enabled status of `ReactEventEmitter`
    *   before the reconciliation occured. `close` restores the previous value.
    */
   close: function(previouslyEnabled) {
-    ReactEvent.setEnabled(previouslyEnabled);
+    ReactEventEmitter.setEnabled(previouslyEnabled);
   }
 };
 

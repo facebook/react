@@ -23,7 +23,8 @@ var CSSProperty = require('CSSProperty');
 
 /**
  * Convert a value into the proper css writable value. The `styleName` name
- * name should be logical (no hyphens), as specified in `CSSProperty.isNumber`.
+ * name should be logical (no hyphens), as specified
+ * in `CSSProperty.isUnitlessNumber`.
  *
  * @param {string} styleName CSS property name such as `topMargin`.
  * @param {*} value CSS property value such as `10px`.
@@ -39,13 +40,18 @@ function dangerousStyleValue(styleName, value) {
   // This is not an XSS hole but instead a potential CSS injection issue
   // which has lead to a greater discussion about how we're going to
   // trust URLs moving forward. See #2115901
-  if (value === null || value === false || value === true || value === '') {
+
+  var isEmpty = value == null || typeof value === 'boolean' || value === '';
+  if (isEmpty) {
     return '';
   }
-  if (isNaN(value)) {
-    return !value ? '' : '' + value;
+
+  var isNonNumeric = isNaN(value);
+  if (isNonNumeric || value === 0 || CSSProperty.isUnitlessNumber[styleName]) {
+    return '' + value; // cast to string
   }
-  return CSSProperty.isNumber[styleName] ? '' + value : (value + 'px');
+
+  return value + 'px';
 }
 
 module.exports = dangerousStyleValue;

@@ -51,6 +51,60 @@ var ComponentLifeCycle = keyMirror({
 });
 
 /**
+ * Warn if there's no key explicitly set on dynamic arrays of children.
+ * This allows us to keep track of children between updates.
+ */
+
+var CHILD_HAS_NO_IDENTITY =
+    'You are passing a dynamic array of children. You should set the ' +
+    'property "key" to a string that uniquely identifies each child.';
+
+var HAS_WARNED = false;
+
+/**
+ * Helpers for flattening child arguments onto a new array or use an existing
+ * one.
+ */
+
+function isEmptyChild(child) {
+  return child == null || typeof child === 'boolean';
+}
+
+function assignKey(setKey, child, index) {
+  if (ReactComponent.isValidComponent(child)) {
+    var key = child.props.key;
+    if (__DEV__) {
+      if (!HAS_WARNED && !key) {
+        HAS_WARNED = true;
+        console && console.warn && console.warn(CHILD_HAS_NO_IDENTITY);
+      }
+    }
+    child._key = (setKey ? setKey + ':' : '') + (key || ('' + index));
+  }
+}
+
+function tryToReuseArray(children) {
+  for (var i = 0; i < children.length; i++) {
+    var child = children[i];
+    if (isEmptyChild(child)) return false;
+    assignKey('', child, i);
+  }
+  return true;
+}
+
+function appendNestedChildren(parentKey, sourceArray, targetArray) {
+  for (var i = 0; i < sourceArray.length; i++) {
+    var child = sourceArray[i];
+    if (isEmptyChild(child)) continue;
+    assignKey(parentKey, child, i);
+    // TODO: Invalid components like strings could possibly need
+    // keys assigned to them here. Usually they're not stateful but
+    // CSS transitions and special events could make them stateful.
+    targetArray.push(child);
+  }
+}
+
+/**
  * Components are the basic units of composition in React.
  *
  * Every component accepts a set of keyed input parameters known as "props" that
@@ -206,13 +260,58 @@ var ReactComponent = {
      */
     construct: function(initialProps, children) {
       this.props = initialProps || {};
-      if (typeof children !== 'undefined') {
-        this.props.children = children;
-      }
       // Record the component responsible for creating this component.
       this.props[OWNER] = ReactCurrentOwner.current;
       // All components start unmounted.
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
+
+      // Children can be either an array or more than one argument
+      if (arguments.length < 2) {
+        return;
+      }
+
+      if (arguments.length === 2) {
+
+        // A single string or number child is treated as content, not an array.
+        var type = typeof children;
+        if (children == null || type === 'string' || type === 'number') {
+          this.props.children = children;
+          return;
+        }
+
+        // A single array can be reused if it's already flat
+        if (Array.isArray(children) && tryToReuseArray(children)) {
+          this.props.children = children;
+          return;
+        }
+
+      }
+
+      // Subsequent arguments are rolled into one child array. Array arguments
+      // are flattened onto it. This is inlined to avoid extra heap allocation.
+      var targetArray = null;
+      for (var i = 1; i < arguments.length; i++) {
+        var child = arguments[i];
+        if (Array.isArray(child)) {
+          if (child.length === 0) continue;
+
+          if (targetArray === null) targetArray = [];
+          appendNestedChildren(i - 1, child, targetArray);
+
+        } else if (!isEmptyChild(child)) {
+
+          if (ReactComponent.isValidComponent(child)) {
+            // This is a static node and therefore safe to key by index.
+            // No warning necessary.
+            child._key = child.props.key || ('' + (i - 1));
+          }
+
+          if (targetArray === null) targetArray = [];
+          targetArray.push(child);
+
+        }
+      }
+      this.props.children = targetArray;
     },
 
     /**
@@ -379,26 +478,6 @@ var ReactComponent = {
 
   }
 
-};
-
-function logDeprecated(msg) {
-  if (__DEV__) {
-    throw new Error(msg);
-  } else {
-    console && console.warn && console.warn(msg);
-  }
-}
-
-/**
- * @deprecated
- */
-ReactComponent.Mixin.update = function(props) {
-  logDeprecated('this.update() is deprecated. Use this.setProps()');
-  this.setProps(props);
-};
-ReactComponent.Mixin.updateAll = function(props) {
-  logDeprecated('this.updateAll() is deprecated. Use this.replaceProps()');
-  this.replaceProps(props);
 };
 
 module.exports = ReactComponent;

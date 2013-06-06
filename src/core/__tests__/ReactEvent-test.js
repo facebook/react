@@ -22,7 +22,7 @@ require('mock-modules')
     .dontMock('BrowserScroll')
     .dontMock('CallbackRegistry')
     .dontMock('EventPluginHub')
-    .dontMock('ReactEvent')
+    .dontMock('ReactEventEmitter')
     .dontMock('ReactInstanceHandles')
     .dontMock('EventPluginHub')
     .dontMock('TapEventPlugin')
@@ -34,7 +34,7 @@ var keyOf = require('keyOf');
 var mocks = require('mocks');
 
 var EventPluginHub;
-var ReactEvent;
+var ReactEventEmitter;
 var ReactEventTopLevelCallback;
 var ReactTestUtils;
 var TapEventPlugin;
@@ -58,12 +58,12 @@ var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
 
 
 /**
- * Since `ReactEvent` is fairly well separated from the DOM, we can test almost
- * all of `ReactEvent` without ever rendering anything in the DOM. As long as we
- * provide IDs that follow `React's` conventional id namespace hierarchy.
- * The only reason why we create these DOM nodes, is so that when we feed them
- * into `ReactEvent` (through `ReactTestUtils`), the event handlers may receive
- * a DOM node to inspect.
+ * Since `ReactEventEmitter` is fairly well separated from the DOM, we can test
+ * almost all of `ReactEventEmitter` without ever rendering anything in the DOM.
+ * As long as we provide IDs that follow `React's` conventional id namespace
+ * hierarchy. The only reason why we create these DOM nodes, is so that when we
+ * feed them into `ReactEventEmitter` (through `ReactTestUtils`), the event
+ * handlers may receive a DOM node to inspect.
  */
 var CHILD = document.createElement('div');
 var PARENT = document.createElement('div');
@@ -73,24 +73,24 @@ PARENT.id = '.reactRoot.[0].[0]';
 GRANDPARENT.id = '.reactRoot.[0]';
 
 function registerSimpleTestHandler() {
-  ReactEvent.putListener(CHILD.id, ON_CLICK_KEY, LISTENER);
-  var listener = ReactEvent.getListener(CHILD.id, ON_CLICK_KEY);
+  ReactEventEmitter.putListener(CHILD.id, ON_CLICK_KEY, LISTENER);
+  var listener = ReactEventEmitter.getListener(CHILD.id, ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
-  return ReactEvent.getListener(CHILD.id, ON_CLICK_KEY);
+  return ReactEventEmitter.getListener(CHILD.id, ON_CLICK_KEY);
 }
 
 
-describe('ReactEvent', function() {
+describe('ReactEventEmitter', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
-    ReactEvent = require('ReactEvent');
+    ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEvent.ensureListening(false, ReactEventTopLevelCallback);
+    ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
@@ -98,20 +98,20 @@ describe('ReactEvent', function() {
 
   it('should store a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener = ReactEvent.getListener(CHILD.id, ON_CLICK_KEY);
+    var listener = ReactEventEmitter.getListener(CHILD.id, ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', function() {
     registerSimpleTestHandler();
-    var listener = ReactEvent.getListener(CHILD.id, ON_CLICK_KEY);
+    var listener = ReactEventEmitter.getListener(CHILD.id, ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
   it('should clear all handlers when asked to', function() {
     registerSimpleTestHandler();
-    ReactEvent.deleteAllListeners(CHILD.id);
-    var listener = ReactEvent.getListener(CHILD.id, ON_CLICK_KEY);
+    ReactEventEmitter.deleteAllListeners(CHILD.id);
+    var listener = ReactEventEmitter.getListener(CHILD.id, ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
@@ -121,28 +121,28 @@ describe('ReactEvent', function() {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke handlers when ReactEvent is disabled', function() {
+  it('should not invoke handlers if ReactEventEmitter is disabled', function() {
     registerSimpleTestHandler();
-    ReactEvent.setEnabled(false);
+    ReactEventEmitter.setEnabled(false);
     ReactTestUtils.Simulate.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(0);
-    ReactEvent.setEnabled(true);
+    ReactEventEmitter.setEnabled(true);
     ReactTestUtils.Simulate.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should bubble simply', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_CLICK_KEY,
       recordID.bind(null, CHILD.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       PARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, PARENT.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       GRANDPARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, GRANDPARENT.id)
@@ -155,17 +155,17 @@ describe('ReactEvent', function() {
   });
 
   it('should support stopPropagation()', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_CLICK_KEY,
       recordID.bind(null, CHILD.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       PARENT.id,
       ON_CLICK_KEY,
       recordIDAndStopPropagation.bind(null, PARENT.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       GRANDPARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, GRANDPARENT.id)
@@ -177,17 +177,17 @@ describe('ReactEvent', function() {
   });
 
   it('should stop after first dispatch if stopPropagation', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_CLICK_KEY,
       recordIDAndStopPropagation.bind(null, CHILD.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       PARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, PARENT.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       GRANDPARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, GRANDPARENT.id)
@@ -198,17 +198,17 @@ describe('ReactEvent', function() {
   });
 
   it('should stopPropagation if false is returned', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_CLICK_KEY,
       recordIDAndReturnFalse.bind(null, CHILD.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       PARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, PARENT.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       GRANDPARENT.id,
       ON_CLICK_KEY,
       recordID.bind(null, GRANDPARENT.id)
@@ -230,10 +230,10 @@ describe('ReactEvent', function() {
   it('should invoke handlers that were removed while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(abstractEvent) {
-      ReactEvent.deleteAllListeners(PARENT.id);
+      ReactEventEmitter.deleteAllListeners(PARENT.id);
     };
-    ReactEvent.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
-    ReactEvent.putListener(PARENT.id, ON_CLICK_KEY, handleParentClick);
+    ReactEventEmitter.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
+    ReactEventEmitter.putListener(PARENT.id, ON_CLICK_KEY, handleParentClick);
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(1);
   });
@@ -241,15 +241,15 @@ describe('ReactEvent', function() {
   it('should not invoke newly inserted handlers while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(abstractEvent) {
-      ReactEvent.putListener(PARENT.id, ON_CLICK_KEY, handleParentClick);
+      ReactEventEmitter.putListener(PARENT.id, ON_CLICK_KEY, handleParentClick);
     };
-    ReactEvent.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
+    ReactEventEmitter.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(0);
   });
 
   it('should infer onTouchTap from a touchStart/End', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, CHILD.id)
@@ -267,7 +267,7 @@ describe('ReactEvent', function() {
   });
 
   it('should infer onTouchTap from when dragging below threshold', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, CHILD.id)
@@ -285,7 +285,7 @@ describe('ReactEvent', function() {
   });
 
   it('should not onTouchTap from when dragging beyond threshold', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, CHILD.id)
@@ -303,17 +303,17 @@ describe('ReactEvent', function() {
 
 
   it('should bubble onTouchTap', function() {
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       CHILD.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, CHILD.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       PARENT.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, PARENT.id)
     );
-    ReactEvent.putListener(
+    ReactEventEmitter.putListener(
       GRANDPARENT.id,
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, GRANDPARENT.id)
