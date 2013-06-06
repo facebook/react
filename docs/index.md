@@ -56,10 +56,11 @@ id: home
     <div class="example">
       <h3>An Application</h3>
       <p>
-        Using properties and state, we can put together a small Todo
-        application. React provides an interface to the DOM via `refs`. Although
-        event handlers appear to be rendered inline, they will be
-        collected and implemented using event delegation.
+        Using `props` and `state`, we can put together a small Todo application.
+        This example uses `state` to track the current list of items as well as
+        the text that the user has entered. Although event handlers appear to be
+        rendered inline, they will be collected and implemented using event
+        delegation. 
       </p>
       <div id="todoExample"></div>
     </div>
