@@ -99,7 +99,7 @@ var analyticsData = {};
 var topLevelTypesToAnalyticsEvent = {
   topClick:       'click',
   topDoubleClick: 'doubleClick',
-  topMouseWheel:  'mouseWheel',
+  wheel:          'wheel',
   topTouchStart:  'touchStart',
   topTouchEnd:    'touchEnd',
   topTouchMove:   'touchMove',
@@ -117,7 +117,7 @@ if (__DEV__) {
   var analyticsEventNameToTopLevelType = {
     'click':        topLevelTypes.topClick,
     'doubleClick':  topLevelTypes.topDoubleClick,
-    'mouseWheel':   topLevelTypes.topMouseWheel,
+    'wheel':        topLevelTypes.wheel,
     'touchStart':   topLevelTypes.topTouchStart,
     'touchEnd':     topLevelTypes.topTouchEnd,
     'touchMove':    topLevelTypes.topTouchMove,

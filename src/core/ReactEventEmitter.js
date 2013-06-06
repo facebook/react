@@ -33,8 +33,8 @@ var isEventSupported = require('isEventSupported');
  *
  *  - We trap low level 'top-level' events.
  *
- *  - We dedupe cross-browser event names into these 'top-level types' so that
- *    `DOMMouseScroll` or `mouseWheel` both become `topMouseWheel`.
+ *  - We dedupe cross-browser event names into these 'top-level types' (e.g. so
+ *    that `wheel`, `mousewheel`, and `DOMMouseScroll` fire one event).
  *
  *  - At this point we have native browser events with the top-level type that
  *    was used to catch it at the top-level.
@@ -178,7 +178,6 @@ function listenAtTopLevel(touchNotMouse) {
   trapBubbledEvent(topLevelTypes.topMouseOut, 'mouseout', mountAt);
   trapBubbledEvent(topLevelTypes.topClick, 'click', mountAt);
   trapBubbledEvent(topLevelTypes.topDoubleClick, 'dblclick', mountAt);
-  trapBubbledEvent(topLevelTypes.topMouseWheel, 'mousewheel', mountAt);
   if (touchNotMouse) {
     trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
     trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
@@ -196,10 +195,17 @@ function listenAtTopLevel(touchNotMouse) {
     mountAt
   );
 
-  // Firefox needs to capture a different mouse scroll event.
-  // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-  trapBubbledEvent(topLevelTypes.topMouseWheel, 'DOMMouseScroll', mountAt);
-  // IE < 9 doesn't support capturing so just trap the bubbled event there.
+  if (isEventSupported('wheel')) {
+    trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
+  } else if (isEventSupported('mousewheel')) {
+    trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
+  } else {
+    // Firefox needs to capture a different mouse scroll event.
+    // @see http://www.quirksmode.org/dom/events/tests/scroll.html
+    trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
+  }
+
+  // IE<9 does not support capturing so just trap the bubbled event there.
   if (isEventSupported('scroll', true)) {
     trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
   } else {

@@ -60,10 +60,10 @@ var SimpleEventPlugin = {
         captured: keyOf({onClickCapture: true})
       }
     },
-    mouseWheel: {
+    wheel: {
       phasedRegistrationNames: {
-        bubbled: keyOf({onMouseWheel: true}),
-        captured: keyOf({onMouseWheelCapture: true})
+        bubbled: keyOf({onWheel: true}),
+        captured: keyOf({onWheelCapture: true})
       }
     },
     touchStart: {
@@ -188,7 +188,7 @@ var SimpleEventPlugin = {
       return null;
     }
     switch(topLevelType) {
-      case topLevelTypes.topMouseWheel:
+      case topLevelTypes.topWheel:
         data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
         break;
       case topLevelTypes.topScroll:
@@ -226,7 +226,7 @@ SimpleEventPlugin.topLevelTypesToAbstract = {
   topMouseMove:   SimpleEventPlugin.abstractEventTypes.mouseMove,
   topClick:       SimpleEventPlugin.abstractEventTypes.click,
   topDoubleClick: SimpleEventPlugin.abstractEventTypes.doubleClick,
-  topMouseWheel:  SimpleEventPlugin.abstractEventTypes.mouseWheel,
+  topWheel:       SimpleEventPlugin.abstractEventTypes.wheel,
   topTouchStart:  SimpleEventPlugin.abstractEventTypes.touchStart,
   topTouchEnd:    SimpleEventPlugin.abstractEventTypes.touchEnd,
   topTouchMove:   SimpleEventPlugin.abstractEventTypes.touchMove,
