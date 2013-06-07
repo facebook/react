@@ -9,6 +9,7 @@ module.exports = function() {
 
   var args = [
     "bin/jsx",
+    "--cache-dir", ".module-cache",
     config.sourceDir,
     config.outputDir
   ];
