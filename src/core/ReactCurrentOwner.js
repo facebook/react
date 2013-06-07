@@ -40,7 +40,9 @@ var ReactCurrentOwner = {
    */
   getDepth: function() {
     var owner = ReactCurrentOwner.current;
-    if (!owner) return 0;
+    if (!owner) {
+      return 0;
+    }
     return owner._compositionLevel;
   }
 

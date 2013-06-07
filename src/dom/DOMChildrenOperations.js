@@ -16,6 +16,9 @@
  * @providesModule DOMChildrenOperations
  */
 
+// Empty blocks improve readability so disable that warning
+// jshint -W035
+
 "use strict";
 
 var Danger = require('Danger');

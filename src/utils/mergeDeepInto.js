@@ -16,6 +16,9 @@
  * @providesModule mergeDeepInto
  */
 
+// Empty blocks improve readability so disable that warning
+// jshint -W035
+
 "use strict";
 
 var keyMirror = require('keyMirror');
