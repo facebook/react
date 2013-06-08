@@ -87,7 +87,7 @@ function tryToReuseArray(children) {
   for (var i = 0; i < children.length; i++) {
     var child = children[i];
     if (isEmptyChild(child)) return false;
-    assignKey('', child, i);
+    assignKey('0', child, i);
   }
   return true;
 }
