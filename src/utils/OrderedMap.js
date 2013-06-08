@@ -33,7 +33,7 @@ var NO_EXIST = 'NO_EXIST';
 if (__DEV__) {
   ARRAY_MUST_CB =
     'If providing an array to an OrderedMap constructor, you must provide ' +
-    'a callback that may determine the uniqueue key for each entry. ' +
+    'a callback that may determine the unique key for each entry. ' +
     'The key that you return from the callback should uniquely define that ' +
     'entity. What is returned from that function must answer the question: ' +
     '"If you were to shuffle the array of entities, how would you be able to ' +
