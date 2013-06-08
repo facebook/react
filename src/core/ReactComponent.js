@@ -296,7 +296,7 @@ var ReactComponent = {
           if (child.length === 0) continue;
 
           if (targetArray === null) targetArray = [];
-          appendNestedChildren(i - 1, child, targetArray);
+          appendNestedChildren('' + (i - 1), child, targetArray);
 
         } else if (!isEmptyChild(child)) {
 

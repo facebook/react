@@ -56,7 +56,7 @@ var flattenChildrenImpl = function(res, children, nameSoFar) {
       flattenChildrenImpl(
         res,
         child,
-        nameSoFar + ':' + escapedKey
+        nameSoFar + '[' + escapedKey + ']'
       );
     }
   } else {
@@ -80,7 +80,7 @@ var flattenChildrenImpl = function(res, children, nameSoFar) {
             flattenChildrenImpl(
               res,
               children[key],
-              nameSoFar + ':' + escapedKey
+              nameSoFar + '{' + escapedKey + '}'
             );
           }
         }

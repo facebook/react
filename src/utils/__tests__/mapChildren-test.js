@@ -122,10 +122,10 @@ describe('mapChildren', function() {
       .instance();
 
     expect(mapFn.calls.length).toBe(3);
-    expect(mapFn).toHaveBeenCalledWith(kidOne, 'one', 0);
-    expect(mapFn).toHaveBeenCalledWith(kidTwo, 'two', 1);
-    expect(mapFn).toHaveBeenCalledWith(kidThree, 'three', 2);
+    expect(mapFn).toHaveBeenCalledWith(kidOne, '0:one', 0);
+    expect(mapFn).toHaveBeenCalledWith(kidTwo, '0:two', 1);
+    expect(mapFn).toHaveBeenCalledWith(kidThree, '0:three', 2);
     expect(rendered.props.children).not.toEqual(instance.props.children);
-    expect(rendered.props.children).toHaveKeys(['one', 'two', 'three']);
+    expect(rendered.props.children).toHaveKeys(['0:one', '0:two', '0:three']);
   });
 });
