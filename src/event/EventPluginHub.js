@@ -277,7 +277,9 @@ var executeDispatchesAndRelease = function(abstractEvent) {
       abstractEvent,
       pluginExecuteDispatch || EventPluginUtils.executeDispatch
     );
-    AbstractEvent.release(abstractEvent);
+    if (!abstractEvent.isPersistent()) {
+      AbstractEvent.release(abstractEvent);
+    }
   }
 };
 

@@ -22,16 +22,8 @@ var BrowserEnv = require('BrowserEnv');
 var PooledClass = require('PooledClass');
 var TouchEventUtils = require('TouchEventUtils');
 
-var throwIf = require('throwIf');
+var emptyFunction = require('emptyFunction');
 
-
-// Only accessed in __DEV__
-var CLONE_TYPE_ERR;
-if (__DEV__) {
-  CLONE_TYPE_ERR =
-    'You may only clone instances of AbstractEvent for ' +
-    'persistent references. Check yourself.';
-}
 var MAX_POOL_SIZE = 20;
 
 /**
@@ -68,6 +60,7 @@ function AbstractEvent(
   this._dispatchIDs = null;
 
   this.isPropagationStopped = false;
+  this.isPersistent = emptyFunction.thatReturnsFalse;
 }
 
 /** `PooledClass` looks for this. */
@@ -102,6 +95,15 @@ AbstractEvent.prototype.stopPropagation = function() {
 
 AbstractEvent.prototype.preventDefault = function() {
   AbstractEvent.preventDefaultOnNativeEvent(this.nativeEvent);
+};
+
+/**
+ * We clear out all dispatched `AbstractEvent`s after each event loop, adding
+ * them back into the pool. This allows a way to hold onto a reference that
+ * won't be added back into the pool.
+ */
+AbstractEvent.prototype.persist = function() {
+  this.isPersistent = emptyFunction.thatReturnsTrue;
 };
 
 /**
@@ -240,32 +242,11 @@ AbstractEvent.eventPageX = function(nativeEvent) {
 };
 
 /**
- * A semantic API around cloning an event for use in another event loop. We
- * clear out all dispatched `AbstractEvent`s after each event loop, adding them
- * back into the pool. This allows a way to hold onto a reference that won't be
- * added back into the pool. Please note that `AbstractEvent.nativeEvent` is
- * *not* cloned and you will run into problems in IE if you assume that it will
- * be! The moral of that story is to always normalize any data you need into the
- * `.data` field. The data field is not cloned either, but there won't be any
- * issues related to use of `.data` in a future event cycle so long as no part
- * of your application mutates it. We don't clone the private fields because
- * your application should never be accessing them.
- *
- * - TODO: In __DEV__ when "releasing" events, don't put them back into the
- *   pool. Instead add ES5 getters on all their fields that throw errors so you
- *   can detect any application that's hanging onto events and reusing them.
- *   In prod - we can put them back into the pool for reuse.
+ * @deprecated
  */
 AbstractEvent.persistentCloneOf = function(abstractEvent) {
-  if (__DEV__) {
-    throwIf(!(abstractEvent instanceof AbstractEvent), CLONE_TYPE_ERR);
-  }
-  return new AbstractEvent(
-    abstractEvent.reactEventType,
-    abstractEvent.reactTargetID,
-    abstractEvent.nativeEvent,
-    abstractEvent.data
-  );
+  abstractEvent.persist();
+  return abstractEvent;
 };
 
 module.exports = AbstractEvent;
