@@ -126,23 +126,6 @@ var ReactMount = {
   },
 
   /**
-   * Creates a function that accepts a `container` and renders the supplied
-   * React component instance into it.
-   *
-   *   var renderInto = ReactMount.createComponentRenderer(component);
-   *   // ...
-   *   var component = renderInto($('container'));
-   *
-   * @param {ReactComponent} component Component instance to render.
-   * @return {function(DOMElement): ReactComponent}
-   */
-  createComponentRenderer: function(component) {
-    return function(container) {
-      return ReactMount.renderComponent(component, container);
-    };
-  },
-
-  /**
    * Constructs a component instance of `constructor` with `initialProps` and
    * renders it into the supplied `container`.
    *

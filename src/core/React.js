@@ -34,7 +34,6 @@ var React = {
   },
   autoBind: ReactCompositeComponent.autoBind,
   createClass: ReactCompositeComponent.createClass,
-  createComponentRenderer: ReactMount.createComponentRenderer,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   renderComponent: ReactMount.renderComponent,
