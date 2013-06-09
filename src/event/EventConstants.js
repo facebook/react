@@ -41,13 +41,14 @@ var topLevelTypes = keyMirror({
   topMouseOut: null,
   topMouseOver: null,
   topMouseUp: null,
-  topWheel: null,
   topScroll: null,
+  topSelectionChange: null,
   topSubmit: null,
   topTouchCancel: null,
   topTouchEnd: null,
   topTouchMove: null,
-  topTouchStart: null
+  topTouchStart: null,
+  topWheel: null
 });
 
 var EventConstants = {
