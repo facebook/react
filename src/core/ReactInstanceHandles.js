@@ -82,8 +82,85 @@ function isValidID(id) {
  * @return {string} ID of the parent, or an empty string.
  * @private
  */
-function parentID(id) {
+function getParentID(id) {
   return id ? id.substr(0, id.lastIndexOf(SEPARATOR)) : '';
+}
+
+/**
+ * Gets the next DOM ID on the tree path from the supplied `ancestorID` to the
+ * supplied `destinationID`. If they are equal, the ID is returned.
+ *
+ * @param {string} ancestorID ID of an ancestor node of `destinationID`.
+ * @param {string} destinationID ID of the destination node.
+ * @return {string} Next ID on the path from `ancestorID` to `destinationID`.
+ * @private
+ */
+function getNextDescendantID(ancestorID, destinationID) {
+  invariant(
+    isValidID(ancestorID) && isValidID(destinationID),
+    'getNextDescendantID(%s, %s): Received an invalid React DOM ID.',
+    ancestorID,
+    destinationID
+  );
+  var longestCommonID = getFirstCommonAncestorID(
+    ancestorID,
+    destinationID
+  );
+  invariant(
+    longestCommonID === ancestorID,
+    'getNextDescendantID(...): React has made an invalid assumption about ' +
+    'the DOM hierarchy. Expected `%s` to be an ancestor of `%s`.',
+    ancestorID,
+    destinationID
+  );
+  if (ancestorID === destinationID) {
+    return ancestorID;
+  }
+  // Skip over the ancestor and the immediate separator. Traverse until we hit
+  // another separator or we reach the end of `destinationID`.
+  var start = ancestorID.length + SEPARATOR_LENGTH;
+  for (var i = start; i < destinationID.length; i++) {
+    if (isMarker(destinationID, i)) {
+      break;
+    }
+  }
+  return destinationID.substr(0, i);
+}
+
+/**
+ * Gets the nearest common ancestor ID of two IDs.
+ *
+ * Using this ID scheme, the nearest common ancestor ID is the longest common
+ * prefix of the two IDs that immediately preceded a "marker" in both strings.
+ *
+ * @param {string} oneID
+ * @param {string} twoID
+ * @return {string} Nearest common ancestor ID, or the empty string if none.
+ * @private
+ */
+function getFirstCommonAncestorID(oneID, twoID) {
+  var minLength = Math.min(oneID.length, twoID.length);
+  if (minLength === 0) {
+    return '';
+  }
+  var lastCommonMarkerIndex = 0;
+  // Use `<=` to traverse until the "EOL" of the shorter string.
+  for (var i = 0; i <= minLength; i++) {
+    if (isMarker(oneID, i) && isMarker(twoID, i)) {
+      lastCommonMarkerIndex = i;
+    } else if (oneID.charAt(i) !== twoID.charAt(i)) {
+      break;
+    }
+  }
+  var longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
+  invariant(
+    isValidID(longestCommonID),
+    'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
+    oneID,
+    twoID,
+    longestCommonID
+  );
+  return longestCommonID;
 }
 
 /**
@@ -105,7 +182,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     'traverseParentPath(...): Cannot traverse from and to the same ID, `%s`.',
     start
   );
-  var ancestorID = ReactInstanceHandles.getFirstCommonAncestorID(start, stop);
+  var ancestorID = getFirstCommonAncestorID(start, stop);
   var traverseUp = ancestorID === stop;
   invariant(
     traverseUp || ancestorID === start,
@@ -116,7 +193,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
   );
   // Traverse from `start` to `stop` one depth at a time.
   var depth = 0;
-  var traverse = traverseUp ? parentID : ReactInstanceHandles.nextDescendantID;
+  var traverse = traverseUp ? getParentID : getNextDescendantID;
   for (var id = start; /* until break */; id = traverse(id, stop)) {
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
       cb(id, traverseUp, arg);
@@ -209,42 +286,6 @@ var ReactInstanceHandles = {
   },
 
   /**
-   * Gets the nearest common ancestor ID of two IDs.
-   *
-   * Using this ID scheme, the nearest common ancestor ID is the longest common
-   * prefix of the two IDs that immediately preceded a "marker" in both strings.
-   *
-   * @param {string} oneID
-   * @param {string} twoID
-   * @return {string} Nearest common ancestor ID, or the empty string if none.
-   * @internal
-   */
-  getFirstCommonAncestorID: function(oneID, twoID) {
-    var minLength = Math.min(oneID.length, twoID.length);
-    if (minLength === 0) {
-      return '';
-    }
-    var lastCommonMarkerIndex = 0;
-    // Use `<=` to traverse until the "EOL" of the shorter string.
-    for (var i = 0; i <= minLength; i++) {
-      if (isMarker(oneID, i) && isMarker(twoID, i)) {
-        lastCommonMarkerIndex = i;
-      } else if (oneID.charAt(i) !== twoID.charAt(i)) {
-        break;
-      }
-    }
-    var longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
-    invariant(
-      isValidID(longestCommonID),
-      'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
-      oneID,
-      twoID,
-      longestCommonID
-    );
-    return longestCommonID;
-  },
-
-  /**
    * Gets the DOM ID of the React component that is the root of the tree that
    * contains the React component with the supplied DOM ID.
    *
@@ -272,15 +313,12 @@ var ReactInstanceHandles = {
    * @internal
    */
   traverseEnterLeave: function(leaveID, enterID, cb, upArg, downArg) {
-    var longestCommonID = ReactInstanceHandles.getFirstCommonAncestorID(
-      leaveID,
-      enterID
-    );
-    if (longestCommonID !== leaveID) {
-      traverseParentPath(leaveID, longestCommonID, cb, upArg, false, true);
+    var ancestorID = getFirstCommonAncestorID(leaveID, enterID);
+    if (ancestorID !== leaveID) {
+      traverseParentPath(leaveID, ancestorID, cb, upArg, false, true);
     }
-    if (longestCommonID !== enterID) {
-      traverseParentPath(longestCommonID, enterID, cb, downArg, true, false);
+    if (ancestorID !== enterID) {
+      traverseParentPath(ancestorID, enterID, cb, downArg, true, false);
     }
   },
 
@@ -302,45 +340,16 @@ var ReactInstanceHandles = {
   },
 
   /**
-   * Gets the next DOM ID on the tree path from the supplied `ancestorID` to the
-   * supplied `destinationID`. If they are equal, the ID is returned.
-   *
-   * @param {string} ancestorID ID of an ancestor node of `destinationID`.
-   * @param {string} destinationID ID of the destination node.
-   * @return {string} Next ID on the path from `ancestorID` to `destinationID`.
-   * @internal
+   * Exposed for unit testing.
+   * @private
    */
-  nextDescendantID: function(ancestorID, destinationID) {
-    invariant(
-      isValidID(ancestorID) && isValidID(destinationID),
-      'nextDescendantID(%s, %s): Received an invalid React DOM ID.',
-      ancestorID,
-      destinationID
-    );
-    var longestCommonID = ReactInstanceHandles.getFirstCommonAncestorID(
-      ancestorID,
-      destinationID
-    );
-    invariant(
-      longestCommonID === ancestorID,
-      'nextDescendantID(...): React has made an invalid assumption about the ' +
-      'DOM hierarchy. Expected `%s` to be an ancestor of `%s`.',
-      ancestorID,
-      destinationID
-    );
-    if (ancestorID === destinationID) {
-      return ancestorID;
-    }
-    // Skip over the ancestor and the immediate separator. Traverse until we hit
-    // another separator or we reach the end of `destinationID`.
-    var start = ancestorID.length + SEPARATOR_LENGTH;
-    for (var i = start; i < destinationID.length; i++) {
-      if (isMarker(destinationID, i)) {
-        break;
-      }
-    }
-    return destinationID.substr(0, i);
-  }
+  _getFirstCommonAncestorID: getFirstCommonAncestorID,
+
+  /**
+   * Exposed for unit testing.
+   * @private
+   */
+  _getNextDescendantID: getNextDescendantID
 
 };
 
