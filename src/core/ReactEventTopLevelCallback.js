@@ -68,6 +68,11 @@ var ReactEventTopLevelCallback = {
       if (!_topLevelListenersEnabled) {
         return;
       }
+      // TODO: Remove when synthetic events are ready, this is for IE<9.
+      if (nativeEvent.srcElement &&
+          nativeEvent.srcElement !== nativeEvent.target) {
+        nativeEvent.target = nativeEvent.srcElement;
+      }
       var topLevelTarget = ReactInstanceHandles.getFirstReactDOM(
         getEventTarget(nativeEvent)
       ) || ExecutionEnvironment.global;

@@ -258,7 +258,7 @@ var ReactInstanceHandles = {
    * Traverses up the ancestors of the supplied node to find a node that is a
    * DOM representation of a React component.
    *
-   * @param {?DOMEventTarget} node
+   * @param {*} node
    * @return {?DOMEventTarget}
    * @internal
    */
