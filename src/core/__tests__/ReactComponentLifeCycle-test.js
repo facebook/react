@@ -429,5 +429,71 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state.stateField).toBe('goodbye');
   });
 
+  it('should call nested lifecycle methods in the right order', function() {
+    var log;
+    var logger = function(msg) {
+      return function() {
+        // return true for shouldComponentUpdate
+        log.push(msg);
+        return true;
+      };
+    };
+    var Outer = React.createClass({
+      render: function() {
+        return <div><Inner x={this.props.x} /></div>;
+      },
+      componentWillMount: logger('outer componentWillMount'),
+      componentDidMount: logger('outer componentDidMount'),
+      componentWillReceiveProps: logger('outer componentWillReceiveProps'),
+      shouldComponentUpdate: logger('outer shouldComponentUpdate'),
+      componentWillUpdate: logger('outer componentWillUpdate'),
+      componentDidUpdate: logger('outer componentDidUpdate'),
+      componentWillUnmount: logger('outer componentWillUnmount')
+    });
+    var Inner = React.createClass({
+      render: function() {
+        return <span>{this.props.x}</span>;
+      },
+      componentWillMount: logger('inner componentWillMount'),
+      componentDidMount: logger('inner componentDidMount'),
+      componentWillReceiveProps: logger('inner componentWillReceiveProps'),
+      shouldComponentUpdate: logger('inner shouldComponentUpdate'),
+      componentWillUpdate: logger('inner componentWillUpdate'),
+      componentDidUpdate: logger('inner componentDidUpdate'),
+      componentWillUnmount: logger('inner componentWillUnmount')
+    });
+    var instance;
+    var node;
+
+    log = [];
+    instance = ReactTestUtils.renderIntoDocument(<Outer x={17} />);
+    expect(log).toEqual([
+      'outer componentWillMount',
+      'inner componentWillMount',
+      'inner componentDidMount',
+      'outer componentDidMount'
+    ]);
+
+    log = [];
+    instance.setProps({x: 42});
+    expect(log).toEqual([
+      'outer componentWillReceiveProps',
+      'outer shouldComponentUpdate',
+      'outer componentWillUpdate',
+      'inner componentWillReceiveProps',
+      'inner shouldComponentUpdate',
+      'inner componentWillUpdate',
+      'inner componentDidUpdate',
+      'outer componentDidUpdate'
+    ]);
+
+    log = [];
+    instance.unmountComponent();
+    expect(log).toEqual([
+      'outer componentWillUnmount',
+      'inner componentWillUnmount'
+    ]);
+  });
+
 });
 
