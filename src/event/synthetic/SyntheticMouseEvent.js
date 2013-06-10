@@ -1,10 +1,10 @@
 /**
- * @providesModule DelegateMouseEvent
+ * @providesModule SyntheticMouseEvent
  * @typechecks
  */
 
 var BrowserEnv = require('BrowserEnv');
-var DelegateUIEvent = require('DelegateUIEvent');
+var SyntheticUIEvent = require('SyntheticUIEvent');
 
 /**
  * @interface MouseEvent
@@ -55,15 +55,15 @@ var MouseEventInterface = {
 };
 
 /**
- * @param {object} reactEventType See `EventPluginHub`.
- * @param {string} reactTargetID ID of the target component.
+ * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {string} dispatchMarker Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
- * @extends {DelegateUIEvent}
+ * @extends {SyntheticUIEvent}
  */
-function DelegateMouseEvent(reactEventType, reactTargetID, nativeEvent) {
-  DelegateUIEvent.call(this, reactEventType, reactTargetID, nativeEvent);
+function SyntheticMouseEvent(dispatchConfig, dispatchMarker, nativeEvent) {
+  SyntheticUIEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
 }
 
-DelegateUIEvent.augmentClass(DelegateMouseEvent, MouseEventInterface);
+SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
 
-module.exports = DelegateMouseEvent;
+module.exports = SyntheticMouseEvent;

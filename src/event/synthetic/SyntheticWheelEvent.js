@@ -1,9 +1,9 @@
 /**
- * @providesModule DelegateWheelEvent
+ * @providesModule SyntheticWheelEvent
  * @typechecks
  */
 
-var DelegateMouseEvent = require('DelegateMouseEvent');
+var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 /**
  * @interface WheelEvent
@@ -33,15 +33,15 @@ var WheelEventInterface = {
 };
 
 /**
- * @param {object} delegateConfig Configuration used by top-level delegation.
- * @param {string} delegateMarker Marker identifying the event target.
+ * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {string} dispatchMarker Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
- * @extends {DelegateMouseEvent}
+ * @extends {SyntheticMouseEvent}
  */
-function DelegateWheelEvent(delegateConfig, delegateMarker, nativeEvent) {
-  DelegateMouseEvent.call(this, delegateConfig, delegateMarker, nativeEvent);
+function SyntheticWheelEvent(dispatchConfig, dispatchMarker, nativeEvent) {
+  SyntheticMouseEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent);
 }
 
-DelegateMouseEvent.augmentClass(DelegateWheelEvent, WheelEventInterface);
+SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);
 
-module.exports = DelegateWheelEvent;
+module.exports = SyntheticWheelEvent;

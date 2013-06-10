@@ -1,5 +1,5 @@
 /**
- * @providesModule DelegateEvent
+ * @providesModule SyntheticEvent
  * @typechecks
  */
 
@@ -29,24 +29,25 @@ var EventInterface = {
 };
 
 /**
- * Delegate events are dispatched by top-level event delegation systems.
+ * Synthetic events are dispatched by event plugins, typically in response to a
+ * top-level event delegation handler.
  *
  * These systems should generally use pooling to reduce the frequency of garbage
  * collection. The system should check `isPersistent` to determine whether the
  * event should be released into the pool after being dispatched. Users that
  * need a persisted event should invoke `persist`.
  *
- * Delegate events (and subclasses) implement the DOM Level 3 Events API by
+ * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
  * normalizing browser quirks. Subclasses do not necessarily have to implement a
  * DOM interface; custom application-specific events can also subclass this.
  *
- * @param {object} delegateConfig Configuration used by top-level delegation.
- * @param {string} delegateMarker Marker identifying the event target.
+ * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {string} dispatchMarker Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
  */
-function DelegateEvent(delegateConfig, delegateMarker, nativeEvent) {
-  this.delegateConfig = delegateConfig;
-  this.delegateMarker = delegateMarker;
+function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
+  this.dispatchConfig = dispatchConfig;
+  this.dispatchMarker = dispatchMarker;
   this.nativeEvent = nativeEvent;
 
   var Interface = this.constructor.Interface;
@@ -67,7 +68,7 @@ function DelegateEvent(delegateConfig, delegateMarker, nativeEvent) {
   this.isPropagationStopped = emptyFunction.thatReturnsFalse;
 }
 
-mergeInto(DelegateEvent.prototype, {
+mergeInto(SyntheticEvent.prototype, {
 
   preventDefault: function() {
     this.defaultPrevented = true;
@@ -83,7 +84,7 @@ mergeInto(DelegateEvent.prototype, {
   },
 
   /**
-   * We release all dispatched `DelegateEvent`s after each event loop, adding
+   * We release all dispatched `SyntheticEvent`s after each event loop, adding
    * them back into the pool. This allows a way to hold onto a reference that
    * won't be added back into the pool.
    */
@@ -106,14 +107,14 @@ mergeInto(DelegateEvent.prototype, {
     for (var propName in Interface) {
       this[propName] = null;
     }
-    this.delegateConfig = null;
-    this.delegateMarker = null;
+    this.dispatchConfig = null;
+    this.dispatchMarker = null;
     this.nativeEvent = null;
   }
 
 });
 
-DelegateEvent.Interface = EventInterface;
+SyntheticEvent.Interface = EventInterface;
 
 /**
  * Helper to reduce boilerplate when creating subclasses.
@@ -121,7 +122,7 @@ DelegateEvent.Interface = EventInterface;
  * @param {function} Class
  * @param {?object} Interface
  */
-DelegateEvent.augmentClass = function(Class, Interface) {
+SyntheticEvent.augmentClass = function(Class, Interface) {
   var Super = this;
 
   var prototype = Object.create(Super.prototype);
@@ -135,6 +136,6 @@ DelegateEvent.augmentClass = function(Class, Interface) {
   PooledClass.addPoolingTo(Class, PooledClass.threeArgumentPooler);
 };
 
-PooledClass.addPoolingTo(DelegateEvent, PooledClass.threeArgumentPooler);
+PooledClass.addPoolingTo(SyntheticEvent, PooledClass.threeArgumentPooler);
 
-module.exports = DelegateEvent;
+module.exports = SyntheticEvent;
