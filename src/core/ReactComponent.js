@@ -401,18 +401,20 @@ var ReactComponent = {
      *
      * @param {string} rootID DOM ID of the root node.
      * @param {DOMElement} container DOM element to mount into.
+     * @param {boolean} shouldReuseMarkup If true, do not insert markup
      * @final
      * @internal
      * @see {ReactMount.renderComponent}
      */
-    mountComponentIntoNode: function(rootID, container) {
+    mountComponentIntoNode: function(rootID, container, shouldReuseMarkup) {
       var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
       transaction.perform(
         this._mountComponentIntoNode,
         this,
         rootID,
         container,
-        transaction
+        transaction,
+        shouldReuseMarkup
       );
       ReactComponent.ReactReconcileTransaction.release(transaction);
     },
@@ -421,13 +423,22 @@ var ReactComponent = {
      * @param {string} rootID DOM ID of the root node.
      * @param {DOMElement} container DOM element to mount into.
      * @param {ReactReconcileTransaction} transaction
+     * @param {boolean} shouldReuseMarkup If true, do not insert markup
      * @final
      * @private
      */
-    _mountComponentIntoNode: function(rootID, container, transaction) {
+    _mountComponentIntoNode: function(
+        rootID,
+        container,
+        transaction,
+        shouldReuseMarkup) {
       var renderStart = Date.now();
       var markup = this.mountComponent(rootID, transaction);
       ReactMount.totalInstantiationTime += (Date.now() - renderStart);
+
+      if (shouldReuseMarkup) {
+        return;
+      }
 
       var injectionStart = Date.now();
       // Asynchronously inject markup by ensuring that the container is not in

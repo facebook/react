@@ -24,8 +24,6 @@ var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 
 var $ = require('$');
 
-var globalMountPointCounter = 0;
-
 /** Mapping from reactRoot DOM ID to React component instance. */
 var instanceByReactRootID = {};
 
@@ -33,11 +31,20 @@ var instanceByReactRootID = {};
 var containersByReactRootID = {};
 
 /**
+ * @param {DOMElement} container DOM element that may contain a React component
+ * @return {?DOMElement} DOM element that may have the reactRoot ID, or null.
+ */
+function getReactRootElementInContainer(container) {
+  return container.firstChild;
+}
+
+/**
  * @param {DOMElement} container DOM element that may contain a React component.
  * @return {?string} A "reactRoot" ID, if a React component is rendered.
  */
 function getReactRootID(container) {
-  return container.firstChild && container.firstChild.id;
+  var rootElement = getReactRootElementInContainer(container);
+  return rootElement && rootElement.id;
 }
 
 /**
@@ -93,6 +100,54 @@ var ReactMount = {
   },
 
   /**
+   * Take a component that's already mounted into the DOM and replace its props
+   * @param {ReactComponent} prevComponent component instance already in the DOM
+   * @param {ReactComponent} nextComponent component instance to render
+   * @param {DOMElement} container container to render into
+   */
+  _updateRootComponent: function(prevComponent, nextComponent, container) {
+    var nextProps = nextComponent.props;
+    ReactMount.scrollMonitor(container, function() {
+      prevComponent.replaceProps(nextProps);
+    });
+    return prevComponent;
+  },
+
+  /**
+   * Register a component into the instance map and start the events system.
+   * @param {ReactComponent} nextComponent component instance to render
+   * @param {DOMElement} container container to render into
+   * @return {string} reactRoot ID prefix
+   */
+  _registerComponent: function(nextComponent, container) {
+    ReactMount.prepareTopLevelEvents(ReactEventTopLevelCallback);
+
+    var reactRootID = ReactMount.registerContainer(container);
+    instanceByReactRootID[reactRootID] = nextComponent;
+    return reactRootID;
+  },
+
+  /**
+   * Render a new component into the DOM.
+   * @param {ReactComponent} nextComponent component instance to render
+   * @param {DOMElement} container container to render into
+   * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
+   * @return {ReactComponent} nextComponent
+   */
+  _renderNewRootComponent: function(
+      nextComponent,
+      container,
+      shouldReuseMarkup) {
+    var reactRootID = ReactMount._registerComponent(nextComponent, container);
+    nextComponent.mountComponentIntoNode(
+      reactRootID,
+      container,
+      shouldReuseMarkup
+    );
+    return nextComponent;
+  },
+
+  /**
    * Renders a React component into the DOM in the supplied `container`.
    *
    * If the React component was previously rendered into `container`, this will
@@ -104,25 +159,32 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   renderComponent: function(nextComponent, container) {
-    var prevComponent = instanceByReactRootID[getReactRootID(container)];
-    if (prevComponent) {
-      if (prevComponent.constructor === nextComponent.constructor) {
-        var nextProps = nextComponent.props;
-        ReactMount.scrollMonitor(container, function() {
-          prevComponent.replaceProps(nextProps);
-        });
-        return prevComponent;
+    var registeredComponent = instanceByReactRootID[getReactRootID(container)];
+
+    if (registeredComponent) {
+      if (registeredComponent.constructor === nextComponent.constructor) {
+        return ReactMount._updateRootComponent(
+          registeredComponent,
+          nextComponent,
+          container
+        );
       } else {
         ReactMount.unmountAndReleaseReactRootNode(container);
       }
     }
 
-    ReactMount.prepareTopLevelEvents(ReactEventTopLevelCallback);
+    var reactRootElement = getReactRootElementInContainer(container);
+    var containerHasReactMarkup =
+      reactRootElement &&
+        ReactInstanceHandles.isRenderedByReact(reactRootElement);
 
-    var reactRootID = ReactMount.registerContainer(container);
-    instanceByReactRootID[reactRootID] = nextComponent;
-    nextComponent.mountComponentIntoNode(reactRootID, container);
-    return nextComponent;
+    var shouldReuseMarkup = containerHasReactMarkup && !registeredComponent;
+
+    return ReactMount._renderNewRootComponent(
+      nextComponent,
+      container,
+      shouldReuseMarkup
+    );
   },
 
   /**
@@ -167,9 +229,7 @@ var ReactMount = {
     }
     if (!reactRootID) {
       // No valid "reactRoot" ID found, create one.
-      reactRootID = ReactInstanceHandles.getReactRootID(
-        globalMountPointCounter++
-      );
+      reactRootID = ReactInstanceHandles.createReactRootID();
     }
     containersByReactRootID[reactRootID] = container;
     return reactRootID;

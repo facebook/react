@@ -31,6 +31,26 @@ var SEPARATOR_LENGTH = SEPARATOR.length;
 var MAX_TREE_DEPTH = 100;
 
 /**
+ * Size of the reactRoot ID space. We generate random numbers for React root
+ * IDs and if there's a collision the events and DOM update system will
+ * get confused. If we assume 100 React components per page, and a user
+ * loads 1 page per minute 24/7 for 50 years, with a mount point space of
+ * 9,999,999 the likelihood of never having a collision is 99.997%.
+ */
+var GLOBAL_MOUNT_POINT_MAX = 9999999;
+
+/**
+ * Creates a DOM ID prefix to use when mounting React components.
+ *
+ * @param {number} index A unique integer
+ * @return {string} React root ID.
+ * @internal
+ */
+function getReactRootIDString(index) {
+  return '.reactRoot[' + index + ']';
+}
+
+/**
  * Checks if a character in the supplied ID is a separator or the end.
  *
  * @param {string} id A React DOM ID.
@@ -53,18 +73,6 @@ function isValidID(id) {
   return id === '' || (
     id.charAt(0) === SEPARATOR && id.charAt(id.length - 1) !== SEPARATOR
   );
-}
-
-/**
- * True if the supplied `node` is rendered by React.
- *
- * @param {DOMEventTarget} node DOM Element to check.
- * @return {boolean} True if the DOM Element appears to be rendered by React.
- * @private
- */
-function isRenderedByReact(node) {
-  var id = getDOMNodeID(node);
-  return id ? id.charAt(0) === SEPARATOR : false;
 }
 
 /**
@@ -137,6 +145,24 @@ var ReactInstanceHandles = {
 
   separator: SEPARATOR,
 
+  createReactRootID: function() {
+    return getReactRootIDString(
+      Math.ceil(Math.random() * GLOBAL_MOUNT_POINT_MAX)
+    );
+  },
+
+  /**
+   * True if the supplied `node` is rendered by React.
+   *
+   * @param {DOMEventTarget} node DOM Element to check.
+   * @return {boolean} True if the DOM Element appears to be rendered by React.
+   * @private
+   */
+  isRenderedByReact: function(node) {
+    var id = getDOMNodeID(node);
+    return id ? id.charAt(0) === SEPARATOR : false;
+  },
+
   /**
    * Traverses up the ancestors of the supplied node to find a node that is a
    * DOM representation of a React component.
@@ -148,7 +174,7 @@ var ReactInstanceHandles = {
   getFirstReactDOM: function(node) {
     var current = node;
     while (current && current.parentNode !== current) {
-      if (isRenderedByReact(current)) {
+      if (ReactInstanceHandles.isRenderedByReact(current)) {
         return current;
       }
       current = current.parentNode;
@@ -212,16 +238,6 @@ var ReactInstanceHandles = {
       longestCommonID
     );
     return longestCommonID;
-  },
-  /**
-   * Creates a DOM ID to use when mounting React components.
-   *
-   * @param {number} mountPointCount The count of React renders so far.
-   * @return {string} React root ID.
-   * @internal
-   */
-  getReactRootID: function(mountPointCount) {
-    return '.reactRoot[' + mountPointCount + ']';
   },
 
   /**

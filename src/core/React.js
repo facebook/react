@@ -22,6 +22,7 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactComponent = require('ReactComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
+var ReactServerRendering = require('ReactServerRendering');
 
 var ReactDefaultInjection = require('ReactDefaultInjection');
 
@@ -37,6 +38,7 @@ var React = {
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   renderComponent: ReactMount.renderComponent,
+  renderComponentToString: ReactServerRendering.renderComponentToString,
   unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
   isValidComponent: ReactComponent.isValidComponent
 };
