@@ -32,7 +32,7 @@ var containersByReactRootID = {};
 
 /**
  * @param {DOMElement} container DOM element that may contain a React component
- * @return {?DOMElement} DOM element that may have the reactRoot ID, or null.
+ * @return {?*} DOM element that may have the reactRoot ID, or null.
  */
 function getReactRootElementInContainer(container) {
   return container.firstChild;

@@ -312,3 +312,11 @@ describe('ReactInstanceHandles.getReactRootIDFromNodeID', function() {
     expect(actual).toEqual(expected);
   });
 });
+
+describe('ReactInstanceHandles.isRenderedByReact', function() {
+  it('should not crash on text nodes', function() {
+    expect(function() {
+      ReactInstanceHandles.isRenderedByReact(document.createTextNode('yolo'))
+    }).not.toThrow();
+  });
+});

@@ -154,11 +154,15 @@ var ReactInstanceHandles = {
   /**
    * True if the supplied `node` is rendered by React.
    *
-   * @param {DOMEventTarget} node DOM Element to check.
+   * @param {*} node DOM Element to check.
    * @return {boolean} True if the DOM Element appears to be rendered by React.
-   * @private
+   * @internal
    */
   isRenderedByReact: function(node) {
+    if (node.nodeType !== 1) {
+      // Not a DOMElement, therefore not a React component
+      return false;
+    }
     var id = getDOMNodeID(node);
     return id ? id.charAt(0) === SEPARATOR : false;
   },
