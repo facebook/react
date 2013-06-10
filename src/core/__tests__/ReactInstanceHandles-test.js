@@ -84,6 +84,24 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
+  describe('findComponentRoot', function() {
+    it('should find the correct node with prefix sibling IDs', function() {
+      var parentNode = document.createElement('div');
+      var childNodeA = document.createElement('div');
+      var childNodeB = document.createElement('div');
+      parentNode.appendChild(childNodeA);
+      parentNode.appendChild(childNodeB);
+
+      parentNode.id = '.react[0]';
+      childNodeA.id = '.react[0].0';
+      childNodeB.id = '.react[0].0:1';
+
+      expect(
+        ReactInstanceHandles.findComponentRoot(parentNode, childNodeB.id)
+      ).toBe(childNodeB);
+    });
+  });
+
   describe('getReactRootIDFromNodeID', function() {
     it('should support strings', function() {
       var test = '.reactRoot[s_0_1][0]..[1]';

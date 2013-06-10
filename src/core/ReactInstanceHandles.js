@@ -58,7 +58,7 @@ function getReactRootIDString(index) {
  * @return {boolean} True if the character is a separator or end of the ID.
  * @private
  */
-function isMarker(id, index) {
+function isBoundary(id, index) {
   return id.charAt(index) === SEPARATOR || index === id.length;
 }
 
@@ -72,6 +72,21 @@ function isMarker(id, index) {
 function isValidID(id) {
   return id === '' || (
     id.charAt(0) === SEPARATOR && id.charAt(id.length - 1) !== SEPARATOR
+  );
+}
+
+/**
+ * Checks if the first ID is an ancestor of or equal to the second ID.
+ *
+ * @param {string} ancestorID
+ * @param {string} descendantID
+ * @return {boolean} True if `ancestorID` is an ancestor of `descendantID`.
+ * @internal
+ */
+function isAncestorIDOf(ancestorID, descendantID) {
+  return (
+    descendantID.indexOf(ancestorID) === 0 &&
+    isBoundary(descendantID, ancestorID.length)
   );
 }
 
@@ -102,12 +117,8 @@ function getNextDescendantID(ancestorID, destinationID) {
     ancestorID,
     destinationID
   );
-  var longestCommonID = getFirstCommonAncestorID(
-    ancestorID,
-    destinationID
-  );
   invariant(
-    longestCommonID === ancestorID,
+    isAncestorIDOf(ancestorID, destinationID),
     'getNextDescendantID(...): React has made an invalid assumption about ' +
     'the DOM hierarchy. Expected `%s` to be an ancestor of `%s`.',
     ancestorID,
@@ -120,7 +131,7 @@ function getNextDescendantID(ancestorID, destinationID) {
   // another separator or we reach the end of `destinationID`.
   var start = ancestorID.length + SEPARATOR_LENGTH;
   for (var i = start; i < destinationID.length; i++) {
-    if (isMarker(destinationID, i)) {
+    if (isBoundary(destinationID, i)) {
       break;
     }
   }
@@ -146,7 +157,7 @@ function getFirstCommonAncestorID(oneID, twoID) {
   var lastCommonMarkerIndex = 0;
   // Use `<=` to traverse until the "EOL" of the shorter string.
   for (var i = 0; i <= minLength; i++) {
-    if (isMarker(oneID, i) && isMarker(twoID, i)) {
+    if (isBoundary(oneID, i) && isBoundary(twoID, i)) {
       lastCommonMarkerIndex = i;
     } else if (oneID.charAt(i) !== twoID.charAt(i)) {
       break;
@@ -182,10 +193,9 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     'traverseParentPath(...): Cannot traverse from and to the same ID, `%s`.',
     start
   );
-  var ancestorID = getFirstCommonAncestorID(start, stop);
-  var traverseUp = ancestorID === stop;
+  var traverseUp = isAncestorIDOf(stop, start);
   invariant(
-    traverseUp || ancestorID === start,
+    traverseUp || isAncestorIDOf(start, stop),
     'traverseParentPath(%s, %s, ...): Cannot traverse from two IDs that do ' +
     'not have a parent path.',
     start,
@@ -277,7 +287,7 @@ var ReactInstanceHandles = {
     while (child) {
       if (id === child.id) {
         return child;
-      } else if (id.indexOf(child.id) === 0) {
+      } else if (isAncestorIDOf(child.id, id)) {
         return ReactInstanceHandles.findComponentRoot(child, id);
       }
       child = child.nextSibling;
