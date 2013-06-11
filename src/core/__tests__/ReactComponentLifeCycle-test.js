@@ -463,7 +463,6 @@ describe('ReactComponentLifeCycle', function() {
       componentWillUnmount: logger('inner componentWillUnmount')
     });
     var instance;
-    var node;
 
     log = [];
     instance = ReactTestUtils.renderIntoDocument(<Outer x={17} />);
