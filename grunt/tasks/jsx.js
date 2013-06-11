@@ -10,6 +10,7 @@ module.exports = function() {
   var args = [
     "bin/jsx",
     "--cache-dir", ".module-cache",
+    "--relativize",
     config.sourceDir,
     config.outputDir
   ];
