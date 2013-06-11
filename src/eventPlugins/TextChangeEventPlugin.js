@@ -22,6 +22,7 @@ var AbstractEvent = require('AbstractEvent');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
@@ -39,9 +40,12 @@ var abstractEventTypes = {
 
 // IE9 claims to support the input event but fails to trigger it when deleting
 // text, so we ignore its input events
-var isInputSupported = isEventSupported('input') && (
-  !("documentMode" in document) || document.documentMode > 9
-);
+var isInputSupported;
+if (ExecutionEnvironment.canUseDOM) {
+  isInputSupported = isEventSupported('input') && (
+    !("documentMode" in document) || document.documentMode > 9
+  );
+}
 
 var hasInputCapabilities = function(elem) {
   // The HTML5 spec lists many more types than `text` and `password` on which
