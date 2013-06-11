@@ -451,17 +451,19 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    if (this.componentDidMount) {
-      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
-    }
-
     this._renderedComponent = this._renderValidatedComponent();
 
     // Done with mounting, `setState` will now trigger UI changes.
     this._compositeLifeCycleState = null;
     this._lifeCycleState = ReactComponent.LifeCycle.MOUNTED;
 
-    return this._renderedComponent.mountComponent(rootID, transaction);
+    var html = this._renderedComponent.mountComponent(rootID, transaction);
+
+    if (this.componentDidMount) {
+      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+    }
+
+    return html;
   },
 
   /**
