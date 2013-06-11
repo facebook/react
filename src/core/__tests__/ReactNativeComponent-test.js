@@ -100,6 +100,55 @@ describe('ReactNativeComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
+    it("should remove attributes", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
+
+      expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
+    });
+
+    it("should remove properties", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
+
+      expect(stub.getDOMNode().className).toEqual('monkey');
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().className).toEqual('');
+    });
+
+    it("should clear a single style prop when changing 'style'", function() {
+      var styles = {display: 'none', color: 'red'};
+      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+
+      var stubStyle = stub.getDOMNode().style;
+
+      styles = {color: 'green'};
+      stub.receiveProps({ style: styles }, transaction);
+      expect(stubStyle.display).toEqual('');
+      expect(stubStyle.color).toEqual('green');
+    });
+
+    it("should clear all the styles when removing 'style'", function() {
+      var styles = {display: 'none', color: 'red'};
+      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+
+      var stubStyle = stub.getDOMNode().style;
+
+      stub.receiveProps({}, transaction);
+      expect(stubStyle.display).toEqual('');
+      expect(stubStyle.color).toEqual('');
+    });
+
+    it("should empty element when removing innerHTML", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML={{__html: ":)"}} />
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual(':)');
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().innerHTML).toEqual('');
+    });
+
   });
 
   describe('createOpenTagMarkup', function() {

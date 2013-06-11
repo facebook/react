@@ -36,6 +36,13 @@ var merge = require('merge');
 var OWNER = '{owner}';
 
 /**
+ * Internal properties that shouldn't be considered when modifying node
+ * attributes.
+ */
+var internalPropNames = {children: true};
+internalPropNames[OWNER] = true;
+
+/**
  * Every React component is in one of these life cycles.
  */
 var ComponentLifeCycle = keyMirror({
@@ -130,6 +137,11 @@ function appendNestedChildren(parentKey, sourceArray, targetArray) {
  * @class ReactComponent
  */
 var ReactComponent = {
+
+  /**
+   * @internal
+   */
+  internalPropNames: internalPropNames,
 
   /**
    * @param {?object} object

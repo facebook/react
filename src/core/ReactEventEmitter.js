@@ -323,6 +323,8 @@ var ReactEventEmitter = {
 
   getListener: EventPluginHub.getListener,
 
+  deleteListener: EventPluginHub.deleteListener,
+
   deleteAllListeners: EventPluginHub.deleteAllListeners,
 
   trapBubbledEvent: trapBubbledEvent,
