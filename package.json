@@ -36,9 +36,9 @@
   },
   "dependencies": {
     "base62": "~0.1.1",
-    "commoner": "~0.6.8",
+    "commoner": "~0.7.0",
     "esprima": "git://github.com/facebook/esprima#fb-harmony",
-    "recast": "~0.3.3",
+    "recast": "~0.4.5",
     "source-map": "~0.1.22"
   },
   "devDependencies": {
