@@ -54,7 +54,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   componentDidUpdate: function(prevProps, prevState, rootNode) {
     var oldContent = getTextContent(prevProps);
     var newContent = getTextContent(this.props);
-    if (oldContent !== newContent) {
+    if (oldContent !== newContent && rootNode.value !== newContent) {
       rootNode.value = newContent;
     }
   }
