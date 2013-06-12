@@ -23,6 +23,8 @@
 
 var invariant = require('invariant');
 
+var defaultValueCache = {};
+
 /**
  * DOMProperty exports lookup objects that can be used like functions:
  *
@@ -98,7 +100,28 @@ var DOMProperty = {
    */
   isCustomAttribute: RegExp.prototype.test.bind(
     /^(data|aria)-[a-z_][a-z\d_.\-]*$/
-  )
+  ),
+
+  /**
+   * Returns the default property value for a DOM property (i.e., not an
+   * attribute). Most default values are '' or false, but not all. Worse yet,
+   * some (in particular, `type`) vary depending on the type of element.
+   *
+   * TODO: Is it better to grab all the possible properties when creating an
+   * element to avoid having to create the same element twice?
+   */
+  getDefaultValueForProperty: function(nodeName, prop) {
+    var nodeDefaults = defaultValueCache[nodeName];
+    var testElement;
+    if (!nodeDefaults) {
+      defaultValueCache[nodeName] = nodeDefaults = {};
+    }
+    if (!(prop in nodeDefaults)) {
+      testElement = document.createElement(nodeName);
+      nodeDefaults[prop] = testElement[prop];
+    }
+    return nodeDefaults[prop];
+  }
 };
 
 /**
@@ -132,7 +155,7 @@ var Properties = {
   dir: null,
   disabled: MustUseProperty | HasBooleanValue,
   enctype: null,
-  height: null,
+  height: MustUseAttribute,
   href: null,
   htmlFor: null,
   max: null,
@@ -158,7 +181,7 @@ var Properties = {
   title: null,
   type: null,
   value: MustUseProperty | HasSideEffects,
-  width: null,
+  width: MustUseAttribute,
   wmode: MustUseAttribute,
   /**
    * SVG Properties
@@ -212,7 +235,8 @@ var DOMPropertyNames = {
 };
 
 /**
- * Properties that require special mutation methods.
+ * Properties that require special mutation methods. If `value` is undefined,
+ * the mutation method should unset the property.
  */
 var DOMMutationMethods = {
   /**

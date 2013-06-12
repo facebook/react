@@ -76,6 +76,24 @@ var ReactDOMIDOperations = {
   },
 
   /**
+   * Updates a DOM node to remove a property. This should only be used to remove
+   * DOM properties in `DOMProperty`.
+   *
+   * @param {string} id ID of the node to update.
+   * @param {string} name A property name to remove, see `DOMProperty`.
+   * @internal
+   */
+  deletePropertyByID: function(id, name, value) {
+    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    invariant(
+      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+      'updatePropertyByID(...): %s',
+      INVALID_PROPERTY_ERRORS[name]
+    );
+    DOMPropertyOperations.deleteValueForProperty(node, name, value);
+  },
+
+  /**
    * This should almost never be used instead of `updatePropertyByID()` due to
    * the extra object allocation required by the API. That said, this is useful
    * for batching up several operations across worker thread boundaries.
@@ -95,7 +113,8 @@ var ReactDOMIDOperations = {
   },
 
   /**
-   * Updates a DOM node with new style values.
+   * Updates a DOM node with new style values. If a value is specified as '',
+   * the corresponding style property will be unset.
    *
    * @param {string} id ID of the node to update.
    * @param {object} styles Mapping from styles to values.

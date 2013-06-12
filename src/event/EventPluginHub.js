@@ -312,6 +312,7 @@ var EventPluginHub = {
   registrationNamesArr: registrationNamesArr,
   putListener: CallbackRegistry.putListener,
   getListener: CallbackRegistry.getListener,
+  deleteListener: CallbackRegistry.deleteListener,
   deleteAllListeners: deleteAllListeners,
   extractAbstractEvents: extractAbstractEvents,
   enqueueAbstractEvents: enqueueAbstractEvents,

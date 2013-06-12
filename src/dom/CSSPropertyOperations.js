@@ -19,6 +19,8 @@
 
 "use strict";
 
+var CSSProperty = require('CSSProperty');
+
 var dangerousStyleValue = require('dangerousStyleValue');
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var hyphenate = require('hyphenate');
@@ -60,7 +62,8 @@ var CSSPropertyOperations = {
   },
 
   /**
-   * Sets the value for multiple styles on a node.
+   * Sets the value for multiple styles on a node.  If a value is specified as
+   * '' (empty string), the corresponding style property will be unset.
    *
    * @param {DOMElement} node
    * @param {object} styles
@@ -72,7 +75,20 @@ var CSSPropertyOperations = {
         continue;
       }
       var styleValue = styles[styleName];
-      style[styleName] = dangerousStyleValue(styleName, styleValue);
+      if (!styleValue) {
+        var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
+        if (expansion) {
+          // Shorthand property that IE8 won't like unsetting, so unset each
+          // component to placate it
+          for (var individualStyleName in expansion) {
+            style[individualStyleName] = '';
+          }
+        } else {
+          style[styleName] = '';
+        }
+      } else {
+        style[styleName] = dangerousStyleValue(styleName, styleValue);
+      }
     }
   }
 

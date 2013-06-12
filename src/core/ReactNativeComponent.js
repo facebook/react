@@ -33,6 +33,7 @@ var merge = require('merge');
 var mixInto = require('mixInto');
 
 var putListener = ReactEventEmitter.putListener;
+var deleteListener = ReactEventEmitter.deleteListener;
 var registrationNames = ReactEventEmitter.registrationNames;
 
 // For quickly matching children type, to test if can be treated as content.
@@ -206,9 +207,45 @@ ReactNativeComponent.Mixin = {
    */
   _updateDOMProperties: function(nextProps) {
     var lastProps = this.props;
-    for (var propKey in nextProps) {
-      var nextProp = nextProps[propKey];
-      var lastProp = lastProps[propKey];
+    var propKey;
+    var nextProp;
+    var lastProp;
+    var styleName;
+    var styleUpdates;
+    for (propKey in lastProps) {
+      nextProp = nextProps[propKey];
+      lastProp = lastProps[propKey];
+      if (!lastProps.hasOwnProperty(propKey) || nextProp) {
+        continue;
+      }
+      if (propKey === STYLE) {
+        for (styleName in lastProp) {
+          if (!lastProp.hasOwnProperty(styleName)) {
+            continue;
+          }
+          if (!styleUpdates) {
+            styleUpdates = {};
+          }
+          styleUpdates[styleName] = '';
+        }
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
+          propKey === CONTENT) {
+        ReactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          ''
+        );
+      } else if (registrationNames[propKey]) {
+        deleteListener(this._rootNodeID, propKey);
+      } else {
+        ReactComponent.DOMIDOperations.deletePropertyByID(
+          this._rootNodeID,
+          propKey
+        );
+      }
+    }
+    for (propKey in nextProps) {
+      nextProp = nextProps[propKey];
+      lastProp = lastProps[propKey];
       if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
         continue;
       }
@@ -216,8 +253,15 @@ ReactNativeComponent.Mixin = {
         if (nextProp) {
           nextProp = nextProps.style = merge(nextProp);
         }
-        var styleUpdates;
-        for (var styleName in nextProp) {
+        for (styleName in lastProp) {
+          if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
+            if (!styleUpdates) {
+              styleUpdates = {};
+            }
+            styleUpdates[styleName] = '';
+          }
+        }
+        for (styleName in nextProp) {
           if (!nextProp.hasOwnProperty(styleName)) {
             continue;
           }
@@ -227,12 +271,6 @@ ReactNativeComponent.Mixin = {
             }
             styleUpdates[styleName] = nextProp[styleName];
           }
-        }
-        if (styleUpdates) {
-          ReactComponent.DOMIDOperations.updateStylesByID(
-            this._rootNodeID,
-            styleUpdates
-          );
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         var lastHtml = lastProp && lastProp.__html;
@@ -257,6 +295,12 @@ ReactNativeComponent.Mixin = {
           nextProp
         );
       }
+    }
+    if (styleUpdates) {
+      ReactComponent.DOMIDOperations.updateStylesByID(
+        this._rootNodeID,
+        styleUpdates
+      );
     }
   },
 
