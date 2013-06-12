@@ -19,7 +19,7 @@ It looks like [Ben Alpert](http://benalpert.com/) is the first person outside of
 
 ### Pimp my Backbone.View (by replacing it with React)
 
-[Paul Seiffert](https://blog.mayflower.de/) wrote a blog post that explains how to integrate React into Backbone applications. This is exciting to see that the efforts we made to make React play well with other libraries are paying off :)
+[Paul Seiffert](https://blog.mayflower.de/) wrote a blog post that explains how to integrate React into Backbone applications.
 
 > React has some interesting concepts for JavaScript view objects that can be used to eliminate this one big problem I have with Backbone.js.
 >
