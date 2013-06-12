@@ -32,8 +32,6 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-var internalPropNames = ReactComponent.internalPropNames;
-
 var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
 var registrationNames = ReactEventEmitter.registrationNames;
@@ -236,7 +234,6 @@ ReactNativeComponent.Mixin = {
           this._rootNodeID,
           ''
         );
-      } else if (internalPropNames[propKey]) {
       } else if (registrationNames[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else {
@@ -291,7 +288,6 @@ ReactNativeComponent.Mixin = {
           this._rootNodeID,
           '' + nextProp
         );
-      } else if (internalPropNames[propKey]) {
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else {
