@@ -211,7 +211,7 @@ if (isInputSupported) {
         return activeElementID;
       }
     }
-  }
+  };
 }
 
 /**
