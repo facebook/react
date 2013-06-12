@@ -38,10 +38,10 @@ var abstractEventTypes = {
   }
 };
 
-// IE9 claims to support the input event but fails to trigger it when deleting
-// text, so we ignore its input events
 var isInputSupported;
 if (ExecutionEnvironment.canUseDOM) {
+  // IE9 claims to support the input event but fails to trigger it when
+  // deleting text, so we ignore its input events
   isInputSupported = isEventSupported('input') && (
     !("documentMode" in document) || document.documentMode > 9
   );
@@ -65,8 +65,10 @@ var activeElementID = null;
 var activeElementValue = null;
 var activeElementValueProp = null;
 
-// Replacement getter/setter for the `value` property for old IE that gets set
-// on the active element
+/**
+ * (For old IE.) Replacement getter/setter for the `value` property that gets
+ * set on the active element.
+ */
 var newValueProp =  {
   get: function() {
     return activeElementValueProp.get.call(this);
@@ -77,6 +79,47 @@ var newValueProp =  {
   }
 };
 
+/**
+ * (For old IE.) Starts tracking propertychange events on the passed-in element
+ * and override the value property so that we can distinguish user events from
+ * value changes in JS.
+ */
+var startWatching = function(target, targetID) {
+  activeElement = target;
+  activeElementID = targetID;
+  activeElementValue = target.value;
+  activeElementValueProp = Object.getOwnPropertyDescriptor(
+    target.constructor.prototype,
+    'value'
+  );
+
+  Object.defineProperty(activeElement, 'value', newValueProp);
+  activeElement.attachEvent('onpropertychange', handlePropertyChange);
+};
+
+/**
+ * (For old IE.) Removes the event listeners from the currently-tracked element,
+ * if any exists.
+ */
+var stopWatching = function() {
+  if (!activeElement) {
+    return;
+  }
+
+  // delete restores the original property definition
+  delete activeElement.value;
+  activeElement.detachEvent('onpropertychange', handlePropertyChange);
+
+  activeElement = null;
+  activeElementID = null;
+  activeElementValue = null;
+  activeElementValueProp = null;
+};
+
+/**
+ * (For old IE.) Handles a propertychange event, sending a textChange event if
+ * the value of the active element has changed.
+ */
 var handlePropertyChange = function(nativeEvent) {
   var value;
   var abstractEvent;
@@ -92,11 +135,84 @@ var handlePropertyChange = function(nativeEvent) {
         nativeEvent
       );
       EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
+
+      // If propertychange bubbled, we'd just bind to it like all the other
+      // events and have it go through ReactEventTopLevelCallback. Since it
+      // doesn't, we manually listen for the propertychange event and so we
+      // have to enqueue and process the abstract event manually.
       EventPluginHub.enqueueAbstractEvents(abstractEvent);
       EventPluginHub.processAbstractEventQueue();
     }
   }
 };
+
+/**
+ * If a textChange event should be fired, returns the target's ID.
+ */
+var targetIDForTextChangeEvent;
+if (isInputSupported) {
+  targetIDForTextChangeEvent = function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    if (topLevelType === topLevelTypes.topInput) {
+      // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
+      // what we want so fall through here and trigger an abstract event...
+      if (topLevelTarget.nodeName === 'TEXTAREA') {
+        // ...unless it's a textarea, in which case we don't fire an event (so
+        // that we have consistency with our old-IE shim).
+        return;
+      }
+      return topLevelTargetID;
+    }
+  };
+} else {
+  targetIDForTextChangeEvent = function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    if (topLevelType === topLevelTypes.topFocus) {
+      // In IE8, we can capture almost all .value changes by adding a
+      // propertychange handler and looking for events with propertyName
+      // equal to 'value'
+      // In IE9, propertychange fires for most input events but is buggy and
+      // doesn't fire when text is deleted, but conveniently, selectionchange
+      // appears to fire in all of the remaining cases so we catch those and
+      // forward the event if the value has changed
+      // In either case, we don't want to call the event handler if the value
+      // is changed from JS so we redefine a setter for `.value` that updates
+      // our activeElementValue variable, allowing us to ignore those changes
+      if (hasInputCapabilities(topLevelTarget)) {
+        // stopWatching() should be a noop here but we call it just in case we
+        // missed a blur event somehow.
+        stopWatching();
+        startWatching(topLevelTarget, topLevelTargetID);
+      }
+    } else if (topLevelType === topLevelTypes.topBlur) {
+      stopWatching();
+    } else if (
+        topLevelType === topLevelTypes.topSelectionChange ||
+        topLevelType === topLevelTypes.topKeyUp ||
+        topLevelType === topLevelTypes.topKeyDown) {
+      // On the selectionchange event, the target is just document which isn't
+      // helpful for us so just check activeElement instead.
+      //
+      // 99% of the time, keydown and keyup aren't necessary. IE8 fails to fire
+      // propertychange on the first input event after setting `value` from a
+      // script and fires only keydown, keypress, keyup. Catching keyup usually
+      // gets it and catching keydown lets us fire an event for the first
+      // keystroke if user does a key repeat (it'll be a little delayed: right
+      // before the second keystroke). Other input methods (e.g., paste) seem to
+      // fire selectionchange normally.
+      if (activeElement && activeElement.value !== activeElementValue) {
+        activeElementValue = activeElement.value;
+        return activeElementID;
+      }
+    }
+  }
+}
 
 /**
  * @param {string} topLevelType Record from `EventConstants`.
@@ -111,89 +227,22 @@ var extractAbstractEvents = function(
     topLevelTarget,
     topLevelTargetID,
     nativeEvent) {
-  var targetID;
-
-  if (isInputSupported && topLevelType === topLevelTypes.topInput) {
-    // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
-    // what we want so fall through here and trigger an abstract event...
-    if (topLevelTarget.nodeName === 'TEXTAREA') {
-      // ...unless it's a textarea, in which case we don't fire an event (so
-      // that we have consistency with our old-IE shim).
-      return;
-    }
-    targetID = topLevelTargetID;
-
-  } else if (!isInputSupported && topLevelType === topLevelTypes.topFocus) {
-    // In IE8, we can capture almost all .value changes by adding a
-    // propertychange handler and looking for events with propertyName 'value'
-    // In IE9, propertychange fires for most input events but is buggy and
-    // doesn't fire when text is deleted, but conveniently, selectionchange
-    // appears to fire in all of the remaining cases so we catch those and
-    // forward the event if the value has changed
-    // In either case, we don't want to call the event handler if the value is
-    // changed from JS so we redefine a setter for `.value` that updates our
-    // activeElementValue variable, allowing us to ignore those changes
-    if (hasInputCapabilities(topLevelTarget)) {
-      activeElement = topLevelTarget;
-      activeElementID = topLevelTargetID;
-      activeElementValue = topLevelTarget.value;
-      activeElementValueProp = Object.getOwnPropertyDescriptor(
-        topLevelTarget.constructor.prototype,
-        'value'
-      );
-
-      Object.defineProperty(topLevelTarget, 'value', newValueProp);
-      topLevelTarget.attachEvent('onpropertychange', handlePropertyChange);
-    }
-    return;
-
-  } else if (!isInputSupported && topLevelType === topLevelTypes.topBlur) {
-    // If blur is triggered due to element removal, the target is set to the
-    // <html> element so ignore that and unbind from activeElement instead
-    if (activeElement) {
-      // delete restores the original property definition
-      delete activeElement.value;
-      activeElement.detachEvent('onpropertychange', handlePropertyChange);
-
-      activeElement = null;
-      activeElementID = null;
-      activeElementValue = null;
-      activeElementValueProp = null;
-    }
-    return;
-
-  } else if (!isInputSupported && (
-      topLevelType === topLevelTypes.topSelectionChange ||
-      topLevelType === topLevelTypes.topKeyUp ||
-      topLevelType === topLevelTypes.topKeyDown)) {
-    // On the selectionchange event, the target is just document which isn't
-    // helpful for us so just check activeElement instead.
-    //
-    // 99% of the time, keydown and keyup aren't necessary. IE8 fails to fire
-    // propertychange on the first input event after setting `value` from a
-    // script and fires only keydown, keypress, keyup. Catching keyup usually
-    // gets it and catching keydown lets us fire an event for the first
-    // keystroke if user does a key repeat (it'll be a little delayed: right
-    // before the second keystroke). Other input methods (e.g., paste) seem to
-    // fire selectionchange normally.
-    if (!activeElement || activeElement.value === activeElementValue) {
-      return;
-    }
-    activeElementValue = activeElement.value;
-    targetID = activeElementID;
-
-  } else {
-    return;
-  }
-
-  // If we've made it to this point, some value change occurred
-  var abstractEvent = AbstractEvent.getPooled(
-    abstractEventTypes.textChange,
-    targetID,
+  var targetID = targetIDForTextChangeEvent(
+    topLevelType,
+    topLevelTarget,
+    topLevelTargetID,
     nativeEvent
   );
-  EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-  return abstractEvent;
+
+  if (targetID) {
+    var abstractEvent = AbstractEvent.getPooled(
+      abstractEventTypes.textChange,
+      targetID,
+      nativeEvent
+    );
+    EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
+    return abstractEvent;
+  }
 };
 
 var TextChangeEventPlugin = {
