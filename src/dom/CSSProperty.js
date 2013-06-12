@@ -18,8 +18,6 @@
 
 "use strict";
 
-var keyMirror = require('keyMirror');
-
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
