@@ -107,9 +107,8 @@ var DOMProperty = {
    * attribute). Most default values are '' or false, but not all. Worse yet,
    * some (in particular, `type`) vary depending on the type of element.
    *
-   * TODO: Is it worth caching the test elements? Caching the properties
-   * ourselves (as opposed to accessing from a cached test element every time)
-   * looks probably worth it: http://jsperf.com/object-vs-element
+   * TODO: Is it better to grab all the possible properties when creating an
+   * element to avoid having to create the same element twice?
    */
   getDefaultValueForProperty: function(nodeName, prop) {
     var nodeDefaults = defaultValueCache[nodeName];

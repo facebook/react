@@ -253,14 +253,12 @@ ReactNativeComponent.Mixin = {
         if (nextProp) {
           nextProp = nextProps.style = merge(nextProp);
         }
-        if (lastProp) {
-          for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
-              if (!styleUpdates) {
-                styleUpdates = {};
-              }
-              styleUpdates[styleName] = '';
+        for (styleName in lastProp) {
+          if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
+            if (!styleUpdates) {
+              styleUpdates = {};
             }
+            styleUpdates[styleName] = '';
           }
         }
         for (styleName in nextProp) {
