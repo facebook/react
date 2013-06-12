@@ -20,6 +20,7 @@
 
 var ReactDOM = require('ReactDOM');
 var ReactDOMForm = require('ReactDOMForm');
+var ReactDOMTextarea = require('ReactDOMTextarea');
 
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
@@ -50,7 +51,8 @@ function inject() {
    * dependency graph we need to inject it here.
    */
   ReactDOM.injection.injectComponentClasses({
-    form: ReactDOMForm
+    form: ReactDOMForm,
+    textarea: ReactDOMTextarea
   });
 }
 
