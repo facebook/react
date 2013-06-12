@@ -190,6 +190,11 @@ function listenAtTopLevel(touchNotMouse) {
   trapBubbledEvent(topLevelTypes.topInput, 'input', mountAt);
   trapBubbledEvent(topLevelTypes.topChange, 'change', mountAt);
   trapBubbledEvent(
+    topLevelTypes.topSelectionChange,
+    'selectionchange',
+    mountAt
+  );
+  trapBubbledEvent(
     topLevelTypes.topDOMCharacterDataModified,
     'DOMCharacterDataModified',
     mountAt
