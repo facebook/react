@@ -21,10 +21,10 @@
 
 var CSSProperty = require('CSSProperty');
 
-var dangerousStyleValue = require('./dangerousStyleValue');
-var escapeTextForBrowser = require('./escapeTextForBrowser');
-var hyphenate = require('./hyphenate');
-var memoizeStringOnly = require('./memoizeStringOnly');
+var dangerousStyleValue = require('dangerousStyleValue');
+var escapeTextForBrowser = require('escapeTextForBrowser');
+var hyphenate = require('hyphenate');
+var memoizeStringOnly = require('memoizeStringOnly');
 
 var processStyleName = memoizeStringOnly(function(styleName) {
   return escapeTextForBrowser(hyphenate(styleName));

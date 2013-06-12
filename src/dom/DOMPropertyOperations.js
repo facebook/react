@@ -19,10 +19,10 @@
 
 "use strict";
 
-var DOMProperty = require("./DOMProperty");
+var DOMProperty = require('DOMProperty');
 
-var escapeTextForBrowser = require("./escapeTextForBrowser");
-var memoizeStringOnly = require("./memoizeStringOnly");
+var escapeTextForBrowser = require('escapeTextForBrowser');
+var memoizeStringOnly = require('memoizeStringOnly');
 
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
   return escapeTextForBrowser(name) + '="';
