@@ -21,6 +21,8 @@
 
 "use strict";
 
+var mocks = require('mocks');
+
 describe('ReactNativeComponent', function() {
 
   describe('updateDOM', function() {
@@ -149,6 +151,27 @@ describe('ReactNativeComponent', function() {
       expect(stub.getDOMNode().innerHTML).toEqual('');
     });
 
+    it("should not incur unnecessary DOM mutations", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
+
+      var node = stub.getDOMNode();
+      var nodeValue = node.value;
+      var nodeValueSetter = mocks.getMockFunction();
+      Object.defineProperty(node, 'value', {
+        get: function() {
+          return nodeValue;
+        },
+        set: nodeValueSetter.mockImplementation(function(newValue) {
+          nodeValue = newValue;
+        })
+      });
+
+      stub.receiveProps({value: ''}, transaction);
+      expect(nodeValueSetter.mock.calls.length).toBe(0);
+
+      stub.receiveProps({}, transaction);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+    });
   });
 
   describe('createOpenTagMarkup', function() {

@@ -208,25 +208,23 @@ ReactNativeComponent.Mixin = {
   _updateDOMProperties: function(nextProps) {
     var lastProps = this.props;
     var propKey;
-    var nextProp;
-    var lastProp;
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      nextProp = nextProps[propKey];
-      lastProp = lastProps[propKey];
-      if (!lastProps.hasOwnProperty(propKey) || nextProp) {
+      if (nextProps.hasOwnProperty(propKey) ||
+         !lastProps.hasOwnProperty(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
-        for (styleName in lastProp) {
-          if (lastProp.hasOwnProperty(styleName)) {
+        var lastStyle = lastProps[propKey];
+        for (styleName in lastStyle) {
+          if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
-          propKey === CONTENT) {
+                 propKey === CONTENT) {
         ReactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           ''
@@ -241,8 +239,8 @@ ReactNativeComponent.Mixin = {
       }
     }
     for (propKey in nextProps) {
-      nextProp = nextProps[propKey];
-      lastProp = lastProps[propKey];
+      var nextProp = nextProps[propKey];
+      var lastProp = lastProps[propKey];
       if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
         continue;
       }
