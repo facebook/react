@@ -167,8 +167,7 @@ var ReactMultiChildMixin = {
           this.enqueueMove(curChild._domIndex, loopDomIndex);
         }
         curChildrenDOMIndex = Math.max(curChild._domIndex, curChildrenDOMIndex);
-        !nextChild.props.isStatic &&
-          curChild.receiveProps(nextChild.props, transaction);
+        curChild.receiveProps(nextChild.props, transaction);
         curChild._domIndex = loopDomIndex;
       } else {
         if (curChild) {               // !shouldUpdate && curChild => delete
