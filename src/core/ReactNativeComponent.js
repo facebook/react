@@ -220,13 +220,10 @@ ReactNativeComponent.Mixin = {
       }
       if (propKey === STYLE) {
         for (styleName in lastProp) {
-          if (!lastProp.hasOwnProperty(styleName)) {
-            continue;
+          if (lastProp.hasOwnProperty(styleName)) {
+            styleUpdates = styleUpdates || {};
+            styleUpdates[styleName] = '';
           }
-          if (!styleUpdates) {
-            styleUpdates = {};
-          }
-          styleUpdates[styleName] = '';
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
           propKey === CONTENT) {
@@ -253,24 +250,25 @@ ReactNativeComponent.Mixin = {
         if (nextProp) {
           nextProp = nextProps.style = merge(nextProp);
         }
-        for (styleName in lastProp) {
-          if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
-            if (!styleUpdates) {
-              styleUpdates = {};
+        if (lastProp) {
+          // Unset styles on `lastProp` but not on `nextProp`.
+          for (styleName in lastProp) {
+            if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
+              styleUpdates = styleUpdates || {};
+              styleUpdates[styleName] = '';
             }
-            styleUpdates[styleName] = '';
           }
-        }
-        for (styleName in nextProp) {
-          if (!nextProp.hasOwnProperty(styleName)) {
-            continue;
-          }
-          if (!lastProp || lastProp[styleName] !== nextProp[styleName]) {
-            if (!styleUpdates) {
-              styleUpdates = {};
+          // Update styles that changed since `lastProp`.
+          for (styleName in nextProp) {
+            if (nextProp.hasOwnProperty(styleName) &&
+                lastProp[styleName] !== nextProp[styleName]) {
+              styleUpdates = styleUpdates || {};
+              styleUpdates[styleName] = nextProp[styleName];
             }
-            styleUpdates[styleName] = nextProp[styleName];
           }
+        } else {
+          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          styleUpdates = nextProp;
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         var lastHtml = lastProp && lastProp.__html;
