@@ -27,16 +27,13 @@ describe('ReactDOMTextarea', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-
-    var ReactReconcileTransaction = require('ReactReconcileTransaction');
-    transaction = new ReactReconcileTransaction();
   });
 
   it("should remove value with removed children", function() {
     var stub = ReactTestUtils.renderIntoDocument(<textarea>giraffe</textarea>);
 
     expect(stub.getDOMNode().value).toEqual('giraffe');
-    stub.receiveProps({ children: null }, transaction);
+    stub.replaceProps({ children: null });
     expect(stub.getDOMNode().value).toEqual('');
   });
 
@@ -44,7 +41,7 @@ describe('ReactDOMTextarea', function() {
     var stub = ReactTestUtils.renderIntoDocument(<textarea>monkey</textarea>);
 
     expect(stub.getDOMNode().value).toEqual('monkey');
-    stub.receiveProps({ children: 'gorilla' }, transaction);
+    stub.replaceProps({ children: 'gorilla' });
     expect(stub.getDOMNode().value).toEqual('gorilla');
   });
 
@@ -52,7 +49,7 @@ describe('ReactDOMTextarea', function() {
     var stub = ReactTestUtils.renderIntoDocument(<textarea>17</textarea>);
 
     expect(stub.getDOMNode().value).toEqual('17');
-    stub.receiveProps({ children: 289 }, transaction);
+    stub.replaceProps({ children: 289 });
     expect(stub.getDOMNode().value).toEqual('289');
   });
 
@@ -60,7 +57,7 @@ describe('ReactDOMTextarea', function() {
     var stub = ReactTestUtils.renderIntoDocument(<textarea content="purple" />);
 
     expect(stub.getDOMNode().value).toEqual('purple');
-    stub.receiveProps({ content: 'eggplant' }, transaction);
+    stub.replaceProps({ content: 'eggplant' });
     expect(stub.getDOMNode().value).toEqual('eggplant');
   });
 });

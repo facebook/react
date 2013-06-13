@@ -39,6 +39,16 @@ var getTextContent = function(props) {
  * we intercept prop changes here to make sure that value is updated.
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
+  getInitialState: function() {
+    // We keep the original value of content and children here so that
+    // ReactNativeComponent doesn't update textContent (unnecessary since we
+    // update value).
+    return {
+      initialContent: this.props.content,
+      initialChildren: this.props.children
+    };
+  },
+
   render: function() {
     invariant(
       this.props.dangerouslySetInnerHTML == null,
@@ -48,13 +58,15 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       this.props.children == null || CONTENT_TYPES[typeof this.props.children],
       'When present, textarea children must be a single string or number.'
     );
-    return this.transferPropsTo(textarea(null, this.props.children));
+    return this.transferPropsTo(textarea({
+      content: this.state.initialContent
+    }, this.state.initialChildren));
   },
 
   componentDidUpdate: function(prevProps, prevState, rootNode) {
     var oldContent = getTextContent(prevProps);
     var newContent = getTextContent(this.props);
-    if (oldContent !== newContent && rootNode.value !== newContent) {
+    if (oldContent !== newContent) {
       rootNode.value = newContent;
     }
   }
