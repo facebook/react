@@ -154,6 +154,7 @@ var Properties = {
   data: null, // For `<object />` acts as `src`.
   dir: null,
   disabled: MustUseProperty | HasBooleanValue,
+  draggable: null,
   enctype: null,
   height: MustUseAttribute,
   href: null,

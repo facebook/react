@@ -149,6 +149,54 @@ var SimpleEventPlugin = {
         bubbled: keyOf({onDOMCharacterDataModified: true}),
         captured: keyOf({onDOMCharacterDataModifiedCapture: true})
       }
+    },
+    drag: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDrag: true}),
+        captured: keyOf({onDragCapture: true})
+      }
+    },
+    dragEnd: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragEnd: true}),
+        captured: keyOf({onDragEndCapture: true})
+      }
+    },
+    dragEnter: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragEnter: true}),
+        captured: keyOf({onDragEnterCapture: true})
+      }
+    },
+    dragExit: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragExit: true}),
+        captured: keyOf({onDragExitCapture: true})
+      }
+    },
+    dragLeave: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragLeave: true}),
+        captured: keyOf({onDragLeaveCapture: true})
+      }
+    },
+    dragOver: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragOver: true}),
+        captured: keyOf({onDragOverCapture: true})
+      }
+    },
+    dragStart: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDragStart: true}),
+        captured: keyOf({onDragStartCapture: true})
+      }
+    },
+    drop: {
+      phasedRegistrationNames: {
+        bubbled: keyOf({onDrop: true}),
+        captured: keyOf({onDropCapture: true})
+      }
     }
   },
 
@@ -204,7 +252,16 @@ var SimpleEventPlugin = {
       case topLevelTypes.topTouchMove:
       case topLevelTypes.topTouchStart:
       case topLevelTypes.topTouchEnd:
+      case topLevelTypes.topDrag:
+      case topLevelTypes.topDragEnd:
+      case topLevelTypes.topDragEnter:
+      case topLevelTypes.topDragExit:
+      case topLevelTypes.topDragLeave:
+      case topLevelTypes.topDragOver:
+      case topLevelTypes.topDragStart:
+      case topLevelTypes.topDrop:
         data = AbstractEvent.normalizePointerData(nativeEvent);
+        // todo: Use AbstractEvent.normalizeDragEventData for drag/drop?
         break;
       default:
         data = null;
@@ -241,7 +298,15 @@ SimpleEventPlugin.topLevelTypesToAbstract = {
   topChange:      SimpleEventPlugin.abstractEventTypes.change,
   topSubmit:      SimpleEventPlugin.abstractEventTypes.submit,
   topDOMCharacterDataModified:
-                  SimpleEventPlugin.abstractEventTypes.DOMCharacterDataModified
+                  SimpleEventPlugin.abstractEventTypes.DOMCharacterDataModified,
+  topDrag:        SimpleEventPlugin.abstractEventTypes.drag,
+  topDragEnd:     SimpleEventPlugin.abstractEventTypes.dragEnd,
+  topDragEnter:   SimpleEventPlugin.abstractEventTypes.dragEnter,
+  topDragExit:    SimpleEventPlugin.abstractEventTypes.dragExit,
+  topDragLeave:   SimpleEventPlugin.abstractEventTypes.dragLeave,
+  topDragOver:    SimpleEventPlugin.abstractEventTypes.dragOver,
+  topDragStart:   SimpleEventPlugin.abstractEventTypes.dragStart,
+  topDrop:        SimpleEventPlugin.abstractEventTypes.drop
 };
 
 module.exports = SimpleEventPlugin;

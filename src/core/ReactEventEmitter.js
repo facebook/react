@@ -200,6 +200,17 @@ function listenAtTopLevel(touchNotMouse) {
     mountAt
   );
 
+  if (isEventSupported('drag')) {
+    trapBubbledEvent(topLevelTypes.topDrag, 'drag', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragEnd, 'dragend', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragEnter, 'dragenter', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragExit, 'dragexit', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragLeave, 'dragleave', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragOver, 'dragover', mountAt);
+    trapBubbledEvent(topLevelTypes.topDragStart, 'dragstart', mountAt);
+    trapBubbledEvent(topLevelTypes.topDrop, 'drop', mountAt);
+  }
+
   if (isEventSupported('wheel')) {
     trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
   } else if (isEventSupported('mousewheel')) {
