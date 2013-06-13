@@ -189,6 +189,17 @@ var ReactComponent = {
   Mixin: {
 
     /**
+     * Checks whether or not this component is mounted.
+     *
+     * @return {boolean} True if mounted, false otherwise.
+     * @final
+     * @protected
+     */
+    isMounted: function() {
+      return this._lifeCycleState === ComponentLifeCycle.MOUNTED;
+    },
+
+    /**
      * Returns the DOM node rendered by this component.
      *
      * @return {?DOMElement} The root node of this component.
@@ -201,7 +212,7 @@ var ReactComponent = {
         'getDOMNode(): The DOM is not supported in the current environment.'
       );
       invariant(
-        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
       var rootNode = this._rootNode;
@@ -329,7 +340,7 @@ var ReactComponent = {
      */
     mountComponent: function(rootID, transaction) {
       invariant(
-        this._lifeCycleState === ComponentLifeCycle.UNMOUNTED,
+        !this.isMounted(),
         'mountComponent(%s, ...): Can only mount an unmounted component.',
         rootID
       );
@@ -354,7 +365,7 @@ var ReactComponent = {
      */
     unmountComponent: function() {
       invariant(
-        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        this.isMounted(),
         'unmountComponent(): Can only unmount a mounted component.'
       );
       var props = this.props;
@@ -378,7 +389,7 @@ var ReactComponent = {
      */
     receiveProps: function(nextProps, transaction) {
       invariant(
-        this._lifeCycleState === ComponentLifeCycle.MOUNTED,
+        this.isMounted(),
         'receiveProps(...): Can only update a mounted component.'
       );
       var props = this.props;

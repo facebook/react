@@ -241,17 +241,21 @@ describe('ReactNativeComponent', function() {
 
       var mixInto = require('mixInto');
       var ReactComponent = require('ReactComponent');
+      var ReactMultiChild = require('ReactMultiChild');
       var ReactNativeComponent = require('ReactNativeComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var NodeStub = function(initialProps) {
+      var StubNativeComponent = function(initialProps) {
         ReactComponent.Mixin.construct.call(this, initialProps);
       };
-      mixInto(NodeStub, ReactNativeComponent.Mixin);
+      mixInto(StubNativeComponent, ReactComponent.Mixin);
+      mixInto(StubNativeComponent, ReactNativeComponent.Mixin);
+      mixInto(StubNativeComponent, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props)).mountComponent('test', transaction);
+        var stubComponent = new StubNativeComponent(props);
+        return stubComponent.mountComponent('test', transaction);
       };
     });
 

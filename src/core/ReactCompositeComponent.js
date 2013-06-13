@@ -548,7 +548,7 @@ var ReactCompositeComponentMixin = {
   replaceState: function(completeState) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED ||
+      this.isMounted() ||
       compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
       'replaceState(...): Can only update a mounted (or mounting) component.'
     );
@@ -712,7 +712,7 @@ var ReactCompositeComponentMixin = {
   forceUpdate: function() {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED,
+      this.isMounted(),
       'forceUpdate(...): Can only force an update on mounted components.'
     );
     invariant(
