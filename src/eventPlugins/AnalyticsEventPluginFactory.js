@@ -141,9 +141,9 @@ if (__DEV__) {
  * @param {string} topLevelTargetID ID of `topLevelTarget`.
  * @param {object} nativeEvent Native browser event.
  * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractAbstractEvents}
+ * @see {EventPluginHub.extractEvents}
  */
-function extractAbstractEvents(
+function extractEvents(
     topLevelType,
     topLevelTarget,
     topLevelTargetID,
@@ -220,7 +220,7 @@ var createAnalyticsPlugin = function(cb, interval) {
     interval > DEFAULT_INTERVAL_MS ? interval : DEFAULT_INTERVAL_MS
   );
 
-  return {extractAbstractEvents: extractAbstractEvents};
+  return {extractEvents: extractEvents};
 };
 
 var AnalyticsEventPluginFactory = {

@@ -31,26 +31,17 @@ var isEventSupported = require('isEventSupported');
 /**
  * Summary of `ReactEventEmitter` event handling:
  *
- *  - We trap low level 'top-level' events.
+ *  - Top-level delegation is used to trap native browser events. We normalize
+ *    and de-duplicate events to account for browser quirks.
  *
- *  - We dedupe cross-browser event names into these 'top-level types' (e.g. so
- *    that `wheel`, `mousewheel`, and `DOMMouseScroll` fire one event).
+ *  - Forward these native events (with the associated top-level type used to
+ *    trap it) to `EventPluginHub`, which in turn will ask plugins if they want
+ *    to extract any synthetic events.
  *
- *  - At this point we have native browser events with the top-level type that
- *    was used to catch it at the top-level.
+ *  - The `EventPluginHub` will then process each event by annotating them with
+ *    "dispatches", a sequence of listeners and IDs that care about that event.
  *
- *  - We continuously stream these native events (and their respective top-level
- *    types) to the event plugin system `EventPluginHub` and ask the plugin
- *    system if it was able to extract `AbstractEvent` objects. `AbstractEvent`
- *    objects are the events that applications actually deal with - they are not
- *    native browser events but cross-browser wrappers.
- *
- *  - When returning the `AbstractEvent` objects, `EventPluginHub` will make
- *    sure each abstract event is annotated with "dispatches", which are the
- *    sequence of listeners (and IDs) that care about the event.
- *
- *  - These `AbstractEvent` objects are fed back into the event plugin system,
- *    which in turn executes these dispatches.
+ *  - The `EventPluginHub` then dispatches the events.
  *
  * Overview of React and the event system:
  *
@@ -321,7 +312,7 @@ var ReactEventEmitter = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    var abstractEvents = EventPluginHub.extractAbstractEvents(
+    var events = EventPluginHub.extractEvents(
       topLevelType,
       topLevelTarget,
       topLevelTargetID,
@@ -329,8 +320,8 @@ var ReactEventEmitter = {
     );
 
     // Event queue being processed in the same cycle allows `preventDefault`.
-    EventPluginHub.enqueueAbstractEvents(abstractEvents);
-    EventPluginHub.processAbstractEventQueue();
+    EventPluginHub.enqueueEvents(events);
+    EventPluginHub.processEventQueue();
   },
 
   registrationNames: EventPluginHub.registrationNames,

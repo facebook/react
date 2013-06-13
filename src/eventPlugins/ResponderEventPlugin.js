@@ -113,10 +113,10 @@ var abstractEventTypes = {
  *
  * - The current event plugin system will traverse the list of injected plugins,
  *   in order, and extract events by collecting the plugin's return value of
- *   `extractAbstractEvents()`.
- * - These events that are returned from `extractAbstractEvents` are "deferred
+ *   `extractEvents()`.
+ * - These events that are returned from `extractEvents` are "deferred
  *   dispatched events".
- * - When returned from `extractAbstractEvents`, deferred dispatched events
+ * - When returned from `extractEvents`, deferred dispatched events
  *   contain an "accumulation" of deferred dispatches.
  * -- These deferred dispatches are accumulated/collected before they are
  *  returned, but processed at a later time by the `EventPluginHub` (hence the
@@ -124,13 +124,13 @@ var abstractEventTypes = {
  *
  * In the process of returning their deferred dispatched events, event plugins
  * themselves can dispatch events on-demand without returning them from
- * `extractAbstractEvents`. Plugins might want to do this, so that they can use
+ * `extractEvents`. Plugins might want to do this, so that they can use
  * event dispatching as a tool that helps them decide which events should be
  * extracted in the first place.
  *
  * "On-Demand-Dispatched Events":
  *
- * - On-demand dispatched are not returned from `extractAbstractEvents`.
+ * - On-demand dispatched are not returned from `extractEvents`.
  * - On-demand dispatched events are dispatched during the process of returning
  *   the deferred-dispatched events.
  * - They should not have side effects.
@@ -150,7 +150,7 @@ var abstractEventTypes = {
  * In the case of `ResponderEventPlugin`: If the `startShouldSetResponder`
  * on-demand dispatch returns `true` (and some other details are satisfied) the
  * `onResponderGrant` deferred dispatched event is returned from
- * `extractAbstractEvents`. The sequence of dispatch executions in this case
+ * `extractEvents`. The sequence of dispatch executions in this case
  * will appear as follows:
  *
  * - `startShouldSetResponder` (`ResponderEventPlugin` dispatches on-demand)
@@ -257,9 +257,9 @@ function canTriggerTransfer(topLevelType) {
  * @param {string} topLevelTargetID ID of `topLevelTarget`.
  * @param {object} nativeEvent Native browser event.
  * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractAbstractEvents}
+ * @see {EventPluginHub.extractEvents}
  */
-var extractAbstractEvents = function(
+var extractEvents = function(
     topLevelType,
     topLevelTarget,
     topLevelTargetID,
@@ -312,7 +312,7 @@ var extractAbstractEvents = function(
  */
 var ResponderEventPlugin = {
   abstractEventTypes: abstractEventTypes,
-  extractAbstractEvents: extractAbstractEvents,
+  extractEvents: extractEvents,
   getResponderID: getResponderID
 };
 

@@ -222,9 +222,9 @@ var SimpleEventPlugin = {
    * @param {string} topLevelTargetID ID of `topLevelTarget`.
    * @param {object} nativeEvent Native browser event.
    * @return {*} An accumulation of `AbstractEvent`s.
-   * @see {EventPluginHub.extractAbstractEvents}
+   * @see {EventPluginHub.extractEvents}
    */
-  extractAbstractEvents: function(
+  extractEvents: function(
       topLevelType,
       topLevelTarget,
       topLevelTargetID,

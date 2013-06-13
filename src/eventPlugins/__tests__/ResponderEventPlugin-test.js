@@ -79,7 +79,7 @@ var onResponderGrant = function(id, cb) {
 };
 
 var extractForTouchStart = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topTouchStart,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -88,7 +88,7 @@ var extractForTouchStart = function(renderedTargetID) {
 };
 
 var extractForTouchMove = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topTouchMove,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -97,7 +97,7 @@ var extractForTouchMove = function(renderedTargetID) {
 };
 
 var extractForTouchEnd = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topTouchEnd,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -106,7 +106,7 @@ var extractForTouchEnd = function(renderedTargetID) {
 };
 
 var extractForMouseDown = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topMouseDown,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -115,7 +115,7 @@ var extractForMouseDown = function(renderedTargetID) {
 };
 
 var extractForMouseMove = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topMouseMove,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -125,7 +125,7 @@ var extractForMouseMove = function(renderedTargetID) {
 
 
 var extractForMouseUp = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topMouseUp,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,
@@ -134,7 +134,7 @@ var extractForMouseUp = function(renderedTargetID) {
 };
 
 var extractForScroll = function(renderedTargetID) {
-  return ResponderEventPlugin.extractAbstractEvents(
+  return ResponderEventPlugin.extractEvents(
     topLevelTypes.topScroll,
     DUMMY_NATIVE_EVENT,
     renderedTargetID,

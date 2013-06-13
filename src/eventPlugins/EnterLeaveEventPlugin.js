@@ -50,9 +50,9 @@ var abstractEventTypes = {
  * @param {string} topLevelTargetID ID of `topLevelTarget`.
  * @param {object} nativeEvent Native browser event.
  * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractAbstractEvents}
+ * @see {EventPluginHub.extractEvents}
  */
-var extractAbstractEvents = function(
+var extractEvents = function(
     topLevelType,
     topLevelTarget,
     topLevelTargetID,
@@ -102,7 +102,7 @@ var extractAbstractEvents = function(
 
 var EnterLeaveEventPlugin = {
   abstractEventTypes: abstractEventTypes,
-  extractAbstractEvents: extractAbstractEvents
+  extractEvents: extractEvents
 };
 
 module.exports = EnterLeaveEventPlugin;
