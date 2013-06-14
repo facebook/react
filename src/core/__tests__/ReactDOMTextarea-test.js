@@ -19,45 +19,66 @@
 
 "use strict";
 
+var mocks = require('mocks');
+
 describe('ReactDOMTextarea', function() {
   var React;
   var ReactTestUtils;
-  var transaction;
+  var getTextContentAccessor;
 
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
+    getTextContentAccessor = require('getTextContentAccessor');
   });
 
-  it("should remove value with removed children", function() {
+  it("should update value and not update textContent", function() {
+    var textContentAccessor = getTextContentAccessor();
     var stub = ReactTestUtils.renderIntoDocument(<textarea>giraffe</textarea>);
+    var node = stub.getDOMNode();
 
-    expect(stub.getDOMNode().value).toEqual('giraffe');
-    stub.replaceProps({ children: null });
-    expect(stub.getDOMNode().value).toEqual('');
-  });
+    var nodeText = node[textContentAccessor];
+    var nodeTextSetter = mocks.getMockFunction();
+    Object.defineProperty(node, textContentAccessor, {
+      get: function() {
+        return nodeText;
+      },
+      set: nodeTextSetter.mockImplementation(function(newText) {
+        nodeText = newText;
+      })
+    });
 
-  it("should update value with a single string child", function() {
-    var stub = ReactTestUtils.renderIntoDocument(<textarea>monkey</textarea>);
+    expect(node.value).toEqual('giraffe');
 
-    expect(stub.getDOMNode().value).toEqual('monkey');
     stub.replaceProps({ children: 'gorilla' });
-    expect(stub.getDOMNode().value).toEqual('gorilla');
-  });
+    expect(node.value).toEqual('gorilla');
 
-  it("should update value with a single numerical child", function() {
-    var stub = ReactTestUtils.renderIntoDocument(<textarea>17</textarea>);
+    stub.replaceProps({ children: 17 });
+    expect(node.value).toEqual('17');
 
-    expect(stub.getDOMNode().value).toEqual('17');
-    stub.replaceProps({ children: 289 });
-    expect(stub.getDOMNode().value).toEqual('289');
-  });
+    stub.replaceProps({ children: [42] });
+    expect(node.value).toEqual('42');
 
-  it("should update value with the content property", function() {
-    var stub = ReactTestUtils.renderIntoDocument(<textarea content="purple" />);
+    stub.replaceProps({ children: null });
+    expect(node.value).toEqual('');
 
-    expect(stub.getDOMNode().value).toEqual('purple');
     stub.replaceProps({ content: 'eggplant' });
-    expect(stub.getDOMNode().value).toEqual('eggplant');
+    expect(node.value).toEqual('eggplant');
+
+    expect(nodeTextSetter.mock.calls.length).toBe(0);
+  });
+
+  it("should throw with multiple or invalid children", function() {
+    expect(function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <textarea>{'hello'}{'there'}</textarea>
+      );
+    }).toThrow();
+
+    expect(function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <textarea><strong /></textarea>
+      );
+    }).toThrow();
   });
 });

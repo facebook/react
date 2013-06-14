@@ -219,12 +219,13 @@ ReactNativeComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-      } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
-                 propKey === CONTENT) {
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         ReactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           ''
         );
+      } else if (propKey === CONTENT) {
+        // (Removal happens in _updateDOMChildren)
       } else if (registrationNames[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else {
@@ -275,10 +276,7 @@ ReactNativeComponent.Mixin = {
           );
         }
       } else if (propKey === CONTENT) {
-        ReactComponent.DOMIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          '' + nextProp
-        );
+        // (Update happens in _updateDOMChildren)
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else {

@@ -30,8 +30,34 @@ var textarea = ReactDOM.textarea;
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var getTextContent = function(props) {
-  return props.content != null ? '' + props.content :
-    CONTENT_TYPES[typeof props.children] ? '' + props.children : '';
+  if (!props) {
+    return '';
+  }
+
+  invariant(
+    props.dangerouslySetInnerHTML == null,
+    '`dangerouslySetInnerHTML` does not make sense on textarea.'
+  );
+
+  var content;
+  if (Array.isArray(props.children)) {
+    invariant(
+      props.children.length <= 1,
+      'textarea can have at most one child'
+    );
+    content = props.children[0];
+  } else if (props.children != null) {
+    content = props.children;
+  } else {
+    content = props.content;
+  }
+
+  invariant(
+    content == null || CONTENT_TYPES[typeof content],
+    'textarea must contain a single string or number, not an array or ' +
+    'object.'
+  );
+  return content != null ? '' + content : '';
 };
 
 /**
@@ -40,33 +66,24 @@ var getTextContent = function(props) {
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
   getInitialState: function() {
-    // We keep the original value of content and children here so that
+    // We keep the original value of content or children here so that
     // ReactNativeComponent doesn't update textContent (unnecessary since we
     // update value).
     return {
-      initialContent: this.props.content,
-      initialChildren: this.props.children
+      initialContent: getTextContent(this.props)
     };
   },
 
   render: function() {
-    invariant(
-      this.props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on textarea.'
-    );
-    invariant(
-      this.props.children == null || CONTENT_TYPES[typeof this.props.children],
-      'When present, textarea children must be a single string or number.'
-    );
     return this.transferPropsTo(textarea({
       content: this.state.initialContent
-    }, this.state.initialChildren));
+    }));
   },
 
   componentDidUpdate: function(prevProps, prevState, rootNode) {
     var oldContent = getTextContent(prevProps);
     var newContent = getTextContent(this.props);
-    if (oldContent !== newContent) {
+    if (oldContent !== newContent && rootNode.value !== newContent) {
       rootNode.value = newContent;
     }
   }
