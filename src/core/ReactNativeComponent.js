@@ -180,12 +180,8 @@ ReactNativeComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   receiveProps: function(nextProps, transaction) {
-    invariant(
-      this._rootNodeID,
-      'Trying to control a native dom element without a backing id'
-    );
-    assertValidProps(nextProps);
     ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+    assertValidProps(nextProps);
     this._updateDOMProperties(nextProps);
     this._updateDOMChildren(nextProps, transaction);
     this.props = nextProps;
