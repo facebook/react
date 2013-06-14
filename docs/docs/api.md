@@ -108,7 +108,7 @@ Transfer properties from this component to a target component that have not alre
 #### setState
 
 ```javascript
-setState(object nextState_[, function callback]_)
+setState(object nextState[, function callback])
 ```
 
 Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed.
