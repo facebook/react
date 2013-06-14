@@ -187,7 +187,7 @@ var ReactTestUtils = {
    * on and `Element` node.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to pass to ReactEvent.
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     var virtualHandler =
@@ -203,7 +203,7 @@ var ReactTestUtils = {
    * on the `ReactNativeComponent` `comp`.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`.
    * @param comp {!ReactNativeComponent}
-   * @param {?Event} fakeNativeEvent Fake native event to pass to ReactEvent.
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnDOMComponent: function(topLevelType, comp, fakeNativeEvent) {
     var reactRootID = comp._rootNodeID || comp._rootDomId;
@@ -280,7 +280,7 @@ for (eventType in topLevelTypes) {
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
   /**
    * @param {!Element || ReactNativeComponent} domComponentOrNode
-   * @param {?Event} nativeEventData Fake native event to pass to ReactEvent.
+   * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.Simulate[convenienceName] = makeSimulator(eventType);
 }

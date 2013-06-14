@@ -18,18 +18,18 @@
 
 "use strict";
 
-var AbstractEvent = require('AbstractEvent');
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var SyntheticEvent = require('SyntheticEvent');
 
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
-var abstractEventTypes = {
+var eventTypes = {
   textChange: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTextChange: null}),
@@ -121,29 +121,28 @@ var stopWatching = function() {
  * the value of the active element has changed.
  */
 var handlePropertyChange = function(nativeEvent) {
-  var value;
-  var abstractEvent;
-
-  if (nativeEvent.propertyName === "value") {
-    value = nativeEvent.srcElement.value;
-    if (value !== activeElementValue) {
-      activeElementValue = value;
-
-      abstractEvent = AbstractEvent.getPooled(
-        abstractEventTypes.textChange,
-        activeElementID,
-        nativeEvent
-      );
-      EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-
-      // If propertychange bubbled, we'd just bind to it like all the other
-      // events and have it go through ReactEventTopLevelCallback. Since it
-      // doesn't, we manually listen for the propertychange event and so we
-      // have to enqueue and process the abstract event manually.
-      EventPluginHub.enqueueEvents(abstractEvent);
-      EventPluginHub.processEventQueue();
-    }
+  if (nativeEvent.propertyName !== "value") {
+    return;
   }
+  var value = nativeEvent.srcElement.value;
+  if (value === activeElementValue) {
+    return;
+  }
+  activeElementValue = value;
+
+  var event = SyntheticEvent.getPooled(
+    eventTypes.textChange,
+    activeElementID,
+    nativeEvent
+  );
+  EventPropagators.accumulateTwoPhaseDispatches(event);
+
+  // If propertychange bubbled, we'd just bind to it like all the other events
+  // and have it go through ReactEventTopLevelCallback. Since it doesn't, we
+  // manually listen for the propertychange event and so we have to enqueue and
+  // process the abstract event manually.
+  EventPluginHub.enqueueEvents(event);
+  EventPluginHub.processEventQueue();
 };
 
 /**
@@ -154,8 +153,7 @@ if (isInputSupported) {
   targetIDForTextChangeEvent = function(
       topLevelType,
       topLevelTarget,
-      topLevelTargetID,
-      nativeEvent) {
+      topLevelTargetID) {
     if (topLevelType === topLevelTypes.topInput) {
       // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
       // what we want so fall through here and trigger an abstract event...
@@ -171,8 +169,7 @@ if (isInputSupported) {
   targetIDForTextChangeEvent = function(
       topLevelType,
       topLevelTarget,
-      topLevelTargetID,
-      nativeEvent) {
+      topLevelTargetID) {
     if (topLevelType === topLevelTypes.topFocus) {
       // In IE8, we can capture almost all .value changes by adding a
       // propertychange handler and looking for events with propertyName
@@ -214,40 +211,40 @@ if (isInputSupported) {
   };
 }
 
-/**
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
- * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractEvents}
- */
-var extractEvents = function(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
-    nativeEvent) {
-  var targetID = targetIDForTextChangeEvent(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
-    nativeEvent
-  );
-
-  if (targetID) {
-    var abstractEvent = AbstractEvent.getPooled(
-      abstractEventTypes.textChange,
-      targetID,
-      nativeEvent
-    );
-    EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-    return abstractEvent;
-  }
-};
-
 var TextChangeEventPlugin = {
-  abstractEventTypes: abstractEventTypes,
-  extractEvents: extractEvents
+
+  eventTypes: eventTypes,
+
+  /**
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   * @return {*} An accumulation of synthetic events.
+   * @see {EventPluginHub.extractEvents}
+   */
+  extractEvents: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    var targetID = targetIDForTextChangeEvent(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID
+    );
+
+    if (targetID) {
+      var event = SyntheticEvent.getPooled(
+        eventTypes.textChange,
+        targetID,
+        nativeEvent
+      );
+      EventPropagators.accumulateTwoPhaseDispatches(event);
+      return event;
+    }
+  }
+
 };
 
 module.exports = TextChangeEventPlugin;

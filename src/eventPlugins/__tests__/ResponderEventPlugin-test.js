@@ -23,21 +23,21 @@ var EventConstants;
 var EventPropagators;
 var ReactInstanceHandles;
 var ResponderEventPlugin;
-var AbstractEvent;
+var SyntheticEvent;
 
 var GRANDPARENT_ID = '.reactRoot[0]';
 var PARENT_ID = '.reactRoot[0].0';
 var CHILD_ID = '.reactRoot[0].0.0';
 
 var topLevelTypes;
-var responderAbstractEventTypes;
+var responderEventTypes;
 var spies;
 
 var DUMMY_NATIVE_EVENT = {};
 var DUMMY_RENDERED_TARGET = {};
 
 var onStartShouldSetResponder = function(id, cb, capture) {
-  var registrationNames = responderAbstractEventTypes
+  var registrationNames = responderEventTypes
     .startShouldSetResponder
     .phasedRegistrationNames;
   CallbackRegistry.putListener(
@@ -48,7 +48,7 @@ var onStartShouldSetResponder = function(id, cb, capture) {
 };
 
 var onScrollShouldSetResponder = function(id, cb, capture) {
-  var registrationNames = responderAbstractEventTypes
+  var registrationNames = responderEventTypes
     .scrollShouldSetResponder
     .phasedRegistrationNames;
   CallbackRegistry.putListener(
@@ -59,7 +59,7 @@ var onScrollShouldSetResponder = function(id, cb, capture) {
 };
 
 var onMoveShouldSetResponder = function(id, cb, capture) {
-  var registrationNames = responderAbstractEventTypes
+  var registrationNames = responderEventTypes
     .moveShouldSetResponder
     .phasedRegistrationNames;
   CallbackRegistry.putListener(
@@ -73,7 +73,7 @@ var onMoveShouldSetResponder = function(id, cb, capture) {
 var onResponderGrant = function(id, cb) {
   CallbackRegistry.putListener(
     id,
-    responderAbstractEventTypes.responderGrant.registrationName,
+    responderEventTypes.responderGrant.registrationName,
     cb
   );
 };
@@ -165,44 +165,40 @@ var existsInExtraction = function(extracted, test) {
  * Helper validators.
  */
 function assertGrantEvent(id, extracted) {
-  var test = function(abstractEvent) {
-    return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.reactEventType ===
-        responderAbstractEventTypes.responderGrant &&
-      abstractEvent.reactTargetID === id;
+  var test = function(event) {
+    return event instanceof SyntheticEvent &&
+      event.dispatchConfig === responderEventTypes.responderGrant &&
+      event.dispatchMarker === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
 }
 
 function assertResponderMoveEvent(id, extracted) {
-  var test = function(abstractEvent) {
-    return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.reactEventType ===
-        responderAbstractEventTypes.responderMove &&
-      abstractEvent.reactTargetID === id;
+  var test = function(event) {
+    return event instanceof SyntheticEvent &&
+      event.dispatchConfig === responderEventTypes.responderMove &&
+      event.dispatchMarker === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
 }
 
 function assertTerminateEvent(id, extracted) {
-  var test = function(abstractEvent) {
-    return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.reactEventType ===
-        responderAbstractEventTypes.responderTerminate &&
-      abstractEvent.reactTargetID === id;
+  var test = function(event) {
+    return event instanceof SyntheticEvent &&
+      event.dispatchConfig === responderEventTypes.responderTerminate &&
+      event.dispatchMarker === id;
   };
   expect(ResponderEventPlugin.getResponderID()).not.toBe(id);
   expect(existsInExtraction(extracted, test)).toBe(true);
 }
 
 function assertRelease(id, extracted) {
-  var test = function(abstractEvent) {
-    return abstractEvent instanceof AbstractEvent &&
-      abstractEvent.reactEventType ===
-        responderAbstractEventTypes.responderRelease &&
-      abstractEvent.reactTargetID === id;
+  var test = function(event) {
+    return event instanceof SyntheticEvent &&
+      event.dispatchConfig === responderEventTypes.responderRelease &&
+      event.dispatchMarker === id;
   };
   expect(ResponderEventPlugin.getResponderID()).toBe(null);
   expect(existsInExtraction(extracted, test)).toBe(true);
@@ -226,12 +222,12 @@ describe('ResponderEventPlugin', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    AbstractEvent = require('AbstractEvent');
     CallbackRegistry = require('CallbackRegistry');
     EventConstants = require('EventConstants');
     EventPropagators = require('EventPropagators');
     ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
+    SyntheticEvent = require('SyntheticEvent');
     EventPropagators.injection.injectInstanceHandle(ReactInstanceHandles);
 
     // dumpCache, in open-source tests, only resets existing mocks. It does not
@@ -240,7 +236,7 @@ describe('ResponderEventPlugin', function() {
     CallbackRegistry.__purge();
 
     topLevelTypes = EventConstants.topLevelTypes;
-    responderAbstractEventTypes = ResponderEventPlugin.abstractEventTypes;
+    responderEventTypes = ResponderEventPlugin.eventTypes;
 
     spies = {
       onStartShouldSetResponderChild: function() {},

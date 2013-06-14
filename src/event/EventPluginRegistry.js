@@ -60,7 +60,7 @@ function recomputePluginOrdering() {
       pluginName
     );
     EventPluginRegistry.plugins[pluginIndex] = PluginModule;
-    var publishedEvents = PluginModule.abstractEventTypes;
+    var publishedEvents = PluginModule.eventTypes;
     for (var eventName in publishedEvents) {
       invariant(
         publishEventForPlugin(publishedEvents[eventName], PluginModule),
@@ -198,7 +198,7 @@ var EventPluginRegistry = {
    * @internal
    */
   getPluginModuleForEvent: function(event) {
-    var dispatchConfig = event.reactEventType;
+    var dispatchConfig = event.dispatchConfig;
     if (dispatchConfig.registrationName) {
       return EventPluginRegistry.registrationNames[
         dispatchConfig.registrationName

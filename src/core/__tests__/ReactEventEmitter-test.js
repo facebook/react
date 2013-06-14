@@ -229,7 +229,7 @@ describe('ReactEventEmitter', function() {
 
   it('should invoke handlers that were removed while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
-    var handleChildClick = function(abstractEvent) {
+    var handleChildClick = function(event) {
       ReactEventEmitter.deleteAllListeners(PARENT.id);
     };
     ReactEventEmitter.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
@@ -240,7 +240,7 @@ describe('ReactEventEmitter', function() {
 
   it('should not invoke newly inserted handlers while bubbling', function() {
     var handleParentClick = mocks.getMockFunction();
-    var handleChildClick = function(abstractEvent) {
+    var handleChildClick = function(event) {
       ReactEventEmitter.putListener(PARENT.id, ON_CLICK_KEY, handleParentClick);
     };
     ReactEventEmitter.putListener(CHILD.id, ON_CLICK_KEY, handleChildClick);
