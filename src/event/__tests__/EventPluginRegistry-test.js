@@ -11,8 +11,8 @@ describe('EventPluginRegistry', function() {
   var createPlugin;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
     EventPluginRegistry = require('EventPluginRegistry');
+    EventPluginRegistry._resetEventPlugins();
 
     createPlugin = function(properties) {
       return merge({extractEvents: function() {}}, properties);
