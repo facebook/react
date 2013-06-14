@@ -54,7 +54,12 @@ function runCli(argv) {
     source += chunk;
   });
   process.stdin.on('end', function () {
-    source = transformAll(source, options, excludes);
+    try {
+      source = transformAll(source, options, excludes);
+    } catch (e) {
+      console.error(e.stack);
+      process.exit(1);
+    }
     process.stdout.write(source.code);
   });
 }
