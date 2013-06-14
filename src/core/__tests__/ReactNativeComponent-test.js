@@ -70,7 +70,7 @@ describe('ReactNativeComponent', function() {
     });
 
     it("should update styles when mutating style object", function() {
-      var styles = { display: 'none', fontFamily: 'Arial' };
+      var styles = { display: 'none', fontFamily: 'Arial', opacity: 0 };
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
       var stubStyle = stub.getDOMNode().style;
@@ -82,12 +82,21 @@ describe('ReactNativeComponent', function() {
       stub.receiveProps({ style: styles }, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Arial');
+      expect(stubStyle.opacity).toEqual('0');
 
       styles.fontFamily = 'Helvetica';
 
       stub.receiveProps({ style: styles }, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
+      expect(stubStyle.opacity).toEqual('0');
+
+      styles.opacity = 0.5;
+
+      stub.receiveProps({ style: styles }, transaction);
+      expect(stubStyle.display).toEqual('block');
+      expect(stubStyle.fontFamily).toEqual('Helvetica');
+      expect(stubStyle.opacity).toEqual('0.5');
     });
 
     it("should update styles if initially null", function() {

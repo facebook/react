@@ -74,8 +74,10 @@ var CSSPropertyOperations = {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
-      var styleValue = styles[styleName];
-      if (!styleValue) {
+      var styleValue = dangerousStyleValue(styleName, styles[styleName]);
+      if (styleValue) {
+        style[styleName] = styleValue;
+      } else {
         var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
@@ -86,8 +88,6 @@ var CSSPropertyOperations = {
         } else {
           style[styleName] = '';
         }
-      } else {
-        style[styleName] = dangerousStyleValue(styleName, styleValue);
       }
     }
   }

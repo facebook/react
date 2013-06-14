@@ -247,7 +247,8 @@ ReactNativeComponent.Mixin = {
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) && !nextProp[styleName]) {
+            if (lastProp.hasOwnProperty(styleName) &&
+                !nextProp.hasOwnProperty(styleName)) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
