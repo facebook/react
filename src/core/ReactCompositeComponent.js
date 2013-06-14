@@ -538,8 +538,8 @@ var ReactCompositeComponentMixin = {
   setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(merge(this._pendingState || this.state, partialState));
-    // If `callback` is callable, do it.
-    typeof callback === 'function' && callback();
+    // If `callback` is truthy, do it.
+    callback && callback();
   },
 
   /**
