@@ -140,8 +140,8 @@ var handlePropertyChange = function(nativeEvent) {
       // events and have it go through ReactEventTopLevelCallback. Since it
       // doesn't, we manually listen for the propertychange event and so we
       // have to enqueue and process the abstract event manually.
-      EventPluginHub.enqueueAbstractEvents(abstractEvent);
-      EventPluginHub.processAbstractEventQueue();
+      EventPluginHub.enqueueEvents(abstractEvent);
+      EventPluginHub.processEventQueue();
     }
   }
 };
