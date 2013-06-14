@@ -66,7 +66,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updatePropertyByID: function(id, name, value) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -84,7 +84,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   deletePropertyByID: function(id, name, value) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -121,7 +121,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateStylesByID: function(id, styles) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     CSSPropertyOperations.setValueForStyles(node, styles);
   },
 
@@ -133,7 +133,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateInnerHTMLByID: function(id, html) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     // HACK: IE8- normalize whitespace in innerHTML, removing leading spaces.
     // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
     node.innerHTML = (html && html.__html || '').replace(/^ /g, '&nbsp;');
@@ -147,7 +147,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateTextContentByID: function(id, content) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     node[textContentAccessor] = content;
   },
 
@@ -160,7 +160,7 @@ var ReactDOMIDOperations = {
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
   dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactDOMNodeCache.getNodeByID(id);
     DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
     ReactDOMNodeCache.purgeEntireCache();
   },
@@ -170,13 +170,13 @@ var ReactDOMIDOperations = {
    *       Detect if any elements were removed instead of blindly purging.
    */
   manageChildrenByParentID: function(parentID, domOperations) {
-    var parent = ReactDOMNodeCache.getCachedNodeByID(parentID);
+    var parent = ReactDOMNodeCache.getNodeByID(parentID);
     DOMChildrenOperations.manageChildren(parent, domOperations);
     ReactDOMNodeCache.purgeEntireCache();
   },
 
   setTextNodeValueAtIndexByParentID: function(parentID, index, value) {
-    var parent = ReactDOMNodeCache.getCachedNodeByID(parentID);
+    var parent = ReactDOMNodeCache.getNodeByID(parentID);
     DOMChildrenOperations.setTextNodeValueAtIndex(parent, index, value);
   }
 

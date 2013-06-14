@@ -18,9 +18,9 @@
 
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactDOMNodeCache = require('ReactDOMNodeCache');
 var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -208,23 +208,10 @@ var ReactComponent = {
      */
     getDOMNode: function() {
       invariant(
-        ExecutionEnvironment.canUseDOM,
-        'getDOMNode(): The DOM is not supported in the current environment.'
-      );
-      invariant(
         this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
-      var rootNode = this._rootNode;
-      if (!rootNode) {
-        rootNode = document.getElementById(this._rootNodeID);
-        if (!rootNode) {
-          // TODO: Log the frequency that we reach this path.
-          rootNode = ReactMount.findReactRenderedDOMNodeSlow(this._rootNodeID);
-        }
-        this._rootNode = rootNode;
-      }
-      return rootNode;
+      return ReactDOMNodeCache.getNodeByID(this._rootNodeID);
     },
 
     /**
@@ -372,7 +359,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
       }
-      this._rootNode = null;
+      ReactDOMNodeCache.purgeID(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },

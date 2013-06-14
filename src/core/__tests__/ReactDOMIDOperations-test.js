@@ -27,7 +27,7 @@ describe('ReactDOMIDOperations', function() {
   var keyOf = require('keyOf');
 
   it('should disallow updating special properties', function() {
-    spyOn(ReactDOMNodeCache, "getCachedNodeByID");
+    spyOn(ReactDOMNodeCache, "getNodeByID");
     spyOn(DOMPropertyOperations, "setValueForProperty");
 
     expect(function() {
@@ -39,7 +39,7 @@ describe('ReactDOMIDOperations', function() {
     }).toThrow();
 
     expect(
-      ReactDOMNodeCache.getCachedNodeByID.argsForCall[0][0]
+      ReactDOMNodeCache.getNodeByID.argsForCall[0][0]
     ).toBe('testID');
 
     expect(
@@ -49,7 +49,7 @@ describe('ReactDOMIDOperations', function() {
 
   it('should update innerHTML and special-case whitespace', function() {
     var stubNode = document.createElement('div');
-    spyOn(ReactDOMNodeCache, "getCachedNodeByID").andReturn(stubNode);
+    spyOn(ReactDOMNodeCache, "getNodeByID").andReturn(stubNode);
 
     ReactDOMIDOperations.updateInnerHTMLByID(
       'testID',
@@ -57,7 +57,7 @@ describe('ReactDOMIDOperations', function() {
     );
 
     expect(
-      ReactDOMNodeCache.getCachedNodeByID.argsForCall[0][0]
+      ReactDOMNodeCache.getNodeByID.argsForCall[0][0]
     ).toBe('testID');
 
     expect(stubNode.innerHTML).toBe('&nbsp;testContent');
