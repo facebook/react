@@ -107,6 +107,12 @@ var eventTypes = {
       captured: keyOf({onDropCapture: true})
     }
   },
+  DOMCharacterDataModified: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDOMCharacterDataModified: true}),
+      captured: keyOf({onDOMCharacterDataModifiedCapture: true})
+    }
+  },
   focus: {
     phasedRegistrationNames: {
       bubbled: keyOf({onFocus: true}),
