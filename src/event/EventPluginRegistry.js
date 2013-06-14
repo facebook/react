@@ -3,6 +3,8 @@
  * @typechecks
  */
 
+"use strict";
+
 var invariant = require('invariant');
 
 /**
@@ -200,6 +202,27 @@ var EventPluginRegistry = {
       }
     }
     return null;
+  },
+
+  /**
+   * Exposed for unit testing.
+   * @private
+   */
+  _resetEventPlugins: function() {
+    EventPluginOrder = null;
+    for (var pluginName in namesToPlugins) {
+      if (namesToPlugins.hasOwnProperty(pluginName)) {
+        delete namesToPlugins[pluginName];
+      }
+    }
+    EventPluginRegistry.plugins.length = 0;
+    var registrationNames = EventPluginRegistry.registrationNames;
+    for (var registrationName in registrationNames) {
+      if (registrationNames.hasOwnProperty(registrationName)) {
+        delete registrationNames[registrationName];
+      }
+    }
+    EventPluginRegistry.registrationNamesKeys.length = 0;
   }
 
 };

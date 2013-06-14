@@ -24,20 +24,25 @@ var mocks = require('mocks');
 describe('AnalyticsEventPlugin', function() {
   var AnalyticsEventPluginFactory;
   var EventPluginHub;
+  var EventPluginRegistry;
   var React;
+  var ReactDefaultInjection;
   var ReactEventEmitter;
   var ReactEventTopLevelCallback;
   var ReactTestUtils;
 
   beforeEach(function() {
-    require('mock-modules').dumpCache();
-
     AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
     EventPluginHub = require('EventPluginHub');
+    EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
+    ReactDefaultInjection = require('ReactDefaultInjection');
     ReactEventEmitter = require('ReactEventEmitter');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactTestUtils = require('ReactTestUtils');
+
+    EventPluginRegistry._resetEventPlugins();
+    ReactDefaultInjection.inject();
 
     ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
   });
