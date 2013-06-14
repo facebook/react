@@ -525,13 +525,21 @@ var ReactCompositeComponentMixin = {
    * There is no guarantee that `this.state` will be immediately updated, so
    * accessing `this.state` after calling this method may return the old value.
    *
+   * There is no guarantee that calls to `setState` will run synchronously,
+   * as they may eventually be batched together.  You can provide an optional
+   * callback that will be executed when the call to setState is actually
+   * completed.
+   *
    * @param {object} partialState Next partial state to be merged with state.
+   * @param {?function} callback Called after state is updated.
    * @final
    * @protected
    */
-  setState: function(partialState) {
+  setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(merge(this._pendingState || this.state, partialState));
+    // If `callback` is callable, do it.
+    typeof callback === 'function' && callback();
   },
 
   /**
