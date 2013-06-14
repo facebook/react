@@ -31,7 +31,7 @@ ReactDefaultInjection.inject();
 
 var React = {
   DOM: ReactDOM,
-  Props: ReactProps,  
+  Props: ReactProps,
   initializeTouchEvents: function(shouldUseTouch) {
     ReactMount.useTouchEvents = shouldUseTouch;
   },
