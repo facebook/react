@@ -435,7 +435,7 @@ React.renderComponent(
 
 ```
 
-All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 60 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
+All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
 
 ## Adding new comments
 
