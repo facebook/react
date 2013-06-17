@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-* @providesModule ReactComponentWithPureRender
+* @providesModule ReactComponentWithPureRenderMixin
 */
 
 "use strict";
@@ -27,9 +27,10 @@
  *
  * Example:
  *
- *   var ReactComponentWithPureRender = require('ReactComponentWithPureRender');
+ *   var ReactComponentWithPureRender =
+ *     require('ReactComponentWithPureRenderMixin');
  *   React.createClass({
- *     mixins: [ReactComponentWithPureRender],
+ *     mixins: [ReactComponentWithPureRenderMixin],
  *
  *     render: function() {
  *       return <div className={this.props.className}>foo</div>;
@@ -41,7 +42,7 @@
  * differences. Only mixin to components which have simple props and state, or
  * use `forceUpdate()` when you know deep data structures have changed.
  */
-var ReactComponentWithPureRender = {
+var ReactComponentWithPureRenderMixin = {
   shouldComponentUpdate: function(nextProps, nextState) {
     return !shallowEqual(this.props, nextProps) ||
            !shallowEqual(this.state, nextState);
@@ -74,4 +75,4 @@ function shallowEqual(objA, objB) {
   return true;
 }
 
-module.exports = ReactComponentWithPureRender;
+module.exports = ReactComponentWithPureRenderMixin;
