@@ -62,13 +62,17 @@ describe('ReactIdentity', function() {
       <div>
         <div key="apple" />
         <div key="banana" />
+        <div key={0} />
+        <div key={123} />
       </div>;
 
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
-    reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
-    checkId(node.childNodes[0], '.reactRoot[0].[apple]');
-    checkId(node.childNodes[1], '.reactRoot[0].[banana]');
+    reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
+    checkId(node.childNodes[0], '.reactRoot[0].[0:apple]');
+    checkId(node.childNodes[1], '.reactRoot[0].[0:banana]');
+    checkId(node.childNodes[2], '.reactRoot[0].[0:0]');
+    checkId(node.childNodes[3], '.reactRoot[0].[0:123]');
   });
 
   it('should use instance identity', function() {
@@ -89,32 +93,108 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
-    checkId(node.childNodes[0], '.reactRoot[0].[wrap1]');
+    checkId(node.childNodes[0], '.reactRoot[0].[0:wrap1]');
     checkId(
       node.childNodes[0].firstChild,
-      '.reactRoot[0].[wrap1].[0:squirrel]'
+      '.reactRoot[0].[0:wrap1].[0:squirrel]'
     );
-    checkId(node.childNodes[1], '.reactRoot[0].[wrap2]');
-    checkId(node.childNodes[1].firstChild, '.reactRoot[0].[wrap2].[0:bunny]');
-    checkId(node.childNodes[2], '.reactRoot[0].[2]');
-    checkId(node.childNodes[2].firstChild, '.reactRoot[0].[2].[0:chipmunk]');
+    checkId(node.childNodes[1], '.reactRoot[0].[0:wrap2]');
+    checkId(node.childNodes[1].firstChild, '.reactRoot[0].[0:wrap2].[0:bunny]');
+    checkId(node.childNodes[2], '.reactRoot[0].[0:2]');
+    checkId(node.childNodes[2].firstChild, '.reactRoot[0].[0:2].[0:chipmunk]');
   });
 
   it('should let restructured components retain their uniqueness', function() {
     var instance0 = <span />;
     var instance1 = <span />;
     var instance2 = <span />;
-    var wrapped = <div>{instance0} {instance1}</div>;
-    var unwrappedAndAdded =
-      <div>
-        {instance2}
-        {wrapped.props.children[0]}
-        {wrapped.props.children[1]}
-      </div>;
+
+    var TestComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            {instance2}
+            {this.props.children[0]}
+            {this.props.children[1]}
+          </div>
+        );
+      }
+    });
+
+    var TestContainer = React.createClass({
+
+      render: function() {
+        return <TestComponent>{instance0} {instance1}</TestComponent>;
+      }
+
+    });
 
     expect(function() {
 
-      React.renderComponent(unwrappedAndAdded, document.createElement('div'));
+      React.renderComponent(<TestContainer />, document.createElement('div'));
+
+    }).not.toThrow();
+  });
+
+  it('should let nested restructures retain their uniqueness', function() {
+    var instance0 = <span />;
+    var instance1 = <span />;
+    var instance2 = <span />;
+
+    var TestComponent = React.createClass({
+      render: function() {
+        return (
+          <div>
+            {instance2}
+            {this.props.children[0]}
+            {this.props.children[1]}
+          </div>
+        );
+      }
+    });
+
+    var TestContainer = React.createClass({
+
+      render: function() {
+        return (
+          <div>
+            <TestComponent>{instance0} {instance1}</TestComponent>
+          </div>
+        );
+      }
+
+    });
+
+    expect(function() {
+
+      React.renderComponent(<TestContainer />, document.createElement('div'));
+
+    }).not.toThrow();
+  });
+
+  it('should let text nodes retain their uniqueness', function() {
+    var TestComponent = React.createClass({
+      render: function() {
+        return <div>{this.props.children}<span /></div>;
+      }
+    });
+
+    var TestContainer = React.createClass({
+
+      render: function() {
+        return (
+          <TestComponent>
+            <div />
+            {'second'}
+          </TestComponent>
+        );
+      }
+
+    });
+
+    expect(function() {
+
+      React.renderComponent(<TestContainer />, document.createElement('div'));
 
     }).not.toThrow();
   });

@@ -56,8 +56,8 @@ describe('ReactComponentFlatten', function() {
     var flat = singleChild(children);
 
     expect(flat).toBe(children);
-    expect(flat[0]._key).toEqual('0:foo');
-    expect(flat[1]._key).toEqual('0:bar');
+    expect(flat[0]._key).toEqual('0:0:foo');
+    expect(flat[1]._key).toEqual('0:0:bar');
   });
 
   it("should collapse a sparse array", function() {
@@ -71,8 +71,8 @@ describe('ReactComponentFlatten', function() {
 
     expect(flat).not.toBe(children);
     expect(flat.length).toEqual(2);
-    expect(flat[0]._key).toEqual('0:foo');
-    expect(flat[1]._key).toEqual('0:bar');
+    expect(flat[0]._key).toEqual('0:0:foo');
+    expect(flat[1]._key).toEqual('0:0:bar');
   });
 
   it("should collapse a nested array into a flat array", function() {
@@ -83,13 +83,11 @@ describe('ReactComponentFlatten', function() {
     );
 
     expect(flat.length).toEqual(2);
-    expect(flat[0]._key).toEqual('foo');
-    expect(flat[1]._key).toEqual('2:bar');
+    expect(flat[0]._key).toEqual('0:foo');
+    expect(flat[1]._key).toEqual('0:2:bar');
   });
 
-  it("should use retain key index despite static empty values", function() {
-    // TODO: Wrap in another single child (currently breaks)
-
+  it("should retain key index despite static empty values", function() {
     var before = multiChild(
       <div />,
       <div />,
@@ -110,22 +108,25 @@ describe('ReactComponentFlatten', function() {
     expect(before[3]._key).toEqual(after[1]._key);
   });
 
-  it("should assign idempotent keys for extra flattening layers", function() {
-    var flat = multiChild(
-      null,
-      [null, <div key="FOO" />],
-      false
-    );
+  it("should retain key index when wrapped", function() {
+    var before = singleChild(multiChild(
+      <div />,
+      <div />,
+      [<div key="foo" />],
+      [<div key="foo" />]
+    ));
 
-    var preFlat = multiChild(
+    var after = singleChild(multiChild(
       null,
-      singleChild([null, <div key="FOO" />]),
-      false
-    );
+      <div />,
+      null,
+      [<div key="foo" />]
+    ));
 
-    expect(flat.length).toBe(1);
-    expect(preFlat.length).toBe(1);
-    expect(preFlat[0]._key).toBe(flat[0]._key);
+    expect(before.length).toEqual(4);
+    expect(after.length).toEqual(2);
+    expect(before[1]._key).toEqual(after[0]._key);
+    expect(before[3]._key).toEqual(after[1]._key);
   });
 
   it("should assign idempotent strings through flattening", function() {
