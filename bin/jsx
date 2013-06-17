@@ -3,7 +3,7 @@
 
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
 var transform = require('../vendor/fbtransform/lib/transform').transform;
-var debranch = require("../vendor/woodchipper").debranch;
+var propagate = require("../vendor/constants").propagate;
 
 require("commoner").resolve(function(id) {
   var context = this;
@@ -32,10 +32,9 @@ require("commoner").resolve(function(id) {
   return context.makePromise(function(callback) {
     var constants = context.config.constants || {};
 
-    // Debranching means removing any obviously dead code after
-    // replacing constant conditional expressions with literal
-    // (boolean) values.
-    debranch(constants, source, function(source) {
+    // Constant propagation means removing dead code after replacing
+    // constant conditional expressions with literal (boolean) values.
+    propagate(constants, source, function(source) {
       callback(null, source);
     });
   });
