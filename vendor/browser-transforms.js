@@ -24,22 +24,22 @@ var visitors = require('./fbtransform/visitors').transformVisitors;
 var transform = transform.bind(null, visitors.react);
 var docblock = require('./fbtransform/lib/docblock');
 
+var headEl = document.getElementsByTagName('head')[0];
+
 exports.transform = transform;
+
 exports.exec = function(code) {
   return eval(transform(code));
 };
-var run = exports.run = function(code) {
-  var moduleName =
-    docblock.parseAsObject(docblock.extract(code)).providesModule;
-  var jsx =
-    docblock.parseAsObject(docblock.extract(code)).jsx;
 
-  window.moduleLoads = (window.moduleLoads || []).concat(moduleName);
-  window.startTime = Date.now();
+var run = exports.run = function(code) {
+  var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
+
   var functionBody = jsx ? transform(code).code : code;
-  Function('require', 'module', 'exports', functionBody)(require, module, exports);
-  window.endTime = Date.now();
-  require[moduleName] = module.exports;
+  var scriptEl = document.createElement('script');
+
+  scriptEl.innerHTML = functionBody;
+  headEl.appendChild(scriptEl);
 };
 
 if (typeof window === "undefined" || window === null) {
@@ -48,15 +48,17 @@ if (typeof window === "undefined" || window === null) {
 
 var load = exports.load = function(url, callback) {
   var xhr;
-  xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP') : new XMLHttpRequest();
+  xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP')
+                             : new XMLHttpRequest();
+  // Disable async since we need to execute scripts in the order they are in the
+  // DOM to mirror normal script loading.
   xhr.open('GET', url, false);
   if ('overrideMimeType' in xhr) {
     xhr.overrideMimeType('text/plain');
   }
   xhr.onreadystatechange = function() {
-    var _ref;
     if (xhr.readyState === 4) {
-      if ((_ref = xhr.status) === 0 || _ref === 200) {
+      if (xhr.status === 0 || xhr.status === 200) {
         run(xhr.responseText);
       } else {
         throw new Error("Could not load " + url);
@@ -70,37 +72,19 @@ var load = exports.load = function(url, callback) {
 };
 
 runScripts = function() {
-  var jsxes, execute, index, length, s, scripts;
-  scripts = document.getElementsByTagName('script');
-  jsxes = (function() {
-    var _i, _len, _results;
-    _results = [];
-    for (_i = 0, _len = scripts.length; _i < _len; _i++) {
-      s = scripts[_i];
-      if (s.type === 'text/jsx') {
-        _results.push(s);
-      }
-    }
-    return _results;
-  })();
-  index = 0;
-  length = jsxes.length;
-  (execute = function(j) {
-    var script;
-    script = jsxes[j];
-    if ((script != null ? script.type : void 0) === 'text/jsx') {
-      if (script.src) {
-         return load(script.src, execute);
-      } else {
-        run(script.innerHTML);
-        return execute();
-      }
+  var scripts = document.getElementsByTagName('script');
+  scripts = Array.prototype.slice.call(scripts);
+  var jsxScripts = scripts.filter(function(script) {
+    return script.type === 'text/jsx';
+  });
+
+  jsxScripts.forEach(function(script) {
+    if (script.src) {
+      load(script.src);
+    } else {
+      run(script.innerHTML);
     }
   });
-  for (var i = 0; i < jsxes.length; i++) {
-    execute(i);
-  }
-  return null;
 };
 
 if (window.addEventListener) {
