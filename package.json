@@ -21,7 +21,7 @@
     "bin/jsx",
     "build/modules/",
     "vendor/fbtransform/",
-    "vendor/woodchipper.js"
+    "vendor/constants.js"
   ],
   "main": "main.js",
   "bin": {
