@@ -17,6 +17,8 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 require('mock-modules')
@@ -147,7 +149,7 @@ describe('ReactServerRendering', function() {
         return (
           <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
         );
-      },
+      }
     });
 
     var element = document.createElement('div');

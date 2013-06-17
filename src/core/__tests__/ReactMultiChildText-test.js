@@ -17,13 +17,14 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 require('mock-modules');
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactTextComponent = require('ReactTextComponent');
 
 var reactComponentExpect = require('reactComponentExpect');
 
@@ -141,7 +142,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero string as text node  then switch to spans', function() {
+  it('should render zero string as text node then switch to spans', function() {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, '0');
@@ -149,7 +150,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero number as text node  then switch to spans', function() {
+  it('should render zero number as text node then switch to spans', function() {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, 0);

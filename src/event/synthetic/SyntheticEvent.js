@@ -17,6 +17,8 @@
  * @typechecks
  */
 
+"use strict";
+
 var PooledClass = require('PooledClass');
 
 var emptyFunction = require('emptyFunction');

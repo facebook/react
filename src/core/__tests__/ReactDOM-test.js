@@ -17,6 +17,8 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var React = require('React');
@@ -81,27 +83,30 @@ describe('ref swapping', function() {
         theBird: <div class="bird" />
       }}</div>
     );
+    // Warm the cache with theDog
     myDiv.setProps({
       children: {
-        theDog: <div class="dogbeforedelete" />,  // Warm the cache with theDog
+        theDog: <div class="dogbeforedelete" />,
         theBird: <div class="bird" />
       }
     });
-    myDiv.setProps({
-      children: {                                 // This better purge that cache
-        theBird: <div class="bird" />
-      }
-    });
-    // Now, put the dog back.
+    // Remove theDog - this should purge the cache
     myDiv.setProps({
       children: {
-        theDog: <div class="dog" />,       // This is a different node than before
         theBird: <div class="bird" />
       }
     });
+    // Now, put theDog back. It's now a different DOM node.
     myDiv.setProps({
-      children: {                          // className changed to bigdog.
-        theDog: <div class="bigdog" />,    // but will it use the proper element
+      children: {
+        theDog: <div class="dog" />,
+        theBird: <div class="bird" />
+      }
+    });
+    // Change the className of theDog. It will use the same element
+    myDiv.setProps({
+      children: {
+        theDog: <div class="bigdog" />,
         theBird: <div class="bird" />
       }
     });

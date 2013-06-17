@@ -72,8 +72,9 @@ var EnterLeaveEventPlugin = {
     var from, to;
     if (topLevelType === topLevelTypes.topMouseOut) {
       from = topLevelTarget;
-      to = getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement)
-        || ExecutionEnvironment.global;
+      to =
+        getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
+        ExecutionEnvironment.global;
     } else {
       from = ExecutionEnvironment.global;
       to = topLevelTarget;

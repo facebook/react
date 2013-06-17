@@ -17,6 +17,8 @@
  * @typechecks
  */
 
+"use strict";
+
 var BrowserEnv = require('BrowserEnv');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 

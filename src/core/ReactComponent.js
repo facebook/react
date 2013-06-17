@@ -16,6 +16,8 @@
  * @providesModule ReactComponent
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -125,7 +127,9 @@ function assignKey(groupingIndex, child, index) {
 function tryToReuseArray(children) {
   for (var i = 0; i < children.length; i++) {
     var child = children[i];
-    if (isEmptyChild(child)) return false;
+    if (isEmptyChild(child)) {
+      return false;
+    }
     assignKey(0, child, i);
   }
   return true;
@@ -142,7 +146,9 @@ function tryToReuseArray(children) {
 function appendNestedChildren(groupingIndex, sourceArray, targetArray) {
   for (var i = 0; i < sourceArray.length; i++) {
     var child = sourceArray[i];
-    if (isEmptyChild(child)) continue;
+    if (isEmptyChild(child)) {
+      continue;
+    }
     assignKey(groupingIndex, child, i);
     // TODO: Invalid components like strings could possibly need
     // keys assigned to them here. Usually they're not stateful but
@@ -338,9 +344,13 @@ var ReactComponent = {
       for (var i = 1; i < arguments.length; i++) {
         var child = arguments[i];
         if (Array.isArray(child)) {
-          if (child.length === 0) continue;
+          if (child.length === 0) {
+            continue;
+          }
 
-          if (targetArray === null) targetArray = [];
+          if (targetArray === null) {
+            targetArray = [];
+          }
           appendNestedChildren(i - 1, child, targetArray);
 
         } else if (!isEmptyChild(child)) {
@@ -352,7 +362,9 @@ var ReactComponent = {
             child._key = createKey(child.props.key, i - 1);
           }
 
-          if (targetArray === null) targetArray = [];
+          if (targetArray === null) {
+            targetArray = [];
+          }
           targetArray.push(child);
 
         }
