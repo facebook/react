@@ -231,21 +231,23 @@ var ReactComponent = {
      * Sets a subset of the props.
      *
      * @param {object} partialProps Subset of the next props.
+     * @param {?function} callback Called after props are updated.
      * @final
      * @public
      */
-    setProps: function(partialProps) {
-      this.replaceProps(merge(this.props, partialProps));
+    setProps: function(partialProps, callback) {
+      this.replaceProps(merge(this.props, partialProps), callback);
     },
 
     /**
      * Replaces all of the props.
      *
      * @param {object} props New props.
+     * @param {?function} callback Called after props are updated.
      * @final
      * @public
      */
-    replaceProps: function(props) {
+    replaceProps: function(props, callback) {
       invariant(
         !this.props[OWNER],
         'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
@@ -257,6 +259,8 @@ var ReactComponent = {
       var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
       transaction.perform(this.receiveProps, this, props, transaction);
       ReactComponent.ReactReconcileTransaction.release(transaction);
+
+      callback && callback();
     },
 
     /**

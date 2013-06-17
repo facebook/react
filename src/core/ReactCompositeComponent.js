@@ -537,9 +537,7 @@ var ReactCompositeComponentMixin = {
    */
   setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this.replaceState(merge(this._pendingState || this.state, partialState));
-    // If `callback` is truthy, do it.
-    callback && callback();
+    this.replaceState(merge(this._pendingState || this.state, partialState), callback);
   },
 
   /**
@@ -550,10 +548,11 @@ var ReactCompositeComponentMixin = {
    * accessing `this.state` after calling this method may return the old value.
    *
    * @param {object} completeState Next state.
+   * @param {?function} callback Called after state is updated.
    * @final
    * @protected
    */
-  replaceState: function(completeState) {
+  replaceState: function(completeState, callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
       this.isMounted() ||
@@ -590,6 +589,9 @@ var ReactCompositeComponentMixin = {
 
       this._compositeLifeCycleState = null;
     }
+
+    // If callback is 'truthy', execute it
+    callback && callback();
   },
 
   /**
@@ -712,10 +714,11 @@ var ReactCompositeComponentMixin = {
    * This will not invoke `shouldUpdateComponent`, but it will invoke
    * `componentWillUpdate` and `componentDidUpdate`.
    *
+   * @param {?function} callback Called after update is complete.
    * @final
    * @protected
    */
-  forceUpdate: function() {
+  forceUpdate: function(callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
       this.isMounted(),
@@ -736,6 +739,8 @@ var ReactCompositeComponentMixin = {
       transaction
     );
     ReactComponent.ReactReconcileTransaction.release(transaction);
+
+    callback && callback();
   },
 
   /**
