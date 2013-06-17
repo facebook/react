@@ -17,14 +17,10 @@
 
 var recast = require('recast');
 
-exports.propagate = function(constants, source, writeback) {
-  recast.runString(
-    source,
-    function(ast, callback) {
-      callback(new ConstantVisitor(constants).visit(ast));
-    },
-    { writeback: writeback }
-  );
+exports.propagate = function(constants, source) {
+  var ast = recast.parse(source);
+  ast = new ConstantVisitor(constants).visit(ast);
+  return recast.print(ast);
 };
 
 var ConstantVisitor = recast.Visitor.extend({
