@@ -3,6 +3,7 @@ id: docs-api
 title: React API
 layout: docs
 prev: mixins.html
+next: jsx-is-not-html.html
 ---
 
 ## React
