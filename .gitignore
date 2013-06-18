@@ -6,11 +6,13 @@ static
 .grunt
 _SpecRunner.html
 build/
+.module-cache
 *.gem
 docs/code
 docs/_site
 docs/.sass-cache
 docs/css/react.css
+docs/js/.module-cache
 docs/js/JSXTransformer.js
 docs/js/react.min.js
 docs/js/docs.js
