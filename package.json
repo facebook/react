@@ -37,7 +37,7 @@
   "dependencies": {
     "base62": "~0.1.1",
     "commoner": "~0.7.0",
-    "esprima": "git://github.com/facebook/esprima#fb-harmony",
+    "esprima": "https://github.com/facebook/esprima/tarball/ca28795124d45968e62a7b4b336d23a053ac3a84",
     "recast": "~0.4.8",
     "source-map": "~0.1.22"
   },
