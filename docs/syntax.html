@@ -75,6 +75,13 @@
       <li><a href="/react/docs/api.html">API</a></li>
     </ul>
   </div>
+
+  <div class="nav-docs-section">
+    <h3>Appendix</h3>
+    <ul>
+      <li><a href="/react/docs/jsx-is-not-html.html">JSX is not HTML</a></li>
+    </ul>
+  </div>
 </div>
 
 
@@ -120,7 +127,7 @@ attributes into function calls and objects, respectively.</p>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">},</span> <span class="nx">Profile</span><span class="p">({},</span> <span class="s1">&#39;click&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p>Use the <a href="/react/jsx-compiler.html">JSX Compiler</a> to try out JSX and see how it
-desguars into native JavaScript.</p>
+desugars into native JavaScript.</p>
 
 <p>If you want to use JSX, the <a href="getting-started.html">Getting Started</a> guide shows
 how to setup compilation.</p>
@@ -240,6 +247,8 @@ efforts include:</p>
         <a class="docs-next" href="/react/docs/component-basics.html">Next &rarr;</a>
       
     </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="/react/docs/syntax.html"></div>
   </div>
 </section>
 
@@ -249,6 +258,7 @@ efforts include:</p>
       <div class="right">&copy; 2013 Facebook Inc.</div>
     </footer>
   </div>
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -258,7 +268,14 @@ efforts include:</p>
     ga('send', 'pageview');
 
     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
   </script>
 </body>
 </html>
-

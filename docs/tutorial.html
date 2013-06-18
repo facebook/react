@@ -75,6 +75,13 @@
       <li><a href="/react/docs/api.html">API</a></li>
     </ul>
   </div>
+
+  <div class="nav-docs-section">
+    <h3>Appendix</h3>
+    <ul>
+      <li><a href="/react/docs/jsx-is-not-html.html">JSX is not HTML</a></li>
+    </ul>
+  </div>
 </div>
 
 
@@ -460,7 +467,7 @@
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 60 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 5 seconds, the changes will show!</p>
+<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 5 seconds, the changes will show!</p>
 
 <h2>Adding new comments</h2>
 
@@ -700,6 +707,8 @@
         <a class="docs-next" href="/react/docs/common-questions.html">Next &rarr;</a>
       
     </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="/react/docs/tutorial.html"></div>
   </div>
 </section>
 
@@ -709,6 +718,7 @@
       <div class="right">&copy; 2013 Facebook Inc.</div>
     </footer>
   </div>
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -718,7 +728,14 @@
     ga('send', 'pageview');
 
     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
   </script>
 </body>
 </html>
-

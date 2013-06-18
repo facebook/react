@@ -78,15 +78,15 @@
 
 <h2>Khan Academy Question Editor</h2>
 
-<p>It looks like <a href="http://benalpert.com/">Ben Alpert</a> is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (<a href="irc://chat.freenode.net/reactjs">#reactjs on Freenode</a>). Ben wrote about his experience using React on Quora:</p>
+<p>It looks like <a href="http://benalpert.com/">Ben Alpert</a> is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (<a href="irc://chat.freenode.net/reactjs">#reactjs on Freenode</a>). Ben wrote about his experience using React:</p>
 
 <blockquote>
 <p>I just rewrote a 2000-line project in React and have now made a handful of pull requests to React. Everything about React I&#39;ve seen so far seems really well thought-out and I&#39;m proud to be the first non-FB/IG production user of React.</p>
 
 <p>The project that I rewrote in React (and am continuing to improve) is the Khan Academy question editor which content creators can use to enter questions and hints that will be presented to students:
-<figure><a href="http://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Ben-Alpert"><img src="/react/img/blog/khan-academy-editor.png" alt=""></a></figure></p>
+<figure><a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html"><img src="/react/img/blog/khan-academy-editor.png" alt=""></a></figure></p>
 
-<p><a href="http://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Ben-Alpert">Read the full post...</a></p>
+<p><a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html">Read the full post...</a></p>
 </blockquote>
 
 <h2>Pimp my Backbone.View (by replacing it with React)</h2>
@@ -126,6 +126,9 @@
 </blockquote>
 
     </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="/react/blog/2013/06/12/community-roundup.html"></div>
   </div>
 </section>
 
@@ -135,6 +138,7 @@
       <div class="right">&copy; 2013 Facebook Inc.</div>
     </footer>
   </div>
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -144,7 +148,14 @@
     ga('send', 'pageview');
 
     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
   </script>
 </body>
 </html>
-

@@ -167,6 +167,9 @@ nuts and bolts
 <p>Thanks for reading!</p>
 
     </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="/react/blog/2013/06/05/why-react.html"></div>
   </div>
 </section>
 
@@ -176,6 +179,7 @@ nuts and bolts
       <div class="right">&copy; 2013 Facebook Inc.</div>
     </footer>
   </div>
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -185,7 +189,14 @@ nuts and bolts
     ga('send', 'pageview');
 
     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
   </script>
 </body>
 </html>
-

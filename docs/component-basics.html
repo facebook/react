@@ -75,6 +75,13 @@
       <li><a href="/react/docs/api.html">API</a></li>
     </ul>
   </div>
+
+  <div class="nav-docs-section">
+    <h3>Appendix</h3>
+    <ul>
+      <li><a href="/react/docs/jsx-is-not-html.html">JSX is not HTML</a></li>
+    </ul>
+  </div>
 </div>
 
 
@@ -150,6 +157,8 @@ camelCased style properties to values, e.g. <code>{backgroundColor: &#39;#fff&#3
         <a class="docs-next" href="/react/docs/component-data.html">Next &rarr;</a>
       
     </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="/react/docs/component-basics.html"></div>
   </div>
 </section>
 
@@ -159,6 +168,7 @@ camelCased style properties to values, e.g. <code>{backgroundColor: &#39;#fff&#3
       <div class="right">&copy; 2013 Facebook Inc.</div>
     </footer>
   </div>
+  <div id="fb-root"></div>
   <script>
     (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -168,7 +178,14 @@ camelCased style properties to values, e.g. <code>{backgroundColor: &#39;#fff&#3
     ga('send', 'pageview');
 
     !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
   </script>
 </body>
 </html>
-

@@ -12,15 +12,15 @@
 
 &lt;h2&gt;Khan Academy Question Editor&lt;/h2&gt;
 
-&lt;p&gt;It looks like &lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (&lt;a href=&quot;irc://chat.freenode.net/reactjs&quot;&gt;#reactjs on Freenode&lt;/a&gt;). Ben wrote about his experience using React on Quora:&lt;/p&gt;
+&lt;p&gt;It looks like &lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (&lt;a href=&quot;irc://chat.freenode.net/reactjs&quot;&gt;#reactjs on Freenode&lt;/a&gt;). Ben wrote about his experience using React:&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;I just rewrote a 2000-line project in React and have now made a handful of pull requests to React. Everything about React I&amp;#39;ve seen so far seems really well thought-out and I&amp;#39;m proud to be the first non-FB/IG production user of React.&lt;/p&gt;
 
 &lt;p&gt;The project that I rewrote in React (and am continuing to improve) is the Khan Academy question editor which content creators can use to enter questions and hints that will be presented to students:
-&lt;figure&gt;&lt;a href=&quot;http://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Ben-Alpert&quot;&gt;&lt;img src=&quot;/react/img/blog/khan-academy-editor.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;figure&gt;&lt;a href=&quot;http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html&quot;&gt;&lt;img src=&quot;/react/img/blog/khan-academy-editor.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;http://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Ben-Alpert&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h2&gt;Pimp my Backbone.View (by replacing it with React)&lt;/h2&gt;
