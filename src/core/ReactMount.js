@@ -35,7 +35,7 @@ var containersByReactRootID = {};
  * @return {?*} DOM element that may have the reactRoot ID, or null.
  */
 function getReactRootElementInContainer(container) {
-  return container.firstChild;
+  return container && container.firstChild;
 }
 
 /**
