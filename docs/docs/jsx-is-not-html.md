@@ -55,7 +55,7 @@ You can use mixed arrays with strings and JSX elements.
 As a last resort, you always have the ability to insert raw HTML.
 
 ```javascript
-<div dangerouslySetInnerHTML={{__html: 'First &middot; Second'}} />
+<div dangerouslySetInnerHTML={{'{{'}}__html: 'First &middot; Second'}} />
 ```
 
 ## Comments
