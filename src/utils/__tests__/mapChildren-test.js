@@ -73,7 +73,7 @@ describe('mapChildren', function() {
       .expectRenderedChild()
       .instance();
 
-    expect(mapFn).toHaveBeenCalledWith(simpleKid, 'simple', 0);
+    expect(mapFn).toHaveBeenCalledWith(simpleKid, '0:simple', 0);
     expect(rendered.props.children[0]).toBe(simpleKid);
     expect(rendered.props.children).toHaveKeys(['0:simple']);
   });
@@ -94,8 +94,9 @@ describe('mapChildren', function() {
 
     expect(rendered.props.children[0]).not.toBe(simpleKid);
     expect(rendered.props.children[0].props.children[0]).toBe(simpleKid);
-    expect(rendered.props.children).toHaveKeys(['0:simple']);
-    expect(rendered.props.children[0].props.children).toHaveKeys(['simple']);
+    expect(rendered.props.children).toHaveKeys(['0:0:0:simple']);
+    expect(rendered.props.children[0].props.children)
+      .toHaveKeys(['0:simple']);
   });
 
   it('should be called for each child', function() {
@@ -127,7 +128,7 @@ describe('mapChildren', function() {
     expect(mapFn).toHaveBeenCalledWith(kidThree, '0:three', 2);
     expect(rendered.props.children).not.toEqual(instance.props.children);
     expect(rendered.props.children).toHaveKeys([
-      '0:0:one', '0:0:two', '0:0:three'
+      '0:0:0:one', '0:0:0:two', '0:0:0:three'
     ]);
   });
 });

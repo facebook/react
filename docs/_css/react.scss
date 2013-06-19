@@ -357,6 +357,22 @@ section.black content {
 }
 
 /**
+ * Blog
+ */
+
+.blogContent {
+  padding-top: 20px;
+
+  blockquote {
+    padding: 5px 15px;
+    margin: 20px 0;
+    background-color: #f8f5ec;
+    border-left: 5px solid #f7ebc6;
+  }
+
+}
+
+/**
  * Docs
  */
 
@@ -493,6 +509,10 @@ p {
 .highlight {
   padding: 10px;
   margin-bottom: 20px;
+}
+
+figure {
+  text-align: center;
 }
 
 .inner-content {
@@ -657,4 +677,8 @@ p code {
   .container {
     padding-top: 0;
   }
+}
+
+.post {
+  margin-bottom: 30px;
 }

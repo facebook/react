@@ -19,25 +19,49 @@
 
 "use strict";
 
-var AbstractEvent = require('AbstractEvent');
+var BrowserEnv = require('BrowserEnv');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
+var SyntheticUIEvent = require('SyntheticUIEvent');
+var TouchEventUtils = require('TouchEventUtils');
 
 var keyOf = require('keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
-var storePageCoordsIn = EventPluginUtils.storePageCoordsIn;
-var eventDistance = EventPluginUtils.eventDistance;
 
 /**
- * The number of pixels that are tolerated in between a touchStart and
- * touchEnd in order to still be considered a 'tap' event.
+ * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
+ * in order to still be considered a 'tap' event.
  */
 var tapMoveThreshold = 10;
 var startCoords = {x: null, y: null};
 
-var abstractEventTypes = {
+var Axis = {
+  x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
+  y: {page: 'pageY', client: 'clientY', envScroll: 'currentPageScrollTop'}
+};
+
+function getAxisCoordOfEvent(axis, nativeEvent) {
+  var singleTouch = TouchEventUtils.extractSingleTouch(nativeEvent);
+  if (singleTouch) {
+    return singleTouch[axis.page];
+  }
+  return axis.page in nativeEvent ?
+    nativeEvent[axis.page] :
+    nativeEvent[axis.client] + BrowserEnv[axis.envScroll];
+}
+
+function getDistance(coords, nativeEvent) {
+  var pageX = getAxisCoordOfEvent(Axis.x, nativeEvent);
+  var pageY = getAxisCoordOfEvent(Axis.y, nativeEvent);
+  return Math.pow(
+    Math.pow(pageX - coords.x, 2) + Math.pow(pageY - coords.y, 2),
+    0.5
+  );
+}
+
+var eventTypes = {
   touchTap: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchTap: null}),
@@ -46,46 +70,48 @@ var abstractEventTypes = {
   }
 };
 
-/**
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
- * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractAbstractEvents}
- */
-var extractAbstractEvents = function(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
-    nativeEvent) {
-  if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
-    return;
-  }
-  var abstractEvent;
-  var dist = eventDistance(startCoords, nativeEvent);
-  if (isEndish(topLevelType) && dist < tapMoveThreshold) {
-    abstractEvent = AbstractEvent.getPooled(
-      abstractEventTypes.touchTap,
-      topLevelTargetID,
-      nativeEvent
-    );
-  }
-  if (isStartish(topLevelType)) {
-    storePageCoordsIn(startCoords, nativeEvent);
-  } else if (isEndish(topLevelType)) {
-    startCoords.x = 0;
-    startCoords.y = 0;
-  }
-  EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-  return abstractEvent;
-};
-
 var TapEventPlugin = {
+
   tapMoveThreshold: tapMoveThreshold,
-  startCoords: startCoords,
-  abstractEventTypes: abstractEventTypes,
-  extractAbstractEvents: extractAbstractEvents
+
+  eventTypes: eventTypes,
+
+  /**
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   * @return {*} An accumulation of synthetic events.
+   * @see {EventPluginHub.extractEvents}
+   */
+  extractEvents: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
+      return null;
+    }
+    var event = null;
+    var distance = getDistance(startCoords, nativeEvent);
+    if (isEndish(topLevelType) && distance < tapMoveThreshold) {
+      event = SyntheticUIEvent.getPooled(
+        eventTypes.touchTap,
+        topLevelTargetID,
+        nativeEvent
+      );
+    }
+    if (isStartish(topLevelType)) {
+      startCoords.x = getAxisCoordOfEvent(Axis.x, nativeEvent);
+      startCoords.y = getAxisCoordOfEvent(Axis.y, nativeEvent);
+    } else if (isEndish(topLevelType)) {
+      startCoords.x = 0;
+      startCoords.y = 0;
+    }
+    EventPropagators.accumulateTwoPhaseDispatches(event);
+    return event;
+  }
+
 };
 
 module.exports = TapEventPlugin;

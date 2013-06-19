@@ -24,6 +24,7 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+var TextChangeEventPlugin = require('TextChangeEventPlugin');
 var EventPluginHub = require('EventPluginHub');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -41,7 +42,8 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'SimpleEventPlugin': SimpleEventPlugin,
-    'EnterLeaveEventPlugin': EnterLeaveEventPlugin
+    'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
+    'TextChangeEventPlugin': TextChangeEventPlugin
   });
 
   /*

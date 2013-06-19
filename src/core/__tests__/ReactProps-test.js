@@ -26,7 +26,7 @@ function typeCheck(declaration, value) {
   if (arguments.length > 1) {
     props.testProp = value;
   }
-  return declaration.bind(this, props, 'testProp', 'testComponent');
+  return declaration.bind(null, props, 'testProp', 'testComponent');
 }
 
 describe('Primitive Types', function() {

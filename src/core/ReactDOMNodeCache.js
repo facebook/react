@@ -14,39 +14,75 @@
  * limitations under the License.
  *
  * @providesModule ReactDOMNodeCache
+ * @typechecks
  */
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactMount = require('ReactMount');
+
+var invariant = require('invariant');
 
 var nodeCache = {};
 
 /**
  * DOM node cache only intended for use by React. Placed into a shared module so
  * that both read and write utilities may benefit from a shared cache.
+ *
+ * @internal
  */
 var ReactDOMNodeCache = {
+
   /**
-   * Releases fast id lookups (node/style cache). This implementation is
-   * aggressive with purging because the bookkeeping associated with doing fine
-   * grained deleted from the cache may outweight the benefits of the cache. The
-   * heuristic that should be used to purge is 'any time anything is deleted'.
-   * Typically this means that a large amount of content is being replaced and
-   * several elements would need purging regardless. It's also a time when an
-   * application is likely not in the middle of a "smooth operation" (such as
-   * animating/scrolling).
+   * Finds the node with the supplied React-generated DOM ID.
+   *
+   * @param {string} id A React-generated DOM ID.
+   * @return {?DOMElement} DOM node with the suppled `id`.
+   * @internal
+   */
+  getNodeByID: function(id) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'getDOMNode(): The DOM is not supported in the current environment.'
+    );
+    if (!nodeCache[id]) {
+      nodeCache[id] =
+        document.getElementById(id) ||
+        ReactMount.findReactRenderedDOMNodeSlow(id);
+    }
+    return nodeCache[id];
+  },
+
+  /**
+   * Purges the supplied ID from cache.
+   *
+   * @param {string} id A React-generated DOM ID.
+   * @internal
+   */
+  purgeID: function(id) {
+    nodeCache[id] = null;
+  },
+
+  /**
+   * Purges the entire node cache used for fast ID lookups.
+   *
+   * This implementation is aggressive with purging because the bookkeeping
+   * associated with doing fine-grained deletes from the cache may outweight the
+   * benefits of the cache.
+   *
+   * The heuristic used to purge is 'any time anything is deleted'. Typically
+   * this means that a large amount of content is being replaced and several
+   * elements would need purging regardless. This is also when applications are
+   * less likely to be in the middle of "smooth operations" such as animations
+   * or scrolling.
+   *
+   * @internal
    */
   purgeEntireCache: function() {
     nodeCache = {};
-    return nodeCache;
-  },
-  getCachedNodeByID: function(id) {
-    return nodeCache[id] ||
-      (nodeCache[id] =
-        document.getElementById(id) ||
-        ReactMount.findReactRenderedDOMNodeSlow(id));
   }
+
 };
 
 module.exports = ReactDOMNodeCache;

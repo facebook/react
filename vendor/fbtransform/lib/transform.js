@@ -91,7 +91,13 @@ function walker(traverse, object, path, state) {
 }
 
 function runPass(source, visitors, options) {
-  var ast = esprima.parse(source, { comment: true, loc: true, range: true });
+  var ast;
+  try {
+    ast = esprima.parse(source, { comment: true, loc: true, range: true });
+  } catch (e) {
+    e.message = 'Parse Error: ' + e.message;
+    throw e;
+  }
   var state = createState(source, options);
   state.g.originalProgramAST = ast;
   state.g.visitors = visitors;

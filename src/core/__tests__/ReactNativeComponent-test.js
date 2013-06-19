@@ -21,6 +21,8 @@
 
 "use strict";
 
+var mocks = require('mocks');
+
 describe('ReactNativeComponent', function() {
 
   describe('updateDOM', function() {
@@ -68,7 +70,7 @@ describe('ReactNativeComponent', function() {
     });
 
     it("should update styles when mutating style object", function() {
-      var styles = { display: 'none', fontFamily: 'Arial' };
+      var styles = { display: 'none', fontFamily: 'Arial', opacity: 0 };
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
       var stubStyle = stub.getDOMNode().style;
@@ -80,12 +82,21 @@ describe('ReactNativeComponent', function() {
       stub.receiveProps({ style: styles }, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Arial');
+      expect(stubStyle.opacity).toEqual('0');
 
       styles.fontFamily = 'Helvetica';
 
       stub.receiveProps({ style: styles }, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
+      expect(stubStyle.opacity).toEqual('0');
+
+      styles.opacity = 0.5;
+
+      stub.receiveProps({ style: styles }, transaction);
+      expect(stubStyle.display).toEqual('block');
+      expect(stubStyle.fontFamily).toEqual('Helvetica');
+      expect(stubStyle.opacity).toEqual('0.5');
     });
 
     it("should update styles if initially null", function() {
@@ -100,6 +111,76 @@ describe('ReactNativeComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
+    it("should remove attributes", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
+
+      expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
+    });
+
+    it("should remove properties", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
+
+      expect(stub.getDOMNode().className).toEqual('monkey');
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().className).toEqual('');
+    });
+
+    it("should clear a single style prop when changing 'style'", function() {
+      var styles = {display: 'none', color: 'red'};
+      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+
+      var stubStyle = stub.getDOMNode().style;
+
+      styles = {color: 'green'};
+      stub.receiveProps({ style: styles }, transaction);
+      expect(stubStyle.display).toEqual('');
+      expect(stubStyle.color).toEqual('green');
+    });
+
+    it("should clear all the styles when removing 'style'", function() {
+      var styles = {display: 'none', color: 'red'};
+      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+
+      var stubStyle = stub.getDOMNode().style;
+
+      stub.receiveProps({}, transaction);
+      expect(stubStyle.display).toEqual('');
+      expect(stubStyle.color).toEqual('');
+    });
+
+    it("should empty element when removing innerHTML", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML={{__html: ":)"}} />
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual(':)');
+      stub.receiveProps({}, transaction);
+      expect(stub.getDOMNode().innerHTML).toEqual('');
+    });
+
+    it("should not incur unnecessary DOM mutations", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
+
+      var node = stub.getDOMNode();
+      var nodeValue = node.value;
+      var nodeValueSetter = mocks.getMockFunction();
+      Object.defineProperty(node, 'value', {
+        get: function() {
+          return nodeValue;
+        },
+        set: nodeValueSetter.mockImplementation(function(newValue) {
+          nodeValue = newValue;
+        })
+      });
+
+      stub.receiveProps({value: ''}, transaction);
+      expect(nodeValueSetter.mock.calls.length).toBe(0);
+
+      stub.receiveProps({}, transaction);
+      expect(nodeValueSetter.mock.calls.length).toBe(1);
+    });
   });
 
   describe('createOpenTagMarkup', function() {
@@ -192,17 +273,21 @@ describe('ReactNativeComponent', function() {
 
       var mixInto = require('mixInto');
       var ReactComponent = require('ReactComponent');
+      var ReactMultiChild = require('ReactMultiChild');
       var ReactNativeComponent = require('ReactNativeComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var NodeStub = function(initialProps) {
+      var StubNativeComponent = function(initialProps) {
         ReactComponent.Mixin.construct.call(this, initialProps);
       };
-      mixInto(NodeStub, ReactNativeComponent.Mixin);
+      mixInto(StubNativeComponent, ReactComponent.Mixin);
+      mixInto(StubNativeComponent, ReactNativeComponent.Mixin);
+      mixInto(StubNativeComponent, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props)).mountComponent('test', transaction);
+        var stubComponent = new StubNativeComponent(props);
+        return stubComponent.mountComponent('test', transaction);
       };
     });
 

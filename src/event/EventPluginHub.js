@@ -18,307 +18,180 @@
 
 "use strict";
 
-var AbstractEvent = require('AbstractEvent');
 var CallbackRegistry = require('CallbackRegistry');
+var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
-var keyMirror = require('keyMirror');
-var merge = require('merge');
-var throwIf = require('throwIf');
-
-var deleteListener = CallbackRegistry.deleteListener;
-
-var ERRORS = keyMirror({
-  DOUBLE_REGISTER: null,
-  DOUBLE_ENQUEUE: null,
-  DEPENDENCY_ERROR: null
-});
-
-if (__DEV__) {
-  ERRORS.DOUBLE_REGISTER =
-    'You\'ve included an event plugin that extracts an ' +
-    'event type with the exact same or identity as an event that ' +
-    'had previously been injected - or, one of the registration names ' +
-    'used by an plugin has already been used.';
-  ERRORS.DOUBLE_ENQUEUE =
-    'During the processing of events, more events were enqueued. This ' +
-    'is strange and should not happen. Please report immediately. ';
-  ERRORS.DEPENDENCY_ERROR =
-    'You have either attempted to load an event plugin that has no ' +
-    'entry in EventPluginOrder, or have attempted to extract events ' +
-    'when some critical dependencies have not yet been injected.';
-}
-
-
-/**
- * EventPluginHub: To see a diagram and explanation of the overall architecture
- * of the plugin hub system, @see ReactEvents.js
- */
-
-/**
- * Injected Dependencies:
- */
-var injection = {
-  /**
-   * [required] Dependency of `EventPropagators`.
-   */
-  injectInstanceHandle: function(InjectedInstanceHandle) {
-    EventPropagators.injection.injectInstanceHandle(InjectedInstanceHandle);
-  },
-
-  /**
-   * `EventPluginOrder`: [optional] Provides deterministic ordering of
-   * `EventPlugin`s. Ordering decoupled from the injection of actual
-   * plugins so that there is always a deterministic and permanent ordering
-   * regardless of the plugins that happen to become packaged, or applications
-   * that happen to inject on-the-fly event plugins.
-   */
-  EventPluginOrder: null,
-  injectEventPluginOrder: function(InjectedEventPluginOrder) {
-    injection.EventPluginOrder = InjectedEventPluginOrder;
-    injection._recomputePluginsList();
-  },
-
-  /**
-   * `EventPlugins`: [optional][lazy-loadable] Plugins that must be listed in
-   * the `EventPluginOrder` injected dependency. The list of plugins may grow as
-   * custom plugins are injected into the system at page as part of the
-   * initialization process, or even after the initialization process (on-the-
-   * fly). Plugins injected into the hub have an opportunity to infer abstract
-   * events when top level events are streamed through the `EventPluginHub`.
-   */
-  plugins: [],
-  injectEventPluginsByName: function(pluginsByName) {
-    injection.pluginsByName = merge(injection.pluginsByName, pluginsByName);
-    injection._recomputePluginsList();
-  },
-
-  /**
-   * A reference of all injected plugins by their name. Both plugins and
-   * `EventPluginOrder` can be injected on-the-fly. Any time either dependency
-   * is (re)injected, the resulting list of plugins in correct order is
-   * recomputed.
-   */
-  pluginsByName: {},
-  _recomputePluginsList: function() {
-    var injectPluginByName = function(name, PluginModule) {
-      var pluginIndex = injection.EventPluginOrder.indexOf(name);
-      throwIf(pluginIndex === -1, ERRORS.DEPENDENCY_ERROR + name);
-      if (!injection.plugins[pluginIndex]) {
-        injection.plugins[pluginIndex] = PluginModule;
-        for (var eventName in PluginModule.abstractEventTypes) {
-          var eventType = PluginModule.abstractEventTypes[eventName];
-          recordAllRegistrationNames(eventType, PluginModule);
-        }
-      }
-    };
-    if (injection.EventPluginOrder) {  // Else, do when plugin order injected
-      var injectedPluginsByName = injection.pluginsByName;
-      for (var name in injectedPluginsByName) {
-        injectPluginByName(name, injectedPluginsByName[name]);
-      }
-    }
-  }
-};
-
-
-/**
- * `renderedTarget`: We'll refer to the concept of a "rendered target". Any
- * framework code that uses the `EventPluginHub` will stream events to the
- * `EventPluginHub`. In order for registered plugins to make sense of the native
- * events, it helps to allow plugins to not only have access to the native
- * `Event` object but also the notion of a "rendered target", which is the
- * conceptual target `Element` of the `Event` that the framework (user of
- * `EventPluginHub`) deems as being the "important" target.
- */
-/**
- * Keeps track of all valid "registration names" (`onClick` etc). We expose
- * these structures to other modules, who will always see updates that we apply
- * to these structures. They should never have a desire to mutate these.
- */
-var registrationNames = {};
-
-/**
- * This prevents the need for clients to call `Object.keys(registrationNames)`
- * every time they want to loop through the possible registration names.
- */
-var registrationNamesArr = [];
+var invariant = require('invariant');
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
-var abstractEventQueue = [];
+var eventQueue = null;
 
 /**
- * Records all the registration names that the event plugin makes available
- * to the general event system. These are things like
- * `onClick`/`onClickCapture`.
- */
-function recordAllRegistrationNames(eventType, PluginModule) {
-  var phaseName;
-  var phasedRegistrationNames = eventType.phasedRegistrationNames;
-  if (phasedRegistrationNames) {
-    for (phaseName in phasedRegistrationNames) {
-      if (!phasedRegistrationNames.hasOwnProperty(phaseName)) {
-        continue;
-      }
-      if (__DEV__) {
-        throwIf(
-          registrationNames[phasedRegistrationNames[phaseName]],
-          ERRORS.DOUBLE_REGISTER
-        );
-      }
-      registrationNames[phasedRegistrationNames[phaseName]] = PluginModule;
-      registrationNamesArr.push(phasedRegistrationNames[phaseName]);
-    }
-  } else if (eventType.registrationName) {
-    if (__DEV__) {
-      throwIf(
-        registrationNames[eventType.registrationName],
-        ERRORS.DOUBLE_REGISTER
-      );
-    }
-    registrationNames[eventType.registrationName] = PluginModule;
-    registrationNamesArr.push(eventType.registrationName);
-  }
-}
-
-/**
- * A hacky way to reverse engineer which event plugin module created an
- * AbstractEvent.
- * @param {AbstractEvent} abstractEvent to look at
- */
-function getPluginModuleForAbstractEvent(abstractEvent) {
-  var reactEventType = abstractEvent.reactEventType;
-  if (reactEventType.registrationName) {
-    return registrationNames[reactEventType.registrationName];
-  } else {
-    for (var phase in reactEventType.phasedRegistrationNames) {
-      if (!reactEventType.phasedRegistrationNames.hasOwnProperty(phase)) {
-        continue;
-      }
-      var PluginModule = registrationNames[
-        reactEventType.phasedRegistrationNames[phase]
-      ];
-      if (PluginModule) {
-        return PluginModule;
-      }
-    }
-  }
-  return null;
-}
-
-var deleteAllListeners = function(domID) {
-  var ii;
-  for (ii = 0; ii < registrationNamesArr.length; ii++) {
-    deleteListener(domID, registrationNamesArr[ii]);
-  }
-};
-
-/**
- * Accepts the stream of top level native events, and gives every registered
- * plugin an opportunity to extract `AbstractEvent`s with annotated dispatches.
+ * Dispatches an event and releases it back into the pool, unless persistent.
  *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
- * @return {*} An accumulation of `AbstractEvent`s.
+ * @param {?object} event Synthetic event to be dispatched.
+ * @private
  */
-var extractAbstractEvents = function(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
-    nativeEvent) {
-  var abstractEvents;
-  var plugins = injection.plugins;
-  for (var i = 0, l = plugins.length; i < l; i++) {
-    // Not every plugin in the ordering may be loaded at runtime.
-    var possiblePlugin = plugins[i];
-    if (possiblePlugin) {
-      var extractedAbstractEvents = possiblePlugin.extractAbstractEvents(
-        topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
-        nativeEvent
-      );
-      if (extractedAbstractEvents) {
-        abstractEvents = accumulate(abstractEvents, extractedAbstractEvents);
-      }
+var executeDispatchesAndRelease = function(event) {
+  if (event) {
+    var executeDispatch = EventPluginUtils.executeDispatch;
+    // Plugins can provide custom behavior when dispatching events.
+    var PluginModule = EventPluginRegistry.getPluginModuleForEvent(event);
+    if (PluginModule && PluginModule.executeDispatch) {
+      executeDispatch = PluginModule.executeDispatch;
     }
-  }
-  return abstractEvents;
-};
+    EventPluginUtils.executeDispatchesInOrder(event, executeDispatch);
 
-var enqueueAbstractEvents = function(abstractEvents) {
-  if (abstractEvents) {
-    abstractEventQueue = accumulate(abstractEventQueue, abstractEvents);
-  }
-};
-
-/**
- * Executes a single abstract event dispatch. Returns a value, but this return
- * value doesn't make much sense when executing dispatches for a list of a
- * events. However, if a plugin executes a single dispatch, mostly bypassing
- * `EventPluginHub`, it can execute dispatches directly and assign special
- * meaning to the return value. So this will return the result of executing the
- * dispatch, though for most use cases, it gets dropped.
- */
-var executeDispatchesAndRelease = function(abstractEvent) {
-  if (abstractEvent) {
-    var PluginModule = getPluginModuleForAbstractEvent(abstractEvent);
-    var pluginExecuteDispatch = PluginModule && PluginModule.executeDispatch;
-    EventPluginUtils.executeDispatchesInOrder(
-      abstractEvent,
-      pluginExecuteDispatch || EventPluginUtils.executeDispatch
-    );
-    if (!abstractEvent.isPersistent()) {
-      AbstractEvent.release(abstractEvent);
+    if (!event.isPersistent()) {
+      event.constructor.release(event);
     }
   }
 };
 
 /**
- * Sets `abstractEventQueue` to null before processing it, so that we can tell
- * if in the process of processing events, more were enqueued. We throw if we
- * find that any were enqueued though this use case could be supported in the
- * future. For now, throwing an error as it's something we don't expect to
- * occur.
- */
-var processAbstractEventQueue = function() {
-  var processingAbstractEventQueue = abstractEventQueue;
-  abstractEventQueue = null;
-  forEachAccumulated(processingAbstractEventQueue, executeDispatchesAndRelease);
-  if (__DEV__) {
-    throwIf(abstractEventQueue, ERRORS.DOUBLE_ENQUEUE);
-  }
-};
-
-/**
- * Provides a unified interface for an arbitrary and dynamic set of event
- * plugins. Loosely, a hub, where several "event plugins" may act as a single
- * event plugin behind the facade of `EventPluginHub`. Each event plugin injects
- * themselves into the HUB, and will immediately become operable upon injection.
+ * This is a unified interface for event plugins to be installed and configured.
  *
- * @constructor EventPluginHub
+ * Event plugins can implement the following properties:
+ *
+ *   `extractEvents` {function(string, DOMEventTarget, string, object): *}
+ *     Required. When a top-level event is fired, this method is expected to
+ *     extract synthetic events that will in turn be queued and dispatched.
+ *
+ *   `eventTypes` {object}
+ *     Optional, plugins that fire events must publish a mapping of registration
+ *     names that are used to register listeners. Values of this mapping must
+ *     be objects that contain `registrationName` or `phasedRegistrationNames`.
+ *
+ *   `executeDispatch` {function(object, function, string)}
+ *     Optional, allows plugins to override how an event gets dispatched. By
+ *     default, the listener is simply invoked.
+ *
+ * Each plugin that is injected into `EventsPluginHub` is immediately operable.
+ *
+ * @public
  */
 var EventPluginHub = {
-  registrationNames: registrationNames,
-  registrationNamesArr: registrationNamesArr,
-  putListener: CallbackRegistry.putListener,
-  getListener: CallbackRegistry.getListener,
-  deleteAllListeners: deleteAllListeners,
-  extractAbstractEvents: extractAbstractEvents,
-  enqueueAbstractEvents: enqueueAbstractEvents,
-  processAbstractEventQueue: processAbstractEventQueue,
-  injection: injection
-};
 
+  /**
+   * Methods for injecting dependencies.
+   */
+  injection: {
+
+    /**
+     * @param {object} InjectedInstanceHandle
+     * @public
+     */
+    injectInstanceHandle: EventPropagators.injection.injectInstanceHandle,
+
+    /**
+     * @param {array} InjectedEventPluginOrder
+     * @public
+     */
+    injectEventPluginOrder: EventPluginRegistry.injectEventPluginOrder,
+
+    /**
+     * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+     */
+    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName
+
+  },
+
+  registrationNames: EventPluginRegistry.registrationNames,
+
+  putListener: CallbackRegistry.putListener,
+
+  getListener: CallbackRegistry.getListener,
+
+  deleteListener: CallbackRegistry.deleteListener,
+
+  /**
+   * Deletes all listeners for the DOM element with the supplied ID.
+   *
+   * @param {string} domID ID of a DOM element.
+   */
+  deleteAllListeners: function(domID) {
+    var registrationNamesKeys = EventPluginRegistry.registrationNamesKeys;
+    for (var ii = 0; ii < registrationNamesKeys.length; ii++) {
+      CallbackRegistry.deleteListener(domID, registrationNamesKeys[ii]);
+    }
+  },
+
+  /**
+   * Allows registered plugins an opportunity to extract events from top-level
+   * native browser events.
+   *
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   * @return {*} An accumulation of synthetic events.
+   * @internal
+   */
+  extractEvents: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    var events;
+    var plugins = EventPluginRegistry.plugins;
+    for (var i = 0, l = plugins.length; i < l; i++) {
+      // Not every plugin in the ordering may be loaded at runtime.
+      var possiblePlugin = plugins[i];
+      if (possiblePlugin) {
+        var extractedEvents = possiblePlugin.extractEvents(
+          topLevelType,
+          topLevelTarget,
+          topLevelTargetID,
+          nativeEvent
+        );
+        if (extractedEvents) {
+          events = accumulate(events, extractedEvents);
+        }
+      }
+    }
+    return events;
+  },
+
+  /**
+   * Enqueues a synthetic event that should be dispatched when
+   * `processEventQueue` is invoked.
+   *
+   * @param {*} events An accumulation of synthetic events.
+   * @internal
+   */
+  enqueueEvents: function(events) {
+    if (events) {
+      eventQueue = accumulate(eventQueue, events);
+    }
+  },
+
+  /**
+   * Dispatches all synthetic events on the event queue.
+   *
+   * @internal
+   */
+  processEventQueue: function() {
+    // Set `eventQueue` to null before processing it so that we can tell if more
+    // events get enqueued while processing.
+    var processingEventQueue = eventQueue;
+    eventQueue = null;
+    forEachAccumulated(processingEventQueue, executeDispatchesAndRelease);
+    invariant(
+      !eventQueue,
+      'processEventQueue(): Additional events were enqueued while processing ' +
+      'an event queue. Support for this has not yet been implemented.'
+    );
+  }
+
+};
 
 if (ExecutionEnvironment.canUseDOM) {
   window.EventPluginHub = EventPluginHub;

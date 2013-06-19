@@ -414,6 +414,8 @@ var ReactCompositeComponentMixin = {
     this.state = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
+    this._compositionLevel = ReactCurrentOwner.current ?
+      ReactCurrentOwner.getDepth() + 1 : 0;
   },
 
   /**
@@ -451,17 +453,21 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    if (this.componentDidMount) {
-      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
-    }
-
     this._renderedComponent = this._renderValidatedComponent();
+
+    this._renderedComponent._compositionLevel = this._compositionLevel + 1;
 
     // Done with mounting, `setState` will now trigger UI changes.
     this._compositeLifeCycleState = null;
     this._lifeCycleState = ReactComponent.LifeCycle.MOUNTED;
 
-    return this._renderedComponent.mountComponent(rootID, transaction);
+    var html = this._renderedComponent.mountComponent(rootID, transaction);
+
+    if (this.componentDidMount) {
+      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+    }
+
+    return html;
   },
 
   /**
@@ -546,7 +552,7 @@ var ReactCompositeComponentMixin = {
   replaceState: function(completeState) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED ||
+      this.isMounted() ||
       compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
       'replaceState(...): Can only update a mounted (or mounting) component.'
     );
@@ -677,9 +683,7 @@ var ReactCompositeComponentMixin = {
     var currentComponent = this._renderedComponent;
     var nextComponent = this._renderValidatedComponent();
     if (currentComponent.constructor === nextComponent.constructor) {
-      if (!nextComponent.props.isStatic) {
-        currentComponent.receiveProps(nextComponent.props, transaction);
-      }
+      currentComponent.receiveProps(nextComponent.props, transaction);
     } else {
       // These two IDs are actually the same! But nothing should rely on that.
       var thisID = this._rootNodeID;
@@ -710,7 +714,7 @@ var ReactCompositeComponentMixin = {
   forceUpdate: function() {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this._lifeCycleState === ReactComponent.LifeCycle.MOUNTED,
+      this.isMounted(),
       'forceUpdate(...): Can only force an update on mounted components.'
     );
     invariant(

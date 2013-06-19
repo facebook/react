@@ -53,7 +53,7 @@ var app = Nav({color:'blue'}, Profile({}, 'click'));
 ```
 
 Use the [JSX Compiler](/react/jsx-compiler.html) to try out JSX and see how it
-desguars into native JavaScript.
+desugars into native JavaScript.
 
 If you want to use JSX, the [Getting Started](getting-started.html) guide shows
 how to setup compilation.

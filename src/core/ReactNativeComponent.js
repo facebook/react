@@ -33,6 +33,7 @@ var merge = require('merge');
 var mixInto = require('mixInto');
 
 var putListener = ReactEventEmitter.putListener;
+var deleteListener = ReactEventEmitter.deleteListener;
 var registrationNames = ReactEventEmitter.registrationNames;
 
 // For quickly matching children type, to test if can be treated as content.
@@ -179,12 +180,8 @@ ReactNativeComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   receiveProps: function(nextProps, transaction) {
-    invariant(
-      this._rootNodeID,
-      'Trying to control a native dom element without a backing id'
-    );
-    assertValidProps(nextProps);
     ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+    assertValidProps(nextProps);
     this._updateDOMProperties(nextProps);
     this._updateDOMChildren(nextProps, transaction);
     this.props = nextProps;
@@ -206,7 +203,38 @@ ReactNativeComponent.Mixin = {
    */
   _updateDOMProperties: function(nextProps) {
     var lastProps = this.props;
-    for (var propKey in nextProps) {
+    var propKey;
+    var styleName;
+    var styleUpdates;
+    for (propKey in lastProps) {
+      if (nextProps.hasOwnProperty(propKey) ||
+         !lastProps.hasOwnProperty(propKey)) {
+        continue;
+      }
+      if (propKey === STYLE) {
+        var lastStyle = lastProps[propKey];
+        for (styleName in lastStyle) {
+          if (lastStyle.hasOwnProperty(styleName)) {
+            styleUpdates = styleUpdates || {};
+            styleUpdates[styleName] = '';
+          }
+        }
+      } else if (propKey === DANGEROUSLY_SET_INNER_HTML ||
+                 propKey === CONTENT) {
+        ReactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          ''
+        );
+      } else if (registrationNames[propKey]) {
+        deleteListener(this._rootNodeID, propKey);
+      } else {
+        ReactComponent.DOMIDOperations.deletePropertyByID(
+          this._rootNodeID,
+          propKey
+        );
+      }
+    }
+    for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps[propKey];
       if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
@@ -216,23 +244,26 @@ ReactNativeComponent.Mixin = {
         if (nextProp) {
           nextProp = nextProps.style = merge(nextProp);
         }
-        var styleUpdates;
-        for (var styleName in nextProp) {
-          if (!nextProp.hasOwnProperty(styleName)) {
-            continue;
-          }
-          if (!lastProp || lastProp[styleName] !== nextProp[styleName]) {
-            if (!styleUpdates) {
-              styleUpdates = {};
+        if (lastProp) {
+          // Unset styles on `lastProp` but not on `nextProp`.
+          for (styleName in lastProp) {
+            if (lastProp.hasOwnProperty(styleName) &&
+                !nextProp.hasOwnProperty(styleName)) {
+              styleUpdates = styleUpdates || {};
+              styleUpdates[styleName] = '';
             }
-            styleUpdates[styleName] = nextProp[styleName];
           }
-        }
-        if (styleUpdates) {
-          ReactComponent.DOMIDOperations.updateStylesByID(
-            this._rootNodeID,
-            styleUpdates
-          );
+          // Update styles that changed since `lastProp`.
+          for (styleName in nextProp) {
+            if (nextProp.hasOwnProperty(styleName) &&
+                lastProp[styleName] !== nextProp[styleName]) {
+              styleUpdates = styleUpdates || {};
+              styleUpdates[styleName] = nextProp[styleName];
+            }
+          }
+        } else {
+          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          styleUpdates = nextProp;
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         var lastHtml = lastProp && lastProp.__html;
@@ -257,6 +288,12 @@ ReactNativeComponent.Mixin = {
           nextProp
         );
       }
+    }
+    if (styleUpdates) {
+      ReactComponent.DOMIDOperations.updateStylesByID(
+        this._rootNodeID,
+        styleUpdates
+      );
     }
   },
 

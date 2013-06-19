@@ -17,6 +17,8 @@
  * @typechecks
  */
 
+"use strict";
+
 var SyntheticUIEvent = require('SyntheticUIEvent');
 
 /**

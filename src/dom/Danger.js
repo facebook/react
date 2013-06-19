@@ -16,6 +16,8 @@
  * @providesModule Danger
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');

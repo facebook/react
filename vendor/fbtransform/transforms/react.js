@@ -136,14 +136,10 @@ function visitReactTag(traverse, object, path, state) {
     move(object.openingElement.range[1], state);
   }
 
-  // separate props and children arguments
-  append(', ', state);
-
   // filter out whitespace
   if (childrenToRender.length > 0) {
-    if (childrenToRender.length > 1) {
-      append('[', state);
-    }
+    append(', ', state);
+
     object.children.forEach(function(child) {
       if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
         return;
@@ -166,8 +162,6 @@ function visitReactTag(traverse, object, path, state) {
 
       catchup(child.range[1], state);
     });
-  } else {
-    append('null', state);
   }
 
   if (object.selfClosing) {
@@ -180,11 +174,6 @@ function visitReactTag(traverse, object, path, state) {
     move(object.closingElement.range[1], state);
   }
 
-  if (childrenToRender.length > 0) {
-    if (childrenToRender.length > 1) {
-      append(']', state);
-    }
-  }
   append(')', state);
   return false;
 }

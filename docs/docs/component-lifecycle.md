@@ -22,7 +22,7 @@ In this one simple line, we have accomplished the following:
  - The component is **mounted** into `document.body`.
 
 **Mounting** is the process of initializing a React component by creating its
-DOM nodes and inserting the them into a supplied container node.
+DOM nodes and inserting them into a supplied container node.
 
 At this point, the entire page consists of a single `<div>` with "Hello,
 world!".

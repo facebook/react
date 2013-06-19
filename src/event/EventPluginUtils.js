@@ -19,7 +19,6 @@
 "use strict";
 
 var EventConstants = require('EventConstants');
-var AbstractEvent = require('AbstractEvent');
 
 var invariant = require('invariant');
 
@@ -40,27 +39,11 @@ function isStartish(topLevelType) {
          topLevelType === topLevelTypes.topTouchStart;
 }
 
-function storePageCoordsIn(obj, nativeEvent) {
-  var pageX = AbstractEvent.eventPageX(nativeEvent);
-  var pageY = AbstractEvent.eventPageY(nativeEvent);
-  obj.pageX = pageX;
-  obj.pageY = pageY;
-}
-
-function eventDistance(coords, nativeEvent) {
-  var pageX = AbstractEvent.eventPageX(nativeEvent);
-  var pageY = AbstractEvent.eventPageY(nativeEvent);
-  return Math.pow(
-    Math.pow(pageX - coords.pageX, 2) + Math.pow(pageY - coords.pageY, 2),
-    0.5
-  );
-}
-
 var validateEventDispatches;
 if (__DEV__) {
-  validateEventDispatches = function(abstractEvent) {
-    var dispatchListeners = abstractEvent._dispatchListeners;
-    var dispatchIDs = abstractEvent._dispatchIDs;
+  validateEventDispatches = function(event) {
+    var dispatchListeners = event._dispatchListeners;
+    var dispatchIDs = event._dispatchIDs;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
     var idsIsArr = Array.isArray(dispatchIDs);
@@ -71,53 +54,52 @@ if (__DEV__) {
 
     invariant(
       idsIsArr === listenersIsArr && IDsLen === listenersLen,
-      'EventPluginUtils: Invalid `abstractEvent`.'
+      'EventPluginUtils: Invalid `event`.'
     );
   };
 }
 
 /**
- * Invokes `cb(abstractEvent, listener, id)`. Avoids using call if no scope is
+ * Invokes `cb(event, listener, id)`. Avoids using call if no scope is
  * provided. The `(listener,id)` pair effectively forms the "dispatch" but are
  * kept separate to conserve memory.
  */
-function forEachEventDispatch(abstractEvent, cb) {
-  var dispatchListeners = abstractEvent._dispatchListeners;
-  var dispatchIDs = abstractEvent._dispatchIDs;
+function forEachEventDispatch(event, cb) {
+  var dispatchListeners = event._dispatchListeners;
+  var dispatchIDs = event._dispatchIDs;
   if (__DEV__) {
-    validateEventDispatches(abstractEvent);
+    validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    var i;
-    for (
-      i = 0;
-      i < dispatchListeners.length && !abstractEvent.isPropagationStopped;
-      i++) {
+    for (var i = 0; i < dispatchListeners.length; i++) {
+      if (event.isPropagationStopped()) {
+        break;
+      }
       // Listeners and IDs are two parallel arrays that are always in sync.
-      cb(abstractEvent, dispatchListeners[i], dispatchIDs[i]);
+      cb(event, dispatchListeners[i], dispatchIDs[i]);
     }
   } else if (dispatchListeners) {
-    cb(abstractEvent, dispatchListeners, dispatchIDs);
+    cb(event, dispatchListeners, dispatchIDs);
   }
 }
 
 /**
  * Default implementation of PluginModule.executeDispatch().
- * @param {AbstractEvent} AbstractEvent to handle
+ * @param {SyntheticEvent} SyntheticEvent to handle
  * @param {function} Application-level callback
  * @param {string} domID DOM id to pass to the callback.
  */
-function executeDispatch(abstractEvent, listener, domID) {
-  listener(abstractEvent, domID);
+function executeDispatch(event, listener, domID) {
+  listener(event, domID);
 }
 
 /**
  * Standard/simple iteration through an event's collected dispatches.
  */
-function executeDispatchesInOrder(abstractEvent, executeDispatch) {
-  forEachEventDispatch(abstractEvent, executeDispatch);
-  abstractEvent._dispatchListeners = null;
-  abstractEvent._dispatchIDs = null;
+function executeDispatchesInOrder(event, executeDispatch) {
+  forEachEventDispatch(event, executeDispatch);
+  event._dispatchListeners = null;
+  event._dispatchIDs = null;
 }
 
 /**
@@ -127,25 +109,24 @@ function executeDispatchesInOrder(abstractEvent, executeDispatch) {
  * @returns id of the first dispatch execution who's listener returns true, or
  * null if no listener returned true.
  */
-function executeDispatchesInOrderStopAtTrue(abstractEvent) {
-  var dispatchListeners = abstractEvent._dispatchListeners;
-  var dispatchIDs = abstractEvent._dispatchIDs;
+function executeDispatchesInOrderStopAtTrue(event) {
+  var dispatchListeners = event._dispatchListeners;
+  var dispatchIDs = event._dispatchIDs;
   if (__DEV__) {
-    validateEventDispatches(abstractEvent);
+    validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    var i;
-    for (
-      i = 0;
-      i < dispatchListeners.length && !abstractEvent.isPropagationStopped;
-      i++) {
+    for (var i = 0; i < dispatchListeners.length; i++) {
+      if (event.isPropagationStopped()) {
+        break;
+      }
       // Listeners and IDs are two parallel arrays that are always in sync.
-      if (dispatchListeners[i](abstractEvent, dispatchIDs[i])) {
+      if (dispatchListeners[i](event, dispatchIDs[i])) {
         return dispatchIDs[i];
       }
     }
   } else if (dispatchListeners) {
-    if (dispatchListeners(abstractEvent, dispatchIDs)) {
+    if (dispatchListeners(event, dispatchIDs)) {
       return dispatchIDs;
     }
   }
@@ -161,30 +142,30 @@ function executeDispatchesInOrderStopAtTrue(abstractEvent) {
  *
  * @returns The return value of executing the single dispatch.
  */
-function executeDirectDispatch(abstractEvent) {
+function executeDirectDispatch(event) {
   if (__DEV__) {
-    validateEventDispatches(abstractEvent);
+    validateEventDispatches(event);
   }
-  var dispatchListener = abstractEvent._dispatchListeners;
-  var dispatchID = abstractEvent._dispatchIDs;
+  var dispatchListener = event._dispatchListeners;
+  var dispatchID = event._dispatchIDs;
   invariant(
     !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `abstractEvent`.'
+    'executeDirectDispatch(...): Invalid `event`.'
   );
   var res = dispatchListener ?
-    dispatchListener(abstractEvent, dispatchID) :
+    dispatchListener(event, dispatchID) :
     null;
-  abstractEvent._dispatchListeners = null;
-  abstractEvent._dispatchIDs = null;
+  event._dispatchListeners = null;
+  event._dispatchIDs = null;
   return res;
 }
 
 /**
- * @param {AbstractEvent} abstractEvent
+ * @param {SyntheticEvent} event
  * @returns {bool} True iff number of dispatches accumulated is greater than 0.
  */
-function hasDispatches(abstractEvent) {
-  return !!abstractEvent._dispatchListeners;
+function hasDispatches(event) {
+  return !!event._dispatchListeners;
 }
 
 /**
@@ -194,8 +175,6 @@ var EventPluginUtils = {
   isEndish: isEndish,
   isMoveish: isMoveish,
   isStartish: isStartish,
-  storePageCoordsIn: storePageCoordsIn,
-  eventDistance: eventDistance,
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   executeDirectDispatch: executeDirectDispatch,

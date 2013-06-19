@@ -86,6 +86,31 @@ var DOMPropertyOperations = {
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.setAttribute(name, value);
     }
+  },
+
+  /**
+   * Deletes the value for a property on a node.
+   *
+   * @param {DOMElement} node
+   * @param {string} name
+   */
+  deleteValueForProperty: function(node, name) {
+    if (DOMProperty.isStandardName[name]) {
+      var mutationMethod = DOMProperty.getMutationMethod[name];
+      if (mutationMethod) {
+        mutationMethod(node, undefined);
+      } else if (DOMProperty.mustUseAttribute[name]) {
+        node.removeAttribute(DOMProperty.getAttributeName[name]);
+      } else {
+        var propName = DOMProperty.getPropertyName[name];
+        node[propName] = DOMProperty.getDefaultValueForProperty(
+          node.nodeName,
+          name
+        );
+      }
+    } else if (DOMProperty.isCustomAttribute(name)) {
+      node.removeAttribute(name);
+    }
   }
 
 };

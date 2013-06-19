@@ -22,8 +22,6 @@
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 
-var reactComponentExpect= require('reactComponentExpect');
-
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.
  */

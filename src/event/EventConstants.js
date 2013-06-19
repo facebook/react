@@ -31,6 +31,14 @@ var topLevelTypes = keyMirror({
   topClick: null,
   topDOMCharacterDataModified: null,
   topDoubleClick: null,
+  topDrag: null,
+  topDragEnd: null,
+  topDragEnter: null,
+  topDragExit: null,
+  topDragLeave: null,
+  topDragOver: null,
+  topDragStart: null,
+  topDrop: null,
   topFocus: null,
   topInput: null,
   topKeyDown: null,
@@ -41,13 +49,14 @@ var topLevelTypes = keyMirror({
   topMouseOut: null,
   topMouseOver: null,
   topMouseUp: null,
-  topWheel: null,
   topScroll: null,
+  topSelectionChange: null,
   topSubmit: null,
   topTouchCancel: null,
   topTouchEnd: null,
   topTouchMove: null,
-  topTouchStart: null
+  topTouchStart: null,
+  topWheel: null
 });
 
 var EventConstants = {

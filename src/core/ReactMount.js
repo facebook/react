@@ -86,8 +86,8 @@ var ReactMount = {
   },
 
   /**
-   * Ensures tht the top-level event delegation listener is set up. This will be
-   * invoked some time before the first time any React component is rendered.
+   * Ensures that the top-level event delegation listener is set up. This will
+   * be invoked some time before the first time any React component is rendered.
    *
    * @param {object} TopLevelCallbackCreator
    * @private
