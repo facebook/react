@@ -115,6 +115,7 @@ var ReactDOM = objMapKeyVal({
   table: false,
   tbody: false,
   td: false,
+  // Danger: this gets monkeypatched! See ReactDOMTextarea for more info.
   textarea: false,
   tfoot: false,
   th: false,
