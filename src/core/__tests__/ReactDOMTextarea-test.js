@@ -19,8 +19,6 @@
 
 "use strict";
 
-var mocks = require('mocks');
-
 describe('ReactDOMTextarea', function() {
   var React;
   var ReactTestUtils;
@@ -29,24 +27,11 @@ describe('ReactDOMTextarea', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    getTextContentAccessor = require('getTextContentAccessor');
   });
 
-  it("should update value and not update textContent", function() {
-    var textContentAccessor = getTextContentAccessor();
+  it("should update value", function() {
     var stub = ReactTestUtils.renderIntoDocument(<textarea>giraffe</textarea>);
     var node = stub.getDOMNode();
-
-    var nodeText = node[textContentAccessor];
-    var nodeTextSetter = mocks.getMockFunction();
-    Object.defineProperty(node, textContentAccessor, {
-      get: function() {
-        return nodeText;
-      },
-      set: nodeTextSetter.mockImplementation(function(newText) {
-        nodeText = newText;
-      })
-    });
 
     expect(node.value).toEqual('giraffe');
 
@@ -64,8 +49,6 @@ describe('ReactDOMTextarea', function() {
 
     stub.replaceProps({ content: 'eggplant' });
     expect(node.value).toEqual('eggplant');
-
-    expect(nodeTextSetter.mock.calls.length).toBe(0);
   });
 
   it("should throw with multiple or invalid children", function() {
