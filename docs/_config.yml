@@ -5,7 +5,7 @@ description: A JavaScript library for building user interfaces
 redcarpet:
   extensions:
   - fenced_code_blocks
-react_version: 0.3.2
+react_version: 0.3.3
 pygments: true
 exclude:
 - Gemfile
