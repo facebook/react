@@ -21,6 +21,7 @@
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactID = require('ReactID');
 
 var $ = require('$');
 
@@ -44,7 +45,7 @@ function getReactRootElementInContainer(container) {
  */
 function getReactRootID(container) {
   var rootElement = getReactRootElementInContainer(container);
-  return rootElement && rootElement.id;
+  return rootElement && ReactID.getID(rootElement);
 }
 
 /**

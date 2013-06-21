@@ -328,6 +328,7 @@ describe('ReactNativeComponent', function() {
     it("should clean up listeners", function() {
       var React = require('React');
       var ReactEventEmitter = require('ReactEventEmitter');
+      var ReactID = require('ReactID');
 
       var container = document.createElement('div');
       document.documentElement.appendChild(container);
@@ -337,7 +338,7 @@ describe('ReactNativeComponent', function() {
       React.renderComponent(instance, container);
 
       var rootNode = instance.getDOMNode();
-      var rootNodeID = rootNode.id;
+      var rootNodeID = ReactID.getID(rootNode);
       expect(
         ReactEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);

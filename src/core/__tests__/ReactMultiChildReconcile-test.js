@@ -23,6 +23,7 @@ require('mock-modules');
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
+var ReactID = require('ReactID');
 
 var objMapKeyVal = require('objMapKeyVal');
 
@@ -191,7 +192,7 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var i;
   var orderedDomIds = [];
   for (i=0; i < statusDisplayNodes.length; i++) {
-    orderedDomIds.push(statusDisplayNodes[i].id);
+    orderedDomIds.push(ReactID.getID(statusDisplayNodes[i]));
   }
 
   var orderedLogicalIds = [];

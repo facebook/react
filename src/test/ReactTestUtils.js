@@ -225,7 +225,7 @@ var ReactTestUtils = {
     var node = ReactID.getNode(reactRootID);
     fakeNativeEvent.target = node;
     /* jsdom is returning nodes without id's - fixing that issue here. */
-    node.id = reactRootID;
+    ReactID.setID(node, reactRootID);
     virtualHandler(fakeNativeEvent);
   },
 
