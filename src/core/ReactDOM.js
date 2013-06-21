@@ -41,15 +41,16 @@ var objMapKeyVal = require('objMapKeyVal');
  */
 function createDOMComponentClass(tag, omitClose) {
   var Constructor = function() {};
-
   Constructor.prototype = new ReactNativeComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
 
-  return function(props, children) {
+  var ConvenienceConstructor = function(props, children) {
     var instance = new Constructor();
     instance.construct.apply(instance, arguments);
     return instance;
   };
+  ConvenienceConstructor.componentConstructor = Constructor;
+  return ConvenienceConstructor;
 }
 
 /**

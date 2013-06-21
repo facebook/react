@@ -45,6 +45,14 @@ var ReactTestUtils = {
     return React.renderComponent(instance, div);
   },
 
+  isComponentOfType: function(inst, type) {
+    return !!(
+      inst &&
+      ReactComponent.isValidComponent(inst) &&
+      inst.constructor === type.componentConstructor
+    );
+  },
+
   isDOMComponent: function(inst) {
     return !!(inst &&
               ReactComponent.isValidComponent(inst) &&

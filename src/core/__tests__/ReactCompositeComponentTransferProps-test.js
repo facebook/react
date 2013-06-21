@@ -52,7 +52,7 @@ describe('ReactCompositeComponent-transferProps', function() {
 
     reactComponentExpect(instance)
       .expectRenderedChild()
-        .toBeDOMComponentWithTag('input')
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
           className: 'textinput',
           style: {display: 'block'},
@@ -67,7 +67,7 @@ describe('ReactCompositeComponent-transferProps', function() {
 
     reactComponentExpect(instance)
       .expectRenderedChild()
-        .toBeDOMComponentWithTag('input')
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({placeholder: 'Type here...'});
   });
 
@@ -81,7 +81,7 @@ describe('ReactCompositeComponent-transferProps', function() {
 
     reactComponentExpect(instance)
       .expectRenderedChild()
-        .toBeDOMComponentWithTag('input')
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
           className: 'textinput hidden_elem',
           style: {

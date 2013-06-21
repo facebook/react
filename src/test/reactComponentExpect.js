@@ -104,6 +104,14 @@ mergeInto(reactComponentExpect.prototype, {
 
   // Matchers ------------------------------------------------------------------
 
+  toBeComponentOfType: function(convenienceConstructor) {
+    expect(ReactTestUtils.isComponentOfType(
+      this.instance(),
+      convenienceConstructor
+    )).toBe(true);
+    return this;
+  },
+
   /**
    * A component that is created with React.createClass. Just duck typing
    * here.
@@ -149,6 +157,10 @@ mergeInto(reactComponentExpect.prototype, {
     return this;
   },
 
+  /**
+   * @deprecated
+   * @see toBeComponentOfType
+   */
   toBeDOMComponentWithTag: function(tag) {
     this.toBeDOMComponent();
     expect(this.instance().tagName).toBe(tag.toUpperCase());
