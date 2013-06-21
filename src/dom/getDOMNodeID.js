@@ -19,22 +19,9 @@
 
 "use strict";
 
-/**
- * Accessing "id" or calling getAttribute('id') on a form element can return its
- * control whose name or ID is "id". All DOM nodes support `getAttributeNode`
- * but this can also get called on other objects so just return '' if we're
- * given something other than a DOM node (such as window).
- *
- * @param {DOMElement|DOMWindow|DOMDocument} domNode DOM node.
- * @returns {string} ID of the supplied `domNode`.
- */
-function getDOMNodeID(domNode) {
-  if (domNode.getAttributeNode) {
-    var attributeNode = domNode.getAttributeNode('id');
-    return attributeNode && attributeNode.value || '';
-  } else {
-    return '';
-  }
-}
+var ReactID = require('ReactID');
 
+function getDOMNodeID(domNode) {
+  return ReactID.getID(domNode);
+}
 module.exports = getDOMNodeID;
