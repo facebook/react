@@ -26,6 +26,7 @@ var React;
 var ReactCurrentOwner;
 var ReactProps;
 var ReactTestUtils;
+var ReactID;
 
 var cx;
 var reactComponentExpect;
@@ -39,6 +40,7 @@ describe('ReactCompositeComponent', function() {
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactProps = require('ReactProps');
     ReactTestUtils = require('ReactTestUtils');
+    ReactID = require('ReactID');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -160,7 +162,7 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchorID = instance.getAnchorID();
-    var actualDOMAnchorNode = document.getElementById(anchorID);
+    var actualDOMAnchorNode = ReactID.getNode(anchorID);
     expect(actualDOMAnchorNode.className).toBe('');
   });
 

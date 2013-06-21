@@ -23,7 +23,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
-var getDOMNodeID = require('getDOMNodeID');
+var ReactID = require('ReactID');
 var getEventTarget = require('getEventTarget');
 
 /**
@@ -76,7 +76,7 @@ var ReactEventTopLevelCallback = {
       var topLevelTarget = ReactInstanceHandles.getFirstReactDOM(
         getEventTarget(nativeEvent)
       ) || ExecutionEnvironment.global;
-      var topLevelTargetID = getDOMNodeID(topLevelTarget) || '';
+      var topLevelTargetID = ReactID.getID(topLevelTarget) || '';
       ReactEventEmitter.handleTopLevel(
         topLevelType,
         topLevelTarget,

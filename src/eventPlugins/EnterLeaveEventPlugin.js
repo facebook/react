@@ -25,7 +25,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
-var getDOMNodeID = require('getDOMNodeID');
+var ReactID = require('ReactID');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -85,8 +85,8 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromID = from ? getDOMNodeID(from) : '';
-    var toID = to ? getDOMNodeID(to) : '';
+    var fromID = from ? ReactID.getID(from) : '';
+    var toID = to ? ReactID.getID(to) : '';
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,

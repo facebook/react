@@ -22,7 +22,7 @@
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactDOMNodeCache = require('ReactDOMNodeCache');
+var ReactID = require('ReactID');
 var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -285,7 +285,7 @@ var ReactComponent = {
         this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
-      return ReactDOMNodeCache.getNodeByID(this._rootNodeID);
+      return ReactID.getNode(this._rootNodeID);
     },
 
     /**
@@ -440,7 +440,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
       }
-      ReactDOMNodeCache.purgeID(this._rootNodeID);
+      ReactID.purgeID(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },

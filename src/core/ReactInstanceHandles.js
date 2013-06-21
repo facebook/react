@@ -19,7 +19,7 @@
 
 "use strict";
 
-var getDOMNodeID = require('getDOMNodeID');
+var ReactID = require('ReactID');
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
@@ -250,7 +250,7 @@ var ReactInstanceHandles = {
       // Not a DOMElement, therefore not a React component
       return false;
     }
-    var id = getDOMNodeID(node);
+    var id = ReactID.getID(node);
     return id ? id.charAt(0) === SEPARATOR : false;
   },
 
