@@ -33,8 +33,8 @@ describe('ReactDOMIDOperations', function() {
     expect(function() {
       ReactDOMIDOperations.updatePropertyByID(
         'testID',
-        keyOf({content: null}),
-        'testContent'
+        keyOf({dangerouslySetInnerHTML: null}),
+        {__html: 'testContent'}
       );
     }).toThrow();
 
