@@ -188,15 +188,6 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <ComponentClass />;
 
-    // Autobound methods will throw before mounting.
-    // TODO: We should actually allow component instance methods to be invoked
-    // before mounting for read-only operations. We would then update this test.
-    expect(function() {
-      instance.methodToBeExplicitlyBound.bind(instance)();
-    }).toThrow();
-    expect(function() {
-      instance.methodAutoBound();
-    }).toThrow();
     expect(function() {
       instance.methodExplicitlyNotBound();
     }).not.toThrow();

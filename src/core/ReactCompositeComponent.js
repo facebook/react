@@ -28,16 +28,18 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-var invokedBeforeMount = function() {
-  invariant(
-    false,
-    'You have invoked a method that is automatically bound, before the ' +
-    'instance has been mounted. There is nothing conceptually wrong with ' +
-    'this, but since this method will be replaced with a new version once ' +
-    'the component is mounted - you should be aware of the fact that this ' +
-    'method will soon be replaced.'
-  );
-};
+function invokeWithWarning(func) {
+  return function() {
+    console && console.warn && console.warn(
+      'You have invoked a method that is automatically bound, before the ' +
+        'instance has been mounted. There is nothing conceptually wrong with ' +
+        'this, but since this method will be replaced with a new version once' +
+        ' the component is mounted - you should be aware of the fact that ' +
+        'this method will soon be replaced.'
+    );
+    return func.apply(this, arguments);
+  };
+}
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -370,7 +372,10 @@ function mixSpecIntoComponent(Constructor, spec) {
           proto.__reactAutoBindMap = {};
         }
         proto.__reactAutoBindMap[name] = property;
-        proto[name] = invokedBeforeMount;
+        proto[name] = property;
+        if (__DEV__) {
+          proto[name] = invokeWithWarning(property);
+        }
       } else {
         if (isInherited) {
           // For methods which are defined more than once, call the existing
@@ -393,13 +398,13 @@ function mixSpecIntoComponent(Constructor, spec) {
  * @private
  */
 function createChainedFunction(one, two) {
-  return function chainedFunction(a, b, c, d, e, tooMany) {
+  return function chainedFunction(a, b, c, d, e, f, g, tooMany) {
     invariant(
       typeof tooMany === 'undefined',
-      'Chained function can only take a maximum of 5 arguments.'
+      'Chained function can only take a maximum of 7 arguments.'
     );
-    one.call(this, a, b, c, d, e);
-    two.call(this, a, b, c, d, e);
+    one.call(this, a, b, c, d, e, f, g);
+    two.call(this, a, b, c, d, e, f, g);
   };
 }
 
@@ -814,12 +819,12 @@ var ReactCompositeComponentMixin = {
    */
   _bindAutoBindMethod: function(method) {
     var component = this;
-    function autoBound(a, b, c, d, e, tooMany) {
+    function autoBound(a, b, c, d, e, f, g, tooMany) {
       invariant(
         typeof tooMany === 'undefined',
-        'React.autoBind(...): Methods can only take a maximum of 5 arguments.'
+        'React.autoBind(...): Methods can only take a maximum of 7 arguments.'
       );
-      return method.call(component, a, b, c, d, e);
+      return method.call(component, a, b, c, d, e, f, g);
     }
     return autoBound;
   }
