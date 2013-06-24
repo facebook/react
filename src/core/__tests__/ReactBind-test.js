@@ -40,7 +40,7 @@ describe('React.autoBind', function() {
       },
       onMouseEnter: ReactDoNotBindDeprecated.doNotBind(mouseDidEnter),
       onMouseLeave: ReactDoNotBindDeprecated.doNotBind(mouseDidLeave),
-      onClick: React.autoBind(mouseDidClick),
+      onClick: mouseDidClick,
 
       // auto binding only occurs on top level functions in class defs.
       badIdeas: {
@@ -110,7 +110,7 @@ describe('React.autoBind', function() {
     var mouseDidClick = mocks.getMockFunction();
 
     var TestMixin = {
-      onClick: React.autoBind(mouseDidClick)
+      onClick: mouseDidClick
     };
 
     var TestBindComponent = React.createClass({
