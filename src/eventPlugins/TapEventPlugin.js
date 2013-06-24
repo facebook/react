@@ -19,11 +19,11 @@
 
 "use strict";
 
-var BrowserEnv = require('BrowserEnv');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var TouchEventUtils = require('TouchEventUtils');
+var ViewportMetrics = require('ViewportMetrics');
 
 var keyOf = require('keyOf');
 
@@ -49,7 +49,7 @@ function getAxisCoordOfEvent(axis, nativeEvent) {
   }
   return axis.page in nativeEvent ?
     nativeEvent[axis.page] :
-    nativeEvent[axis.client] + BrowserEnv[axis.envScroll];
+    nativeEvent[axis.client] + ViewportMetrics[axis.envScroll];
 }
 
 function getDistance(coords, nativeEvent) {

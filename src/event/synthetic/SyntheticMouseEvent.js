@@ -19,8 +19,8 @@
 
 "use strict";
 
-var BrowserEnv = require('BrowserEnv');
 var SyntheticUIEvent = require('SyntheticUIEvent');
+var ViewportMetrics = require('ViewportMetrics');
 
 /**
  * @interface MouseEvent
@@ -61,12 +61,12 @@ var MouseEventInterface = {
   pageX: function(event) {
     return 'pageX' in event ?
       event.pageX :
-      event.clientX + BrowserEnv.currentPageScrollLeft;
+      event.clientX + ViewportMetrics.currentPageScrollLeft;
   },
   pageY: function(event) {
     return 'pageY' in event ?
       event.pageY :
-      event.clientY + BrowserEnv.currentPageScrollTop;
+      event.clientY + ViewportMetrics.currentPageScrollTop;
   }
 };
 

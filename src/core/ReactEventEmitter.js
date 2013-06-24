@@ -19,11 +19,11 @@
 
 "use strict";
 
-var BrowserEnv = require('BrowserEnv');
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ViewportMetrics = require('ViewportMetrics');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -126,7 +126,7 @@ function trapCapturedEvent(topLevelType, handlerBaseName, element) {
  * @see http://www.quirksmode.org/dom/events/scroll.html
  */
 function registerScrollValueMonitoring() {
-  var refresh = BrowserEnv.refreshAuthoritativeScrollValues;
+  var refresh = ViewportMetrics.refreshScrollValues;
   EventListener.listen(window, 'scroll', refresh);
   EventListener.listen(window, 'resize', refresh);
 }

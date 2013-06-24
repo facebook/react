@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule BrowserEnv
+ * @providesModule ViewportMetrics
  */
 
 "use strict";
 
-/**
- * A place to share/cache browser/chrome level computations.
- */
-var BrowserEnv = {
+var ViewportMetrics = {
+
   currentScrollLeft: 0,
+
   currentScrollTop: 0,
-  browserInfo: null,
-  refreshAuthoritativeScrollValues: function() {
-    BrowserEnv.currentScrollLeft =
+
+  refreshScrollValues: function() {
+    ViewportMetrics.currentScrollLeft =
       document.body.scrollLeft + document.documentElement.scrollLeft;
-    BrowserEnv.currentScrollTop =
+    ViewportMetrics.currentScrollTop =
       document.body.scrollTop + document.documentElement.scrollTop;
   }
+
 };
 
-module.exports = BrowserEnv;
+module.exports = ViewportMetrics;
