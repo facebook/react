@@ -34,6 +34,15 @@ var ConstantVisitor = recast.Visitor.extend({
     }
   },
 
+  visitCallExpression: function(call) {
+    if (!this.constants.__DEV__) {
+      if (call.callee.type === 'Identifier' && call.callee.name === 'invariant') {
+        call.arguments.length = 1;
+      }
+    }
+    this.genericVisit(call);
+  },
+
   visitIfStatement: function(stmt) {
     // Replaces all identifiers in this.constants with literal values.
     this.genericVisit(stmt);
