@@ -188,6 +188,14 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <ComponentClass />;
 
+    // These are controversial assertions for now, they just exist
+    // because existing code depends on these assumptions.
+    expect(function() {
+      instance.methodToBeExplicitlyBound.bind(instance)();
+    }).not.toThrow();
+    expect(function() {
+      instance.methodAutoBound();
+    }).not.toThrow();
     expect(function() {
       instance.methodExplicitlyNotBound();
     }).not.toThrow();
