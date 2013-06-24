@@ -47,7 +47,7 @@ var REMOVE_AT = keyOf({removeAt: null});
  *
  * @param {Element} parent Parent DOM node.
  * @param {Object} childOperations Description of child operations.
- * @returns {Array?} Sparse array containing elements by their current index in
+ * @return {Array?} Sparse array containing elements by their current index in
  * the DOM.
  */
 var _getNodesByOriginalIndex = function(parent, childOperations) {

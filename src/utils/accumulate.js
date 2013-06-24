@@ -35,7 +35,7 @@ if (__DEV__) {
  * depending on the total count (if greater than one, an array is allocated).
  * Handles most common case first (starting with an empty current value and
  * acquiring one).
- * @returns {Accumulation} An accumulation which is either a single item or an
+ * @return {Accumulation} An accumulation which is either a single item or an
  * Array of items.
  */
 function accumulate(cur, next) {

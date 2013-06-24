@@ -106,7 +106,7 @@ function executeDispatchesInOrder(event, executeDispatch) {
  * Standard/simple iteration through an event's collected dispatches, but stops
  * at the first dispatch execution returning true, and returns that id.
  *
- * @returns id of the first dispatch execution who's listener returns true, or
+ * @return id of the first dispatch execution who's listener returns true, or
  * null if no listener returned true.
  */
 function executeDispatchesInOrderStopAtTrue(event) {
@@ -140,7 +140,7 @@ function executeDispatchesInOrderStopAtTrue(event) {
  * return values at each dispatch execution, but it does tend to make sense when
  * dealing with "direct" dispatches.
  *
- * @returns The return value of executing the single dispatch.
+ * @return The return value of executing the single dispatch.
  */
 function executeDirectDispatch(event) {
   if (__DEV__) {
@@ -162,7 +162,7 @@ function executeDirectDispatch(event) {
 
 /**
  * @param {SyntheticEvent} event
- * @returns {bool} True iff number of dispatches accumulated is greater than 0.
+ * @return {bool} True iff number of dispatches accumulated is greater than 0.
  */
 function hasDispatches(event) {
   return !!event._dispatchListeners;

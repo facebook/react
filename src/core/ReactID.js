@@ -31,7 +31,7 @@ var nodeCache = {};
  * DOM node (such as window).
  *
  * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
- * @returns {string} ID of the supplied `domNode`.
+ * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
   if (node && node.getAttributeNode) {
