@@ -12,6 +12,6 @@ module.exports = {
         return gzip.zip(contents, {}).length;
       }
     },
-    cache: "build/.sizecache.json"
+    cache: ".grunt/sizecache.json"
   }
 };
