@@ -65,7 +65,7 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
-  if (!nodeCache.hasOwnProperty(id)) {
+  if (!nodeCache[id]) {
     nodeCache[id] =
       document.getElementById(id) || // TODO Quit using getElementById.
       ReactMount.findReactRenderedDOMNodeSlow(id);
