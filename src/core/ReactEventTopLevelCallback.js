@@ -21,9 +21,9 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitter = require('ReactEventEmitter');
+var ReactID = require('ReactID');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
-var ReactID = require('ReactID');
 var getEventTarget = require('getEventTarget');
 
 /**

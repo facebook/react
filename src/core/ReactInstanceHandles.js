@@ -20,6 +20,7 @@
 "use strict";
 
 var ReactID = require('ReactID');
+
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
