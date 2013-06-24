@@ -63,7 +63,7 @@ var CHILD_HAS_NO_IDENTITY =
 
 var CHILD_CAME_FROM_ANOTHER_OWNER = '. It was passed a child from ';
 
-var owner_has_warned = {};
+var ownerHasWarned = {};
 
 /**
  * Helpers for flattening child arguments onto a new array or use an existing
@@ -120,8 +120,8 @@ function assignKey(groupingIndex, child, index) {
         var childOwnerName =
           child.props[OWNER] && child.props[OWNER].constructor.displayName;
 
-        if (currentName && !owner_has_warned.hasOwnProperty(currentName)) {
-          owner_has_warned[currentName] = true;
+        if (currentName && !ownerHasWarned.hasOwnProperty(currentName)) {
+          ownerHasWarned[currentName] = true;
           var message = CHILD_HAS_NO_IDENTITY + currentName;
           if (childOwnerName && currentName !== childOwnerName) {
             // Usually the current owner is the offender, but if it accepts
