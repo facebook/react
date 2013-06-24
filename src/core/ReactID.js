@@ -30,7 +30,7 @@ var nodeCache = {};
  * other objects so just return '' if we're given something other than a
  * DOM node (such as window).
  *
- * @param {DOMElement|DOMWindow|DOMDocument} node DOM node.
+ * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
  * @returns {string} ID of the supplied `domNode`.
  */
 function getID(node) {

@@ -27,6 +27,7 @@ var ReactCurrentOwner;
 var ReactProps;
 var ReactTestUtils;
 var ReactID;
+var ReactDoNotBindDeprecated;
 
 var cx;
 var reactComponentExpect;
@@ -38,6 +39,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
+    ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactProps = require('ReactProps');
     ReactTestUtils = require('ReactTestUtils');
     ReactID = require('ReactID');
@@ -52,7 +54,7 @@ describe('ReactCompositeComponent', function() {
       },
 
       render: function() {
-        var toggleActivatedState = this._toggleActivatedState.bind(this);
+        var toggleActivatedState = this._toggleActivatedState;
         return !this.state.activated ?
           <a ref="x" onClick={toggleActivatedState} /> :
           <b ref="x" onClick={toggleActivatedState} />;
@@ -64,9 +66,9 @@ describe('ReactCompositeComponent', function() {
         return {activated: false};
       },
 
-      _toggleActivatedState: React.autoBind(function() {
+      _toggleActivatedState:function() {
         this.setState({activated: !this.state.activated});
-      }),
+      },
 
       render: function() {
         return !this.state.activated ?
@@ -167,15 +169,18 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should auto bind methods and values correctly', function() {
-    var RETURN_VALUE_AFTER_MOUNT = 'returnValue';
     var ComponentClass = React.createClass({
       getInitialState: function() {
-        return {
-          valueToReturn: RETURN_VALUE_AFTER_MOUNT
-        };
+        return {valueToReturn: 'hi'};
       },
-      methodBoundOnMount: React.autoBind(function() {
-        return this.state.valueToReturn;
+      methodToBeExplicitlyBound: function() {
+        return this;
+      },
+      methodAutoBound: function() {
+        return this;
+      },
+      methodExplicitlyNotBound: ReactDoNotBindDeprecated.doNotBind(function() {
+        return this;
       }),
       render: function() {
         return <div> </div>;
@@ -184,18 +189,33 @@ describe('ReactCompositeComponent', function() {
     var instance = <ComponentClass />;
 
     // Autobound methods will throw before mounting.
+    // TODO: We should actually allow component instance methods to be invoked
+    // before mounting for read-only operations. We would then update this test.
     expect(function() {
-      instance.methodBoundOnMount();
+      instance.methodToBeExplicitlyBound.bind(instance)();
     }).toThrow();
+    expect(function() {
+      instance.methodAutoBound();
+    }).toThrow();
+    expect(function() {
+      instance.methodExplicitlyNotBound();
+    }).not.toThrow();
 
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
     ReactTestUtils.renderIntoDocument(instance);
-    var retValAfterMount = instance.methodBoundOnMount();
-    expect(retValAfterMount).toBe(RETURN_VALUE_AFTER_MOUNT);
-    var retValAfterMountWithCrazyScope =
-      instance.methodBoundOnMount.call({thisIsACrazyScope:null});
-    expect(retValAfterMountWithCrazyScope).toBe(RETURN_VALUE_AFTER_MOUNT);
+    var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
+    var autoBound = instance.methodAutoBound;
+    var explicitlyNotBound = instance.methodExplicitlyNotBound;
+
+    expect(explicitlyBound.call(null)).toBe(instance);
+    expect(autoBound.call(null)).toBe(instance);
+    expect(explicitlyNotBound.call(null)).toBe(null);
+
+    expect(explicitlyBound.call(instance)).toBe(instance);
+    expect(autoBound.call(instance)).toBe(instance);
+    expect(explicitlyNotBound.call(instance)).toBe(instance);
+
   });
 
   it('should normalize props with default values', function() {

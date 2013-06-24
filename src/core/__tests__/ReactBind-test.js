@@ -21,9 +21,11 @@
 
 var mocks = require('mocks');
 var React = require('React');
+var ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
+// TODO: Test render and all stock methods.
 describe('React.autoBind', function() {
 
   it('Holds reference to instance', function() {
@@ -31,16 +33,20 @@ describe('React.autoBind', function() {
     var mouseDidEnter = mocks.getMockFunction();
     var mouseDidLeave = mocks.getMockFunction();
     var mouseDidClick = mocks.getMockFunction();
-    var didBadIdea = mocks.getMockFunction();
 
     var TestBindComponent = React.createClass({
-      onMouseEnter: mouseDidEnter,
-      onMouseLeave: mouseDidLeave,
+      getInitialState: function() {
+        return {something: 'hi'};
+      },
+      onMouseEnter: ReactDoNotBindDeprecated.doNotBind(mouseDidEnter),
+      onMouseLeave: ReactDoNotBindDeprecated.doNotBind(mouseDidLeave),
       onClick: React.autoBind(mouseDidClick),
 
-      // autoBind needs to be on the top-level spec.
+      // auto binding only occurs on top level functions in class defs.
       badIdeas: {
-        badBind: React.autoBind(didBadIdea)
+        badBind: function() {
+          this.state.something;
+        }
       },
 
       render: function() {
@@ -48,7 +54,8 @@ describe('React.autoBind', function() {
           <div
             onMouseEnter={this.onMouseEnter.bind(this)}
             onMouseLeave={this.onMouseLeave}
-            onClick={this.onClick} />
+            onClick={this.onClick}
+          />
         );
       }
     });
