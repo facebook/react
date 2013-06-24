@@ -95,4 +95,23 @@ describe('ReactComponent', function() {
     ReactTestUtils.renderIntoDocument(instance);
   });
 
+  it('should correctly determine if a component is mounted', function() {
+    var Component = React.createClass({
+      componentWillMount: function() {
+        expect(this.isMounted()).toBeFalsy();
+      },
+      componentDidMount: function() {
+        expect(this.isMounted()).toBeTruthy();
+      },
+      render: function() {
+        return <div/>;
+      }
+    });
+
+    var instance = <Component />;
+
+    expect(instance.isMounted()).toBeFalsy();
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.isMounted()).toBeTruthy();
+  });
 });

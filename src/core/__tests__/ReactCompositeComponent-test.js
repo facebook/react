@@ -308,7 +308,7 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).toThrow(
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted components.'
+      'mounted or mounting components.'
     );
 
     React.renderComponent(instance, container);
@@ -321,7 +321,7 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).toThrow(
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted components.'
+      'mounted or mounting components.'
     );
   });
 

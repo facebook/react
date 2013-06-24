@@ -326,8 +326,9 @@ function validateMethodOverride(proto, name) {
 function validateLifeCycleOnReplaceState(instance) {
   var compositeLifeCycleState = instance._compositeLifeCycleState;
   invariant(
-    instance.isMounted(),
-    'replaceState(...): Can only update a mounted component.'
+    instance.isMounted() ||
+      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+    'replaceState(...): Can only update a mounted or mounting component.'
   );
   invariant(
     compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
@@ -478,6 +479,17 @@ var ReactCompositeComponentMixin = {
     this._compositeLifeCycleState = null;
     this._compositionLevel = ReactCurrentOwner.current ?
       ReactCurrentOwner.getDepth() + 1 : 0;
+  },
+
+  /**
+   * Checks whether or not this composite component is mounted.
+   * @return {boolean} True if mounted, false otherwise.
+   * @protected
+   * @final
+   */
+  isMounted: function() {
+    return ReactComponent.Mixin.isMounted.call(this) &&
+      this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING;
   },
 
   /**
@@ -756,8 +768,10 @@ var ReactCompositeComponentMixin = {
   forceUpdate: function() {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this.isMounted(),
-      'forceUpdate(...): Can only force an update on mounted components.'
+      this.isMounted() ||
+        compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+      'forceUpdate(...): Can only force an update on mounted or mounting ' +
+        'components.'
     );
     invariant(
       compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
