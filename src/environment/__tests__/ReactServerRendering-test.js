@@ -24,10 +24,12 @@
 require('mock-modules')
   .dontMock('ExecutionEnvironment')
   .dontMock('React')
+  .dontMock('ReactID')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils');
 
 var React;
+var ReactID;
 var ReactTestUtils;
 var ReactServerRendering;
 var ExecutionEnvironment;
@@ -36,6 +38,7 @@ describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactID = require('ReactID');
     ReactTestUtils = require('ReactTestUtils');
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -51,7 +54,7 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<span  id="[^"]+">hello world</span>'
+      '<span  ' + ReactID.ATTR_NAME + '="[^"]+">hello world</span>'
     );
   });
 
@@ -74,8 +77,12 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<div  id="[^"]+"><span  id="[^"]+"><span id="[^"]+">My name is </span>' +
-        '<span id="[^"]+">child</span></span></div>'
+      '<div  ' + ReactID.ATTR_NAME + '="[^"]+">' +
+        '<span  ' + ReactID.ATTR_NAME + '="[^"]+">' +
+          '<span ' + ReactID.ATTR_NAME + '="[^"]+">My name is </span>' +
+          '<span ' + ReactID.ATTR_NAME + '="[^"]+">child</span>' +
+        '</span>' +
+      '</div>'
     );
   });
 
@@ -123,8 +130,10 @@ describe('ReactServerRendering', function() {
     );
 
     expect(response).toMatch(
-      '<span  id="[^"]+"><span id="[^"]+">Component name: </span>' +
-        '<span id="[^"]+">TestComponent</span></span>'
+      '<span  ' + ReactID.ATTR_NAME + '="[^"]+">' +
+        '<span ' + ReactID.ATTR_NAME + '="[^"]+">Component name: </span>' +
+        '<span ' + ReactID.ATTR_NAME + '="[^"]+">TestComponent</span>' +
+      '</span>'
     );
     expect(lifecycle).toEqual(
       ['getInitialState', 'componentWillMount', 'render']

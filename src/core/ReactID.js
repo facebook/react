@@ -120,6 +120,7 @@ function purgeEntireCache() {
   nodeCache = {};
 }
 
+exports.ATTR_NAME = ATTR_NAME;
 exports.getID = getID;
 exports.setID = setID;
 exports.getNode = getNode;
