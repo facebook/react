@@ -66,13 +66,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
     props.checked = this.getChecked();
     props.value = this.getValue();
-
-    // TODO: Re-implement `onChange` with the implementation of `onTextChange`.
-    if (props.type === 'text' || props.type === 'password') {
-      props.onTextChange = this.handleTextChange;
-    } else {
-      props.onChange = this.handleChange;
-    }
+    props.onChange = this.handleChange;
 
     return input(props, this.props.children);
   },
@@ -93,18 +87,6 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       );
     }
   },
-
-  handleTextChange: ReactCompositeComponent.autoBind(function(event) {
-    var returnValue;
-    if (this.props.onTextChange) {
-      returnValue = this.props.onTextChange(event);
-    }
-    this.setState({
-      checked: event.target.checked,
-      value: event.target.value
-    });
-    return returnValue;
-  }),
 
   handleChange: ReactCompositeComponent.autoBind(function(event) {
     var returnValue;

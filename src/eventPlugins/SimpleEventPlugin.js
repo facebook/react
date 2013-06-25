@@ -41,12 +41,6 @@ var eventTypes = {
       captured: keyOf({onBlurCapture: true})
     }
   },
-  change: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onChange: true}),
-      captured: keyOf({onChangeCapture: true})
-    }
-  },
   click: {
     phasedRegistrationNames: {
       bubbled: keyOf({onClick: true}),
@@ -209,7 +203,6 @@ var eventTypes = {
 
 var topLevelEventsToDispatchConfig = {
   topBlur:        eventTypes.blur,
-  topChange:      eventTypes.change,
   topClick:       eventTypes.click,
   topDoubleClick: eventTypes.doubleClick,
   topDOMCharacterDataModified: eventTypes.DOMCharacterDataModified,
@@ -277,7 +270,6 @@ var SimpleEventPlugin = {
     }
     var EventConstructor;
     switch(topLevelType) {
-      case topLevelTypes.topChange:
       case topLevelTypes.topInput:
       case topLevelTypes.topSubmit:
         // HTML Events

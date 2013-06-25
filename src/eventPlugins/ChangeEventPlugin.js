@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule TextChangeEventPlugin
+ * @providesModule ChangeEventPlugin
  */
 
 "use strict";
@@ -30,40 +30,124 @@ var keyOf = require('keyOf');
 var topLevelTypes = EventConstants.topLevelTypes;
 
 var eventTypes = {
-  textChange: {
+  change: {
     phasedRegistrationNames: {
-      bubbled: keyOf({onTextChange: null}),
-      captured: keyOf({onTextChangeCapture: null})
+      bubbled: keyOf({onChange: null}),
+      captured: keyOf({onChangeCapture: null})
     }
   }
 };
 
-var isInputSupported;
-if (ExecutionEnvironment.canUseDOM) {
-  // IE9 claims to support the input event but fails to trigger it when
-  // deleting text, so we ignore its input events
-  isInputSupported = isEventSupported('input') && (
-    !("documentMode" in document) || document.documentMode > 9
-  );
-}
-
-var hasInputCapabilities = function(elem) {
-  // The HTML5 spec lists many more types than `text` and `password` on which
-  // the input event is triggered but none of them exist in old IE, so we don't
-  // check them here.
-  // TODO: <textarea> should be supported too but IE seems to reset the
-  // selection when changing textarea contents during a selectionchange event
-  // so it's not listed here for now.
-  return (
-    elem.nodeName === 'INPUT' &&
-    (elem.type === 'text' || elem.type === 'password')
-  );
-};
-
+/**
+ * For IE shims
+ */
 var activeElement = null;
 var activeElementID = null;
 var activeElementValue = null;
 var activeElementValueProp = null;
+
+
+/**
+ * SECTION: handle `change` event
+ */
+var shouldUseChangeEvent = function(elem) {
+  return elem.nodeName === 'SELECT';
+};
+
+var doesChangeEventBubble = false;
+if (ExecutionEnvironment.canUseDOM) {
+  // See `handleChange` comment below
+  doesChangeEventBubble = isEventSupported('change') && (
+    !('documentMode' in document) || document.documentMode > 8
+  );
+}
+
+/**
+ * (For IE8). The `change` event does not bubble in IE8 so we add a listener
+ * when the element is focused (and remove when blurred).
+ */
+var handleChange = function(nativeEvent) {
+  var event = SyntheticEvent.getPooled(
+    eventTypes.change,
+    activeElementID,
+    nativeEvent
+  );
+  EventPropagators.accumulateTwoPhaseDispatches(event);
+
+  // If change bubbled, we'd just bind to it like all the other events
+  // and have it go through ReactEventTopLevelCallback. Since it doesn't, we
+  // manually listen for the change event and so we have to enqueue and
+  // process the abstract event manually.
+  EventPluginHub.enqueueEvents(event);
+  EventPluginHub.processEventQueue();
+};
+
+var getTargetIDForChangeEvent;
+if (doesChangeEventBubble) {
+  getTargetIDForChangeEvent = function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID) {
+    if (topLevelType === topLevelTypes.topChange) {
+      return topLevelTargetID;
+    }
+  };
+} else {
+  getTargetIDForChangeEvent = function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID) {
+    if (topLevelType === topLevelTypes.topFocus) {
+      activeElementID = topLevelTargetID;
+      topLevelTarget.attachEvent('onchange', handleChange);
+    } else if (topLevelType === topLevelTypes.topBlur) {
+      topLevelTarget.detachEvent('onchange', handleChange);
+      activeElementID = null;
+    }
+  };
+}
+
+
+/**
+ * SECTION: handle `input` event
+ */
+var isInputEventSupported = false;
+if (ExecutionEnvironment.canUseDOM) {
+  // IE9 claims to support the input event but fails to trigger it when
+  // deleting text, so we ignore its input events
+  isInputEventSupported = isEventSupported('input') && (
+    !('documentMode' in document) || document.documentMode > 9
+  );
+}
+
+
+/**
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
+ */
+var supportedInputTypes = {
+  'color': true,
+  'date': true,
+  'datetime': true,
+  'datetime-local': true,
+  'email': true,
+  'month': true,
+  'number': true,
+  'password': true,
+  'range': true,
+  'search': true,
+  'tel': true,
+  'text': true,
+  'time': true,
+  'url': true,
+  'week': true
+};
+
+var shouldUseInputEvent = function(elem) {
+  return (
+    (elem.nodeName === 'INPUT' && supportedInputTypes[elem.type]) ||
+    elem.nodeName === 'TEXTAREA'
+  );
+};
 
 /**
  * (For old IE.) Replacement getter/setter for the `value` property that gets
@@ -84,7 +168,7 @@ var newValueProp =  {
  * and override the value property so that we can distinguish user events from
  * value changes in JS.
  */
-var startWatching = function(target, targetID) {
+var startWatchingForValueChange = function(target, targetID) {
   activeElement = target;
   activeElementID = targetID;
   activeElementValue = target.value;
@@ -101,7 +185,7 @@ var startWatching = function(target, targetID) {
  * (For old IE.) Removes the event listeners from the currently-tracked element,
  * if any exists.
  */
-var stopWatching = function() {
+var stopWatchingForValueChange = function() {
   if (!activeElement) {
     return;
   }
@@ -117,11 +201,11 @@ var stopWatching = function() {
 };
 
 /**
- * (For old IE.) Handles a propertychange event, sending a textChange event if
+ * (For old IE.) Handles a propertychange event, sending a `change` event if
  * the value of the active element has changed.
  */
 var handlePropertyChange = function(nativeEvent) {
-  if (nativeEvent.propertyName !== "value") {
+  if (nativeEvent.propertyName !== 'value') {
     return;
   }
   var value = nativeEvent.srcElement.value;
@@ -131,42 +215,34 @@ var handlePropertyChange = function(nativeEvent) {
   activeElementValue = value;
 
   var event = SyntheticEvent.getPooled(
-    eventTypes.textChange,
+    eventTypes.change,
     activeElementID,
     nativeEvent
   );
   EventPropagators.accumulateTwoPhaseDispatches(event);
 
-  // If propertychange bubbled, we'd just bind to it like all the other events
-  // and have it go through ReactEventTopLevelCallback. Since it doesn't, we
-  // manually listen for the propertychange event and so we have to enqueue and
-  // process the abstract event manually.
+  // See comment above in handleChange
   EventPluginHub.enqueueEvents(event);
   EventPluginHub.processEventQueue();
 };
 
 /**
- * If a textChange event should be fired, returns the target's ID.
+ * If a `change` event should be fired, returns the target's ID.
  */
-var targetIDForTextChangeEvent;
-if (isInputSupported) {
-  targetIDForTextChangeEvent = function(
+var getTargetIDForValueChangeEvent;
+if (isInputEventSupported) {
+  getTargetIDForValueChangeEvent = function(
       topLevelType,
       topLevelTarget,
       topLevelTargetID) {
     if (topLevelType === topLevelTypes.topInput) {
       // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
-      // what we want so fall through here and trigger an abstract event...
-      if (topLevelTarget.nodeName === 'TEXTAREA') {
-        // ...unless it's a textarea, in which case we don't fire an event (so
-        // that we have consistency with our old-IE shim).
-        return;
-      }
+      // what we want so fall through here and trigger an abstract event
       return topLevelTargetID;
     }
   };
 } else {
-  targetIDForTextChangeEvent = function(
+  getTargetIDForValueChangeEvent = function(
       topLevelType,
       topLevelTarget,
       topLevelTargetID) {
@@ -181,14 +257,13 @@ if (isInputSupported) {
       // In either case, we don't want to call the event handler if the value
       // is changed from JS so we redefine a setter for `.value` that updates
       // our activeElementValue variable, allowing us to ignore those changes
-      if (hasInputCapabilities(topLevelTarget)) {
-        // stopWatching() should be a noop here but we call it just in case we
-        // missed a blur event somehow.
-        stopWatching();
-        startWatching(topLevelTarget, topLevelTargetID);
-      }
+      //
+      // stopWatching() should be a noop here but we call it just in case we
+      // missed a blur event somehow.
+      stopWatchingForValueChange();
+      startWatchingForValueChange(topLevelTarget, topLevelTargetID);
     } else if (topLevelType === topLevelTypes.topBlur) {
-      stopWatching();
+      stopWatchingForValueChange();
     } else if (
         topLevelType === topLevelTypes.topSelectionChange ||
         topLevelType === topLevelTypes.topKeyUp ||
@@ -211,7 +286,40 @@ if (isInputSupported) {
   };
 }
 
-var TextChangeEventPlugin = {
+
+/**
+ * SECTION: handle `click` event
+ */
+var shouldUseClickEvent = function(elem) {
+  // Use the `click` event to detect changes to checkbox and radio inputs.
+  // This approach works across all browsers, whereas `change` does not fire
+  // until `blur` in IE8.
+  return (
+    elem.nodeName === 'INPUT' &&
+    (elem.type === 'checkbox' || elem.type === 'radio')
+  );
+};
+
+var getTargetIDForClickEvent = function(
+    topLevelType,
+    topLevelTarget,
+    topLevelTargetID) {
+  if (topLevelType === topLevelTypes.topClick) {
+    return topLevelTargetID;
+  }
+};
+
+/**
+ * This plugin creates an `onChange` event that normalizes change events
+ * across form elements. This event fires at a time when it's possible to
+ * change the element's value without seeing a flicker.
+ *
+ * Supported elements are:
+ * - input (see `supportedInputTypes`)
+ * - textarea
+ * - select
+ */
+var ChangeEventPlugin = {
 
   eventTypes: eventTypes,
 
@@ -228,15 +336,26 @@ var TextChangeEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    var targetID = targetIDForTextChangeEvent(
-      topLevelType,
-      topLevelTarget,
-      topLevelTargetID
-    );
+
+    var getTargetIDFunc, targetID;
+    if (shouldUseChangeEvent(topLevelTarget)) {
+      getTargetIDFunc = getTargetIDForChangeEvent;
+    } else if (shouldUseInputEvent(topLevelTarget)) {
+      getTargetIDFunc = getTargetIDForValueChangeEvent;
+    } else if (shouldUseClickEvent(topLevelTarget)) {
+      getTargetIDFunc = getTargetIDForClickEvent;
+    }
+    if (getTargetIDFunc) {
+      targetID = getTargetIDFunc(
+        topLevelType,
+        topLevelTarget,
+        topLevelTargetID
+      );
+    }
 
     if (targetID) {
       var event = SyntheticEvent.getPooled(
-        eventTypes.textChange,
+        eventTypes.change,
         targetID,
         nativeEvent
       );
@@ -247,4 +366,4 @@ var TextChangeEventPlugin = {
 
 };
 
-module.exports = TextChangeEventPlugin;
+module.exports = ChangeEventPlugin;
