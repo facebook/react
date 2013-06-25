@@ -36,7 +36,16 @@ var nodeCache = {};
 function getID(node) {
   if (node && node.getAttributeNode) {
     var attributeNode = node.getAttributeNode(ATTR_NAME);
-    return attributeNode && attributeNode.value || '';
+    if (attributeNode) {
+      var id = attributeNode.value;
+      if (id) {
+        // Assume that any node previously cached with this ID has since
+        // become invalid and should be replaced. TODO Enforce this.
+        nodeCache[id] = node;
+
+        return id;
+      }
+    }
   }
 
   return '';
@@ -80,31 +89,6 @@ function getNode(id) {
 }
 
 /**
- * Efficiently finds all nodes with a React-specific ID and primes the
- * cache so that getNode lookups take constant time.
- *
- * @param {DOMElement} root The root element to scan.
- */
-function primeTree(root) {
-  var nodes = root.querySelectorAll
-    ? root.querySelectorAll('[' + ATTR_NAME + ']')
-    : root.getElementsByTagName('*');
-
-  for (var i = 0; i < nodes.length; ++i) {
-    prime(nodes.item(i));
-  }
-
-  prime(root);
-}
-
-function prime(node) {
-  var attributeNode = node.getAttributeNode(ATTR_NAME);
-  if (attributeNode) {
-    nodeCache[attributeNode.value] = node;
-  }
-}
-
-/**
  * Causes the cache to forget about one React-specific ID.
  *
  * @param {string} id The ID to forget.
@@ -124,6 +108,5 @@ exports.ATTR_NAME = ATTR_NAME;
 exports.getID = getID;
 exports.setID = setID;
 exports.getNode = getNode;
-exports.primeTree = primeTree;
 exports.purgeID = purgeID;
 exports.purgeEntireCache = purgeEntireCache;
