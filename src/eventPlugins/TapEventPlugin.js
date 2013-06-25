@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule TapEventPlugin
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

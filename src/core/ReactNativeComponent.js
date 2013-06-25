@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactNativeComponent
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

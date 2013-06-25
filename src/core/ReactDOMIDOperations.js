@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactDOMIDOperations
- * @typechecks
+ * @typechecks static-only
  */
 
 /*jslint evil: true */

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule SyntheticFocusEvent
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

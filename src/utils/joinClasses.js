@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule joinClasses
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

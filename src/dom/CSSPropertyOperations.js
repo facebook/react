@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule CSSPropertyOperations
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

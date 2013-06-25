@@ -13,33 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule mergeInto
+ * @providesModule ReactDOMNodeCache
  * @typechecks static-only
  */
 
 "use strict";
 
-var mergeHelpers = require('mergeHelpers');
+var ReactID = require('ReactID');
 
-var checkMergeObjectArg = mergeHelpers.checkMergeObjectArg;
-
-/**
- * Shallow merges two structures by mutating the first parameter.
- *
- * @param {object} one Object to be merged into.
- * @param {?object} two Optional object with properties to merge from.
- */
-function mergeInto(one, two) {
-  checkMergeObjectArg(one);
-  if (two != null) {
-    checkMergeObjectArg(two);
-    for (var key in two) {
-      if (!two.hasOwnProperty(key)) {
-        continue;
-      }
-      one[key] = two[key];
-    }
-  }
-}
-
-module.exports = mergeInto;
+exports.getNodeByID = ReactID.getNode;
+exports.purgeID = ReactID.purgeID;
+exports.purgeEntireCache = ReactID.purgeEntireCache;

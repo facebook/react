@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactInstanceHandles
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

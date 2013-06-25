@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule SyntheticWheelEvent
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

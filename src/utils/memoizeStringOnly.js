@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule memoizeStringOnly
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";
