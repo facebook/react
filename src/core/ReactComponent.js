@@ -511,6 +511,10 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
+      invariant(
+        container && container.nodeType === 1,
+        'mountComponentIntoNode(...): Target container is not a DOM element.'
+      );
       var renderStart = Date.now();
       var markup = this.mountComponent(rootID, transaction);
       ReactMount.totalInstantiationTime += (Date.now() - renderStart);
