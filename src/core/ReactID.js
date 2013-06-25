@@ -19,6 +19,7 @@
 
 "use strict";
 
+var invariant = require('invariant');
 var ReactMount = require('ReactMount');
 var ATTR_NAME = 'id';
 var nodeCache = {};
@@ -34,20 +35,34 @@ var nodeCache = {};
  * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
-  if (node && node.getAttributeNode) {
-    var attributeNode = node.getAttributeNode(ATTR_NAME);
-    if (attributeNode) {
-      var id = attributeNode.value;
-      if (id) {
-        // Assume that any node previously cached with this ID has since
-        // become invalid and should be replaced. TODO Enforce this.
-        nodeCache[id] = node;
+  var id = internalGetID(node);
+  if (id) {
+    if (nodeCache.hasOwnProperty(id)) {
+      var cached = nodeCache[id];
+      if (cached !== node) {
+        invariant(
+          !isValid(cached, id),
+          'ReactID: Two valid but unequal nodes with the same `%s`: %s',
+          ATTR_NAME, id
+        );
 
-        return id;
+        nodeCache[id] = node;
       }
+    } else {
+      nodeCache[id] = node;
     }
   }
 
+  return id;
+}
+
+function internalGetID(node) {
+  if (node && node.getAttributeNode) {
+    var attributeNode = node.getAttributeNode(ATTR_NAME);
+    if (attributeNode) {
+      return attributeNode.value || '';
+    }
+  }
   return '';
 }
 
@@ -58,7 +73,7 @@ function getID(node) {
  * @param {string} id The value of the ID attribute.
  */
 function setID(node, id) {
-  var oldID = getID(node);
+  var oldID = internalGetID(node);
   if (oldID !== id) {
     delete nodeCache[oldID];
   }
@@ -74,18 +89,70 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
-  if (!nodeCache[id]) {
-    nodeCache[id] =
-      document.getElementById(id) || // TODO Quit using getElementById.
-      ReactMount.findReactRenderedDOMNodeSlow(id);
+  if (nodeCache.hasOwnProperty(id)) {
+    var node = nodeCache[id];
+    if (isValid(node, id)) {
+      return node;
+    }
   }
 
-  var node = nodeCache[id];
-  if (getID(node) === id) {
-    return node;
+  return nodeCache[id] =
+    document.getElementById(id) || // TODO Quit using getElementById.
+    ReactMount.findReactRenderedDOMNodeSlow(id);
+}
+
+/**
+ * A node is "valid" if it is contained by a currently mounted container.
+ *
+ * This means that the node does not have to be contained by a document in
+ * order to be considered valid.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @param {string} id The expected ID of the node.
+ * @return {boolean} Whether the node is contained by a mounted container.
+ */
+function isValid(node, id) {
+  if (node) {
+    invariant(
+      internalGetID(node) === id,
+      'ReactID: Unexpected modification of `%s`',
+      ATTR_NAME
+    );
+
+    var container = ReactMount.findReactContainerForID(id);
+    if (container && contains(container, node)) {
+      return true;
+    }
   }
 
-  return null;
+  return false;
+}
+
+function contains(ancestor, descendant) {
+  if (ancestor.contains) {
+    // Supported natively in virtually all browsers, but not in jsdom.
+    return ancestor.contains(descendant);
+  }
+
+  if (descendant === ancestor) {
+    return true;
+  }
+
+  if (descendant.nodeType === 3) {
+    // If descendant is a text node, start from descendant.parentNode
+    // instead, so that we can assume all ancestors worth considering are
+    // element nodes with nodeType === 1.
+    descendant = descendant.parentNode;
+  }
+
+  while (descendant && descendant.nodeType === 1) {
+    if (descendant === ancestor) {
+      return true;
+    }
+    descendant = descendant.parentNode;
+  }
+
+  return false;
 }
 
 /**
