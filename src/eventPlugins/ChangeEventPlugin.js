@@ -51,7 +51,10 @@ var activeElementValueProp = null;
  * SECTION: handle `change` event
  */
 var shouldUseChangeEvent = function(elem) {
-  return elem.nodeName === 'SELECT';
+  return (
+    elem.nodeName === 'SELECT' ||
+    (elem.nodeName === 'INPUT' && elem.type === 'file')
+  );
 };
 
 var doesChangeEventBubble = false;
