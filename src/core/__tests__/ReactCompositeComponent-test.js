@@ -207,9 +207,10 @@ describe('ReactCompositeComponent', function() {
     var autoBound = instance.methodAutoBound;
     var explicitlyNotBound = instance.methodExplicitlyNotBound;
 
-    expect(explicitlyBound.call(null)).toBe(instance);
-    expect(autoBound.call(null)).toBe(instance);
-    expect(explicitlyNotBound.call(null)).toBe(null);
+    var context = {};
+    expect(explicitlyBound.call(context)).toBe(instance);
+    expect(autoBound.call(context)).toBe(instance);
+    expect(explicitlyNotBound.call(context)).toBe(context);
 
     expect(explicitlyBound.call(instance)).toBe(instance);
     expect(autoBound.call(instance)).toBe(instance);
