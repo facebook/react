@@ -21,7 +21,7 @@
 
 var invariant = require('invariant');
 var ReactMount = require('ReactMount');
-var ATTR_NAME = 'id';
+var ATTR_NAME = 'data-reactid';
 var nodeCache = {};
 
 /**
@@ -97,7 +97,6 @@ function getNode(id) {
   }
 
   return nodeCache[id] =
-    document.getElementById(id) || // TODO Quit using getElementById.
     ReactMount.findReactRenderedDOMNodeSlow(id);
 }
 

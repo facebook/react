@@ -55,10 +55,9 @@ function getReactRootID(container) {
  *
  *   ReactMount.renderComponent(component, $('container'));
  *
- *   TODO Update this comment when ReactID.ATTR_NAME changes.
- *   <div id="container">         <-- Supplied `container`.
- *     <div id=".reactRoot[3]">   <-- Rendered reactRoot of React component.
- *       // ...
+ *   <div id="container">                   <-- Supplied `container`.
+ *     <div data-reactid=".reactRoot[3]">   <-- Rendered reactRoot of React
+ *       // ...                                 component.
  *     </div>
  *   </div>
  *
