@@ -262,8 +262,8 @@ So far we've been inserting the comments directly in the source code. Instead, l
 ```javascript
 // tutorial8.js
 var data = [
-  {author: 'Pete Hunt', text: 'This is one comment'},
-  {author: 'Jordan Walke', text: 'This is *another* comment'}
+  {author: "Pete Hunt", text: "This is one comment"},
+  {author: "Jordan Walke", text: "This is *another* comment"}
 ];
 ```
 
@@ -357,8 +357,8 @@ When the component is first created, we want to GET some JSON from the server an
 ```javascript
 // tutorial13.json
 [
-  {'author': 'Pete Hunt', 'text': 'This is one comment'},
-  {'author': 'Jordan Walke', 'text': 'This is *another* comment'}
+  {"author": "Pete Hunt", "text": "This is one comment"},
+  {"author": "Jordan Walke", "text": "This is *another* comment"}
 ]
 ```
 
