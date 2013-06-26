@@ -105,9 +105,8 @@ var ReactCompositeComponentInterface = {
   // ==== Definition methods ====
 
   /**
-   * Invoked when the component is mounted and whenever new props are received.
-   * Values in the returned mapping will be set on `this.props` if that prop is
-   * not specified (i.e. using an `in` check).
+   * Invoked when the component is mounted. Values in the mapping will be set on
+   * `this.props` if that prop is not specified (i.e. using an `in` check).
    *
    * This method is invoked before `getInitialState` and therefore cannot rely
    * on `this.state` or use `this.setState`.
@@ -504,6 +503,8 @@ var ReactCompositeComponentMixin = {
   mountComponent: function(rootID, transaction) {
     ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
     this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+
+    this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
     this._processProps(this.props);
 
     if (this.__reactAutoBindMap) {
@@ -548,6 +549,8 @@ var ReactCompositeComponentMixin = {
       this.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
+
+    this._defaultProps = null;
 
     ReactComponent.Mixin.unmountComponent.call(this);
     this._renderedComponent.unmountComponent();
@@ -651,12 +654,10 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(props) {
     var propName;
-    if (this.getDefaultProps) {
-      var defaultProps = this.getDefaultProps();
-      for (propName in defaultProps) {
-        if (!(propName in props)) {
-          props[propName] = defaultProps[propName];
-        }
+    var defaultProps = this._defaultProps;
+    for (propName in defaultProps) {
+      if (!(propName in props)) {
+        props[propName] = defaultProps[propName];
       }
     }
     var propDeclarations = this.constructor.propDeclarations;
