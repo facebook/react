@@ -102,6 +102,25 @@ describe('ReactInstanceHandles', function() {
         )
       ).toBe(childNodeB);
     });
+
+    it('should work around unidentified nodes', function() {
+      var parentNode = document.createElement('div');
+      var childNodeA = document.createElement('div');
+      var childNodeB = document.createElement('div');
+      parentNode.appendChild(childNodeA);
+      parentNode.appendChild(childNodeB);
+
+      ReactID.setID(parentNode, '.react[0]');
+      // No ID on `childNodeA`.
+      ReactID.setID(childNodeB, '.react[0].0:1');
+
+      expect(
+        ReactInstanceHandles.findComponentRoot(
+          parentNode,
+          ReactID.getID(childNodeB)
+        )
+      ).toBe(childNodeB);
+    });
   });
 
   describe('getReactRootIDFromNodeID', function() {

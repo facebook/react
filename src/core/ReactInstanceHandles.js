@@ -286,10 +286,10 @@ var ReactInstanceHandles = {
   findComponentRoot: function(ancestorNode, id) {
     var child = ancestorNode.firstChild;
     while (child) {
-      var childId = ReactID.getID(child);
-      if (id === childId) {
+      var childID = ReactID.getID(child);
+      if (id === childID) {
         return child;
-      } else if (isAncestorIDOf(childId, id)) {
+      } else if (childID && isAncestorIDOf(childID, id)) {
         return ReactInstanceHandles.findComponentRoot(child, id);
       }
       child = child.nextSibling;
