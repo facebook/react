@@ -22,6 +22,7 @@ var ReactComponent = require('ReactComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactOwner = require('ReactOwner');
 var ReactPropTransferer = require('ReactPropTransferer');
+var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
@@ -507,6 +508,7 @@ var ReactCompositeComponentMixin = {
 
     this.state = this.getInitialState ? this.getInitialState() : null;
     this._pendingState = null;
+    this._pendingForceUpdate = false;
 
     if (this.componentWillMount) {
       this.componentWillMount();
@@ -559,31 +561,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Updates the rendered DOM nodes given a new set of props.
-   *
-   * @param {object} nextProps Next set of properties.
-   * @param {ReactReconcileTransaction} transaction
-   * @final
-   * @internal
-   */
-  receiveProps: function(nextProps, transaction) {
-    this._processProps(nextProps);
-    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
-
-    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
-    if (this.componentWillReceiveProps) {
-      this.componentWillReceiveProps(nextProps, transaction);
-    }
-    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
-    // When receiving props, calls to `setState` by `componentWillReceiveProps`
-    // will set `this._pendingState` without triggering a re-render.
-    var nextState = this._pendingState || this.state;
-    this._pendingState = null;
-    this._receivePropsAndState(nextProps, nextState, transaction);
-    this._compositeLifeCycleState = null;
-  },
-
-  /**
    * Sets a subset of the state. Always use this or `replaceState` to mutate
    * state. You should treat `this.state` as immutable.
    *
@@ -602,7 +579,10 @@ var ReactCompositeComponentMixin = {
    */
   setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this.replaceState(merge(this._pendingState || this.state, partialState), callback);
+    this.replaceState(
+      merge(this._pendingState || this.state, partialState),
+      callback
+    );
   },
 
   /**
@@ -618,33 +598,9 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   replaceState: function(completeState, callback) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
     validateLifeCycleOnReplaceState.call(null, this);
     this._pendingState = completeState;
-
-    // Do not trigger a state transition if we are in the middle of mounting or
-    // receiving props because both of those will already be doing this.
-    if (compositeLifeCycleState !== CompositeLifeCycle.MOUNTING &&
-        compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_PROPS) {
-      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
-
-      var nextState = this._pendingState;
-      this._pendingState = null;
-
-      var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
-      transaction.perform(
-        this._receivePropsAndState,
-        this,
-        this.props,
-        nextState,
-        transaction
-      );
-      ReactComponent.ReactReconcileTransaction.release(transaction);
-      this._compositeLifeCycleState = null;
-    }
-
-    // If callback is 'truthy', execute it
-    callback && callback();
+    ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
@@ -674,18 +630,52 @@ var ReactCompositeComponentMixin = {
     }
   },
 
+  performUpdateIfNecessary: function() {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    // Do not trigger a state transition if we are in the middle of mounting or
+    // receiving props because both of those will already be doing this.
+    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
+        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
+      return;
+    }
+    ReactComponent.Mixin.performUpdateIfNecessary.call(this);
+  },
+
   /**
-   * Receives next props and next state, and negotiates whether or not the
-   * component should update as a result.
+   * If any of `_pendingProps`, `_pendingState`, or `_pendingForceUpdate` is
+   * set, update the component.
    *
-   * @param {object} nextProps Next object to set as props.
-   * @param {?object} nextState Next object to set as state.
    * @param {ReactReconcileTransaction} transaction
-   * @private
+   * @internal
    */
-  _receivePropsAndState: function(nextProps, nextState, transaction) {
-    if (!this.shouldComponentUpdate ||
+  _performUpdateIfNecessary: function(transaction) {
+    if (this._pendingProps == null &&
+        this._pendingState == null &&
+        !this._pendingForceUpdate) {
+      return;
+    }
+
+    var nextProps = this.props;
+    if (this._pendingProps != null) {
+      nextProps = this._pendingProps;
+      this._processProps(nextProps);
+      this._pendingProps = null;
+
+      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
+      if (this.componentWillReceiveProps) {
+        this.componentWillReceiveProps(nextProps, transaction);
+      }
+    }
+
+    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
+
+    var nextState = this._pendingState || this.state;
+    this._pendingState = null;
+
+    if (this._pendingForceUpdate ||
+        !this.shouldComponentUpdate ||
         this.shouldComponentUpdate(nextProps, nextState)) {
+      this._pendingForceUpdate = false;
       // Will set `this.props` and `this.state`.
       this._performComponentUpdate(nextProps, nextState, transaction);
     } else {
@@ -694,6 +684,8 @@ var ReactCompositeComponentMixin = {
       this.props = nextProps;
       this.state = nextState;
     }
+
+    this._compositeLifeCycleState = null;
   },
 
   /**
@@ -716,7 +708,7 @@ var ReactCompositeComponentMixin = {
     this.props = nextProps;
     this.state = nextState;
 
-    this.updateComponent(transaction);
+    this.updateComponent(transaction, prevProps, prevState);
 
     if (this.componentDidUpdate) {
       transaction.getReactOnDOMReady().enqueue(
@@ -733,10 +725,13 @@ var ReactCompositeComponentMixin = {
    * Sophisticated clients may wish to override this.
    *
    * @param {ReactReconcileTransaction} transaction
+   * @param {object} prevProps
+   * @param {?object} prevState
    * @internal
    * @overridable
    */
-  updateComponent: function(transaction) {
+  updateComponent: function(transaction, prevProps, prevState) {
+    ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
     var currentComponent = this._renderedComponent;
     var nextComponent = this._renderValidatedComponent();
     if (currentComponent.constructor === nextComponent.constructor) {
@@ -783,17 +778,8 @@ var ReactCompositeComponentMixin = {
       'forceUpdate(...): Cannot force an update while unmounting component ' +
       'or during an existing state transition (such as within `render`).'
     );
-    var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
-    transaction.perform(
-      this._performComponentUpdate,
-      this,
-      this.props,
-      this.state,
-      transaction
-    );
-    ReactComponent.ReactReconcileTransaction.release(transaction);
-
-    callback && callback();
+    this._pendingForceUpdate = true;
+    ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
