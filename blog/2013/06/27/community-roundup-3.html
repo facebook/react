@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #3</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #3" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+    
+      <li><a href="/react/blog/2013/06/27/community-roundup-3.html" class="active">Community Round-up #3</a></li>
+    
+      <li><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></li>
+    
+      <li><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></li>
+    
+      <li><a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a></li>
+    
+      <li><a href="/react/blog/2013/06/05/why-react.html">Why did we build React?</a></li>
+    
+      <li><a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a></li>
+    
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #3</h1>
+    <p class="meta">June 27, 2013 by Vjeux</p>
+
+    <hr>
+
+    <div class="post">
+      <p>The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.</p>
+
+<h2>Moving From Backbone To React</h2>
+
+<p><a href="http://twitter.com/clayallsopp">Clay Allsopp</a> successfuly ported <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a>, a fairly big, interaction-heavy JavaScript app, to React.</p>
+
+<blockquote>
+<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/"><img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" /></a>Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn&#39;t automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they&#39;re all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.</p>
+
+<p>React, on the other hand, manages the DOM and only exposes real nodes at select points in its API. The &quot;elements&quot; you code in React are actually objects which wrap DOM nodes, not the actual objects which get inserted into the DOM. Internally, React converts those abstractions into actual DOMElements and fills out the document accordingly. [...]</p>
+
+<p>We moved about 20 different Backbone view classes to React over the past few weeks, including the live-preview pane that you see in our little iOS demo. Most importantly, it&#39;s allowed us to put energy into making each component work great on its own, instead of spending extra cycles to ensure they function in unison. For that reason, we think React is a more scalable way to build view-intensive apps than Backbone alone, and it doesn&#39;t require you to drop-everything-and-refactor like a move to Ember or Angular would demand.</p>
+
+<p><a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Read the full post...</a></p>
+</blockquote>
+
+<h2>Grunt Task for JSX</h2>
+
+<p><a href="http://ericclemmons.github.io/">Eric Clemmons</a> wrote a task for <a href="http://gruntjs.com/">Grunt</a> that applies the JSX transformation to your Javascript files. It also works with <a href="http://browserify.org/">Browserify</a> if you want all your files to be concatenated and minified together.</p>
+
+<blockquote>
+<p>Grunt task for compiling Facebook React&#39;s .jsx templates into .js</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+  <span class="nx">react</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">options</span><span class="o">:</span> <span class="p">{</span> <span class="nx">extension</span><span class="o">:</span> <span class="s1">&#39;js&#39;</span> <span class="p">},</span>
+      <span class="nx">files</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;path/to/output/dir&#39;</span><span class="o">:</span> <span class="s1">&#39;path/to/jsx/templates/dir&#39;</span> <span class="p">}</span>
+</code></pre></div>
+<p>It also works great with <code>grunt-browserify</code>!</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">browserify</span><span class="o">:</span> <span class="p">{</span>
+  <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">transform</span><span class="o">:</span> <span class="p">[</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;grunt-react&#39;</span><span class="p">).</span><span class="nx">browserify</span> <span class="p">]</span>
+  <span class="p">},</span>
+  <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">src</span><span class="o">:</span> <span class="s1">&#39;path/to/source/main.js&#39;</span><span class="p">,</span>
+    <span class="nx">dest</span><span class="o">:</span> <span class="s1">&#39;path/to/target/output.js&#39;</span>
+</code></pre></div>
+<p><a href="https://github.com/ericclemmons/grunt-react">Check out the project ...</a></p>
+</blockquote>
+
+<h2>Backbone/Handlebars Nested Views</h2>
+
+<p><a href="http://joelburget.com/">Joel Burget</a> wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.</p>
+
+<blockquote>
+<p>The problem here is that we&#39;re trying to maniplate a tree, but there&#39;s a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there&#39;s a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.</p>
+
+<p>What does it take to render a collection view? In the Backbone/Handlebars view of the world you have to render the template (with stubs), render each subview which replaces a stub, and keep a reference to each subview (or anything within the view that could change in the future).</p>
+
+<p>So while our view is conceptually hierarchical, due to the fact that it has to go through a flat textual representation, we need to do a lot of extra work to reassemble that structure after rendering.</p>
+
+<p><a href="http://joelburget.com/react/">Read the full post...</a></p>
+</blockquote>
+
+<h2>JSRomandie Meetup</h2>
+
+<p><a href="https://twitter.com/renajohn/">Renault John Lecoultre</a> did a React introduction talk at a JS meetup called <a href="https://twitter.com/jsromandie">JS Romandie</a> last week.</p>
+
+<script async class="speakerdeck-embed" data-id="888a9d50c01b01300df36658d0894ac1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+<h2>CoffeeScript integration</h2>
+
+<p><a href="http://blog.vjeux.com/">Vjeux</a> used the fact that JSX is just a syntactic sugar on-top of regular JS to rewrite the React front-page examples in CoffeeScript.</p>
+
+<blockquote>
+<p>Multiple people asked what&#39;s the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I&#39;m not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">{</span><span class="nx">div</span><span class="p">,</span> <span class="nx">h3</span><span class="p">,</span> <span class="nx">textarea</span><span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span>
+<span class="p">(</span><span class="nx">div</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;MarkdownEditor&#39;</span><span class="p">},</span> <span class="p">[</span>
+  <span class="p">(</span><span class="nx">h3</span> <span class="p">{},</span> <span class="s1">&#39;Input&#39;</span><span class="p">),</span>
+  <span class="p">(</span><span class="nx">textarea</span> <span class="p">{</span><span class="nx">onKeyUp</span><span class="o">:</span> <span class="err">@</span><span class="nx">handleKeyUp</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;textarea&#39;</span><span class="p">},</span>
+    <span class="err">@</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span>
+  <span class="p">)</span>
+<span class="p">])</span>
+</code></pre></div>
+<p><a href="http://blog.vjeux.com/2013/javascript/react-coffeescript.html">Read the full post...</a></p>
+</blockquote>
+
+<h2>Tutorial in Plain Javascript</h2>
+
+<p>We&#39;ve seen a lot of people comparing React with various frameworks. <a href="http://ricardo.cc/">Ricardo Tomasi</a> decided to re-implement the tutorial without any framework, just plain Javascript.</p>
+
+<blockquote>
+<p>Facebook &amp; Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you&#39;re like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let&#39;s see what that looks like in plain javascript.</p>
+
+<p><a href="http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html">Read the full post...</a></p>
+</blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
