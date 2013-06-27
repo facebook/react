@@ -58,5 +58,8 @@
     "tmp": "~0.0.18",
     "grunt-contrib-compress": "~0.5.1"
   },
+  "engines": {
+    "node": ">=0.10.0"
+  },
   "preferGlobal": true
 }
