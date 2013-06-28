@@ -476,8 +476,7 @@ var ReactCompositeComponentMixin = {
     this.state = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
-    this._compositionLevel = ReactCurrentOwner.current ?
-      ReactCurrentOwner.getDepth() + 1 : 0;
+    this._compositionLevel = ReactCurrentOwner.getDepth() + 1;
   },
 
   /**
