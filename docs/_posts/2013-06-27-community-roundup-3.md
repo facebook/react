@@ -60,7 +60,7 @@ browserify: {
 
 ## JSRomandie Meetup
 
-[Renault John Lecoultre](https://twitter.com/renajohn/) did a React introduction talk at a JS meetup called [JS Romandie](https://twitter.com/jsromandie) last week.
+[Renault John Lecoultre](https://twitter.com/renajohn/) from [BugBuster](http://www.bugbuster.com) did a React introduction talk at a JS meetup called [JS Romandie](https://twitter.com/jsromandie) last week.
 
 <script async class="speakerdeck-embed" data-id="888a9d50c01b01300df36658d0894ac1" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
 
