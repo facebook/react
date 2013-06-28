@@ -22,7 +22,6 @@
 describe('ReactDOMTextarea', function() {
   var React;
   var ReactTestUtils;
-  var getTextContentAccessor;
 
   beforeEach(function() {
     React = require('React');
@@ -53,13 +52,13 @@ describe('ReactDOMTextarea', function() {
 
   it("should throw with multiple or invalid children", function() {
     expect(function() {
-      var stub = ReactTestUtils.renderIntoDocument(
+      ReactTestUtils.renderIntoDocument(
         <textarea>{'hello'}{'there'}</textarea>
       );
     }).toThrow();
 
     expect(function() {
-      var stub = ReactTestUtils.renderIntoDocument(
+      ReactTestUtils.renderIntoDocument(
         <textarea><strong /></textarea>
       );
     }).toThrow();
