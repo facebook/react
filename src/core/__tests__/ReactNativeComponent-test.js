@@ -293,24 +293,10 @@ describe('ReactNativeComponent', function() {
 
     it("should validate against multiple children props", function() {
       expect(function() {
-        mountComponent({ content: '', children: '' });
-      }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
-      );
-
-      expect(function() {
-        mountComponent({ content: '', dangerouslySetInnerHTML: '' });
-      }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
-      );
-
-      expect(function() {
         mountComponent({ children: '', dangerouslySetInnerHTML: '' });
       }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
+        'Invariant Violation: Can only set one of `children` or ' +
+        '`props.dangerouslySetInnerHTML`.'
       );
     });
 
