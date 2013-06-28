@@ -20,8 +20,6 @@
 
 var ReactTextComponent = require('ReactTextComponent');
 
-var escapeTextForBrowser = require('escapeTextForBrowser');
-
 var throwIf = require('throwIf');
 
 /**
@@ -47,16 +45,15 @@ var DUPLICATE_KEY_ERROR =
 var ONLY_CHILD_NAME = '0';
 
 var flattenChildrenImpl = function(res, children, nameSoFar) {
-  var key, escapedKey;
+  var key;
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
       key = child && (child._key || (child.props && child.props.key));
-      escapedKey = key ? escapeTextForBrowser(key) : ('' + i);
       flattenChildrenImpl(
         res,
         child,
-        nameSoFar + '[' + escapedKey + ']'
+        nameSoFar + '[' + (key ? key : ('' + i)) + ']'
       );
     }
   } else {
@@ -76,11 +73,10 @@ var flattenChildrenImpl = function(res, children, nameSoFar) {
         throwIf(children && children.nodeType === 1, INVALID_CHILD);
         for (key in children) {
           if (children.hasOwnProperty(key)) {
-            escapedKey = escapeTextForBrowser(key);
             flattenChildrenImpl(
               res,
               children[key],
-              nameSoFar + '{' + escapedKey + '}'
+              nameSoFar + '{' + key + '}'
             );
           }
         }

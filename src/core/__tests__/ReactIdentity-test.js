@@ -106,6 +106,52 @@ describe('ReactIdentity', function() {
     checkId(node.childNodes[2].firstChild, '.r[0].[0:2].[0:chipmunk]');
   });
 
+  function renderAComponentWithKeyIntoContainer(key, container) {
+    var span1 = <span key={key} />;
+    var span2 = <span />;
+
+    var map = {};
+    map[key] = span2;
+
+    React.renderComponent(<div>{[span1, map]}</div>, container);
+
+    expect(span1.getDOMNode()).not.toBe(null);
+    expect(span2.getDOMNode()).not.toBe(null);
+
+    checkId(span1.getDOMNode(), '.r[0].[0:0:' + key + ']');
+    checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}');
+  }
+
+  it('should allow any character as a key, in a detached parent', function() {
+    var detachedContainer = document.createElement('div');
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", detachedContainer);
+  });
+
+  it('should allow any character as a key, in an attached parent', function() {
+    // This test exists to protect against implementation details that
+    // incorrectly query escaped IDs using DOM tools like getElementById.
+    var attachedContainer = document.createElement('div');
+    document.body.appendChild(attachedContainer);
+
+    renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", attachedContainer);
+
+    document.body.removeChild(attachedContainer);
+  });
+
+  it('should not allow scripts in keys to execute', function() {
+    var h4x0rKey = '"><script>window.YOUVEBEENH4X0RED=true;</script><div id="';
+
+    var attachedContainer = document.createElement('div');
+    document.body.appendChild(attachedContainer);
+
+    renderAComponentWithKeyIntoContainer(h4x0rKey, attachedContainer);
+
+    document.body.removeChild(attachedContainer);
+
+    // If we get this far, make sure we haven't executed the code
+    expect(window.YOUVEBEENH4X0RED).toBe(undefined);
+  });
+
   it('should let restructured components retain their uniqueness', function() {
     var instance0 = <span />;
     var instance1 = <span />;

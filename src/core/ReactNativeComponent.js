@@ -139,7 +139,8 @@ ReactNativeComponent.Mixin = {
       }
     }
 
-    return ret + ' ' + ReactID.ATTR_NAME + '="' + this._rootNodeID + '">';
+    var escapedID = escapeTextForBrowser(this._rootNodeID);
+    return ret + ' ' + ReactID.ATTR_NAME + '="' + escapedID + '">';
   },
 
   /**

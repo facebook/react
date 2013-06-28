@@ -94,7 +94,7 @@ describe('mapChildren', function() {
 
     expect(rendered.props.children[0]).not.toBe(simpleKid);
     expect(rendered.props.children[0].props.children[0]).toBe(simpleKid);
-    expect(rendered.props.children).toHaveKeys(['0:0:0:simple']);
+    expect(rendered.props.children).toHaveKeys(['1:0:0:simple']);
     expect(rendered.props.children[0].props.children)
       .toHaveKeys(['0:simple']);
   });
@@ -128,7 +128,7 @@ describe('mapChildren', function() {
     expect(mapFn).toHaveBeenCalledWith(kidThree, '0:three', 2);
     expect(rendered.props.children).not.toEqual(instance.props.children);
     expect(rendered.props.children).toHaveKeys([
-      '0:0:0:one', '0:0:0:two', '0:0:0:three'
+      '1:0:0:one', '1:0:0:two', '1:0:0:three'
     ]);
   });
 });
