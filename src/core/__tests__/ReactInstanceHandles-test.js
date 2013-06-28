@@ -139,10 +139,9 @@ describe('ReactInstanceHandles', function() {
           ReactID.getID(childNodeB)
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot: Unable to find element by ' +
-        'React ID, `.react[0].1:0`. This indicates that someone (or the ' +
-        'browser) has mutated the DOM tree in an unexpected way. Try ' +
-        'inspecting the child nodes of the element with React ID, `.react[0]`.'
+        'Invariant Violation: findComponentRoot(..., .react[0].1:0): Unable ' +
+        'to find element. This probably means the DOM was unexpectedly ' +
+        'mutated (e.g. by the browser).'
       );
     });
   });

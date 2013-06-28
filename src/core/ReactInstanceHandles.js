@@ -296,12 +296,15 @@ var ReactInstanceHandles = {
       }
       child = child.nextSibling;
     }
+    global.console && console.error && console.error(
+      'Error while invoking `findComponentRoot` with the following ' +
+      'ancestor node:',
+      ancestorNode
+    );
     invariant(
       false,
-      'findComponentRoot: Unable to find element by React ID, `%s`. This ' +
-      'indicates that someone (or the browser) has mutated the DOM tree in ' +
-      'an unexpected way. Try inspecting the child nodes of the element with ' +
-      'React ID, `%s`.',
+      'findComponentRoot(..., %s): Unable to find element. This probably ' +
+      'means the DOM was unexpectedly mutated (e.g. by the browser).',
       id,
       ReactID.getID(ancestorNode)
     );
