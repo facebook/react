@@ -85,19 +85,14 @@ function setID(node, id) {
  * Finds the node with the supplied React-generated DOM ID.
  *
  * @param {string} id A React-generated DOM ID.
- * @return {?DOMElement} DOM node with the suppled `id`.
+ * @return {DOMElement} DOM node with the suppled `id`.
  * @internal
  */
 function getNode(id) {
-  if (nodeCache.hasOwnProperty(id)) {
-    var node = nodeCache[id];
-    if (isValid(node, id)) {
-      return node;
-    }
+  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
+    nodeCache[id] = ReactMount.findReactNodeByID(id);
   }
-
-  return nodeCache[id] =
-    ReactMount.findReactRenderedDOMNodeSlow(id);
+  return nodeCache[id];
 }
 
 /**

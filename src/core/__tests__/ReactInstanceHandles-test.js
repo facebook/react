@@ -121,6 +121,30 @@ describe('ReactInstanceHandles', function() {
         )
       ).toBe(childNodeB);
     });
+
+    it('should throw if a rendered element cannot be found', function() {
+      var parentNode = document.createElement('table');
+      var childNodeA = document.createElement('tbody');
+      var childNodeB = document.createElement('tr');
+      parentNode.appendChild(childNodeA);
+      childNodeA.appendChild(childNodeB);
+
+      ReactID.setID(parentNode, '.react[0]');
+      // No ID on `childNodeA`, it was "rendered by the browser".
+      ReactID.setID(childNodeB, '.react[0].1:0');
+
+      expect(function() {
+        ReactInstanceHandles.findComponentRoot(
+          parentNode,
+          ReactID.getID(childNodeB)
+        );
+      }).toThrow(
+        'Invariant Violation: findComponentRoot: Unable to find element by ' +
+        'React ID, `.react[0].1:0`. This indicates that someone (or the ' +
+        'browser) has mutated the DOM tree in an unexpected way. Try ' +
+        'inspecting the child nodes of the element with React ID, `.react[0]`.'
+      );
+    });
   });
 
   describe('getReactRootIDFromNodeID', function() {

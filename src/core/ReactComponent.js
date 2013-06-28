@@ -276,7 +276,7 @@ var ReactComponent = {
     /**
      * Returns the DOM node rendered by this component.
      *
-     * @return {?DOMElement} The root node of this component.
+     * @return {DOMElement} The root node of this component.
      * @final
      * @protected
      */

@@ -269,13 +269,12 @@ var ReactMount = {
   },
 
   /**
-   * Given the ID of a DOM node rendered by a React component, finds the root
-   * DOM node of the React component.
+   * Finds an element rendered by React with the supplied ID.
    *
    * @param {string} id ID of a DOM node in the React component.
-   * @return {?DOMElement} Root DOM node of the React component.
+   * @return {DOMElement} Root DOM node of the React component.
    */
-  findReactRenderedDOMNodeSlow: function(id) {
+  findReactNodeByID: function(id) {
     var reactRoot = ReactMount.findReactContainerForID(id);
     return ReactInstanceHandles.findComponentRoot(reactRoot, id);
   }

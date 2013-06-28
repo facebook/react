@@ -280,21 +280,31 @@ var ReactInstanceHandles = {
    *
    * @param {DOMEventTarget} ancestorNode Search from this root.
    * @pararm {string} id ID of the DOM representation of the component.
-   * @return {?DOMEventTarget} DOM node with the supplied `id`, if one exists.
+   * @return {DOMEventTarget} DOM node with the supplied `id`.
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
     var child = ancestorNode.firstChild;
     while (child) {
       var childID = ReactID.getID(child);
-      if (id === childID) {
-        return child;
-      } else if (childID && isAncestorIDOf(childID, id)) {
-        return ReactInstanceHandles.findComponentRoot(child, id);
+      if (childID) {
+        if (id === childID) {
+          return child;
+        } else if (isAncestorIDOf(childID, id)) {
+          return ReactInstanceHandles.findComponentRoot(child, id);
+        }
       }
       child = child.nextSibling;
     }
-    // Effectively: return null;
+    invariant(
+      false,
+      'findComponentRoot: Unable to find element by React ID, `%s`. This ' +
+      'indicates that someone (or the browser) has mutated the DOM tree in ' +
+      'an unexpected way. Try inspecting the child nodes of the element with ' +
+      'React ID, `%s`.',
+      id,
+      ReactID.getID(ancestorNode)
+    );
   },
 
   /**
