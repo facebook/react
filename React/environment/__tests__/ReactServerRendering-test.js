@@ -1,1 +1,0 @@
-throw new Error("nonexistent module required: environment/__tests__/ReactServerRendering-test");
