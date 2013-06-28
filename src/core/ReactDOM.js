@@ -80,8 +80,7 @@ var ReactDOM = objMapKeyVal({
   embed: true,
   fieldset: false,
   footer: false,
-  // Danger: this gets monkeypatched! See ReactDOMForm for more info.
-  form: false,
+  form: false, // NOTE: Injected, see `ReactDOMForm`.
   h1: false,
   h2: false,
   h3: false,
@@ -116,8 +115,7 @@ var ReactDOM = objMapKeyVal({
   table: false,
   tbody: false,
   td: false,
-  // Danger: this gets monkeypatched! See ReactDOMTextarea for more info.
-  textarea: false,
+  textarea: false, // NOTE: Injected, see `ReactDOMTextarea`.
   tfoot: false,
   th: false,
   thead: false,
