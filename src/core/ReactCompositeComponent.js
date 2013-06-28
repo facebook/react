@@ -398,13 +398,9 @@ function mixSpecIntoComponent(Constructor, spec) {
  * @private
  */
 function createChainedFunction(one, two) {
-  return function chainedFunction(a, b, c, d, e, f, g, tooMany) {
-    invariant(
-      typeof tooMany === 'undefined',
-      'Chained function can only take a maximum of 7 arguments.'
-    );
-    one.call(this, a, b, c, d, e, f, g);
-    two.call(this, a, b, c, d, e, f, g);
+  return function chainedFunction() {
+    one.apply(this, arguments);
+    two.apply(this, arguments);
   };
 }
 
@@ -833,14 +829,9 @@ var ReactCompositeComponentMixin = {
    */
   _bindAutoBindMethod: function(method) {
     var component = this;
-    function autoBound(a, b, c, d, e, f, g, tooMany) {
-      invariant(
-        typeof tooMany === 'undefined',
-        'React.autoBind(...): Methods can only take a maximum of 7 arguments.'
-      );
-      return method.call(component, a, b, c, d, e, f, g);
-    }
-    return autoBound;
+    return function() {
+      return method.apply(component, arguments);
+    };
   }
 
 };
