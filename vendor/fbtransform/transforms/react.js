@@ -24,7 +24,8 @@ var move = require('../lib/utils').move;
 var getDocblock = require('../lib/utils').getDocblock;
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
-var renderXJSExpression = require('./xjs').renderXJSExpression;
+var renderXJSExpressionContainer =
+  require('./xjs').renderXJSExpressionContainer;
 var renderXJSLiteral = require('./xjs').renderXJSLiteral;
 var quoteAttrName = require('./xjs').quoteAttrName;
 
@@ -121,7 +122,7 @@ function visitReactTag(traverse, object, path, state) {
       renderXJSLiteral(attr.value, isLast, state);
     } else {
       move(attr.value.range[0], state);
-      renderXJSExpression(traverse, attr.value, isLast, path, state);
+      renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
     }
 
     if (isLast) {
@@ -150,8 +151,8 @@ function visitReactTag(traverse, object, path, state) {
 
       if (child.type === Syntax.Literal) {
         renderXJSLiteral(child, isLast, state);
-      } else if (child.type === Syntax.XJSExpression) {
-        renderXJSExpression(traverse, child, isLast, path, state);
+      } else if (child.type === Syntax.XJSExpressionContainer) {
+        renderXJSExpressionContainer(traverse, child, isLast, path, state);
       } else {
         traverse(child, path, state);
         if (!isLast) {
