@@ -14,28 +14,26 @@
  * limitations under the License.
  *
  * @providesModule ReactNativeComponent
- * @typechecks static-only
+ * @typechecks
  */
 
 "use strict";
 
-var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactComponent = require('ReactComponent');
-var ReactEventEmitter = require('ReactEventEmitter');
-var ReactMultiChild = require('ReactMultiChild');
-var ReactID = require('ReactID');
+var CSSPropertyOperations = require("./CSSPropertyOperations");
+var DOMPropertyOperations = require("./DOMPropertyOperations");
+var ReactComponent = require("./ReactComponent");
+var ReactEvent = require("./ReactEvent");
+var ReactMultiChild = require("./ReactMultiChild");
 
-var escapeTextForBrowser = require('escapeTextForBrowser');
-var flattenChildren = require('flattenChildren');
-var invariant = require('invariant');
-var keyOf = require('keyOf');
-var merge = require('merge');
-var mixInto = require('mixInto');
+var escapeTextForBrowser = require("./escapeTextForBrowser");
+var flattenChildren = require("./flattenChildren");
+var invariant = require("./invariant");
+var keyOf = require("./keyOf");
+var merge = require("./merge");
+var mixInto = require("./mixInto");
 
-var putListener = ReactEventEmitter.putListener;
-var deleteListener = ReactEventEmitter.deleteListener;
-var registrationNames = ReactEventEmitter.registrationNames;
+var putListener = ReactEvent.putListener;
+var registrationNames = ReactEvent.registrationNames;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
@@ -139,7 +137,7 @@ ReactNativeComponent.Mixin = {
       }
     }
 
-    return ret + ' ' + ReactID.ATTR_NAME + '="' + this._rootNodeID + '">';
+    return ret + ' id="' + this._rootNodeID + '">';
   },
 
   /**
@@ -181,8 +179,12 @@ ReactNativeComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   receiveProps: function(nextProps, transaction) {
-    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+    invariant(
+      this._rootNodeID,
+      'Trying to control a native dom element without a backing id'
+    );
     assertValidProps(nextProps);
+    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
     this._updateDOMProperties(nextProps);
     this._updateDOMChildren(nextProps, transaction);
     this.props = nextProps;
@@ -204,39 +206,7 @@ ReactNativeComponent.Mixin = {
    */
   _updateDOMProperties: function(nextProps) {
     var lastProps = this.props;
-    var propKey;
-    var styleName;
-    var styleUpdates;
-    for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey)) {
-        continue;
-      }
-      if (propKey === STYLE) {
-        var lastStyle = lastProps[propKey];
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = '';
-          }
-        }
-      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        ReactComponent.DOMIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          ''
-        );
-      } else if (propKey === CONTENT) {
-        // (Removal happens in _updateDOMChildren)
-      } else if (registrationNames[propKey]) {
-        deleteListener(this._rootNodeID, propKey);
-      } else {
-        ReactComponent.DOMIDOperations.deletePropertyByID(
-          this._rootNodeID,
-          propKey
-        );
-      }
-    }
-    for (propKey in nextProps) {
+    for (var propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps[propKey];
       if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
@@ -246,26 +216,23 @@ ReactNativeComponent.Mixin = {
         if (nextProp) {
           nextProp = nextProps.style = merge(nextProp);
         }
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                !nextProp.hasOwnProperty(styleName)) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = '';
-            }
+        var styleUpdates;
+        for (var styleName in nextProp) {
+          if (!nextProp.hasOwnProperty(styleName)) {
+            continue;
           }
-          // Update styles that changed since `lastProp`.
-          for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = nextProp[styleName];
+          if (!lastProp || lastProp[styleName] !== nextProp[styleName]) {
+            if (!styleUpdates) {
+              styleUpdates = {};
             }
+            styleUpdates[styleName] = nextProp[styleName];
           }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          styleUpdates = nextProp;
+        }
+        if (styleUpdates) {
+          ReactComponent.DOMIDOperations.updateStylesByID(
+            this._rootNodeID,
+            styleUpdates
+          );
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         var lastHtml = lastProp && lastProp.__html;
@@ -277,7 +244,10 @@ ReactNativeComponent.Mixin = {
           );
         }
       } else if (propKey === CONTENT) {
-        // (Update happens in _updateDOMChildren)
+        ReactComponent.DOMIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          '' + nextProp
+        );
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else {
@@ -287,12 +257,6 @@ ReactNativeComponent.Mixin = {
           nextProp
         );
       }
-    }
-    if (styleUpdates) {
-      ReactComponent.DOMIDOperations.updateStylesByID(
-        this._rootNodeID,
-        styleUpdates
-      );
     }
   },
 
@@ -353,9 +317,9 @@ ReactNativeComponent.Mixin = {
    * @internal
    */
   unmountComponent: function() {
-    ReactEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
     this.unmountMultiChild();
+    ReactEvent.deleteAllListeners(this._rootNodeID);
   }
 
 };

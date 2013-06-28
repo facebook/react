@@ -14,15 +14,15 @@
  * limitations under the License.
  *
  * @providesModule ReactDOM
- * @typechecks static-only
+ * @typechecks
  */
 
 "use strict";
 
-var ReactNativeComponent = require('ReactNativeComponent');
+var ReactNativeComponent = require("./ReactNativeComponent");
 
-var mergeInto = require('mergeInto');
-var objMapKeyVal = require('objMapKeyVal');
+var mergeInto = require("./mergeInto");
+var objMapKeyVal = require("./objMapKeyVal");
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -40,17 +40,16 @@ var objMapKeyVal = require('objMapKeyVal');
  * @private
  */
 function createDOMComponentClass(tag, omitClose) {
-  var Constructor = function() {};
+  var Constructor = function(initialProps, children) {
+    this.construct(initialProps, children);
+  };
+
   Constructor.prototype = new ReactNativeComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
 
-  var ConvenienceConstructor = function(props, children) {
-    var instance = new Constructor();
-    instance.construct.apply(instance, arguments);
-    return instance;
+  return function(props, children) {
+    return new Constructor(props, children);
   };
-  ConvenienceConstructor.componentConstructor = Constructor;
-  return ConvenienceConstructor;
 }
 
 /**
@@ -116,7 +115,6 @@ var ReactDOM = objMapKeyVal({
   table: false,
   tbody: false,
   td: false,
-  // Danger: this gets monkeypatched! See ReactDOMTextarea for more info.
   textarea: false,
   tfoot: false,
   th: false,

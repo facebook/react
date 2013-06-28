@@ -18,16 +18,14 @@
 
 "use strict";
 
-var ReactDOM = require('ReactDOM');
-var ReactDOMForm = require('ReactDOMForm');
-var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactDOM = require("./ReactDOM");
+var ReactDOMForm = require("./ReactDOMForm");
 
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var EventPluginHub = require('EventPluginHub');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var SimpleEventPlugin = require('SimpleEventPlugin');
+var DefaultEventPluginOrder = require("./DefaultEventPluginOrder");
+var EnterLeaveEventPlugin = require("./EnterLeaveEventPlugin");
+var EventPluginHub = require("./EventPluginHub");
+var ReactInstanceHandles = require("./ReactInstanceHandles");
+var SimpleEventPlugin = require("./SimpleEventPlugin");
 
 function inject() {
   /**
@@ -42,20 +40,17 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginsByName({
     'SimpleEventPlugin': SimpleEventPlugin,
-    'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
-    'ChangeEventPlugin': ChangeEventPlugin
+    'EnterLeaveEventPlugin': EnterLeaveEventPlugin
   });
 
-  /**
-   * This is a bit of a hack. We need to override the <form> element to be a
-   * composite component because IE8 does not bubble or capture submit to the
-   * top level. In order to make this work with our dependency graph we need to
-   * inject it here.
+  /*
+   * This is a bit of a hack. We need to override the <form> element
+   * to be a composite component because IE8 does not bubble or capture
+   * submit to the top level. In order to make this work with our
+   * dependency graph we need to inject it here.
    */
   ReactDOM.injection.injectComponentClasses({
-    form: ReactDOMForm,
-    // TODO: Inject `ReactDOMInput`.
-    textarea: ReactDOMTextarea
+    form: ReactDOMForm
   });
 }
 
