@@ -155,6 +155,12 @@
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementyById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>The comment parser is very strict right now, in order for it to pick up the <code>@jsx</code> modifier, two conditions are required. The <code>@jsx</code> comment block must be the first comment on the file. The comment must start with <code>/**</code> (<code>/*</code> and <code>//</code> will not work). If the parser can&#39;t find the <code>@jsx</code> comment, it will output the file without transforming it.</p>
+</blockquote>
+
 <p>Update your HTML file as below:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
