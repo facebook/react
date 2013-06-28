@@ -40,7 +40,6 @@ var registrationNames = ReactEventEmitter.registrationNames;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
-var CONTENT = keyOf({content: null});
 var DANGEROUSLY_SET_INNER_HTML = keyOf({dangerouslySetInnerHTML: null});
 var STYLE = keyOf({style: null});
 
@@ -51,14 +50,10 @@ function assertValidProps(props) {
   if (!props) {
     return;
   }
-  // Note the use of `!=` which checks for null or undefined.
-  var hasChildren = props.children != null ? 1 : 0;
-  var hasContent = props.content != null ? 1 : 0;
-  var hasInnerHTML = props.dangerouslySetInnerHTML != null ? 1 : 0;
+  // Note the use of `==` which checks for null or undefined.
   invariant(
-    hasChildren + hasContent + hasInnerHTML <= 1,
-    'Can only set one of `children`, `props.content`, or ' +
-    '`props.dangerouslySetInnerHTML`.'
+    props.children == null || props.dangerouslySetInnerHTML == null,
+    'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
   );
   invariant(
     props.style == null || typeof props.style === 'object',
@@ -158,7 +153,7 @@ ReactNativeComponent.Mixin = {
         return innerHTML.__html;
       }
     } else {
-      var contentToUse = this.props.content != null ? this.props.content :
+      var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
       if (contentToUse != null) {
@@ -222,12 +217,11 @@ ReactNativeComponent.Mixin = {
           }
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+        // http://jsperf.com/emptying-speed
         ReactComponent.DOMIDOperations.updateTextContentByID(
           this._rootNodeID,
           ''
         );
-      } else if (propKey === CONTENT) {
-        // (Removal happens in _updateDOMChildren)
       } else if (registrationNames[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else {
@@ -277,8 +271,6 @@ ReactNativeComponent.Mixin = {
             nextProp
           );
         }
-      } else if (propKey === CONTENT) {
-        // (Update happens in _updateDOMChildren)
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else {
@@ -305,17 +297,10 @@ ReactNativeComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   _updateDOMChildren: function(nextProps, transaction) {
-    var thisPropsContentType = typeof this.props.content;
-    var thisPropsContentEmpty =
-      this.props.content == null || thisPropsContentType === 'boolean';
-    var nextPropsContentType = typeof nextProps.content;
-    var nextPropsContentEmpty =
-      nextProps.content == null || nextPropsContentType === 'boolean';
-
-    var lastUsedContent = !thisPropsContentEmpty ? this.props.content :
+    var lastUsedContent =
       CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
 
-    var contentToUse = !nextPropsContentEmpty ? nextProps.content :
+    var contentToUse =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
     // Note the use of `!=` which checks for null or undefined.

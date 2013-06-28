@@ -36,7 +36,6 @@ var invariant = require('invariant');
  * @private
  */
 var INVALID_PROPERTY_ERRORS = {
-  content: '`content` must be set using `updateTextContentByID()`.',
   dangerouslySetInnerHTML:
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
