@@ -25,9 +25,9 @@ var ReactInstanceHandles;
 var ResponderEventPlugin;
 var SyntheticEvent;
 
-var GRANDPARENT_ID = '.reactRoot[0]';
-var PARENT_ID = '.reactRoot[0].0';
-var CHILD_ID = '.reactRoot[0].0.0';
+var GRANDPARENT_ID = '.r[0]';
+var PARENT_ID = '.r[0].0';
+var CHILD_ID = '.r[0].0.0';
 
 var topLevelTypes;
 var responderEventTypes;

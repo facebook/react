@@ -149,8 +149,8 @@ describe('ReactInstanceHandles', function() {
 
   describe('getReactRootIDFromNodeID', function() {
     it('should support strings', function() {
-      var test = '.reactRoot[s_0_1][0]..[1]';
-      var expected = '.reactRoot[s_0_1]';
+      var test = '.r[s_0_1][0]..[1]';
+      var expected = '.r[s_0_1]';
       var actual = ReactInstanceHandles.getReactRootIDFromNodeID(test);
       expect(actual).toEqual(expected);
     });

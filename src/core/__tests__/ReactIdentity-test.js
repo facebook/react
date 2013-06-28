@@ -34,7 +34,7 @@ describe('ReactIdentity', function() {
     ReactID = require('ReactID');
   });
 
-  var idExp = /^\.reactRoot\[\d+\](.*)$/;
+  var idExp = /^\.r\[.+?\](.*)$/;
   function checkId(child, expectedId) {
     var actual = idExp.exec(ReactID.getID(child));
     var expected = idExp.exec(expectedId);
@@ -55,8 +55,8 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
-    checkId(node.childNodes[0], '.reactRoot[0].[0]{first}');
-    checkId(node.childNodes[1], '.reactRoot[0].[0]{second}');
+    checkId(node.childNodes[0], '.r[0].[0]{first}');
+    checkId(node.childNodes[1], '.r[0].[0]{second}');
   });
 
   it('should allow key property to express identity', function() {
@@ -71,10 +71,10 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
-    checkId(node.childNodes[0], '.reactRoot[0].[0:apple]');
-    checkId(node.childNodes[1], '.reactRoot[0].[0:banana]');
-    checkId(node.childNodes[2], '.reactRoot[0].[0:0]');
-    checkId(node.childNodes[3], '.reactRoot[0].[0:123]');
+    checkId(node.childNodes[0], '.r[0].[0:apple]');
+    checkId(node.childNodes[1], '.r[0].[0:banana]');
+    checkId(node.childNodes[2], '.r[0].[0:0]');
+    checkId(node.childNodes[3], '.r[0].[0:123]');
   });
 
   it('should use instance identity', function() {
@@ -95,15 +95,15 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
-    checkId(node.childNodes[0], '.reactRoot[0].[0:wrap1]');
+    checkId(node.childNodes[0], '.r[0].[0:wrap1]');
     checkId(
       node.childNodes[0].firstChild,
-      '.reactRoot[0].[0:wrap1].[0:squirrel]'
+      '.r[0].[0:wrap1].[0:squirrel]'
     );
-    checkId(node.childNodes[1], '.reactRoot[0].[0:wrap2]');
-    checkId(node.childNodes[1].firstChild, '.reactRoot[0].[0:wrap2].[0:bunny]');
-    checkId(node.childNodes[2], '.reactRoot[0].[0:2]');
-    checkId(node.childNodes[2].firstChild, '.reactRoot[0].[0:2].[0:chipmunk]');
+    checkId(node.childNodes[1], '.r[0].[0:wrap2]');
+    checkId(node.childNodes[1].firstChild, '.r[0].[0:wrap2].[0:bunny]');
+    checkId(node.childNodes[2], '.r[0].[0:2]');
+    checkId(node.childNodes[2].firstChild, '.r[0].[0:2].[0:chipmunk]');
   });
 
   it('should let restructured components retain their uniqueness', function() {

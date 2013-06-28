@@ -48,7 +48,7 @@ var GLOBAL_MOUNT_POINT_MAX = 9999999;
  * @internal
  */
 function getReactRootIDString(index) {
-  return '.reactRoot[' + index + ']';
+  return SEPARATOR + 'r[' + index.toString(36) + ']';
 }
 
 /**
@@ -316,7 +316,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   getReactRootIDFromNodeID: function(id) {
-    var regexResult = /\.reactRoot\[[^\]]+\]/.exec(id);
+    var regexResult = /\.r\[[^\]]+\]/.exec(id);
     return regexResult && regexResult[0];
   },
 
