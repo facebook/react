@@ -24,6 +24,7 @@ var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactProps = require('ReactProps');
 var ReactServerRendering = require('ReactServerRendering');
+var DOMProperty = require('DOMProperty');
 
 var ReactDefaultInjection = require('ReactDefaultInjection');
 
@@ -31,6 +32,7 @@ ReactDefaultInjection.inject();
 
 var React = {
   DOM: ReactDOM,
+  DOMProperty: DOMProperty,
   Props: ReactProps,
   initializeTouchEvents: function(shouldUseTouch) {
     ReactMount.useTouchEvents = shouldUseTouch;
