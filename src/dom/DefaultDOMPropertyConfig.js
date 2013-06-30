@@ -54,6 +54,7 @@ var DefaultDOMPropertyConfig = {
     height: DOMProperty.injection.MUST_USE_ATTRIBUTE,
     href: null,
     htmlFor: null,
+    id: DOMProperty.injection.MUST_USE_PROPERTY,
     max: null,
     method: null,
     min: null,

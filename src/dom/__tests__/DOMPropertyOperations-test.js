@@ -48,6 +48,13 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
+    it('should work with the id attribute', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'id',
+        'simple'
+      )).toBe('id="simple"');
+    });
+
     it('should create markup for boolean properties', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
