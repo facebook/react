@@ -57,9 +57,9 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties;
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames;
-    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames;
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods;
+    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
+    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     if (domPropertyConfig.isCustomAttribute) {
       DOMProperty._isCustomAttributeFunctions.push(domPropertyConfig.isCustomAttribute);
