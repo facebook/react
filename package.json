@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "base62": "~0.1.1",
-    "commoner": "~0.7.0",
+    "commoner": "~0.7.1",
     "esprima": "https://github.com/facebook/esprima/tarball/a3e0ea3979eb8d54d8bfade220c272903f928b1e",
     "recast": "~0.4.8",
     "source-map": "~0.1.22"
