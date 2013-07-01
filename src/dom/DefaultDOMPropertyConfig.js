@@ -20,6 +20,11 @@
 
 var DOMProperty = require('DOMProperty');
 
+var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
+var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
+var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
+var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
+
 var DefaultDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
     /^(data|aria)-[a-z_][a-z\d_.\-]*$/
@@ -30,47 +35,41 @@ var DefaultDOMPropertyConfig = {
      */
     accept: null,
     action: null,
-    ajaxify: DOMProperty.injection.MUST_USE_ATTRIBUTE,
-    allowFullScreen: DOMProperty.injection.MUST_USE_ATTRIBUTE |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    ajaxify: MUST_USE_ATTRIBUTE,
+    allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     alt: null,
     autoComplete: null,
-    autoplay: DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    autoplay: HAS_BOOLEAN_VALUE,
     cellPadding: null,
     cellSpacing: null,
-    checked: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
-    className: DOMProperty.injection.MUST_USE_PROPERTY,
+    checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    className: MUST_USE_PROPERTY,
     colSpan: null,
     contentEditable: null,
-    controls: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     data: null, // For `<object />` acts as `src`.
     dir: null,
-    disabled: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    disabled: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     draggable: null,
     enctype: null,
-    height: DOMProperty.injection.MUST_USE_ATTRIBUTE,
+    height: MUST_USE_ATTRIBUTE,
     href: null,
     htmlFor: null,
-    id: DOMProperty.injection.MUST_USE_PROPERTY,
+    id: MUST_USE_PROPERTY,
     max: null,
     method: null,
     min: null,
-    multiple: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     name: null,
     poster: null,
     preload: null,
     placeholder: null,
     rel: null,
-    required: DOMProperty.injection.HAS_BOOLEAN_VALUE,
-    role: DOMProperty.injection.MUST_USE_ATTRIBUTE,
-    scrollLeft: DOMProperty.injection.MUST_USE_PROPERTY,
-    scrollTop: DOMProperty.injection.MUST_USE_PROPERTY,
-    selected: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_BOOLEAN_VALUE,
+    required: HAS_BOOLEAN_VALUE,
+    role: MUST_USE_ATTRIBUTE,
+    scrollLeft: MUST_USE_PROPERTY,
+    scrollTop: MUST_USE_PROPERTY,
+    selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     spellCheck: null,
     src: null,
     step: null,
@@ -79,39 +78,38 @@ var DefaultDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
-    value: DOMProperty.injection.MUST_USE_PROPERTY |
-      DOMProperty.injection.HAS_SIDE_EFFECTS,
-    width: DOMProperty.injection.MUST_USE_ATTRIBUTE,
-    wmode: DOMProperty.injection.MUST_USE_ATTRIBUTE,
+    value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    width: MUST_USE_ATTRIBUTE,
+    wmode: MUST_USE_ATTRIBUTE,
     /**
      * SVG Properties
      */
-    cx: DOMProperty.injection.MUST_USE_PROPERTY,
-    cy: DOMProperty.injection.MUST_USE_PROPERTY,
-    d: DOMProperty.injection.MUST_USE_PROPERTY,
-    fill: DOMProperty.injection.MUST_USE_PROPERTY,
-    fx: DOMProperty.injection.MUST_USE_PROPERTY,
-    fy: DOMProperty.injection.MUST_USE_PROPERTY,
-    points: DOMProperty.injection.MUST_USE_PROPERTY,
-    r: DOMProperty.injection.MUST_USE_PROPERTY,
-    stroke: DOMProperty.injection.MUST_USE_PROPERTY,
-    strokeLinecap: DOMProperty.injection.MUST_USE_PROPERTY,
-    strokeWidth: DOMProperty.injection.MUST_USE_PROPERTY,
-    transform: DOMProperty.injection.MUST_USE_PROPERTY,
-    x: DOMProperty.injection.MUST_USE_PROPERTY,
-    x1: DOMProperty.injection.MUST_USE_PROPERTY,
-    x2: DOMProperty.injection.MUST_USE_PROPERTY,
-    version: DOMProperty.injection.MUST_USE_PROPERTY,
-    viewBox: DOMProperty.injection.MUST_USE_PROPERTY,
-    y: DOMProperty.injection.MUST_USE_PROPERTY,
-    y1: DOMProperty.injection.MUST_USE_PROPERTY,
-    y2: DOMProperty.injection.MUST_USE_PROPERTY,
-    spreadMethod: DOMProperty.injection.MUST_USE_PROPERTY,
-    offset: DOMProperty.injection.MUST_USE_PROPERTY,
-    stopColor: DOMProperty.injection.MUST_USE_PROPERTY,
-    stopOpacity: DOMProperty.injection.MUST_USE_PROPERTY,
-    gradientUnits: DOMProperty.injection.MUST_USE_PROPERTY,
-    gradientTransform: DOMProperty.injection.MUST_USE_PROPERTY
+    cx: MUST_USE_PROPERTY,
+    cy: MUST_USE_PROPERTY,
+    d: MUST_USE_PROPERTY,
+    fill: MUST_USE_PROPERTY,
+    fx: MUST_USE_PROPERTY,
+    fy: MUST_USE_PROPERTY,
+    points: MUST_USE_PROPERTY,
+    r: MUST_USE_PROPERTY,
+    stroke: MUST_USE_PROPERTY,
+    strokeLinecap: MUST_USE_PROPERTY,
+    strokeWidth: MUST_USE_PROPERTY,
+    transform: MUST_USE_PROPERTY,
+    x: MUST_USE_PROPERTY,
+    x1: MUST_USE_PROPERTY,
+    x2: MUST_USE_PROPERTY,
+    version: MUST_USE_PROPERTY,
+    viewBox: MUST_USE_PROPERTY,
+    y: MUST_USE_PROPERTY,
+    y1: MUST_USE_PROPERTY,
+    y2: MUST_USE_PROPERTY,
+    spreadMethod: MUST_USE_PROPERTY,
+    offset: MUST_USE_PROPERTY,
+    stopColor: MUST_USE_PROPERTY,
+    stopOpacity: MUST_USE_PROPERTY,
+    gradientUnits: MUST_USE_PROPERTY,
+    gradientTransform: MUST_USE_PROPERTY
   },
   DOMAttributeNames: {
     className: 'class',
