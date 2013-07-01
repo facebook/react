@@ -11,6 +11,7 @@ module.exports = function() {
   var args = [
     "--cache-dir", ".module-cache",
     "--relativize",
+    "--follow-requires",
     config.sourceDir,
     config.outputDir
   ];
