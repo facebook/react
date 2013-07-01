@@ -52,6 +52,11 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     };
   },
 
+  shouldComponentUpdate: function() {
+    // Defer any updates to this component during the `onChange` handler.
+    return !this._isChanging;
+  },
+
   getChecked: function() {
     return this.props.checked != null ? this.props.checked : this.state.checked;
   },
@@ -91,7 +96,9 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   handleChange: ReactCompositeComponent.autoBind(function(event) {
     var returnValue;
     if (this.props.onChange) {
+      this._isChanging = true;
       returnValue = this.props.onChange(event);
+      this._isChanging = false;
     }
     this.setState({
       checked: event.target.checked,

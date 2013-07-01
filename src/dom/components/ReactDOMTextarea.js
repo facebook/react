@@ -84,6 +84,11 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     };
   },
 
+  shouldComponentUpdate: function() {
+    // Defer any updates to this component during the `onChange` handler.
+    return !this._isChanging;
+  },
+
   getValue: function() {
     return this.props.value != null ? this.props.value : this.state.value;
   },
@@ -118,7 +123,9 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   handleChange: ReactCompositeComponent.autoBind(function(event) {
     var returnValue;
     if (this.props.onChange) {
+      this._isChanging = true;
       returnValue = this.props.onChange(event);
+      this._isChanging = false;
     }
     this.setState({value: event.target.value});
     return returnValue;
