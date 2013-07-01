@@ -66,6 +66,15 @@ var DOMPropertyInjection = {
     }
 
     for (var propName in Properties) {
+      invariant(
+        !DOMProperty.isStandardName[propName],
+        'injectDOMPropertyConfig(...): You\'re trying to inject DOM property \'%s\' which ' +
+        'has already been injected. You may be accidentally injecting the same DOM ' +
+        'property config twice, or you may be injecting two configs that have conflicting ' +
+        'property names.',
+        propName
+      );
+
       DOMProperty.isStandardName[propName] = true;
 
       DOMProperty.getAttributeName[propName] =

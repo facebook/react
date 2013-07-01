@@ -179,6 +179,11 @@ describe('DOMPropertyOperations', function() {
         'foo-xyz',
         'simple'
       )).toBe('foo-xyz="simple"');
+
+      // It should complain about double injections.
+      expect(function() {
+        DOMProperty.injection.injectDOMPropertyConfig({Properties: {foobar: null}});
+      }).toThrow();
     });
   });
 });
