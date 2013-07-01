@@ -61,12 +61,12 @@ var MouseEventInterface = {
   pageX: function(event) {
     return 'pageX' in event ?
       event.pageX :
-      event.clientX + ViewportMetrics.currentPageScrollLeft;
+      event.clientX + ViewportMetrics.currentScrollLeft;
   },
   pageY: function(event) {
     return 'pageY' in event ?
       event.pageY :
-      event.clientY + ViewportMetrics.currentPageScrollTop;
+      event.clientY + ViewportMetrics.currentScrollTop;
   }
 };
 
