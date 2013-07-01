@@ -18,201 +18,236 @@
 
 "use strict";
 
-var AbstractEvent = require('AbstractEvent');
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
+var SyntheticEvent = require('SyntheticEvent');
+var SyntheticFocusEvent = require('SyntheticFocusEvent');
+var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
+var SyntheticMouseEvent = require('SyntheticMouseEvent');
+var SyntheticMutationEvent = require('SyntheticMutationEvent');
+var SyntheticTouchEvent = require('SyntheticTouchEvent');
+var SyntheticUIEvent = require('SyntheticUIEvent');
+var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
+var invariant = require('invariant');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
-var SimpleEventPlugin = {
-  abstractEventTypes: {
-    // Note: We do not allow listening to mouseOver events. Instead, use the
-    // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
-    mouseDown: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onMouseDown: true}),
-        captured: keyOf({onMouseDownCapture: true})
-      }
-    },
-    mouseUp: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onMouseUp: true}),
-        captured: keyOf({onMouseUpCapture: true})
-      }
-    },
-    mouseMove: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onMouseMove: true}),
-        captured: keyOf({onMouseMoveCapture: true})
-      }
-    },
-    doubleClick: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDoubleClick: true}),
-        captured: keyOf({onDoubleClickCapture: true})
-      }
-    },
-    click: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onClick: true}),
-        captured: keyOf({onClickCapture: true})
-      }
-    },
-    wheel: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onWheel: true}),
-        captured: keyOf({onWheelCapture: true})
-      }
-    },
-    touchStart: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onTouchStart: true}),
-        captured: keyOf({onTouchStartCapture: true})
-      }
-    },
-    touchEnd: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onTouchEnd: true}),
-        captured: keyOf({onTouchEndCapture: true})
-      }
-    },
-    touchCancel: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onTouchCancel: true}),
-        captured: keyOf({onTouchCancelCapture: true})
-      }
-    },
-    touchMove: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onTouchMove: true}),
-        captured: keyOf({onTouchMoveCapture: true})
-      }
-    },
-    keyUp: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onKeyUp: true}),
-        captured: keyOf({onKeyUpCapture: true})
-      }
-    },
-    keyPress: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onKeyPress: true}),
-        captured: keyOf({onKeyPressCapture: true})
-      }
-    },
-    keyDown: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onKeyDown: true}),
-        captured: keyOf({onKeyDownCapture: true})
-      }
-    },
-    input: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onInput: true}),
-        captured: keyOf({onInputCapture: true})
-      }
-    },
-    focus: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onFocus: true}),
-        captured: keyOf({onFocusCapture: true})
-      }
-    },
-    blur: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onBlur: true}),
-        captured: keyOf({onBlurCapture: true})
-      }
-    },
-    scroll: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onScroll: true}),
-        captured: keyOf({onScrollCapture: true})
-      }
-    },
-    change: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onChange: true}),
-        captured: keyOf({onChangeCapture: true})
-      }
-    },
-    submit: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onSubmit: true}),
-        captured: keyOf({onSubmitCapture: true})
-      }
-    },
-    DOMCharacterDataModified: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDOMCharacterDataModified: true}),
-        captured: keyOf({onDOMCharacterDataModifiedCapture: true})
-      }
-    },
-    drag: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDrag: true}),
-        captured: keyOf({onDragCapture: true})
-      }
-    },
-    dragEnd: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragEnd: true}),
-        captured: keyOf({onDragEndCapture: true})
-      }
-    },
-    dragEnter: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragEnter: true}),
-        captured: keyOf({onDragEnterCapture: true})
-      }
-    },
-    dragExit: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragExit: true}),
-        captured: keyOf({onDragExitCapture: true})
-      }
-    },
-    dragLeave: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragLeave: true}),
-        captured: keyOf({onDragLeaveCapture: true})
-      }
-    },
-    dragOver: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragOver: true}),
-        captured: keyOf({onDragOverCapture: true})
-      }
-    },
-    dragStart: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDragStart: true}),
-        captured: keyOf({onDragStartCapture: true})
-      }
-    },
-    drop: {
-      phasedRegistrationNames: {
-        bubbled: keyOf({onDrop: true}),
-        captured: keyOf({onDropCapture: true})
-      }
+var eventTypes = {
+  blur: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onBlur: true}),
+      captured: keyOf({onBlurCapture: true})
     }
   },
+  click: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onClick: true}),
+      captured: keyOf({onClickCapture: true})
+    }
+  },
+  doubleClick: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDoubleClick: true}),
+      captured: keyOf({onDoubleClickCapture: true})
+    }
+  },
+  drag: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDrag: true}),
+      captured: keyOf({onDragCapture: true})
+    }
+  },
+  dragEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragEnd: true}),
+      captured: keyOf({onDragEndCapture: true})
+    }
+  },
+  dragEnter: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragEnter: true}),
+      captured: keyOf({onDragEnterCapture: true})
+    }
+  },
+  dragExit: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragExit: true}),
+      captured: keyOf({onDragExitCapture: true})
+    }
+  },
+  dragLeave: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragLeave: true}),
+      captured: keyOf({onDragLeaveCapture: true})
+    }
+  },
+  dragOver: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragOver: true}),
+      captured: keyOf({onDragOverCapture: true})
+    }
+  },
+  dragStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDragStart: true}),
+      captured: keyOf({onDragStartCapture: true})
+    }
+  },
+  drop: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDrop: true}),
+      captured: keyOf({onDropCapture: true})
+    }
+  },
+  DOMCharacterDataModified: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onDOMCharacterDataModified: true}),
+      captured: keyOf({onDOMCharacterDataModifiedCapture: true})
+    }
+  },
+  focus: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onFocus: true}),
+      captured: keyOf({onFocusCapture: true})
+    }
+  },
+  input: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onInput: true}),
+      captured: keyOf({onInputCapture: true})
+    }
+  },
+  keyDown: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onKeyDown: true}),
+      captured: keyOf({onKeyDownCapture: true})
+    }
+  },
+  keyPress: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onKeyPress: true}),
+      captured: keyOf({onKeyPressCapture: true})
+    }
+  },
+  keyUp: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onKeyUp: true}),
+      captured: keyOf({onKeyUpCapture: true})
+    }
+  },
+  // Note: We do not allow listening to mouseOver events. Instead, use the
+  // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
+  mouseDown: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onMouseDown: true}),
+      captured: keyOf({onMouseDownCapture: true})
+    }
+  },
+  mouseMove: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onMouseMove: true}),
+      captured: keyOf({onMouseMoveCapture: true})
+    }
+  },
+  mouseUp: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onMouseUp: true}),
+      captured: keyOf({onMouseUpCapture: true})
+    }
+  },
+  scroll: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onScroll: true}),
+      captured: keyOf({onScrollCapture: true})
+    }
+  },
+  submit: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onSubmit: true}),
+      captured: keyOf({onSubmitCapture: true})
+    }
+  },
+  touchCancel: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTouchCancel: true}),
+      captured: keyOf({onTouchCancelCapture: true})
+    }
+  },
+  touchEnd: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTouchEnd: true}),
+      captured: keyOf({onTouchEndCapture: true})
+    }
+  },
+  touchMove: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTouchMove: true}),
+      captured: keyOf({onTouchMoveCapture: true})
+    }
+  },
+  touchStart: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onTouchStart: true}),
+      captured: keyOf({onTouchStartCapture: true})
+    }
+  },
+  wheel: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onWheel: true}),
+      captured: keyOf({onWheelCapture: true})
+    }
+  }
+};
+
+var topLevelEventsToDispatchConfig = {
+  topBlur:        eventTypes.blur,
+  topClick:       eventTypes.click,
+  topDoubleClick: eventTypes.doubleClick,
+  topDOMCharacterDataModified: eventTypes.DOMCharacterDataModified,
+  topDrag:        eventTypes.drag,
+  topDragEnd:     eventTypes.dragEnd,
+  topDragEnter:   eventTypes.dragEnter,
+  topDragExit:    eventTypes.dragExit,
+  topDragLeave:   eventTypes.dragLeave,
+  topDragOver:    eventTypes.dragOver,
+  topDragStart:   eventTypes.dragStart,
+  topDrop:        eventTypes.drop,
+  topFocus:       eventTypes.focus,
+  topInput:       eventTypes.input,
+  topKeyDown:     eventTypes.keyDown,
+  topKeyPress:    eventTypes.keyPress,
+  topKeyUp:       eventTypes.keyUp,
+  topMouseDown:   eventTypes.mouseDown,
+  topMouseMove:   eventTypes.mouseMove,
+  topMouseUp:     eventTypes.mouseUp,
+  topScroll:      eventTypes.scroll,
+  topSubmit:      eventTypes.submit,
+  topTouchCancel: eventTypes.touchCancel,
+  topTouchEnd:    eventTypes.touchEnd,
+  topTouchMove:   eventTypes.touchMove,
+  topTouchStart:  eventTypes.touchStart,
+  topWheel:       eventTypes.wheel
+};
+
+var SimpleEventPlugin = {
+
+  eventTypes: eventTypes,
 
   /**
    * Same as the default implementation, except cancels the event when return
    * value is false.
    *
-   * @param {AbstractEvent} AbstractEvent to handle
-   * @param {function} Application-level callback
-   * @param {string} domID DOM id to pass to the callback.
+   * @param {object} Event to be dispatched.
+   * @param {function} Application-level callback.
+   * @param {string} domID DOM ID to pass to the callback.
    */
-  executeDispatch: function(abstractEvent, listener, domID) {
-    var returnValue = listener(abstractEvent, domID);
+  executeDispatch: function(event, listener, domID) {
+    var returnValue = listener(event, domID);
     if (returnValue === false) {
-      abstractEvent.stopPropagation();
-      abstractEvent.preventDefault();
+      event.stopPropagation();
+      event.preventDefault();
     }
   },
 
@@ -221,7 +256,7 @@ var SimpleEventPlugin = {
    * @param {DOMEventTarget} topLevelTarget The listening component root node.
    * @param {string} topLevelTargetID ID of `topLevelTarget`.
    * @param {object} nativeEvent Native browser event.
-   * @return {*} An accumulation of `AbstractEvent`s.
+   * @return {*} An accumulation of synthetic events.
    * @see {EventPluginHub.extractEvents}
    */
   extractEvents: function(
@@ -229,29 +264,29 @@ var SimpleEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    var data;
-    var abstractEventType =
-      SimpleEventPlugin.topLevelTypesToAbstract[topLevelType];
-    if (!abstractEventType) {
+    var dispatchConfig = topLevelEventsToDispatchConfig[topLevelType];
+    if (!dispatchConfig) {
       return null;
     }
+    var EventConstructor;
     switch(topLevelType) {
-      case topLevelTypes.topWheel:
-        data = AbstractEvent.normalizeMouseWheelData(nativeEvent);
+      case topLevelTypes.topInput:
+      case topLevelTypes.topSubmit:
+        // HTML Events
+        // @see http://www.w3.org/TR/html5/index.html#events-0
+        EventConstructor = SyntheticEvent;
         break;
-      case topLevelTypes.topScroll:
-        data = AbstractEvent.normalizeScrollDataFromTarget(topLevelTarget);
+      case topLevelTypes.topKeyDown:
+      case topLevelTypes.topKeyPress:
+      case topLevelTypes.topKeyUp:
+        EventConstructor = SyntheticKeyboardEvent;
+        break;
+      case topLevelTypes.topBlur:
+      case topLevelTypes.topFocus:
+        EventConstructor = SyntheticFocusEvent;
         break;
       case topLevelTypes.topClick:
       case topLevelTypes.topDoubleClick:
-      case topLevelTypes.topChange:
-      case topLevelTypes.topDOMCharacterDataModified:
-      case topLevelTypes.topMouseDown:
-      case topLevelTypes.topMouseUp:
-      case topLevelTypes.topMouseMove:
-      case topLevelTypes.topTouchMove:
-      case topLevelTypes.topTouchStart:
-      case topLevelTypes.topTouchEnd:
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:
       case topLevelTypes.topDragEnter:
@@ -260,53 +295,41 @@ var SimpleEventPlugin = {
       case topLevelTypes.topDragOver:
       case topLevelTypes.topDragStart:
       case topLevelTypes.topDrop:
-        data = AbstractEvent.normalizePointerData(nativeEvent);
-        // todo: Use AbstractEvent.normalizeDragEventData for drag/drop?
+      case topLevelTypes.topMouseDown:
+      case topLevelTypes.topMouseMove:
+      case topLevelTypes.topMouseUp:
+        EventConstructor = SyntheticMouseEvent;
         break;
-      default:
-        data = null;
+      case topLevelTypes.topDOMCharacterDataModified:
+        EventConstructor = SyntheticMutationEvent;
+        break;
+      case topLevelTypes.topTouchCancel:
+      case topLevelTypes.topTouchEnd:
+      case topLevelTypes.topTouchMove:
+      case topLevelTypes.topTouchStart:
+        EventConstructor = SyntheticTouchEvent;
+        break;
+      case topLevelTypes.topScroll:
+        EventConstructor = SyntheticUIEvent;
+        break;
+      case topLevelTypes.topWheel:
+        EventConstructor = SyntheticWheelEvent;
+        break;
     }
-    var abstractEvent = AbstractEvent.getPooled(
-      abstractEventType,
-      topLevelTargetID,
-      nativeEvent,
-      data
+    invariant(
+      EventConstructor,
+      'SimpleEventPlugin: Unhandled event type, `%s`.',
+      topLevelType
     );
-    EventPropagators.accumulateTwoPhaseDispatches(abstractEvent);
-    return abstractEvent;
+    var event = EventConstructor.getPooled(
+      dispatchConfig,
+      topLevelTargetID,
+      nativeEvent
+    );
+    EventPropagators.accumulateTwoPhaseDispatches(event);
+    return event;
   }
-};
 
-SimpleEventPlugin.topLevelTypesToAbstract = {
-  topMouseDown:   SimpleEventPlugin.abstractEventTypes.mouseDown,
-  topMouseUp:     SimpleEventPlugin.abstractEventTypes.mouseUp,
-  topMouseMove:   SimpleEventPlugin.abstractEventTypes.mouseMove,
-  topClick:       SimpleEventPlugin.abstractEventTypes.click,
-  topDoubleClick: SimpleEventPlugin.abstractEventTypes.doubleClick,
-  topWheel:       SimpleEventPlugin.abstractEventTypes.wheel,
-  topTouchStart:  SimpleEventPlugin.abstractEventTypes.touchStart,
-  topTouchEnd:    SimpleEventPlugin.abstractEventTypes.touchEnd,
-  topTouchMove:   SimpleEventPlugin.abstractEventTypes.touchMove,
-  topTouchCancel: SimpleEventPlugin.abstractEventTypes.touchCancel,
-  topKeyUp:       SimpleEventPlugin.abstractEventTypes.keyUp,
-  topKeyPress:    SimpleEventPlugin.abstractEventTypes.keyPress,
-  topKeyDown:     SimpleEventPlugin.abstractEventTypes.keyDown,
-  topInput:       SimpleEventPlugin.abstractEventTypes.input,
-  topFocus:       SimpleEventPlugin.abstractEventTypes.focus,
-  topBlur:        SimpleEventPlugin.abstractEventTypes.blur,
-  topScroll:      SimpleEventPlugin.abstractEventTypes.scroll,
-  topChange:      SimpleEventPlugin.abstractEventTypes.change,
-  topSubmit:      SimpleEventPlugin.abstractEventTypes.submit,
-  topDOMCharacterDataModified:
-                  SimpleEventPlugin.abstractEventTypes.DOMCharacterDataModified,
-  topDrag:        SimpleEventPlugin.abstractEventTypes.drag,
-  topDragEnd:     SimpleEventPlugin.abstractEventTypes.dragEnd,
-  topDragEnter:   SimpleEventPlugin.abstractEventTypes.dragEnter,
-  topDragExit:    SimpleEventPlugin.abstractEventTypes.dragExit,
-  topDragLeave:   SimpleEventPlugin.abstractEventTypes.dragLeave,
-  topDragOver:    SimpleEventPlugin.abstractEventTypes.dragOver,
-  topDragStart:   SimpleEventPlugin.abstractEventTypes.dragStart,
-  topDrop:        SimpleEventPlugin.abstractEventTypes.drop
 };
 
 module.exports = SimpleEventPlugin;

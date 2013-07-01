@@ -38,7 +38,7 @@ function run(config, done) {
   }
 
   args.push("--tests");
-  var tests = grunt.file.expand({
+  grunt.file.expand({
     nonull: true,
     cwd: "src"
   }, config.tests || []).forEach(function(file) {

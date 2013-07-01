@@ -3,7 +3,7 @@
 
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
 var transform = require('../vendor/fbtransform/lib/transform').transform;
-var debranch = require("../vendor/woodchipper").debranch;
+var propagate = require("../vendor/constants").propagate;
 
 require("commoner").resolve(function(id) {
   var context = this;
@@ -25,18 +25,12 @@ require("commoner").resolve(function(id) {
 
 }).process(function(id, source) {
   var context = this;
+  var constants = context.config.constants || {};
 
   // This is where JSX, ES6, etc. desugaring happens.
   source = transform(visitors.react, source).code;
 
-  return context.makePromise(function(callback) {
-    var constants = context.config.constants || {};
-
-    // Debranching means removing any obviously dead code after
-    // replacing constant conditional expressions with literal
-    // (boolean) values.
-    debranch(constants, source, function(source) {
-      callback(null, source);
-    });
-  });
+  // Constant propagation means removing any obviously dead code after
+  // replacing constant expressions with literal (boolean) values.
+  return propagate(constants, source);
 });

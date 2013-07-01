@@ -51,8 +51,8 @@ describe('ReactCompositeComponent-transferProps', function() {
     ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
-      .expectRenderedChild(instance)
-        .toBeDOMComponentWithTag('input')
+      .expectRenderedChild()
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
           className: 'textinput',
           style: {display: 'block'},
@@ -66,8 +66,8 @@ describe('ReactCompositeComponent-transferProps', function() {
     ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
-      .expectRenderedChild(instance)
-        .toBeDOMComponentWithTag('input')
+      .expectRenderedChild()
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({placeholder: 'Type here...'});
   });
 
@@ -80,8 +80,8 @@ describe('ReactCompositeComponent-transferProps', function() {
     ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
-      .expectRenderedChild(instance)
-        .toBeDOMComponentWithTag('input')
+      .expectRenderedChild()
+        .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
           className: 'textinput hidden_elem',
           style: {
@@ -89,6 +89,25 @@ describe('ReactCompositeComponent-transferProps', function() {
             width: '100%'
           }
         });
+  });
+
+  it('should not transfer children', function() {
+    var ChildrenTestComponent = React.createClass({
+      render: function() {
+        return this.transferPropsTo(<div />);
+      }
+    });
+
+    var instance =
+      <ChildrenTestComponent>
+        <span>Hello!</span>
+      </ChildrenTestComponent>;
+
+    ReactTestUtils.renderIntoDocument(instance);
+    reactComponentExpect(instance)
+      .expectRenderedChild()
+        .toBeDOMComponentWithTag('div')
+        .toBeDOMComponentWithNoChildren();
   });
 
   it('should not transfer ref', function() {

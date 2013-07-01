@@ -14,8 +14,10 @@
  * limitations under the License.
  *
  * @providesModule getEventTarget
- * @typechecks
+ * @typechecks static-only
  */
+
+"use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 

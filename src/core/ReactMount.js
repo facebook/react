@@ -21,6 +21,7 @@
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactID = require('ReactID');
 
 var $ = require('$');
 
@@ -35,7 +36,7 @@ var containersByReactRootID = {};
  * @return {?*} DOM element that may have the reactRoot ID, or null.
  */
 function getReactRootElementInContainer(container) {
-  return container.firstChild;
+  return container && container.firstChild;
 }
 
 /**
@@ -44,7 +45,7 @@ function getReactRootElementInContainer(container) {
  */
 function getReactRootID(container) {
   var rootElement = getReactRootElementInContainer(container);
-  return rootElement && rootElement.id;
+  return rootElement && ReactID.getID(rootElement);
 }
 
 /**
@@ -54,9 +55,9 @@ function getReactRootID(container) {
  *
  *   ReactMount.renderComponent(component, $('container'));
  *
- *   <div id="container">         <-- Supplied `container`.
- *     <div id=".reactRoot[3]">   <-- Rendered reactRoot of React component.
- *       // ...
+ *   <div id="container">                   <-- Supplied `container`.
+ *     <div data-reactid=".r[3]">           <-- Rendered reactRoot of React
+ *       // ...                                 component.
  *     </div>
  *   </div>
  *
@@ -268,13 +269,12 @@ var ReactMount = {
   },
 
   /**
-   * Given the ID of a DOM node rendered by a React component, finds the root
-   * DOM node of the React component.
+   * Finds an element rendered by React with the supplied ID.
    *
    * @param {string} id ID of a DOM node in the React component.
-   * @return {?DOMElement} Root DOM node of the React component.
+   * @return {DOMElement} Root DOM node of the React component.
    */
-  findReactRenderedDOMNodeSlow: function(id) {
+  findReactNodeByID: function(id) {
     var reactRoot = ReactMount.findReactContainerForID(id);
     return ReactInstanceHandles.findComponentRoot(reactRoot, id);
   }

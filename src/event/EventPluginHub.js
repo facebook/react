@@ -65,7 +65,7 @@ var executeDispatchesAndRelease = function(event) {
  *     Required. When a top-level event is fired, this method is expected to
  *     extract synthetic events that will in turn be queued and dispatched.
  *
- *   `abstractEventTypes` {object}
+ *   `eventTypes` {object}
  *     Optional, plugins that fire events must publish a mapping of registration
  *     names that are used to register listeners. Values of this mapping must
  *     be objects that contain `registrationName` or `phasedRegistrationNames`.

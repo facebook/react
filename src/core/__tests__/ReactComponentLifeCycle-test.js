@@ -286,6 +286,8 @@ describe('ReactComponentLifeCycle', function() {
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
           this._testJournal.lifeCycleInInitialRender = this._lifeCycleState;
+          this._testJournal.compositeLifeCycleInInitialRender =
+            this._compositeLifeCycleState;
         } else {
           this._testJournal.stateInLaterRender = clone(this.state);
           this._testJournal.lifeCycleInLaterRender = this._lifeCycleState;
@@ -319,7 +321,7 @@ describe('ReactComponentLifeCycle', function() {
       GET_INIT_STATE_RETURN_VAL
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
-      .toBe(ComponentLifeCycle.UNMOUNTED);
+      .toBe(ComponentLifeCycle.MOUNTED);
     expect(instance._testJournal.compositeLifeCycleAtStartOfGetInitialState)
       .toBe(CompositeComponentLifeCycle.MOUNTING);
 
@@ -328,7 +330,7 @@ describe('ReactComponentLifeCycle', function() {
       instance._testJournal.returnedFromGetInitialState
     );
     expect(instance._testJournal.lifeCycleAtStartOfWillMount)
-      .toBe(ComponentLifeCycle.UNMOUNTED);
+      .toBe(ComponentLifeCycle.MOUNTED);
     expect(instance._testJournal.compositeLifeCycleAtStartOfWillMount)
       .toBe(CompositeComponentLifeCycle.MOUNTING);
 
@@ -343,7 +345,10 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance._testJournal.stateInInitialRender)
       .toEqual(INIT_RENDER_STATE);
     expect(instance._testJournal.lifeCycleInInitialRender).toBe(
-      ComponentLifeCycle.UNMOUNTED
+      ComponentLifeCycle.MOUNTED
+    );
+    expect(instance._testJournal.compositeLifeCycleInInitialRender).toBe(
+      CompositeComponentLifeCycle.MOUNTING
     );
 
     expect(instance._lifeCycleState).toBe(ComponentLifeCycle.MOUNTED);
@@ -493,6 +498,5 @@ describe('ReactComponentLifeCycle', function() {
       'inner componentWillUnmount'
     ]);
   });
-
 });
 

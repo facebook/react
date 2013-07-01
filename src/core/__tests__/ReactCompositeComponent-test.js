@@ -26,6 +26,8 @@ var React;
 var ReactCurrentOwner;
 var ReactProps;
 var ReactTestUtils;
+var ReactID;
+var ReactDoNotBindDeprecated;
 
 var cx;
 var reactComponentExpect;
@@ -37,8 +39,10 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
+    ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactProps = require('ReactProps');
     ReactTestUtils = require('ReactTestUtils');
+    ReactID = require('ReactID');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -50,7 +54,7 @@ describe('ReactCompositeComponent', function() {
       },
 
       render: function() {
-        var toggleActivatedState = this._toggleActivatedState.bind(this);
+        var toggleActivatedState = this._toggleActivatedState;
         return !this.state.activated ?
           <a ref="x" onClick={toggleActivatedState} /> :
           <b ref="x" onClick={toggleActivatedState} />;
@@ -62,9 +66,9 @@ describe('ReactCompositeComponent', function() {
         return {activated: false};
       },
 
-      _toggleActivatedState: React.autoBind(function() {
+      _toggleActivatedState:function() {
         this.setState({activated: !this.state.activated});
-      }),
+      },
 
       render: function() {
         return !this.state.activated ?
@@ -160,20 +164,23 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchorID = instance.getAnchorID();
-    var actualDOMAnchorNode = document.getElementById(anchorID);
+    var actualDOMAnchorNode = ReactID.getNode(anchorID);
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
   it('should auto bind methods and values correctly', function() {
-    var RETURN_VALUE_AFTER_MOUNT = 'returnValue';
     var ComponentClass = React.createClass({
       getInitialState: function() {
-        return {
-          valueToReturn: RETURN_VALUE_AFTER_MOUNT
-        };
+        return {valueToReturn: 'hi'};
       },
-      methodBoundOnMount: React.autoBind(function() {
-        return this.state.valueToReturn;
+      methodToBeExplicitlyBound: function() {
+        return this;
+      },
+      methodAutoBound: function() {
+        return this;
+      },
+      methodExplicitlyNotBound: ReactDoNotBindDeprecated.doNotBind(function() {
+        return this;
       }),
       render: function() {
         return <div> </div>;
@@ -181,19 +188,34 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <ComponentClass />;
 
-    // Autobound methods will throw before mounting.
+    // These are controversial assertions for now, they just exist
+    // because existing code depends on these assumptions.
     expect(function() {
-      instance.methodBoundOnMount();
-    }).toThrow();
+      instance.methodToBeExplicitlyBound.bind(instance)();
+    }).not.toThrow();
+    expect(function() {
+      instance.methodAutoBound();
+    }).not.toThrow();
+    expect(function() {
+      instance.methodExplicitlyNotBound();
+    }).not.toThrow();
 
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
     ReactTestUtils.renderIntoDocument(instance);
-    var retValAfterMount = instance.methodBoundOnMount();
-    expect(retValAfterMount).toBe(RETURN_VALUE_AFTER_MOUNT);
-    var retValAfterMountWithCrazyScope =
-      instance.methodBoundOnMount.call({thisIsACrazyScope:null});
-    expect(retValAfterMountWithCrazyScope).toBe(RETURN_VALUE_AFTER_MOUNT);
+    var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
+    var autoBound = instance.methodAutoBound;
+    var explicitlyNotBound = instance.methodExplicitlyNotBound;
+
+    var context = {};
+    expect(explicitlyBound.call(context)).toBe(instance);
+    expect(autoBound.call(context)).toBe(instance);
+    expect(explicitlyNotBound.call(context)).toBe(context);
+
+    expect(explicitlyBound.call(instance)).toBe(instance);
+    expect(autoBound.call(instance)).toBe(instance);
+    expect(explicitlyNotBound.call(instance)).toBe(instance);
+
   });
 
   it('should normalize props with default values', function() {
@@ -287,7 +309,7 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).toThrow(
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted components.'
+      'mounted or mounting components.'
     );
 
     React.renderComponent(instance, container);
@@ -300,7 +322,7 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).toThrow(
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted components.'
+      'mounted or mounting components.'
     );
   });
 

@@ -2,13 +2,11 @@
 
 var assert = require("assert");
 var path = require("path");
-var fs = require("fs");
 var tmp = require("tmp");
 var grunt = require("grunt");
 var spawn = grunt.util.spawn;
 
 module.exports = function() {
-  var config = this.data;
   var done = this.async();
 
   function run(cmd, args, opts, callback) {
@@ -25,7 +23,8 @@ module.exports = function() {
 
     grunt.log.writeln("> " + cmd + " " + args.join(" "));
 
-    var proc = spawn({
+    // var proc =
+    spawn({
       cmd: cmd,
       args: args,
       opts: opts

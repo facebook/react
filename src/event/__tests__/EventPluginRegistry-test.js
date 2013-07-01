@@ -1,4 +1,18 @@
 /**
+ * Copyright 2013 Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
  * @emails react-core
  */
 
@@ -141,13 +155,13 @@ describe('EventPluginRegistry', function() {
 
   it('should publish registration names of injected plugins', function() {
     var OnePlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         click: {registrationName: 'onClick'},
         focus: {registrationName: 'onFocus'}
       }
     });
     var TwoPlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         magic: {
           phasedRegistrationNames: {
             bubbled: 'onMagicBubble',
@@ -175,12 +189,12 @@ describe('EventPluginRegistry', function() {
 
   it('should throw if multiple registration names collide', function() {
     var OnePlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         photoCapture: {registrationName: 'onPhotoCapture'}
       }
     });
     var TwoPlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         photo: {
           phasedRegistrationNames: {
             bubbled: 'onPhotoBubble',
@@ -205,7 +219,7 @@ describe('EventPluginRegistry', function() {
 
   it('should throw if an invalid event is published', function() {
     var OnePlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         badEvent: {/* missing configuration */}
       }
     });
@@ -232,14 +246,14 @@ describe('EventPluginRegistry', function() {
     };
 
     var OnePlugin = createPlugin({
-      abstractEventTypes: {
+      eventTypes: {
         click: clickDispatchConfig,
         magic: magicDispatchConfig
       }
     });
 
-    var clickEvent = {reactEventType: clickDispatchConfig};
-    var magicEvent = {reactEventType: magicDispatchConfig};
+    var clickEvent = {dispatchConfig: clickDispatchConfig};
+    var magicEvent = {dispatchConfig: magicDispatchConfig};
 
     expect(EventPluginRegistry.getPluginModuleForEvent(clickEvent)).toBe(null);
     expect(EventPluginRegistry.getPluginModuleForEvent(magicEvent)).toBe(null);

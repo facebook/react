@@ -17,12 +17,15 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var React = require('React');
+var ReactID = require('ReactID');
 
 describe('ref swapping', function() {
   // TODO: uncomment this test once we can run in phantom, which
@@ -58,7 +61,7 @@ describe('ref swapping', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div(null, 'child')
     );
-    var argNode = document.getElementById(argDiv._rootNodeID);
+    var argNode = ReactID.getNode(argDiv._rootNodeID);
     expect(argNode.innerHTML).toBe('child');
   });
 
@@ -66,7 +69,7 @@ describe('ref swapping', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = document.getElementById(conflictDiv._rootNodeID);
+    var conflictNode = ReactID.getNode(conflictDiv._rootNodeID);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -81,31 +84,34 @@ describe('ref swapping', function() {
         theBird: <div class="bird" />
       }}</div>
     );
+    // Warm the cache with theDog
     myDiv.setProps({
       children: {
-        theDog: <div class="dogbeforedelete" />,  // Warm the cache with theDog
+        theDog: <div class="dogbeforedelete" />,
         theBird: <div class="bird" />
       }
     });
-    myDiv.setProps({
-      children: {                                 // This better purge that cache
-        theBird: <div class="bird" />
-      }
-    });
-    // Now, put the dog back.
+    // Remove theDog - this should purge the cache
     myDiv.setProps({
       children: {
-        theDog: <div class="dog" />,       // This is a different node than before
         theBird: <div class="bird" />
       }
     });
+    // Now, put theDog back. It's now a different DOM node.
     myDiv.setProps({
-      children: {                          // className changed to bigdog.
-        theDog: <div class="bigdog" />,    // but will it use the proper element
+      children: {
+        theDog: <div class="dog" />,
         theBird: <div class="bird" />
       }
     });
-    var root = document.getElementById(myDiv._rootNodeID);
+    // Change the className of theDog. It will use the same element
+    myDiv.setProps({
+      children: {
+        theDog: <div class="bigdog" />,
+        theBird: <div class="bird" />
+      }
+    });
+    var root = ReactID.getNode(myDiv._rootNodeID);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

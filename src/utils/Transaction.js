@@ -153,7 +153,7 @@ var Mixin = {
    * @param {Object} scope Scope to invoke from.
    * @param {Object?=} args... Arguments to pass to the method (optional).
    *                           Helps prevent need to bind in many cases.
-   * @returns Return value from `method`.
+   * @return Return value from `method`.
    */
   perform: function(method, scope, a, b, c, d, e, f) {
     throwIf(this.isInTransaction(), DUAL_TRANSACTION);

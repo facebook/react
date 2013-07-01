@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule DOMProperty
- * @typechecks
+ * @typechecks static-only
  */
 
 /*jslint bitwise: true */

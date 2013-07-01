@@ -19,12 +19,7 @@
 
 "use strict";
 
-var ReactMount = require('ReactMount');
 var React = require('React');
-var ReactTestUtils = require('ReactTestUtils');
-var ReactMount = require('ReactMount');
-
-var reactComponentExpect = require('reactComponentExpect');
 
 describe('ReactMount', function() {
   it("should destroy a react root upon request", function() {

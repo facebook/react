@@ -48,11 +48,17 @@ describe('mapChildren', function() {
 
     this.addMatchers({
       toHaveKeys: function(expected) {
+        if (!Array.isArray(this.actual)) {
+          if (expected.length !== 1) {
+            return false;
+          }
+          return this.actual.props.key === expected[0];
+        }
         if (this.actual.length != expected.length) {
           return false;
         }
         return this.actual.every(function(component, index) {
-          return component._key === expected[index];
+          return component.props.key === expected[index];
         }, this);
       }
     });
@@ -73,9 +79,9 @@ describe('mapChildren', function() {
       .expectRenderedChild()
       .instance();
 
-    expect(mapFn).toHaveBeenCalledWith(simpleKid, 'simple', 0);
+    expect(mapFn).toHaveBeenCalledWith(simpleKid, '[simple]', 0);
     expect(rendered.props.children[0]).toBe(simpleKid);
-    expect(rendered.props.children).toHaveKeys(['0:simple']);
+    expect(rendered.props.children).toHaveKeys(['[simple]']);
   });
 
   it('should pass key to returned component', function() {
@@ -93,9 +99,10 @@ describe('mapChildren', function() {
       .instance();
 
     expect(rendered.props.children[0]).not.toBe(simpleKid);
-    expect(rendered.props.children[0].props.children[0]).toBe(simpleKid);
-    expect(rendered.props.children).toHaveKeys(['0:simple']);
-    expect(rendered.props.children[0].props.children).toHaveKeys(['simple']);
+    expect(rendered.props.children[0].props.children).toBe(simpleKid);
+    expect(rendered.props.children).toHaveKeys(['[simple]']);
+    expect(rendered.props.children[0].props.children)
+      .toHaveKeys(['simple']);
   });
 
   it('should be called for each child', function() {
@@ -122,12 +129,12 @@ describe('mapChildren', function() {
       .instance();
 
     expect(mapFn.calls.length).toBe(3);
-    expect(mapFn).toHaveBeenCalledWith(kidOne, 'one', 0);
-    expect(mapFn).toHaveBeenCalledWith(kidTwo, 'two', 1);
-    expect(mapFn).toHaveBeenCalledWith(kidThree, 'three', 2);
+    expect(mapFn).toHaveBeenCalledWith(kidOne, '[one]', 0);
+    expect(mapFn).toHaveBeenCalledWith(kidTwo, '[two]', 1);
+    expect(mapFn).toHaveBeenCalledWith(kidThree, '[three]', 2);
     expect(rendered.props.children).not.toEqual(instance.props.children);
     expect(rendered.props.children).toHaveKeys([
-      '0:one', '0:two', '0:three'
+      '[one]', '[two]', '[three]'
     ]);
   });
 });

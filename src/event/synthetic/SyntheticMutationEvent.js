@@ -14,8 +14,10 @@
  * limitations under the License.
  *
  * @providesModule SyntheticMutationEvent
- * @typechecks
+ * @typechecks static-only
  */
+
+"use strict";
 
 var SyntheticEvent = require('SyntheticEvent');
 

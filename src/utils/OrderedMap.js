@@ -246,7 +246,7 @@ var OrderedMapMethods = {
    *
    * @param {Function} cb Callback to invoke for each item.
    * @param {Object?=} context Context to invoke callback from.
-   * @returns {OrderedMap} OrderedMap that results from mapping.
+   * @return {OrderedMap} OrderedMap that results from mapping.
    */
   map: function(cb, context) {
     return this.mapRange(cb, 0, this.length, context);
@@ -288,7 +288,7 @@ var OrderedMapMethods = {
    *
    * @param {Function} cb Callback to invoke for each item.
    * @param {Object?=} context Context to invoke callback from.
-   * @returns {OrderedMap} OrderedMap that results from filtering.
+   * @return {OrderedMap} OrderedMap that results from filtering.
    */
   filter: function(cb, context) {
     return this.filterRange(cb, 0, this.length, context);

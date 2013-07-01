@@ -23,6 +23,7 @@ require('mock-modules');
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
+var ReactID = require('ReactID');
 
 var objMapKeyVal = require('objMapKeyVal');
 
@@ -41,12 +42,11 @@ var stripEmptyValues = function(obj) {
 };
 
 /**
- * These children are wrapped in an array and therefore their keys are prefixed.
- * Their name is also wrapped in an prefix and suffix character. We strip those
+ * Child names is are wrapped in an prefix and suffix character. We strip those
  * out. This relies on a tiny implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {
-  return childName.substr(4, childName.length - 5);
+  return childName.substr(1, childName.length - 2);
 };
 
 /**
@@ -191,7 +191,7 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var i;
   var orderedDomIds = [];
   for (i=0; i < statusDisplayNodes.length; i++) {
-    orderedDomIds.push(statusDisplayNodes[i].id);
+    orderedDomIds.push(ReactID.getID(statusDisplayNodes[i]));
   }
 
   var orderedLogicalIds = [];

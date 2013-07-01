@@ -133,14 +133,14 @@ if (__DEV__) {
 }
 
 /**
- * This plugin does not really extract any abstract events. Rather it just looks
- * at the top level event and bumps up counters as appropriate
+ * This plugin does not really extract any synthetic events. Rather it just
+ * looks at the top-level event and bumps up counters as appropriate
  *
  * @param {string} topLevelType Record from `EventConstants`.
  * @param {DOMEventTarget} topLevelTarget The listening component root node.
  * @param {string} topLevelTargetID ID of `topLevelTarget`.
  * @param {object} nativeEvent Native browser event.
- * @return {*} An accumulation of `AbstractEvent`s.
+ * @return {*} An accumulation of synthetic events.
  * @see {EventPluginHub.extractEvents}
  */
 function extractEvents(

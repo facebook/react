@@ -14,8 +14,10 @@
  * limitations under the License.
  *
  * @providesModule SyntheticTouchEvent
- * @typechecks
+ * @typechecks static-only
  */
+
+"use strict";
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
 

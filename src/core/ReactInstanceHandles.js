@@ -14,12 +14,13 @@
  * limitations under the License.
  *
  * @providesModule ReactInstanceHandles
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";
 
-var getDOMNodeID = require('getDOMNodeID');
+var ReactID = require('ReactID');
+
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
@@ -47,7 +48,7 @@ var GLOBAL_MOUNT_POINT_MAX = 9999999;
  * @internal
  */
 function getReactRootIDString(index) {
-  return '.reactRoot[' + index + ']';
+  return SEPARATOR + 'r[' + index.toString(36) + ']';
 }
 
 /**
@@ -250,7 +251,7 @@ var ReactInstanceHandles = {
       // Not a DOMElement, therefore not a React component
       return false;
     }
-    var id = getDOMNodeID(node);
+    var id = ReactID.getID(node);
     return id ? id.charAt(0) === SEPARATOR : false;
   },
 
@@ -279,20 +280,34 @@ var ReactInstanceHandles = {
    *
    * @param {DOMEventTarget} ancestorNode Search from this root.
    * @pararm {string} id ID of the DOM representation of the component.
-   * @return {?DOMEventTarget} DOM node with the supplied `id`, if one exists.
+   * @return {DOMEventTarget} DOM node with the supplied `id`.
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
     var child = ancestorNode.firstChild;
     while (child) {
-      if (id === child.id) {
-        return child;
-      } else if (isAncestorIDOf(child.id, id)) {
-        return ReactInstanceHandles.findComponentRoot(child, id);
+      var childID = ReactID.getID(child);
+      if (childID) {
+        if (id === childID) {
+          return child;
+        } else if (isAncestorIDOf(childID, id)) {
+          return ReactInstanceHandles.findComponentRoot(child, id);
+        }
       }
       child = child.nextSibling;
     }
-    // Effectively: return null;
+    global.console && console.error && console.error(
+      'Error while invoking `findComponentRoot` with the following ' +
+      'ancestor node:',
+      ancestorNode
+    );
+    invariant(
+      false,
+      'findComponentRoot(..., %s): Unable to find element. This probably ' +
+      'means the DOM was unexpectedly mutated (e.g. by the browser).',
+      id,
+      ReactID.getID(ancestorNode)
+    );
   },
 
   /**
@@ -304,7 +319,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   getReactRootIDFromNodeID: function(id) {
-    var regexResult = /\.reactRoot\[[^\]]+\]/.exec(id);
+    var regexResult = /\.r\[[^\]]+\]/.exec(id);
     return regexResult && regexResult[0];
   },
 

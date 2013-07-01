@@ -23,9 +23,6 @@ require('mock-modules')
 
 var ImmutableObject;
 
-var expectSeriallyEqual = function(one, two) {
-};
-
 /**
  * To perform performance testing of using `ImmutableObject` vs. not using
  * `ImmutableObject`, such testing must be done with __DEV__ set to false.
@@ -270,7 +267,7 @@ describe('ImmutableObject', function() {
     });
     expect(afterIO).toBeSeriallyEqualTo({
       a: {b: {}, c: 'C', d: 'd', e: {f: 'F', g: 'G'}, h: 'H'}
-    })
+    });
     expect(afterIO).not.toBe(beforeIO);
     expect(afterIO.a).not.toBe(beforeIO.a);
     expect(afterIO.a.e).not.toBe(beforeIO.a.e);

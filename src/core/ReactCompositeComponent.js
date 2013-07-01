@@ -28,6 +28,19 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
+function invokeWithWarning(func) {
+  return function() {
+    console && console.warn && console.warn(
+      'You have invoked a method that is automatically bound, before the ' +
+        'instance has been mounted. There is nothing conceptually wrong with ' +
+        'this, but since this method will be replaced with a new version once' +
+        ' the component is mounted - you should be aware of the fact that ' +
+        'this method will soon be replaced.'
+    );
+    return func.apply(this, arguments);
+  };
+}
+
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
  */
@@ -92,9 +105,8 @@ var ReactCompositeComponentInterface = {
   // ==== Definition methods ====
 
   /**
-   * Invoked when the component is mounted and whenever new props are received.
-   * Values in the returned mapping will be set on `this.props` if that prop is
-   * not specified (i.e. using an `in` check).
+   * Invoked when the component is mounted. Values in the mapping will be set on
+   * `this.props` if that prop is not specified (i.e. using an `in` check).
    *
    * This method is invoked before `getInitialState` and therefore cannot rely
    * on `this.state` or use `this.setState`.
@@ -283,6 +295,48 @@ var RESERVED_SPEC_KEYS = {
   }
 };
 
+function validateMethodOverride(proto, name) {
+  var specPolicy = ReactCompositeComponentInterface[name];
+
+  // Disallow overriding of base class methods unless explicitly allowed.
+  if (ReactCompositeComponentMixin.hasOwnProperty(name)) {
+    invariant(
+      specPolicy === SpecPolicy.OVERRIDE_BASE,
+      'ReactCompositeComponentInterface: You are attempting to override ' +
+      '`%s` from your class specification. Ensure that your method names ' +
+      'do not overlap with React methods.',
+      name
+    );
+  }
+
+  // Disallow defining methods more than once unless explicitly allowed.
+  if (proto.hasOwnProperty(name)) {
+    invariant(
+      specPolicy === SpecPolicy.DEFINE_MANY,
+      'ReactCompositeComponentInterface: You are attempting to define ' +
+      '`%s` on your component more than once. This conflict may be due ' +
+      'to a mixin.',
+      name
+    );
+  }
+}
+
+
+function validateLifeCycleOnReplaceState(instance) {
+  var compositeLifeCycleState = instance._compositeLifeCycleState;
+  invariant(
+    instance.isMounted() ||
+      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+    'replaceState(...): Can only update a mounted or mounting component.'
+  );
+  invariant(
+    compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+    compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+    'replaceState(...): Cannot update while unmounting component or during ' +
+    'an existing state transition (such as within `render`).'
+  );
+}
+
 /**
  * Custom version of `mixInto` which handles policy validation and reserved
  * specification keys when building `ReactCompositeComponent` classses.
@@ -290,58 +344,47 @@ var RESERVED_SPEC_KEYS = {
 function mixSpecIntoComponent(Constructor, spec) {
   var proto = Constructor.prototype;
   for (var name in spec) {
-    if (!spec.hasOwnProperty(name)) {
+    var property = spec[name];
+    if (!spec.hasOwnProperty(name) || !property) {
       continue;
     }
-    var property = spec[name];
-    var specPolicy = ReactCompositeComponentInterface[name];
-
-    // Disallow overriding of base class methods unless explicitly allowed.
-    if (ReactCompositeComponentMixin.hasOwnProperty(name)) {
-      invariant(
-        specPolicy === SpecPolicy.OVERRIDE_BASE,
-        'ReactCompositeComponentInterface: You are attempting to override ' +
-        '`%s` from your class specification. Ensure that your method names ' +
-        'do not overlap with React methods.',
-        name
-      );
-    }
-
-    // Disallow using `React.autoBind` on internal methods.
-    if (specPolicy != null) {
-      invariant(
-        !property || !property.__reactAutoBind,
-        'ReactCompositeComponentInterface: You are attempting to use ' +
-        '`React.autoBind` on `%s`, a method that is internal to React.' +
-        'Internal methods are called with the component as the context.',
-        name
-      );
-    }
-
-    // Disallow defining methods more than once unless explicitly allowed.
-    if (proto.hasOwnProperty(name)) {
-      invariant(
-        specPolicy === SpecPolicy.DEFINE_MANY,
-        'ReactCompositeComponentInterface: You are attempting to define ' +
-        '`%s` on your component more than once. This conflict may be due ' +
-        'to a mixin.',
-        name
-      );
-    }
+    validateMethodOverride(proto, name);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
       RESERVED_SPEC_KEYS[name](Constructor, property);
-    } else if (property && property.__reactAutoBind) {
-      if (!proto.__reactAutoBindMap) {
-        proto.__reactAutoBindMap = {};
-      }
-      proto.__reactAutoBindMap[name] = property.__reactAutoBind;
-    } else if (proto.hasOwnProperty(name)) {
-      // For methods which are defined more than once, call the existing methods
-      // before calling the new property.
-      proto[name] = createChainedFunction(proto[name], property);
     } else {
-      proto[name] = property;
+      // Setup methods on prototype:
+      // The following member methods should not be automatically bound:
+      // 1. Expected ReactCompositeComponent methods (in the "interface").
+      // 2. Overridden methods (that were mixed in).
+      var isCompositeComponentMethod = name in ReactCompositeComponentInterface;
+      var isInherited = name in proto;
+      var markedDontBind = property.__reactDontBind;
+      var isFunction = typeof property === 'function';
+      var shouldAutoBind =
+        isFunction &&
+        !isCompositeComponentMethod &&
+        !isInherited &&
+        !markedDontBind;
+
+      if (shouldAutoBind) {
+        if (!proto.__reactAutoBindMap) {
+          proto.__reactAutoBindMap = {};
+        }
+        proto.__reactAutoBindMap[name] = property;
+        proto[name] = property;
+        if (__DEV__) {
+          proto[name] = invokeWithWarning(property);
+        }
+      } else {
+        if (isInherited) {
+          // For methods which are defined more than once, call the existing
+          // methods before calling the new property.
+          proto[name] = createChainedFunction(proto[name], property);
+        } else {
+          proto[name] = property;
+        }
+      }
     }
   }
 }
@@ -355,13 +398,9 @@ function mixSpecIntoComponent(Constructor, spec) {
  * @private
  */
 function createChainedFunction(one, two) {
-  return function chainedFunction(a, b, c, d, e, tooMany) {
-    invariant(
-      typeof tooMany === 'undefined',
-      'Chained function can only take a maximum of 5 arguments.'
-    );
-    one.call(this, a, b, c, d, e);
-    two.call(this, a, b, c, d, e);
+  return function chainedFunction() {
+    one.apply(this, arguments);
+    two.apply(this, arguments);
   };
 }
 
@@ -370,7 +409,26 @@ function createChainedFunction(one, two) {
  * `this._compositeLifeCycleState` (which can be null).
  *
  * This is different from the life cycle state maintained by `ReactComponent` in
- * `this._lifeCycleState`.
+ * `this._lifeCycleState`. The following diagram shows how the states overlap in
+ * time. There are times when the CompositeLifeCycle is null - at those times it
+ * is only meaningful to look at ComponentLifeCycle alone.
+ *
+ * Top Row: ReactComponent.ComponentLifeCycle
+ * Low Row: ReactComponent.CompositeLifeCycle
+ *
+ * +-------+------------------------------------------------------+--------+
+ * |  UN   |                    MOUNTED                           |   UN   |
+ * |MOUNTED|                                                      | MOUNTED|
+ * +-------+------------------------------------------------------+--------+
+ * |       ^--------+   +------+   +------+   +------+   +--------^        |
+ * |       |        |   |      |   |      |   |      |   |        |        |
+ * |    0--|MOUNTING|-0-|RECEIV|-0-|RECEIV|-0-|RECEIV|-0-|   UN   |--->0   |
+ * |       |        |   |PROPS |   | PROPS|   | STATE|   |MOUNTING|        |
+ * |       |        |   |      |   |      |   |      |   |        |        |
+ * |       |        |   |      |   |      |   |      |   |        |        |
+ * |       +--------+   +------+   +------+   +------+   +--------+        |
+ * |       |                                                      |        |
+ * +-------+------------------------------------------------------+--------+
  */
 var CompositeLifeCycle = keyMirror({
   /**
@@ -417,6 +475,17 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
+   * Checks whether or not this composite component is mounted.
+   * @return {boolean} True if mounted, false otherwise.
+   * @protected
+   * @final
+   */
+  isMounted: function() {
+    return ReactComponent.Mixin.isMounted.call(this) &&
+      this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING;
+  },
+
+  /**
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {string} rootID DOM ID of the root node.
@@ -427,11 +496,9 @@ var ReactCompositeComponentMixin = {
    */
   mountComponent: function(rootID, transaction) {
     ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
-
-    // Unset `this._lifeCycleState` until after this method is finished.
-    this._lifeCycleState = ReactComponent.LifeCycle.UNMOUNTED;
     this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
+    this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
     this._processProps(this.props);
 
     if (this.__reactAutoBindMap) {
@@ -455,15 +522,11 @@ var ReactCompositeComponentMixin = {
 
     // Done with mounting, `setState` will now trigger UI changes.
     this._compositeLifeCycleState = null;
-    this._lifeCycleState = ReactComponent.LifeCycle.MOUNTED;
-
-    var html = this._renderedComponent.mountComponent(rootID, transaction);
-
+    var markup = this._renderedComponent.mountComponent(rootID, transaction);
     if (this.componentDidMount) {
       transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
     }
-
-    return html;
+    return markup;
   },
 
   /**
@@ -478,6 +541,8 @@ var ReactCompositeComponentMixin = {
       this.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
+
+    this._defaultProps = null;
 
     ReactComponent.Mixin.unmountComponent.call(this);
     this._renderedComponent.unmountComponent();
@@ -554,18 +619,7 @@ var ReactCompositeComponentMixin = {
    */
   replaceState: function(completeState, callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      this.isMounted() ||
-      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
-      'replaceState(...): Can only update a mounted (or mounting) component.'
-    );
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-      'replaceState(...): Cannot update while unmounting component or during ' +
-      'an existing state transition (such as within `render`).'
-    );
-
+    validateLifeCycleOnReplaceState.call(null, this);
     this._pendingState = completeState;
 
     // Do not trigger a state transition if we are in the middle of mounting or
@@ -586,7 +640,6 @@ var ReactCompositeComponentMixin = {
         transaction
       );
       ReactComponent.ReactReconcileTransaction.release(transaction);
-
       this._compositeLifeCycleState = null;
     }
 
@@ -603,12 +656,10 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(props) {
     var propName;
-    if (this.getDefaultProps) {
-      var defaultProps = this.getDefaultProps();
-      for (propName in defaultProps) {
-        if (!(propName in props)) {
-          props[propName] = defaultProps[propName];
-        }
+    var defaultProps = this._defaultProps;
+    for (propName in defaultProps) {
+      if (!(propName in props)) {
+        props[propName] = defaultProps[propName];
       }
     }
     var propDeclarations = this.constructor.propDeclarations;
@@ -721,8 +772,10 @@ var ReactCompositeComponentMixin = {
   forceUpdate: function(callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
-      this.isMounted(),
-      'forceUpdate(...): Can only force an update on mounted components.'
+      this.isMounted() ||
+        compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
+      'forceUpdate(...): Can only force an update on mounted or mounting ' +
+        'components.'
     );
     invariant(
       compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
@@ -786,27 +839,9 @@ var ReactCompositeComponentMixin = {
    */
   _bindAutoBindMethod: function(method) {
     var component = this;
-    var hasWarned = false;
-    function autoBound(a, b, c, d, e, tooMany) {
-      invariant(
-        typeof tooMany === 'undefined',
-        'React.autoBind(...): Methods can only take a maximum of 5 arguments.'
-      );
-      if (component._lifeCycleState === ReactComponent.LifeCycle.MOUNTED) {
-        return method.call(component, a, b, c, d, e);
-      } else if (!hasWarned) {
-        hasWarned = true;
-        if (__DEV__) {
-          console.warn(
-            'React.autoBind(...): Attempted to invoke an auto-bound method ' +
-            'on an unmounted instance of `%s`. You either have a memory leak ' +
-            'or an event handler that is being run after unmounting.',
-            component.constructor.displayName || 'ReactCompositeComponent'
-          );
-        }
-      }
-    }
-    return autoBound;
+    return function() {
+      return method.apply(component, arguments);
+    };
   }
 
 };
@@ -859,33 +894,16 @@ var ReactCompositeComponent = {
   },
 
   /**
-   * Marks the provided method to be automatically bound to the component.
-   * This means the method's context will always be the component.
+   * TODO: Delete this when all callers have been updated to rely on this
+   * behavior being the default.
    *
-   *   React.createClass({
-   *     handleClick: React.autoBind(function() {
-   *       this.setState({jumping: true});
-   *     }),
-   *     render: function() {
-   *       return <a onClick={this.handleClick}>Jump</a>;
-   *     }
-   *   });
-   *
+   * Backwards compatible stub for what is now the default behavior.
    * @param {function} method Method to be bound.
    * @public
    */
   autoBind: function(method) {
-    function unbound() {
-      invariant(
-        false,
-        'React.autoBind(...): Attempted to invoke an auto-bound method that ' +
-        'was not correctly defined on the class specification.'
-      );
-    }
-    unbound.__reactAutoBind = method;
-    return unbound;
+    return method;
   }
-
 };
 
 module.exports = ReactCompositeComponent;

@@ -293,24 +293,10 @@ describe('ReactNativeComponent', function() {
 
     it("should validate against multiple children props", function() {
       expect(function() {
-        mountComponent({ content: '', children: '' });
-      }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
-      );
-
-      expect(function() {
-        mountComponent({ content: '', dangerouslySetInnerHTML: '' });
-      }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
-      );
-
-      expect(function() {
         mountComponent({ children: '', dangerouslySetInnerHTML: '' });
       }).toThrow(
-        'Invariant Violation: Can only set one of `children`, ' +
-        '`props.content`, or `props.dangerouslySetInnerHTML`.'
+        'Invariant Violation: Can only set one of `children` or ' +
+        '`props.dangerouslySetInnerHTML`.'
       );
     });
 
@@ -328,6 +314,7 @@ describe('ReactNativeComponent', function() {
     it("should clean up listeners", function() {
       var React = require('React');
       var ReactEventEmitter = require('ReactEventEmitter');
+      var ReactID = require('ReactID');
 
       var container = document.createElement('div');
       document.documentElement.appendChild(container);
@@ -337,7 +324,7 @@ describe('ReactNativeComponent', function() {
       React.renderComponent(instance, container);
 
       var rootNode = instance.getDOMNode();
-      var rootNodeID = rootNode.id;
+      var rootNodeID = ReactID.getID(rootNode);
       expect(
         ReactEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);

@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactReconcileTransaction
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

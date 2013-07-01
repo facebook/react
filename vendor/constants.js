@@ -17,17 +17,13 @@
 
 var recast = require('recast');
 
-exports.debranch = function(constants, source, writeback) {
-  recast.runString(
-    source,
-    function(ast, callback) {
-      callback(new Woodchipper(constants).visit(ast));
-    },
-    { writeback: writeback }
-  );
+exports.propagate = function(constants, source) {
+  var ast = recast.parse(source);
+  ast = new ConstantVisitor(constants).visit(ast);
+  return recast.print(ast);
 };
 
-var Woodchipper = recast.Visitor.extend({
+var ConstantVisitor = recast.Visitor.extend({
   init: function(constants) {
     this.constants = constants || {};
   },
@@ -36,6 +32,15 @@ var Woodchipper = recast.Visitor.extend({
     if (this.constants.hasOwnProperty(ident.name)) {
       return recast.builder.literal(this.constants[ident.name]);
     }
+  },
+
+  visitCallExpression: function(call) {
+    if (!this.constants.__DEV__) {
+      if (call.callee.type === 'Identifier' && call.callee.name === 'invariant') {
+        call.arguments.length = 1;
+      }
+    }
+    this.genericVisit(call);
   },
 
   visitIfStatement: function(stmt) {
@@ -57,6 +62,6 @@ var Woodchipper = recast.Visitor.extend({
 if (!module.parent) {
   var constants = JSON.parse(process.argv[3]);
   recast.run(function(ast, callback) {
-    callback(new Woodchipper(constants).visit(ast));
+    callback(new ConstantVisitor(constants).visit(ast));
   });
 }

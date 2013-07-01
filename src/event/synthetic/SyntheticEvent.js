@@ -14,8 +14,10 @@
  * limitations under the License.
  *
  * @providesModule SyntheticEvent
- * @typechecks
+ * @typechecks static-only
  */
+
+"use strict";
 
 var PooledClass = require('PooledClass');
 

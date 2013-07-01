@@ -17,13 +17,14 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 require('mock-modules');
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactTextComponent = require('ReactTextComponent');
 
 var reactComponentExpect = require('reactComponentExpect');
 
@@ -70,10 +71,6 @@ var assertSingleChild = function(instance, text) {
 };
 
 // Helpers
-var renderSingleContentChild = function(text) {
-  var d = ReactTestUtils.renderIntoDocument(<div content={text} />);
-  return d;
-};
 var renderSingleTextChild = function(text) {
   var d = ReactTestUtils.renderIntoDocument(<div>{text}</div>);
   return d;
@@ -141,7 +138,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero string as text node  then switch to spans', function() {
+  it('should render zero string as text node then switch to spans', function() {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, '0');
@@ -149,17 +146,12 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero number as text node  then switch to spans', function() {
+  it('should render zero number as text node then switch to spans', function() {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, 0);
     d.replaceProps({children: ['hello', 'goodbye']});
     assertMultiChild(d, 'hello', 'goodbye');
-  });
-
-  it('should render content to single text node', function() {
-    var d = renderSingleContentChild('hello');
-    assertNodeText(d, 'hello');
   });
 
   it('should render a single text child to a single text node', function() {
@@ -233,12 +225,6 @@ describe('ReactMultiChildText', function() {
     assertNodeText(d, '0');
   });
 
-  it('should render content number zero as text node', function() {
-    var d = renderSingleContentChild(0);
-    // false should act exactly as a null child
-    assertNodeText(d, '0');
-  });
-
   it('should render zero string as string child', function() {
     var d = renderMultipleTextChildren('0', 234.2);
     // false should act exactly as a null child
@@ -249,7 +235,7 @@ describe('ReactMultiChildText', function() {
     var d = renderMultipleTextChildren('0', 234.2);
     // false should act exactly as a null child
     assertMultiChild(d, '0', '234.2');
-    d.replaceProps({content: '0'});
+    d.replaceProps({children: '0'});
     assertNodeText(d, '0');
   });
 
@@ -257,7 +243,7 @@ describe('ReactMultiChildText', function() {
     var d = renderMultipleTextChildren(0, 234.2);
     // false should act exactly as a null child
     assertMultiChild(d, '0', '234.2');
-    d.replaceProps({content: 0});
+    d.replaceProps({children: 0});
     // BELOW REVEALS A BUG IN JSDOM
     // assertNodeText(d, '0');  // This works in the browser.
   });
@@ -265,7 +251,7 @@ describe('ReactMultiChildText', function() {
   it('should render multiple children then switch to inline', function() {
     var d = renderMultipleTextChildren('hello', 'goodbye');
     assertMultiChild(d, 'hello', 'goodbye');
-    d.replaceProps({content: 'hello'});
+    d.replaceProps({children: 'hello'});
     assertNodeText(d, 'hello');
   });
 
@@ -285,13 +271,6 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render content, then switch to text components ', function() {
-    var d = renderSingleContentChild('hello');
-    assertNodeText(d, 'hello');
-    d.replaceProps({children: ['hello', 'goodbye']});
-    assertMultiChild(d, 'hello', 'goodbye');
-  });
-
   it('should render inline child, then switch to composite', function() {
     var d = renderSingleTextChild('hello');
     assertNodeText(d, 'hello');
@@ -301,9 +280,11 @@ describe('ReactMultiChildText', function() {
       .toBeCompositeComponentWithType(TestCompositeComponent);
   });
 
-  it('should throw if rendering both content and children', function() {
+  it('should throw if rendering both HTML and children', function() {
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div content="asdf">ghjkl</div>);
+      ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML={{_html: 'abcdef'}}>ghjkl</div>
+      );
     }).toThrow();
   });
 });

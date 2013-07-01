@@ -21,8 +21,8 @@ var React = require('React');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
+var ReactID = require('ReactID');
 
-var ge = require('ge');
 var mergeInto = require('mergeInto');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -43,6 +43,14 @@ var ReactTestUtils = {
     var div = document.createElement('div');
     document.documentElement.appendChild(div);
     return React.renderComponent(instance, div);
+  },
+
+  isComponentOfType: function(inst, type) {
+    return !!(
+      inst &&
+      ReactComponent.isValidComponent(inst) &&
+      inst.constructor === type.componentConstructor
+    );
   },
 
   isDOMComponent: function(inst) {
@@ -187,7 +195,7 @@ var ReactTestUtils = {
    * on and `Element` node.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`
    * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to pass to ReactEvent.
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     var virtualHandler =
@@ -203,7 +211,7 @@ var ReactTestUtils = {
    * on the `ReactNativeComponent` `comp`.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`.
    * @param comp {!ReactNativeComponent}
-   * @param {?Event} fakeNativeEvent Fake native event to pass to ReactEvent.
+   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnDOMComponent: function(topLevelType, comp, fakeNativeEvent) {
     var reactRootID = comp._rootNodeID || comp._rootDomId;
@@ -214,10 +222,10 @@ var ReactTestUtils = {
       ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
         topLevelType
       );
-    var node = ge(reactRootID);
+    var node = ReactID.getNode(reactRootID);
     fakeNativeEvent.target = node;
     /* jsdom is returning nodes without id's - fixing that issue here. */
-    node.id = reactRootID;
+    ReactID.setID(node, reactRootID);
     virtualHandler(fakeNativeEvent);
   },
 
@@ -280,7 +288,7 @@ for (eventType in topLevelTypes) {
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
   /**
    * @param {!Element || ReactNativeComponent} domComponentOrNode
-   * @param {?Event} nativeEventData Fake native event to pass to ReactEvent.
+   * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.Simulate[convenienceName] = makeSimulator(eventType);
 }

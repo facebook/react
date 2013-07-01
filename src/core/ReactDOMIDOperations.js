@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactDOMIDOperations
- * @typechecks
+ * @typechecks static-only
  */
 
 /*jslint evil: true */
@@ -24,7 +24,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactDOMNodeCache = require('ReactDOMNodeCache');
+var ReactID = require('ReactID');
 
 var getTextContentAccessor = require('getTextContentAccessor');
 var invariant = require('invariant');
@@ -36,7 +36,6 @@ var invariant = require('invariant');
  * @private
  */
 var INVALID_PROPERTY_ERRORS = {
-  content: '`content` must be set using `updateTextContentByID()`.',
   dangerouslySetInnerHTML:
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
@@ -66,7 +65,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updatePropertyByID: function(id, name, value) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -84,7 +83,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   deletePropertyByID: function(id, name, value) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -121,7 +120,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateStylesByID: function(id, styles) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     CSSPropertyOperations.setValueForStyles(node, styles);
   },
 
@@ -133,7 +132,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateInnerHTMLByID: function(id, html) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     // HACK: IE8- normalize whitespace in innerHTML, removing leading spaces.
     // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
     node.innerHTML = (html && html.__html || '').replace(/^ /g, '&nbsp;');
@@ -147,7 +146,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateTextContentByID: function(id, content) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     node[textContentAccessor] = content;
   },
 
@@ -160,9 +159,9 @@ var ReactDOMIDOperations = {
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
   dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
-    var node = ReactDOMNodeCache.getCachedNodeByID(id);
+    var node = ReactID.getNode(id);
     DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-    ReactDOMNodeCache.purgeEntireCache();
+    ReactID.purgeEntireCache();
   },
 
   /**
@@ -170,13 +169,13 @@ var ReactDOMIDOperations = {
    *       Detect if any elements were removed instead of blindly purging.
    */
   manageChildrenByParentID: function(parentID, domOperations) {
-    var parent = ReactDOMNodeCache.getCachedNodeByID(parentID);
+    var parent = ReactID.getNode(parentID);
     DOMChildrenOperations.manageChildren(parent, domOperations);
-    ReactDOMNodeCache.purgeEntireCache();
+    ReactID.purgeEntireCache();
   },
 
   setTextNodeValueAtIndexByParentID: function(parentID, index, value) {
-    var parent = ReactDOMNodeCache.getCachedNodeByID(parentID);
+    var parent = ReactID.getNode(parentID);
     DOMChildrenOperations.setTextNodeValueAtIndex(parent, index, value);
   }
 

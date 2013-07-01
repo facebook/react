@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule DOMPropertyOperations
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";

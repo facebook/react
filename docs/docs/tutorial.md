@@ -262,8 +262,8 @@ So far we've been inserting the comments directly in the source code. Instead, l
 ```javascript
 // tutorial8.js
 var data = [
-  {author: 'Pete Hunt', text: 'This is one comment'},
-  {author: 'Jordan Walke', text: 'This is *another* comment'}
+  {author: "Pete Hunt", text: "This is one comment"},
+  {author: "Jordan Walke", text: "This is *another* comment"}
 ];
 ```
 
@@ -357,8 +357,8 @@ When the component is first created, we want to GET some JSON from the server an
 ```javascript
 // tutorial13.json
 [
-  {'author': 'Pete Hunt', 'text': 'This is one comment'},
-  {'author': 'Jordan Walke', 'text': 'This is *another* comment'}
+  {"author": "Pete Hunt", "text": "This is one comment"},
+  {"author": "Jordan Walke", "text": "This is *another* comment"}
 ]
 ```
 
@@ -435,7 +435,7 @@ React.renderComponent(
 
 ```
 
-All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 60 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
+All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
 
 ## Adding new comments
 

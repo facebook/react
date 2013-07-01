@@ -14,7 +14,7 @@
  * limitations under the License.
  *
  * @providesModule ReactDOM
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";
@@ -41,15 +41,16 @@ var objMapKeyVal = require('objMapKeyVal');
  */
 function createDOMComponentClass(tag, omitClose) {
   var Constructor = function() {};
-
   Constructor.prototype = new ReactNativeComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
 
-  return function(props, children) {
+  var ConvenienceConstructor = function(props, children) {
     var instance = new Constructor();
     instance.construct.apply(instance, arguments);
     return instance;
   };
+  ConvenienceConstructor.componentConstructor = Constructor;
+  return ConvenienceConstructor;
 }
 
 /**
@@ -79,8 +80,7 @@ var ReactDOM = objMapKeyVal({
   embed: true,
   fieldset: false,
   footer: false,
-  // Danger: this gets monkeypatched! See ReactDOMForm for more info.
-  form: false,
+  form: false, // NOTE: Injected, see `ReactDOMForm`.
   h1: false,
   h2: false,
   h3: false,
@@ -115,7 +115,7 @@ var ReactDOM = objMapKeyVal({
   table: false,
   tbody: false,
   td: false,
-  textarea: false,
+  textarea: false, // NOTE: Injected, see `ReactDOMTextarea`.
   tfoot: false,
   th: false,
   thead: false,

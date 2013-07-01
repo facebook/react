@@ -21,8 +21,7 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-
-var reactComponentExpect= require('reactComponentExpect');
+var ReactID = require('ReactID');
 
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.
@@ -92,20 +91,65 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       parentNode.appendChild(childNodeB);
 
-      parentNode.id = '.react[0]';
-      childNodeA.id = '.react[0].0';
-      childNodeB.id = '.react[0].0:1';
+      ReactID.setID(parentNode, '.react[0]');
+      ReactID.setID(childNodeA, '.react[0].0');
+      ReactID.setID(childNodeB, '.react[0].0:1');
 
       expect(
-        ReactInstanceHandles.findComponentRoot(parentNode, childNodeB.id)
+        ReactInstanceHandles.findComponentRoot(
+          parentNode,
+          ReactID.getID(childNodeB)
+        )
       ).toBe(childNodeB);
+    });
+
+    it('should work around unidentified nodes', function() {
+      var parentNode = document.createElement('div');
+      var childNodeA = document.createElement('div');
+      var childNodeB = document.createElement('div');
+      parentNode.appendChild(childNodeA);
+      parentNode.appendChild(childNodeB);
+
+      ReactID.setID(parentNode, '.react[0]');
+      // No ID on `childNodeA`.
+      ReactID.setID(childNodeB, '.react[0].0:1');
+
+      expect(
+        ReactInstanceHandles.findComponentRoot(
+          parentNode,
+          ReactID.getID(childNodeB)
+        )
+      ).toBe(childNodeB);
+    });
+
+    it('should throw if a rendered element cannot be found', function() {
+      var parentNode = document.createElement('table');
+      var childNodeA = document.createElement('tbody');
+      var childNodeB = document.createElement('tr');
+      parentNode.appendChild(childNodeA);
+      childNodeA.appendChild(childNodeB);
+
+      ReactID.setID(parentNode, '.react[0]');
+      // No ID on `childNodeA`, it was "rendered by the browser".
+      ReactID.setID(childNodeB, '.react[0].1:0');
+
+      expect(function() {
+        ReactInstanceHandles.findComponentRoot(
+          parentNode,
+          ReactID.getID(childNodeB)
+        );
+      }).toThrow(
+        'Invariant Violation: findComponentRoot(..., .react[0].1:0): Unable ' +
+        'to find element. This probably means the DOM was unexpectedly ' +
+        'mutated (e.g. by the browser).'
+      );
     });
   });
 
   describe('getReactRootIDFromNodeID', function() {
     it('should support strings', function() {
-      var test = '.reactRoot[s_0_1][0]..[1]';
-      var expected = '.reactRoot[s_0_1]';
+      var test = '.r[s_0_1][0]..[1]';
+      var expected = '.r[s_0_1]';
       var actual = ReactInstanceHandles.getReactRootIDFromNodeID(test);
       expect(actual).toEqual(expected);
     });

@@ -15,9 +15,10 @@
  */
 /*global exports:true*/
 "use strict";
-var catchup = require('../lib/utils').catchup;
 var append = require('../lib/utils').append;
+var catchup = require('../lib/utils').catchup;
 var move = require('../lib/utils').move;
+var Syntax = require('esprima').Syntax;
 
 var knownTags = {
   a: true,
@@ -255,15 +256,16 @@ function renderXJSLiteral(object, isLast, state, start, end) {
   move(object.range[1], state);
 }
 
-function renderXJSExpression(traverse, object, isLast, path, state) {
+function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   // Plus 1 to skip `{`.
   move(object.range[0] + 1, state);
-  traverse(object.value, path, state);
-  if (!isLast) {
+  traverse(object.expression, path, state);
+  if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
-    catchup(object.value.range[1], state);
+    catchup(object.expression.range[1], state);
     append(',', state);
   }
+
   // Minus 1 to skip `}`.
   catchup(object.range[1] - 1, state);
   move(object.range[1], state);
@@ -279,6 +281,6 @@ function quoteAttrName(attr) {
 }
 
 exports.knownTags = knownTags;
-exports.renderXJSExpression = renderXJSExpression;
+exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
 exports.renderXJSLiteral = renderXJSLiteral;
 exports.quoteAttrName = quoteAttrName;

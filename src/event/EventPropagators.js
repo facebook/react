@@ -56,19 +56,19 @@ var injection = {
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
-function listenerAtPhase(id, abstractEvent, propagationPhase) {
+function listenerAtPhase(id, event, propagationPhase) {
   var registrationName =
-    abstractEvent.reactEventType.phasedRegistrationNames[propagationPhase];
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(id, registrationName);
 }
 
 /**
- * Tags an `AbstractEvent` with dispatched listeners. Creating this function
+ * Tags a `SyntheticEvent` with dispatched listeners. Creating this function
  * here, allows us to not have to bind or create functions for each event.
  * Mutating the event's members allows us to not have to create a wrapping
  * "dispatch" object that pairs the event with the listener.
  */
-function accumulateDirectionalDispatches(domID, upwards, abstractEvent) {
+function accumulateDirectionalDispatches(domID, upwards, event) {
   if (__DEV__) {
     if (!domID) {
       throw new Error('Dispatching id must not be null');
@@ -76,11 +76,10 @@ function accumulateDirectionalDispatches(domID, upwards, abstractEvent) {
     injection.validate();
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
-  var listener = listenerAtPhase(domID, abstractEvent, phase);
+  var listener = listenerAtPhase(domID, event, phase);
   if (listener) {
-    abstractEvent._dispatchListeners =
-      accumulate(abstractEvent._dispatchListeners, listener);
-    abstractEvent._dispatchIDs = accumulate(abstractEvent._dispatchIDs, domID);
+    event._dispatchListeners = accumulate(event._dispatchListeners, listener);
+    event._dispatchIDs = accumulate(event._dispatchIDs, domID);
   }
 }
 
@@ -91,12 +90,12 @@ function accumulateDirectionalDispatches(domID, upwards, abstractEvent) {
  * single traversal for the entire collection of events because each event may
  * have a different target.
  */
-function accumulateTwoPhaseDispatchesSingle(abstractEvent) {
-  if (abstractEvent && abstractEvent.reactEventType.phasedRegistrationNames) {
+function accumulateTwoPhaseDispatchesSingle(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
     injection.InstanceHandle.traverseTwoPhase(
-      abstractEvent.reactTargetID,
+      event.dispatchMarker,
       accumulateDirectionalDispatches,
-      abstractEvent
+      event
     );
   }
 }
@@ -105,36 +104,35 @@ function accumulateTwoPhaseDispatchesSingle(abstractEvent) {
 /**
  * Accumulates without regard to direction, does not look for phased
  * registration names. Same as `accumulateDirectDispatchesSingle` but without
- * requiring that the `reactTargetID` be the same as the dispatched ID.
+ * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
-function accumulateDispatches(id, ignoredDirection, abstractEvent) {
-  if (abstractEvent && abstractEvent.reactEventType.registrationName) {
-    var registrationName = abstractEvent.reactEventType.registrationName;
+function accumulateDispatches(id, ignoredDirection, event) {
+  if (event && event.dispatchConfig.registrationName) {
+    var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(id, registrationName);
     if (listener) {
-      abstractEvent._dispatchListeners =
-        accumulate(abstractEvent._dispatchListeners, listener);
-      abstractEvent._dispatchIDs = accumulate(abstractEvent._dispatchIDs, id);
+      event._dispatchListeners = accumulate(event._dispatchListeners, listener);
+      event._dispatchIDs = accumulate(event._dispatchIDs, id);
     }
   }
 }
 
 /**
- * Accumulates dispatches on an `AbstractEvent`, but only for the
- * `reactTargetID`.
- * @param {AbstractEvent} abstractEvent
+ * Accumulates dispatches on an `SyntheticEvent`, but only for the
+ * `dispatchMarker`.
+ * @param {SyntheticEvent} event
  */
-function accumulateDirectDispatchesSingle(abstractEvent) {
-  if (abstractEvent && abstractEvent.reactEventType.registrationName) {
-    accumulateDispatches(abstractEvent.reactTargetID, null, abstractEvent);
+function accumulateDirectDispatchesSingle(event) {
+  if (event && event.dispatchConfig.registrationName) {
+    accumulateDispatches(event.dispatchMarker, null, event);
   }
 }
 
-function accumulateTwoPhaseDispatches(abstractEvents) {
+function accumulateTwoPhaseDispatches(events) {
   if (__DEV__) {
     injection.validate();
   }
-  forEachAccumulated(abstractEvents, accumulateTwoPhaseDispatchesSingle);
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
 function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
@@ -151,11 +149,11 @@ function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
 }
 
 
-function accumulateDirectDispatches(abstractEvents) {
+function accumulateDirectDispatches(events) {
   if (__DEV__) {
     injection.validate();
   }
-  forEachAccumulated(abstractEvents, accumulateDirectDispatchesSingle);
+  forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
 
 

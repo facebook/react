@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule reactKeys
+ * @providesModule ViewportMetrics
  */
 
 "use strict";
 
-/**
- * Similar to Object.keys() but does not fail on empty parameter.
- */
-var keys = function(obj) {
-  var ret = [], aKey;
-  for (aKey in obj) {
-    if (obj.hasOwnProperty(aKey)) {
-      ret.push(aKey);
-    }
+var ViewportMetrics = {
+
+  currentScrollLeft: 0,
+
+  currentScrollTop: 0,
+
+  refreshScrollValues: function() {
+    ViewportMetrics.currentScrollLeft =
+      document.body.scrollLeft + document.documentElement.scrollLeft;
+    ViewportMetrics.currentScrollTop =
+      document.body.scrollTop + document.documentElement.scrollTop;
   }
-  return ret;
+
 };
 
-module.exports = keys;
+module.exports = ViewportMetrics;

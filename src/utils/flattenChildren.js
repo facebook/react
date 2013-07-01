@@ -18,9 +18,8 @@
 
 "use strict";
 
+var ReactComponent = require('ReactComponent');
 var ReactTextComponent = require('ReactTextComponent');
-
-var escapeTextForBrowser = require('escapeTextForBrowser');
 
 var throwIf = require('throwIf');
 
@@ -41,28 +40,24 @@ var DUPLICATE_KEY_ERROR =
     'You have two children with identical keys. Make sure that you set the ' +
     '"key" property to a unique value such as a row ID.';
 
-/**
- * If there is only a single child, it still needs a name.
- */
-var ONLY_CHILD_NAME = '0';
-
 var flattenChildrenImpl = function(res, children, nameSoFar) {
-  var key, escapedKey;
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
-      key = child && (child._key || (child.props && child.props.key));
-      escapedKey = key ? escapeTextForBrowser(key) : ('' + i);
       flattenChildrenImpl(
         res,
         child,
-        nameSoFar + '[' + escapedKey + ']'
+        nameSoFar + '[' + ReactComponent.getKey(child, i) + ']'
       );
     }
   } else {
     var type = typeof children;
     var isOnlyChild = nameSoFar === '';
-    var storageName = isOnlyChild ? ONLY_CHILD_NAME : nameSoFar;
+    // If it's the only child, treat the name as if it was wrapped in an array
+    // so that it's consistent if the number of children grows
+    var storageName = isOnlyChild ?
+                      '[' + ReactComponent.getKey(children, 0) + ']' :
+                      nameSoFar;
     if (children === null || children === undefined || type === 'boolean') {
       res[storageName] = null;
     } else if (children.mountComponentIntoNode) {
@@ -74,13 +69,12 @@ var flattenChildrenImpl = function(res, children, nameSoFar) {
     } else {
       if (type === 'object') {
         throwIf(children && children.nodeType === 1, INVALID_CHILD);
-        for (key in children) {
+        for (var key in children) {
           if (children.hasOwnProperty(key)) {
-            escapedKey = escapeTextForBrowser(key);
             flattenChildrenImpl(
               res,
               children[key],
-              nameSoFar + '{' + escapedKey + '}'
+              nameSoFar + '{' + key + '}'
             );
           }
         }

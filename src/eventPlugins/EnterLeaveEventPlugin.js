@@ -14,95 +14,95 @@
  * limitations under the License.
  *
  * @providesModule EnterLeaveEventPlugin
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";
 
+var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var AbstractEvent = require('AbstractEvent');
-var EventConstants = require('EventConstants');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
-var getDOMNodeID = require('getDOMNodeID');
+var ReactID = require('ReactID');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var getFirstReactDOM = ReactInstanceHandles.getFirstReactDOM;
 
-var abstractEventTypes = {
+var eventTypes = {
   mouseEnter: {registrationName: keyOf({onMouseEnter: null})},
   mouseLeave: {registrationName: keyOf({onMouseLeave: null})}
 };
 
-/**
- * For almost every interaction we care about, there will be a top-level
- * `mouseover` and `mouseout` event that occurs so only pay attention to one of
- * the two (to avoid duplicate events). We use the `mouseout` event.
- *
- * However, there's one interaction where there will be no `mouseout` event to
- * rely on - mousing from outside the browser *into* the chrome. We detect this
- * scenario and only in that case, we use the `mouseover` event.
- *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {DOMEventTarget} topLevelTarget The listening component root node.
- * @param {string} topLevelTargetID ID of `topLevelTarget`.
- * @param {object} nativeEvent Native browser event.
- * @return {*} An accumulation of `AbstractEvent`s.
- * @see {EventPluginHub.extractEvents}
- */
-var extractEvents = function(
-    topLevelType,
-    topLevelTarget,
-    topLevelTargetID,
-    nativeEvent) {
-  if (topLevelType === topLevelTypes.topMouseOver &&
-      (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
-    return null;
-  }
-  if (topLevelType !== topLevelTypes.topMouseOut &&
-      topLevelType !== topLevelTypes.topMouseOver) {
-    return null;  // Must not be a mouse in or mouse out - ignoring.
-  }
-
-  var to, from;
-  if (topLevelType === topLevelTypes.topMouseOut) {
-    to = getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-      ExecutionEnvironment.global;
-    from = topLevelTarget;
-  } else {
-    to = topLevelTarget;
-    from = ExecutionEnvironment.global;
-  }
-
-  // Nothing pertains to our managed components.
-  if (from === to) {
-    return null;
-  }
-
-  var fromID = from ? getDOMNodeID(from) : '';
-  var toID = to ? getDOMNodeID(to) : '';
-
-  var leave = AbstractEvent.getPooled(
-    abstractEventTypes.mouseLeave,
-    fromID,
-    nativeEvent
-  );
-  var enter = AbstractEvent.getPooled(
-    abstractEventTypes.mouseEnter,
-    toID,
-    nativeEvent
-  );
-
-  EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
-
-  return [leave, enter];
-};
-
 var EnterLeaveEventPlugin = {
-  abstractEventTypes: abstractEventTypes,
-  extractEvents: extractEvents
+
+  eventTypes: eventTypes,
+
+  /**
+   * For almost every interaction we care about, there will be both a top-level
+   * `mouseover` and `mouseout` event that occurs. Only use `mouseout` so that
+   * we do not extract duplicate events. However, moving the mouse into the
+   * browser from outside will not fire a `mouseout` event. In this case, we use
+   * the `mouseover` top-level event.
+   *
+   * @param {string} topLevelType Record from `EventConstants`.
+   * @param {DOMEventTarget} topLevelTarget The listening component root node.
+   * @param {string} topLevelTargetID ID of `topLevelTarget`.
+   * @param {object} nativeEvent Native browser event.
+   * @return {*} An accumulation of synthetic events.
+   * @see {EventPluginHub.extractEvents}
+   */
+  extractEvents: function(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent) {
+    if (topLevelType === topLevelTypes.topMouseOver &&
+        (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+      return null;
+    }
+    if (topLevelType !== topLevelTypes.topMouseOut &&
+        topLevelType !== topLevelTypes.topMouseOver) {
+      // Must not be a mouse in or mouse out - ignoring.
+      return null;
+    }
+
+    var from, to;
+    if (topLevelType === topLevelTypes.topMouseOut) {
+      from = topLevelTarget;
+      to =
+        getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
+        ExecutionEnvironment.global;
+    } else {
+      from = ExecutionEnvironment.global;
+      to = topLevelTarget;
+    }
+
+    if (from === to) {
+      // Nothing pertains to our managed components.
+      return null;
+    }
+
+    var fromID = from ? ReactID.getID(from) : '';
+    var toID = to ? ReactID.getID(to) : '';
+
+    var leave = SyntheticMouseEvent.getPooled(
+      eventTypes.mouseLeave,
+      fromID,
+      nativeEvent
+    );
+    var enter = SyntheticMouseEvent.getPooled(
+      eventTypes.mouseEnter,
+      toID,
+      nativeEvent
+    );
+
+    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
+    return [leave, enter];
+  }
+
 };
 
 module.exports = EnterLeaveEventPlugin;

@@ -16,6 +16,8 @@
  * @providesModule Danger
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
@@ -63,7 +65,7 @@ function getParentDummy(parent) {
  * @param {Element} elem Parent element.
  * @param {Element} insert Element to insert.
  * @param {Element} after Element to insert after.
- * @returns {Element} Element that was inserted.
+ * @return {Element} Element that was inserted.
  */
 function insertNodeAfterNode(elem, insert, after) {
   if (__DEV__) {

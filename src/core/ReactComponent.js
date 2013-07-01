@@ -16,11 +16,13 @@
  * @providesModule ReactComponent
  */
 
+/*jslint evil: true */
+
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactID = require('ReactID');
 var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -34,6 +36,12 @@ var merge = require('merge');
  * @private
  */
 var OWNER = '{owner}';
+
+/**
+ * Props key that determines if a component's key was already validated.
+ * @private
+ */
+var IS_KEY_VALIDATED = '{is.key.validated}';
 
 /**
  * Every React component is in one of these life cycles.
@@ -55,52 +63,70 @@ var ComponentLifeCycle = keyMirror({
  * This allows us to keep track of children between updates.
  */
 
-var CHILD_HAS_NO_IDENTITY =
-    'You are passing a dynamic array of children. You should set the ' +
-    'property "key" to a string that uniquely identifies each child.';
-
-var HAS_WARNED = false;
+var ownerHasWarned = {};
 
 /**
- * Helpers for flattening child arguments onto a new array or use an existing
- * one.
+ * Warn if the component doesn't have an explicit key assigned to it.
+ * This component is in an array. The array could grow and shrink or be
+ * reordered. All children, that hasn't already been validated, are required to
+ * have a "key" property assigned to it.
+ *
+ * @internal
+ * @param {ReactComponent} component Component that requires a key.
  */
+function validateExplicitKey(component) {
+  if (component[IS_KEY_VALIDATED] || component.props.key != null) {
+    return;
+  }
+  component[IS_KEY_VALIDATED] = true;
 
-function isEmptyChild(child) {
-  return child == null || typeof child === 'boolean';
+  // We can't provide friendly warnings for top level components.
+  if (!ReactCurrentOwner.current) {
+    return;
+  }
+
+  // Name of the component whose render method tried to pass children.
+  var currentName = ReactCurrentOwner.current.constructor.displayName;
+  if (ownerHasWarned.hasOwnProperty(currentName)) {
+    return;
+  }
+  ownerHasWarned[currentName] = true;
+
+  var message = 'Each child in an array should have a unique "key" prop. ' +
+                'Check the render method of ' + currentName + '.';
+  if (!component.isOwnedBy(ReactCurrentOwner.current)) {
+    // Name of the component that originally created this child.
+    var childOwnerName =
+      component.props[OWNER] && component.props[OWNER].constructor.displayName;
+
+    // Usually the current owner is the offender, but if it accepts
+    // children as a property, it may be the creator of the child that's
+    // responsible for assigning it a key.
+    message += ' It was passed a child from ' + childOwnerName + '.';
+  }
+
+  global.console && console.warn && console.warn(message);
 }
 
-function assignKey(setKey, child, index) {
-  if (ReactComponent.isValidComponent(child)) {
-    var key = child.props.key;
-    if (__DEV__) {
-      if (!HAS_WARNED && !key) {
-        HAS_WARNED = true;
-        console && console.warn && console.warn(CHILD_HAS_NO_IDENTITY);
+/**
+ * Ensure that every component either is passed in a static location or, if
+ * if it's passed in an array, has an explicit key property defined.
+ *
+ * @internal
+ * @param {*} component Statically passed child of any type.
+ * @return {boolean}
+ */
+function validateChildKeys(component) {
+  if (Array.isArray(component)) {
+    for (var i = 0; i < component.length; i++) {
+      var child = component[i];
+      if (ReactComponent.isValidComponent(child)) {
+        validateExplicitKey(child);
       }
     }
-    child._key = (setKey ? setKey + ':' : '') + (key || ('' + index));
-  }
-}
-
-function tryToReuseArray(children) {
-  for (var i = 0; i < children.length; i++) {
-    var child = children[i];
-    if (isEmptyChild(child)) return false;
-    assignKey('0', child, i);
-  }
-  return true;
-}
-
-function appendNestedChildren(parentKey, sourceArray, targetArray) {
-  for (var i = 0; i < sourceArray.length; i++) {
-    var child = sourceArray[i];
-    if (isEmptyChild(child)) continue;
-    assignKey(parentKey, child, i);
-    // TODO: Invalid components like strings could possibly need
-    // keys assigned to them here. Usually they're not stateful but
-    // CSS transitions and special events could make them stateful.
-    targetArray.push(child);
+  } else if (ReactComponent.isValidComponent(component)) {
+    // This component was passed in a valid location.
+    component[IS_KEY_VALIDATED] = true;
   }
 }
 
@@ -142,6 +168,23 @@ var ReactComponent = {
       typeof object.mountComponentIntoNode === 'function' &&
       typeof object.receiveProps === 'function'
     );
+  },
+
+  /**
+   * Generate a key string that identifies a component within a set.
+   *
+   * @param {*} component A component that could contain a manual key.
+   * @param {number} index Index that is used if a manual key is not provided.
+   * @return {string}
+   * @internal
+   */
+  getKey: function(component, index) {
+    if (component && component.props && component.props.key != null) {
+      // Explicit key
+      return '' + component.props.key;
+    }
+    // Implicit key determined by the index in the set
+    return '' + index;
   },
 
   /**
@@ -202,29 +245,16 @@ var ReactComponent = {
     /**
      * Returns the DOM node rendered by this component.
      *
-     * @return {?DOMElement} The root node of this component.
+     * @return {DOMElement} The root node of this component.
      * @final
      * @protected
      */
     getDOMNode: function() {
       invariant(
-        ExecutionEnvironment.canUseDOM,
-        'getDOMNode(): The DOM is not supported in the current environment.'
-      );
-      invariant(
         this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
-      var rootNode = this._rootNode;
-      if (!rootNode) {
-        rootNode = document.getElementById(this._rootNodeID);
-        if (!rootNode) {
-          // TODO: Log the frequency that we reach this path.
-          rootNode = ReactMount.findReactRenderedDOMNodeSlow(this._rootNodeID);
-        }
-        this._rootNode = rootNode;
-      }
-      return rootNode;
+      return ReactID.getNode(this._rootNodeID);
     },
 
     /**
@@ -280,53 +310,23 @@ var ReactComponent = {
       // All components start unmounted.
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
 
-      // Children can be either an array or more than one argument
-      if (arguments.length < 2) {
-        return;
-      }
-
-      if (arguments.length === 2) {
-
-        // A single string or number child is treated as content, not an array.
-        var type = typeof children;
-        if (children == null || type === 'string' || type === 'number') {
-          this.props.children = children;
-          return;
+      // Children can be more than one argument
+      var childrenLength = arguments.length - 1;
+      if (childrenLength === 1) {
+        if (__DEV__) {
+          validateChildKeys(children);
         }
-
-        // A single array can be reused if it's already flat
-        if (Array.isArray(children) && tryToReuseArray(children)) {
-          this.props.children = children;
-          return;
-        }
-
-      }
-
-      // Subsequent arguments are rolled into one child array. Array arguments
-      // are flattened onto it. This is inlined to avoid extra heap allocation.
-      var targetArray = null;
-      for (var i = 1; i < arguments.length; i++) {
-        var child = arguments[i];
-        if (Array.isArray(child)) {
-          if (child.length === 0) continue;
-
-          if (targetArray === null) targetArray = [];
-          appendNestedChildren('' + (i - 1), child, targetArray);
-
-        } else if (!isEmptyChild(child)) {
-
-          if (ReactComponent.isValidComponent(child)) {
-            // This is a static node and therefore safe to key by index.
-            // No warning necessary.
-            child._key = child.props.key || ('' + (i - 1));
+        this.props.children = children;
+      } else if (childrenLength > 1) {
+        var childArray = Array(childrenLength);
+        for (var i = 0; i < childrenLength; i++) {
+          if (__DEV__) {
+            validateChildKeys(arguments[i + 1]);
           }
-
-          if (targetArray === null) targetArray = [];
-          targetArray.push(child);
-
+          childArray[i] = arguments[i + 1];
         }
+        this.props.children = childArray;
       }
-      this.props.children = targetArray;
     },
 
     /**
@@ -376,7 +376,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
       }
-      this._rootNode = null;
+      ReactID.purgeID(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -447,6 +447,10 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
+      invariant(
+        container && container.nodeType === 1,
+        'mountComponentIntoNode(...): Target container is not a DOM element.'
+      );
       var renderStart = Date.now();
       var markup = this.mountComponent(rootID, transaction);
       ReactMount.totalInstantiationTime += (Date.now() - renderStart);
@@ -500,6 +504,22 @@ var ReactComponent = {
      */
     isOwnedBy: function(owner) {
       return this.props[OWNER] === owner;
+    },
+
+    /**
+     * Gets another component, that shares the same owner as this one, by ref.
+     *
+     * @param {string} ref of a sibling Component.
+     * @return {?ReactComponent} the actual sibling Component.
+     * @final
+     * @internal
+     */
+    getSiblingByRef: function(ref) {
+      var owner = this.props[OWNER];
+      if (!owner || !owner.refs) {
+        return null;
+      }
+      return owner.refs[ref];
     }
 
   }

@@ -14,12 +14,13 @@
  * limitations under the License.
  *
  * @providesModule ReactTextComponent
- * @typechecks
+ * @typechecks static-only
  */
 
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactID = require('ReactID');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -57,7 +58,7 @@ mixInto(ReactTextComponent, {
   mountComponent: function(rootID) {
     ReactComponent.Mixin.mountComponent.call(this, rootID);
     return (
-      '<span id="' + rootID + '">' +
+      '<span ' + ReactID.ATTR_NAME + '="' + rootID + '">' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );

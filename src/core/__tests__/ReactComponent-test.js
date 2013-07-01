@@ -31,6 +31,24 @@ describe('ReactComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
   });
 
+  it('should throw on invalid render targets', function() {
+    var container = document.createElement('div');
+    // jQuery objects are basically arrays; people often pass them in by mistake
+    expect(function() {
+      React.renderComponent(<div></div>, [container]);
+    }).toThrow(
+      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
+      'not a DOM element.'
+    );
+
+    expect(function() {
+      React.renderComponent(<div></div>, null);
+    }).toThrow(
+      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
+      'not a DOM element.'
+    );
+  });
+
   it('should throw when supplying a ref outside of render method', function() {
     var instance = <div ref="badDiv" />;
     expect(function() {
@@ -95,4 +113,23 @@ describe('ReactComponent', function() {
     ReactTestUtils.renderIntoDocument(instance);
   });
 
+  it('should correctly determine if a component is mounted', function() {
+    var Component = React.createClass({
+      componentWillMount: function() {
+        expect(this.isMounted()).toBeFalsy();
+      },
+      componentDidMount: function() {
+        expect(this.isMounted()).toBeTruthy();
+      },
+      render: function() {
+        return <div/>;
+      }
+    });
+
+    var instance = <Component />;
+
+    expect(instance.isMounted()).toBeFalsy();
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.isMounted()).toBeTruthy();
+  });
 });
