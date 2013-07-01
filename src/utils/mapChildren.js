@@ -18,13 +18,13 @@
 
 "use strict";
 
+var flattenChildren = require('flattenChildren');
+
 /**
  * Maps children that are typically specified as `props.children`.
  *
  * The provided mapFunction(child, key, index) will be called for each
  * leaf child.
- *
- * Note: mapChildren assumes children have already been flattened.
  *
  * @param {array} children
  * @param {function(*, string, int)} mapFunction
@@ -36,12 +36,20 @@ function mapChildren(children, mapFunction, context) {
     return children;
   }
   var mappedChildren = [];
-  for (var ii = 0; ii < children.length; ii++) {
-    var child = children[ii];
-    var key = child._key;
-    var mappedChild = mapFunction.call(context, child, key, ii);
-    mappedChild.props.key = key;
-    mappedChildren.push(mappedChild);
+  var flattenedMap = flattenChildren(children);
+  var ii = 0;
+  for (var key in flattenedMap) {
+    if (!flattenedMap.hasOwnProperty(key)) {
+      continue;
+    }
+    var child = flattenedMap[key];
+    // In this version of map children we ignore empty children.
+    if (child !== null) {
+      var mappedChild = mapFunction.call(context, child, key, ii);
+      mappedChild.props.key = key;
+      mappedChildren.push(mappedChild);
+      ii++;
+    }
   }
   return mappedChildren;
 }

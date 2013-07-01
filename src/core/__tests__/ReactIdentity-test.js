@@ -55,8 +55,8 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
-    checkId(node.childNodes[0], '.r[0].[0]{first}');
-    checkId(node.childNodes[1], '.r[0].[0]{second}');
+    checkId(node.childNodes[0], '.r[0].{first}');
+    checkId(node.childNodes[1], '.r[0].{second}');
   });
 
   it('should allow key property to express identity', function() {
@@ -71,10 +71,10 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
-    checkId(node.childNodes[0], '.r[0].[0:apple]');
-    checkId(node.childNodes[1], '.r[0].[0:banana]');
-    checkId(node.childNodes[2], '.r[0].[0:0]');
-    checkId(node.childNodes[3], '.r[0].[0:123]');
+    checkId(node.childNodes[0], '.r[0].[apple]');
+    checkId(node.childNodes[1], '.r[0].[banana]');
+    checkId(node.childNodes[2], '.r[0].[0]');
+    checkId(node.childNodes[3], '.r[0].[123]');
   });
 
   it('should use instance identity', function() {
@@ -95,15 +95,13 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
-    checkId(node.childNodes[0], '.r[0].[0:wrap1]');
-    checkId(
-      node.childNodes[0].firstChild,
-      '.r[0].[0:wrap1].[0:squirrel]'
-    );
-    checkId(node.childNodes[1], '.r[0].[0:wrap2]');
-    checkId(node.childNodes[1].firstChild, '.r[0].[0:wrap2].[0:bunny]');
-    checkId(node.childNodes[2], '.r[0].[0:2]');
-    checkId(node.childNodes[2].firstChild, '.r[0].[0:2].[0:chipmunk]');
+
+    checkId(node.childNodes[0], '.r[0].[wrap1]');
+    checkId(node.childNodes[0].firstChild, '.r[0].[wrap1].[squirrel]');
+    checkId(node.childNodes[1], '.r[0].[wrap2]');
+    checkId(node.childNodes[1].firstChild, '.r[0].[wrap2].[bunny]');
+    checkId(node.childNodes[2], '.r[0].[2]');
+    checkId(node.childNodes[2].firstChild, '.r[0].[2].[chipmunk]');
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
@@ -118,7 +116,7 @@ describe('ReactIdentity', function() {
     expect(span1.getDOMNode()).not.toBe(null);
     expect(span2.getDOMNode()).not.toBe(null);
 
-    checkId(span1.getDOMNode(), '.r[0].[0:0:' + key + ']');
+    checkId(span1.getDOMNode(), '.r[0].[' + key + ']');
     checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}');
   }
 
@@ -247,7 +245,7 @@ describe('ReactIdentity', function() {
     }).not.toThrow();
   });
 
-  it('should retain keys during updates in composite components', function() {
+  it('should retain key during updates in composite components', function() {
 
     var TestComponent = React.createClass({
       render: function() {
@@ -283,19 +281,13 @@ describe('ReactIdentity', function() {
 
     React.renderComponent(wrapped, document.createElement('div'));
 
-    var beforeKey = wrapped
-      ._renderedComponent
-      ._renderedComponent
-      .props.children[0]._key;
+    var beforeID = ReactID.getID(wrapped.getDOMNode().firstChild);
 
     wrapped.swap();
 
-    var afterKey = wrapped
-      ._renderedComponent
-      ._renderedComponent
-      .props.children[0]._key;
+    var afterID = ReactID.getID(wrapped.getDOMNode().firstChild);
 
-    expect(beforeKey).not.toEqual(afterKey);
+    expect(beforeID).not.toEqual(afterID);
 
   });
 

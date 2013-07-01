@@ -32,19 +32,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: null,
-
-  /**
-   * @internal
-   * @return {number}
-   */
-  getDepth: function() {
-    var owner = ReactCurrentOwner.current;
-    if (!owner) {
-      return 0;
-    }
-    return owner._compositionLevel;
-  }
+  current: null
 
 };
 

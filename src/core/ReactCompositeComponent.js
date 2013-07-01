@@ -472,7 +472,6 @@ var ReactCompositeComponentMixin = {
     this.state = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
-    this._compositionLevel = ReactCurrentOwner.getDepth() + 1;
   },
 
   /**
@@ -520,8 +519,6 @@ var ReactCompositeComponentMixin = {
     }
 
     this._renderedComponent = this._renderValidatedComponent();
-
-    this._renderedComponent._compositionLevel = this._compositionLevel + 1;
 
     // Done with mounting, `setState` will now trigger UI changes.
     this._compositeLifeCycleState = null;
