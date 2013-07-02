@@ -28,19 +28,6 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-function invokeWithWarning(func) {
-  return function() {
-    console && console.warn && console.warn(
-      'You have invoked a method that is automatically bound, before the ' +
-        'instance has been mounted. There is nothing conceptually wrong with ' +
-        'this, but since this method will be replaced with a new version once' +
-        ' the component is mounted - you should be aware of the fact that ' +
-        'this method will soon be replaced.'
-    );
-    return func.apply(this, arguments);
-  };
-}
-
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
  */
@@ -373,9 +360,6 @@ function mixSpecIntoComponent(Constructor, spec) {
         }
         proto.__reactAutoBindMap[name] = property;
         proto[name] = property;
-        if (__DEV__) {
-          proto[name] = invokeWithWarning(property);
-        }
       } else {
         if (isInherited) {
           // For methods which are defined more than once, call the existing
