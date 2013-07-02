@@ -590,13 +590,19 @@ var ReactCompositeComponentMixin = {
    * There is no guarantee that `this.state` will be immediately updated, so
    * accessing `this.state` after calling this method may return the old value.
    *
+   * There is no guarantee that calls to `setState` will run synchronously,
+   * as they may eventually be batched together.  You can provide an optional
+   * callback that will be executed when the call to setState is actually
+   * completed.
+   *
    * @param {object} partialState Next partial state to be merged with state.
+   * @param {?function} callback Called after state is updated.
    * @final
    * @protected
    */
-  setState: function(partialState) {
+  setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this.replaceState(merge(this._pendingState || this.state, partialState));
+    this.replaceState(merge(this._pendingState || this.state, partialState), callback);
   },
 
   /**
@@ -607,10 +613,11 @@ var ReactCompositeComponentMixin = {
    * accessing `this.state` after calling this method may return the old value.
    *
    * @param {object} completeState Next state.
+   * @param {?function} callback Called after state is updated.
    * @final
    * @protected
    */
-  replaceState: function(completeState) {
+  replaceState: function(completeState, callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     validateLifeCycleOnReplaceState.call(null, this);
     this._pendingState = completeState;
@@ -635,6 +642,9 @@ var ReactCompositeComponentMixin = {
       ReactComponent.ReactReconcileTransaction.release(transaction);
       this._compositeLifeCycleState = null;
     }
+
+    // If callback is 'truthy', execute it
+    callback && callback();
   },
 
   /**
@@ -755,10 +765,11 @@ var ReactCompositeComponentMixin = {
    * This will not invoke `shouldUpdateComponent`, but it will invoke
    * `componentWillUpdate` and `componentDidUpdate`.
    *
+   * @param {?function} callback Called after update is complete.
    * @final
    * @protected
    */
-  forceUpdate: function() {
+  forceUpdate: function(callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     invariant(
       this.isMounted() ||
@@ -781,6 +792,8 @@ var ReactCompositeComponentMixin = {
       transaction
     );
     ReactComponent.ReactReconcileTransaction.release(transaction);
+
+    callback && callback();
   },
 
   /**
