@@ -79,6 +79,8 @@ var ReactDOM = objMapKeyVal({
   em: false,
   embed: true,
   fieldset: false,
+  figcaption: false,
+  figure: false,
   footer: false,
   form: false, // NOTE: Injected, see `ReactDOMForm`.
   h1: false,
