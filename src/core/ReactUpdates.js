@@ -36,29 +36,34 @@ function batchedUpdates(callback) {
   );
   isBatchingUpdates = true;
 
-  callback();
-  // TODO: Sort components by depth such that parent components update first
-  for (var i = 0; i < dirtyComponents.length; i++) {
-    // If a component is unmounted before pending changes apply, ignore them
-    // TODO: Queue unmounts in the same list to avoid this happening at all
-    var component = dirtyComponents[i];
-    if (component.isMounted()) {
-      // If performUpdateIfNecessary happens to enqueue any new updates, we
-      // shouldn't execute the callbacks until the next render happens, so
-      // stash the callbacks first
-      var callbacks = component._pendingCallbacks;
-      component._pendingCallbacks = null;
-      component.performUpdateIfNecessary();
-      if (callbacks) {
-        for (var j = 0; j < callbacks.length; j++) {
-          callbacks[j]();
+  try {
+    callback();
+    // TODO: Sort components by depth such that parent components update first
+    for (var i = 0; i < dirtyComponents.length; i++) {
+      // If a component is unmounted before pending changes apply, ignore them
+      // TODO: Queue unmounts in the same list to avoid this happening at all
+      var component = dirtyComponents[i];
+      if (component.isMounted()) {
+        // If performUpdateIfNecessary happens to enqueue any new updates, we
+        // shouldn't execute the callbacks until the next render happens, so
+        // stash the callbacks first
+        var callbacks = component._pendingCallbacks;
+        component._pendingCallbacks = null;
+        component.performUpdateIfNecessary();
+        if (callbacks) {
+          for (var j = 0; j < callbacks.length; j++) {
+            callbacks[j]();
+          }
         }
       }
     }
+  } catch (error) {
+    // IE8 requires `catch` in order to use `finally`.
+    throw error;
+  } finally {
+    dirtyComponents.length = 0;
+    isBatchingUpdates = false;
   }
-  dirtyComponents.length = 0;
-
-  isBatchingUpdates = false;
 }
 
 /**
