@@ -26,6 +26,7 @@ var ReactID = require('ReactID');
 var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
+var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
@@ -261,21 +262,27 @@ var ReactComponent = {
      * Sets a subset of the props.
      *
      * @param {object} partialProps Subset of the next props.
+     * @param {?function} callback Called after props are updated.
      * @final
      * @public
      */
-    setProps: function(partialProps) {
-      this.replaceProps(merge(this.props, partialProps));
+    setProps: function(partialProps, callback) {
+      // Merge with `_pendingProps` if it exists, otherwise with existing props.
+      this.replaceProps(
+        merge(this._pendingProps || this.props, partialProps),
+        callback
+      );
     },
 
     /**
      * Replaces all of the props.
      *
      * @param {object} props New props.
+     * @param {?function} callback Called after props are updated.
      * @final
      * @public
      */
-    replaceProps: function(props) {
+    replaceProps: function(props, callback) {
       invariant(
         !this.props[OWNER],
         'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
@@ -284,9 +291,8 @@ var ReactComponent = {
         '`render` method to pass the correct value as props to the component ' +
         'where it is created.'
       );
-      var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
-      transaction.perform(this.receiveProps, this, props, transaction);
-      ReactComponent.ReactReconcileTransaction.release(transaction);
+      this._pendingProps = props;
+      ReactUpdates.enqueueUpdate(this, callback);
     },
 
     /**
@@ -305,6 +311,9 @@ var ReactComponent = {
       this.props[OWNER] = ReactCurrentOwner.current;
       // All components start unmounted.
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
+
+      this._pendingProps = null;
+      this._pendingCallbacks = null;
 
       // Children can be more than one argument
       var childrenLength = arguments.length - 1;
@@ -392,17 +401,59 @@ var ReactComponent = {
         this.isMounted(),
         'receiveProps(...): Can only update a mounted component.'
       );
+      this._pendingProps = nextProps;
+      this._performUpdateIfNecessary(transaction);
+    },
+
+    /**
+     * Call `_performUpdateIfNecessary` within a new transaction.
+     *
+     * @param {ReactReconcileTransaction} transaction
+     * @internal
+     */
+    performUpdateIfNecessary: function() {
+      var transaction = ReactComponent.ReactReconcileTransaction.getPooled();
+      transaction.perform(this._performUpdateIfNecessary, this, transaction);
+      ReactComponent.ReactReconcileTransaction.release(transaction);
+    },
+
+    /**
+     * If `_pendingProps` is set, update the component.
+     *
+     * @param {ReactReconcileTransaction} transaction
+     * @internal
+     */
+    _performUpdateIfNecessary: function(transaction) {
+      if (this._pendingProps == null) {
+        return;
+      }
+      var prevProps = this.props;
+      this.props = this._pendingProps;
+      this._pendingProps = null;
+      this.updateComponent(transaction, prevProps);
+    },
+
+    /**
+     * Updates the component's currently mounted representation.
+     *
+     * @param {ReactReconcileTransaction} transaction
+     * @param {object} prevProps
+     * @internal
+     */
+    updateComponent: function(transaction, prevProps) {
       var props = this.props;
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`.
-      if (nextProps[OWNER] !== props[OWNER] || nextProps.ref !== props.ref) {
-        if (props.ref != null) {
-          ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
+      if (props[OWNER] !== prevProps[OWNER] || props.ref !== prevProps.ref) {
+        if (prevProps.ref != null) {
+          ReactOwner.removeComponentAsRefFrom(
+            this, prevProps.ref, prevProps[OWNER]
+          );
         }
         // Correct, even if the owner is the same, and only the ref has changed.
-        if (nextProps.ref != null) {
-          ReactOwner.addComponentAsRefTo(this, nextProps.ref, nextProps[OWNER]);
+        if (props.ref != null) {
+          ReactOwner.addComponentAsRefTo(this, props.ref, props[OWNER]);
         }
       }
     },

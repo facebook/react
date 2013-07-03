@@ -168,20 +168,24 @@ ReactNativeComponent.Mixin = {
     return '';
   },
 
+  receiveProps: function(nextProps, transaction) {
+    assertValidProps(nextProps);
+    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+  },
+
   /**
-   * Controls a native DOM component after it has already been allocated and
+   * Updates a native DOM component after it has already been allocated and
    * attached to the DOM. Reconciles the root DOM node, then recurses.
    *
-   * @internal
-   * @param {object} nextProps
    * @param {ReactReconcileTransaction} transaction
+   * @param {object} prevProps
+   * @internal
+   * @overridable
    */
-  receiveProps: function(nextProps, transaction) {
-    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
-    assertValidProps(nextProps);
-    this._updateDOMProperties(nextProps);
-    this._updateDOMChildren(nextProps, transaction);
-    this.props = nextProps;
+  updateComponent: function(transaction, prevProps) {
+    ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+    this._updateDOMProperties(prevProps);
+    this._updateDOMChildren(prevProps, transaction);
   },
 
   /**
@@ -196,10 +200,10 @@ ReactNativeComponent.Mixin = {
    * TODO: Benchmark areas that can be improved with caching.
    *
    * @private
-   * @param {object} nextProps
+   * @param {object} lastProps
    */
-  _updateDOMProperties: function(nextProps) {
-    var lastProps = this.props;
+  _updateDOMProperties: function(lastProps) {
+    var nextProps = this.props;
     var propKey;
     var styleName;
     var styleUpdates;
@@ -293,20 +297,21 @@ ReactNativeComponent.Mixin = {
    * Reconciles the children with the various properties that affect the
    * children content.
    *
-   * @param {object} nextProps
+   * @param {object} lastProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMChildren: function(nextProps, transaction) {
-    var lastUsedContent =
-      CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
+  _updateDOMChildren: function(lastProps, transaction) {
+    var nextProps = this.props;
 
+    var lastUsedContent =
+      CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
     var contentToUse =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
     // Note the use of `!=` which checks for null or undefined.
 
     var lastUsedChildren =
-      lastUsedContent != null ? null : this.props.children;
+      lastUsedContent != null ? null : lastProps.children;
     var childrenToUse = contentToUse != null ? null : nextProps.children;
 
     if (contentToUse != null) {

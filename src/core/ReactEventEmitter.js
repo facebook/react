@@ -23,6 +23,7 @@ var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactUpdates = require('ReactUpdates');
 var ViewportMetrics = require('ViewportMetrics');
 
 var invariant = require('invariant');
@@ -320,8 +321,10 @@ var ReactEventEmitter = {
     );
 
     // Event queue being processed in the same cycle allows `preventDefault`.
-    EventPluginHub.enqueueEvents(events);
-    EventPluginHub.processEventQueue();
+    ReactUpdates.batchedUpdates(function() {
+      EventPluginHub.enqueueEvents(events);
+      EventPluginHub.processEventQueue();
+    });
   },
 
   registrationNames: EventPluginHub.registrationNames,

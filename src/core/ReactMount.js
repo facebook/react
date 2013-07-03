@@ -105,11 +105,16 @@ var ReactMount = {
    * @param {ReactComponent} prevComponent component instance already in the DOM
    * @param {ReactComponent} nextComponent component instance to render
    * @param {DOMElement} container container to render into
+   * @param {?function} callback function triggered on completion
    */
-  _updateRootComponent: function(prevComponent, nextComponent, container) {
+  _updateRootComponent: function(
+      prevComponent,
+      nextComponent,
+      container,
+      callback) {
     var nextProps = nextComponent.props;
     ReactMount.scrollMonitor(container, function() {
-      prevComponent.replaceProps(nextProps);
+      prevComponent.replaceProps(nextProps, callback);
     });
     return prevComponent;
   },
@@ -157,9 +162,10 @@ var ReactMount = {
    *
    * @param {ReactComponent} nextComponent Component instance to render.
    * @param {DOMElement} container DOM element to render into.
+   * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  renderComponent: function(nextComponent, container) {
+  renderComponent: function(nextComponent, container, callback) {
     var registeredComponent = instanceByReactRootID[getReactRootID(container)];
 
     if (registeredComponent) {
@@ -167,7 +173,8 @@ var ReactMount = {
         return ReactMount._updateRootComponent(
           registeredComponent,
           nextComponent,
-          container
+          container,
+          callback
         );
       } else {
         ReactMount.unmountAndReleaseReactRootNode(container);
@@ -181,11 +188,13 @@ var ReactMount = {
 
     var shouldReuseMarkup = containerHasReactMarkup && !registeredComponent;
 
-    return ReactMount._renderNewRootComponent(
+    var component = ReactMount._renderNewRootComponent(
       nextComponent,
       container,
       shouldReuseMarkup
     );
+    callback && callback();
+    return component;
   },
 
   /**

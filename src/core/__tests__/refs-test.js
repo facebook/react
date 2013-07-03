@@ -46,7 +46,9 @@ var ClickCounter = React.createClass({
     }
     return (
       <span className="clickIncrementer"
-        onClick={this.setState.bind(this, {count: this.state.count + 1})}>
+          onClick={function() {
+            this.setState({count: this.state.count + 1});
+          }.bind(this)}>
         {children}
       </span>
     );
