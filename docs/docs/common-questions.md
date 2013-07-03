@@ -12,7 +12,8 @@ React supports the latest two Chrome, Firefox, Safari, and Internet Explorer ver
 
 ### How do I get React to support Internet Explorer 8?
 
-React requires ES5 JavaScript shims to run in Internet Explorer 8. Include the [ES5 Shims](https://github.com/kriskowal/es5-shim) to implement these shims.
+React requires ES5 JavaScript shims to run in Internet Explorer 8. Include the [ES5 Shims and shams](https://github.com/kriskowal/es5-shim)
+and [console-polyfill)(https://github.com/paulmillr/console-polyfill/) to implement these shims.
 
 ### Who uses React?
 
