@@ -20,6 +20,7 @@
 
 var ReactDOM = require('ReactDOM');
 var ReactDOMForm = require('ReactDOMForm');
+var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 
 var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
@@ -51,7 +52,7 @@ function inject() {
 
   ReactDOM.injection.injectComponentClasses({
     form: ReactDOMForm,
-    // TODO: Inject `ReactDOMInput`.
+    input: ReactDOMInput,
     textarea: ReactDOMTextarea
   });
 
