@@ -53,6 +53,7 @@ var DefaultDOMPropertyConfig = {
     draggable: null,
     enctype: null,
     height: MUST_USE_ATTRIBUTE,
+    hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     href: null,
     htmlFor: null,
     id: MUST_USE_PROPERTY,
