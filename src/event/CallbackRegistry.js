@@ -35,7 +35,7 @@ var CallbackRegistry = {
   /**
    * Stores `listener` at `listenerBank[registrationName][id]`. Is idempotent.
    *
-   * @param {string} id ID of the DOM node.
+   * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {?function} listener The callback to store.
    */
@@ -46,7 +46,7 @@ var CallbackRegistry = {
   },
 
   /**
-   * @param {string} id ID of the DOM node.
+   * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
@@ -58,13 +58,24 @@ var CallbackRegistry = {
   /**
    * Deletes a listener from the registration bank.
    *
-   * @param {string} id ID of the DOM node.
+   * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(id, registrationName) {
     var bankForRegistrationName = listenerBank[registrationName];
     if (bankForRegistrationName) {
       delete bankForRegistrationName[id];
+    }
+  },
+
+  /**
+   * Deletes all listeners for the DOM element with the supplied ID.
+   *
+   * @param {string} id ID of the DOM element.
+   */
+  deleteAllListeners: function(id) {
+    for (var registrationName in listenerBank) {
+      delete listenerBank[registrationName][id];
     }
   },
 

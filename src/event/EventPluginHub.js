@@ -112,17 +112,7 @@ var EventPluginHub = {
 
   deleteListener: CallbackRegistry.deleteListener,
 
-  /**
-   * Deletes all listeners for the DOM element with the supplied ID.
-   *
-   * @param {string} domID ID of a DOM element.
-   */
-  deleteAllListeners: function(domID) {
-    var registrationNamesKeys = EventPluginRegistry.registrationNamesKeys;
-    for (var ii = 0; ii < registrationNamesKeys.length; ii++) {
-      CallbackRegistry.deleteListener(domID, registrationNamesKeys[ii]);
-    }
-  },
+  deleteAllListeners: CallbackRegistry.deleteAllListeners,
 
   /**
    * Allows registered plugins an opportunity to extract events from top-level
