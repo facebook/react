@@ -22,6 +22,9 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 
+var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
+var DOMProperty = require('DOMProperty');
+
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
@@ -37,7 +40,7 @@ function inject() {
   EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
 
   /**
-   * Two important event plugins included by default (without having to require
+   * Some important event plugins included by default (without having to require
    * them).
    */
   EventPluginHub.injection.injectEventPluginsByName({
@@ -46,17 +49,13 @@ function inject() {
     'ChangeEventPlugin': ChangeEventPlugin
   });
 
-  /**
-   * This is a bit of a hack. We need to override the <form> element to be a
-   * composite component because IE8 does not bubble or capture submit to the
-   * top level. In order to make this work with our dependency graph we need to
-   * inject it here.
-   */
   ReactDOM.injection.injectComponentClasses({
     form: ReactDOMForm,
     // TODO: Inject `ReactDOMInput`.
     textarea: ReactDOMTextarea
   });
+
+  DOMProperty.injection.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 }
 
 module.exports = {

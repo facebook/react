@@ -193,6 +193,9 @@ describe('ReactNativeComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
+      var ReactDefaultInjection = require('ReactDefaultInjection');
+      ReactDefaultInjection.inject();
+
       var mixInto = require('mixInto');
       var ReactNativeComponent = require('ReactNativeComponent');
 
@@ -217,7 +220,7 @@ describe('ReactNativeComponent', function() {
       });
     });
 
-    it("should handle className", function() {
+    it("should generate the correct markup with className", function() {
       expect(genMarkup({ className: 'a' })).toHaveAttribute('class', 'a');
       expect(genMarkup({ className: 'a b' })).toHaveAttribute('class', 'a b');
       expect(genMarkup({ className: '' })).toHaveAttribute('class', '');

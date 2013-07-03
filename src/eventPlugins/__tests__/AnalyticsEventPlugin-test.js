@@ -26,23 +26,42 @@ describe('AnalyticsEventPlugin', function() {
   var EventPluginHub;
   var EventPluginRegistry;
   var React;
-  var ReactDefaultInjection;
   var ReactEventEmitter;
   var ReactEventTopLevelCallback;
   var ReactTestUtils;
+
+  var DefaultEventPluginOrder;
+  var EnterLeaveEventPlugin;
+  var ChangeEventPlugin;
+  var ReactInstanceHandles;
+  var SimpleEventPlugin;
 
   beforeEach(function() {
     AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
-    ReactDefaultInjection = require('ReactDefaultInjection');
     ReactEventEmitter = require('ReactEventEmitter');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactTestUtils = require('ReactTestUtils');
 
     EventPluginRegistry._resetEventPlugins();
-    ReactDefaultInjection.inject();
+
+    // Re-inject default events system after resetting.
+    DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+    EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+    ChangeEventPlugin = require('ChangeEventPlugin');
+    ReactInstanceHandles = require('ReactInstanceHandles');
+    SimpleEventPlugin = require('SimpleEventPlugin');
+
+    EventPluginHub.injection.injectEventPluginOrder(DefaultEventPluginOrder);
+    EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
+
+    EventPluginHub.injection.injectEventPluginsByName({
+      'SimpleEventPlugin': SimpleEventPlugin,
+      'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
+      'ChangeEventPlugin': ChangeEventPlugin
+    });
 
     ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
   });

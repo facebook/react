@@ -23,6 +23,101 @@
 
 var invariant = require('invariant');
 
+var DOMPropertyInjection = {
+  /**
+   * Mapping from normalized, camelcased property names to a configuration that
+   * specifies how the associated DOM property should be accessed or rendered.
+   */
+  MUST_USE_ATTRIBUTE: 0x1,
+  MUST_USE_PROPERTY:  0x2,
+  HAS_BOOLEAN_VALUE:  0x4,
+  HAS_SIDE_EFFECTS:   0x8,
+
+  /**
+   * Inject some specialized knowledge about the DOM. This takes a config object
+   * with the following properties:
+   *
+   * isCustomAttribute: function that given an attribute name will return true
+   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
+   * attributes where it's impossible to enumerate all of the possible
+   * attribute names,
+   *
+   * Properties: object mapping DOM property name to one of the
+   * DOMPropertyInjection constants or null. If your attribute isn't in here,
+   * it won't get written to the DOM.
+   *
+   * DOMAttributeNames: object mapping React attribute name to the DOM
+   * attribute name. Attribute names not specified use the **lowercase**
+   * normalized name.
+   *
+   * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
+   * Property names not specified use the normalized name.
+   *
+   * DOMMutationMethods: Properties that require special mutation methods. If
+   * `value` is undefined, the mutation method should unset the property.
+   *
+   * @param {object} domPropertyConfig the config as described above.
+   */
+  injectDOMPropertyConfig: function(domPropertyConfig) {
+    var Properties = domPropertyConfig.Properties || {};
+    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
+    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+
+    if (domPropertyConfig.isCustomAttribute) {
+      DOMProperty._isCustomAttributeFunctions.push(
+        domPropertyConfig.isCustomAttribute
+      );
+    }
+
+    for (var propName in Properties) {
+      invariant(
+        !DOMProperty.isStandardName[propName],
+        'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
+        '\'%s\' which has already been injected. You may be accidentally ' +
+        'injecting the same DOM property config twice, or you may be ' +
+        'injecting two configs that have conflicting property names.',
+        propName
+      );
+
+      DOMProperty.isStandardName[propName] = true;
+
+      DOMProperty.getAttributeName[propName] =
+        DOMAttributeNames[propName] || propName.toLowerCase();
+
+      DOMProperty.getPropertyName[propName] =
+        DOMPropertyNames[propName] || propName;
+
+      var mutationMethod = DOMMutationMethods[propName];
+      if (mutationMethod) {
+        DOMProperty.getMutationMethod[propName] = mutationMethod;
+      }
+
+      var propConfig = Properties[propName];
+      DOMProperty.mustUseAttribute[propName] =
+        propConfig & DOMPropertyInjection.MUST_USE_ATTRIBUTE;
+      DOMProperty.mustUseProperty[propName] =
+        propConfig & DOMPropertyInjection.MUST_USE_PROPERTY;
+      DOMProperty.hasBooleanValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
+      DOMProperty.hasSideEffects[propName] =
+        propConfig & DOMPropertyInjection.HAS_SIDE_EFFECTS;
+
+      invariant(
+        !DOMProperty.mustUseAttribute[propName] ||
+          !DOMProperty.mustUseProperty[propName],
+        'DOMProperty: Cannot use require using both attribute and property: %s',
+        propName
+      );
+      invariant(
+        DOMProperty.mustUseProperty[propName] ||
+          !DOMProperty.hasSideEffects[propName],
+        'DOMProperty: Properties that have side effects must use property: %s',
+        propName
+      );
+    }
+  }
+};
 var defaultValueCache = {};
 
 /**
@@ -95,12 +190,21 @@ var DOMProperty = {
   hasSideEffects: {},
 
   /**
+   * All of the isCustomAttribute() functions that have been injected.
+   */
+  _isCustomAttributeFunctions: [],
+
+  /**
    * Checks whether a property name is a custom attribute.
    * @method
    */
-  isCustomAttribute: RegExp.prototype.test.bind(
-    /^(data|aria)-[a-z_][a-z\d_.\-]*$/
-  ),
+  isCustomAttribute: function(attributeName) {
+    return DOMProperty._isCustomAttributeFunctions.some(
+      function(isCustomAttributeFn) {
+        return isCustomAttributeFn.call(null, attributeName);
+      }
+    );
+  },
 
   /**
    * Returns the default property value for a DOM property (i.e., not an
@@ -121,168 +225,9 @@ var DOMProperty = {
       nodeDefaults[prop] = testElement[prop];
     }
     return nodeDefaults[prop];
-  }
+  },
+
+  injection: DOMPropertyInjection
 };
-
-/**
- * Mapping from normalized, camelcased property names to a configuration that
- * specifies how the associated DOM property should be accessed or rendered.
- */
-var MustUseAttribute  = 0x1;
-var MustUseProperty   = 0x2;
-var HasBooleanValue   = 0x4;
-var HasSideEffects    = 0x8;
-
-var Properties = {
-  /**
-   * Standard Properties
-   */
-  accept: null,
-  action: null,
-  ajaxify: MustUseAttribute,
-  allowFullScreen: MustUseAttribute | HasBooleanValue,
-  alt: null,
-  autoComplete: null,
-  autoplay: HasBooleanValue,
-  cellPadding: null,
-  cellSpacing: null,
-  checked: MustUseProperty | HasBooleanValue,
-  className: MustUseProperty,
-  colSpan: null,
-  contentEditable: null,
-  controls: MustUseProperty | HasBooleanValue,
-  data: null, // For `<object />` acts as `src`.
-  dir: null,
-  disabled: MustUseProperty | HasBooleanValue,
-  draggable: null,
-  enctype: null,
-  height: MustUseAttribute,
-  href: null,
-  htmlFor: null,
-  max: null,
-  method: null,
-  min: null,
-  multiple: MustUseProperty | HasBooleanValue,
-  name: null,
-  poster: null,
-  preload: null,
-  placeholder: null,
-  rel: null,
-  required: HasBooleanValue,
-  role: MustUseAttribute,
-  scrollLeft: MustUseProperty,
-  scrollTop: MustUseProperty,
-  selected: MustUseProperty | HasBooleanValue,
-  spellCheck: null,
-  src: null,
-  step: null,
-  style: null,
-  tabIndex: null,
-  target: null,
-  title: null,
-  type: null,
-  value: MustUseProperty | HasSideEffects,
-  width: MustUseAttribute,
-  wmode: MustUseAttribute,
-  /**
-   * SVG Properties
-   */
-  cx: MustUseProperty,
-  cy: MustUseProperty,
-  d: MustUseProperty,
-  fill: MustUseProperty,
-  fx: MustUseProperty,
-  fy: MustUseProperty,
-  points: MustUseProperty,
-  r: MustUseProperty,
-  stroke: MustUseProperty,
-  strokeLinecap: MustUseProperty,
-  strokeWidth: MustUseProperty,
-  transform: MustUseProperty,
-  x: MustUseProperty,
-  x1: MustUseProperty,
-  x2: MustUseProperty,
-  version: MustUseProperty,
-  viewBox: MustUseProperty,
-  y: MustUseProperty,
-  y1: MustUseProperty,
-  y2: MustUseProperty,
-  spreadMethod: MustUseProperty,
-  offset: MustUseProperty,
-  stopColor: MustUseProperty,
-  stopOpacity: MustUseProperty,
-  gradientUnits: MustUseProperty,
-  gradientTransform: MustUseProperty
-};
-
-/**
- * Attribute names not specified use the **lowercase** normalized name.
- */
-var DOMAttributeNames = {
-  className: 'class',
-  htmlFor: 'for',
-  strokeLinecap: 'stroke-linecap',
-  strokeWidth: 'stroke-width',
-  stopColor: 'stop-color',
-  stopOpacity: 'stop-opacity'
-};
-
-/**
- * Property names not specified use the normalized name.
- */
-var DOMPropertyNames = {
-  autoComplete: 'autocomplete',
-  spellCheck: 'spellcheck'
-};
-
-/**
- * Properties that require special mutation methods. If `value` is undefined,
- * the mutation method should unset the property.
- */
-var DOMMutationMethods = {
-  /**
-   * Setting `className` to null may cause it to be set to the string "null".
-   *
-   * @param {DOMElement} node
-   * @param {*} value
-   */
-  className: function(node, value) {
-    node.className = value || '';
-  }
-};
-
-for (var propName in Properties) {
-  DOMProperty.isStandardName[propName] = true;
-
-  DOMProperty.getAttributeName[propName] =
-    DOMAttributeNames[propName] || propName.toLowerCase();
-
-  DOMProperty.getPropertyName[propName] =
-    DOMPropertyNames[propName] || propName;
-
-  var mutationMethod = DOMMutationMethods[propName];
-  if (mutationMethod) {
-    DOMProperty.getMutationMethod[propName] = mutationMethod;
-  }
-
-  var propConfig = Properties[propName];
-  DOMProperty.mustUseAttribute[propName] = propConfig & MustUseAttribute;
-  DOMProperty.mustUseProperty[propName]  = propConfig & MustUseProperty;
-  DOMProperty.hasBooleanValue[propName]  = propConfig & HasBooleanValue;
-  DOMProperty.hasSideEffects[propName]   = propConfig & HasSideEffects;
-
-  invariant(
-    !DOMProperty.mustUseAttribute[propName] ||
-    !DOMProperty.mustUseProperty[propName],
-    'DOMProperty: Cannot use require using both attribute and property: %s',
-    propName
-  );
-  invariant(
-    DOMProperty.mustUseProperty[propName] ||
-    !DOMProperty.hasSideEffects[propName],
-    'DOMProperty: Properties that have side effects must use property: %s',
-    propName
-  );
-}
 
 module.exports = DOMProperty;

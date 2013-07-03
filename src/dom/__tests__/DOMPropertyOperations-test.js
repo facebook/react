@@ -21,10 +21,15 @@
 
 describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
+  var DOMProperty;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    var ReactDefaultInjection = require('ReactDefaultInjection');
+    ReactDefaultInjection.inject();
+
     DOMPropertyOperations = require('DOMPropertyOperations');
+    DOMProperty = require('DOMProperty');
   });
 
   describe('createMarkupForProperty', function() {
@@ -44,6 +49,13 @@ describe('DOMPropertyOperations', function() {
         'name',
         null
       )).toBe('');
+    });
+
+    it('should work with the id attribute', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'id',
+        'simple'
+      )).toBe('id="simple"');
     });
 
     it('should create markup for boolean properties', function() {
@@ -125,5 +137,58 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.className).toBe('');
     });
 
+  });
+
+  describe('injectDOMPropertyConfig', function() {
+    it('should support custom attributes', function() {
+      // foobar does not exist yet
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'foobar',
+        'simple'
+      )).toBe(null);
+
+      // foo-* does not exist yet
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'foo-xyz',
+        'simple'
+      )).toBe(null);
+
+      // inject foobar DOM property
+      DOMProperty.injection.injectDOMPropertyConfig({
+        isCustomAttribute: function(name) {
+          return name.indexOf('foo-') === 0;
+        },
+        Properties: {foobar: null}
+      });
+
+      // Ensure old attributes still work
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'name',
+        'simple'
+      )).toBe('name="simple"');
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'data-name',
+        'simple'
+      )).toBe('data-name="simple"');
+
+      // foobar should work
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'foobar',
+        'simple'
+      )).toBe('foobar="simple"');
+
+      // foo-* should work
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'foo-xyz',
+        'simple'
+      )).toBe('foo-xyz="simple"');
+
+      // It should complain about double injections.
+      expect(function() {
+        DOMProperty.injection.injectDOMPropertyConfig(
+          {Properties: {foobar: null}}
+        );
+      }).toThrow();
+    });
   });
 });
