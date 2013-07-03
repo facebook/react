@@ -37,7 +37,7 @@ var Nav;
 // Input (JSX):
 var app = <Nav color="blue" />;
 // Output (JS):
-var app = Nav({color:'blue'});
+var app = Nav({color:'blue'}, null);
 ```
 
 Notice that in order to use `<Nav />`, the `Nav` variable must be in scope.
@@ -49,7 +49,7 @@ var Nav, Profile;
 // Input (JSX):
 var app = <Nav color="blue"><Profile>click</Profile></Nav>;
 // Output (JS):
-var app = Nav({color:'blue'}, Profile({}, 'click'));
+var app = Nav({color:'blue'}, Profile(null, 'click'));
 ```
 
 Use the [JSX Compiler](/react/jsx-compiler.html) to try out JSX and see how it
@@ -114,7 +114,7 @@ var Nav;
 // Input (JSX):
 var tree = <Nav><span /></Nav>;
 // Output (JS):
-var tree = Nav({}, React.DOM.span({}));
+var tree = Nav(null, React.DOM.span(null, null));
 ```
 
 > Remember:
@@ -145,7 +145,7 @@ Likewise, JavaScript expressions may be used to express children:
 // Input (JSX):
 var content = <Container>{window.isLoggedIn ? <Nav /> : <Login />}</Container>;
 // Output (JS):
-var content = Container({}, window.isLoggedIn ? <Nav /> : <Login />);
+var content = Container(null, window.isLoggedIn ? Nav(null, null) : Login(null, null));
 ```
 
 ## Tooling
