@@ -242,7 +242,7 @@ function  getTargetIDForInputEvent(
   }
 }
 
-// For IE8 and IE9
+// For IE8 and IE9.
 function handleEventsForInputEventIE(
     topLevelType,
     topLevelTarget,
@@ -265,8 +265,15 @@ function handleEventsForInputEventIE(
     startWatchingForValueChange(topLevelTarget, topLevelTargetID);
   } else if (topLevelType === topLevelTypes.topBlur) {
     stopWatchingForValueChange();
-  } else if (
-      topLevelType === topLevelTypes.topSelectionChange ||
+  }
+}
+
+// For IE8 and IE9.
+function getTargetIDForInputEventIE(
+    topLevelType,
+    topLevelTarget,
+    topLevelTargetID) {
+  if (topLevelType === topLevelTypes.topSelectionChange ||
       topLevelType === topLevelTypes.topKeyUp ||
       topLevelType === topLevelTypes.topKeyDown) {
     // On the selectionchange event, the target is just document which isn't
@@ -348,6 +355,7 @@ var ChangeEventPlugin = {
       if (isInputEventSupported) {
         getTargetIDFunc = getTargetIDForInputEvent;
       } else {
+        getTargetIDFunc = getTargetIDForInputEventIE;
         handleEventFunc = handleEventsForInputEventIE;
       }
     } else if (shouldUseClickEvent(topLevelTarget)) {
@@ -369,7 +377,9 @@ var ChangeEventPlugin = {
         EventPropagators.accumulateTwoPhaseDispatches(event);
         return event;
       }
-    } else if (handleEventFunc) {
+    }
+
+    if (handleEventFunc) {
       handleEventFunc(
         topLevelType,
         topLevelTarget,
