@@ -65,6 +65,7 @@ var ReactDOM = objMapKeyVal({
   address: false,
   audio: false,
   b: false,
+  blockquote: false,
   body: false,
   br: true,
   button: false,
