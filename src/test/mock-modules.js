@@ -16,8 +16,9 @@
  * @providesModule mock-modules
  */
 
-var global = Function("return this")();
-require('test/mock-timers').installMockTimers(global);
+exports.register = function(id, module) {
+    // TODO
+};
 
 exports.dumpCache = function() {
     require("mocks").clear();
@@ -31,3 +32,6 @@ exports.dontMock = function() {
 exports.mock = function() {
     return exports;
 };
+
+var global = Function("return this")();
+require('test/mock-timers').installMockTimers(global);
