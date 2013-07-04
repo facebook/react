@@ -7,6 +7,82 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #4</title>
+				<description>&lt;p&gt;React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.&lt;/p&gt;
+
+&lt;h2&gt;Khan Academy&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://bjk5.com/&quot;&gt;Ben Kamens&lt;/a&gt; explains how &lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; and &lt;a href=&quot;http://joelburget.com/&quot;&gt;Joel Burget&lt;/a&gt; are promoting React inside of &lt;a href=&quot;https://www.khanacademy.org/&quot;&gt;Khan Academy&lt;/a&gt;. They now have three projects in the works using React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Recently two Khan Academy devs dropped into our team chat and said they were gonna use React to write a new feature. They even hinted that we may want to adopt it product-wide.&lt;/p&gt;
+
+&lt;p&gt;&amp;quot;The library is only a week old. It&amp;#39;s a brand new way of thinking about things. We&amp;#39;re the first to use it outside of Facebook. Heck, even the React devs were surprised to hear we&amp;#39;re using this in production!!!&amp;quot;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;The best part is the demo of how React reconciliation process makes live editing more user-friendly.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Our renderer, post-React, is on the left. A typical math editor&amp;#39;s preview is on the right.
+&lt;figure&gt;&lt;a href=&quot;http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology&quot;&gt;&lt;img src=&quot;/react/img/blog/monkeys.gif&quot; width=&quot;70%&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2&gt;React Snippets&lt;/h2&gt;
+
+&lt;p&gt;Over the past several weeks, members of our team, &lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; and &lt;a href=&quot;http://zpao.com/&quot;&gt;Paul O&amp;#39;Shannessy&lt;/a&gt;, answered many questions that were asked in the &lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;React group&lt;/a&gt;. They give a good overview of how to integrate React with other libraries and APIs through the use of &lt;a href=&quot;/react/docs/mixins.html&quot;&gt;Mixins&lt;/a&gt; and &lt;a href=&quot;/react/docs/advanced-components.html&quot;&gt;Lifecycle Methods&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk&quot;&gt;Listening Scroll Event&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/aabeL/1/&quot;&gt;JSFiddle&lt;/a&gt;: Basically I&amp;#39;ve given you two mixins. The first lets you react to global scroll events. The second is, IMO, much more useful: it gives you scroll start and scroll end events, which you can use with setState() to create components that react based on whether the user is scrolling or not.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/RVAY_eQmdpo&quot;&gt;Fade-in Transition&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/ufe8k/1/&quot;&gt;JSFiddle&lt;/a&gt;: Creating a new &lt;code&gt;&amp;lt;FadeInWhenAdded&amp;gt;&lt;/code&gt; component and using jQuery &lt;code&gt;.fadeIn()&lt;/code&gt; function on the DOM node.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/R8f5L/5/&quot;&gt;JSFiddle&lt;/a&gt;: Using CSS transition instead.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/pyUZBRWcHB4&quot;&gt;Socket.IO Integration&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://gist.github.com/zpao/5686416&quot;&gt;Gist&lt;/a&gt;: The big thing to notice is that my component is pretty dumb (it doesn&amp;#39;t have to be but that&amp;#39;s how I chose to model it). All it does is render itself based on the props that are passed in. renderOrUpdate is where the &amp;quot;magic&amp;quot; happens.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://gist.github.com/petehunt/5687230&quot;&gt;Gist&lt;/a&gt;: This example is doing everything -- including the IO -- inside of a single React component.&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://gist.github.com/petehunt/5687276&quot;&gt;Gist&lt;/a&gt;: One pattern that we use at Instagram a lot is to employ separation of concerns and consolidate I/O and state into components higher in the hierarchy to keep the rest of the components mostly stateless and purely display.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/mHfBGI3Qwz4&quot;&gt;Sortable jQuery Plugin Integration&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/LQxy7/&quot;&gt;JSFiddle&lt;/a&gt;: Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h2&gt;Introduction to React Screencast&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; recorded himself implementing a simple &lt;code&gt;&amp;lt;Blink&amp;gt;&lt;/code&gt; tag in React.&lt;/p&gt;
+
+&lt;figure&gt;&lt;iframe src=&quot;http://player.vimeo.com/video/67248575&quot; width=&quot;500&quot; height=&quot;340&quot; frameborder=&quot;0&quot; webkitAllowFullScreen mozallowfullscreen allowFullScreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
+
+&lt;h2&gt;Snake in React&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://tomocchino.com/&quot;&gt;Tom Occhino&lt;/a&gt; implemented Snake in 150 lines with React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/tomocchino/react-snake/blob/master/src/snake.js&quot;&gt;Check the source on Github&lt;/a&gt;
+&lt;figure&gt;&lt;a href=&quot;http://tomocchino.github.io/react-snake/&quot;&gt;&lt;img src=&quot;/react/img/blog/snake.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+				<pubDate>2013-07-03T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/07/03/community-roundup-4.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/03/community-roundup-4.html</guid>
+			</item>
+		
+			<item>
 				<title>New in React v0.4: Autobind by Default</title>
 				<description>&lt;p&gt;React v0.4 is very close to completion. As we finish it off, we&amp;#39;d like to share with you some of the major changes we&amp;#39;ve made since v0.3. This is the first of several posts we&amp;#39;ll be making over the next week.&lt;/p&gt;
 
