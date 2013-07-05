@@ -19,11 +19,16 @@ var BootstrapModal = React.createClass({
   // integrate with Bootstrap or jQuery!
   componentDidMount: function() {
     // When the component is added, turn it into a modal
-    $(this.getDOMNode()).modal({backdrop: 'static', keyboard: false});
+    $(this.getDOMNode())
+      .modal({
+        backdrop: 'static',
+        keyboard: false,
+        show: this.props.initiallyVisible
+      })
+      .on('hidden', this.handleHidden);
   },
   componentWillUnmount: function() {
-    // And when it's destroyed, hide it.
-    $(this.getDOMNode()).modal('hide');
+    $(this.getDOMNode()).off('hidden', this.handleHidden);
   },
   render: function() {
     var confirmButton = null;
@@ -71,47 +76,46 @@ var BootstrapModal = React.createClass({
     if (this.props.onCancel) {
       this.props.onCancel();
     }
-    this.close();
   }),
   onConfirm: React.autoBind(function() {
     if (this.props.onConfirm) {
       this.props.onConfirm();
     }
-    this.close();
   }),
-  close: function() {
-    if (this.props.onClose) {
-      this.props.onClose();
+  handleHidden: React.autoBind(function() {
+    if (this.props.onHidden) {
+      this.props.onHidden();
     }
-  }
+  })
 });
 
 var Example = React.createClass({
-  getInitialState: function() {
-    return {modalVisible: false};
-  },
   toggleModal: React.autoBind(function() {
-    this.setState({modalVisible: !this.state.modalVisible});
+    $(this.refs.modal.getDOMNode()).modal('toggle');
   }),
   handleCancel: React.autoBind(function() {
     if (confirm('Are you sure you want to cancel?')) {
       this.toggleModal();
     }
   }),
+  handleHidden: function() {
+    console.log('Modal closed.');
+  },
   render: function() {
     var modal = null;
-    if (this.state.modalVisible) {
-      modal = (
-        <BootstrapModal
-          confirm="OK"
-          cancel="Cancel"
-          onCancel={this.handleCancel}
-          onConfirm={this.toggleModal}
-          title="Hello, Bootstrap!">
-            This is a React component powered by jQuery and Bootstrap!
-        </BootstrapModal>
-      );
-    }
+    modal = (
+      <BootstrapModal
+        confirm="OK"
+        cancel="Cancel"
+        onCancel={this.handleCancel}
+        onConfirm={this.toggleModal}
+        title="Hello, Bootstrap!"
+        initiallyVisible={false}
+        onHidden={this.handleHidden}
+        ref="modal">
+          This is a React component powered by jQuery and Bootstrap!
+      </BootstrapModal>
+    );
     return (
       <div class="example">
         {modal}
