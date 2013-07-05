@@ -2,7 +2,6 @@
 
 var assert = require("assert");
 var path = require("path");
-var tmp = require("tmp");
 var grunt = require("grunt");
 var spawn = grunt.util.spawn;
 
@@ -48,7 +47,7 @@ module.exports = function() {
   grunt.log.writeln("Packing " + tgz + " (this could take a while)...");
 
   run("npm", ["pack", "--verbose", "."], function() {
-    tmp.dir(function(err, dir) {
+    require("tmp").dir(function(err, dir) {
       if (err) {
         grunt.log.error(err);
         done(false);
