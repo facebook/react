@@ -1,6 +1,7 @@
 'use strict';
 
 var assert = require("assert");
+var fs = require("fs");
 var grunt = require("grunt");
 var spawn = grunt.util.spawn;
 var semver = require("semver");
@@ -58,11 +59,13 @@ module.exports = function() {
   var config = this.data;
   var done = this.async();
 
-  spawn({
-    cmd: phantomjs,
-    args: ["--version"]
-  }, function(error, result, code) {
-    checkVersion(error, result, code);
-    run(config, done);
+  fs.chmod(phantomjs, 755, function(err) {
+    spawn({
+      cmd: phantomjs,
+      args: ["--version"]
+    }, function(error, result, code) {
+      checkVersion(error, result, code);
+      run(config, done);
+    });
   });
 };
