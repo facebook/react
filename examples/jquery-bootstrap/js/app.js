@@ -72,6 +72,9 @@ var BootstrapModal = React.createClass({
       </div>
     );
   },
+  close: function() {
+    $(this.getDOMNode()).modal('toggle');
+  },
   onCancel: React.autoBind(function() {
     if (this.props.onCancel) {
       this.props.onCancel();
@@ -91,7 +94,7 @@ var BootstrapModal = React.createClass({
 
 var Example = React.createClass({
   toggleModal: React.autoBind(function() {
-    $(this.refs.modal.getDOMNode()).modal('toggle');
+    this.refs.modal.close();
   }),
   handleCancel: React.autoBind(function() {
     if (confirm('Are you sure you want to cancel?')) {
