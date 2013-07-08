@@ -21,6 +21,7 @@ require('test/mock-timers').installMockTimers(global);
 
 exports.dumpCache = function() {
     require("mocks").clear();
+    global.require.dumpCache();
     return exports;
 };
 
