@@ -72,7 +72,7 @@ function makeComponent(metadata) {
           metadata.members.prototype.members) || {};
 
       var f = function() {
-        dirtyMocks.push(f);
+        global.dirtyMocks.push(f);
 
         instances.push(this);
         calls.push(Array.prototype.slice.call(arguments));
@@ -305,7 +305,8 @@ function removeUnusedRefs(metadata) {
   });
 }
 
-var dirtyMocks = [];
+var global = Function("return this")();
+global.dirtyMocks = global.dirtyMocks || [];
 
 module.exports = {
   /**
@@ -313,8 +314,8 @@ module.exports = {
    * called since the last time clear was called.
    */
   clear: function() {
-    var old = dirtyMocks;
-    dirtyMocks = [];
+    var old = global.dirtyMocks;
+    global.dirtyMocks = [];
     old.forEach(function(mock) {
       mock.mockClear();
     });
