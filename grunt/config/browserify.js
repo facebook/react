@@ -49,6 +49,60 @@ function simpleBannerify(src) {
          '\n' + src;
 }
 
+var TEST_PRELUDE = [
+  "(function(modules, cache, entry) {",
+  "  var hasOwn = cache.hasOwnProperty;",
+  "  function require(name) {",
+  "    if (!hasOwn.call(cache, name)) {",
+  "      var m = cache[name] = { exports: {} };",
+  "      modules[name][0].call(m.exports, function(relID) {",
+  "        var id = modules[name][1][relID];",
+  "        return require(id ? id : relID);",
+  "      }, m, m.exports);",
+  "    }",
+  "    return cache[name].exports;",
+  "  }",
+  "",
+  "  require.dumpCache = function() { cache = {} };",
+  "",
+  "  for(var i = 0, len = entry.length; i < len; ++i)",
+  "    require(entry[i]);",
+  "",
+  "  return require;",
+  "})"
+].join("\n");
+
+function monkeyPatchDumpCache(src) {
+  var ch, start = 0, depth = 0;
+
+  // Parsing the entire source with Esprima would be cleaner but also
+  // prohibitively expensive (multiple seconds), and regular expressions
+  // don't balance parentheses well. So we take a hybrid parenthesis
+  // counting approach that fails noisily if things go awry.
+  for (var i = 0, len = src.length; i < len; ++i) {
+    ch = src.charAt(i);
+    if (ch === "(") {
+      if (depth++ === 0) {
+        var expected = "(function";
+        if (src.slice(i, i + expected.length) !== expected) {
+          throw new Error(
+            "Refusing to replace react-test.js prelude because first " +
+            "opening parenthesis did not begin a function expression: " +
+            src.slice(i, 100) + "..."
+          );
+        }
+        start = i;
+      }
+    } else if (ch === ")") {
+      if (--depth === 0) {
+        return src.slice(0, start) + TEST_PRELUDE + src.slice(i + 1);
+      }
+    }
+  }
+
+  throw new Error("Unable to replace react-test.js prelude.");
+}
+
 // Our basic config which we'll add to to make our other builds
 var basic = {
   entries: [
@@ -96,7 +150,8 @@ var test = {
   ],
   outfile: './build/react-test.js',
   debug: false,
-  standalone: false
+  standalone: false,
+  after: [monkeyPatchDumpCache]
 };
 
 module.exports = {
