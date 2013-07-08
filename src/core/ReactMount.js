@@ -25,11 +25,16 @@ var ReactID = require('ReactID');
 
 var $ = require('$');
 
-/** Mapping from reactRoot DOM ID to React component instance. */
+/** Mapping from reactRootID to React component instance. */
 var instanceByReactRootID = {};
 
-/** Mapping from reactRoot DOM ID to `container` nodes. */
+/** Mapping from reactRootID to `container` nodes. */
 var containersByReactRootID = {};
+
+if (__DEV__) {
+  /** __DEV__-only mapping from reactRootID to root elements. */
+  var rootElementsByReactRootID = {};
+}
 
 /**
  * @param {DOMElement} container DOM element that may contain a React component
@@ -116,6 +121,13 @@ var ReactMount = {
     ReactMount.scrollMonitor(container, function() {
       prevComponent.replaceProps(nextProps, callback);
     });
+
+    if (__DEV__) {
+      // Record the root element in case it later gets transplanted.
+      rootElementsByReactRootID[getReactRootID(container)] =
+        getReactRootElementInContainer(container);
+    }
+
     return prevComponent;
   },
 
@@ -150,6 +162,13 @@ var ReactMount = {
       container,
       shouldReuseMarkup
     );
+
+    if (__DEV__) {
+      // Record the root element in case it later gets transplanted.
+      rootElementsByReactRootID[reactRootID] =
+        getReactRootElementInContainer(container);
+    }
+
     return nextComponent;
   },
 
@@ -261,6 +280,9 @@ var ReactMount = {
     component.unmountComponentFromNode(container);
     delete instanceByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
+    if (__DEV__) {
+      delete rootElementsByReactRootID[reactRootID];
+    }
     return true;
   },
 
@@ -272,9 +294,20 @@ var ReactMount = {
    * @return {?DOMElement} DOM element that contains the `id`.
    */
   findReactContainerForID: function(id) {
-    var reatRootID = ReactInstanceHandles.getReactRootIDFromNodeID(id);
-    // TODO: Consider throwing if `id` is not a valid React element ID.
-    return containersByReactRootID[reatRootID];
+    var reactRootID = ReactInstanceHandles.getReactRootIDFromNodeID(id);
+    var container = containersByReactRootID[reactRootID];
+
+    if (__DEV__) {
+      var rootElement = rootElementsByReactRootID[reactRootID];
+      if (rootElement && rootElement.parentNode !== container) {
+        console.warn(
+          "ReactMount: Root element has been removed from its original " +
+          "container. New container:", rootElement.parentNode
+        );
+      }
+    }
+
+    return container;
   },
 
   /**
