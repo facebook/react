@@ -284,18 +284,30 @@ var ReactInstanceHandles = {
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
-    var child = ancestorNode.firstChild;
-    while (child) {
-      var childID = ReactID.getID(child);
-      if (childID) {
-        if (id === childID) {
-          return child;
-        } else if (isAncestorIDOf(childID, id)) {
-          return ReactInstanceHandles.findComponentRoot(child, id);
+    var firstChildren = [ancestorNode.firstChild];
+    var childIndex = 0;
+
+    while (childIndex < firstChildren.length) {
+      var child = firstChildren[childIndex++];
+      while (child) {
+        var childID = ReactID.getID(child);
+        if (childID) {
+          if (id === childID) {
+            return child;
+          } else if (isAncestorIDOf(childID, id)) {
+            // If we find a child whose ID is an ancestor of the given ID,
+            // then we can be sure that we only want to search the subtree
+            // rooted at this child, so we can throw out the rest of the
+            // search state.
+            firstChildren.length = childIndex = 0;
+            firstChildren.push(child.firstChild);
+            break;
+          }
         }
+        child = child.nextSibling;
       }
-      child = child.nextSibling;
     }
+
     global.console && console.error && console.error(
       'Error while invoking `findComponentRoot` with the following ' +
       'ancestor node:',
