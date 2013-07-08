@@ -37,7 +37,7 @@ require("commoner").resolve(function(id) {
   // Make sure there is exactly one newline at the end of the module.
   source = source.replace(/\s+$/m, "\n");
 
-  if (constants.__DEV__) {
+  if (constants.__MOCK__) {
     return context.getProvidedP().then(function(idToPath) {
       if (id !== "mock-modules" &&
           id !== "mocks" &&
