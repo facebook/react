@@ -48,6 +48,7 @@ var DefaultDOMPropertyConfig = {
     contentEditable: null,
     controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     data: null, // For `<object />` acts as `src`.
+    dateTime: MUST_USE_ATTRIBUTE,
     dir: null,
     disabled: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     draggable: null,
