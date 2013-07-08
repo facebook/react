@@ -106,7 +106,7 @@ function validateExplicitKey(component) {
     message += ' It was passed a child from ' + childOwnerName + '.';
   }
 
-  global.console && console.warn && console.warn(message);
+  console.warn(message);
 }
 
 /**
