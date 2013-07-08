@@ -303,6 +303,13 @@ var ReactInstanceHandles = {
             firstChildren.push(child.firstChild);
             break;
           }
+        } else {
+          // If this child had no ID, then there's a chance that it was
+          // injected automatically by the browser, as when a `<table>`
+          // element sprouts an extra `<tbody>` child as a side effect of
+          // `.innerHTML` parsing. Optimistically continue down this
+          // branch, but not before examining the other siblings.
+          firstChildren.push(child.firstChild);
         }
         child = child.nextSibling;
       }

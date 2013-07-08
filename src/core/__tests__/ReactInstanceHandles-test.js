@@ -133,15 +133,20 @@ describe('ReactInstanceHandles', function() {
       // No ID on `childNodeA`, it was "rendered by the browser".
       ReactID.setID(childNodeB, '.react[0].1:0');
 
+      expect(ReactInstanceHandles.findComponentRoot(
+        parentNode,
+        ReactID.getID(childNodeB)
+      )).toBe(childNodeB);
+
       expect(function() {
         ReactInstanceHandles.findComponentRoot(
           parentNode,
-          ReactID.getID(childNodeB)
+          ReactID.getID(childNodeB) + ":junk"
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., .react[0].1:0): Unable ' +
-        'to find element. This probably means the DOM was unexpectedly ' +
-        'mutated (e.g. by the browser).'
+        'Invariant Violation: findComponentRoot(..., .react[0].1:0:junk): ' +
+        'Unable to find element. This probably means the DOM was ' +
+        'unexpectedly mutated (e.g. by the browser).'
       );
     });
   });
