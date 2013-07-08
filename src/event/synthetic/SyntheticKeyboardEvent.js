@@ -26,7 +26,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var KeyboardEventInterface = {
-  char: null,
+  'char': null,
   key: null,
   location: null,
   ctrlKey: null,

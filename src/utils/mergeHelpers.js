@@ -23,7 +23,7 @@
 var keyMirror = require('keyMirror');
 var throwIf = require('throwIf');
 
-/*
+/**
  * Maximum number of levels to traverse. Will catch circular structures.
  * @const
  */
