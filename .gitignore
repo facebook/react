@@ -5,6 +5,7 @@ node_modules
 static
 .grunt
 _SpecRunner.html
+__benchmarks__
 build/
 .module-cache
 *.gem
