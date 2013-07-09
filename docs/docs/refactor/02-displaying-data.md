@@ -51,7 +51,7 @@ setInterval(function() {
 
 ## Reactive updates
 
-View the finished code in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI -- any input you put in the text field remains, even though the code is written in a declarative way.
+View the finished code in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI -- any input you put in the text field remains, even though you haven't written any code to manage this behavior. React figures it out for you and does the right thing.
 
 ## JSX syntax
 
