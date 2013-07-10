@@ -875,6 +875,12 @@ var ReactCompositeComponent = {
       Constructor.prototype.render,
       'createClass(...): Class specification must implement a `render` method.'
     );
+    // Reduce time spent doing lookups by setting these on the prototype.
+    for (var methodName in ReactCompositeComponentInterface) {
+      if (!Constructor.prototype[methodName]) {
+        Constructor.prototype[methodName] = null;
+      }
+    }
 
     var ConvenienceConstructor = function(props, children) {
       var instance = new Constructor();
