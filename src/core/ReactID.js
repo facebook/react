@@ -158,16 +158,8 @@ function purgeID(id) {
   delete nodeCache[id];
 }
 
-/**
- * Clears the entire cache.
- */
-function purgeEntireCache() {
-  nodeCache = {};
-}
-
 exports.ATTR_NAME = ATTR_NAME;
 exports.getID = getID;
 exports.setID = setID;
 exports.getNode = getNode;
 exports.purgeID = purgeID;
-exports.purgeEntireCache = purgeEntireCache;

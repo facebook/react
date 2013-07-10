@@ -161,7 +161,6 @@ var ReactDOMIDOperations = {
   dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
     var node = ReactID.getNode(id);
     DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-    ReactID.purgeEntireCache();
   },
 
   /**
@@ -171,7 +170,6 @@ var ReactDOMIDOperations = {
   manageChildrenByParentID: function(parentID, domOperations) {
     var parent = ReactID.getNode(parentID);
     DOMChildrenOperations.manageChildren(parent, domOperations);
-    ReactID.purgeEntireCache();
   }
 
 };
