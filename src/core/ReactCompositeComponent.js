@@ -809,11 +809,34 @@ var ReactCompositeComponentMixin = {
    */
   _bindAutoBindMethod: function(method) {
     var component = this;
-    return function() {
+    var boundMethod = function() {
       return method.apply(component, arguments);
     };
+    if (__DEV__) {
+      var componentName = component.constructor.displayName;
+      var _bind = boundMethod.bind;
+      boundMethod.bind = function(newThis) {
+        // User is trying to bind() an autobound method; we effectively will
+        // ignore the value of "this" that the user is trying to use, so
+        // let's warn.
+        if (newThis !== component) {
+          console.warn(
+            'bind(): React component methods may only be bound to the ' +
+            'component instance. See ' + componentName
+          );
+        } else if (arguments.length === 1) {
+          console.warn(
+            'bind(): You are binding a component method to the component. ' +
+            'React does this for you automatically in a high-performance ' +
+            'way, so you can safely remove this call. See ' + componentName
+          );
+          return boundMethod;
+        }
+        return _bind.apply(boundMethod, arguments);
+      };
+    }
+    return boundMethod;
   }
-
 };
 
 var ReactCompositeComponentBase = function() {};
@@ -872,6 +895,13 @@ var ReactCompositeComponent = {
    * @public
    */
   autoBind: function(method) {
+    if (__DEV__) {
+      console.warn && console.warn(
+        'React.autoBind() is now deprecated. All React component methods ' +
+        'are auto bound by default, so React.autoBind() is a no-op. It ' +
+        'will be removed in the next version of React'
+      );
+    }
     return method;
   }
 };
