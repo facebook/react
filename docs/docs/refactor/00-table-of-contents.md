@@ -14,6 +14,7 @@ Handling user input
 - Under the hood: autoBind and event delegation (IE8 notes)
 - How state works
 - What should go in state?
+- What components should have state?
 
 Scaling up: using multiple components
 - Motivation: separate concerns
