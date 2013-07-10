@@ -132,18 +132,13 @@ var manageChildren = function(parent, childOperations) {
   _placeNodesAtDestination(parent, childOperations, nodesByOriginalIndex);
 };
 
-var setTextNodeValueAtIndex = function(parent, index, val) {
-  parent.childNodes[index].nodeValue = val;
-};
-
 /**
  * Also reexport all of the dangerous functions. It helps to have all dangerous
  * functions located in a single module `Danger`.
  */
 var DOMChildrenOperations = {
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
-  manageChildren: manageChildren,
-  setTextNodeValueAtIndex: setTextNodeValueAtIndex
+  manageChildren: manageChildren
 };
 
 module.exports = DOMChildrenOperations;

@@ -172,11 +172,6 @@ var ReactDOMIDOperations = {
     var parent = ReactID.getNode(parentID);
     DOMChildrenOperations.manageChildren(parent, domOperations);
     ReactID.purgeEntireCache();
-  },
-
-  setTextNodeValueAtIndexByParentID: function(parentID, index, value) {
-    var parent = ReactID.getNode(parentID);
-    DOMChildrenOperations.setTextNodeValueAtIndex(parent, index, value);
   }
 
 };
