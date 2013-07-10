@@ -302,6 +302,11 @@ var ReactInstanceHandles = {
             firstChildren.length = childIndex = 0;
             firstChildren.push(child.firstChild);
             break;
+          } else {
+            // TODO This should not be necessary if the ID hierarchy is
+            // correct, but is occasionally necessary if the DOM has been
+            // modified in unexpected ways.
+            firstChildren.push(child.firstChild);
           }
         } else {
           // If this child had no ID, then there's a chance that it was
