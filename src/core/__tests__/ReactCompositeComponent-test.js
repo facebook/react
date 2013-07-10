@@ -24,7 +24,7 @@ var MorphingAutoBindComponent;
 var ChildUpdates;
 var React;
 var ReactCurrentOwner;
-var ReactProps;
+var ReactPropTypes;
 var ReactTestUtils;
 var ReactID;
 var ReactDoNotBindDeprecated;
@@ -40,7 +40,7 @@ describe('ReactCompositeComponent', function() {
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
-    ReactProps = require('ReactProps');
+    ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactID = require('ReactID');
 
@@ -220,7 +220,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should normalize props with default values', function() {
     var Component = React.createClass({
-      props: {key: ReactProps.string.isRequired},
+      propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
         return {key: 'testKey'};
       },
@@ -247,7 +247,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should check default prop values', function() {
     var Component = React.createClass({
-      props: {key: ReactProps.string.isRequired},
+      propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
         return {key: null};
       },
@@ -267,8 +267,8 @@ describe('ReactCompositeComponent', function() {
 
   it('should check declared prop types', function() {
     var Component = React.createClass({
-      props: {
-        key: ReactProps.string.isRequired
+      propTypes: {
+        key: ReactPropTypes.string.isRequired
       },
       render: function() {
         return <span>{this.props.key}</span>;

@@ -81,12 +81,12 @@ var ReactCompositeComponentInterface = {
   mixins: SpecPolicy.DEFINE_MANY,
 
   /**
-   * Definition of props for this component.
+   * Definition of prop types for this component.
    *
-   * @type {array}
+   * @type {object}
    * @optional
    */
-  props: SpecPolicy.DEFINE_ONCE,
+  propTypes: SpecPolicy.DEFINE_ONCE,
 
 
 
@@ -278,8 +278,8 @@ var RESERVED_SPEC_KEYS = {
       }
     }
   },
-  props: function(Constructor, props) {
-    Constructor.propDeclarations = props;
+  propTypes: function(Constructor, propTypes) {
+    Constructor.propTypes = propTypes;
   }
 };
 
@@ -602,11 +602,11 @@ var ReactCompositeComponentMixin = {
         props[propName] = defaultProps[propName];
       }
     }
-    var propDeclarations = this.constructor.propDeclarations;
-    if (propDeclarations) {
+    var propTypes = this.constructor.propTypes;
+    if (propTypes) {
       var componentName = this.constructor.displayName;
-      for (propName in propDeclarations) {
-        var checkProp = propDeclarations[propName];
+      for (propName in propTypes) {
+        var checkProp = propTypes[propName];
         if (checkProp) {
           checkProp(props, propName, componentName);
         }

@@ -26,6 +26,9 @@ var ReactTestUtils;
 var reactComponentExpect;
 
 var TestComponent;
+var TestComponentWithPropTypes;
+var mixinPropValidator;
+var componentPropValidator;
 
 describe('ReactCompositeComponent-mixin', function() {
 
@@ -33,6 +36,8 @@ describe('ReactCompositeComponent-mixin', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
+    mixinPropValidator = mocks.getMockFunction();
+    componentPropValidator = mocks.getMockFunction();
 
     var MixinA = {
       componentDidMount: function() {
@@ -53,8 +58,14 @@ describe('ReactCompositeComponent-mixin', function() {
       }
     };
 
+    var MixinD = {
+      propTypes: {
+        value: mixinPropValidator
+      }
+    };
+
     TestComponent = React.createClass({
-      mixins: [MixinB, MixinC],
+      mixins: [MixinB, MixinC, MixinD],
 
       componentDidMount: function() {
         this.props.listener('Component didMount');
@@ -65,6 +76,15 @@ describe('ReactCompositeComponent-mixin', function() {
       }
     });
 
+    TestComponentWithPropTypes = React.createClass({
+      mixins: [MixinD],
+      propTypes: {
+        value: componentPropValidator
+      },
+      render: function() {
+        return <div />;
+      }
+    });
   });
 
   it('should support chaining delegate functions', function() {
@@ -78,5 +98,23 @@ describe('ReactCompositeComponent-mixin', function() {
       ['MixinC didMount'],
       ['Component didMount']
     ]);
+  });
+
+  it('should validate prop types via mixins', function() {
+    expect(TestComponent.componentConstructor.propTypes).toBeDefined();
+    expect(TestComponent.componentConstructor.propTypes.value)
+      .toBe(mixinPropValidator);
+  });
+
+  it('should override mixin prop types with class prop types', function() {
+    // Sanity check...
+    expect(componentPropValidator).toNotBe(mixinPropValidator);
+    // Actually check...
+    expect(TestComponentWithPropTypes.componentConstructor.propTypes)
+      .toBeDefined();
+    expect(TestComponentWithPropTypes.componentConstructor.propTypes.value)
+      .toNotBe(mixinPropValidator);
+    expect(TestComponentWithPropTypes.componentConstructor.propTypes.value)
+      .toBe(componentPropValidator);
   });
 });

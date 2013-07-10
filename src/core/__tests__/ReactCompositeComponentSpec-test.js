@@ -53,10 +53,10 @@ describe('ReactCompositeComponent-spec', function() {
       .toBe('TestComponent');
   });
 
-  it('should copy prop declarations onto the Constructor', function() {
+  it('should copy prop types onto the Constructor', function() {
     var propValidator = mocks.getMockFunction();
     var TestComponent = React.createClass({
-      props: {
+      propTypes: {
         value: propValidator
       },
       render: function() {
@@ -64,8 +64,8 @@ describe('ReactCompositeComponent-spec', function() {
       }
     });
 
-    expect(TestComponent.componentConstructor.propDeclarations).toBeDefined();
-    expect(TestComponent.componentConstructor.propDeclarations.value)
+    expect(TestComponent.componentConstructor.propTypes).toBeDefined();
+    expect(TestComponent.componentConstructor.propTypes.value)
       .toBe(propValidator);
   });
 });

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactProps
+ * @providesModule ReactPropTypes
  */
 
 "use strict";
@@ -25,9 +25,9 @@ var invariant = require('invariant');
  * Collection of methods that allow declaration and validation of props that are
  * supplied to React components. Example usage:
  *
- *   var Props = require('ReactProps');
+ *   var Props = require('ReactPropTypes');
  *   var MyArticle = React.createClass({
- *     props: {
+ *     propTypes: {
  *       // An optional string prop named "description".
  *       description: Props.string,
  *
@@ -43,14 +43,14 @@ var invariant = require('invariant');
  * A more formal specification of how these methods are used:
  *
  *   type := array|bool|object|number|string|oneOf([...])|instanceOf(...)
- *   decl := ReactProps.{type}(.isRequired)?
+ *   decl := ReactPropTypes.{type}(.isRequired)?
  *
  * Each and every declaration produces a function with the same signature. This
  * allows the creation of custom validation functions. For example:
  *
- *   var Props = require('ReactProps');
+ *   var Props = require('ReactPropTypes');
  *   var MyLink = React.createClass({
- *     props: {
+ *     propTypes: {
  *       // An optional string or URI prop named "href".
  *       href: function(props, propName, componentName) {
  *         var propValue = props[propName];

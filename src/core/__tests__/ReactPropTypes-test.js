@@ -19,7 +19,7 @@
 
 "use strict";
 
-var Props = require('ReactProps');
+var Props = require('ReactPropTypes');
 
 function typeCheck(declaration, value) {
   var props = {};
