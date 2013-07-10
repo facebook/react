@@ -20,6 +20,7 @@
 "use strict";
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
+var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
@@ -277,7 +278,9 @@ ReactNativeComponent.Mixin = {
         }
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
-      } else {
+      } else if (
+          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
         ReactComponent.DOMIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
