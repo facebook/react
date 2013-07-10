@@ -582,7 +582,7 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   replaceState: function(completeState, callback) {
-    validateLifeCycleOnReplaceState.call(null, this);
+    validateLifeCycleOnReplaceState(this);
     this._pendingState = completeState;
     ReactUpdates.enqueueUpdate(this, callback);
   },
