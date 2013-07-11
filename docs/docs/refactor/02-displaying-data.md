@@ -59,10 +59,12 @@ The inputs to this component are called `props` -- short for "properties". They'
 
 React components are very simple. You can think of them as simple function that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
 
+**One limitation**: React components can only render a single root node. If you want to return multiple nodes they *must* be wrapped in a single root. This is a limitation we can fix, but we have not identified a pressing reason to do so yet; reach out to our [Google Group](http://groups.google.com/group/reactjs) if you have a compelling case for it.
+
 ## JSX syntax
 
 We strongly believe that components are the right way to separate concerns rather than "templates" and "display logic." We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.
 
 We've found that the best solution for this problem is to generate markup directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs. In order to make this easier, we've added a *very* simple, **optional** HTML-like syntax for the function calls that generate markup called JSX.
 
-JSX is very small; the example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.md)
+JSX is very small; the example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.md).

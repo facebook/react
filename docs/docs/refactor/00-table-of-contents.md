@@ -30,10 +30,11 @@ Handling user input
 Scaling up: using multiple components
 - Motivation: separate concerns
 - Composition example
-- Ownership
+- Ownership (and owner vs. parent)
 - Data flow (one-way data binding)
 - A note on performance
 - You should build a reusable component library (CSS, testing etc)
+- Prop validation
 - Mixins
 - Testing
 
@@ -42,9 +43,10 @@ Forms
 - How to think about Reactive forms
 - New form events and properties
 
-Touching the DOM
+Working with the browser
 - Refs / getDOMNode()
 - Component lifecycle
+- Polyfills
 
 Integrating with other UI libraries
 - Using jQuery plugins
@@ -64,6 +66,7 @@ Big ideas
 - Bootstrap bindings (responsive grids)
 - Reactive CSS
 - Web workers
+- Native views
 
 Case studies
 - Comment box tutorial from scratch
