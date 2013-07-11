@@ -3,6 +3,7 @@
 - High information density -- assume the reader is adept at JS
 - Talk about best practices
 - JSFiddles for all code samples
+- Provide background for some of the design decisions
 
 # Outline
 
@@ -14,12 +15,14 @@ Motivation / Why React?
 Displaying data
 - Hello world example
 - Reactive updates
+- Components are just functions
 - JSX syntax (link to separate doc?)
 
 Handling user input
 - Click handler example
 - Event handlers / synthetic events (link to w3c docs)
 - Under the hood: autoBind and event delegation (IE8 notes)
+- React is a state machine
 - How state works
 - What should go in state?
 - What components should have state?

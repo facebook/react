@@ -55,6 +55,10 @@ View the finished code in a web browser and type your name into the text field. 
 
 The inputs to this component are called `props` -- short for "properties". They're passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, **never write to this.props**.
 
+## Components are just like functions
+
+React components are very simple. You can think of them as simple function that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
+
 ## JSX syntax
 
 We strongly believe that components are the right way to separate concerns rather than "templates" and "display logic." We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.
