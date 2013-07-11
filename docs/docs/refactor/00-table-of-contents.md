@@ -1,6 +1,8 @@
 # Goals of the documentation
 - Flow of docs should mimic progression of questions a new user would ask
 - High information density -- assume the reader is adept at JS
+- Talk about best practices
+- JSFiddles for all code samples
 
 # Outline
 
