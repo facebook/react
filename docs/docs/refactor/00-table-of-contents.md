@@ -1,3 +1,9 @@
+# Goals of the documentation
+- Flow of docs should mimic progression of questions a new user would ask
+- High information density -- assume the reader is adept at JS
+
+# Outline
+
 Motivation / Why React?
 - Declarative (simple)
 - Components (separation of concerns)
