@@ -4,6 +4,7 @@
 - Talk about best practices
 - JSFiddles for all code samples
 - Provide background for some of the design decisions
+- Less words less words less words!
 
 # Outline
 
