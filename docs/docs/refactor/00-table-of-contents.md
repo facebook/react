@@ -42,7 +42,6 @@ Forms
 Touching the DOM
 - Refs / getDOMNode()
 - Component lifecycle
-- DOM differences
 
 Integrating with other UI libraries
 - Using jQuery plugins
@@ -66,5 +65,9 @@ Big ideas
 Case studies
 - Comment box tutorial from scratch
 - From HTML mock to application: React one-hour email
+- Jordan's LikeToggler example
 
-API reference
+Reference
+- API
+- DOM differences
+- JSX gotchas
