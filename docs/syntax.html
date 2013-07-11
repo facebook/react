@@ -115,7 +115,7 @@ attributes into function calls and objects, respectively.</p>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">},</span> <span class="kc">null</span><span class="p">);</span>
 </code></pre></div>
 <p>Notice that in order to use <code>&lt;Nav /&gt;</code>, the <code>Nav</code> variable must be in scope.</p>
 
@@ -124,7 +124,7 @@ attributes into function calls and objects, respectively.</p>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="o">&gt;&lt;</span><span class="nx">Profile</span><span class="o">&gt;</span><span class="nx">click</span><span class="o">&lt;</span><span class="err">/Profile&gt;&lt;/Nav&gt;;</span>
 <span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">},</span> <span class="nx">Profile</span><span class="p">({},</span> <span class="s1">&#39;click&#39;</span><span class="p">));</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s1">&#39;blue&#39;</span><span class="p">},</span> <span class="nx">Profile</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;click&#39;</span><span class="p">));</span>
 </code></pre></div>
 <p>Use the <a href="/react/jsx-compiler.html">JSX Compiler</a> to try out JSX and see how it
 desugars into native JavaScript.</p>
@@ -186,7 +186,7 @@ will use that field to find DOM components.</p>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">tree</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;&lt;</span><span class="nx">span</span> <span class="o">/&gt;&lt;</span><span class="err">/Nav&gt;;</span>
 <span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">tree</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({},</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">span</span><span class="p">({}));</span>
+<span class="kd">var</span> <span class="nx">tree</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">span</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">));</span>
 </code></pre></div>
 <blockquote>
 <p>Remember:</p>
@@ -213,7 +213,7 @@ pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</co
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
 <span class="c1">// Output (JS):</span>
-<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">Container</span><span class="p">({},</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">Container</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">Nav</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span> <span class="o">:</span> <span class="nx">Login</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="kc">null</span><span class="p">));</span>
 </code></pre></div>
 <h2>Tooling</h2>
 
