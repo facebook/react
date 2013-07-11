@@ -3,14 +3,17 @@ $linkColor: darken($primary, 9%);
 $linkInteract: darken($linkColor, 9%);
 $pageBg: #f9f9f9;
 
+$topNavColor: #303030;
+$underTopNav: #404040;
+
 $lightColor: #e9e9e9;
 $mediumestColor: #666;
 $mediumColor: #484848;
 $darkColor: #2d2d2d;
 $darkestColor: #222222;
-$blueColor: #61dafb;
-$orangeColor: complement($blueColor);
+$logoColor: #f5f5f5;
 
+$lighterTextColor: #fcfcfc;
 $lightTextColor: #fafafa;
 $mediumTextColor: #aaa;
 $darkTextColor: $mediumColor;
