@@ -27,7 +27,8 @@ Handling user input
 Scaling up: using multiple components
 - Motivation: separate concerns
 - Composition example
-- Handling events
+- Ownership
+- Data flow (one-way data binding)
 - A note on performance
 - You should build a reusable component library (CSS, testing etc)
 - Mixins
@@ -41,6 +42,7 @@ Forms
 Touching the DOM
 - Refs / getDOMNode()
 - Component lifecycle
+- DOM differences
 
 Integrating with other UI libraries
 - Using jQuery plugins
