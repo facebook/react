@@ -26,7 +26,7 @@ var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
 // TODO: Test render and all stock methods.
-describe('React.autoBind', function() {
+describe('autobinding', function() {
 
   it('Holds reference to instance', function() {
 

@@ -37,9 +37,9 @@ var invariant = require('invariant');
  *         </div>
  *       );
  *     },
- *     handleClick: React.autoBind(function() {
+ *     handleClick: function() {
  *       this.refs.custom.handleClick();
- *     }),
+ *     },
  *     componentDidMount: function() {
  *       this.refs.custom.initialize();
  *     }

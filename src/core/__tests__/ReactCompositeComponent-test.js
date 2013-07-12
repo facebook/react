@@ -20,7 +20,6 @@
 "use strict";
 
 var MorphingComponent;
-var MorphingAutoBindComponent;
 var ChildUpdates;
 var React;
 var ReactCurrentOwner;
@@ -58,22 +57,6 @@ describe('ReactCompositeComponent', function() {
         return !this.state.activated ?
           <a ref="x" onClick={toggleActivatedState} /> :
           <b ref="x" onClick={toggleActivatedState} />;
-      }
-    });
-
-    MorphingAutoBindComponent = React.createClass({
-      getInitialState: function() {
-        return {activated: false};
-      },
-
-      _toggleActivatedState:function() {
-        this.setState({activated: !this.state.activated});
-      },
-
-      render: function() {
-        return !this.state.activated ?
-          <a ref="x" onClick={this._toggleActivatedState} /> :
-          <b ref="x" onClick={this._toggleActivatedState} />;
       }
     });
 
@@ -136,24 +119,6 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('b');
     instance._toggleActivatedState();
     reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
-  });
-
-  it('should behave the same with React.autoBind', function() {
-    var instance = <MorphingAutoBindComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
-
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeDOMComponentWithTag('a');
-
-    var renderedChild = reactComponentExpect(instance)
-      .expectRenderedChild()
-      .instance();
-
-    ReactTestUtils.Simulate.click(renderedChild);
-    reactComponentExpect(instance)
-      .expectRenderedChild()
-      .toBeDOMComponentWithTag('b');
   });
 
   it('should not cache old DOM nodes when switching constructors', function() {
