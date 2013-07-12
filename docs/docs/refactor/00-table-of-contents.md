@@ -19,7 +19,7 @@ Displaying data
 - Components are just functions
 - JSX syntax (link to separate doc?)
 
-Handling user input
+Interactivity and dynamic UIs
 - Click handler example
 - Event handlers / synthetic events (link to w3c docs)
 - Under the hood: autoBind and event delegation (IE8 notes)
@@ -32,22 +32,25 @@ Scaling up: using multiple components
 - Motivation: separate concerns
 - Composition example
 - Ownership (and owner vs. parent)
+- Children
 - Data flow (one-way data binding)
 - A note on performance
+
+Building effective reusable components
 - You should build a reusable component library (CSS, testing etc)
 - Prop validation
+- Transferring props: a shortcut
 - Mixins
 - Testing
 
 Forms
-- TODO list example
-- How to think about Reactive forms
-- New form events and properties
 
 Working with the browser
+- The mock DOM
 - Refs / getDOMNode()
+- More about refs
 - Component lifecycle
-- Polyfills
+- Browser support and polyfills
 
 Integrating with other UI libraries
 - Using jQuery plugins
@@ -78,3 +81,4 @@ Reference
 - API
 - DOM differences
 - JSX gotchas
+- Antipatterns

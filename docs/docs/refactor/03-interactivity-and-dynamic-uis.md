@@ -1,4 +1,4 @@
-# Handling User Input
+# Interactivity and dynamic UIs
 
 You've already [learned how to display data](./02-displaying-data.html) with React. Now let's look at how to make our UIs interactive.
 
@@ -33,6 +33,8 @@ React.renderComponent(
 ## Event handling and synthetic events
 
 With React you simply pass your event handler as a camelCased prop similar to how you'd do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with [the W3C spec](http://www.w3.org/TR/DOM-Level-3-Events/), regardless of which browser you're using.
+
+**If you'd like to use React on a touch device** (i.e. a phone or tablet), simply call `React.initializeTouchEvents(true);` to turn them on.
 
 ## Under the hood: autoBind and event delegation
 

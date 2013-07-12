@@ -54,6 +54,63 @@ In the above example, instances of `Avatar` *own* instances of `ProfilePic` and 
 
 It's important to draw a distinciton between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, `Avatar` owns the `div`, `ProfilePic` and `ProfileLink` instances, and `div` is the **parent** (but not owner) of the `ProfilePic` and `ProfileLink` instances.
 
+## Children
+
+When you create a React component instance, you can include additional React components or JavaScript expressions between the opening and closing tags like this:
+
+```javascript
+<Parent><Child /></Parent>
+```
+
+`Parent` can read its children by accessing the special `this.props.children` prop.
+
+### Child Reconciliation
+
+> Reconciliation is the process by which React updates the DOM with each new render pass.
+
+In general, children are reconciled according to the order in which they are rendered. For example, suppose two render passes generate the following respective markup:
+
+```html
+// Render Pass 1
+<Card><p>Paragraph 1</p><p>Paragraph 2</p></Card>
+// Render Pass 2
+<Card><p>Paragraph 2</p></Card>
+```
+
+Intuitively, `<p>Paragraph 1</p>` was removed. Instead, React will reconcile the DOM by changing the text content of the first child and destroying the last child. React reconciles according to the *order* of the children.
+
+### Stateful Children
+
+For most components, this is not a big deal. However, for stateful components that maintain data in `this.state` across render passes, this can be very problematic.
+
+In most cases, this can be sidestepped by hiding elements instead of destroying them:
+
+```html
+// Render Pass 1
+<Card><p>Paragraph 1</p><p>Paragraph 2</p></Card>
+// Render Pass 2
+<Card><p style={{display: 'none'}}>Paragraph 1</p><p>Paragraph 2</p></Card>
+```
+
+### Dynamic Children
+
+The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a `key`:
+
+```javascript
+  render: function() {
+    var results = this.props.results;
+    return (
+      <ol>
+        {this.results.map(function(result) {
+          return <li key={result.id}>{result.text}</li>;
+        })}
+      </ol>
+    );
+  }
+```
+
+When React reconciles the keyed children, it will ensure that any child with `key` will be reordered (instead of clobbered) or destroyed (instead of reused).
+
 ## Data flow
 
 In React, data flows from owner to owned component through `props` as discussed above. This is effectively one-way data binding: owners bind their owned component's props to some value the owner has computed based on its `props` or `state`. Since this process happens recursively, data changes are automatically reflected everywhere they are used.
@@ -65,19 +122,3 @@ You may be thinking that it's expensive to react to changing data if there are a
 However, sometimes you really want to have fine-grained control over your performance. In that case, simply override `shouldComponentUpdate()` to return false when you want React to skip processing of a subtree. See [the React API docs](./api.html) for more information.
 
 **Note:** if `shouldComponentUpdate()` returns false when data has actually changed, React can't keep your UI in sync. Be sure you know what you're doing while using it, and only use this function when you have a noticeable performance problem. Don't underestimate how fast JavaScript is relative to the DOM.
-
-## Build reusable component libraries!
-
-When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
-
-## Prop validation
-
-As your app grows it's helpful to ensure that your components are used correctly. We do this using `propTypes`.
-
-** TODO zpao **
-
-## Mixins
-
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
-
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore. React provides [lifecycle methods](./06-working-with-the-browser.html)
