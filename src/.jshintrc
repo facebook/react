@@ -21,6 +21,7 @@
   "globals": {
     "__DEV__": false,
     "require": false,
-    "module": false
+    "module": false,
+    "exports": false
   }
 }
