@@ -16,6 +16,8 @@
  * @providesModule ReactDoNotBindDeprecated
  */
 
+"use strict";
+
 var ReactDoNotBindDeprecated = {
   /**
    * Marks the method for not being automatically bound on component mounting. A
