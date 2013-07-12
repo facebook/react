@@ -320,11 +320,13 @@ var ReactInstanceHandles = {
       }
     }
 
-    global.console && console.error && console.error(
-      'Error while invoking `findComponentRoot` with the following ' +
-      'ancestor node:',
-      ancestorNode
-    );
+    if (__DEV__) {
+      console.error(
+        'Error while invoking `findComponentRoot` with the following ' +
+        'ancestor node:',
+        ancestorNode
+      );
+    }
     invariant(
       false,
       'findComponentRoot(..., %s): Unable to find element. This probably ' +

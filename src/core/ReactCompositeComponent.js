@@ -902,7 +902,7 @@ var ReactCompositeComponent = {
    */
   autoBind: function(method) {
     if (__DEV__) {
-      console.warn && console.warn(
+      console.warn(
         'React.autoBind() is now deprecated. All React component methods ' +
         'are auto bound by default, so React.autoBind() is a no-op. It ' +
         'will be removed in the next version of React'
