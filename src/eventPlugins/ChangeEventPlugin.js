@@ -169,7 +169,8 @@ var newValueProp =  {
     return activeElementValueProp.get.call(this);
   },
   set: function(val) {
-    activeElementValue = val;
+    // Cast to a string so we can do equality checks.
+    activeElementValue = '' + val;
     activeElementValueProp.set.call(this, val);
   }
 };
@@ -231,7 +232,7 @@ function handlePropertyChange(nativeEvent) {
 /**
  * If a `change` event should be fired, returns the target's ID.
  */
-function  getTargetIDForInputEvent(
+function getTargetIDForInputEvent(
     topLevelType,
     topLevelTarget,
     topLevelTargetID) {

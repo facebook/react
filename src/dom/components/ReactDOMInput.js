@@ -62,7 +62,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   },
 
   getValue: function() {
-    return this.props.value != null ? this.props.value : this.state.value;
+    // Cast `this.props.value` to a string so equality checks pass.
+    return this.props.value != null ? '' + this.props.value : this.state.value;
   },
 
   render: function() {
@@ -85,10 +86,12 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       );
     }
     if (this.props.value != null) {
+      // Cast `this.props.value` to a string so falsey values that cast to
+      // truthy strings are not ignored.
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        this.props.value || ''
+        '' + this.props.value || ''
       );
     }
   },
