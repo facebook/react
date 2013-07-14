@@ -53,11 +53,11 @@ Working with the browser
 - Component lifecycle
 - Browser support and polyfills
 
-Working with your development and production environments
+Working with your environment
 - CDN-hosted React
 - Using master
 - In-browser JSX transform
-- Precompiled JSX
+- Productionizing: precompiled JSX
 - Helpful open-source projects
 
 Integrating with other UI libraries
