@@ -53,6 +53,13 @@ Working with the browser
 - Component lifecycle
 - Browser support and polyfills
 
+Working with your development and production environments
+- CDN-hosted React
+- Using master
+- In-browser JSX transform
+- Precompiled JSX
+- Helpful open-source projects
+
 Integrating with other UI libraries
 - Using jQuery plugins
 - Letting jQuery manage React components

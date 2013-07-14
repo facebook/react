@@ -69,6 +69,8 @@ We strongly believe that components are the right way to separate concerns rathe
 
 We've found that the best solution for this problem is to generate markup directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs. In order to make this easier, we've added a *very* simple, **optional** HTML-like syntax for the function calls that generate markup called JSX.
 
-JSX is very small; the example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.md). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
+**JSX lets you write JavaScript function calls with HTML syntax.** To generate, say, a link using pure JavaScript you'd write: `React.DOM.a({href: 'http://facebook.github.io/react/'}, 'Hello React!')`. With JSX this becomes `<a href="http://facebook.github.io/react/">Hello React!</a>`. We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
+
+JSX is very small; the "hello, world" example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.md). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
 
 The easiest way to get started with JSX is to use the in-browser `JSXTransformer`, but in production you'll want to precompile your code using our command-line [react-tools](http://npmjs.org/package/react-tools) package.
