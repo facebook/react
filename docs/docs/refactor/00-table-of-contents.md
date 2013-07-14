@@ -18,6 +18,7 @@ Displaying data
 - Reactive updates
 - Components are just functions
 - JSX syntax (link to separate doc?)
+- JSX gotchas
 
 Interactivity and dynamic UIs
 - Click handler example
@@ -88,5 +89,4 @@ Case studies
 Reference
 - API
 - DOM differences
-- JSX gotchas
 
