@@ -65,3 +65,10 @@ A common pattern is to create several stateless components that just render data
 ## What should go in state?
 
 **`this.state` should contain any data that the component's event handlers will change that should trigger a UI update.** In real apps this data tends to be very small and JSON-serializable. When building a stateful component, think about the minimal possible representation of its state, and only store those properties in `this.state`. Inside of `render()` simply compute any other information you need based on this state. You'll find that thinking about and writing applications in this way tends to lead to the most correct application, since adding redundant or computed values to state means that you need to explicitly keep them in sync rather than rely on React computing them for you.
+
+## What *shouldn't* go in state?
+
+**`this.state`** should contain the minimal amount of data needed to represent your UI's state. As such, it should not contain:
+* **Computed data.** Don't worry about precomputing values based on state -- it's easier to ensure that your UI is consistent if you do all computation within `render()`
+* **React component nodes.** Build them in `render()` based on underlying props and state.
+* **Duplicated data from props.** Try to use props as the source of truth where possible. Because props can change over time, it's appropriate to store props in state to be able to know its previous values.

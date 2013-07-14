@@ -25,8 +25,9 @@ Interactivity and dynamic UIs
 - Under the hood: autoBind and event delegation (IE8 notes)
 - React is a state machine
 - How state works
-- What should go in state?
 - What components should have state?
+- What should go in state?
+- What shouldn't go in state?
 
 Scaling up: using multiple components
 - Motivation: separate concerns
