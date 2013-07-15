@@ -77,6 +77,8 @@ var Props = {
   number: createPrimitiveTypeChecker('number'),
   object: createPrimitiveTypeChecker('object'),
   string: createPrimitiveTypeChecker('string'),
+  date: createPrimitiveTypeChecker('date'),
+  regexp: createPrimitiveTypeChecker('regexp'),
 
   oneOf: createEnumTypeChecker,
 
@@ -89,8 +91,14 @@ var ANONYMOUS = '<<anonymous>>';
 function createPrimitiveTypeChecker(expectedType) {
   function validatePrimitiveType(propValue, propName, componentName) {
     var propType = typeof propValue;
-    if (propType === 'object' && Array.isArray(propValue)) {
-      propType = 'array';
+    if (propType === 'object'){
+      if(Array.isArray(propValue)) {
+        propType = 'array';
+      } else if (propValue instanceof Date) {
+        propType = 'date';
+      } else if (propValue instanceof RegExp) {
+        propType = 'regexp';
+      }
     }
     invariant(
       propType === expectedType,
