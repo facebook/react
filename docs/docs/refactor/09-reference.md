@@ -160,3 +160,6 @@ React has implemented a browser-independent events and DOM system for performanc
 * React powers all of Instagram.com and many components on Facebook.com, including the commenting interface, ads creation flows, and page insights.
 * We've included [a step-by-step tutorial](./09.1-tutorial.md) for creating a comment box widget with React
 * [The React starter kit](/react/downloads.md) includes several examples which you can [view online in our GitHub repo](https://github.com/facebook/react/tree/master/examples/)
+* [reactapp](https://github.com/jordwalke/reactapp) is a simple app template to get you up-and-running quickly with React.
+* [React one-hour email](https://github.com/petehunt/react-one-hour-email/commits/master) goes step-by-step from a static HTML mock to an interactive email reader (written in just one hour!)
+* [Rendr + React app template](https://github.com/petehunt/rendr-react-template/) demonstrates how to use React's server rendering capabilities.
