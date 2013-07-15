@@ -74,6 +74,7 @@ A common pattern is to create several stateless components that just render data
 ### What *shouldn't* go in state?
 
 `this.state` should only contain the minimal amount of data needed to represent your UI's state. As such, it should not contain:
+
 * **Computed data.** Don't worry about precomputing values based on state -- it's easier to ensure that your UI is consistent if you do all computation within `render()`. For example, if you have an array of list items in state and you want to render the count as a string, simply render `this.state.listItems.length + ' list items'` in your `render()` method rather than storing it on state.
 * **React components.** Build them in `render()` based on underlying props and state.
 * **Duplicated data from props.** Try to use props as the source of truth where possible. Because props can change over time, it's appropriate to store props in state to be able to know its previous values.
