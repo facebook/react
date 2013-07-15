@@ -154,3 +154,9 @@ React has implemented a browser-independent events and DOM system for performanc
 * All event objects conform to the W3C spec
 * All DOM properties and attributes (including event handlers) should be camelCased to be consistent with standard JavaScript style. We intentionally break with the spec here, since the spec is inconsistent.
 * `onChange` behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because `onChange` is a misnomer for its behavior and React relies on this event to react to user input in real time.
+
+## Examples
+
+* React powers all of Instagram.com and many components on Facebook.com, including the commenting interface, ads creation flows, and page insights.
+* We've included [a step-by-step tutorial](./09.1-tutorial.md) for creating a comment box widget with React
+* [The React starter kit](/react/downloads.md) includes several examples which you can [view online in our GitHub repo](https://github.com/facebook/react/tree/master/examples/)
