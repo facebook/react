@@ -25,7 +25,7 @@ var test = {
     "test/all.js",
     "**/__tests__/*.js"
   ]),
-  configFile: debug.configFile,
+  configFile: "grunt/config/jsx/test.json",
   sourceDir: "src",
   outputDir: "build/modules"
 };
