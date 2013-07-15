@@ -144,7 +144,7 @@ componentDidUpdate(object prevProps, object prevState, DOMElement domNode)
 componentWillUnmount()
 ```
 
-See the [working with the browser](./07-working-with-the-browser.md) documentation for more details on these lifecycle methods.
+See the [working with the browser](./07-working-with-the-browser.html) documentation for more details on these lifecycle methods.
 
 ## DOM differences
 

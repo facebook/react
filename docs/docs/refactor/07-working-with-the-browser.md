@@ -50,7 +50,7 @@ React.renderComponent(
 
 ## More about refs
 
-To learn more about refs, including ways to use them effectively, see our [more about refs](./07.1-more-about-refs.md) documentation.
+To learn more about refs, including ways to use them effectively, see our [more about refs](./07.1-more-about-refs.html) documentation.
 
 ## Component lifecycle
 

@@ -71,8 +71,8 @@ We've found that the best solution for this problem is to generate markup direct
 
 **JSX lets you write JavaScript function calls with HTML syntax.** To generate, say, a link using pure JavaScript you'd write: `React.DOM.a({href: 'http://facebook.github.io/react/'}, 'Hello React!')`. With JSX this becomes `<a href="http://facebook.github.io/react/">Hello React!</a>`. We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
 
-JSX is very small; the "hello, world" example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.md). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
+JSX is very small; the "hello, world" example above uses every feature of JSX. To learn more about it, see [JSX in depth](./02.1-jsx-in-depth.html). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
 
-JSX is similar to HTML, but not exactly the same. See [JSX gotchas](./02.2-jsx-gotchas.md) for some key differences.
+JSX is similar to HTML, but not exactly the same. See [JSX gotchas](./02.2-jsx-gotchas.html) for some key differences.
 
 The easiest way to get started with JSX is to use the in-browser `JSXTransformer`, but in production you'll want to precompile your code using our command-line [react-tools](http://npmjs.org/package/react-tools) package.
