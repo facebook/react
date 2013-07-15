@@ -4,6 +4,7 @@ var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var wrapupTask = require('./grunt/tasks/wrapup');
+var populistTask = require('./grunt/tasks/populist');
 var phantomTask = require('./grunt/tasks/phantom');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
@@ -16,6 +17,7 @@ module.exports = function(grunt) {
     jsx: require('./grunt/config/jsx/jsx'),
     browserify: require('./grunt/config/browserify'),
     wrapup: require('./grunt/config/wrapup'),
+    populist: require('./grunt/config/populist'),
     phantom: require('./grunt/config/phantom'),
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
@@ -44,6 +46,8 @@ module.exports = function(grunt) {
   // defines global variables instead of using require.
   grunt.registerMultiTask('wrapup', wrapupTask);
 
+  grunt.registerMultiTask('populist', populistTask);
+
   grunt.registerMultiTask('phantom', phantomTask);
 
   grunt.registerMultiTask('npm', npmTask);
@@ -52,11 +56,10 @@ module.exports = function(grunt) {
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
   grunt.registerTask('build:min', ['jsx:release', 'browserify:min']);
   grunt.registerTask('build:test', [
-    'jsx:debug',
     'jsx:jasmine',
     'jsx:test',
     'browserify:jasmine',
-    'browserify:test'
+    'populist:test'
   ]);
 
   grunt.registerTask('test', ['build:test', 'phantom:run']);
