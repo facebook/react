@@ -56,7 +56,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
   grunt.registerTask('build:min', ['jsx:release', 'browserify:min']);
   grunt.registerTask('build:test', [
-    'jsx:debug',
     'jsx:jasmine',
     'jsx:test',
     'browserify:jasmine',

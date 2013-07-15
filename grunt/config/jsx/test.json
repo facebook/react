@@ -1,5 +1,6 @@
 {
     "debug": true,
+    "mocking": true,
     "constants": {
         "__DEV__": true
     }

@@ -34,7 +34,7 @@ require("commoner").resolve(function(id) {
   // replacing constant expressions with literal (boolean) values.
   source = propagate(constants, source);
 
-  if (constants.__MOCK__) {
+  if (context.config.mocking) {
     // Make sure there is exactly one newline at the end of the module.
     source = source.replace(/\s+$/m, "\n");
 
