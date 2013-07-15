@@ -27,3 +27,4 @@ The open-source community has built tools that integrate JSX with several build 
 * [reactify](https://github.com/andreypopp/reactify) - use JSX with [browserify](http://browserify.org/).
 * [grunt-react](https://github.com/ericclemmons/grunt-react) - [grunt](http://gruntjs.com/) task for JSX
 * [require-jsx](https://github.com/seiffert/require-jsx) - use JSX with [require.js](http://requirejs.org/)
+* [reactapp](https://github.com/jordwalke/reactapp) - a sample project to get up-and-running with React quickly
