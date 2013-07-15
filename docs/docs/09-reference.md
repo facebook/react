@@ -3,7 +3,6 @@ id: 09-reference
 title: Reference
 layout: docs
 prev: 08-tooling-integration.html
-next: 09.1-tutorial.html
 ---
 ### Examples
 
@@ -15,7 +14,7 @@ next: 09.1-tutorial.html
 
 #### Sample code
 
-* We've included **[a step-by-step comment box tutorial](./09.1-tutorial.md)**
+* We've included **[a step-by-step comment box tutorial](./tutorial.md)**
 * There is also [a simple LikeButton tutorial](./likebutton/)
 * [The React starter kit](/react/downloads.md) includes several examples which you can [view online in our GitHub repo](https://github.com/facebook/react/tree/master/examples/)
 * [reactapp](https://github.com/jordwalke/reactapp) is a simple app template to get you up-and-running quickly with React.

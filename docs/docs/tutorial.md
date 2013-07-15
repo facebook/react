@@ -1,8 +1,7 @@
 ---
-id: 09.1-tutorial
+id: tutorial
 title: Tutorial
 layout: docs
-prev: 09-reference.html
 ---
 We'll be building a simple, but realistic comments box that you can drop into a blog, similar to Disqus, LiveFyre or Facebook comments.
 
