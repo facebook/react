@@ -1,4 +1,4 @@
-# Working with your environment
+# Tooling integration
 
 Every project uses a different system for building and deploying JavaScript. We've tried to make React as environment-agnostic as possible.
 

@@ -107,7 +107,7 @@ In addition to that philosphy, we've also taken the stance that we, as authors o
 * `Date.now`
 * `Array.prototype.some` (also in `es5-shim.js`)
 
-All of these can be polyfilled using `es5-shim.js` from https://github.com/kriskowal/es5-shim.
+All of these can be polyfilled using `es5-shim.js` from [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim).
 
-* `console.*` - https://github.com/paulmillr/console-polyfill
-* `Object.create` - Provided in `es5-sham.js` @ https://github.com/kriskowal/es5-shim
+* `console.*` - [https://github.com/paulmillr/console-polyfill](https://github.com/paulmillr/console-polyfill)
+* `Object.create` - Provided in `es5-sham.js` @ [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim)

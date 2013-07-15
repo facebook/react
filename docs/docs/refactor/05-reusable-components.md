@@ -1,4 +1,4 @@
-## Build reusable component libraries!
+## Reusable components
 
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
 

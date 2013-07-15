@@ -1,4 +1,4 @@
-# Scaling Up and Using Multiple Components
+# Multiple components
 
 So far, we've looked at how to write a single component to display data and handle user input. Next let's examine one of React's finest features: composability.
 
