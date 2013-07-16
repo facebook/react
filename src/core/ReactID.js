@@ -160,6 +160,7 @@ function purgeID(id) {
 
 exports.ATTR_NAME = ATTR_NAME;
 exports.getID = getID;
+exports.rawGetID = internalGetID;
 exports.setID = setID;
 exports.getNode = getNode;
 exports.purgeID = purgeID;
