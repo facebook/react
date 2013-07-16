@@ -7,7 +7,7 @@ next: 04-multiple-components.html
 ---
 You've already [learned how to display data](./02-displaying-data.html) with React. Now let's look at how to make our UIs interactive.
 
-### A simple example
+## A Simple Example
 
 ```javascript
 /** @jsx React.DOM */
@@ -35,13 +35,13 @@ React.renderComponent(
 );
 ```
 
-### Event handling and synthetic events
+## Event Handling and Synthetic Events
 
 With React you simply pass your event handler as a camelCased prop similar to how you'd do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with [the W3C spec](http://www.w3.org/TR/DOM-Level-3-Events/), regardless of which browser you're using.
 
 **If you'd like to use React on a touch device** (i.e. a phone or tablet), simply call `React.initializeTouchEvents(true);` to turn them on.
 
-### Under the hood: autoBind and event delegation
+## Under the Hood: autoBind and Event Delegation
 
 Under the hood React does a few things to keep your code performant and easy to understand.
 
@@ -49,17 +49,17 @@ Under the hood React does a few things to keep your code performant and easy to 
 
 **Event delegation.** React doesn't actually attach event handlers to the nodes themselves. When React starts up, it starts listening for all events at the top level using a single event listener. When a component is mounted or unmounted, the event handlers are simply added or removed from a fast internal event mapping. When the event occurs, React knows how to dispatch it using this mapping. When there are no event handlers left in the mapping, React's event handlers are simple no-ops. To learn more about why this is fast, see [David Walsh's excellent blog post](http://davidwalsh.name/event-delegate).
 
-### Components are just state machines
+## Components are Just State Machines
 
 React thinks of UIs as simple state machines. By thinking of a UI as being in various states and rendering those states, it's easy to keep your UI consistent.
 
 In React, you simply update a component's state, and then render a new UI based on this new state. React takes care of updating the DOM for you in the most efficient way.
 
-### How state works
+## How State Works
 
 A common way to inform React of a data change is by calling `setState(data, callback)`. This method merges `data` into `this.state` and re-renders the component. When the component finishes re-rendering, the optional `callback` is called. Most of the time you'll never need to provide a `callback` since React will take care of keeping your UI up-to-date for you.
 
-### What components should have state?
+## What Components Should Have State?
 
 Most of your components should simply take some data from `props` and render it. However, sometimes you need to respond to user input, a server request or the passage of time. For this you use state.
 
@@ -67,11 +67,11 @@ Most of your components should simply take some data from `props` and render it.
 
 A common pattern is to create several stateless components that just render data, and have a stateful component above them in the hierarchy that passes its state to its children via `props`. The stateful component encapsulates all of the interaction logic, while the stateless components take care of rendering data in a declarative way.
 
-### What should go in state?
+## What Should Go in State?
 
 **State should contain data that the component's event handlers may change to trigger a UI update.** In real apps this data tends to be very small and JSON-serializable. When building a stateful component, think about the minimal possible representation of its state, and only store those properties in `this.state`. Inside of `render()` simply compute any other information you need based on this state. You'll find that thinking about and writing applications in this way tends to lead to the most correct application, since adding redundant or computed values to state means that you need to explicitly keep them in sync rather than rely on React computing them for you.
 
-### What *shouldn't* go in state?
+## What *Shouldn't* Go in State?
 
 `this.state` should only contain the minimal amount of data needed to represent your UI's state. As such, it should not contain:
 

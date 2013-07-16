@@ -1,13 +1,13 @@
 ---
 id: 02-displaying-data
-title: Displaying data
+title: Displaying Data
 layout: docs
 prev: 01-why-react.html
 next: 02.1-jsx-in-depth.html
 ---
 The most basic thing you can do with a UI is display some data. React makes it easy to display data, and automatically keeps it up-to-date when the data changes.
 
-### Getting started
+## Getting Started
 
 Let's look at a really simple example. Create a `hello-react.html` file with the following code:
 
@@ -54,7 +54,7 @@ setInterval(function() {
 }, 500);
 ```
 
-### Reactive updates
+## Reactive Updates
 
 View the finished code in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI -- any input you put in the text field remains, even though you haven't written any code to manage this behavior. React figures it out for you and does the right thing.
 
@@ -62,13 +62,13 @@ The way it is able to figure this out is that React does not directly manipulate
 
 The inputs to this component are called `props` -- short for "properties". They're passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, **never write to this.props**.
 
-### Components are just like functions
+## Components are Just Like Functions
 
 React components are very simple. You can think of them as simple function that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
 
 **One limitation**: React components can only render a single root node. If you want to return multiple nodes they *must* be wrapped in a single root. This is a limitation we can fix, but we have not identified a pressing reason to do so yet; reach out to our [Google Group](http://groups.google.com/group/reactjs) if you have a compelling case for it.
 
-### JSX syntax
+## JSX Syntax
 
 We strongly believe that components are the right way to separate concerns rather than "templates" and "display logic." We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.
 

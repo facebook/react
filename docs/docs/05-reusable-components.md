@@ -1,19 +1,19 @@
 ---
 id: 05-reusable-components
-title: Reusable components
+title: Reusable Components
 layout: docs
 prev: 04-multiple-components.html
 next: 06-forms.html
 ---
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
 
-### Prop validation
+## Prop Validation
 
 As your app grows it's helpful to ensure that your components are used correctly. We do this using `propTypes`.
 
 ** TODO zpao **
 
-### Transferring props: a shortcut
+## Transferring Props: A Shortcut
 
 A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
 
@@ -36,7 +36,7 @@ React.renderComponent(
 );
 ```
 
-### Mixins
+## Mixins
 
 Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
 
@@ -85,6 +85,6 @@ React.renderComponent(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
 
-### Testing
+## Testing
 
 **TODO: benjamn**

@@ -7,7 +7,7 @@ next: 07-working-with-the-browser.html
 ---
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
 
-### Interactive Props
+## Interactive Props
 
 Form components support a few props that are affected via user interactions:
 
@@ -25,7 +25,7 @@ Form components allow listening for changes by setting a callback to the `onChan
 
 Like all DOM events, the `onChange` prop is supported on all native components and can be used to listen to bubbled change events.
 
-### Controlled Components
+## Controlled Components
 
 An `<input>` with `value` set is a *controlled* component. In a controlled `<input>`, the value of the rendered element will always reflect the `value` prop. For example:
 
@@ -60,7 +60,7 @@ In this example, we are simply accepting the newest value provided by the user a
 
 This would accept user input but truncate the value to the first 140 characters.
 
-### Uncontrolled Components
+## Uncontrolled Components
 
 An `<input>` that does not supply a `value` (or sets it to `null`) is an *uncontrolled* component. In an uncontrolled `<input>`, the value of the rendered element will reflect the user's input. For example:
 
@@ -84,9 +84,9 @@ This example will function much like the **Controlled Components** example above
 
 Likewise, `<input>` supports `defaultChecked` and `<option>` supports `defaultSelected`.
 
-### Advanced Topics
+## Advanced Topics
 
-#### Why controlled components?
+### Why Controlled Components?
 
 Using form components such as `<input>` in React presents a challenge that is absent when writing traditional form HTML. For example, in HTML:
 
@@ -106,7 +106,7 @@ Unlike HTML, React components must represent the state of the view at any point 
 
 Since this method describes the view at any point in time, the value of the text input should *always* be `Untitled`.
 
-#### Why textarea value?
+### Why Textarea Value?
 
 In HTML, the value of `<textarea>` is usually set using its children:
 

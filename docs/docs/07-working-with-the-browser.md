@@ -1,13 +1,13 @@
 ---
 id: 07-working-with-the-browser
-title: Working with the browser
+title: Working With the Browser
 layout: docs
 prev: 06-forms.html
 next: 07.1-more-about-refs.html
 ---
 React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.
 
-### The mock DOM
+## The Mock DOM
 
 React is so fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. `render()` methods return a *description* of the DOM, and React can diff this description with the in-memory representation to compute the fastest way to update the browser.
 
@@ -15,7 +15,7 @@ Additionally, React implements a full synthetic event system such that all event
 
 Most of the time you should stay within React's "faked browser" world since it's more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.
 
-### Refs and getDOMNode()
+## Refs and getDOMNode()
 
 To interact with the browser, you'll need a reference to a DOM node. Every mounted React component has a `getDOMNode()` function which you can call to get a reference to it.
 
@@ -53,11 +53,11 @@ React.renderComponent(
 );
 ```
 
-### More about refs
+## More About Refs
 
 To learn more about refs, including ways to use them effectively, see our [more about refs](./07.1-more-about-refs.html) documentation.
 
-### Component lifecycle
+## Component Lifecycle
 
 Components have three main parts of their lifecycle:
 - **Mounting:** A component is being inserted into the DOM.
@@ -66,24 +66,24 @@ Components have three main parts of their lifecycle:
 
 React provides lifecycle methods that you can override to hook into this process. We provide **will** methods, which are called right before something happens, and **did** methods which are called right after something happens.
 
-#### Mounting
+### Mounting
 
  - `getInitialState(): object` is invoked before a component is mounted. Stateful components should implement this and return the initial state data.
  - `componentWillMount()` is invoked immediately before mounting occurs.
  - `componentDidMount(DOMElement rootNode)` is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.
 
-#### Updating
+### Updating
 
  - `componentWillReceiveProps(object nextProps)` is invoked when a mounted component receives new props. This method should be used to compare `this.props` and `nextProps` to perform state transitions using `this.setState()`.
  - `shouldComponentUpdate(object nextProps, object nextState): boolean` is invoked when a component decides whether any changes warrant an update to the DOM. Implement this as an optimization to compare `this.props` with `nextProps` and `this.state` with `nextState` and return false if React should skip updating.
  - `componentWillUpdate(object nextProps, object nextState)` is invoked immediately before updating occurs. You cannot call `this.setState()` here.
  - `componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)` is invoked immediately after updating occurs.
 
-#### Unmounting
+### Unmounting
 
  - `componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.
 
-#### Mounted Methods
+### Mounted Methods
 
 _Mounted_ composite components also support the following methods:
 
@@ -96,14 +96,14 @@ _Mounted_ composite components also support the following methods:
 > `componentDidUpdate()` is a convenience. The same node can be obtained by
 > calling `this.getDOMNode()`.
 
-### Browser suppport and polyfills
+## Browser Suppport and Polyfills
 
 At Facebook, we support older browsers, including IE8. We've had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don't have a bunch of hacks scattered throughout our codebase and we can still expect our code to "just work". For example, instead of seeing `+new Date()`, we can just write `Date.now()`. Since the open source React is the same as what we use internally, we've carried over this philosophy of using forward thinking JS.
 
 In addition to that philosphy, we've also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there's a good chance you'd be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you're already using something like [es5-shim](https://github.com/kriskowal/es5-shim).
 
 
-#### Polyfills needed to support older browsers
+### Polyfills Needed to Support Older Browsers
 
 * `Array.isArray`
 * `Array.prototype.forEach`
