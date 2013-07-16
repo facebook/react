@@ -50,63 +50,6 @@ if (__DEV__) {
   };
 }
 
-var dummies = {};
-
-function getParentDummy(parent) {
-  var parentTag = parent.tagName;
-  return dummies[parentTag] ||
-    (dummies[parentTag] = document.createElement(parentTag));
-}
-
-/**
- * Inserts node after 'after'. If 'after' is null, inserts it after nothing,
- * which is inserting it at the beginning.
- *
- * @param {Element} elem Parent element.
- * @param {Element} insert Element to insert.
- * @param {Element} after Element to insert after.
- * @return {Element} Element that was inserted.
- */
-function insertNodeAfterNode(elem, insert, after) {
-  if (__DEV__) {
-    throwIf(!ExecutionEnvironment.canUseDOM, DOM_UNSUPPORTED);
-  }
-  if (after) {
-    if (after.nextSibling) {
-      return elem.insertBefore(insert, after.nextSibling);
-    } else {
-      return elem.appendChild(insert);
-    }
-  } else {
-    return elem.insertBefore(insert, elem.firstChild);
-  }
-}
-
-/**
- * Slow: Should only be used when it is known there are a few (or one) element
- * in the node list.
- * @param {Element} parentRootDomNode Parent element.
- * @param {HTMLCollection} htmlCollection HTMLCollection to insert.
- * @param {Element} after Element to insert the node list after.
- */
-function inefficientlyInsertHTMLCollectionAfter(
-    parentRootDomNode,
-    htmlCollection,
-    after) {
-
-  if (__DEV__) {
-    throwIf(!ExecutionEnvironment.canUseDOM, DOM_UNSUPPORTED);
-  }
-  var ret;
-  var originalLength = htmlCollection.length;
-  // Access htmlCollection[0] because htmlCollection shrinks as we remove items.
-  // `insertNodeAfterNode` will remove items from the htmlCollection.
-  for (var i = 0; i < originalLength; i++) {
-    ret =
-      insertNodeAfterNode(parentRootDomNode, htmlCollection[0], ret || after);
-  }
-}
-
 /**
  * Super-dangerously inserts markup into existing DOM structure. Seriously, you
  * don't want to use this module unless you are building a framework. This
@@ -122,11 +65,14 @@ function dangerouslyInsertMarkupAt(parentNode, markup, index) {
   if (__DEV__) {
     validateMarkupParams(parentNode, markup);
   }
-  var parentDummy = getParentDummy(parentNode);
-  parentDummy.innerHTML = markup;
-  var htmlCollection = parentDummy.childNodes;
-  var afterNode = index ? parentNode.childNodes[index - 1] : null;
-  inefficientlyInsertHTMLCollectionAfter(parentNode, htmlCollection, afterNode);
+  if (index) {
+    var afterNode = parentNode.childNodes[index - 1];
+    afterNode.insertAdjacentHTML('afterend', markup);
+  } else if (parentNode.firstChild) {
+    parentNode.firstChild.insertAdjacentHTML('beforebegin', markup);
+  } else { // No children
+    parentNode.innerHTML = markup;
+  }
 }
 
 /**
@@ -143,13 +89,8 @@ function dangerouslyReplaceNodeWithMarkup(childNode, markup) {
   if (__DEV__) {
     validateMarkupParams(parentNode, markup);
   }
-  var parentDummy = getParentDummy(parentNode);
-  parentDummy.innerHTML = markup;
-  var htmlCollection = parentDummy.childNodes;
-  if (__DEV__) {
-    throwIf(htmlCollection.length !== 1, NO_MULTI_MARKUP);
-  }
-  parentNode.replaceChild(htmlCollection[0], childNode);
+  childNode.insertAdjacentHTML('afterend', markup);
+  parentNode.removeChild(childNode);
 }
 
 var Danger = {
