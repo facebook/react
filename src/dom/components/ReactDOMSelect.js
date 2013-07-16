@@ -39,13 +39,15 @@ function selectValueType(props, propName, componentName) {
     invariant(
       Array.isArray(props[propName]),
       'The `%s` prop supplied to <select> must be an array if `multiple` is ' +
-      'true.'
+      'true.',
+      propName
     );
   } else {
     invariant(
       !Array.isArray(props[propName]),
       'The `%s` prop supplied to <select> must be a scalar value if ' +
-      '`multiple` is false.'
+      '`multiple` is false.',
+      propName
     );
   }
 }
