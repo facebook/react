@@ -37,14 +37,7 @@ copyProperties(emptyFunction, {
   thatReturnsTrue: makeEmptyFunction(true),
   thatReturnsNull: makeEmptyFunction(null),
   thatReturnsThis: function() { return this; },
-  thatReturnsArgument: function(arg) { return arg; },
-  mustImplement: function(module, property) {
-    return function() {
-      if (__DEV__) {
-        throw new Error(module + '.' + property + ' must be implemented!');
-      }
-    };
-  }
+  thatReturnsArgument: function(arg) { return arg; }
 });
 
 module.exports = emptyFunction;
