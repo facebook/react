@@ -36,7 +36,7 @@
   },
   "dependencies": {
     "base62": "~0.1.1",
-    "commoner": "~0.8.3",
+    "commoner": "~0.8.4",
     "esprima": "https://github.com/facebook/esprima/tarball/a3e0ea3979eb8d54d8bfade220c272903f928b1e",
     "recast": "~0.4.8",
     "source-map": "~0.1.22"
@@ -44,7 +44,7 @@
   "devDependencies": {
     "browserify": "~2.24.1",
     "wrapup": "~0.12.0",
-    "populist": "~0.1.2",
+    "populist": "~0.1.3",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
