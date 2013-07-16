@@ -10,16 +10,16 @@ module.exports = function() {
   var args = config.args;
 
   // Make sure the things that need to be exposed are.
-  var requires = config.requires || {};
+  var requires = config.requires || [];
   grunt.file.expand({
     nonull: true, // Keep IDs that don't expand to anything.
-    cwd: "src"
+    cwd: config.rootDirectory
   }, requires).forEach(function(name) {
     args.push(name.replace(/\.js$/i, ""));
   });
 
   require("populist").buildP({
-    rootDirectory: "build/modules",
+    rootDirectory: config.rootDirectory,
     args: args
   }).then(function(output) {
     grunt.file.write(config.outfile, output);

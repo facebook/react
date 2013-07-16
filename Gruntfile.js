@@ -58,7 +58,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build:test', [
     'jsx:jasmine',
     'jsx:test',
-    'browserify:jasmine',
+    'populist:jasmine',
     'populist:test'
   ]);
 
