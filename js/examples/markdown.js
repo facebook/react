@@ -18,9 +18,8 @@ var MarkdownEditor = React.createClass({\n\
     return (\n\
       <div className=\"MarkdownEditor\">\n\
         <h3>Input</h3>\n\
-        <textarea onInput={this.handleInput} ref=\"textarea\">\n\
-          {this.state.value}\n\
-        </textarea>\n\
+        <textarea onInput={this.handleInput} ref=\"textarea\"\n\
+          value={this.state.value}/>\n\
         <h3>Output</h3>\n\
         <div\n\
           className=\"content\"\n\
