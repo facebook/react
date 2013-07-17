@@ -1,9 +1,10 @@
 ---
-id: 08-tooling-integration
+id: tooling-integration
 title: Tooling integration
 layout: docs
-prev: 07.1-more-about-refs.html
-next: 09-reference.html
+permalink: tooling-integration.html
+prev: more-about-refs.html
+next: reference.html
 ---
 Every project uses a different system for building and deploying JavaScript. We've tried to make React as environment-agnostic as possible.
 

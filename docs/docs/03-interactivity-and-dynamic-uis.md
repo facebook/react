@@ -1,11 +1,12 @@
 ---
-id: 03-interactivity-and-dynamic-uis
+id: interactivity-and-dynamic-uis
 title: Interactivity and dynamic UIs
 layout: docs
-prev: 02.2-jsx-gotchas.html
-next: 04-multiple-components.html
+permalink: interactivity-and-dynamic-uis.html
+prev: jsx-gotchas.html
+next: multiple-components.html
 ---
-You've already [learned how to display data](./02-displaying-data.html) with React. Now let's look at how to make our UIs interactive.
+You've already [learned how to display data](./displaying-data.html) with React. Now let's look at how to make our UIs interactive.
 
 ## A Simple Example
 

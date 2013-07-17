@@ -1,9 +1,10 @@
 ---
-id: 06-forms
+id: forms
 title: Forms
 layout: docs
-prev: 05-reusable-components.html
-next: 07-working-with-the-browser.html
+permalink: forms.html
+prev: reusable-components.html
+next: working-with-the-browser.html
 ---
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
 

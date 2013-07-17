@@ -1,8 +1,9 @@
 ---
-id: 09-reference
+id: reference
 title: Reference
 layout: docs
-prev: 08-tooling-integration.html
+permalink: reference.html
+prev: tooling-integration.html
 ---
 ## Examples
 
@@ -165,7 +166,7 @@ componentDidUpdate(object prevProps, object prevState, DOMElement domNode)
 componentWillUnmount()
 ```
 
-See the [working with the browser](./07-working-with-the-browser.html) documentation for more details on these lifecycle methods.
+See the [working with the browser](./working-with-the-browser.html) documentation for more details on these lifecycle methods.
 
 ## DOM Differences
 

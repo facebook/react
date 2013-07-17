@@ -1,9 +1,10 @@
 ---
-id: 07-working-with-the-browser
+id: working-with-the-browser
 title: Working With the Browser
 layout: docs
-prev: 06-forms.html
-next: 07.1-more-about-refs.html
+permalink: working-with-the-browser.html
+prev: forms.html
+next: more-about-refs.html
 ---
 React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.
 
@@ -55,7 +56,7 @@ React.renderComponent(
 
 ## More About Refs
 
-To learn more about refs, including ways to use them effectively, see our [more about refs](./07.1-more-about-refs.html) documentation.
+To learn more about refs, including ways to use them effectively, see our [more about refs](./more-about-refs.html) documentation.
 
 ## Component Lifecycle
 

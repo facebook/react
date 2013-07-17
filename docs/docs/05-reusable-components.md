@@ -1,9 +1,10 @@
 ---
-id: 05-reusable-components
+id: reusable-components
 title: Reusable Components
 layout: docs
-prev: 04-multiple-components.html
-next: 06-forms.html
+permalink: reusable-components.html
+prev: multiple-components.html
+next: forms.html
 ---
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
 
@@ -40,7 +41,7 @@ React.renderComponent(
 
 Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
 
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](./06-working-with-the-browser.html) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
+One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](./working-with-the-browser.html) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
 ```javascript
 /** @jsx React.DOM */

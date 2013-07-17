@@ -15,3 +15,4 @@ name: React
 markdown: redcarpet
 react_version: 0.4.0a
 description: A JavaScript library for building user interfaces
+relative_permalinks: true

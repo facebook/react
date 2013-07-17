@@ -1,9 +1,10 @@
 ---
-id: 02-displaying-data
+id: displaying-data
 title: Displaying Data
 layout: docs
-prev: 01-why-react.html
-next: 02.1-jsx-in-depth.html
+permalink: displaying-data.html
+prev: why-react.html
+next: jsx-in-depth.html
 ---
 The most basic thing you can do with a UI is display some data. React makes it easy to display data, and automatically keeps it up-to-date when the data changes.
 

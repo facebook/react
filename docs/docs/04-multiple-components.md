@@ -1,9 +1,10 @@
 ---
-id: 04-multiple-components
+id: multiple-components
 title: Multiple Components
 layout: docs
-prev: 03-interactivity-and-dynamic-uis.html
-next: 05-reusable-components.html
+permalink: multiple-components.html
+prev: interactivity-and-dynamic-uis.html
+next: reusable-components.html
 ---
 So far, we've looked at how to write a single component to display data and handle user input. Next let's examine one of React's finest features: composability.
 
