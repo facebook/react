@@ -14,17 +14,17 @@ Form components such as `<input>`, `<textarea>`, and `<option>` differ from othe
 
 Form components support a few props that are affected via user interactions:
 
- - `value`, supported by `<input>` and `<textarea>` components.
- - `checked`, supported by `<input>` components of type `checkbox` or `radio`.
- - `selected`, supported by `<option>` components.
+* `value`, supported by `<input>` and `<textarea>` components.
+* `checked`, supported by `<input>` components of type `checkbox` or `radio`.
+* `selected`, supported by `<option>` components.
 
 In HTML, the value of `<textarea>` is set via children. In React, you should use `value` instead.
 
 Form components allow listening for changes by setting a callback to the `onChange` prop. The `onChange` prop works across browsers to fire in response to user interactions when:
 
- - The `value` of `<input>` or `<textarea>` changes.
- - The `checked` state of `<input>` changes.
- - The `selected` state of `<option>` changes.
+* The `value` of `<input>` or `<textarea>` changes.
+* The `checked` state of `<input>` changes.
+* The `selected` state of `<option>` changes.
 
 Like all DOM events, the `onChange` prop is supported on all native components and can be used to listen to bubbled change events.
 
