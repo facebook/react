@@ -24,7 +24,7 @@ module.exports = function() {
   });
 
   args.push.apply(args, rootIDs);
-  args.push("--config" /* from stdin */);
+  args.push("--config", config.configFile);
 
   var child = spawn({
     cmd: "bin/jsx",
@@ -37,9 +37,6 @@ module.exports = function() {
       done();
     }
   });
-
-  child.stdin.write(JSON.stringify(config.getConfig()));
-  child.stdin.end();
 
   child.stdout.pipe(process.stdout);
   child.stderr.pipe(process.stderr);
