@@ -19,6 +19,7 @@
   "unused": "vars",
 
   "globals": {
+    "__VERSION__": false,
     "__DEV__": false,
     "require": false,
     "module": false,
