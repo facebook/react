@@ -6,13 +6,16 @@ permalink: reusable-components.html
 prev: multiple-components.html
 next: forms.html
 ---
+
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
+
 
 ## Prop Validation
 
 As your app grows it's helpful to ensure that your components are used correctly. We do this using `propTypes`.
 
 ** TODO zpao **
+
 
 ## Transferring Props: A Shortcut
 
@@ -36,6 +39,7 @@ React.renderComponent(
   document.getElementById('example')
 );
 ```
+
 
 ## Mixins
 
@@ -85,6 +89,7 @@ React.renderComponent(
 ```
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
+
 
 ## Testing
 
