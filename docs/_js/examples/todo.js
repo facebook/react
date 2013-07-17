@@ -16,7 +16,7 @@ var TodoApp = React.createClass({\n\
   getInitialState: function() {\n\
     return {items: [], text: ''};\n\
   },\n\
-  onKey: function(e) {\n\
+  onChange: function(e) {\n\
     this.setState({text: e.target.value});\n\
   },\n\
   handleSubmit: function(e) {\n\
@@ -31,7 +31,7 @@ var TodoApp = React.createClass({\n\
         <h3>TODO</h3>\n\
         <TodoList items={this.state.items} />\n\
         <form onSubmit={this.handleSubmit}>\n\
-          <input onKeyUp={this.onKey} defaultValue={this.state.text} />\n\
+          <input onChange={this.onChange} value={this.state.text} />\n\
           <button>{'Add #' + (this.state.items.length + 1)}</button>\n\
         </form>\n\
       </div>\n\

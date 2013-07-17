@@ -11,7 +11,10 @@ var Timer = React.createClass({\n\
     this.setState({secondsElapsed: this.state.secondsElapsed + 1});\n\
   },\n\
   componentDidMount: function() {\n\
-    setInterval(this.tick, 1000);\n\
+    this.interval = setInterval(this.tick, 1000);\n\
+  },\n\
+  componentWillUnmount: function() {\n\
+    clearInterval(this.interval);\n\
   },\n\
   render: function() {\n\
     return React.DOM.div({},\n\
