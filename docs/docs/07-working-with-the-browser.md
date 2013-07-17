@@ -6,7 +6,9 @@ permalink: working-with-the-browser.html
 prev: forms.html
 next: more-about-refs.html
 ---
+
 React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.
+
 
 ## The Mock DOM
 
@@ -16,11 +18,14 @@ Additionally, React implements a full synthetic event system such that all event
 
 Most of the time you should stay within React's "faked browser" world since it's more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.
 
+
 ## Refs and getDOMNode()
 
 To interact with the browser, you'll need a reference to a DOM node. Every mounted React component has a `getDOMNode()` function which you can call to get a reference to it.
 
-**Warning:** `getDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `getDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
+> Note:
+>
+> `getDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `getDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
 
 In order to get a reference to a React component, you can either use `this` to get the current React component, or you can use refs to refer to a component you own. They work like this:
 
@@ -54,24 +59,29 @@ React.renderComponent(
 );
 ```
 
+
 ## More About Refs
 
 To learn more about refs, including ways to use them effectively, see our [more about refs](./more-about-refs.html) documentation.
 
+
 ## Component Lifecycle
 
 Components have three main parts of their lifecycle:
+
 - **Mounting:** A component is being inserted into the DOM.
 - **Updating:** A component is being re-rendered to determine if the DOM should be updated.
 - **Unmounting:** A component is being removed from the DOM.
 
-React provides lifecycle methods that you can override to hook into this process. We provide **will** methods, which are called right before something happens, and **did** methods which are called right after something happens.
+React provides lifecycle methods that you can specify to hook into this process. We provide **will** methods, which are called right before something happens, and **did** methods which are called right after something happens.
+
 
 ### Mounting
 
  - `getInitialState(): object` is invoked before a component is mounted. Stateful components should implement this and return the initial state data.
  - `componentWillMount()` is invoked immediately before mounting occurs.
  - `componentDidMount(DOMElement rootNode)` is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.
+
 
 ### Updating
 
@@ -80,9 +90,11 @@ React provides lifecycle methods that you can override to hook into this process
  - `componentWillUpdate(object nextProps, object nextState)` is invoked immediately before updating occurs. You cannot call `this.setState()` here.
  - `componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)` is invoked immediately after updating occurs.
 
+
 ### Unmounting
 
  - `componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.
+
 
 ### Mounted Methods
 
@@ -96,6 +108,7 @@ _Mounted_ composite components also support the following methods:
 > The `DOMElement rootNode` argument of `componentDidMount()` and
 > `componentDidUpdate()` is a convenience. The same node can be obtained by
 > calling `this.getDOMNode()`.
+
 
 ## Browser Suppport and Polyfills
 
@@ -115,5 +128,5 @@ In addition to that philosphy, we've also taken the stance that we, as authors o
 
 All of these can be polyfilled using `es5-shim.js` from [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim).
 
-* `console.*` - [https://github.com/paulmillr/console-polyfill](https://github.com/paulmillr/console-polyfill)
-* `Object.create` - Provided in `es5-sham.js` @ [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim)
+* `console.*` - Only needed when not using the minified build. If you need to polyfill this, try [https://github.com/paulmillr/console-polyfill](https://github.com/paulmillr/console-polyfill).
+* `Object.create` - Provided in `es5-sham.js` @ [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim).
