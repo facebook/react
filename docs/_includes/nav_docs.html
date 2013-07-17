@@ -1,24 +1,27 @@
 <div class="nav-docs">
-  <div class="nav-docs-section">
-    <h3>Quick start</h3>
-    <ul>
-      <li><a href="/react/docs/getting-started.html"{% if page.id == 'getting-started' %} class="active"{% endif %}>Getting Started</a></li>
-      <li><a href="/react/docs/tutorial.html"{% if page.id == 'tutorial' %} class="active"{% endif %}>Tutorial</a></li>
-    </ul>
-  </div>
-  <div class="nav-docs-section">
-    <h3>Guides</h3>
-    <ul>
-        <li><a href="/react/docs/01-why-react.html"{% if page.id == '01-why-react' %} class="active"{% endif %}>Why React?</a></li>
-        <li><a href="/react/docs/02-displaying-data.html"{% if page.id == '02-displaying-data' %} class="active"{% endif %}>Displaying Data</a></li>
-        <li><a href="/react/docs/03-interactivity-and-dynamic-uis.html"{% if page.id == '03-interactivity-and-dynamic-uis' %} class="active"{% endif %}>Interactivity and Dynamic UIs</a></li>
-        <li><a href="/react/docs/04-multiple-components.html"{% if page.id == '04-multiple-components' %} class="active"{% endif %}>Multiple Components</a></li>
-        <li><a href="/react/docs/05-reusable-components.html"{% if page.id == '05-reusable-components' %} class="active"{% endif %}>Reusable Components</a></li>
-        <li><a href="/react/docs/06-forms.html"{% if page.id == '06-forms' %} class="active"{% endif %}>Forms</a></li>
-        <li><a href="/react/docs/07-working-with-the-browser.html"{% if page.id == '07-working-with-the-browser' %} class="active"{% endif %}>Working With the Browser</a></li>
-        <li><a href="/react/docs/08-tooling-integration.html"{% if page.id == '08-tooling-integration' %} class="active"{% endif %}>Tooling Integration</a></li>
-        <li><a href="/react/docs/09-reference.html"{% if page.id == '09-reference' %} class="active"{% endif %}>Reference</a></li>
-
-    </ul>
-  </div>
+  {% for section in site.nav_docs_sections %}
+    <div class="nav-docs-section">
+      <h3>{{ section.title }}</h3>
+      <ul>
+        {% for item in section.items %}
+          <li>
+            <a href="/react/docs/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>
+              {{ item.title }}
+            </a>
+            {% if item.subitems %}
+              <ul>
+                {% for subitem in item.subitems %}
+                  <li>
+                    <a href="/react/docs/{{ subitem.id }}.html"{% if page.id == subitem.id %} class="active"{% endif %}>
+                      {{ subitem.title }}
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
 </div>
