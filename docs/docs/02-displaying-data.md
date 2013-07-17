@@ -17,8 +17,8 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-0.4.0.min.js"></script>
-    <script src="http://fb.me/JSXTransformer-0.4.0.js"></script>
+    <script src="http://fb.me/react-{{site.react_version}}.min.js"></script>
+    <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   </head>
   <body>
     <div id="example"></div>
