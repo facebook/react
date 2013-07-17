@@ -17,6 +17,24 @@ As your app grows it's helpful to ensure that your components are used correctly
 ** TODO zpao **
 
 
+## Default Prop Values
+
+React let's you define default values for your `props` in a very declarative way:
+
+```javascript
+var ComponentWithDefaultProps = React.createClass({
+  getDefaultProps: function() {
+    return {
+      value: 'default value'
+    };
+  }
+  /* ... */
+});
+```
+
+The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component`. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+
+
 ## Transferring Props: A Shortcut
 
 A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
