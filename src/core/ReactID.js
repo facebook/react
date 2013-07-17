@@ -57,13 +57,7 @@ function getID(node) {
 }
 
 function internalGetID(node) {
-  if (node && node.getAttributeNode) {
-    var attributeNode = node.getAttributeNode(ATTR_NAME);
-    if (attributeNode) {
-      return attributeNode.value || '';
-    }
-  }
-  return '';
+  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
 }
 
 /**
