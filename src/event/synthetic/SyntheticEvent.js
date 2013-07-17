@@ -141,10 +141,13 @@ SyntheticEvent.Interface = EventInterface;
 SyntheticEvent.augmentClass = function(Class, Interface) {
   var Super = this;
 
-  var prototype = Object.create(Super.prototype);
+  function ctor() {
+    this.constructor = Class;
+  }
+  ctor.prototype = Super.prototype;
+  var prototype = new ctor();
   mergeInto(prototype, Class.prototype);
   Class.prototype = prototype;
-  Class.prototype.constructor = Class;
 
   Class.Interface = merge(Super.Interface, Interface);
   Class.augmentClass = Super.augmentClass;
