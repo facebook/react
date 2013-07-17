@@ -12,14 +12,47 @@ When designing interfaces, break down the common design elements (buttons, form 
 
 ## Prop Validation
 
-As your app grows it's helpful to ensure that your components are used correctly. We do this using `propTypes`.
+As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, an error will be thrown. Here is an example documenting the different validators provided:
 
-** TODO zpao **
+```javascript
+React.createClass({
+  propTypes: {
+    // You can declare that a prop is a specific JS primitive. By default, these
+    // are all optional.
+    optionalArray: React.PropTypes.array,
+    optionalBool: React.PropTypes.bool,
+    optionalFunc: React.PropTypes.func,
+    optionalNumber: React.PropTypes.number,
+    optionalObject: React.PropTypes.object,
+    optionalString: React.PropTypes.string,
+
+    // You can ensure that your prop is limited to specific values by treating
+    // it as an enum.
+    optionalEnum: React.PropTypes.oneOf(['News','Photos']),
+
+    // You can also declare that a prop is an instance of a class. This uses
+    // JS's instanceof operator.
+    someClass: React.PropTypes.instanceOf(SomeClass),
+
+    // You can chain any of the above with isRequired to make sure an error is
+    // thrown if the prop isn't provide.
+    requiredFunc: React.PropTypes.func.isRequired
+
+    // You can also specify a custom validator.
+    customProp: function(props, propName, componentName) {
+      if (!/matchme/.test(props[propName])) {
+        throw new Error('Validation failed!')
+      }
+    }
+  },
+  /* ... */
+});
+```
 
 
 ## Default Prop Values
 
-React let's you define default values for your `props` in a very declarative way:
+React lets you define default values for your `props` in a very declarative way:
 
 ```javascript
 var ComponentWithDefaultProps = React.createClass({
@@ -32,7 +65,7 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component`. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
 
 
 ## Transferring Props: A Shortcut
