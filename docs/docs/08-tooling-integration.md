@@ -26,7 +26,7 @@ If you like using JSX, we provide an in-browser JSX transformer for development 
 
 > Note:
 >
-> The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production -- see the next section.
+> The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.
 
 
 ## Productionizing: Precompiled JSX
