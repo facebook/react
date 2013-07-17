@@ -1,5 +1,5 @@
 ---
-id: docs-getting-started
+id: getting-started
 title: Getting Started
 layout: docs
 next: tutorial.html
