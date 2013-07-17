@@ -6,7 +6,9 @@ permalink: forms.html
 prev: reusable-components.html
 next: working-with-the-browser.html
 ---
+
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
+
 
 ## Interactive Props
 
@@ -26,6 +28,7 @@ Form components allow listening for changes by setting a callback to the `onChan
 
 Like all DOM events, the `onChange` prop is supported on all native components and can be used to listen to bubbled change events.
 
+
 ## Controlled Components
 
 An `<input>` with `value` set is a *controlled* component. In a controlled `<input>`, the value of the rendered element will always reflect the `value` prop. For example:
@@ -42,12 +45,12 @@ This will render an input that always has a value of `Hello!`. Any user input wi
   getInitialState: function() {
     return {value: 'Hello!'};
   },
+  handleChange: function(event) {
+    this.setState({value: event.target.value});
+  },
   render: function() {
     var value = this.state.value;
     return <input type="text" value={value} onChange={this.handleChange} />;
-  },
-  handleChange: function(event) {
-    this.setState({value: event.target.value});
   }
 ```
 
@@ -60,6 +63,7 @@ In this example, we are simply accepting the newest value provided by the user a
 ```
 
 This would accept user input but truncate the value to the first 140 characters.
+
 
 ## Uncontrolled Components
 
@@ -85,7 +89,9 @@ This example will function much like the **Controlled Components** example above
 
 Likewise, `<input>` supports `defaultChecked` and `<option>` supports `defaultSelected`.
 
+
 ## Advanced Topics
+
 
 ### Why Controlled Components?
 
@@ -106,6 +112,7 @@ Unlike HTML, React components must represent the state of the view at any point 
 ```
 
 Since this method describes the view at any point in time, the value of the text input should *always* be `Untitled`.
+
 
 ### Why Textarea Value?
 
