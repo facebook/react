@@ -11,16 +11,17 @@ var MarkdownEditor = React.createClass({\n\
   getInitialState: function() {\n\
     return {value: 'Type some *markdown* here!'};\n\
   },\n\
-  handleInput: React.autoBind(function() {\n\
+  handleChange: React.autoBind(function() {\n\
     this.setState({value: this.refs.textarea.getDOMNode().value});\n\
   }),\n\
   render: function() {\n\
     return (\n\
       <div className=\"MarkdownEditor\">\n\
         <h3>Input</h3>\n\
-        <textarea onInput={this.handleInput} ref=\"textarea\">\n\
-          {this.state.value}\n\
-        </textarea>\n\
+        <textarea\n\
+          onChange={this.handleChange}\n\
+          ref=\"textarea\"\n\
+          defaultValue={this.state.value} />\n\
         <h3>Output</h3>\n\
         <div\n\
           className=\"content\"\n\
@@ -37,6 +38,6 @@ React.renderComponent(<MarkdownEditor />, mountNode);\
 ";
 
 React.renderComponent(
-  <ReactPlayground codeText={MARKDOWN_COMPONENT} />,
+  ReactPlayground( {codeText:MARKDOWN_COMPONENT}, null ),
   document.getElementById('markdownExample')
 );
