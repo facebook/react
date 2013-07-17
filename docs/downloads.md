@@ -47,16 +47,3 @@ $ bower install --save react
 $ npm install -g react-tools
 ```
 
-## Release Notes
-
-**0.3.3** Upgrade `react-tools` dependencies, improve in-browser JSX transformer, make `React.renderComponent` more versatile. [Details...](blog/2013/06/20/react-v0-3-3.html)
-
-**0.3.2** Improve compatibility of JSX Transformer; make `react-tools` compatible with [browserify](https://github.com/substack/node-browserify)
-
-**0.3.1** Fix `react-tools` module
-
-**0.3** Initial public release.
-
-**0.2** Standardize API & refactor component lifecycle. Normalize DOM interactions.
-
-**0.1** Initial release.
