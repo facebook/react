@@ -54,7 +54,7 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<span  ' + ReactID.ATTR_NAME + '="[^"]+">hello world</span>'
+      '<span ' + ReactID.ATTR_NAME + '="[^"]+">hello world</span>'
     );
   });
 
@@ -77,8 +77,8 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<div  ' + ReactID.ATTR_NAME + '="[^"]+">' +
-        '<span  ' + ReactID.ATTR_NAME + '="[^"]+">' +
+      '<div ' + ReactID.ATTR_NAME + '="[^"]+">' +
+        '<span ' + ReactID.ATTR_NAME + '="[^"]+">' +
           '<span ' + ReactID.ATTR_NAME + '="[^"]+">My name is </span>' +
           '<span ' + ReactID.ATTR_NAME + '="[^"]+">child</span>' +
         '</span>' +
@@ -130,7 +130,7 @@ describe('ReactServerRendering', function() {
     );
 
     expect(response).toMatch(
-      '<span  ' + ReactID.ATTR_NAME + '="[^"]+">' +
+      '<span ' + ReactID.ATTR_NAME + '="[^"]+">' +
         '<span ' + ReactID.ATTR_NAME + '="[^"]+">Component name: </span>' +
         '<span ' + ReactID.ATTR_NAME + '="[^"]+">TestComponent</span>' +
       '</span>'

@@ -39,9 +39,12 @@ function hasArrayNature(obj) {
     ('length' in obj) &&
     // not window
     !('setInterval' in obj) &&
+    // no DOM node should be considered an array-like
+    // a 'select' element has 'length' and 'item' properties
+    (typeof obj.nodeType != 'number') &&
     (
       // a real array
-      Object.prototype.toString.call(obj) === "[object Array]" ||
+      Array.isArray(obj) ||
       // arguments
       ('callee' in obj) ||
       // HTMLCollection/NodeList

@@ -16,7 +16,7 @@
  * @providesModule Danger
  */
 
-/*jslint evil: true */
+/*jslint evil: true, sub: true */
 
 "use strict";
 
@@ -50,12 +50,86 @@ if (__DEV__) {
   };
 }
 
-var dummies = {};
+/**
+ * Dummy container used to render all markup.
+ */
+var dummyNode = ExecutionEnvironment.canUseDOM ?
+  document.createElement('div') :
+  null;
 
-function getParentDummy(parent) {
-  var parentTag = parent.tagName;
-  return dummies[parentTag] ||
-    (dummies[parentTag] = document.createElement(parentTag));
+/**
+ * Some browsers cannot use `innerHTML` to render certain elements standalone,
+ * so we wrap them, render the wrapped nodes, then extract the desired node.
+ */
+var markupWrap = {
+  'option': [1, '<select multiple="true">', '</select>'],
+  'legend': [1, '<fieldset>', '</fieldset>'],
+  'area': [1, '<map>', '</map>'],
+  'param': [1, '<object>', '</object>'],
+  'thead': [1, '<table>', '</table>'],
+  'tr': [2, '<table><tbody>', '</tbody></table>'],
+  'col': [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
+  'td': [3, '<table><tbody><tr>', '</tr></tbody></table>']
+};
+markupWrap['optgroup'] = markupWrap['option'];
+markupWrap['tbody'] = markupWrap['thead'];
+markupWrap['tfoot'] = markupWrap['thead'];
+markupWrap['colgroup'] = markupWrap['thead'];
+markupWrap['caption'] = markupWrap['thead'];
+markupWrap['th'] = markupWrap['td'];
+
+/**
+ * In IE8, certain elements cannot render alone, so wrap all elements.
+ */
+var defaultWrap = [1, '?<div>', '</div>'];
+
+/**
+ * Feature detection, remove wraps that are unnecessary for the current browser.
+ */
+if (dummyNode) {
+  for (var nodeName in markupWrap) {
+    if (!markupWrap.hasOwnProperty(nodeName)) {
+      continue;
+    }
+    dummyNode.innerHTML = '<' + nodeName + '></' + nodeName + '>';
+    if (dummyNode.firstChild) {
+      markupWrap[nodeName] = null;
+    }
+  }
+  dummyNode.innerHTML = '<link />';
+  if (dummyNode.firstChild) {
+    defaultWrap = null;
+  }
+}
+
+/**
+ * Renders markup into nodes. The returned HTMLCollection is live and should be
+ * used immediately (or at least before the next invocation to `renderMarkup`).
+ *
+ * NOTE: Extracting the `nodeName` does not require a regular expression match
+ * because we make assumptions about React-generated markup (i.e. there are no
+ * spaces surrounding the opening tag and there is at least one attribute).
+ * @see http://jsperf.com/extract-nodename
+ *
+ * @param {string} markup
+ * @return {*} An HTMLCollection.
+ */
+function renderMarkup(markup) {
+  var node = dummyNode;
+  var nodeName = markup.substring(1, markup.indexOf(' '));
+
+  var wrap = markupWrap[nodeName.toLowerCase()] || defaultWrap;
+  if (wrap) {
+    node.innerHTML = wrap[1] + markup + wrap[2];
+
+    var wrapDepth = wrap[0];
+    while (wrapDepth--) {
+      node = node.lastChild;
+    }
+  } else {
+    node.innerHTML = markup;
+  }
+  return node.childNodes;
 }
 
 /**
@@ -122,9 +196,7 @@ function dangerouslyInsertMarkupAt(parentNode, markup, index) {
   if (__DEV__) {
     validateMarkupParams(parentNode, markup);
   }
-  var parentDummy = getParentDummy(parentNode);
-  parentDummy.innerHTML = markup;
-  var htmlCollection = parentDummy.childNodes;
+  var htmlCollection = renderMarkup(markup);
   var afterNode = index ? parentNode.childNodes[index - 1] : null;
   inefficientlyInsertHTMLCollectionAfter(parentNode, htmlCollection, afterNode);
 }
@@ -143,9 +215,7 @@ function dangerouslyReplaceNodeWithMarkup(childNode, markup) {
   if (__DEV__) {
     validateMarkupParams(parentNode, markup);
   }
-  var parentDummy = getParentDummy(parentNode);
-  parentDummy.innerHTML = markup;
-  var htmlCollection = parentDummy.childNodes;
+  var htmlCollection = renderMarkup(markup);
   if (__DEV__) {
     throwIf(htmlCollection.length !== 1, NO_MULTI_MARKUP);
   }

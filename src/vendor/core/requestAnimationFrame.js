@@ -18,17 +18,19 @@
 
 var emptyFunction = require('emptyFunction');
 
+var lastTime = 0;
+
 var requestAnimationFrame =
-  window.requestAnimationFrame       ||
-  window.webkitRequestAnimationFrame ||
-  window.mozRequestAnimationFrame    ||
-  window.oRequestAnimationFrame      ||
-  window.msRequestAnimationFrame     ||
+  global.requestAnimationFrame       ||
+  global.webkitRequestAnimationFrame ||
+  global.mozRequestAnimationFrame    ||
+  global.oRequestAnimationFrame      ||
+  global.msRequestAnimationFrame     ||
   function(callback) {
-    // Browsers which don't support requestAnimationFrame are likely running on
-    // older hardware, so it's not reasonable to expect 60FPS animations out of
-    // them. 30FPS (33.3ms per frame) is more reasonable.
-    return window.setTimeout(callback, 33);
+    var currTime = Date.now();
+    var timeDelay = Math.max(0, 16 - (currTime - lastTime));
+    lastTime = currTime + timeDelay;
+    return global.setTimeout(callback, timeDelay);
   };
 
 // Works around a rare bug in Safari 6 where the first request is never invoked.

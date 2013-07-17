@@ -18,6 +18,7 @@
 
 "use strict";
 
+var invariant = require('invariant');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
@@ -300,10 +301,27 @@ var ReactMount = {
     if (__DEV__) {
       var rootElement = rootElementsByReactRootID[reactRootID];
       if (rootElement && rootElement.parentNode !== container) {
-        console.warn(
-          "ReactMount: Root element has been removed from its original " +
-          "container. New container:", rootElement.parentNode
+        invariant(
+          // Call rawGetID here because getID calls isValid which calls
+          // findReactContainerForID (this function).
+          ReactID.rawGetID(rootElement) === reactRootID,
+          'ReactMount: Root element ID differed from reactRootID.'
         );
+
+        var containerChild = container.firstChild;
+        if (containerChild &&
+            reactRootID === ReactID.rawGetID(containerChild)) {
+          // If the container has a new child with the same ID as the old
+          // root element, then rootElementsByReactRootID[reactRootID] is
+          // just stale and needs to be updated. The case that deserves a
+          // warning is when the container is empty.
+          rootElementsByReactRootID[reactRootID] = containerChild;
+        } else {
+          console.warn(
+            'ReactMount: Root element has been removed from its original ' +
+            'container. New container:', rootElement.parentNode
+          );
+        }
       }
     }
 

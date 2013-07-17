@@ -32,5 +32,23 @@ require("commoner").resolve(function(id) {
 
   // Constant propagation means removing any obviously dead code after
   // replacing constant expressions with literal (boolean) values.
-  return propagate(constants, source);
+  source = propagate(constants, source);
+
+  if (context.config.mocking) {
+    // Make sure there is exactly one newline at the end of the module.
+    source = source.replace(/\s+$/m, "\n");
+
+    return context.getProvidedP().then(function(idToPath) {
+      if (id !== "mock-modules" &&
+          id !== "mocks" &&
+          idToPath.hasOwnProperty("mock-modules")) {
+        return source + '\nrequire("mock-modules").register(' +
+          JSON.stringify(id) + ', module);\n';
+      }
+
+      return source;
+    });
+  }
+
+  return source;
 });

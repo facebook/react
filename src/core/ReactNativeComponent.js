@@ -69,7 +69,7 @@ function assertValidProps(props) {
  * @extends ReactMultiChild
  */
 function ReactNativeComponent(tag, omitClose) {
-  this._tagOpen = '<' + tag + ' ';
+  this._tagOpen = '<' + tag;
   this._tagClose = omitClose ? '' : '</' + tag + '>';
   this.tagName = tag.toUpperCase();
 }

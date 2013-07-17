@@ -36,6 +36,9 @@ var ClickCounter = React.createClass({
   triggerReset: function() {
     this.setState({count: this.props.initialCount});
   },
+  handleClick: function() {
+    this.setState({count: this.state.count + 1});
+  },
   render: function() {
     var children = [];
     var i;
@@ -45,10 +48,7 @@ var ClickCounter = React.createClass({
       );
     }
     return (
-      <span className="clickIncrementer"
-          onClick={function() {
-            this.setState({count: this.state.count + 1});
-          }.bind(this)}>
+      <span className="clickIncrementer" onClick={this.handleClick}>
         {children}
       </span>
     );
@@ -77,7 +77,7 @@ var TestRefsComponent = React.createClass({
   render: function() {
     return (
       <div>
-        <div ref="resetDiv" onClick={this.doReset.bind(this)}>
+        <div ref="resetDiv" onClick={this.doReset}>
           Reset Me By Clicking This.
         </div>
         <GeneralContainerComponent ref="myContainer">

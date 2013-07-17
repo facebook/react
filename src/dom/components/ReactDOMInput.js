@@ -96,7 +96,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     }
   },
 
-  handleChange: ReactCompositeComponent.autoBind(function(event) {
+  handleChange: function(event) {
     var returnValue;
     if (this.props.onChange) {
       this._isChanging = true;
@@ -108,7 +108,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       value: event.target.value
     });
     return returnValue;
-  })
+  }
 
 });
 

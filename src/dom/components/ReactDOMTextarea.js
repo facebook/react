@@ -122,7 +122,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     }
   },
 
-  handleChange: ReactCompositeComponent.autoBind(function(event) {
+  handleChange: function(event) {
     var returnValue;
     if (this.props.onChange) {
       this._isChanging = true;
@@ -131,7 +131,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     }
     this.setState({value: event.target.value});
     return returnValue;
-  })
+  }
 
 });
 
