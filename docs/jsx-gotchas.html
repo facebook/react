@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | JSX is not HTML</title>
+  <title>React | JSX Gotchas</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | JSX is not HTML" />
+  <meta property="og:title" content="React | JSX Gotchas" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-is-not-html.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-gotchas.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -53,44 +53,133 @@
 
     <section class="content wrap documentationContent">
   <div class="nav-docs">
-  <div class="nav-docs-section">
-    <h3>Getting started</h3>
-    <ul>
-      <li><a href="/react/docs/getting-started.html">Getting Started</a></li>
-      <li><a href="/react/docs/tutorial.html">Tutorial</a></li>
-      <li><a href="/react/docs/common-questions.html">Common Questions</a></li>
-    </ul>
-  </div>
-
-  <div class="nav-docs-section">
-    <h3>Reference</h3>
-    <ul>
-      <li><a href="/react/docs/syntax.html">JSX Syntax</a></li>
-      <li><a href="/react/docs/component-basics.html">Component Basics</a></li>
-      <li><a href="/react/docs/component-data.html">Component Data</a></li>
-      <li><a href="/react/docs/component-lifecycle.html">Component Lifecycle</a></li>
-      <li><a href="/react/docs/event-handling.html">Event Handling</a></li>
-      <li><a href="/react/docs/advanced-components.html">Advanced Components</a></li>
-      <li><a href="/react/docs/mixins.html">Mixins</a></li>
-      <li><a href="/react/docs/api.html">API</a></li>
-    </ul>
-  </div>
-
-  <div class="nav-docs-section">
-    <h3>Appendix</h3>
-    <ul>
-      <li><a href="/react/docs/jsx-is-not-html.html" class="active">JSX is not HTML</a></li>
-    </ul>
-  </div>
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">
+              Getting Started
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">
+              Tutorial
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">
+              Why React?
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">
+              Displaying Data
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">
+                      JSX in Depth
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html" class="active">
+                      JSX Gotchas
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">
+              Interactivity and Dynamic UIs
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">
+              Multiple Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">
+              Reusable Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">
+              Forms
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">
+              Working With the Browser
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">
+                      More About Refs
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">
+              Tooling integration
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reference.html">
+              Reference
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
 </div>
 
 
   <div class="inner-content">
-    <h1>JSX is not HTML</h1>
-    <div class="subHeader">Differences between JSX and HTML.</div>
+    <h1>JSX Gotchas</h1>
+    <div class="subHeader"></div>
     <p>JSX looks like HTML but there are some important differences you may run into.</p>
 
-<h2>Whitespace removal</h2>
+<h2>Whitespace Removal</h2>
 
 <p>JSX doesn&#39;t follow the same whitespace elimination rules as HTML. JSX removes all whitespace between two curly braces expressions. If you want to have whitespace, simply add <code>{&#39; &#39;}</code>.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="p">}</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">surname</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
@@ -119,22 +208,6 @@
 <p>As a last resort, you always have the ability to insert raw HTML.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
 </code></pre></div>
-<h2>Comments</h2>
-
-<p>JSX supports both single-line and multi-line JavaScript comments within a tag declaration:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="c1">// This is a single-line comment:</span>
-    <span class="cm">/*</span>
-<span class="cm">        And a multi-line</span>
-<span class="cm">        comment</span>
-<span class="cm">    */</span>
-<span class="o">/&gt;</span>
-</code></pre></div>
-<p>As of React 0.3, there is no good way to insert comments within the children section. <a href="https://github.com/facebook/react/issues/82">Issue #82</a> is tracking progress to enable the following:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Note: This is not implemented yet!</span>
-<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-  <span class="p">{</span><span class="cm">/* This is a comment */</span><span class="p">}</span>
-<span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
 <h2>Custom HTML Attributes</h2>
 
 <p>If you pass properties to native HTML elements that do not exist in the HTML specification, React will not render them. If you want to use a custom attribute, you should prefix it with <code>data-</code>.</p>
@@ -146,12 +219,14 @@
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/api.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/jsx-in-depth.html">&larr; Prev</a>
       
+      
+        <a class="docs-next" href="/react/docs/interactivity-and-dynamic-uis.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/jsx-is-not-html.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/jsx-gotchas.html"></div>
   </div>
 </section>
 

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Goals of the documentation</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Goals of the documentation" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/OUTLINE.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">
+              Getting Started
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">
+              Tutorial
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">
+              Why React?
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">
+              Displaying Data
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">
+                      JSX in Depth
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">
+                      JSX Gotchas
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">
+              Interactivity and Dynamic UIs
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">
+              Multiple Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">
+              Reusable Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">
+              Forms
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">
+              Working With the Browser
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">
+                      More About Refs
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">
+              Tooling integration
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reference.html">
+              Reference
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>Goals of the documentation</h1>
+    <div class="subHeader"></div>
+    <ul>
+<li>Flow of docs should mimic progression of questions a new user would ask</li>
+<li>High information density -- assume the reader is adept at JS</li>
+<li>Talk about best practices</li>
+<li>JSFiddles for all code samples</li>
+<li>Provide background for some of the design decisions</li>
+<li>Less words less words less words!</li>
+</ul>
+
+<h2>Outline</h2>
+
+<p>Motivation / Why React?
+- Declarative (simple)
+- Components (separation of concerns)
+- Give it 5 minutes</p>
+
+<p>Displaying data
+- Hello world example
+- Reactive updates
+- Components are just functions
+- JSX syntax (link to separate doc?)
+- JSX gotchas</p>
+
+<p>Interactivity and dynamic UIs
+- Click handler example
+- Event handlers / synthetic events (link to w3c docs)
+- Under the hood: autoBind and event delegation (IE8 notes)
+- React is a state machine
+- How state works
+- What components should have state?
+- What should go in state?
+- What shouldn&#39;t go in state?</p>
+
+<p>Scaling up: using multiple components
+- Motivation: separate concerns
+- Composition example
+- Ownership (and owner vs. parent)
+- Children
+- Data flow (one-way data binding)
+- A note on performance</p>
+
+<p>Building effective reusable components
+- You should build a reusable component library (CSS, testing etc)
+- Prop validation
+- Transferring props: a shortcut
+- Mixins
+- Testing</p>
+
+<p>Forms</p>
+
+<p>Working with the browser
+- The mock DOM
+- Refs / getDOMNode()
+- More about refs
+- Component lifecycle
+- Browser support and polyfills</p>
+
+<p>Working with your environment
+- CDN-hosted React
+- Using master
+- In-browser JSX transform
+- Productionizing: precompiled JSX
+- Helpful open-source projects</p>
+
+<p>Integrating with other UI libraries
+- Using jQuery plugins
+- Letting jQuery manage React components
+- Using with Backbone.View
+- CoffeeScript
+- Moving from Handlebars to React: an example</p>
+
+<p>Server / static rendering
+- Motivation
+- Simple example
+- How does it work? (No DOM)
+- Rendr + React</p>
+
+<p>Big ideas
+- Animation
+- Bootstrap bindings (responsive grids)
+- Reactive CSS
+- Web workers
+- Native views</p>
+
+<p>Case studies
+- Comment box tutorial from scratch
+- From HTML mock to application: React one-hour email
+- Jordan&#39;s LikeToggler example</p>
+
+<p>Reference
+- API
+- DOM differences</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/09.1-tutorial.html">&larr; Prev</a>
+      
+      
+    </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/OUTLINE.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

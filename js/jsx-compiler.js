@@ -14,6 +14,6 @@ React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
 React.renderComponent(
-  ReactPlayground( {codeText:HELLO_COMPONENT, renderCode:true}, null ),
+  ReactPlayground( {codeText:HELLO_COMPONENT, renderCode:true} ),
   document.getElementById('jsxCompiler')
 );

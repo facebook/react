@@ -77,7 +77,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
         CodeMirrorEditor(
           {onChange:this.bindState('code'),
           className:"playgroundStage",
-          codeText:this.state.code}, null
+          codeText:this.state.code}
         );
     } else if (this.state.mode === this.MODES.JS) {
       content =
@@ -87,14 +87,14 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     }
 
     return (
-      React.DOM.div( {className:"playground"}, [
+      React.DOM.div( {className:"playground"}, 
         React.DOM.div( {className:"playgroundCode"}, 
           content
         ),
         React.DOM.div( {className:"playgroundPreview"}, 
-          React.DOM.div( {ref:"mount"}, null )
+          React.DOM.div( {ref:"mount"} )
         )
-      ])
+      )
     );
   },
   componentDidMount: function() {
@@ -121,7 +121,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       }
     } catch (e) {
       React.renderComponent(
-        React.DOM.div( {content:e.toString(), className:"playgroundError"}, null ),
+        React.DOM.div( {content:e.toString(), className:"playgroundError"} ),
         mountNode
       );
     }

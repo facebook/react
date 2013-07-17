@@ -7,6 +7,52 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.4.0</title>
+				<description>&lt;p&gt;Over the past 2 months we&amp;#39;ve been taking feedback and working hard to make React even better. We&amp;#39;ve also added several features that awe didn&amp;#39;t finish in time for the v0.3 launch, and are proud to announce the availability of React v0.4 today!&lt;/p&gt;
+
+&lt;p&gt;This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the &lt;a href=&quot;http://groups.google.com/group/reactjs&quot;&gt;Google Group&lt;/a&gt;, and issues and pull requests on GitHub. We&amp;#39;ve had contributions ranging from documentation improvements to major changes to React&amp;#39;s rendering. We&amp;#39;ve seen people integrate React into the tools they&amp;#39;re using and the products they&amp;#39;re building, and we&amp;#39;re all very excited to see what our budding community builds next!&lt;/p&gt;
+
+&lt;p&gt;React v0.4 has some big changes. We&amp;#39;ve also restructured the documentation to better communicate how to use React. We&amp;#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.&lt;/p&gt;
+
+&lt;p&gt;When you&amp;#39;re ready, &lt;a href=&quot;/react/downloads.html&quot;&gt;go download it&lt;/a&gt;!&lt;/p&gt;
+
+&lt;h3&gt;React&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Switch from using &lt;code&gt;id&lt;/code&gt; attribute to &lt;code&gt;data-reactid&lt;/code&gt; to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.&lt;/li&gt;
+&lt;li&gt;Support for more DOM elements and attributes (e.g., &lt;code&gt;&amp;lt;canvas&amp;gt;&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Improved server-side rendering APIs. &lt;code&gt;React.renderComponentToString(&amp;lt;component&amp;gt;, callback)&lt;/code&gt; allows you to use React on the server and generate markup which can be sent down to the browser.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;prop&lt;/code&gt; improvements: validation and default values. &lt;a href=&quot;http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html&quot;&gt;Read our blog post for details...&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Support for the &lt;code&gt;key&lt;/code&gt; prop, which allows for finer control over reconciliation. &lt;a href=&quot;http://facebook.github.io/react/docs/multiple-components.html&quot;&gt;Read the docs for details...&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Removed &lt;code&gt;React.autoBind&lt;/code&gt;. &lt;a href=&quot;http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html&quot;&gt;Read our blog post for details...&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;Improvements to forms. We&amp;#39;ve written wrappers around &lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;textarea&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt;, and &lt;code&gt;&amp;lt;select&amp;gt;&lt;/code&gt; in order to standardize many inconsistencies in browser implementations. This includes support for &lt;code&gt;defaultValue&lt;/code&gt;, and improved implementation of the &lt;code&gt;onChange&lt;/code&gt; event, and circuit completion. &lt;a href=&quot;http://facebook.github.io/react/docs/forms.html&quot;&gt;Read the docs for details...&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;We&amp;#39;ve implemented an improved synthetic event system that conforms to the W3C spec.&lt;/li&gt;
+&lt;li&gt;Updates to your component are batched now, which may result in a significantly faster re-render of components. &lt;code&gt;this.setState&lt;/code&gt; now takes an optional callback as it&amp;#39;s second parameter. If you were using &lt;code&gt;onClick={this.setState.bind(this, state)}&lt;/code&gt; previously, you&amp;#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;JSX&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Support for comment nodes &lt;code&gt;&amp;lt;div&amp;gt;{/* this is a comment and won&amp;#39;t be rendered */}&amp;lt;/div&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Children are now transformed directly into arguments instead of being wrapped in an array
+E.g. &lt;code&gt;&amp;lt;div&amp;gt;&amp;lt;Component1/&amp;gt;&amp;lt;Component2&amp;gt;&amp;lt;/div&amp;gt;&lt;/code&gt; is transformed into &lt;code&gt;React.DOM.div(null, Component1(null), Component2(null))&lt;/code&gt;.
+Previously this would be transformed into &lt;code&gt;React.DOM.div(null, [Component1(null), Component2(null)])&lt;/code&gt;.
+If you were using React without JSX previously, your code should still work.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;react-tools&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Fixed a number of bugs when transforming directories&lt;/li&gt;
+&lt;li&gt;No longer re-write &lt;code&gt;require()&lt;/code&gt;s to be relative unless specified&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2013-07-17T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html</guid>
+			</item>
+		
+			<item>
 				<title>New in React v0.4: Prop Validation and Default Values</title>
 				<description>&lt;p&gt;Many of the questions we got following the public launch of React revolved around &lt;code&gt;props&lt;/code&gt;, specifically that people wanted to do validation and to make sure their components had sensible defaults.&lt;/p&gt;
 
