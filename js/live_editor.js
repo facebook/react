@@ -24,7 +24,7 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
       matchBrackets: true,
       theme: 'solarized-light'
     });
-    this.editor.on('change', this.onChange.bind(this));
+    this.editor.on('change', this.onChange);
     this.onChange();
   },
   onChange: function() {
@@ -40,7 +40,7 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
     if (IS_MOBILE) {
       editor = React.DOM.pre( {style:{overflow: 'scroll'}}, this.props.codeText);
     } else {
-      editor = React.DOM.textarea( {ref:"editor"}, this.props.codeText);
+      editor = React.DOM.textarea( {ref:"editor", defaultValue:this.props.codeText} );
     }
 
     return (

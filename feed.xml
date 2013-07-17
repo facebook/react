@@ -35,7 +35,7 @@
 &lt;ul&gt;
 &lt;li&gt;Support for comment nodes &lt;code&gt;&amp;lt;div&amp;gt;{/* this is a comment and won&amp;#39;t be rendered */}&amp;lt;/div&amp;gt;&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Children are now transformed directly into arguments instead of being wrapped in an array
-E.g. &lt;code&gt;&amp;lt;div&amp;gt;&amp;lt;Component1/&amp;gt;&amp;lt;Component2&amp;gt;&amp;lt;/div&amp;gt;&lt;/code&gt; is transformed into &lt;code&gt;React.DOM.div(null, Component1(null), Component2(null))&lt;/code&gt;.
+E.g. &lt;code&gt;&amp;lt;div&amp;gt;&amp;lt;Component1/&amp;gt;&amp;lt;Component2/&amp;gt;&amp;lt;/div&amp;gt;&lt;/code&gt; is transformed into &lt;code&gt;React.DOM.div(null, Component1(null), Component2(null))&lt;/code&gt;.
 Previously this would be transformed into &lt;code&gt;React.DOM.div(null, [Component1(null), Component2(null)])&lt;/code&gt;.
 If you were using React without JSX previously, your code should still work.&lt;/li&gt;
 &lt;/ul&gt;

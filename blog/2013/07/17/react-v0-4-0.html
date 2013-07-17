@@ -115,7 +115,7 @@
 <ul>
 <li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
 <li>Children are now transformed directly into arguments instead of being wrapped in an array
-E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2&gt;&lt;/div&gt;</code> is transformed into <code>React.DOM.div(null, Component1(null), Component2(null))</code>.
+E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> is transformed into <code>React.DOM.div(null, Component1(null), Component2(null))</code>.
 Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
 If you were using React without JSX previously, your code should still work.</li>
 </ul>
