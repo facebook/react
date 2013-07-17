@@ -1,0 +1,115 @@
+/* .com { color: #93a1a1; } */
+/* .lit { color: #195f91; } */
+/* .pun, .opn, .clo { color: #93a1a1; } */
+/* .fun { color: #dc322f; } */
+/* .str, .atv { color: #D14; } */
+/* .kwd, .linenums .tag { color: #1e347b; } */
+/* .typ, .atn, .dec, .var { color: teal; } */
+/* .pln { color: #48484c; } */
+
+/* .prettyprint { */
+/*   padding: 8px; */
+/*   background-color: #f9f9f9; */
+/*   border: 1px solid #e1e1e8; */
+/* } */
+/* .prettyprint.linenums { */
+/*   -webkit-box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0; */
+/*      -moz-box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0; */
+/*           box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0; */
+/* } */
+
+/* /1* Specify class=linenums on a pre to get line numbering *1/ */
+/* ol.linenums { */
+/*   margin: 0 0 0 33px; /1* IE indents via margin-left *1/ */
+/* } */ 
+/* ol.linenums li { */
+/*   padding-left: 12px; */
+/*   color: #bebec5; */
+/*   line-height: 18px; */
+/*   text-shadow: 0 1px 0 #fff; */
+/* } */
+
+
+
+/* Jordow's theme */
+/* .com { */
+/*   color: rgba(90, 117, 200, 1); */
+/* } */
+/* .lit { color: #195f91; } */
+/* .pun, .opn, .clo { color: #90908e; } */
+/* .fun { color: #dc322f; } */
+/* .str, .atv { color: #9a9; } */
+/* .kwd, .linenums .tag { color: rgba(90, 117, 200, 1)} */
+/* .typ, .atn, .dec, .var { color: #b86050; } */
+/* .pln { color: #555550; } */
+
+/* .prettyprint { */
+/*   padding: 8px; */
+/*   background-color: rgb(253,253,253); */
+/*   border: 1px solid #e0e0e7; */
+/* } */
+/* .prettyprint.linenums { */
+/*   -webkit-box-shadow: inset 40px 0 0 #f9f9f9, inset 41px 0 0 #E8E8EE; */
+/*      -moz-box-shadow: inset 40px 0 0 #f9f9f9, inset 41px 0 0 #E8E8EE; */
+/*           box-shadow: inset 40px 0 0 #f9f9f9, inset 41px 0 0 #E8E8EE; */
+/* } */
+
+/* /1* Specify class=linenums on a pre to get line numbering *1/ */
+/* ol.linenums { */
+/*   margin: 0 0 0 33px; /1* IE indents via margin-left *1/ */
+/* } */ 
+/* ol.linenums li { */
+/*   padding-left: 12px; */
+/*   color: #ceced5; */
+/*   line-height: 18px; */
+/*   text-shadow: 0 1px 0 #fff; */
+/* } */
+
+/* code { */
+/*   /*border: 1px solid #E8E8EE;*/ */
+/*   box-sizing: border-box; */
+/*   padding: 1px 2px; */
+/*   background-color: #f7f7f7; */
+/*   color: rgba(90, 117, 200, 1); */
+/*   border: 1px solid #E8E8EE; */
+/* } */
+
+
+/** USE THE YELLOW THEME: */
+/* http://docs.scala-lang.org/sips/completed/scala-2-8-arrays.html */
+.lit { color: #195f91; }
+.pun, .opn, .clo { color: #93a1a1; }
+.fun { color: #dc322f; }
+.str, .atv { color: #268bd2; }
+.kwd, .tag { color: #195f91; }
+.typ, .atn, .dec, .var { color: #CB4B16; }
+.pln { color: #555 /*color: #93a1a1;*/ }
+pre.prettyprint {
+  background: #fefbf3;
+  padding: 9px;
+  border: 1px solid rgba(0,0,0,.2);
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  -moz-box-shadow: 0 1px 2px rgba(0,0,0,.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,.1);
+}
+.com {
+  color: rgb(110, 130, 117);
+}
+
+/* Specify class=linenums on a pre to get line numbering */
+ol.linenums {
+  margin: 0 0 0 33px; /* IE indents via margin-left */
+} 
+ol.linenums li {
+  padding-left: 12px;
+  color: #ceced5;
+  line-height: 18px;
+  text-shadow: 0 1px 0 #fff;
+}
+
+
+/* Alternate shading for lines */
+li.L1, li.L3, li.L5, li.L7, li.L9 {  }
+
+
+

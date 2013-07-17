@@ -7,9 +7,9 @@ var Timer = React.createClass({\n\
   getInitialState: function() {\n\
     return {secondsElapsed: 0};\n\
   },\n\
-  tick: React.autoBind(function() {\n\
+  tick: function() {\n\
     this.setState({secondsElapsed: this.state.secondsElapsed + 1});\n\
-  }),\n\
+  },\n\
   componentDidMount: function() {\n\
     setInterval(this.tick, 1000);\n\
   },\n\

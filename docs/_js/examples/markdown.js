@@ -11,9 +11,9 @@ var MarkdownEditor = React.createClass({\n\
   getInitialState: function() {\n\
     return {value: 'Type some *markdown* here!'};\n\
   },\n\
-  handleInput: React.autoBind(function() {\n\
+  handleInput: function() {\n\
     this.setState({value: this.refs.textarea.getDOMNode().value});\n\
-  }),\n\
+  },\n\
   render: function() {\n\
     return (\n\
       <div className=\"MarkdownEditor\">\n\

@@ -1,11 +1,8 @@
 ---
-id: docs-tutorial
+id: tutorial
 title: Tutorial
 layout: docs
-prev: getting-started.html
-next: common-questions.html
 ---
-
 We'll be building a simple, but realistic comments box that you can drop into a blog, similar to Disqus, LiveFyre or Facebook comments.
 
 We'll provide:
@@ -20,11 +17,11 @@ It'll also have a few neat features:
 * **Live updates:** as other users comment we'll pop them into the comment view in real time
 * **Markdown formatting:** users can use Markdown to format their text
 
-## Want to skip all this and just see the source?
+### Want to skip all this and just see the source?
 
 [It's all on GitHub.](https://github.com/petehunt/react-tutorial)
 
-## Getting started
+### Getting started
 
 For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
 
@@ -50,7 +47,7 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
 
 For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag.
 
-## Your first component
+### Your first component
 
 React is all about modular, composable components. For our comment box example, we'll have the following component structure:
 
@@ -80,7 +77,7 @@ React.renderComponent(
 );
 ```
 
-### JSX Syntax
+#### JSX Syntax
 
 The first thing you'll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:
 
@@ -104,7 +101,7 @@ React.renderComponent(
 
 Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](syntax.html).
 
-### What's going on
+#### What's going on
 
 We pass some methods in a JavaScript object to `React.createClass()` to create a new React component. The most important of these methods is called `render` which returns a tree of React components that will eventually render to HTML.
 
@@ -114,7 +111,7 @@ You do not have to return basic HTML. You can return a tree of components that y
 
 `React.renderComponent()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
-# Composing components
+## Composing components
 
 Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s:
 
@@ -160,7 +157,7 @@ var CommentBox = React.createClass({
 
 Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to "React.DOM.tagName" expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
 
-## Component Properties
+### Component Properties
 
 Let's create our third component, `Comment`. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let's add some comments to the `CommentList`:
 
@@ -180,7 +177,7 @@ var CommentList = React.createClass({
 
 Note that we have passed some data from the parent `CommentList` component to the child `Comment` component as both XML-like children and attributes. Data passed from parent to child is called **props**, short for properties.
 
-## Using props
+### Using props
 
 Let's create the Comment component. It will read the data passed to it from the CommentList and render some markup:
 
@@ -202,7 +199,7 @@ var Comment = React.createClass({
 
 By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as keys on `this.props` and any nested elements as `this.props.children`.
 
-## Adding Markdown
+### Adding Markdown
 
 Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.
 
@@ -255,7 +252,7 @@ This is a special API that intentionally makes it difficult to insert raw HTML, 
 
 **Remember:** by using this feature you're relying on Showdown to be secure.
 
-## Hook up the data model
+### Hook up the data model
 
 So far we've been inserting the comments directly in the source code. Instead, let's render a blob of JSON data into the comment list. Eventually this will come from the server, but for now, write it in your source:
 
@@ -309,7 +306,7 @@ var CommentList = React.createClass({
 
 That's it!
 
-## Fetching from the server
+### Fetching from the server
 
 Let's replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:
 
@@ -323,7 +320,7 @@ React.renderComponent(
 
 This component is different from the prior components because it will have to re-render itself. The component won't have any data until the request from the server comes back, at which point the component may need to render some new comments.
 
-## Reactive state
+### Reactive state
 
 So far, each component has rendered itself once based on its props. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state is updated, the component re-renders itself.
 
@@ -351,7 +348,7 @@ var CommentBox = React.createClass({
 
 `getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
 
-### Updating state
+#### Updating state
 When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:
 
 ```javascript
@@ -437,7 +434,7 @@ React.renderComponent(
 
 All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
 
-## Adding new comments
+### Adding new comments
 
 Now it's time to build the form. Our `CommentForm` component should ask the user for their name and comment text and send a request to the server to save the comment.
 
@@ -461,7 +458,7 @@ Let's make the form interactive. When the user submits the form, we should clear
 ```javascript{3-13,16,21}
 // tutorial16.js
 var CommentForm = React.createClass({
-  handleSubmit: React.autoBind(function() {
+  handleSubmit: function() {
     var author = this.refs.author.getDOMNode().value.trim();
     var text = this.refs.text.getDOMNode().value.trim();
     if (!text || !author) {
@@ -471,7 +468,7 @@ var CommentForm = React.createClass({
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
     return false;
-  }),
+  },
   render: function() {
     return (
       <form class="commentForm" onSubmit={this.handleSubmit}>
@@ -488,19 +485,17 @@ var CommentForm = React.createClass({
 });
 ```
 
-#### Events
+##### Events
 
 React attaches event handlers to components using a camelCase naming convention. We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
 
 We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it &ndash; read more about [event handling](event-handling.html).)
 
-`React.autoBind()` is a simple way to ensure that a method is always bound to its component. Inside the method, `this` will be bound to the component instance.
-
-#### Refs
+##### Refs
 
 We use the `ref` attribute to assign a name to a child component and `this.refs` to reference the component. We can call `getDOMNode()` on a component to get the native browser DOM element.
 
-#### Callbacks as props
+##### Callbacks as props
 
 When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in `CommentBox` since `CommentBox` owns the state that represents the list of comments.
 
@@ -519,9 +514,9 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: React.autoBind(function(comment) {
+  handleCommentSubmit: function(comment) {
     // TODO: submit to the server and refresh the list
-  }),
+  },
   getInitialState: function() {
     return {data: []};
   },
@@ -551,14 +546,14 @@ Let's call the callback from the `CommentForm` when the user submits the form:
 ```javascript{6}
 // tutorial18.js
 var CommentForm = React.createClass({
-  handleSubmit: React.autoBind(function() {
+  handleSubmit: function() {
     var author = this.refs.author.getDOMNode().value.trim();
     var text = this.refs.text.getDOMNode().value.trim();
     this.props.onCommentSubmit({author: author, text: text});
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
     return false;
-  }),
+  },
   render: function() {
     return (
       <form class="commentForm" onSubmit={this.handleSubmit}>
@@ -590,7 +585,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: React.autoBind(function(comment) {
+  handleCommentSubmit: function(comment) {
     $.ajax({
       url: this.props.url,
       data: comment,
@@ -600,7 +595,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this)
     });
-  }),
+  },
   getInitialState: function() {
     return {data: []};
   },
@@ -625,7 +620,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-## Optimization: optimistic updates
+### Optimization: optimistic updates
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
@@ -642,7 +637,7 @@ var CommentBox = React.createClass({
       }.bind(this)
     });
   },
-  handleCommentSubmit: React.autoBind(function(comment) {
+  handleCommentSubmit: function(comment) {
     var comments = this.state.data;
     comments.push(comment);
     this.setState({data: comments});
@@ -655,7 +650,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this)
     });
-  }),
+  },
   getInitialState: function() {
     return {data: []};
   },
@@ -680,6 +675,6 @@ var CommentBox = React.createClass({
 });
 ```
 
-## Congrats!
+### Congrats!
 
 You have just built a comment box in a few simple steps. Learn more about React in the [reference](syntax.html) or start hacking! Good luck!

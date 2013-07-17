@@ -1,0 +1,1594 @@
+<!-- Masthead
+================================================== -->
+<header class="jumbotron subhead" id="overview">
+  <h1>{{_i}}Base CSS{{/i}}</h1>
+  <p class="lead">{{_i}}On top of the scaffolding, basic HTML elements are styled and enhanced with extensible classes to provide a fresh, consistent look and feel.{{/i}}</p>
+  <div class="subnav">
+    <ul class="nav nav-pills">
+      <li><a href="#typography">{{_i}}Typography{{/i}}</a></li>
+      <li><a href="#code">{{_i}}Code{{/i}}</a></li>
+      <li><a href="#tables">{{_i}}Tables{{/i}}</a></li>
+      <li><a href="#forms">{{_i}}Forms{{/i}}</a></li>
+      <li><a href="#buttons">{{_i}}Buttons{{/i}}</a></li>
+      <li><a href="#icons">{{_i}}Icons by Glyphicons{{/i}}</a></li>
+    </ul>
+  </div>
+</header>
+
+
+<!-- Typography
+================================================== -->
+<section id="typography">
+  <div class="page-header">
+    <h1>{{_i}}Typography <small>Headings, paragraphs, lists, and other inline type elements</small>{{/i}}</h1>
+  </div>
+
+  <h2>{{_i}}Headings &amp; body copy{{/i}}</h2>
+
+  <!-- Headings & Paragraph Copy -->
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Typographic scale{{/i}}</h3>
+      <p>{{_i}}The entire typographic grid is based on two Less variables in our variables.less file: <code>@baseFontSize</code> and <code>@baseLineHeight</code>. The first is the base font-size used throughout and the second is the base line-height.{{/i}}</p>
+      <p>{{_i}}We use those variables, and some math, to create the margins, paddings, and line-heights of all our type and more.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Example body text{{/i}}</h3>
+      <p>Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nullam id dolor id nibh ultricies vehicula.</p>
+      <h3>{{_i}}Lead body copy{{/i}}</h3>
+      <p>{{_i}}Make a paragraph stand out by adding <code>.lead</code>.{{/i}}</p>
+      <p class="lead">Vivamus sagittis lacus vel augue laoreet rutrum faucibus dolor auctor. Duis mollis, est non commodo luctus.</p>
+    </div>
+    <div class="span4">
+      <div class="well">
+        <h1>h1. {{_i}}Heading 1{{/i}}</h1>
+        <h2>h2. {{_i}}Heading 2{{/i}}</h2>
+        <h3>h3. {{_i}}Heading 3{{/i}}</h3>
+        <h4>h4. {{_i}}Heading 4{{/i}}</h4>
+        <h5>h5. {{_i}}Heading 5{{/i}}</h5>
+        <h6>h6. {{_i}}Heading 6{{/i}}</h6>
+      </div>
+    </div>
+  </div>
+
+  <!-- Misc Elements -->
+  <h2>{{_i}}Emphasis, address, and abbreviation{{/i}}</h2>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>{{_i}}Element{{/i}}</th>
+        <th>{{_i}}Usage{{/i}}</th>
+        <th>{{_i}}Optional{{/i}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <code>&lt;strong&gt;</code>
+        </td>
+        <td>
+          {{_i}}For emphasizing a snippet of text with <strong>important</strong>{{/i}}
+        </td>
+        <td>
+          <span class="muted">{{_i}}None{{/i}}</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>&lt;em&gt;</code>
+        </td>
+        <td>
+          {{_i}}For emphasizing a snippet of text with <em>stress</em>{{/i}}
+        </td>
+        <td>
+          <span class="muted">{{_i}}None{{/i}}</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>&lt;abbr&gt;</code>
+        </td>
+        <td>
+          {{_i}}Wraps abbreviations and acronyms to show the expanded version on hover{{/i}}
+        </td>
+        <td>
+          <p>{{_i}}Include optional <code>title</code> attribute for expanded text{{/i}}</p>
+          {{_i}}Use <code>.initialism</code> class for uppercase abbreviations.{{/i}}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>&lt;address&gt;</code>
+        </td>
+        <td>
+          {{_i}}For contact information for its nearest ancestor or the entire body of work{{/i}}
+        </td>
+        <td>
+          {{_i}}Preserve formatting by ending all lines with <code>&lt;br&gt;</code>{{/i}}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Using emphasis{{/i}}</h3>
+      <p><a href="#">Fusce dapibus</a>, <strong>tellus ac cursus commodo</strong>, <em>tortor mauris condimentum nibh</em>, ut fermentum massa justo sit amet risus. Maecenas faucibus mollis interdum. Nulla vitae elit libero, a pharetra augue.</p>
+      <p>{{_i}}<strong>Note:</strong> Feel free to use <code>&lt;b&gt;</code> and <code>&lt;i&gt;</code> in HTML5, but their usage has changed a bit. <code>&lt;b&gt;</code> is meant to highlight words or phrases without conveying additional importance while <code>&lt;i&gt;</code> is mostly for voice, technical terms, etc.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Example addresses{{/i}}</h3>
+      <p>{{_i}}Here are two examples of how the <code>&lt;address&gt;</code> tag can be used:{{/i}}</p>
+      <address>
+        <strong>Twitter, Inc.</strong><br>
+        795 Folsom Ave, Suite 600<br>
+        San Francisco, CA 94107<br>
+        <abbr title="Phone">P:</abbr> (123) 456-7890
+      </address>
+      <address>
+        <strong>{{_i}}Full Name{{/i}}</strong><br>
+        <a href="mailto:#">{{_i}}first.last@gmail.com{{/i}}</a>
+      </address>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Example abbreviations{{/i}}</h3>
+      <p>{{_i}}Abbreviations with a <code>title</code> attribute have a light dotted bottom border and a help cursor on hover. This gives users extra indication something will be shown on hover.{{/i}}</p>
+      <p>{{_i}}Add the <code>initialism</code> class to an abbreviation to increase typographic harmony by giving it a slightly smaller text size.{{/i}}</p>
+      <p>{{_i}}<abbr title="HyperText Markup Language" class="initialism">HTML</abbr> is the best thing since sliced bread.{{/i}}</p>
+      <p>{{_i}}An abbreviation of the word attribute is <abbr title="attribute">attr</abbr>.{{/i}}</p>
+    </div>
+  </div>
+
+
+  <!-- Blockquotes -->
+  <h2>{{_i}}Blockquotes{{/i}}</h2>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>{{_i}}Element{{/i}}</th>
+        <th>{{_i}}Usage{{/i}}</th>
+        <th>{{_i}}Optional{{/i}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <code>&lt;blockquote&gt;</code>
+        </td>
+        <td>
+          {{_i}}Block-level element for quoting content from another source{{/i}}
+        </td>
+        <td>
+          <p>{{_i}}Add <code>cite</code> attribute for source URL{{/i}}</p>
+          {{_i}}Use <code>.pull-left</code> and <code>.pull-right</code> classes for floated options{{/i}}
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <code>&lt;small&gt;</code>
+        </td>
+        <td>
+          {{_i}}Optional element for adding a user-facing citation, typically an author with title of work{{/i}}
+        </td>
+        <td>
+          {{_i}}Place the <code>&lt;cite&gt;</code> around the title or name of source{{/i}}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}To include a blockquote, wrap <code>&lt;blockquote&gt;</code> around any <abbr title="HyperText Markup Language">HTML</abbr> as the quote. For straight quotes we recommend a <code>&lt;p&gt;</code>.{{/i}}</p>
+      <p>{{_i}}Include an optional <code>&lt;small&gt;</code> element to cite your source and you'll get an em dash <code>&amp;mdash;</code> before it for styling purposes.{{/i}}</p>
+    </div>
+    <div class="span8">
+<pre class="prettyprint linenums">
+&lt;blockquote&gt;
+  &lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis.&lt;/p&gt;
+  &lt;small&gt;{{_i}}Someone famous{{/i}}&lt;/small&gt;
+&lt;/blockquote&gt;
+</pre>
+    </div>
+  </div><!--/row-->
+
+  <h3>{{_i}}Example blockquotes{{/i}}</h3>
+  <div class="row">
+    <div class="span6">
+      <p>{{_i}}Default blockquotes are styled as such:{{/i}}</p>
+      <blockquote>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis.</p>
+        <small>{{_i}}Someone famous in <cite title="">Body of work</cite>{{/i}}</small>
+      </blockquote>
+    </div>
+    <div class="span6">
+      <p>{{_i}}To float your blockquote to the right, add <code>class="pull-right"</code>:{{/i}}</p>
+      <blockquote class="pull-right">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante venenatis.</p>
+        <small>{{_i}}Someone famous in <cite title="">Body of work</cite>{{/i}}</small>
+      </blockquote>
+    </div>
+  </div>
+
+
+  <!-- Lists -->
+  <h2>{{_i}}Lists{{/i}}</h2>
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Unordered{{/i}}</h3>
+      <p><code>&lt;ul&gt;</code></p>
+      <ul>
+        <li>Lorem ipsum dolor sit amet</li>
+        <li>Consectetur adipiscing elit</li>
+        <li>Integer molestie lorem at massa</li>
+        <li>Facilisis in pretium nisl aliquet</li>
+        <li>Nulla volutpat aliquam velit
+          <ul>
+            <li>Phasellus iaculis neque</li>
+            <li>Purus sodales ultricies</li>
+            <li>Vestibulum laoreet porttitor sem</li>
+            <li>Ac tristique libero volutpat at</li>
+          </ul>
+        </li>
+        <li>Faucibus porta lacus fringilla vel</li>
+        <li>Aenean sit amet erat nunc</li>
+        <li>Eget porttitor lorem</li>
+      </ul>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Unstyled{{/i}}</h3>
+      <p><code>&lt;ul class="unstyled"&gt;</code></p>
+      <ul class="unstyled">
+        <li>Lorem ipsum dolor sit amet</li>
+        <li>Consectetur adipiscing elit</li>
+        <li>Integer molestie lorem at massa</li>
+        <li>Facilisis in pretium nisl aliquet</li>
+        <li>Nulla volutpat aliquam velit
+          <ul>
+            <li>Phasellus iaculis neque</li>
+            <li>Purus sodales ultricies</li>
+            <li>Vestibulum laoreet porttitor sem</li>
+            <li>Ac tristique libero volutpat at</li>
+          </ul>
+        </li>
+        <li>Faucibus porta lacus fringilla vel</li>
+        <li>Aenean sit amet erat nunc</li>
+        <li>Eget porttitor lorem</li>
+      </ul>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Ordered{{/i}}</h3>
+      <p><code>&lt;ol&gt;</code></p>
+      <ol>
+        <li>Lorem ipsum dolor sit amet</li>
+        <li>Consectetur adipiscing elit</li>
+        <li>Integer molestie lorem at massa</li>
+        <li>Facilisis in pretium nisl aliquet</li>
+        <li>Nulla volutpat aliquam velit</li>
+        <li>Faucibus porta lacus fringilla vel</li>
+        <li>Aenean sit amet erat nunc</li>
+        <li>Eget porttitor lorem</li>
+      </ol>
+    </div>
+  </div><!-- /row -->
+  <br>
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Description{{/i}}</h3>
+      <p><code>&lt;dl&gt;</code></p>
+      <dl>
+        <dt>{{_i}}Description lists{{/i}}</dt>
+        <dd>{{_i}}A description list is perfect for defining terms.{{/i}}</dd>
+        <dt>Euismod</dt>
+        <dd>Vestibulum id ligula porta felis euismod semper eget lacinia odio sem nec elit.</dd>
+        <dd>Donec id elit non mi porta gravida at eget metus.</dd>
+        <dt>Malesuada porta</dt>
+        <dd>Etiam porta sem malesuada magna mollis euismod.</dd>
+      </dl>
+    </div>
+    <div class="span8">
+      <h3>{{_i}}Horizontal description{{/i}}</h3>
+      <p><code>&lt;dl class="dl-horizontal"&gt;</code></p>
+      <dl class="dl-horizontal">
+        <dt>{{_i}}Description lists{{/i}}</dt>
+        <dd>{{_i}}A description list is perfect for defining terms.{{/i}}</dd>
+        <dt>Euismod</dt>
+        <dd>Vestibulum id ligula porta felis euismod semper eget lacinia odio sem nec elit.</dd>
+        <dd>Donec id elit non mi porta gravida at eget metus.</dd>
+        <dt>Malesuada porta</dt>
+        <dd>Etiam porta sem malesuada magna mollis euismod.</dd>
+        <dt>Felis euismod semper eget lacinia</dt>
+        <dd>Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</dd>
+      </dl>
+      <hr>
+      <p>
+        <span class="label label-info">{{_i}}Heads up!{{/i}}</span>
+        {{_i}}Horizontal description lists will truncate terms that are too long to fit in the left column fix <code>text-overflow</code>. In narrower viewports, they will change to the default stacked layout.{{/i}}
+      </p>
+    </div>
+  </div><!-- /row -->
+</section>
+
+
+
+<!-- Code
+================================================== -->
+<section id="code">
+  <div class="page-header">
+    <h1>{{_i}}Code{{/i}} <small>{{_i}}Inline and block code snippets{{/i}}</small></h1>
+  </div>
+  <div class="row">
+    <div class="span4">
+      <h2>Inline</h2>
+      <p>Wrap inline snippets of code with <code>&lt;code&gt;</code>.</p>
+<pre class="prettyprint linenums">
+{{_i}}For example, &lt;code&gt;section&lt;/code&gt; should be wrapped as inline.{{/i}}
+</pre>
+    </div><!--/span-->
+    <div class="span4">
+      <h2>Basic block</h2>
+      <p>{{_i}}Use <code>&lt;pre&gt;</code> for multiple lines of code. Be sure to escape any angle brackets in the code for proper rendering.{{/i}}</p>
+<pre>
+&lt;p&gt;{{_i}}Sample text here...{{/i}}&lt;/p&gt;
+</pre>
+<pre class="prettyprint linenums" style="margin-bottom: 9px;">
+&lt;pre&gt;
+  &amp;lt;p&amp;gt;{{_i}}Sample text here...{{/i}}&amp;lt;/p&amp;gt;
+&lt;/pre&gt;
+</pre>
+      <p>{{_i}}<strong>Note:</strong> Be sure to keep code within <code>&lt;pre&gt;</code> tags as close to the left as possible; it will render all tabs.{{/i}}</p>
+      <p>{{_i}}You may optionally add the <code>.pre-scrollable</code> class which will set a max-height of 350px and provide a y-axis scrollbar.{{/i}}</p>
+    </div><!--/span-->
+    <div class="span4">
+      <h2>Google Prettify</h2>
+      <p>Take the same <code>&lt;pre&gt;</code> element and add two optional classes for enhanced rendering.</p>
+<pre class="prettyprint linenums" style="margin-bottom: 9px;">
+&lt;p&gt;{{_i}}Sample text here...{{/i}}&lt;/p&gt;
+</pre>
+<pre class="prettyprint linenums" style="margin-bottom: 9px;">
+&lt;pre class="prettyprint
+     linenums"&gt;
+  &amp;lt;p&amp;gt;{{_i}}Sample text here...{{/i}}&amp;lt;/p&amp;gt;
+&lt;/pre&gt;
+</pre>
+      <p>{{_i}}<a href="http://code.google.com/p/google-code-prettify/">Download google-code-prettify</a> and view the readme for <a href="http://google-code-prettify.googlecode.com/svn/trunk/README.html">how to use</a>.{{/i}}</p>
+    </div><!--/span-->
+  </div><!--/row-->
+</section>
+
+
+
+<!-- Tables
+================================================== -->
+<section id="tables">
+  <div class="page-header">
+    <h1>{{_i}}Tables <small>For, you guessed it, tabular data</small>{{/i}}</h1>
+  </div>
+
+  <h2>{{_i}}Table markup{{/i}}</h2>
+  <div class="row">
+    <div class="span8">
+      <table class="table table-bordered table-striped">
+        <colgroup>
+          <col class="span1">
+          <col class="span7">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>{{_i}}Tag{{/i}}</th>
+            <th>{{_i}}Description{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>&lt;table&gt;</code>
+            </td>
+            <td>
+              {{_i}}Wrapping element for displaying data in a tabular format{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;thead&gt;</code>
+            </td>
+            <td>
+              {{_i}}Container element for table header rows (<code>&lt;tr&gt;</code>) to label table columns{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;tbody&gt;</code>
+            </td>
+            <td>
+              {{_i}}Container element for table rows (<code>&lt;tr&gt;</code>) in the body of the table{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;tr&gt;</code>
+            </td>
+            <td>
+              {{_i}}Container element for a set of table cells (<code>&lt;td&gt;</code> or <code>&lt;th&gt;</code>) that appears on a single row{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;td&gt;</code>
+            </td>
+            <td>
+              {{_i}}Default table cell{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;th&gt;</code>
+            </td>
+            <td>
+              {{_i}}Special table cell for column (or row, depending on scope and placement) labels{{/i}}<br>
+              {{_i}}Must be used within a <code>&lt;thead&gt;</code>{{/i}}
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>&lt;caption&gt;</code>
+            </td>
+            <td>
+              {{_i}}Description or summary of what the table holds, especially useful for screen readers{{/i}}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="span4">
+<pre class="prettyprint linenums">
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;…&lt;/th&gt;
+      &lt;th&gt;…&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;…&lt;/td&gt;
+      &lt;td&gt;…&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+</pre>
+    </div>
+  </div>
+
+  <h2>{{_i}}Table options{{/i}}</h2>
+  <table class="table table-bordered table-striped">
+  <thead>
+      <tr>
+        <th>{{_i}}Name{{/i}}</th>
+        <th>{{_i}}Class{{/i}}</th>
+        <th>{{_i}}Description{{/i}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{_i}}Default{{/i}}</td>
+        <td class="muted">{{_i}}None{{/i}}</td>
+        <td>{{_i}}No styles, just columns and rows{{/i}}</td>
+      </tr>
+      <tr>
+        <td>{{_i}}Basic{{/i}}</td>
+        <td>
+          <code>.table</code>
+        </td>
+        <td>{{_i}}Only horizontal lines between rows{{/i}}</td>
+      </tr>
+      <tr>
+        <td>{{_i}}Bordered{{/i}}</td>
+        <td>
+          <code>.table-bordered</code>
+        </td>
+        <td>{{_i}}Rounds corners and adds outer border{{/i}}</td>
+      </tr>
+      <tr>
+        <td>{{_i}}Zebra-stripe{{/i}}</td>
+        <td>
+          <code>.table-striped</code>
+        </td>
+        <td>{{_i}}Adds light gray background color to odd rows (1, 3, 5, etc){{/i}}</td>
+      </tr>
+      <tr>
+        <td>{{_i}}Condensed{{/i}}</td>
+        <td>
+          <code>.table-condensed</code>
+        </td>
+        <td>{{_i}}Cuts vertical padding in half, from 8px to 4px, within all <code>td</code> and <code>th</code> elements{{/i}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <h2>{{_i}}Example tables{{/i}}</h2>
+
+  <h3>1. {{_i}}Default table styles{{/i}}</h3>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Tables are automatically styled with only a few borders to ensure readability and maintain structure. With 2.0, the <code>.table</code> class is required.{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;table class="table"&gt;
+  …
+&lt;/table&gt;</pre>
+    </div>
+    <div class="span8">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{_i}}First Name{{/i}}</th>
+            <th>{{_i}}Last Name{{/i}}</th>
+            <th>{{_i}}Username{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Larry</td>
+            <td>the Bird</td>
+            <td>@twitter</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <h3>2. {{_i}}Striped table{{/i}}</h3>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Get a little fancy with your tables by adding zebra-striping&mdash;just add the <code>.table-striped</code> class.{{/i}}</p>
+      <p class="muted">{{_i}}<strong>Note:</strong> Striped tables use the <code>:nth-child</code> CSS selector and is not available in IE7-IE8.{{/i}}</p>
+<pre class="prettyprint linenums" style="margin-bottom: 18px;">
+&lt;table class="table table-striped"&gt;
+  …
+&lt;/table&gt;</pre>
+    </div>
+    <div class="span8">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{_i}}First Name{{/i}}</th>
+            <th>{{_i}}Last Name{{/i}}</th>
+            <th>{{_i}}Username{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Larry</td>
+            <td>the Bird</td>
+            <td>@twitter</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <h3>3. {{_i}}Bordered table{{/i}}</h3>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Add borders around the entire table and rounded corners for aesthetic purposes.{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;table class="table table-bordered"&gt;
+  …
+&lt;/table&gt;</pre>
+    </div>
+    <div class="span8">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{_i}}First Name{{/i}}</th>
+            <th>{{_i}}Last Name{{/i}}</th>
+            <th>{{_i}}Username{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="2">1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+          <tr>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@TwBootstrap</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td colspan="2">Larry the Bird</td>
+            <td>@twitter</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <h3>4. {{_i}}Condensed table{{/i}}</h3>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Make your tables more compact by adding the <code>.table-condensed</code> class to cut table cell padding in half (from 8px to 4px).{{/i}}</p>
+<pre class="prettyprint linenums" style="margin-bottom: 18px;">
+&lt;table class="table table-condensed"&gt;
+  …
+&lt;/table&gt;</pre>
+    </div>
+    <div class="span8">
+      <table class="table table-condensed">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>{{_i}}First Name{{/i}}</th>
+            <th>{{_i}}Last Name{{/i}}</th>
+            <th>{{_i}}Username{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td colspan="2">Larry the Bird</td>
+            <td>@twitter</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+
+  <h3>5. {{_i}}Combine them all!{{/i}}</h3>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Feel free to combine any of the table classes to achieve different looks by utilizing any of the available classes.{{/i}}</p>
+<pre class="prettyprint linenums" style="margin-bottom: 18px;">
+&lt;table class="table table-striped table-bordered table-condensed"&gt;
+  ...
+&lt;/table&gt;</pre>
+    </div>
+    <div class="span8">
+      <table class="table table-striped table-bordered table-condensed">
+        <thead>
+          <tr>
+            <th></th>
+            <th colspan="2">{{_i}}Full name{{/i}}</th>
+            <th></th>
+          </tr>
+          <tr>
+            <th>#</th>
+            <th>{{_i}}First Name{{/i}}</th>
+            <th>{{_i}}Last Name{{/i}}</th>
+            <th>{{_i}}Username{{/i}}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <tr>
+            <td>1</td>
+            <td>Mark</td>
+            <td>Otto</td>
+            <td>@mdo</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>Jacob</td>
+            <td>Thornton</td>
+            <td>@fat</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td colspan="2">Larry the Bird</td>
+            <td>@twitter</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- Forms
+================================================== -->
+<section id="forms">
+  <div class="page-header">
+    <h1>{{_i}}Forms{{/i}}</h1>
+  </div>
+  <div class="row">
+    <div class="span4">
+      <h2>{{_i}}Flexible HTML and CSS{{/i}}</h2>
+      <p>{{_i}}The best part about forms in Bootstrap is that all your inputs and controls look great no matter how you build them in your markup. No superfluous HTML is required, but we provide the patterns for those who require it.{{/i}}</p>
+      <p>{{_i}}More complicated layouts come with succinct and scalable classes for easy styling and event binding, so you're covered at every step.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h2>{{_i}}Four layouts included{{/i}}</h2>
+      <p>{{_i}}Bootstrap comes with support for four types of form layouts:{{/i}}</p>
+      <ul>
+        <li>{{_i}}Vertical (default){{/i}}</li>
+        <li>{{_i}}Search{{/i}}</li>
+        <li>{{_i}}Inline{{/i}}</li>
+        <li>{{_i}}Horizontal{{/i}}</li>
+      </ul>
+      <p>{{_i}}Different types of form layouts require some changes to markup, but the controls themselves remain and behave the same.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h2>{{_i}}Control states and more{{/i}}</h2>
+      <p>{{_i}}Bootstrap's forms include styles for all the base form controls like input, textarea, and select you'd expect. But it also comes with a number of custom components like appended and prepended inputs and support for lists of checkboxes.{{/i}}</p>
+      <p>{{_i}}States like error, warning, and success are included for each type of form control. Also included are styles for disabled controls.{{/i}}</p>
+    </div>
+  </div>
+
+  <h2>{{_i}}Four types of forms{{/i}}</h2>
+  <p>{{_i}}Bootstrap provides simple markup and styles for four styles of common web forms.{{/i}}</p>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>{{_i}}Name{{/i}}</th>
+        <th>{{_i}}Class{{/i}}</th>
+        <th>{{_i}}Description{{/i}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>{{_i}}Vertical (default){{/i}}</th>
+        <td><code>.form-vertical</code> <span class="muted">({{_i}}not required{{/i}})</span></td>
+        <td>{{_i}}Stacked, left-aligned labels over controls{{/i}}</td>
+      </tr>
+      <tr>
+        <th>{{_i}}Inline{{/i}}</th>
+        <td><code>.form-inline</code></td>
+        <td>{{_i}}Left-aligned label and inline-block controls for compact style{{/i}}</td>
+      </tr>
+      <tr>
+        <th>{{_i}}Search{{/i}}</th>
+        <td><code>.form-search</code></td>
+        <td>{{_i}}Extra-rounded text input for a typical search aesthetic{{/i}}</td>
+      </tr>
+      <tr>
+        <th>{{_i}}Horizontal{{/i}}</th>
+        <td><code>.form-horizontal</code></td>
+        <td>{{_i}}Float left, right-aligned labels on same line as controls{{/i}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <h2>{{_i}}Example forms <small>using just form controls, no extra markup</small>{{/i}}</h2>
+  <div class="row">
+    <div class="span6">
+      <h3>{{_i}}Basic form{{/i}}</h3>
+      <p>{{_i}}Smart and lightweight defaults without extra markup.{{/i}}</p>
+      <form class="well">
+        <label>{{_i}}Label name{{/i}}</label>
+        <input type="text" class="span3" placeholder="{{_i}}Type something…{{/i}}">
+        <p class="help-block">{{_i}}Example block-level help text here.{{/i}}</p>
+        <label class="checkbox">
+          <input type="checkbox"> {{_i}}Check me out{{/i}}
+        </label>
+        <button type="submit" class="btn">{{_i}}Submit{{/i}}</button>
+      </form>
+<pre class="prettyprint linenums">
+&lt;form class="well"&gt;
+  &lt;label&gt;{{_i}}Label name{{/i}}&lt;/label&gt;
+  &lt;input type="text" class="span3" placeholder="{{_i}}Type something…{{/i}}"&gt;
+  &lt;span class="help-block"&gt;Example block-level help text here.&lt;/span&gt;
+  &lt;label class="checkbox"&gt;
+    &lt;input type="checkbox"&gt; {{_i}}Check me out{{/i}}
+  &lt;/label&gt;
+  &lt;button type="submit" class="btn"&gt;{{_i}}Submit{{/i}}&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+  </div>
+  <div class="span6">
+    <h3>{{_i}}Search form{{/i}}</h3>
+    <p>{{_i}}Add <code>.form-search</code> to the form and <code>.search-query</code> to the <code>input</code>.{{/i}}</p>
+    <form class="well form-search">
+      <input type="text" class="input-medium search-query">
+      <button type="submit" class="btn">{{_i}}Search{{/i}}</button>
+    </form>
+<pre class="prettyprint linenums">
+&lt;form class="well form-search"&gt;
+  &lt;input type="text" class="input-medium search-query"&gt;
+  &lt;button type="submit" class="btn"&gt;{{_i}}Search{{/i}}&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+
+      <h3>{{_i}}Inline form{{/i}}</h3>
+      <p>{{_i}}Add <code>.form-inline</code> to finesse the vertical alignment and spacing of form controls.{{/i}}</p>
+      <form class="well form-inline">
+        <input type="text" class="input-small" placeholder="{{_i}}Email{{/i}}">
+        <input type="password" class="input-small" placeholder="{{_i}}Password{{/i}}">
+        <label class="checkbox">
+          <input type="checkbox"> {{_i}}Remember me{{/i}}
+        </label>
+        <button type="submit" class="btn">{{_i}}Sign in{{/i}}</button>
+      </form>
+<pre class="prettyprint linenums">
+&lt;form class="well form-inline"&gt;
+  &lt;input type="text" class="input-small" placeholder="{{_i}}Email{{/i}}"&gt;
+  &lt;input type="password" class="input-small" placeholder="{{_i}}Password{{/i}}"&gt;
+  &lt;label class="checkbox"&gt;
+    &lt;input type="checkbox"&gt; {{_i}}Remember me{{/i}}
+  &lt;/label&gt;
+  &lt;button type="submit" class="btn"&gt;{{_i}}Sign in{{/i}}&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+    </div><!-- /.span -->
+  </div><!-- /row -->
+
+  <br>
+
+  <h2>{{_i}}Horizontal forms{{/i}}</h2>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}{{/i}}</p>
+      <p>{{_i}}Shown on the right are all the default form controls we support. Here's the bulleted list:{{/i}}</p>
+      <ul>
+        <li>{{_i}}text inputs (text, password, email, etc){{/i}}</li>
+        <li>{{_i}}checkbox{{/i}}</li>
+        <li>{{_i}}radio{{/i}}</li>
+        <li>{{_i}}select{{/i}}</li>
+        <li>{{_i}}multiple select{{/i}}</li>
+        <li>{{_i}}file input{{/i}}</li>
+        <li>{{_i}}textarea{{/i}}</li>
+      </ul>
+    </div><!-- /.span -->
+    <div class="span8">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="input01">{{_i}}Text input{{/i}}</label>
+            <div class="controls">
+              <input type="text" class="input-xlarge" id="input01">
+              <p class="help-block">{{_i}}In addition to freeform text, any HTML5 text-based input appears like so.{{/i}}</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="optionsCheckbox">{{_i}}Checkbox{{/i}}</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="optionsCheckbox" value="option1">
+                {{_i}}Option one is this and that&mdash;be sure to include why it's great{{/i}}
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="select01">{{_i}}Select list{{/i}}</label>
+            <div class="controls">
+              <select id="select01">
+                <option>something</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="multiSelect">{{_i}}Multicon-select{{/i}}</label>
+            <div class="controls">
+              <select multiple="multiple" id="multiSelect">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="fileInput">{{_i}}File input{{/i}}</label>
+            <div class="controls">
+              <input class="input-file" id="fileInput" type="file">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="textarea">{{_i}}Textarea{{/i}}</label>
+            <div class="controls">
+              <textarea class="input-xlarge" id="textarea" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{_i}}Save changes{{/i}}</button>
+            <button class="btn">{{_i}}Cancel{{/i}}</button>
+          </div>
+        </fieldset>
+      </form>
+      <h3>{{_i}}Example markup{{/i}}</h3>
+      <p>{{_i}}Given the above example form layout, here's the markup associated with the first input and control group. The <code>.control-group</code>, <code>.control-label</code>, and <code>.controls</code> classes are all required for styling.{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;form class="form-horizontal"&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;{{_i}}Legend text{{/i}}&lt;/legend&gt;
+    &lt;div class="control-group"&gt;
+      &lt;label class="control-label" for="input01"&gt;{{_i}}Text input{{/i}}&lt;/label&gt;
+      &lt;div class="controls"&gt;
+        &lt;input type="text" class="input-xlarge" id="input01"&gt;
+        &lt;p class="help-block"&gt;{{_i}}Supporting help text{{/i}}&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;
+</pre>
+    </div>
+  </div>
+
+  <br>
+
+  <h2>{{_i}}Form control states{{/i}}</h2>
+  <div class="row">
+    <div class="span4">
+      <p>{{_i}}Bootstrap features styles for browser-supported focused and <code>disabled</code> states. We remove the default Webkit <code>outline</code> and apply a <code>box-shadow</code> in its place for <code>:focus</code>.{{/i}}</p>
+      <hr>
+      <h3>{{_i}}Form validation{{/i}}</h3>
+      <p>{{_i}}It also includes validation styles for errors, warnings, and success. To use, add the error class to the surrounding <code>.control-group</code>.{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;fieldset
+  class="control-group error"&gt;
+  …
+&lt;/fieldset&gt;
+</pre>
+    </div>
+    <div class="span8">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label" for="focusedInput">{{_i}}Focused input{{/i}}</label>
+            <div class="controls">
+              <input class="input-xlarge focused" id="focusedInput" type="text" value="{{_i}}This is focused…{{/i}}">
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Uneditable input</label>
+            <div class="controls">
+              <span class="input-xlarge uneditable-input">Some value here</span>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="disabledInput">{{_i}}Disabled input{{/i}}</label>
+            <div class="controls">
+              <input class="input-xlarge disabled" id="disabledInput" type="text" placeholder="{{_i}}Disabled input here…{{/i}}" disabled>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="optionsCheckbox2">{{_i}}Disabled checkbox{{/i}}</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="optionsCheckbox2" value="option1" disabled>
+                {{_i}}This is a disabled checkbox{{/i}}
+              </label>
+            </div>
+          </div>
+          <div class="control-group warning">
+            <label class="control-label" for="inputWarning">{{_i}}Input with warning{{/i}}</label>
+            <div class="controls">
+              <input type="text" id="inputWarning">
+              <span class="help-inline">{{_i}}Something may have gone wrong{{/i}}</span>
+            </div>
+          </div>
+          <div class="control-group error">
+            <label class="control-label" for="inputError">{{_i}}Input with error{{/i}}</label>
+            <div class="controls">
+              <input type="text" id="inputError">
+              <span class="help-inline">{{_i}}Please correct the error{{/i}}</span>
+            </div>
+          </div>
+          <div class="control-group success">
+            <label class="control-label" for="inputSuccess">{{_i}}Input with success{{/i}}</label>
+            <div class="controls">
+              <input type="text" id="inputSuccess">
+              <span class="help-inline">{{_i}}Woohoo!{{/i}}</span>
+            </div>
+          </div>
+          <div class="control-group success">
+            <label class="control-label" for="selectError">{{_i}}Select with success{{/i}}</label>
+            <div class="controls">
+              <select id="selectError">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+              <span class="help-inline">{{_i}}Woohoo!{{/i}}</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{_i}}Save changes{{/i}}</button>
+            <button class="btn">{{_i}}Cancel{{/i}}</button>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </div>
+
+  <br>
+
+  <h2>{{_i}}Extending form controls{{/i}}</h2>
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Prepend &amp; append inputs{{/i}}</h3>
+      <p>{{_i}}Input groups&mdash;with appended or prepended text&mdash;provide an easy way to give more context for your inputs. Great examples include the @ sign for Twitter usernames or $ for finances.{{/i}}</p>
+      <hr>
+      <h3>{{_i}}Checkboxes and radios{{/i}}</h3>
+      <p>{{_i}}Up to v1.4, Bootstrap required extra markup around checkboxes and radios to stack them. Now, it's a simple matter of repeating the <code>&lt;label class="checkbox"&gt;</code> that wraps the <code>&lt;input type="checkbox"&gt;</code>.{{/i}}</p>
+      <p>{{_i}}Inline checkboxes and radios are also supported. Just add <code>.inline</code> to any <code>.checkbox</code> or <code>.radio</code> and you're done.{{/i}}</p>
+      <hr>
+      <h4>{{_i}}Inline forms and append/prepend{{/i}}</h4>
+      <p>{{_i}}To use prepend or append inputs in an inline form, be sure to place the <code>.add-on</code> and <code>input</code> on the same line, without spaces.{{/i}}</p>
+      <hr>
+      <h4>{{_i}}Form help text{{/i}}</h4>
+      <p>{{_i}}To add help text for your form inputs, include inline help text with <code>&lt;span class="help-inline"&gt;</code> or a help text block with <code>&lt;p class="help-block"&gt;</code> after the input element.{{/i}}</p>
+    </div>
+    <div class="span8">
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group">
+            <label class="control-label">{{_i}}Form grid sizes{{/i}}</label>
+            <div class="controls docs-input-sizes">
+              <input class="span1" type="text" placeholder=".span1">
+              <input class="span2" type="text" placeholder=".span2">
+              <input class="span3" type="text" placeholder=".span3">
+              <select class="span1">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+              <select class="span2">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+              <select class="span3">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+              </select>
+              <p class="help-block">{{_i}}Use the same <code>.span*</code> classes from the grid system for input sizes.{{/i}}</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">{{_i}}Alternate sizes{{/i}}</label>
+            <div class="controls docs-input-sizes">
+              <input class="input-mini" type="text" placeholder=".input-mini">
+              <input class="input-small" type="text" placeholder=".input-small">
+              <input class="input-medium" type="text" placeholder=".input-medium">
+              <p class="help-block">{{_i}}You may also use static classes that don't map to the grid, adapt to the responsive CSS styles, or account for varying types of controls (e.g., <code>input</code> vs. <code>select</code>).{{/i}}</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="prependedInput">{{_i}}Prepended text{{/i}}</label>
+            <div class="controls">
+              <div class="input-prepend">
+                <span class="add-on">@</span><input class="span2" id="prependedInput" size="16" type="text">
+              </div>
+              <p class="help-block">{{_i}}Here's some help text{{/i}}</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="appendedInput">{{_i}}Appended text{{/i}}</label>
+            <div class="controls">
+              <div class="input-append">
+                <input class="span2" id="appendedInput" size="16" type="text"><span class="add-on">.00</span>
+              </div>
+              <span class="help-inline">{{_i}}Here's more help text{{/i}}</span>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="appendedPrependedInput">{{_i}}Append and prepend{{/i}}</label>
+            <div class="controls">
+              <div class="input-prepend input-append">
+                <span class="add-on">$</span><input class="span2" id="appendedPrependedInput" size="16" type="text"><span class="add-on">.00</span>
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="appendedInputButton">{{_i}}Append with button{{/i}}</label>
+            <div class="controls">
+              <div class="input-append">
+                <input class="span2" id="appendedInputButton" size="16" type="text"><button class="btn" type="button">Go!</button>
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="appendedInputButtons">{{_i}}Two-button append{{/i}}</label>
+            <div class="controls">
+              <div class="input-append">
+                <input class="span2" id="appendedInputButtons" size="16" type="text"><button class="btn" type="button">Search</button><button class="btn" type="button">Options</button>
+              </div>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="inlineCheckboxes">{{_i}}Inline checkboxes{{/i}}</label>
+            <div class="controls">
+              <label class="checkbox inline">
+                <input type="checkbox" id="inlineCheckbox1" value="option1"> 1
+              </label>
+              <label class="checkbox inline">
+                <input type="checkbox" id="inlineCheckbox2" value="option2"> 2
+              </label>
+              <label class="checkbox inline">
+                <input type="checkbox" id="inlineCheckbox3" value="option3"> 3
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="optionsCheckboxList">{{_i}}Checkboxes{{/i}}</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" name="optionsCheckboxList1" value="option1">
+                {{_i}}Option one is this and that&mdash;be sure to include why it's great{{/i}}
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="optionsCheckboxList2" value="option2">
+                {{_i}}Option two can also be checked and included in form results{{/i}}
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" name="optionsCheckboxList3" value="option3">
+                {{_i}}Option three can&mdash;yes, you guessed it&mdash;also be checked and included in form results{{/i}}
+              </label>
+              <p class="help-block">{{_i}}<strong>Note:</strong> Labels surround all the options for much larger click areas and a more usable form.{{/i}}</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">{{_i}}Radio buttons{{/i}}</label>
+            <div class="controls">
+              <label class="radio">
+                <input type="radio" name="optionsRadios" id="optionsRadios1" value="option1" checked>
+                {{_i}}Option one is this and that&mdash;be sure to include why it's great{{/i}}
+              </label>
+              <label class="radio">
+                <input type="radio" name="optionsRadios" id="optionsRadios2" value="option2">
+                {{_i}}Option two can be something else and selecting it will deselect option one{{/i}}
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">{{_i}}Save changes{{/i}}</button>
+            <button class="btn">{{_i}}Cancel{{/i}}</button>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </div><!-- /row -->
+</section>
+
+
+
+<!-- Buttons
+================================================== -->
+<section id="buttons">
+  <div class="page-header">
+    <h1>{{_i}}Buttons{{/i}}</h1>
+  </div>
+  <table class="table table-bordered table-striped">
+    <thead>
+      <tr>
+        <th>{{_i}}Button{{/i}}</th>
+        <th>{{_i}}class=""{{/i}}</th>
+        <th>{{_i}}Description{{/i}}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><button class="btn" href="#">{{_i}}Default{{/i}}</button></td>
+        <td><code>btn</code></td>
+        <td>{{_i}}Standard gray button with gradient{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-primary" href="#">{{_i}}Primary{{/i}}</button></td>
+        <td><code>btn btn-primary</code></td>
+        <td>{{_i}}Provides extra visual weight and identifies the primary action in a set of buttons{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-info" href="#">{{_i}}Info{{/i}}</button></td>
+        <td><code>btn btn-info</code></td>
+        <td>{{_i}}Used as an alternative to the default styles{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-success" href="#">{{_i}}Success{{/i}}</button></td>
+        <td><code>btn btn-success</code></td>
+        <td>{{_i}}Indicates a successful or positive action{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-warning" href="#">{{_i}}Warning{{/i}}</button></td>
+        <td><code>btn btn-warning</code></td>
+        <td>{{_i}}Indicates caution should be taken with this action{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-danger" href="#">{{_i}}Danger{{/i}}</button></td>
+        <td><code>btn btn-danger</code></td>
+        <td>{{_i}}Indicates a dangerous or potentially negative action{{/i}}</td>
+      </tr>
+      <tr>
+        <td><button class="btn btn-inverse" href="#">{{_i}}Inverse{{/i}}</button></td>
+        <td><code>btn btn-inverse</code></td>
+        <td>{{_i}}Alternate dark gray button, not tied to a semantic action or use{{/i}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Buttons for actions{{/i}}</h3>
+      <p>{{_i}}As a convention, buttons should only be used for actions while hyperlinks are to be used for objects. For instance, "Download" should be a button while "recent activity" should be a link.{{/i}}</p>
+      <p>{{_i}}Button styles can be applied to anything with the <code>.btn</code> class applied. However, typically you'll want to apply these to only <code>&lt;a&gt;</code> and <code>&lt;button&gt;</code> elements.{{/i}}</p>
+      <h3>{{_i}}Cross browser compatibility{{/i}}</h3>
+      <p>{{_i}}IE9 doesn't crop background gradients on rounded corners, so we remove it. Related, IE9 jankifies disabled <code>button</code> elements, rendering text gray with a nasty text-shadow that we cannot fix.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Multiple sizes{{/i}}</h3>
+      <p>{{_i}}Fancy larger or smaller buttons? Add <code>.btn-large</code>, <code>.btn-small</code>, or <code>.btn-mini</code> for two additional sizes.{{/i}}</p>
+      <p>
+        <button class="btn btn-large btn-primary">{{_i}}Primary action{{/i}}</button>
+        <button class="btn btn-large">{{_i}}Action{{/i}}</button>
+      </p>
+      <p>
+        <button class="btn btn-small btn-primary">{{_i}}Primary action{{/i}}</button>
+        <button class="btn btn-small">{{_i}}Action{{/i}}</button>
+      </p>
+      <p>
+        <button class="btn btn-mini btn-primary">{{_i}}Primary action{{/i}}</button>
+        <button class="btn btn-mini">{{_i}}Action{{/i}}</button>
+      </p>
+      <br>
+      <h3>{{_i}}Disabled state{{/i}}</h3>
+      <p>{{_i}}For disabled buttons, add the <code>.disabled</code> class to links and the <code>disabled</code> attribute for <code>&lt;button&gt;</code> elements.{{/i}}</p>
+      <p>
+        <a href="#" class="btn btn-large btn-primary disabled">{{_i}}Primary link{{/i}}</a>
+        <a href="#" class="btn btn-large disabled">{{_i}}Link{{/i}}</a>
+      </p>
+      <p style="margin-bottom: 18px;">
+        <button class="btn btn-large btn-primary disabled" disabled="disabled">{{_i}}Primary button{{/i}}</button>
+        <button class="btn btn-large" disabled>{{_i}}Button{{/i}}</button>
+      </p>
+      <p>
+        <span class="label label-info">{{_i}}Heads up!{{/i}}</span>
+        {{_i}}We use <code>.disabled</code> as a utility class here, similar to the common <code>.active</code> class, so no prefix is required.{{/i}}
+      </p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}One class, multiple tags{{/i}}</h3>
+      <p>{{_i}}Use the <code>.btn</code> class on an <code>&lt;a&gt;</code>, <code>&lt;button&gt;</code>, or <code>&lt;input&gt;</code> element.{{/i}}</p>
+<form>
+<a class="btn" href="">{{_i}}Link{{/i}}</a>
+<button class="btn" type="submit">{{_i}}Button{{/i}}</button>
+<input class="btn" type="button" value="{{_i}}Input{{/i}}">
+<input class="btn" type="submit" value="{{_i}}Submit{{/i}}">
+</form>
+<pre class="prettyprint linenums">
+&lt;a class="btn" href=""&gt;{{_i}}Link{{/i}}&lt;/a&gt;
+&lt;button class="btn" type="submit"&gt;
+  {{_i}}Button{{/i}}
+&lt;/button&gt;
+&lt;input class="btn" type="button"
+         value="{{_i}}Input{{/i}}"&gt;
+&lt;input class="btn" type="submit"
+         value="{{_i}}Submit{{/i}}"&gt;
+</pre>
+      <p>{{_i}}As a best practice, try to match the element for you context to ensure matching cross-browser rendering. If you have an <code>input</code>, use an <code>&lt;input type="submit"&gt;</code> for your button.{{/i}}</p>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- Icons
+================================================== -->
+<section id="icons">
+  <div class="page-header">
+    <h1>{{_i}}Icons <small>Graciously provided by <a href="http://glyphicons.com" target="_blank">Glyphicons</a></small>{{/i}}</h1>
+  </div>
+  <div class="row">
+    <div class="span3">
+      <ul class="the-icons">
+        <li><i class="icon-glass"></i> icon-glass</li>
+        <li><i class="icon-music"></i> icon-music</li>
+        <li><i class="icon-search"></i> icon-search</li>
+        <li><i class="icon-envelope"></i> icon-envelope</li>
+        <li><i class="icon-heart"></i> icon-heart</li>
+        <li><i class="icon-star"></i> icon-star</li>
+        <li><i class="icon-star-empty"></i> icon-star-empty</li>
+        <li><i class="icon-user"></i> icon-user</li>
+        <li><i class="icon-film"></i> icon-film</li>
+        <li><i class="icon-th-large"></i> icon-th-large</li>
+        <li><i class="icon-th"></i> icon-th</li>
+        <li><i class="icon-th-list"></i> icon-th-list</li>
+        <li><i class="icon-ok"></i> icon-ok</li>
+        <li><i class="icon-remove"></i> icon-remove</li>
+        <li><i class="icon-zoom-in"></i> icon-zoom-in</li>
+        <li><i class="icon-zoom-out"></i> icon-zoom-out</li>
+        <li><i class="icon-off"></i> icon-off</li>
+        <li><i class="icon-signal"></i> icon-signal</li>
+        <li><i class="icon-cog"></i> icon-cog</li>
+        <li><i class="icon-trash"></i> icon-trash</li>
+        <li><i class="icon-home"></i> icon-home</li>
+        <li><i class="icon-file"></i> icon-file</li>
+        <li><i class="icon-time"></i> icon-time</li>
+        <li><i class="icon-road"></i> icon-road</li>
+        <li><i class="icon-download-alt"></i> icon-download-alt</li>
+        <li><i class="icon-download"></i> icon-download</li>
+        <li><i class="icon-upload"></i> icon-upload</li>
+        <li><i class="icon-inbox"></i> icon-inbox</li>
+        <li><i class="icon-play-circle"></i> icon-play-circle</li>
+        <li><i class="icon-repeat"></i> icon-repeat</li>
+        <li><i class="icon-refresh"></i> icon-refresh</li>
+        <li><i class="icon-list-alt"></i> icon-list-alt</li>
+        <li><i class="icon-lock"></i> icon-lock</li>
+        <li><i class="icon-flag"></i> icon-flag</li>
+        <li><i class="icon-headphones"></i> icon-headphones</li>
+      </ul>
+    </div>
+    <div class="span3">
+      <ul class="the-icons">
+        <li><i class="icon-volume-off"></i> icon-volume-off</li>
+        <li><i class="icon-volume-down"></i> icon-volume-down</li>
+        <li><i class="icon-volume-up"></i> icon-volume-up</li>
+        <li><i class="icon-qrcode"></i> icon-qrcode</li>
+        <li><i class="icon-barcode"></i> icon-barcode</li>
+        <li><i class="icon-tag"></i> icon-tag</li>
+        <li><i class="icon-tags"></i> icon-tags</li>
+        <li><i class="icon-book"></i> icon-book</li>
+        <li><i class="icon-bookmark"></i> icon-bookmark</li>
+        <li><i class="icon-print"></i> icon-print</li>
+        <li><i class="icon-camera"></i> icon-camera</li>
+        <li><i class="icon-font"></i> icon-font</li>
+        <li><i class="icon-bold"></i> icon-bold</li>
+        <li><i class="icon-italic"></i> icon-italic</li>
+        <li><i class="icon-text-height"></i> icon-text-height</li>
+        <li><i class="icon-text-width"></i> icon-text-width</li>
+        <li><i class="icon-align-left"></i> icon-align-left</li>
+        <li><i class="icon-align-center"></i> icon-align-center</li>
+        <li><i class="icon-align-right"></i> icon-align-right</li>
+        <li><i class="icon-align-justify"></i> icon-align-justify</li>
+        <li><i class="icon-list"></i> icon-list</li>
+        <li><i class="icon-indent-left"></i> icon-indent-left</li>
+        <li><i class="icon-indent-right"></i> icon-indent-right</li>
+        <li><i class="icon-facetime-video"></i> icon-facetime-video</li>
+        <li><i class="icon-picture"></i> icon-picture</li>
+        <li><i class="icon-pencil"></i> icon-pencil</li>
+        <li><i class="icon-map-marker"></i> icon-map-marker</li>
+        <li><i class="icon-adjust"></i> icon-adjust</li>
+        <li><i class="icon-tint"></i> icon-tint</li>
+        <li><i class="icon-edit"></i> icon-edit</li>
+        <li><i class="icon-share"></i> icon-share</li>
+        <li><i class="icon-check"></i> icon-check</li>
+        <li><i class="icon-move"></i> icon-move</li>
+        <li><i class="icon-step-backward"></i> icon-step-backward</li>
+        <li><i class="icon-fast-backward"></i> icon-fast-backward</li>
+      </ul>
+    </div>
+    <div class="span3">
+      <ul class="the-icons">
+        <li><i class="icon-backward"></i> icon-backward</li>
+        <li><i class="icon-play"></i> icon-play</li>
+        <li><i class="icon-pause"></i> icon-pause</li>
+        <li><i class="icon-stop"></i> icon-stop</li>
+        <li><i class="icon-forward"></i> icon-forward</li>
+        <li><i class="icon-fast-forward"></i> icon-fast-forward</li>
+        <li><i class="icon-step-forward"></i> icon-step-forward</li>
+        <li><i class="icon-eject"></i> icon-eject</li>
+        <li><i class="icon-chevron-left"></i> icon-chevron-left</li>
+        <li><i class="icon-chevron-right"></i> icon-chevron-right</li>
+        <li><i class="icon-plus-sign"></i> icon-plus-sign</li>
+        <li><i class="icon-minus-sign"></i> icon-minus-sign</li>
+        <li><i class="icon-remove-sign"></i> icon-remove-sign</li>
+        <li><i class="icon-ok-sign"></i> icon-ok-sign</li>
+        <li><i class="icon-question-sign"></i> icon-question-sign</li>
+        <li><i class="icon-info-sign"></i> icon-info-sign</li>
+        <li><i class="icon-screenshot"></i> icon-screenshot</li>
+        <li><i class="icon-remove-circle"></i> icon-remove-circle</li>
+        <li><i class="icon-ok-circle"></i> icon-ok-circle</li>
+        <li><i class="icon-ban-circle"></i> icon-ban-circle</li>
+        <li><i class="icon-arrow-left"></i> icon-arrow-left</li>
+        <li><i class="icon-arrow-right"></i> icon-arrow-right</li>
+        <li><i class="icon-arrow-up"></i> icon-arrow-up</li>
+        <li><i class="icon-arrow-down"></i> icon-arrow-down</li>
+        <li><i class="icon-share-alt"></i> icon-share-alt</li>
+        <li><i class="icon-resize-full"></i> icon-resize-full</li>
+        <li><i class="icon-resize-small"></i> icon-resize-small</li>
+        <li><i class="icon-plus"></i> icon-plus</li>
+        <li><i class="icon-minus"></i> icon-minus</li>
+        <li><i class="icon-asterisk"></i> icon-asterisk</li>
+        <li><i class="icon-exclamation-sign"></i> icon-exclamation-sign</li>
+        <li><i class="icon-gift"></i> icon-gift</li>
+        <li><i class="icon-leaf"></i> icon-leaf</li>
+        <li><i class="icon-fire"></i> icon-fire</li>
+        <li><i class="icon-eye-open"></i> icon-eye-open</li>
+      </ul>
+    </div>
+    <div class="span3">
+      <ul class="the-icons">
+        <li><i class="icon-eye-close"></i> icon-eye-close</li>
+        <li><i class="icon-warning-sign"></i> icon-warning-sign</li>
+        <li><i class="icon-plane"></i> icon-plane</li>
+        <li><i class="icon-calendar"></i> icon-calendar</li>
+        <li><i class="icon-random"></i> icon-random</li>
+        <li><i class="icon-comment"></i> icon-comment</li>
+        <li><i class="icon-magnet"></i> icon-magnet</li>
+        <li><i class="icon-chevron-up"></i> icon-chevron-up</li>
+        <li><i class="icon-chevron-down"></i> icon-chevron-down</li>
+        <li><i class="icon-retweet"></i> icon-retweet</li>
+        <li><i class="icon-shopping-cart"></i> icon-shopping-cart</li>
+        <li><i class="icon-folder-close"></i> icon-folder-close</li>
+        <li><i class="icon-folder-open"></i> icon-folder-open</li>
+        <li><i class="icon-resize-vertical"></i> icon-resize-vertical</li>
+        <li><i class="icon-resize-horizontal"></i> icon-resize-horizontal</li>
+        <li><i class="icon-hdd"></i> icon-hdd</li>
+        <li><i class="icon-bullhorn"></i> icon-bullhorn</li>
+        <li><i class="icon-bell"></i> icon-bell</li>
+        <li><i class="icon-certificate"></i> icon-certificate</li>
+        <li><i class="icon-thumbs-up"></i> icon-thumbs-up</li>
+        <li><i class="icon-thumbs-down"></i> icon-thumbs-down</li>
+        <li><i class="icon-hand-right"></i> icon-hand-right</li>
+        <li><i class="icon-hand-left"></i> icon-hand-left</li>
+        <li><i class="icon-hand-up"></i> icon-hand-up</li>
+        <li><i class="icon-hand-down"></i> icon-hand-down</li>
+        <li><i class="icon-circle-arrow-right"></i> icon-circle-arrow-right</li>
+        <li><i class="icon-circle-arrow-left"></i> icon-circle-arrow-left</li>
+        <li><i class="icon-circle-arrow-up"></i> icon-circle-arrow-up</li>
+        <li><i class="icon-circle-arrow-down"></i> icon-circle-arrow-down</li>
+        <li><i class="icon-globe"></i> icon-globe</li>
+        <li><i class="icon-wrench"></i> icon-wrench</li>
+        <li><i class="icon-tasks"></i> icon-tasks</li>
+        <li><i class="icon-filter"></i> icon-filter</li>
+        <li><i class="icon-briefcase"></i> icon-briefcase</li>
+        <li><i class="icon-fullscreen"></i> icon-fullscreen</li>
+      </ul>
+    </div>
+  </div>
+
+  <br>
+
+  <div class="row">
+    <div class="span4">
+      <h3>{{_i}}Built as a sprite{{/i}}</h3>
+      <p>{{_i}}Instead of making every icon an extra request, we've compiled them into a sprite&mdash;a bunch of images in one file that uses CSS to position the images with <code>background-position</code>. This is the same method we use on Twitter.com and it has worked well for us.{{/i}}</p>
+      <p>{{_i}}All icons classes are prefixed with <code>.icon-</code> for proper namespacing and scoping, much like our other components. This will help avoid conflicts with other tools.{{/i}}</p>
+      <p>{{_i}}<a href="http://glyphicons.com" target="_blank">Glyphicons</a> has granted us use of the Halflings set in our open-source toolkit so long as we provide a link and credit here in the docs. Please consider doing the same in your projects.{{/i}}</p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}How to use{{/i}}</h3>
+      <p>{{_i}}Bootstrap uses an <code>&lt;i&gt;</code> tag for all icons, but they have no case class&mdash;only a shared prefix. To use, place the following code just about anywhere:{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;i class="icon-search"&gt;&lt;/i&gt;
+</pre>
+      <p>{{_i}}There are also styles available for inverted (white) icons, made ready with one extra class:{{/i}}</p>
+<pre class="prettyprint linenums">
+&lt;i class="icon-search icon-white"&gt;&lt;/i&gt;
+</pre>
+      <p>{{_i}}There are 140 classes to choose from for your icons. Just add an <code>&lt;i&gt;</code> tag with the right classes and you're set. You can find the full list in <strong>sprites.less</strong> or right here in this document.{{/i}}</p>
+      <p>
+        <span class="label label-info">{{_i}}Heads up!{{/i}}</span>
+        {{_i}}When using beside strings of text, as in buttons or nav links, be sure to leave a space after the <code>&lt;i&gt;</code> tag for proper spacing.{{/i}}
+      </p>
+    </div>
+    <div class="span4">
+      <h3>{{_i}}Use cases{{/i}}</h3>
+      <p>{{_i}}Icons are great, but where would one use them? Here are a few ideas:{{/i}}</p>
+      <ul>
+        <li>{{_i}}As visuals for your sidebar navigation{{/i}}</li>
+        <li>{{_i}}For a purely icon-driven navigation{{/i}}</li>
+        <li>{{_i}}For buttons to help convey the meaning of an action{{/i}}</li>
+        <li>{{_i}}With links to share context on a user's destination{{/i}}</li>
+      </ul>
+      <p>{{_i}}Essentially, anywhere you can put an <code>&lt;i&gt;</code> tag, you can put an icon.{{/i}}</p>
+    </div>
+  </div>
+
+  <h3>{{_i}}Examples{{/i}}</h3>
+  <p>{{_i}}Use them in buttons, button groups for a toolbar, navigation, or prepended form inputs.{{/i}}</p>
+  <div class="row">
+    <div class="span4">
+      <div class="btn-toolbar" style="margin-bottom: 9px">
+        <div class="btn-group">
+          <a class="btn" href="#"><i class="icon-align-left"></i></a>
+          <a class="btn" href="#"><i class="icon-align-center"></i></a>
+          <a class="btn" href="#"><i class="icon-align-right"></i></a>
+          <a class="btn" href="#"><i class="icon-align-justify"></i></a>
+        </div>
+        <div class="btn-group">
+          <a class="btn btn-primary" href="#"><i class="icon-user icon-white"></i> {{_i}}User{{/i}}</a>
+          <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a href="#"><i class="icon-pencil"></i> {{_i}}Edit{{/i}}</a></li>
+            <li><a href="#"><i class="icon-trash"></i> {{_i}}Delete{{/i}}</a></li>
+            <li><a href="#"><i class="icon-ban-circle"></i> {{_i}}Ban{{/i}}</a></li>
+            <li class="divider"></li>
+            <li><a href="#"><i class="i"></i> {{_i}}Make admin{{/i}}</a></li>
+          </ul>
+        </div>
+      </div>
+      <p>
+        <a class="btn" href="#"><i class="icon-refresh"></i> {{_i}}Refresh{{/i}}</a>
+        <a class="btn btn-success" href="#"><i class="icon-shopping-cart icon-white"></i> {{_i}}Checkout{{/i}}</a>
+        <a class="btn btn-danger" href="#"><i class="icon-trash icon-white"></i> {{_i}}Delete{{/i}}</a>
+      </p>
+      <p>
+        <a class="btn btn-large" href="#"><i class="icon-comment"></i> {{_i}}Comment{{/i}}</a>
+        <a class="btn btn-small" href="#"><i class="icon-cog"></i> {{_i}}Settings{{/i}}</a>
+        <a class="btn btn-small btn-info" href="#"><i class="icon-info-sign icon-white"></i> {{_i}}More Info{{/i}}</a>
+      </p>
+    </div>
+    <div class="span4">
+      <div class="well" style="padding: 8px 0;">
+        <ul class="nav nav-list">
+          <li class="active"><a href="#"><i class="icon-home icon-white"></i> {{_i}}Home{{/i}}</a></li>
+          <li><a href="#"><i class="icon-book"></i> {{_i}}Library{{/i}}</a></li>
+          <li><a href="#"><i class="icon-pencil"></i> {{_i}}Applications{{/i}}</a></li>
+          <li><a href="#"><i class="i"></i> {{_i}}Misc{{/i}}</a></li>
+        </ul>
+      </div> <!-- /well -->
+    </div>
+    <div class="span4">
+      <form>
+        <div class="control-group">
+          <label class="control-label" for="inputIcon">{{_i}}Email address{{/i}}</label>
+          <div class="controls">
+            <div class="input-prepend">
+              <span class="add-on"><i class="icon-envelope"></i></span><input class="span2" id="inputIcon" type="text">
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
