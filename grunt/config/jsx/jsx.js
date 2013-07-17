@@ -1,12 +1,24 @@
 'use strict';
 
+var grunt = require('grunt');
+
 var rootIDs = [
   "React"
 ];
 
+var getDebugConfig = function() {
+  return {
+    "debug": true,
+    "constants": {
+      "__VERSION__": grunt.config.data.pkg.version,
+      "__DEV__": true
+    }
+  };
+};
+
 var debug = {
   rootIDs: rootIDs,
-  configFile: "grunt/config/jsx/debug.json",
+  getConfig: getDebugConfig,
   sourceDir: "src",
   outputDir: "build/modules"
 };
@@ -15,7 +27,7 @@ var jasmine = {
   rootIDs: [
     "all"
   ],
-  configFile: debug.configFile,
+  getConfig: getDebugConfig,
   sourceDir: "vendor/jasmine",
   outputDir: "build/jasmine"
 };
@@ -25,17 +37,36 @@ var test = {
     "test/all.js",
     "**/__tests__/*.js"
   ]),
-  configFile: "grunt/config/jsx/test.json",
+  getConfig: function() {
+    return {
+      "debug": true,
+      "mocking": true,
+      "constants": {
+        "__VERSION__": grunt.config.data.pkg.version,
+        "__DEV__": true
+      }
+    };
+  },
   sourceDir: "src",
   outputDir: "build/modules"
 };
 
+
 var release = {
   rootIDs: rootIDs,
-  configFile: "grunt/config/jsx/release.json",
+  getConfig: function() {
+    return {
+      "debug": false,
+      "constants": {
+        "__VERSION__": grunt.config.data.pkg.version,
+        "__DEV__": false
+      }
+    };
+  },
   sourceDir: "src",
   outputDir: "build/modules"
 };
+
 
 module.exports = {
   debug: debug,

@@ -30,6 +30,7 @@ var ReactDefaultInjection = require('ReactDefaultInjection');
 ReactDefaultInjection.inject();
 
 var React = {
+  version: __VERSION__,
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
