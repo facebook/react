@@ -21,9 +21,9 @@ When the data changes, React conceptually hits the "refresh" button, and knows t
 
 React is all about building reusable components. In fact, with React the *only* thing you do is build components. Since they're so encapsulated, components make code reuse, testing, and separation of concerns easy.
 
-## Give It a Try
+## Give It Five Minutes
 
-We solved a lot of problems through challenging conventional wisdom. [Give it Five Minutes](http://37signals.com/svn/posts/3124-give-it-five-minutes); engineers and designers have built thousands of components both inside and outside of Facebook and Instagram: those crazy ideas work.
+React challenges a lot of conventional wisdom, and at first glance some of the ideas may seem crazy. [Give it five minutes](http://37signals.com/svn/posts/3124-give-it-five-minutes) while reading about this guide; those crazy ideas have worked for building thousands of components both inside and outside of Facebook and Instagram.
 
 ## Learn More
 
