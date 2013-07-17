@@ -108,7 +108,3 @@ React.renderComponent(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
 
-
-## Testing
-
-**TODO: benjamn**
