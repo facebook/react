@@ -8,7 +8,7 @@
 		
 			<item>
 				<title>React v0.4.0</title>
-				<description>&lt;p&gt;Over the past 2 months we&amp;#39;ve been taking feedback and working hard to make React even better. We&amp;#39;ve also added several features that awe didn&amp;#39;t finish in time for the v0.3 launch, and are proud to announce the availability of React v0.4 today!&lt;/p&gt;
+				<description>&lt;p&gt;Over the past 2 months we&amp;#39;ve been taking feedback and working hard to make React even better. We fixed some bugs, made some under-the-hood improvements, and added several features that we think will improve the experience developing with React. Today we&amp;#39;re proud to announce the availability of React v0.4!&lt;/p&gt;
 
 &lt;p&gt;This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the &lt;a href=&quot;http://groups.google.com/group/reactjs&quot;&gt;Google Group&lt;/a&gt;, and issues and pull requests on GitHub. We&amp;#39;ve had contributions ranging from documentation improvements to major changes to React&amp;#39;s rendering. We&amp;#39;ve seen people integrate React into the tools they&amp;#39;re using and the products they&amp;#39;re building, and we&amp;#39;re all very excited to see what our budding community builds next!&lt;/p&gt;
 
