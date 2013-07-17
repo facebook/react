@@ -1,22 +1,21 @@
---- 
+---
 baseurl: /react
 url: http://facebook.github.io
 permalink: /blog/:year/:month/:day/:title.html
-exclude: 
+exclude:
 - Gemfile
 - Gemfile.lock
 - README.md
 - Rakefile
-redcarpet: 
-  extensions: 
+redcarpet:
+  extensions:
   - fenced_code_blocks
 pygments: true
 name: React
 markdown: redcarpet
-react_version: 0.4.0a
+react_version: 0.4.0
 description: A JavaScript library for building user interfaces
 relative_permalinks: true
-
 nav_docs_sections:
 - title: Quick Start
   items:
@@ -26,29 +25,29 @@ nav_docs_sections:
     title: Tutorial
 - title: Guides
   items:
-    - id: why-react
-      title: Why React?
-    - id: displaying-data
-      title: Displaying Data
-      subitems:
-      - id: jsx-in-depth
-        title: JSX in Depth
-      - id: jsx-gotchas
-        title: JSX Gotchas
-    - id: interactivity-and-dynamic-uis
-      title: Interactivity and Dynamic UIs
-    - id: multiple-components
-      title: Multiple Components
-    - id: reusable-components
-      title: Reusable Components
-    - id: forms
-      title: Forms
-    - id: working-with-the-browser
-      title: Working With the Browser
-      subitems:
-      - id: more-about-refs
-        title: More About Refs
-    - id: tooling-integration
-      title: Tooling integration
-    - id: reference
-      title: Reference
+  - id: why-react
+    title: Why React?
+  - id: displaying-data
+    title: Displaying Data
+    subitems:
+    - id: jsx-in-depth
+      title: JSX in Depth
+    - id: jsx-gotchas
+      title: JSX Gotchas
+  - id: interactivity-and-dynamic-uis
+    title: Interactivity and Dynamic UIs
+  - id: multiple-components
+    title: Multiple Components
+  - id: reusable-components
+    title: Reusable Components
+  - id: forms
+    title: Forms
+  - id: working-with-the-browser
+    title: Working With the Browser
+    subitems:
+    - id: more-about-refs
+      title: More About Refs
+  - id: tooling-integration
+    title: Tooling integration
+  - id: reference
+    title: Reference
