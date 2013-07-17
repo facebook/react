@@ -23,7 +23,7 @@ React is all about building reusable components. In fact, with React the *only* 
 
 ## Give It Five Minutes
 
-React challenges a lot of conventional wisdom, and at first glance some of the ideas may seem crazy. [Give it five minutes](http://37signals.com/svn/posts/3124-give-it-five-minutes) while reading about this guide; those crazy ideas have worked for building thousands of components both inside and outside of Facebook and Instagram.
+React challenges a lot of conventional wisdom, and at first glance some of the ideas may seem crazy. [Give it five minutes](http://37signals.com/svn/posts/3124-give-it-five-minutes) while reading this guide; those crazy ideas have worked for building thousands of components both inside and outside of Facebook and Instagram.
 
 ## Learn More
 
