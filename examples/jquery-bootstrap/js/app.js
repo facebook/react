@@ -67,18 +67,18 @@ var BootstrapModal = React.createClass({
       </div>
     );
   },
-  onCancel: React.autoBind(function() {
+  onCancel: function() {
     if (this.props.onCancel) {
       this.props.onCancel();
     }
     this.close();
-  }),
-  onConfirm: React.autoBind(function() {
+  },
+  onConfirm: function() {
     if (this.props.onConfirm) {
       this.props.onConfirm();
     }
     this.close();
-  }),
+  },
   close: function() {
     if (this.props.onClose) {
       this.props.onClose();
@@ -90,14 +90,14 @@ var Example = React.createClass({
   getInitialState: function() {
     return {modalVisible: false};
   },
-  toggleModal: React.autoBind(function() {
+  toggleModal: function() {
     this.setState({modalVisible: !this.state.modalVisible});
-  }),
-  handleCancel: React.autoBind(function() {
+  },
+  handleCancel: function() {
     if (confirm('Are you sure you want to cancel?')) {
       this.toggleModal();
     }
-  }),
+  },
   render: function() {
     var modal = null;
     if (this.state.modalVisible) {

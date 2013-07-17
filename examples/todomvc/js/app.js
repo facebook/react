@@ -32,24 +32,24 @@ function cx(obj) {
 }
 
 var TodoItem = React.createClass({
-  handleSubmit: React.autoBind(function() {
+  handleSubmit: function() {
     var val = this.state.editText;
     if (val) {
       this.props.onSave(val);
       this.setState({editField: ''});
     }
     return false;
-  }),
-  handleEdit: React.autoBind(function() {
+  },
+  handleEdit: function() {
     this.props.onEdit();
     this.refs.editField.getDOMNode().focus();
-  }),
-  handleKey: React.autoBind(function(event) {
+  },
+  handleKey: function(event) {
     if (event.nativeEvent.keyCode === 27) {
       this.handleSubmit();
     }
     this.setState({editText: event.target.value});
-  }),
+  },
   getInitialState: function() {
     return {editText: this.props.todo.title};
   },
@@ -114,7 +114,7 @@ var TodoApp = React.createClass({
     };
   },
 
-  handleSubmit: React.autoBind(function() {
+  handleSubmit: function() {
     var val = this.refs.newField.getDOMNode().value.trim();
     if (val) {
       var todos = this.state.todos;
@@ -127,7 +127,7 @@ var TodoApp = React.createClass({
       this.refs.newField.getDOMNode().value = '';
     }
     return false;
-  }),
+  },
 
   toggleAll: function(event) {
     var checked = event.nativeEvent.target.checked;

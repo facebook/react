@@ -74,17 +74,17 @@ var Utils = {
 // Begin React stuff
 
 var TodoItem = React.createClass({
-  handleSubmit: React.autoBind(function(event) {
+  handleSubmit: function(event) {
     var val = this.refs.editField.getDOMNode().value;
     if (val) {
       this.props.onSave(val);
     }
     return false;
-  }),
-  onEdit: React.autoBind(function() {
+  },
+  onEdit: function() {
     this.props.onEdit();
     this.refs.editField.getDOMNode().focus();
-  }),
+  },
   render: function() {
     return (
       <li class={cx({completed: this.props.todo.get('completed'), editing: this.props.editing})}>
@@ -166,7 +166,7 @@ var TodoApp = React.createClass({
   getBackboneModels: function() {
     return [this.props.todos];
   },
-  handleSubmit: React.autoBind(function() {
+  handleSubmit: function() {
     var val = this.refs.newField.getDOMNode().value.trim();
     if (val) {
       this.props.todos.create({
@@ -177,13 +177,13 @@ var TodoApp = React.createClass({
       this.refs.newField.getDOMNode().value = '';
     }
     return false;
-  }),
-  toggleAll: React.autoBind(function(event) {
+  },
+  toggleAll: function(event) {
     var checked = event.nativeEvent.target.checked;
     this.props.todos.map(function(todo) {
       todo.set('completed', checked);
     });
-  }),
+  },
   destroy: function(todo) {
     this.props.todos.remove(todo);
   },
@@ -194,11 +194,11 @@ var TodoApp = React.createClass({
     todo.set('title', text);
     this.setState({editing: null});
   },
-  clearCompleted: React.autoBind(function() {
+  clearCompleted: function() {
     this.props.todos.completed().map(function(todo) {
       todo.destroy();
     });
-  }),
+  },
   render: function() {
     var footer = null;
     var main = null;

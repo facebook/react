@@ -14,9 +14,9 @@ var BallmerPeakCalculator = React.createClass({
   getInitialState: function() {
     return {bac: 0};
   },
-  handleChange: React.autoBind(function() {
+  handleChange: function() {
     this.setState({bac: this.refs.bac.getDOMNode().value});
-  }),
+  },
   render: function() {
     var bac;
     var pct;
