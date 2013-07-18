@@ -138,6 +138,9 @@ describe('ReactInstanceHandles', function() {
         ReactID.getID(childNodeB)
       )).toBe(childNodeB);
 
+      spyOn(console, 'error');
+      expect(console.error.argsForCall.length).toBe(0);
+
       expect(function() {
         ReactInstanceHandles.findComponentRoot(
           parentNode,
@@ -148,6 +151,8 @@ describe('ReactInstanceHandles', function() {
         'Unable to find element. This probably means the DOM was ' +
         'unexpectedly mutated (e.g. by the browser).'
       );
+
+      expect(console.error.argsForCall.length).toBe(1);
     });
   });
 
