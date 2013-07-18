@@ -99,7 +99,7 @@ React.renderComponent(
 );
 ```
 
-Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](syntax.html).
+Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](jsx-in-depth.html).
 
 #### What's going on
 
