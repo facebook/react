@@ -489,7 +489,7 @@ var CommentForm = React.createClass({
 
 React attaches event handlers to components using a camelCase naming convention. We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
 
-We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it &ndash; read more about [event handling](event-handling.html).)
+We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it.)
 
 ##### Refs
 
