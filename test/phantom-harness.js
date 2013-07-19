@@ -34,14 +34,13 @@ while (argv.length > 0) {
   rest.push(arg);
 }
 
-// Dynamically interpolate the individual test <iframe>s.
+// Dynamically enable the individual tests.
 var indexHtml = fs.read("index.html").replace(
-  /<body>([\s\S]*?)<\/body>/im,
-  function(outer, inner) {
-    return "<body>" + tests.map(function(test) {
-      return '\n    <iframe src="frame.html" test=' +
-        JSON.stringify(test) + '></iframe>';
-    }).join("") + inner + "</body>";
+  /^(\s*)ENABLE_TESTS_HERE/m,
+  function(placeholder, leadingSpace) {
+    return leadingSpace + tests.map(function(testID) {
+      return "harness.enableTest(" + JSON.stringify(testID) + ");";
+    }).join("\n" + leadingSpace);
   }
 );
 
@@ -61,9 +60,6 @@ server.listen(port, function(req, res) {
 
   case "jasmine.js":
     file = "../build/" + file;
-    break;
-
-  case "frame.html":
     break;
 
   case "":
