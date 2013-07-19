@@ -10,11 +10,11 @@ Since the launch we have received a lot of feedback and are actively working on 
 
 [Andrew Greig](http://www.andrewgreig.com/) made a blog post that gives a high level description of what React is.
 
-> I have been using Facebooks recently released Javascript framework called React.js for the last few days and have managed to obtain a rather high level understanding of how it works and formed a good perspective on how it fits in to the entire Javascript framework ecosystem.
+> I have been using Facebooks recently released Javascript framework called React.js for the last few days and have managed to obtain a rather high level understanding of how it works and formed a good perspective on how it fits in to the entire javascript framework ecosystem.
 >
 > Basically, React is not an MVC framework. It is not a replacement for Backbone or Knockout or Angular, instead it is designed to work with existing frameworks and help extend their functionality.
 >
-> It is designed for building big UIs. The type where you have lots of reusable components that are handling events and presenting and changing some backend data. In a traditional MVC app, React fulfills the role of the View. So you would still need to handle the Model and Controller on your own.
+> It is designed for building big UIs. The type where you have lots of reusable components that are handling events and presenting and changing some backend data. In a traditional MVC app, React fulfils the role of the View. So you would still need to handle the Model and Controller on your own.
 >
 > I found the best way to utilise React was to pair it with Backbone, with React replacing the Backbone View, or to write your own Model/Data object and have React communicate with that.
 >
