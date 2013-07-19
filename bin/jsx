@@ -41,6 +41,7 @@ require("commoner").resolve(function(id) {
     return context.getProvidedP().then(function(idToPath) {
       if (id !== "mock-modules" &&
           id !== "mocks" &&
+          id !== "test/all" &&
           idToPath.hasOwnProperty("mock-modules")) {
         return source + '\nrequire("mock-modules").register(' +
           JSON.stringify(id) + ', module);\n';
