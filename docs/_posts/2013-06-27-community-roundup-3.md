@@ -8,7 +8,7 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 
 ## Moving From Backbone To React
 
-[Clay Allsopp](http://twitter.com/clayallsopp) successfuly ported [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/), a fairly big, interaction-heavy JavaScript app, to React.
+[Clay Allsopp](http://twitter.com/clayallsopp) successfully ported [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/), a fairly big, interaction-heavy JavaScript app, to React.
 
 > [<img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" />](http://usepropeller.com/blog/posts/from-backbone-to-react/)Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn't automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they're all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.
 >
@@ -50,7 +50,7 @@ browserify: {
 
 [Joel Burget](http://joelburget.com/) wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.
 
-> The problem here is that we're trying to maniplate a tree, but there's a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there's a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.
+> The problem here is that we're trying to manipulate a tree, but there's a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there's a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.
 >
 > What does it take to render a collection view? In the Backbone/Handlebars view of the world you have to render the template (with stubs), render each subview which replaces a stub, and keep a reference to each subview (or anything within the view that could change in the future).
 >
@@ -86,6 +86,6 @@ browserify: {
 
 We've seen a lot of people comparing React with various frameworks. [Ricardo Tomasi](http://ricardo.cc/) decided to re-implement the tutorial without any framework, just plain Javascript.
 
-> Facebook & Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you're like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let's see what that looks like in plain javascript.
+> Facebook & Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you're like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let's see what that looks like in plain Javascript.
 >
 > [Read the full post...](http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html)
