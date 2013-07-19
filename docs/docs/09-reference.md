@@ -52,7 +52,7 @@ Configure React's event system to handle touch events on mobile devices.
 function createClass(object specification)
 ```
 
-Creates a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than a standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
+Creates a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
 
 
 #### React.renderComponent
