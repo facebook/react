@@ -77,7 +77,7 @@ A common type of React component is one that extends a basic HTML in a simple wa
 
 var CheckLink = React.createClass({
   render: function() {
-    // transferPropsTo() will take any props pased to CheckLink
+    // transferPropsTo() will take any props passed to CheckLink
     // and copy them to <a>
     return this.transferPropsTo(<a>{'√ '}{this.props.children}</a>);
   }
