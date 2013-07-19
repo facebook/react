@@ -35,7 +35,7 @@ React.createClass({
     someClass: React.PropTypes.instanceOf(SomeClass),
 
     // You can chain any of the above with isRequired to make sure an error is
-    // thrown if the prop isn't provide.
+    // thrown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired
 
     // You can also specify a custom validator.
