@@ -44,7 +44,7 @@ exports.enableTest = function(testID) {
   require("../" + testID);
 };
 
-exports.removeSiblings = function(node) {
+exports.removeNextSiblings = function(node) {
   var parent = node && node.parentNode;
   if (parent) {
     while (node.nextSibling) {

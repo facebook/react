@@ -12,8 +12,8 @@
       (function(env) {
         // Clean up any nodes the previous test might have added.
         env.afterEach(function() {
-          harness.removeSiblings(document.body);
-          harness.removeSiblings(document.getElementById("HTMLReporter"));
+          harness.removeNextSiblings(document.body);
+          harness.removeNextSiblings(document.getElementById("HTMLReporter"));
         });
 
         env.execute();
