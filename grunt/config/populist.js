@@ -11,7 +11,7 @@ var jasmine = {
 
 var test = {
   rootDirectory: "build/modules",
-  args: ["test/all:"],
+  args: ["test/all:harness"],
   requires: [
     "**/__tests__/*-test.js"
   ],
