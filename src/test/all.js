@@ -6,9 +6,6 @@ var Ap = Array.prototype;
 var slice = Ap.slice;
 var Fp = Function.prototype;
 
-var global = Function("return this")();
-global.require = require;
-
 if (!Fp.bind) {
   // PhantomJS doesn't support Function.prototype.bind natively, so
   // polyfill it whenever this module is required.
@@ -58,3 +55,7 @@ require("reactComponentExpect");
 require("mocks");
 require("mock-modules");
 require("./mock-timers");
+
+exports.enableTest = function(testID) {
+  require("../" + testID);
+};

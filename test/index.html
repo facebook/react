@@ -2,21 +2,13 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="jasmine.css" />
-    <style type="text/css">
-      iframe {
-        visibility: hidden;
-        position: absolute;
-        left: -1000px;
-        top: -1000px;
-      }
-    </style>
     <script src="jasmine.js"></script>
-    <script>
-      window.onload = function() {
-        jasmine.getEnv().execute();
-      };
-    </script>
+    <script src="react-test.js"></script>
   </head>
   <body>
+    <script>
+      ENABLE_TESTS_HERE
+      jasmine.getEnv().execute();
+    </script>
   </body>
 </html>
