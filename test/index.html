@@ -8,7 +8,16 @@
   <body>
     <script>
       ENABLE_TESTS_HERE
-      jasmine.getEnv().execute();
+
+      (function(env) {
+        // Clean up any nodes the previous test might have added.
+        env.afterEach(function() {
+          harness.removeNextSiblings(document.body);
+          harness.removeNextSiblings(document.getElementById("HTMLReporter"));
+        });
+
+        env.execute();
+      })(jasmine.getEnv());
     </script>
   </body>
 </html>

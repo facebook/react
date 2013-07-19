@@ -43,3 +43,12 @@ require("./mock-timers");
 exports.enableTest = function(testID) {
   require("../" + testID);
 };
+
+exports.removeNextSiblings = function(node) {
+  var parent = node && node.parentNode;
+  if (parent) {
+    while (node.nextSibling) {
+      parent.removeChild(node.nextSibling);
+    }
+  }
+};
