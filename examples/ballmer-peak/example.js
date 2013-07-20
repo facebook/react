@@ -14,8 +14,8 @@ var BallmerPeakCalculator = React.createClass({
   getInitialState: function() {
     return {bac: 0};
   },
-  handleChange: function() {
-    this.setState({bac: this.refs.bac.getDOMNode().value});
+  handleChange: function(event) {
+    this.setState({bac: event.target.value});
   },
   render: function() {
     var bac;
@@ -33,7 +33,7 @@ var BallmerPeakCalculator = React.createClass({
         <h4>Compute your Ballmer Peak:</h4>
         <p>
           If your BAC is{' '}
-          <input ref="bac" type="text" onInput={this.handleChange} value={this.state.bac} />
+          <input type="text" onChange={this.handleChange} value={this.state.bac} />
           {', '}then <b>{pct}</b> of your lines of code will have bugs.
         </p>
       </div>
