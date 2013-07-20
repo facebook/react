@@ -18,13 +18,13 @@
 
 'use strict';
 var runScripts;
+var headEl;
 
 var transform = require('./fbtransform/lib/transform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
 var transform = transform.bind(null, visitors.react);
 var docblock = require('./fbtransform/lib/docblock');
 
-var headEl = document.getElementsByTagName('head')[0];
 
 exports.transform = transform;
 
@@ -45,6 +45,7 @@ var run = exports.run = function(code) {
 if (typeof window === "undefined" || window === null) {
   return;
 }
+headEl = document.getElementsByTagName('head')[0];
 
 var load = exports.load = function(url, callback) {
   var xhr;
