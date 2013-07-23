@@ -202,7 +202,7 @@
     <span class="nx">someClass</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">SomeClass</span><span class="p">),</span>
 
     <span class="c1">// You can chain any of the above with isRequired to make sure an error is</span>
-    <span class="c1">// thrown if the prop isn&#39;t provide.</span>
+    <span class="c1">// thrown if the prop isn&#39;t provided.</span>
     <span class="nx">requiredFunc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">func</span><span class="p">.</span><span class="nx">isRequired</span>
 
     <span class="c1">// You can also specify a custom validator.</span>
@@ -236,7 +236,7 @@
 
 <span class="kd">var</span> <span class="nx">CheckLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// transferPropsTo() will take any props pased to CheckLink</span>
+    <span class="c1">// transferPropsTo() will take any props passed to CheckLink</span>
     <span class="c1">// and copy them to &lt;a&gt;</span>
     <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">transferPropsTo</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">a</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;√ &#39;</span><span class="p">}{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/a&gt;);</span>
   <span class="p">}</span>

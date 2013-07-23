@@ -271,7 +271,7 @@
     <span class="p">}</span>
   <span class="p">});</span>
 </code></pre></div>
-<p>In this example, our render function returns a description of an <code>&lt;input /&gt;</code> instance. But the true instance is accessed via <code>this.refs.theInput</code>. As long as a child component with <code>ref=&quot;theInput&quot;</code> is returned from render, <code>this.refs.theInput</code> will access the the proper instance. This even works on higher level (non-DOM) components such as <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code>.</p>
+<p>In this example, our render function returns a description of an <code>&lt;input /&gt;</code> instance. But the true instance is accessed via <code>this.refs.theInput</code>. As long as a child component with <code>ref=&quot;theInput&quot;</code> is returned from render, <code>this.refs.theInput</code> will access the proper instance. This even works on higher level (non-DOM) components such as <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code>.</p>
 
 <h2>Summary</h2>
 

@@ -286,7 +286,7 @@ calling <code>this.getDOMNode()</code>.</p>
 
 <p>At Facebook, we support older browsers, including IE8. We&#39;ve had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don&#39;t have a bunch of hacks scattered throughout our codebase and we can still expect our code to &quot;just work&quot;. For example, instead of seeing <code>+new Date()</code>, we can just write <code>Date.now()</code>. Since the open source React is the same as what we use internally, we&#39;ve carried over this philosophy of using forward thinking JS.</p>
 
-<p>In addition to that philosphy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/kriskowal/es5-shim">es5-shim</a>.</p>
+<p>In addition to that philosophy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/kriskowal/es5-shim">es5-shim</a>.</p>
 
 <h3>Polyfills Needed to Support Older Browsers</h3>
 

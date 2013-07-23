@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #5</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #5" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/23/community-roundup-5.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+    
+      <li><a href="/react/blog/2013/07/23/community-roundup-5.html" class="active">Community Round-up #5</a></li>
+    
+      <li><a href="/react/blog/2013/07/17/react-v0-4-0.html">React v0.4.0</a></li>
+    
+      <li><a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">New in React v0.4: Prop Validation and Default Values</a></li>
+    
+      <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
+    
+      <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
+    
+      <li><a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a></li>
+    
+      <li><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></li>
+    
+      <li><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></li>
+    
+      <li><a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a></li>
+    
+      <li><a href="/react/blog/2013/06/05/why-react.html">Why did we build React?</a></li>
+    
+      <li><a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a></li>
+    
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #5</h1>
+    <p class="meta">July 23, 2013 by Vjeux</p>
+
+    <hr>
+
+    <div class="post">
+      <p>We launched the <a href="https://www.facebook.com/react">React Facebook Page</a> along with the React v0.4 launch. 700 people already liked it to get updated on the project :)</p>
+
+<h2>Cross-browser onChange</h2>
+
+<p><a href="http://benalpert.com/">Ben Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.</p>
+
+<blockquote>
+<p>First off, what is the input event? If you have an <code>&lt;input&gt;</code> element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn&#39;t catch input that doesn&#39;t involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.</p>
+
+<p>Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using <code>setTimeout(fn, 0)</code> or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn&#39;t change at all (such as when pressing the arrow keys).</p>
+
+<p><a href="http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
+</blockquote>
+
+<h2>React Samples</h2>
+
+<p>Learning a new library is always easier when you have working examples you can play with. <a href="https://github.com/jhw">jwh</a> put many of them on his <a href="https://github.com/jhw/react-samples">react-samples Github repo</a>.</p>
+
+<blockquote>
+<p>Some simple examples with Facebook&#39;s React framework</p>
+
+<ul>
+<li>Bootstrap action bar, modal and table <a href="https://rawgithub.com/jhw/react-samples/master/html/actionbar.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_actionbar.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_modal.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_striped_table.html">#4</a></li>
+<li>Comments <a href="https://rawgithub.com/jhw/react-samples/master/html/comments1.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/comments2.html">#2</a></li>
+<li>Data Table <a href="https://rawgithub.com/jhw/react-samples/master/html/datatable.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable4.html">#4</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable5.html">#5</a></li>
+<li>Filter Bar <a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar4.html">#4</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar5.html">#5</a></li>
+<li>Fundoo Rating <a href="https://rawgithub.com/jhw/react-samples/master/html/fundoo.html">#1</a></li>
+<li>Line Char: <a href="https://rawgithub.com/jhw/react-samples/master/html/linechart.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/linechart2.html">#2</a></li>
+<li>Multi tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/multitabs.html">#1</a></li>
+<li>Select <a href="https://rawgithub.com/jhw/react-samples/master/html/select.html">#1</a></li>
+<li>Simple Tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs.html">#1</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs2.html">#2</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs3.html">#3</a>,
+<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs4.html">#4</a></li>
+<li>Toggle <a href="https://rawgithub.com/jhw/react-samples/master/html/toggle.html">#1</a></li>
+</ul>
+</blockquote>
+
+<h2>React Chosen Wrapper</h2>
+
+<p><a href="https://github.com/chenglou">Cheng Lou</a> wrote a wrapper for the <a href="http://harvesthq.github.io/chosen/">Chosen</a> input library called <a href="https://github.com/chenglou/react-chosen">react-chosen</a>. It took just 25 lines to be able to use jQuery component as a React one.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Chosen</span> <span class="nx">noResultsText</span><span class="o">=</span><span class="s2">&quot;No result&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">doSomething</span><span class="p">}</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Facebook&quot;</span><span class="o">&gt;</span><span class="nx">Facebook</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span><span class="o">&gt;</span><span class="nx">Harvest</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Chosen&gt;</span>
+<span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<h2>JSX and ES6 Template Strings</h2>
+
+<p><a href="http://domenicdenicola.com/">Domenic Denicola</a> wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.</p>
+
+<figure><iframe src="http://www.slideshare.net/slideshow/embed_code/24187146?rel=0&startSlide=36" width="600" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe></figure>
+
+<h2>React Presentation</h2>
+
+<p><a href="http://tomocchino.com/">Tom Occhino</a> and <a href="https://github.com/jordwalke">Jordan Walke</a>, React developers, did a presentation of React at Facebook Seattle&#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;A. I highly recommend you watching this video.</p>
+
+<figure><iframe width="650" height="400" src="//www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+
+<h2>Docs</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.</p>
+
+<blockquote>
+<p>Guides</p>
+
+<ul>
+<li><a href="/react/docs/why-react.html">Why React?</a></li>
+<li><a href="/react/docs/displaying-data.html">Displaying Data</a>
+
+<ul>
+<li><a href="/react/docs/jsx-in-depth.html">JSX in Depth</a></li>
+<li><a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a></li>
+</ul></li>
+<li><a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a></li>
+<li><a href="/react/docs/multiple-components.html">Multiple Components</a></li>
+<li><a href="/react/docs/reusable-components.html">Reusable Components</a></li>
+<li><a href="/react/docs/forms.html">Forms</a></li>
+<li><a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+
+<ul>
+<li><a href="/react/docs/more-about-refs.html">More About Refs</a></li>
+</ul></li>
+<li><a href="/react/docs/tooling-integration.html">Tooling integration</a></li>
+<li><a href="/react/docs/reference.html">Reference</a></li>
+</ul>
+</blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/07/23/community-roundup-5.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
