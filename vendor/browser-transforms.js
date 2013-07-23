@@ -32,6 +32,11 @@ exports.exec = function(code) {
   return eval(transform(code));
 };
 
+if (typeof window === "undefined" || window === null) {
+  return;
+}
+headEl = document.getElementsByTagName('head')[0];
+
 var run = exports.run = function(code) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
@@ -41,11 +46,6 @@ var run = exports.run = function(code) {
   scriptEl.innerHTML = functionBody;
   headEl.appendChild(scriptEl);
 };
-
-if (typeof window === "undefined" || window === null) {
-  return;
-}
-headEl = document.getElementsByTagName('head')[0];
 
 var load = exports.load = function(url, callback) {
   var xhr;
