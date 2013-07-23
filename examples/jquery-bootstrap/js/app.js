@@ -7,7 +7,7 @@ var BootstrapButton = React.createClass({
     // transferPropsTo() is smart enough to merge classes provided
     // to this component.
     return this.transferPropsTo(
-      <a href="javascript:;" role="button" class="btn">
+      <a href="javascript:;" role="button" className="btn">
         {this.props.children}
       </a>
     );
@@ -19,11 +19,17 @@ var BootstrapModal = React.createClass({
   // integrate with Bootstrap or jQuery!
   componentDidMount: function() {
     // When the component is added, turn it into a modal
-    $(this.getDOMNode()).modal({backdrop: 'static', keyboard: false});
+    $(this.getDOMNode())
+      .modal({backdrop: 'static', keyboard: false, show: false})
   },
   componentWillUnmount: function() {
-    // And when it's destroyed, hide it.
+    $(this.getDOMNode()).off('hidden', this.handleHidden);
+  },
+  close: function() {
     $(this.getDOMNode()).modal('hide');
+  },
+  open: function() {
+    $(this.getDOMNode()).modal('show');
   },
   render: function() {
     var confirmButton = null;
@@ -32,92 +38,84 @@ var BootstrapModal = React.createClass({
     if (this.props.confirm) {
       confirmButton = (
         <BootstrapButton
-          onClick={this.onConfirm}
-          class="btn-primary">
+          onClick={this.handleConfirm}
+          className="btn-primary">
           {this.props.confirm}
         </BootstrapButton>
       );
     }
     if (this.props.cancel) {
       cancelButton = (
-        <BootstrapButton onClick={this.onCancel}>
+        <BootstrapButton onClick={this.handleCancel}>
           {this.props.cancel}
         </BootstrapButton>
       );
     }
 
     return (
-      <div class="modal hide fade">
-        <div class="modal-header">
+      <div className="modal hide fade">
+        <div className="modal-header">
           <button
             type="button"
-            class="close"
-            onClick={this.onCancel}
-            dangerouslyInsertInnerHtml={{__html: '&times;'}}
+            className="close"
+            onClick={this.handleCancel}
+            dangerouslySetInnerHTML={{__html: '&times'}}
           />
           <h3>{this.props.title}</h3>
         </div>
-        <div class="modal-body">
+        <div className="modal-body">
           {this.props.children}
         </div>
-        <div class="modal-footer">
+        <div className="modal-footer">
           {cancelButton}
           {confirmButton}
         </div>
       </div>
     );
   },
-  onCancel: function() {
+  handleCancel: function() {
     if (this.props.onCancel) {
       this.props.onCancel();
     }
-    this.close();
   },
-  onConfirm: function() {
+  handleConfirm: function() {
     if (this.props.onConfirm) {
       this.props.onConfirm();
-    }
-    this.close();
-  },
-  close: function() {
-    if (this.props.onClose) {
-      this.props.onClose();
     }
   }
 });
 
 var Example = React.createClass({
-  getInitialState: function() {
-    return {modalVisible: false};
-  },
-  toggleModal: function() {
-    this.setState({modalVisible: !this.state.modalVisible});
-  },
   handleCancel: function() {
     if (confirm('Are you sure you want to cancel?')) {
-      this.toggleModal();
+      this.refs.modal.close();
     }
   },
   render: function() {
     var modal = null;
-    if (this.state.modalVisible) {
-      modal = (
-        <BootstrapModal
-          confirm="OK"
-          cancel="Cancel"
-          onCancel={this.handleCancel}
-          onConfirm={this.toggleModal}
-          title="Hello, Bootstrap!">
-            This is a React component powered by jQuery and Bootstrap!
-        </BootstrapModal>
-      );
-    }
+    modal = (
+      <BootstrapModal
+        ref="modal"
+        confirm="OK"
+        cancel="Cancel"
+        onCancel={this.handleCancel}
+        onConfirm={this.closeModal}
+        title="Hello, Bootstrap!">
+          This is a React component powered by jQuery and Bootstrap!
+      </BootstrapModal>
+    );
     return (
-      <div class="example">
+      <div className="example">
         {modal}
-        <BootstrapButton onClick={this.toggleModal}>Toggle modal</BootstrapButton>
+        <BootstrapButton onClick={this.openModal}>Open modal</BootstrapButton>
       </div>
     );
+  },
+  openModal: function() {
+    this.refs.modal.open();
+  },
+  closeModal: function() {
+    this.refs.modal.close();
   }
 });
 
