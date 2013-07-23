@@ -23,7 +23,6 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactID = require('ReactID');
-var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
@@ -498,15 +497,12 @@ var ReactComponent = {
         container && container.nodeType === 1,
         'mountComponentIntoNode(...): Target container is not a DOM element.'
       );
-      var renderStart = Date.now();
       var markup = this.mountComponent(rootID, transaction);
-      ReactMount.totalInstantiationTime += (Date.now() - renderStart);
 
       if (shouldReuseMarkup) {
         return;
       }
 
-      var injectionStart = Date.now();
       // Asynchronously inject markup by ensuring that the container is not in
       // the document when settings its `innerHTML`.
       var parent = container.parentNode;
@@ -522,7 +518,6 @@ var ReactComponent = {
       } else {
         container.innerHTML = markup;
       }
-      ReactMount.totalInjectionTime += (Date.now() - injectionStart);
     },
 
     /**

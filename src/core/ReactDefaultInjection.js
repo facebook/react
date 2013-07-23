@@ -34,6 +34,7 @@ var ChangeEventPlugin = require('ChangeEventPlugin');
 var EventPluginHub = require('EventPluginHub');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var SimpleEventPlugin = require('SimpleEventPlugin');
+var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 
 function inject() {
   /**
@@ -49,7 +50,8 @@ function inject() {
   EventPluginHub.injection.injectEventPluginsByName({
     'SimpleEventPlugin': SimpleEventPlugin,
     'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
-    'ChangeEventPlugin': ChangeEventPlugin
+    'ChangeEventPlugin': ChangeEventPlugin,
+    'MobileSafariClickEventPlugin': MobileSafariClickEventPlugin
   });
 
   ReactDOM.injection.injectComponentClasses({

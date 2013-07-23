@@ -35,7 +35,8 @@ var DefaultEventPluginOrder = [
   keyOf({TapEventPlugin: null}),
   keyOf({EnterLeaveEventPlugin: null}),
   keyOf({ChangeEventPlugin: null}),
-  keyOf({AnalyticsEventPlugin: null})
+  keyOf({AnalyticsEventPlugin: null}),
+  keyOf({MobileSafariClickEventPlugin: null})
 ];
 
 module.exports = DefaultEventPluginOrder;

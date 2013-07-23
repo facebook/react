@@ -68,6 +68,9 @@ function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
 
   var Interface = this.constructor.Interface;
   for (var propName in Interface) {
+    if (!Interface.hasOwnProperty(propName)) {
+      continue;
+    }
     var normalize = Interface[propName];
     if (normalize) {
       this[propName] = normalize(nativeEvent);
