@@ -32,7 +32,7 @@
     "url": "https://github.com/facebook/react"
   },
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt build && grunt test"
   },
   "dependencies": {
     "base62": "~0.1.1",
