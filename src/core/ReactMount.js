@@ -204,9 +204,6 @@ var ReactMount = {
   /** Time spent inserting markup into the DOM. */
   totalInjectionTime: 0,
 
-  /** Whether support for touch events should be initialized. */
-  useTouchEvents: false,
-
   /**
    * This is a hook provided to support rendering React components while
    * ensuring that the apparent scroll position of its `container` does not
@@ -226,7 +223,7 @@ var ReactMount = {
    * @private
    */
   prepareTopLevelEvents: function() {
-    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents);
+    ReactEventEmitter.ensureListening();
   },
 
   /**

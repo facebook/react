@@ -61,7 +61,7 @@ describe('AnalyticsEventPlugin', function() {
       'ChangeEventPlugin': ChangeEventPlugin
     });
 
-    ReactEventEmitter.ensureListening(false);
+    ReactEventEmitter.ensureListening();
   });
 
   it('should count events correctly', function() {
