@@ -60,7 +60,7 @@ var BootstrapModal = React.createClass({
             className="close"
             onClick={this.handleCancel}
             dangerouslySetInnerHTML={{__html: '&times'}}
-            />
+          />
           <h3>{this.props.title}</h3>
         </div>
         <div className="modal-body">
