@@ -54,7 +54,7 @@ function batchedUpdates(callback) {
         component.performUpdateIfNecessary();
         if (callbacks) {
           for (var j = 0; j < callbacks.length; j++) {
-            callbacks[j]();
+            callbacks[j].call(component);
           }
         }
       }
