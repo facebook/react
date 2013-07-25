@@ -22,8 +22,11 @@ var invariant = require('invariant');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
-var ReactID = require('ReactID');
+
+var SEPARATOR = ReactInstanceHandles.SEPARATOR;
+
+var ATTR_NAME = 'data-reactid';
+var nodeCache = {};
 
 var $ = require('$');
 
@@ -44,7 +47,138 @@ if (__DEV__) {
  */
 function getReactRootID(container) {
   var rootElement = getReactRootElementInContainer(container);
-  return rootElement && ReactID.getID(rootElement);
+  return rootElement && ReactMount.getID(rootElement);
+}
+
+/**
+ * Accessing node[ATTR_NAME] or calling getAttribute(ATTR_NAME) on a form
+ * element can return its control whose name or ID equals ATTR_NAME. All
+ * DOM nodes support `getAttributeNode` but this can also get called on
+ * other objects so just return '' if we're given something other than a
+ * DOM node (such as window).
+ *
+ * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
+ * @return {string} ID of the supplied `domNode`.
+ */
+function getID(node) {
+  var id = internalGetID(node);
+  if (id) {
+    if (nodeCache.hasOwnProperty(id)) {
+      var cached = nodeCache[id];
+      if (cached !== node) {
+        invariant(
+          !isValid(cached, id),
+          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
+          ATTR_NAME, id
+        );
+
+        nodeCache[id] = node;
+      }
+    } else {
+      nodeCache[id] = node;
+    }
+  }
+
+  return id;
+}
+
+function internalGetID(node) {
+  // If node is something like a window, document, or text node, none of
+  // which support attributes or a .getAttribute method, gracefully return
+  // the empty string, as if the attribute were missing.
+  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+}
+
+/**
+ * Sets the React-specific ID of the given node.
+ *
+ * @param {DOMElement} node The DOM node whose ID will be set.
+ * @param {string} id The value of the ID attribute.
+ */
+function setID(node, id) {
+  var oldID = internalGetID(node);
+  if (oldID !== id) {
+    delete nodeCache[oldID];
+  }
+  node.setAttribute(ATTR_NAME, id);
+  nodeCache[id] = node;
+}
+
+/**
+ * Finds the node with the supplied React-generated DOM ID.
+ *
+ * @param {string} id A React-generated DOM ID.
+ * @return {DOMElement} DOM node with the suppled `id`.
+ * @internal
+ */
+function getNode(id) {
+  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
+    nodeCache[id] = ReactMount.findReactNodeByID(id);
+  }
+  return nodeCache[id];
+}
+
+/**
+ * A node is "valid" if it is contained by a currently mounted container.
+ *
+ * This means that the node does not have to be contained by a document in
+ * order to be considered valid.
+ *
+ * @param {?DOMElement} node The candidate DOM node.
+ * @param {string} id The expected ID of the node.
+ * @return {boolean} Whether the node is contained by a mounted container.
+ */
+function isValid(node, id) {
+  if (node) {
+    invariant(
+      internalGetID(node) === id,
+      'ReactMount: Unexpected modification of `%s`',
+      ATTR_NAME
+    );
+
+    var container = ReactMount.findReactContainerForID(id);
+    if (container && contains(container, node)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function contains(ancestor, descendant) {
+  if (ancestor.contains) {
+    // Supported natively in virtually all browsers, but not in jsdom.
+    return ancestor.contains(descendant);
+  }
+
+  if (descendant === ancestor) {
+    return true;
+  }
+
+  if (descendant.nodeType === 3) {
+    // If descendant is a text node, start from descendant.parentNode
+    // instead, so that we can assume all ancestors worth considering are
+    // element nodes with nodeType === 1.
+    descendant = descendant.parentNode;
+  }
+
+  while (descendant && descendant.nodeType === 1) {
+    if (descendant === ancestor) {
+      return true;
+    }
+    descendant = descendant.parentNode;
+  }
+
+  return false;
+}
+
+/**
+ * Causes the cache to forget about one React-specific ID.
+ *
+ * @param {string} id The ID to forget.
+ */
+function purgeID(id) {
+  delete nodeCache[id];
 }
 
 /**
@@ -89,14 +223,10 @@ var ReactMount = {
    * Ensures that the top-level event delegation listener is set up. This will
    * be invoked some time before the first time any React component is rendered.
    *
-   * @param {object} TopLevelCallbackCreator
    * @private
    */
-  prepareTopLevelEvents: function(TopLevelCallbackCreator) {
-    ReactEventEmitter.ensureListening(
-      ReactMount.useTouchEvents,
-      TopLevelCallbackCreator
-    );
+  prepareTopLevelEvents: function() {
+    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents);
   },
 
   /**
@@ -132,7 +262,7 @@ var ReactMount = {
    * @return {string} reactRoot ID prefix
    */
   _registerComponent: function(nextComponent, container) {
-    ReactMount.prepareTopLevelEvents(ReactEventTopLevelCallback);
+    ReactMount.prepareTopLevelEvents();
 
     var reactRootID = ReactMount.registerContainer(container);
     instanceByReactRootID[reactRootID] = nextComponent;
@@ -196,8 +326,7 @@ var ReactMount = {
 
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
-      reactRootElement &&
-        ReactInstanceHandles.isRenderedByReact(reactRootElement);
+      reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
 
     var shouldReuseMarkup = containerHasReactMarkup && !registeredComponent;
 
@@ -295,15 +424,15 @@ var ReactMount = {
       var rootElement = rootElementsByReactRootID[reactRootID];
       if (rootElement && rootElement.parentNode !== container) {
         invariant(
-          // Call rawGetID here because getID calls isValid which calls
+          // Call internalGetID here because getID calls isValid which calls
           // findReactContainerForID (this function).
-          ReactID.rawGetID(rootElement) === reactRootID,
+          internalGetID(rootElement) === reactRootID,
           'ReactMount: Root element ID differed from reactRootID.'
         );
 
         var containerChild = container.firstChild;
         if (containerChild &&
-            reactRootID === ReactID.rawGetID(containerChild)) {
+            reactRootID === internalGetID(containerChild)) {
           // If the container has a new child with the same ID as the old
           // root element, then rootElementsByReactRootID[reactRootID] is
           // just stale and needs to be updated. The case that deserves a
@@ -329,8 +458,122 @@ var ReactMount = {
    */
   findReactNodeByID: function(id) {
     var reactRoot = ReactMount.findReactContainerForID(id);
-    return ReactInstanceHandles.findComponentRoot(reactRoot, id);
-  }
+    return ReactMount.findComponentRoot(reactRoot, id);
+  },
+
+  /**
+   * True if the supplied `node` is rendered by React.
+   *
+   * @param {*} node DOM Element to check.
+   * @return {boolean} True if the DOM Element appears to be rendered by React.
+   * @internal
+   */
+  isRenderedByReact: function(node) {
+    if (node.nodeType !== 1) {
+      // Not a DOMElement, therefore not a React component
+      return false;
+    }
+    var id = ReactMount.getID(node);
+    return id ? id.charAt(0) === SEPARATOR : false;
+  },
+
+  /**
+   * Traverses up the ancestors of the supplied node to find a node that is a
+   * DOM representation of a React component.
+   *
+   * @param {*} node
+   * @return {?DOMEventTarget}
+   * @internal
+   */
+  getFirstReactDOM: function(node) {
+    var current = node;
+    while (current && current.parentNode !== current) {
+      if (ReactMount.isRenderedByReact(current)) {
+        return current;
+      }
+      current = current.parentNode;
+    }
+    return null;
+  },
+
+  /**
+   * Finds a node with the supplied `id` inside of the supplied `ancestorNode`.
+   * Exploits the ID naming scheme to perform the search quickly.
+   *
+   * @param {DOMEventTarget} ancestorNode Search from this root.
+   * @pararm {string} id ID of the DOM representation of the component.
+   * @return {DOMEventTarget} DOM node with the supplied `id`.
+   * @internal
+   */
+  findComponentRoot: function(ancestorNode, id) {
+    var firstChildren = [ancestorNode.firstChild];
+    var childIndex = 0;
+
+    while (childIndex < firstChildren.length) {
+      var child = firstChildren[childIndex++];
+      while (child) {
+        var childID = ReactMount.getID(child);
+        if (childID) {
+          if (id === childID) {
+            return child;
+          } else if (ReactInstanceHandles.isAncestorIDOf(childID, id)) {
+            // If we find a child whose ID is an ancestor of the given ID,
+            // then we can be sure that we only want to search the subtree
+            // rooted at this child, so we can throw out the rest of the
+            // search state.
+            firstChildren.length = childIndex = 0;
+            firstChildren.push(child.firstChild);
+            break;
+          } else {
+            // TODO This should not be necessary if the ID hierarchy is
+            // correct, but is occasionally necessary if the DOM has been
+            // modified in unexpected ways.
+            firstChildren.push(child.firstChild);
+          }
+        } else {
+          // If this child had no ID, then there's a chance that it was
+          // injected automatically by the browser, as when a `<table>`
+          // element sprouts an extra `<tbody>` child as a side effect of
+          // `.innerHTML` parsing. Optimistically continue down this
+          // branch, but not before examining the other siblings.
+          firstChildren.push(child.firstChild);
+        }
+        child = child.nextSibling;
+      }
+    }
+
+    if (__DEV__) {
+      console.error(
+        'Error while invoking `findComponentRoot` with the following ' +
+        'ancestor node:',
+        ancestorNode
+      );
+    }
+    invariant(
+      false,
+      'findComponentRoot(..., %s): Unable to find element. This probably ' +
+      'means the DOM was unexpectedly mutated (e.g. by the browser).',
+      id,
+      ReactMount.getID(ancestorNode)
+    );
+  },
+
+
+  /**
+   * React ID utilities.
+   */
+
+  ATTR_NAME: ATTR_NAME,
+
+  getID: getID,
+
+  setID: setID,
+
+  getNode: getNode,
+
+  purgeID: purgeID,
+
+  injection: {}
 };
 
 module.exports = ReactMount;

@@ -25,7 +25,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var flattenChildren = require('flattenChildren');
@@ -136,7 +136,7 @@ ReactNativeComponent.Mixin = {
     }
 
     var escapedID = escapeTextForBrowser(this._rootNodeID);
-    return ret + ' ' + ReactID.ATTR_NAME + '="' + escapedID + '">';
+    return ret + ' ' + ReactMount.ATTR_NAME + '="' + escapedID + '">';
   },
 
   /**

@@ -21,7 +21,7 @@ var React = require('React');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 var mergeInto = require('mergeInto');
 
@@ -222,10 +222,10 @@ var ReactTestUtils = {
       ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
         topLevelType
       );
-    var node = ReactID.getNode(reactRootID);
+    var node = ReactMount.getNode(reactRootID);
     fakeNativeEvent.target = node;
     /* jsdom is returning nodes without id's - fixing that issue here. */
-    ReactID.setID(node, reactRootID);
+    ReactMount.setID(node, reactRootID);
     virtualHandler(fakeNativeEvent);
   },
 

@@ -22,14 +22,13 @@
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactInstanceHandles = require('ReactInstanceHandles');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
-var getFirstReactDOM = ReactInstanceHandles.getFirstReactDOM;
+var getFirstReactDOM = ReactMount.getFirstReactDOM;
 
 var eventTypes = {
   mouseEnter: {registrationName: keyOf({onMouseEnter: null})},
@@ -85,8 +84,8 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromID = from ? ReactID.getID(from) : '';
-    var toID = to ? ReactID.getID(to) : '';
+    var fromID = from ? ReactMount.getID(from) : '';
+    var toID = to ? ReactMount.getID(to) : '';
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,

@@ -24,7 +24,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 var getTextContentAccessor = require('getTextContentAccessor');
 var invariant = require('invariant');
@@ -65,7 +65,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updatePropertyByID: function(id, name, value) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -91,7 +91,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   deletePropertyByID: function(id, name, value) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     invariant(
       !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
       'updatePropertyByID(...): %s',
@@ -128,7 +128,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateStylesByID: function(id, styles) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     CSSPropertyOperations.setValueForStyles(node, styles);
   },
 
@@ -140,7 +140,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateInnerHTMLByID: function(id, html) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     // HACK: IE8- normalize whitespace in innerHTML, removing leading spaces.
     // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
     node.innerHTML = (html && html.__html || '').replace(/^ /g, '&nbsp;');
@@ -154,7 +154,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   updateTextContentByID: function(id, content) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     node[textContentAccessor] = content;
   },
 
@@ -167,7 +167,7 @@ var ReactDOMIDOperations = {
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
   dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
-    var node = ReactID.getNode(id);
+    var node = ReactMount.getNode(id);
     DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
   },
 
@@ -176,7 +176,7 @@ var ReactDOMIDOperations = {
    *       Detect if any elements were removed instead of blindly purging.
    */
   manageChildrenByParentID: function(parentID, domOperations) {
-    var parent = ReactID.getNode(parentID);
+    var parent = ReactMount.getNode(parentID);
     DOMChildrenOperations.manageChildren(parent, domOperations);
   }
 

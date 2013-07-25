@@ -24,7 +24,7 @@
 require('mock-modules')
   .dontMock('ExecutionEnvironment')
   .dontMock('React')
-  .dontMock('ReactID')
+  .dontMock('ReactMount')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils')
   .dontMock('ReactMarkupChecksum');
@@ -32,7 +32,7 @@ require('mock-modules')
 var mocks = require('mocks');
 
 var React;
-var ReactID;
+var ReactMount;
 var ReactTestUtils;
 var ReactServerRendering;
 var ReactMarkupChecksum;
@@ -42,7 +42,7 @@ describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
-    ReactID = require('ReactID');
+    ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -59,7 +59,7 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<span ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+      '<span ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
     );
   });
@@ -83,11 +83,11 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<div ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+      '<div ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-        '<span ' + ReactID.ATTR_NAME + '="[^"]+">' +
-          '<span ' + ReactID.ATTR_NAME + '="[^"]+">My name is </span>' +
-          '<span ' + ReactID.ATTR_NAME + '="[^"]+">child</span>' +
+        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">' +
+          '<span ' + ReactMount.ATTR_NAME + '="[^"]+">My name is </span>' +
+          '<span ' + ReactMount.ATTR_NAME + '="[^"]+">child</span>' +
         '</span>' +
       '</div>'
     );
@@ -137,10 +137,10 @@ describe('ReactServerRendering', function() {
     );
 
     expect(response).toMatch(
-      '<span ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+      '<span ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-        '<span ' + ReactID.ATTR_NAME + '="[^"]+">Component name: </span>' +
-        '<span ' + ReactID.ATTR_NAME + '="[^"]+">TestComponent</span>' +
+        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">Component name: </span>' +
+        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">TestComponent</span>' +
       '</span>'
     );
     expect(lifecycle).toEqual(

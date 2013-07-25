@@ -21,7 +21,7 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.
@@ -78,7 +78,7 @@ describe('ReactInstanceHandles', function() {
   describe('isRenderedByReact', function() {
     it('should not crash on text nodes', function() {
       expect(function() {
-        ReactInstanceHandles.isRenderedByReact(document.createTextNode('yolo'));
+        ReactMount.isRenderedByReact(document.createTextNode('yolo'));
       }).not.toThrow();
     });
   });
@@ -91,14 +91,14 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       parentNode.appendChild(childNodeB);
 
-      ReactID.setID(parentNode, '.react[0]');
-      ReactID.setID(childNodeA, '.react[0].0');
-      ReactID.setID(childNodeB, '.react[0].0:1');
+      ReactMount.setID(parentNode, '.react[0]');
+      ReactMount.setID(childNodeA, '.react[0].0');
+      ReactMount.setID(childNodeB, '.react[0].0:1');
 
       expect(
-        ReactInstanceHandles.findComponentRoot(
+        ReactMount.findComponentRoot(
           parentNode,
-          ReactID.getID(childNodeB)
+          ReactMount.getID(childNodeB)
         )
       ).toBe(childNodeB);
     });
@@ -110,14 +110,14 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       parentNode.appendChild(childNodeB);
 
-      ReactID.setID(parentNode, '.react[0]');
+      ReactMount.setID(parentNode, '.react[0]');
       // No ID on `childNodeA`.
-      ReactID.setID(childNodeB, '.react[0].0:1');
+      ReactMount.setID(childNodeB, '.react[0].0:1');
 
       expect(
-        ReactInstanceHandles.findComponentRoot(
+        ReactMount.findComponentRoot(
           parentNode,
-          ReactID.getID(childNodeB)
+          ReactMount.getID(childNodeB)
         )
       ).toBe(childNodeB);
     });
@@ -129,22 +129,22 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       childNodeA.appendChild(childNodeB);
 
-      ReactID.setID(parentNode, '.react[0]');
+      ReactMount.setID(parentNode, '.react[0]');
       // No ID on `childNodeA`, it was "rendered by the browser".
-      ReactID.setID(childNodeB, '.react[0].1:0');
+      ReactMount.setID(childNodeB, '.react[0].1:0');
 
-      expect(ReactInstanceHandles.findComponentRoot(
+      expect(ReactMount.findComponentRoot(
         parentNode,
-        ReactID.getID(childNodeB)
+        ReactMount.getID(childNodeB)
       )).toBe(childNodeB);
 
       spyOn(console, 'error');
       expect(console.error.argsForCall.length).toBe(0);
 
       expect(function() {
-        ReactInstanceHandles.findComponentRoot(
+        ReactMount.findComponentRoot(
           parentNode,
-          ReactID.getID(childNodeB) + ":junk"
+          ReactMount.getID(childNodeB) + ":junk"
         );
       }).toThrow(
         'Invariant Violation: findComponentRoot(..., .react[0].1:0:junk): ' +

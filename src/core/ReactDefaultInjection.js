@@ -24,6 +24,8 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactEventEmitter = require('ReactEventEmitter');
+var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 
 var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
 var DOMProperty = require('DOMProperty');
@@ -37,6 +39,7 @@ var SimpleEventPlugin = require('SimpleEventPlugin');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 
 function inject() {
+  ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */
