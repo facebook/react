@@ -85,8 +85,6 @@ function OrderedMapImpl(normalizedObj, computedLength) {
  * Validates a "public" key - that is, one that the public facing API supplies.
  * The key is then normalized for internal storage. In order to be considered
  * valid, all keys must be non-empty, defined, non-null strings or numbers.
- * Since this already costs a function invocation, will avoid additional call to
- * `throwIf`.
  *
  * @param {string?} key Validates that the key is suitable for use in a
  * `OrderedMap`.

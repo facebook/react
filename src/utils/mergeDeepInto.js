@@ -21,9 +21,8 @@
 
 "use strict";
 
-var keyMirror = require('keyMirror');
+var invariant = require('invariant');
 var mergeHelpers = require('mergeHelpers');
-var throwIf = require('throwIf');
 
 var ArrayStrategies = mergeHelpers.ArrayStrategies;
 var checkArrayStrategy = mergeHelpers.checkArrayStrategy;
@@ -32,20 +31,6 @@ var checkMergeLevel = mergeHelpers.checkMergeLevel;
 var checkMergeObjectArgs = mergeHelpers.checkMergeObjectArgs;
 var isTerminal = mergeHelpers.isTerminal;
 var normalizeMergeArg = mergeHelpers.normalizeMergeArg;
-
-var ERRORS = keyMirror({
-  RUN_TIME_ARRAY_MERGE_FAIL: null
-});
-
-if (__DEV__) {
-  ERRORS = {
-    RUN_TIME_ARRAY_MERGE_FAIL:
-      "The caller has not supplied an ArrayStrategy. This is supported as " +
-      "long as the data structures being merged do not contain two Arrays " +
-      "that must be merged together, which is exactly what has just " +
-      "happened. Change the call site to supply an Array merge resolver."
-  };
-}
 
 /**
  * Every deep merge function must handle merging in each of the following cases
@@ -161,9 +146,10 @@ var mergeSingleFieldDeep = function(one, two, key, arrayStrategy, level) {
     if (twoValIsTerminal) {             // [E]
       one[key] = twoVal;
     } else if (twoValIsArray) {         // [F]
-      throwIf(
-        !ArrayStrategies[arrayStrategy],
-        ERRORS.RUN_TIME_ARRAY_MERGE_FAIL
+      invariant(
+        ArrayStrategies[arrayStrategy],
+        'mergeDeepInto(...): Attempted to merge two arrays, but a valid ' +
+        'ArrayStrategy was not specified.'
       );
       // Else: At this point, the only other valid option is `IndexByIndex`
       if (arrayStrategy === ArrayStrategies.Clobber) {
@@ -234,7 +220,7 @@ var mergeSingleFieldDeep = function(one, two, key, arrayStrategy, level) {
  */
 var mergeDeepInto = function(one, twoParam, arrayStrategy) {
   var two = normalizeMergeArg(twoParam);
-  checkArrayStrategy(arrayStrategy);  // Will be checked twice, for now
+  checkArrayStrategy(arrayStrategy); // Will be checked twice, for now.
   mergeDeepIntoObjects(one, two, arrayStrategy, 0);
 };
 

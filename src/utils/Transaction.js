@@ -18,23 +18,7 @@
 
 "use strict";
 
-var throwIf = require('throwIf');
-
-var DUAL_TRANSACTION = 'DUAL_TRANSACTION';
-var MISSING_TRANSACTION = 'MISSING_TRANSACTION';
-if (__DEV__) {
-  DUAL_TRANSACTION =
-    'Cannot initialize transaction when there is already an outstanding ' +
-    'transaction. Common causes of this are trying to render a component ' +
-    'when you are already rendering a component or attempting a state ' +
-    'transition while in a render function. Another possibility is that ' +
-    'you are rendering new content (or state transitioning) in a ' +
-    'componentDidRender callback. If this is not the case, please report the ' +
-    'issue immediately.';
-
-  MISSING_TRANSACTION =
-    'Cannot close transaction when there is none open.';
-}
+var invariant = require('invariant');
 
 /**
  * `Transaction` creates a black box that is able to wrap any method such that
@@ -156,26 +140,33 @@ var Mixin = {
    * @return Return value from `method`.
    */
   perform: function(method, scope, a, b, c, d, e, f) {
-    throwIf(this.isInTransaction(), DUAL_TRANSACTION);
+    invariant(
+      !this.isInTransaction(),
+      'Transaction.perform(...): Cannot initialize a transaction when there ' +
+      'is already an outstanding transaction.'
+    );
     var memberStart = Date.now();
-    var err = null;
+    var errorToThrow = null;
     var ret;
     try {
       this.initializeAll();
       ret = method.call(scope, a, b, c, d, e, f);
-    } catch (ie_requires_catch) {
-      err = ie_requires_catch;
+    } catch (error) {
+      // IE8 requires `catch` in order to use `finally`.
+      errorToThrow = error;
     } finally {
       var memberEnd = Date.now();
       this.methodInvocationTime += (memberEnd - memberStart);
       try {
         this.closeAll();
-      } catch (closeAllErr) {
-        err = err || closeAllErr;
+      } catch (closeError) {
+        // If `method` throws, prefer to show that stack trace over any thrown
+        // by invoking `closeAll`.
+        errorToThrow = errorToThrow || closeError;
       }
     }
-    if (err) {
-      throw err;
+    if (errorToThrow) {
+      throw errorToThrow;
     }
     return ret;
   },
@@ -184,15 +175,17 @@ var Mixin = {
     this._isInTransaction = true;
     var transactionWrappers = this.transactionWrappers;
     var wrapperInitTimes = this.timingMetrics.wrapperInitTimes;
-    var err = null;
+    var errorToThrow = null;
     for (var i = 0; i < transactionWrappers.length; i++) {
       var initStart = Date.now();
       var wrapper = transactionWrappers[i];
       try {
-        this.wrapperInitData[i] =
-          wrapper.initialize ? wrapper.initialize.call(this) : null;
-      } catch (initErr) {
-        err = err || initErr;  // Remember the first error.
+        this.wrapperInitData[i] = wrapper.initialize ?
+          wrapper.initialize.call(this) :
+          null;
+      } catch (initError) {
+        // Prefer to show the stack trace of the first error.
+        errorToThrow = errorToThrow || initError;
         this.wrapperInitData[i] = Transaction.OBSERVED_ERROR;
       } finally {
         var curInitTime = wrapperInitTimes[i];
@@ -200,8 +193,8 @@ var Mixin = {
         wrapperInitTimes[i] = (curInitTime || 0) + (initEnd - initStart);
       }
     }
-    if (err) {
-      throw err;
+    if (errorToThrow) {
+      throw errorToThrow;
     }
   },
 
@@ -212,10 +205,13 @@ var Mixin = {
    * invoked).
    */
   closeAll: function() {
-    throwIf(!this.isInTransaction(), MISSING_TRANSACTION);
+    invariant(
+      this.isInTransaction(),
+      'Transaction.closeAll(): Cannot close transaction when none are open.'
+    );
     var transactionWrappers = this.transactionWrappers;
     var wrapperCloseTimes = this.timingMetrics.wrapperCloseTimes;
-    var err = null;
+    var errorToThrow = null;
     for (var i = 0; i < transactionWrappers.length; i++) {
       var wrapper = transactionWrappers[i];
       var closeStart = Date.now();
@@ -224,8 +220,9 @@ var Mixin = {
         if (initData !== Transaction.OBSERVED_ERROR) {
           wrapper.close && wrapper.close.call(this, initData);
         }
-      } catch (closeErr) {
-        err = err || closeErr;  // Remember the first error.
+      } catch (closeError) {
+        // Prefer to show the stack trace of the first error.
+        errorToThrow = errorToThrow || closeError;
       } finally {
         var closeEnd = Date.now();
         var curCloseTime = wrapperCloseTimes[i];
@@ -234,14 +231,16 @@ var Mixin = {
     }
     this.wrapperInitData.length = 0;
     this._isInTransaction = false;
-    if (err) {
-      throw err;
+    if (errorToThrow) {
+      throw errorToThrow;
     }
   }
 };
 
 var Transaction = {
+
   Mixin: Mixin,
+
   /**
    * Token to look for to determine if an error occured.
    */
