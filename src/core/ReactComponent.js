@@ -20,9 +20,11 @@
 
 "use strict";
 
+var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactID = require('ReactID');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
@@ -500,7 +502,23 @@ var ReactComponent = {
       var markup = this.mountComponent(rootID, transaction);
 
       if (shouldReuseMarkup) {
-        return;
+        if (ReactMarkupChecksum.canReuseMarkup(
+              markup,
+              getReactRootElementInContainer(container))) {
+          return;
+        } else {
+          if (__DEV__) {
+            console.warn(
+              'React attempted to use reuse markup in a container but the ' +
+              'checksum was invalid. This generally means that you are using ' +
+              'server rendering and the markup generated on the server was ' +
+              'not what the client was expecting. React injected new markup ' +
+              'to compensate which works but you have lost many of the ' +
+              'benefits of server rendering. Instead, figure out why the ' +
+              'markup being generated is different on the client or server.'
+            );
+          }
+        }
       }
 
       // Asynchronously inject markup by ensuring that the container is not in

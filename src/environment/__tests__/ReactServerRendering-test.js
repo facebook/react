@@ -26,12 +26,16 @@ require('mock-modules')
   .dontMock('React')
   .dontMock('ReactID')
   .dontMock('ReactServerRendering')
-  .dontMock('ReactTestUtils');
+  .dontMock('ReactTestUtils')
+  .dontMock('ReactMarkupChecksum');
+
+var mocks = require('mocks');
 
 var React;
 var ReactID;
 var ReactTestUtils;
 var ReactServerRendering;
+var ReactMarkupChecksum;
 var ExecutionEnvironment;
 
 describe('ReactServerRendering', function() {
@@ -43,6 +47,7 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
+    ReactMarkupChecksum = require('ReactMarkupChecksum');
   });
 
   it('should generate simple markup', function() {
@@ -54,7 +59,8 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<span ' + ReactID.ATTR_NAME + '="[^"]+">hello world</span>'
+      '<span ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+        ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
     );
   });
 
@@ -77,7 +83,8 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<div ' + ReactID.ATTR_NAME + '="[^"]+">' +
+      '<div ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+        ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
         '<span ' + ReactID.ATTR_NAME + '="[^"]+">' +
           '<span ' + ReactID.ATTR_NAME + '="[^"]+">My name is </span>' +
           '<span ' + ReactID.ATTR_NAME + '="[^"]+">child</span>' +
@@ -130,7 +137,8 @@ describe('ReactServerRendering', function() {
     );
 
     expect(response).toMatch(
-      '<span ' + ReactID.ATTR_NAME + '="[^"]+">' +
+      '<span ' + ReactID.ATTR_NAME + '="[^"]+" ' +
+        ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
         '<span ' + ReactID.ATTR_NAME + '="[^"]+">Component name: </span>' +
         '<span ' + ReactID.ATTR_NAME + '="[^"]+">TestComponent</span>' +
       '</span>'
@@ -148,7 +156,7 @@ describe('ReactServerRendering', function() {
     var numClicks = 0;
 
     var TestComponent = React.createClass({
-      componentWillMount: function() {
+      componentDidMount: function() {
         mountCount++;
       },
       click: function() {
@@ -179,18 +187,41 @@ describe('ReactServerRendering', function() {
     expect(mountCount).toEqual(2);
     expect(element.innerHTML).not.toEqual(lastMarkup);
 
-    // Now kill the node and render it on top of the old markup, as if
+    // Now kill the node and render it on top of server-rendered markup, as if
     // we used server rendering. We should mount again, but the markup should be
-    // unchanged.
-    lastMarkup = element.innerHTML;
+    // unchanged. We will append a sentinel at the end of innerHTML to be sure
+    // that innerHTML was not changed.
     React.unmountAndReleaseReactRootNode(element);
     expect(element.innerHTML).toEqual('');
-    element.innerHTML = lastMarkup;
-    // NOTE: we pass a different name here. This is to ensure that the markup
-    // being generated is not replaced.
-    var instance = React.renderComponent(<TestComponent name="y" />, element);
+
+    ExecutionEnvironment.canUseDOM = false;
+    ReactServerRendering.renderComponentToString(
+      <TestComponent name="x" />,
+      function(markup) {
+        lastMarkup = markup;
+      }
+    );
+    ExecutionEnvironment.canUseDOM = true;
+
+    element.innerHTML = lastMarkup + ' __sentinel__';
+
+    React.renderComponent(<TestComponent name="x" />, element);
     expect(mountCount).toEqual(3);
-    expect(element.innerHTML).toEqual(lastMarkup);
+    expect(element.innerHTML.indexOf('__sentinel__') > -1).toBe(true);
+    React.unmountAndReleaseReactRootNode(element);
+    expect(element.innerHTML).toEqual('');
+
+    // Now simulate a situation where the app is not idempotent. React should
+    // warn but do the right thing.
+    var _warn = console.warn;
+    console.warn = mocks.getMockFunction();
+    element.innerHTML = lastMarkup;
+    var instance = React.renderComponent(<TestComponent name="y" />, element);
+    expect(mountCount).toEqual(4);
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(element.innerHTML.length > 0).toBe(true);
+    expect(element.innerHTML).not.toEqual(lastMarkup);
+    console.warn = _warn;
 
     // Ensure the events system works
     expect(numClicks).toEqual(0);

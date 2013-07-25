@@ -19,6 +19,7 @@
 "use strict";
 
 var invariant = require('invariant');
+var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
@@ -35,14 +36,6 @@ var containersByReactRootID = {};
 if (__DEV__) {
   /** __DEV__-only mapping from reactRootID to root elements. */
   var rootElementsByReactRootID = {};
-}
-
-/**
- * @param {DOMElement} container DOM element that may contain a React component
- * @return {?*} DOM element that may have the reactRoot ID, or null.
- */
-function getReactRootElementInContainer(container) {
-  return container && container.firstChild;
 }
 
 /**
@@ -338,7 +331,6 @@ var ReactMount = {
     var reactRoot = ReactMount.findReactContainerForID(id);
     return ReactInstanceHandles.findComponentRoot(reactRoot, id);
   }
-
 };
 
 module.exports = ReactMount;
