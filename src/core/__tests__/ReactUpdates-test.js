@@ -237,6 +237,7 @@ describe('ReactUpdates', function() {
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1}, function() {
         instance.setState({x: 2}, function() {
+          expect(this).toBe(instance);
           innerCallbackRun = true;
           expect(instance.state.x).toBe(2);
           expect(updateCount).toBe(2);
