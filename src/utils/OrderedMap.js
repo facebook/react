@@ -18,6 +18,7 @@
 
 "use strict";
 
+var invariant = require('invariant');
 var mixInto = require('mixInto');
 var throwIf = require('throwIf');
 
@@ -349,6 +350,10 @@ var OrderedMapMethods = {
   mapKeyRange: function(cb, startKey, endKey, context) {
     var startIndex = this.indexOfKey(startKey);
     var endIndex = this.indexOfKey(endKey);
+    invariant(
+      startIndex !== undefined && endIndex !== undefined,
+      'mapKeyRange must be given keys that are present.'
+    );
     if (endIndex < startIndex) {
       throw new Error(RANGE_ARGS);
     }
@@ -358,6 +363,10 @@ var OrderedMapMethods = {
   forEachKeyRange: function(cb, startKey, endKey, context) {
     var startIndex = this.indexOfKey(startKey);
     var endIndex = this.indexOfKey(endKey);
+    invariant(
+      startIndex !== undefined && endIndex !== undefined,
+      'forEachKeyRange must be given keys that are present.'
+    );
     if (endIndex < startIndex) {
       throw new Error(RANGE_ARGS);
     }
