@@ -39,7 +39,6 @@ var ReactMount = require('ReactMount');
 var getID = ReactMount.getID;
 var setID = ReactMount.setID;
 var ReactEventEmitter;
-var ReactEventTopLevelCallback;
 var ReactTestUtils;
 var TapEventPlugin;
 
@@ -94,10 +93,9 @@ describe('ReactEventEmitter', function() {
     setID = ReactMount.setID;
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
-    ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
+    ReactEventEmitter.ensureListening(false);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });

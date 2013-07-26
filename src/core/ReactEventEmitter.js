@@ -244,7 +244,7 @@ var ReactEventEmitter = {
 
   /**
    * React references `ReactEventTopLevelCallback` using this property in order
-   * to allow dependency injection via `ensureListening`.
+   * to allow dependency injection.
    */
   TopLevelCallbackCreator: null,
 

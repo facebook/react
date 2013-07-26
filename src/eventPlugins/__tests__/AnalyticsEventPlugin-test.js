@@ -27,7 +27,6 @@ describe('AnalyticsEventPlugin', function() {
   var EventPluginRegistry;
   var React;
   var ReactEventEmitter;
-  var ReactEventTopLevelCallback;
   var ReactTestUtils;
 
   var DefaultEventPluginOrder;
@@ -42,7 +41,6 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
     ReactEventEmitter = require('ReactEventEmitter');
-    ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactTestUtils = require('ReactTestUtils');
 
     EventPluginRegistry._resetEventPlugins();
@@ -63,7 +61,7 @@ describe('AnalyticsEventPlugin', function() {
       'ChangeEventPlugin': ChangeEventPlugin
     });
 
-    ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
+    ReactEventEmitter.ensureListening(false);
   });
 
   it('should count events correctly', function() {
