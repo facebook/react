@@ -5,7 +5,7 @@ node_js:
 after_script:
 - curl -F "react=@build/react.js" -F "react.min=@build/react.min.js" -F "transformer=@build/JSXTransformer.js"
   -F "commit=$TRAVIS_COMMIT" -F "date=`git log --format='%ct' -1`" -F "pull_request=$TRAVIS_PULL_REQUEST"
-  -F "token=$SECRET_TOKEN" $SERVER
+  -F "token=$SECRET_TOKEN" -F "branch=$TRAVIS_BRANCH" $SERVER
 env:
   global:
   # SERVER
