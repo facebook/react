@@ -1,5 +1,5 @@
 /**
- * JSXTransformer v0.4.0
+ * JSXTransformer v0.4.1
  */
 (function(e){if("function"==typeof bootstrap)bootstrap("jsxtransformer",e);else if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else if("undefined"!=typeof ses){if(!ses.ok())return;ses.makeJSXTransformer=e}else"undefined"!=typeof window?window.JSXTransformer=e():global.JSXTransformer=e()})(function(){var define,ses,bootstrap,module,exports;
 return (function(e,t,n){function i(n,s){if(!t[n]){if(!e[n]){var o=typeof require=="function"&&require;if(!s&&o)return o(n,!0);if(r)return r(n,!0);throw new Error("Cannot find module '"+n+"'")}var u=t[n]={exports:{}};e[n][0].call(u.exports,function(t){var r=e[n][1][t];return i(r?r:t)},u,u.exports)}return t[n].exports}var r=typeof require=="function"&&require;for(var s=0;s<n.length;s++)i(n[s]);return i})({1:[function(require,module,exports){
@@ -6886,7 +6886,7 @@ define(function (require, exports, module) {
     var sourceRoot = util.getArg(sourceMap, 'sourceRoot', null);
     var sourcesContent = util.getArg(sourceMap, 'sourcesContent', null);
     var mappings = util.getArg(sourceMap, 'mappings');
-    var file = util.getArg(sourceMap, 'file');
+    var file = util.getArg(sourceMap, 'file', null);
 
     if (version !== this._version) {
       throw new Error('Unsupported version: ' + version);
@@ -8450,19 +8450,24 @@ module.exports = amdefine;
 
 'use strict';
 var runScripts;
+var headEl;
 
 var transform = require('./fbtransform/lib/transform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
 var transform = transform.bind(null, visitors.react);
 var docblock = require('./fbtransform/lib/docblock');
 
-var headEl = document.getElementsByTagName('head')[0];
 
 exports.transform = transform;
 
 exports.exec = function(code) {
   return eval(transform(code));
 };
+
+if (typeof window === "undefined" || window === null) {
+  return;
+}
+headEl = document.getElementsByTagName('head')[0];
 
 var run = exports.run = function(code) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
@@ -8473,10 +8478,6 @@ var run = exports.run = function(code) {
   scriptEl.innerHTML = functionBody;
   headEl.appendChild(scriptEl);
 };
-
-if (typeof window === "undefined" || window === null) {
-  return;
-}
 
 var load = exports.load = function(url, callback) {
   var xhr;
