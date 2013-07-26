@@ -20,7 +20,7 @@
 
 var PooledClass = require('PooledClass');
 
-var throwIf = require('throwIf');
+var invariant = require('invariant');
 var traverseAllChildren = require('traverseAllChildren');
 
 var threeArgumentPooler = PooledClass.threeArgumentPooler;
@@ -50,13 +50,13 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
   var mapFunction = mapBookKeeping.mapFunction;
   var mapContext = mapBookKeeping.mapContext;
   var mappedChild = mapFunction.call(mapContext, child, name, i);
-  // We found a component instance
-  if (__DEV__) {
-    throwIf(
-      mapResult.hasOwnProperty(name),
-      traverseAllChildren.DUPLICATE_KEY_ERROR
-    );
-  }
+  // We found a component instance.
+  invariant(
+    !mapResult.hasOwnProperty(name),
+    'mapAllChildren(...): Encountered two children with the same key, `%s`. ' +
+    'Children keys must be unique.',
+    name
+  );
   mapResult[name] = mappedChild;
 }
 

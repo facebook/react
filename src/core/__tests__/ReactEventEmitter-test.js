@@ -22,7 +22,7 @@ require('mock-modules')
     .dontMock('BrowserScroll')
     .dontMock('CallbackRegistry')
     .dontMock('EventPluginHub')
-    .dontMock('ReactID')
+    .dontMock('ReactMount')
     .dontMock('ReactEventEmitter')
     .dontMock('ReactInstanceHandles')
     .dontMock('EventPluginHub')
@@ -35,11 +35,10 @@ var keyOf = require('keyOf');
 var mocks = require('mocks');
 
 var EventPluginHub;
-var ReactID = require('ReactID');
-var getID = ReactID.getID;
-var setID = ReactID.setID;
+var ReactMount = require('ReactMount');
+var getID = ReactMount.getID;
+var setID = ReactMount.setID;
 var ReactEventEmitter;
-var ReactEventTopLevelCallback;
 var ReactTestUtils;
 var TapEventPlugin;
 
@@ -89,15 +88,14 @@ describe('ReactEventEmitter', function() {
     require('mock-modules').dumpCache();
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
-    ReactID = require('ReactID');
-    getID = ReactID.getID;
-    setID = ReactID.setID;
+    ReactMount = require('ReactMount');
+    getID = ReactMount.getID;
+    setID = ReactMount.setID;
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
-    ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEventEmitter.ensureListening(false, ReactEventTopLevelCallback);
+    ReactEventEmitter.ensureListening(false);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });

@@ -244,7 +244,7 @@ var ReactEventEmitter = {
 
   /**
    * React references `ReactEventTopLevelCallback` using this property in order
-   * to allow dependency injection via `ensureListening`.
+   * to allow dependency injection.
    */
   TopLevelCallbackCreator: null,
 
@@ -257,17 +257,20 @@ var ReactEventEmitter = {
    * reason, and only in some cases).
    *
    * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
-   * @param {object} TopLevelCallbackCreator
    */
-  ensureListening: function(touchNotMouse, TopLevelCallbackCreator) {
+  ensureListening: function(touchNotMouse) {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'ensureListening(...): Cannot toggle event listening in a Worker ' +
       'thread. This is likely a bug in the framework. Please report ' +
       'immediately.'
     );
+    invariant(
+      ReactEventEmitter.TopLevelCallbackCreator,
+      'ensureListening(...): Cannot be called without a top level callback ' +
+      'creator being injected.'
+    );
     if (!_isListening) {
-      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
       listenAtTopLevel(touchNotMouse);
       _isListening = true;
     }

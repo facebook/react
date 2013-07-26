@@ -62,9 +62,12 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should treat children like `defaultValue`', function() {
+    spyOn(console, 'warn');
+
     var stub = <textarea>giraffe</textarea>;
     var node = renderTextarea(stub);
 
+    expect(console.warn.argsForCall.length).toBe(1);
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
@@ -73,21 +76,29 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should allow numbers as children', function() {
+    spyOn(console, 'warn');
     var node = renderTextarea(<textarea>{17}</textarea>);
+    expect(console.warn.argsForCall.length).toBe(1);
     expect(node.value).toBe('17');
   });
 
   it("should throw with multiple or invalid children", function() {
+    spyOn(console, 'warn');
+
     expect(function() {
       ReactTestUtils.renderIntoDocument(
         <textarea>{'hello'}{'there'}</textarea>
       );
     }).toThrow();
 
+    expect(console.warn.argsForCall.length).toBe(1);
+
     expect(function() {
       ReactTestUtils.renderIntoDocument(
         <textarea><strong /></textarea>
       );
     }).toThrow();
+
+    expect(console.warn.argsForCall.length).toBe(2);
   });
 });

@@ -20,49 +20,14 @@
 
 "use strict";
 
+var invariant = require('invariant');
 var keyMirror = require('keyMirror');
-var throwIf = require('throwIf');
 
 /**
  * Maximum number of levels to traverse. Will catch circular structures.
  * @const
  */
 var MAX_MERGE_DEPTH = 36;
-
-var ERRORS = keyMirror({
-  MERGE_ARRAY_FAIL: null,
-  MERGE_CORE_FAILURE: null,
-  MERGE_TYPE_USAGE_FAILURE: null,
-  MERGE_DEEP_MAX_LEVELS: null,
-  MERGE_DEEP_NO_ARR_STRATEGY: null
-});
-
-if (__DEV__) {
-  ERRORS = {
-    MERGE_ARRAY_FAIL:
-      'Unsupported type passed to a merge function. You may have passed a ' +
-      'structure that contains an array and the merge function does not know ' +
-      'how to merge arrays. ',
-
-    MERGE_CORE_FAILURE:
-      'Critical assumptions about the merge functions have been violated. ' +
-      'This is the fault of the merge functions themselves, not necessarily ' +
-      'the callers.',
-
-    MERGE_TYPE_USAGE_FAILURE:
-      'Calling merge function with invalid types. You may call merge ' +
-      'functions (non-array non-terminal) OR (null/undefined) arguments. ' +
-      'mergeInto functions have the same requirements but with an added ' +
-      'restriction that the first parameter must not be null/undefined.',
-
-    MERGE_DEEP_MAX_LEVELS:
-      'Maximum deep merge depth exceeded. You may attempting to merge ' +
-      'circular structures in an unsupported way.',
-    MERGE_DEEP_NO_ARR_STRATEGY:
-      'You must provide an array strategy to deep merge functions to ' +
-      'instruct the deep merge how to resolve merging two arrays.'
-  };
-}
 
 /**
  * We won't worry about edge cases like new String('x') or new Boolean(true).
@@ -99,9 +64,11 @@ var mergeHelpers = {
    * @param {*} two Array to merge from.
    */
   checkMergeArrayArgs: function(one, two) {
-    throwIf(
-      !Array.isArray(one) || !Array.isArray(two),
-      ERRORS.MERGE_CORE_FAILURE
+    invariant(
+      Array.isArray(one) && Array.isArray(two),
+      'Critical assumptions about the merge functions have been violated. ' +
+      'This is the fault of the merge functions themselves, not necessarily ' +
+      'the callers.'
     );
   },
 
@@ -118,7 +85,12 @@ var mergeHelpers = {
    * @param {*} arg
    */
   checkMergeObjectArg: function(arg) {
-    throwIf(isTerminal(arg) || Array.isArray(arg), ERRORS.MERGE_CORE_FAILURE);
+    invariant(
+      !isTerminal(arg) && !Array.isArray(arg),
+      'Critical assumptions about the merge functions have been violated. ' +
+      'This is the fault of the merge functions themselves, not necessarily ' +
+      'the callers.'
+    );
   },
 
   /**
@@ -128,19 +100,23 @@ var mergeHelpers = {
    * @param {number} Level of recursion to validate against maximum.
    */
   checkMergeLevel: function(level) {
-    throwIf(level >= MAX_MERGE_DEPTH, ERRORS.MERGE_DEEP_MAX_LEVELS);
+    invariant(
+      level < MAX_MERGE_DEPTH,
+      'Maximum deep merge depth exceeded. You may be attempting to merge ' +
+      'circular structures in an unsupported way.'
+    );
   },
 
   /**
-   * Checks that a merge was not given a circular object or an object that had
-   * too great of depth.
+   * Checks that the supplied merge strategy is valid.
    *
-   * @param {number} Level of recursion to validate against maximum.
+   * @param {string} Array merge strategy.
    */
   checkArrayStrategy: function(strategy) {
-    throwIf(
-      strategy !== undefined && !(strategy in mergeHelpers.ArrayStrategies),
-      ERRORS.MERGE_DEEP_NO_ARR_STRATEGY
+    invariant(
+      strategy === undefined || strategy in mergeHelpers.ArrayStrategies,
+      'You must provide an array strategy to deep merge functions to ' +
+      'instruct the deep merge how to resolve merging two arrays.'
     );
   },
 
@@ -154,9 +130,8 @@ var mergeHelpers = {
   ArrayStrategies: keyMirror({
     Clobber: true,
     IndexByIndex: true
-  }),
+  })
 
-  ERRORS: ERRORS
 };
 
 module.exports = mergeHelpers;

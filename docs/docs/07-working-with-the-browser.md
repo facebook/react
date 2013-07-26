@@ -110,7 +110,7 @@ _Mounted_ composite components also support the following methods:
 > calling `this.getDOMNode()`.
 
 
-## Browser Suppport and Polyfills
+## Browser Support and Polyfills
 
 At Facebook, we support older browsers, including IE8. We've had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don't have a bunch of hacks scattered throughout our codebase and we can still expect our code to "just work". For example, instead of seeing `+new Date()`, we can just write `Date.now()`. Since the open source React is the same as what we use internally, we've carried over this philosophy of using forward thinking JS.
 

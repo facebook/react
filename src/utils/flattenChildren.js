@@ -18,7 +18,7 @@
 
 "use strict";
 
-var throwIf = require('throwIf');
+var invariant = require('invariant');
 var traverseAllChildren = require('traverseAllChildren');
 
 /**
@@ -27,14 +27,14 @@ var traverseAllChildren = require('traverseAllChildren');
  * @param {!string} name String name of key path to child.
  */
 function flattenSingleChildIntoContext(traverseContext, child, name) {
-  // We found a component instance
+  // We found a component instance.
   var result = traverseContext;
-  if (__DEV__) {
-    throwIf(
-      result.hasOwnProperty(name),
-      traverseAllChildren.DUPLICATE_KEY_ERROR
-    );
-  }
+  invariant(
+    !result.hasOwnProperty(name),
+    'flattenChildren(...): Encountered two children with the same key, `%s`. ' +
+    'Children keys must be unique.',
+    name
+  );
   result[name] = child;
 }
 
@@ -43,7 +43,7 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
  * @return {!object} flattened children keyed by name.
  */
 function flattenChildren(children) {
-  if (children === null || children === undefined) {
+  if (children == null) {
     return children;
   }
   var result = {};

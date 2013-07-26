@@ -25,7 +25,7 @@ var React;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactTestUtils;
-var ReactID;
+var ReactMount;
 var ReactDoNotBindDeprecated;
 
 var cx;
@@ -41,7 +41,7 @@ describe('ReactCompositeComponent', function() {
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactID = require('ReactID');
+    ReactMount = require('ReactMount');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -129,11 +129,13 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchorID = instance.getAnchorID();
-    var actualDOMAnchorNode = ReactID.getNode(anchorID);
+    var actualDOMAnchorNode = ReactMount.getNode(anchorID);
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
   it('should auto bind methods and values correctly', function() {
+    spyOn(console, 'warn');
+
     var ComponentClass = React.createClass({
       getInitialState: function() {
         return {valueToReturn: 'hi'};
@@ -168,7 +170,9 @@ describe('ReactCompositeComponent', function() {
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
     ReactTestUtils.renderIntoDocument(instance);
+    expect(console.warn.argsForCall.length).toBe(0);
     var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
+    expect(console.warn.argsForCall.length).toBe(1);
     var autoBound = instance.methodAutoBound;
     var explicitlyNotBound = instance.methodExplicitlyNotBound;
 

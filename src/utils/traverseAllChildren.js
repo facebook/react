@@ -21,22 +21,7 @@
 var ReactComponent = require('ReactComponent');
 var ReactTextComponent = require('ReactTextComponent');
 
-var throwIf = require('throwIf');
-
-/**
- * @polyFill Array.isArray
- */
-var DUPLICATE_KEY_ERROR = 'DUPLICATE_KEY_ERROR';
-var INVALID_CHILD = 'INVALID_CHILD';
-if (__DEV__) {
-  INVALID_CHILD =
-    'You may not pass a child of that type to a React component. It ' +
-    'is a common mistake to try to pass a standard browser DOM element ' +
-    'as a child of a React component.';
-  DUPLICATE_KEY_ERROR =
-    'You have two children with identical keys. Make sure that you set the ' +
-    '"key" property to a unique value such as a row ID.';
-}
+var invariant = require('invariant');
 
 /**
  * TODO: Test that:
@@ -88,7 +73,11 @@ var traverseAllChildrenImpl =
         subtreeCount = 1;
       } else {
         if (type === 'object') {
-          throwIf(children && children.nodeType === 1, INVALID_CHILD);
+          invariant(
+            children || children.nodeType !== 1,
+            'traverseAllChildren(...): Encountered an invalid child; DOM ' +
+            'elements are not valid children of React components.'
+          );
           for (var key in children) {
             if (children.hasOwnProperty(key)) {
               subtreeCount += traverseAllChildrenImpl(
@@ -134,11 +123,5 @@ function traverseAllChildren(children, callback, traverseContext) {
     traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
   }
 }
-
-/**
- * Export the error code for use in other walking/mapping code.
- */
-traverseAllChildren.DUPLICATE_KEY_ERROR = DUPLICATE_KEY_ERROR;
-
 
 module.exports = traverseAllChildren;

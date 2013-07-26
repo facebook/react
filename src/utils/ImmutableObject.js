@@ -14,112 +14,111 @@
  * limitations under the License.
  *
  * @providesModule ImmutableObject
+ * @typechecks
  */
 
 "use strict";
 
-var keyMirror = require('keyMirror');
+var invariant = require('invariant');
 var merge = require('merge');
 var mergeInto = require('mergeInto');
 var mergeHelpers = require('mergeHelpers');
-var throwIf = require('throwIf');
 
 var checkMergeObjectArgs = mergeHelpers.checkMergeObjectArgs;
 var isTerminal = mergeHelpers.isTerminal;
 
 /**
- * Simple wrapper around javascript key/value objects that provide a dev time
- * guarantee of immutability (assuming all modules that may potentially mutate
- * include a "use strict" declaration). Retaining immutability requires CPU
- * cycles (in order to perform the freeze), but this computation can be avoided
- * in production. The fact that mutation attempts in __DEV__ will be caught,
- * allows us to reasonably assume that mutation on those objects won't even be
- * attempted in production. This means that an object being an instanceof
- * `ImmutableObject` implies that the object may never change.
- *
- * TODO: Require strict mode in source files that use ImmutableObject (lint
- * rule).
- *
- * @class ImmutableObject
+ * Wrapper around JavaScript objects that provide a guarantee of immutability at
+ * developer time when strict mode is used. The extra computations required to
+ * enforce immutability is stripped out in production for performance reasons.
  */
-
-var ERRORS;
 var ImmutableObject;
 
-if (__DEV__) {
-  ERRORS = {
-    INVALID_MAP_SET_ARG: 'You have attempted to set fields on an object that ' +
-      'is not an instance of ImmutableObject'
-  };
+function assertImmutableObject(immutableObject) {
+  invariant(
+    immutableObject instanceof ImmutableObject,
+    'ImmutableObject: Attempted to set fields on an object that is not an ' +
+    'instance of ImmutableObject.'
+  );
+}
 
+if (__DEV__) {
   /**
    * Constructs an instance of `ImmutableObject`.
    *
-   * @param {!Object} initMap The initial set of properties.
+   * @param {?object} initialProperties The initial set of properties.
    * @constructor
    */
-  ImmutableObject = function(initMap) {
-    mergeInto(this, initMap);
-    deepFreeze(this, initMap);
+  ImmutableObject = function ImmutableObject(initialProperties) {
+    mergeInto(this, initialProperties);
+    deepFreeze(this);
   };
 
   /**
-   * Objects that are instances of `ImmutableObject` are assumed to be deep
-   * frozen.
-   * @param {!Object} o The object to deep freeze.
-   * @return {!boolean} Whether or not deep freeze is needed.
-   */
-  var shouldRecurseFreeze = function(o) {
-    return (typeof o) === 'object' &&
-        !(o instanceof ImmutableObject) && o !== null;
-  };
-
-  /**
-   * Freezes an object `o` deeply. Invokes `shouldRecurseFreeze` to determine if
-   * further freezing is needed.
+   * Checks if an object should be deep frozen. Instances of `ImmutableObject`
+   * are assumed to have already been deep frozen.
    *
-   * @param {!Object} o The object to freeze.
+   * @param {*} object The object to check.
+   * @return {boolean} Whether or not deep freeze is needed.
    */
-  var deepFreeze = function(o) {
-    var prop;
-    Object.freeze(o); // First freeze the object.
-    for (prop in o) {
-      var field = o[prop];
-      if (o.hasOwnProperty(prop) && shouldRecurseFreeze(field)) {
+  var shouldRecurseFreeze = function(object) {
+    return (
+      typeof object === 'object' &&
+      !(object instanceof ImmutableObject) &&
+      object !== null
+    );
+  };
+
+  /**
+   * Freezes the supplied object deeply.
+   *
+   * @param {*} object The object to freeze.
+   */
+  var deepFreeze = function(object) {
+    Object.freeze(object); // First freeze the object.
+    for (var prop in object) {
+      var field = object[prop];
+      if (object.hasOwnProperty(prop) && shouldRecurseFreeze(field)) {
         deepFreeze(field);
       }
     }
   };
 
   /**
-   * Returns a new ImmutableObject that is that is the same as the parameter
-   * `immutableObject` but with the differences specified in `put`.
-   * @param {!ImmutableObject} ImmutableObject The ImmutableObject object to set
-   * fields on.
-   * @param {!Object} put Subset of fields to merge into the returned result.
-   * @return {!ImmutableObject} The result of merging in `put` fields.
+   * Returns a new ImmutableObject that is identical to the supplied object but
+   * with the supplied changes, `put`.
+   *
+   * @param {ImmutableObject} immutableObject Starting object.
+   * @param {?object} put Fields to merge into the object.
+   * @return {ImmutableObject} The result of merging in `put` fields.
    */
   ImmutableObject.set = function(immutableObject, put) {
-    throwIf(
-      !(immutableObject instanceof ImmutableObject),
-      ERRORS.INVALID_MAP_SET_ARG
-    );
+    assertImmutableObject(immutableObject);
     var totalNewFields = merge(immutableObject, put);
     return new ImmutableObject(totalNewFields);
   };
 
 } else {
-  ERRORS = keyMirror({INVALID_MAP_SET_ARG: null});
-
-  ImmutableObject = function(initMap) {
-    mergeInto(this, initMap);
+  /**
+   * Constructs an instance of `ImmutableObject`.
+   *
+   * @param {?object} initialProperties The initial set of properties.
+   * @constructor
+   */
+  ImmutableObject = function ImmutableObject(initialProperties) {
+    mergeInto(this, initialProperties);
   };
 
+  /**
+   * Returns a new ImmutableObject that is identical to the supplied object but
+   * with the supplied changes, `put`.
+   *
+   * @param {ImmutableObject} immutableObject Starting object.
+   * @param {?object} put Fields to merge into the object.
+   * @return {ImmutableObject} The result of merging in `put` fields.
+   */
   ImmutableObject.set = function(immutableObject, put) {
-    throwIf(
-      !(immutableObject instanceof ImmutableObject),
-      ERRORS.INVALID_MAP_SET_ARG
-    );
+    assertImmutableObject(immutableObject);
     var newMap = new ImmutableObject(immutableObject);
     mergeInto(newMap, put);
     return newMap;
@@ -127,8 +126,12 @@ if (__DEV__) {
 }
 
 /**
- * Sugar for `ImmutableObject.set(ImmutableObject, {fieldName: putField})`
- * @see ImmutableObject.set
+ * Sugar for `ImmutableObject.set(ImmutableObject, {fieldName: putField})`.
+ *
+ * @param {ImmutableObject} immutableObject Object on which to set field.
+ * @param {string} fieldName Name of the field to set.
+ * @param {*} putField Value of the field to set.
+ * @return {ImmutableObject} [description]
  */
 ImmutableObject.setField = function(immutableObject, fieldName, putField) {
   var put = {};
@@ -137,15 +140,15 @@ ImmutableObject.setField = function(immutableObject, fieldName, putField) {
 };
 
 /**
- * Returns a new ImmutableObject that is that is the same as the parameter
- * `immutableObject` but with the differences specified in `put` recursively
- * applied.
+ * Returns a new ImmutableObject that is identical to the supplied object but
+ * with the supplied changes recursively applied.
+ *
+ * @param {ImmutableObject} immutableObject Object on which to set fields.
+ * @param {object} put Fields to merge into the object.
+ * @return {ImmutableObject} The result of merging in `put` fields.
  */
 ImmutableObject.setDeep = function(immutableObject, put) {
-  throwIf(
-    !(immutableObject instanceof ImmutableObject),
-    ERRORS.INVALID_MAP_SET_ARG
-  );
+  assertImmutableObject(immutableObject);
   return _setDeep(immutableObject, put);
 };
 

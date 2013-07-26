@@ -23,11 +23,11 @@
 describe('ReactDOMIDOperations', function() {
   var DOMPropertyOperations = require('DOMPropertyOperations');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
-  var ReactID = require('ReactID');
+  var ReactMount = require('ReactMount');
   var keyOf = require('keyOf');
 
   it('should disallow updating special properties', function() {
-    spyOn(ReactID, "getNode");
+    spyOn(ReactMount, "getNode");
     spyOn(DOMPropertyOperations, "setValueForProperty");
 
     expect(function() {
@@ -39,7 +39,7 @@ describe('ReactDOMIDOperations', function() {
     }).toThrow();
 
     expect(
-      ReactID.getNode.argsForCall[0][0]
+      ReactMount.getNode.argsForCall[0][0]
     ).toBe('testID');
 
     expect(
@@ -49,7 +49,7 @@ describe('ReactDOMIDOperations', function() {
 
   it('should update innerHTML and special-case whitespace', function() {
     var stubNode = document.createElement('div');
-    spyOn(ReactID, "getNode").andReturn(stubNode);
+    spyOn(ReactMount, "getNode").andReturn(stubNode);
 
     ReactDOMIDOperations.updateInnerHTMLByID(
       'testID',
@@ -57,7 +57,7 @@ describe('ReactDOMIDOperations', function() {
     );
 
     expect(
-      ReactID.getNode.argsForCall[0][0]
+      ReactMount.getNode.argsForCall[0][0]
     ).toBe('testID');
 
     expect(stubNode.innerHTML).toBe('&nbsp;testContent');

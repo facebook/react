@@ -6,48 +6,29 @@ var Ap = Array.prototype;
 var slice = Ap.slice;
 var Fp = Function.prototype;
 
-var global = Function("return this")();
-global.require = require;
-
 if (!Fp.bind) {
   // PhantomJS doesn't support Function.prototype.bind natively, so
   // polyfill it whenever this module is required.
   Fp.bind = function(context) {
     var func = this;
     var args = slice.call(arguments, 1);
-    var bound;
 
-    if (func.prototype) {
-      if (args.length > 0) {
-        bound = function() {
-          return func.apply(
-            !(this instanceof func) && context || this,
-            args.concat(slice.call(arguments))
-          );
-        };
-      } else {
-        bound = function() {
-          return func.apply(
-            !(this instanceof func) && context || this,
-            arguments
-          );
-        };
-      }
-
-      bound.prototype = Object.create(func.prototype);
-
-    } else if (args.length > 0) {
-      bound = function() {
-        return func.apply(
-          context || this,
-          args.concat(slice.call(arguments))
-        );
-      };
-    } else {
-      bound = function() {
-        return func.apply(context || this, arguments);
-      };
+    function bound() {
+      var invokedAsConstructor = func.prototype && (this instanceof func);
+      return func.apply(
+        // Ignore the context parameter when invoking the bound function
+        // as a constructor. Note that this includes not only constructor
+        // invocations using the new keyword but also calls to base class
+        // constructors such as BaseClass.call(this, ...) or super(...).
+        !invokedAsConstructor && context || this,
+        args.concat(slice.call(arguments))
+      );
     }
+
+    // The bound function must share the .prototype of the unbound
+    // function so that any object created by one constructor will count
+    // as an instance of both constructors.
+    bound.prototype = func.prototype;
 
     return bound;
   };
@@ -58,3 +39,16 @@ require("reactComponentExpect");
 require("mocks");
 require("mock-modules");
 require("./mock-timers");
+
+exports.enableTest = function(testID) {
+  require("../" + testID);
+};
+
+exports.removeNextSiblings = function(node) {
+  var parent = node && node.parentNode;
+  if (parent) {
+    while (node.nextSibling) {
+      parent.removeChild(node.nextSibling);
+    }
+  }
+};

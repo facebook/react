@@ -20,7 +20,7 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -58,7 +58,7 @@ mixInto(ReactTextComponent, {
   mountComponent: function(rootID) {
     ReactComponent.Mixin.mountComponent.call(this, rootID);
     return (
-      '<span ' + ReactID.ATTR_NAME + '="' + rootID + '">' +
+      '<span ' + ReactMount.ATTR_NAME + '="' + rootID + '">' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );

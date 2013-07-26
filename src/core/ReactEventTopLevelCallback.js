@@ -21,8 +21,7 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitter = require('ReactEventEmitter');
-var ReactID = require('ReactID');
-var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactMount = require('ReactMount');
 
 var getEventTarget = require('getEventTarget');
 
@@ -34,7 +33,7 @@ var _topLevelListenersEnabled = true;
 
 /**
  * Top-level callback creator used to implement event handling using delegation.
- * This is used via dependency injection in `ReactEventEmitter.ensureListening`.
+ * This is used via dependency injection.
  */
 var ReactEventTopLevelCallback = {
 
@@ -73,10 +72,10 @@ var ReactEventTopLevelCallback = {
           nativeEvent.srcElement !== nativeEvent.target) {
         nativeEvent.target = nativeEvent.srcElement;
       }
-      var topLevelTarget = ReactInstanceHandles.getFirstReactDOM(
+      var topLevelTarget = ReactMount.getFirstReactDOM(
         getEventTarget(nativeEvent)
       ) || ExecutionEnvironment.global;
-      var topLevelTargetID = ReactID.getID(topLevelTarget) || '';
+      var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
       ReactEventEmitter.handleTopLevel(
         topLevelType,
         topLevelTarget,

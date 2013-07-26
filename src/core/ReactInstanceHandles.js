@@ -19,8 +19,6 @@
 
 "use strict";
 
-var ReactID = require('ReactID');
-
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
@@ -240,103 +238,6 @@ var ReactInstanceHandles = {
   },
 
   /**
-   * True if the supplied `node` is rendered by React.
-   *
-   * @param {*} node DOM Element to check.
-   * @return {boolean} True if the DOM Element appears to be rendered by React.
-   * @internal
-   */
-  isRenderedByReact: function(node) {
-    if (node.nodeType !== 1) {
-      // Not a DOMElement, therefore not a React component
-      return false;
-    }
-    var id = ReactID.getID(node);
-    return id ? id.charAt(0) === SEPARATOR : false;
-  },
-
-  /**
-   * Traverses up the ancestors of the supplied node to find a node that is a
-   * DOM representation of a React component.
-   *
-   * @param {*} node
-   * @return {?DOMEventTarget}
-   * @internal
-   */
-  getFirstReactDOM: function(node) {
-    var current = node;
-    while (current && current.parentNode !== current) {
-      if (ReactInstanceHandles.isRenderedByReact(current)) {
-        return current;
-      }
-      current = current.parentNode;
-    }
-    return null;
-  },
-
-  /**
-   * Finds a node with the supplied `id` inside of the supplied `ancestorNode`.
-   * Exploits the ID naming scheme to perform the search quickly.
-   *
-   * @param {DOMEventTarget} ancestorNode Search from this root.
-   * @pararm {string} id ID of the DOM representation of the component.
-   * @return {DOMEventTarget} DOM node with the supplied `id`.
-   * @internal
-   */
-  findComponentRoot: function(ancestorNode, id) {
-    var firstChildren = [ancestorNode.firstChild];
-    var childIndex = 0;
-
-    while (childIndex < firstChildren.length) {
-      var child = firstChildren[childIndex++];
-      while (child) {
-        var childID = ReactID.getID(child);
-        if (childID) {
-          if (id === childID) {
-            return child;
-          } else if (isAncestorIDOf(childID, id)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-            break;
-          } else {
-            // TODO This should not be necessary if the ID hierarchy is
-            // correct, but is occasionally necessary if the DOM has been
-            // modified in unexpected ways.
-            firstChildren.push(child.firstChild);
-          }
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
-          firstChildren.push(child.firstChild);
-        }
-        child = child.nextSibling;
-      }
-    }
-
-    if (__DEV__) {
-      console.error(
-        'Error while invoking `findComponentRoot` with the following ' +
-        'ancestor node:',
-        ancestorNode
-      );
-    }
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g. by the browser).',
-      id,
-      ReactID.getID(ancestorNode)
-    );
-  },
-
-  /**
    * Gets the DOM ID of the React component that is the root of the tree that
    * contains the React component with the supplied DOM ID.
    *
@@ -400,7 +301,11 @@ var ReactInstanceHandles = {
    * Exposed for unit testing.
    * @private
    */
-  _getNextDescendantID: getNextDescendantID
+  _getNextDescendantID: getNextDescendantID,
+
+  isAncestorIDOf: isAncestorIDOf,
+
+  SEPARATOR: SEPARATOR
 
 };
 

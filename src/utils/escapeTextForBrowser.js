@@ -14,19 +14,12 @@
  * limitations under the License.
  *
  * @providesModule escapeTextForBrowser
+ * @typechecks static-only
  */
 
 "use strict";
 
-var throwIf = require('throwIf');
-
-var ESCAPE_TYPE_ERR;
-
-if (__DEV__) {
-  ESCAPE_TYPE_ERR =
-    'The React core has attempted to escape content that is of a ' +
-    'mysterious type (object etc) Escaping only works on numbers and strings';
-}
+var invariant = require('invariant');
 
 var ESCAPE_LOOKUP = {
   "&": "&amp;",
@@ -41,13 +34,19 @@ function escaper(match) {
   return ESCAPE_LOOKUP[match];
 }
 
-var escapeTextForBrowser = function (text) {
+/**
+ * Escapes text to prevent scripting attacks.
+ *
+ * @param {number|string} text Text value to escape.
+ * @return {string} An escaped string.
+ */
+function escapeTextForBrowser(text) {
   var type = typeof text;
-  var invalid = type === 'object';
-  if (__DEV__) {
-    throwIf(invalid, ESCAPE_TYPE_ERR);
-  }
-  if (text === '' || invalid) {
+  invariant(
+    type !== 'object',
+    'escapeTextForBrowser(...): Attempted to escape an object.'
+  );
+  if (text === '') {
     return '';
   } else {
     if (type === 'string') {
@@ -56,6 +55,6 @@ var escapeTextForBrowser = function (text) {
       return (''+text).replace(/[&><"'\/]/g, escaper);
     }
   }
-};
+}
 
 module.exports = escapeTextForBrowser;

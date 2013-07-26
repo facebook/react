@@ -25,7 +25,7 @@ var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var React = require('React');
-var ReactID = require('ReactID');
+var ReactMount = require('ReactMount');
 
 describe('ref swapping', function() {
   // TODO: uncomment this test once we can run in phantom, which
@@ -61,7 +61,7 @@ describe('ref swapping', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div(null, 'child')
     );
-    var argNode = ReactID.getNode(argDiv._rootNodeID);
+    var argNode = ReactMount.getNode(argDiv._rootNodeID);
     expect(argNode.innerHTML).toBe('child');
   });
 
@@ -69,7 +69,7 @@ describe('ref swapping', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = ReactID.getNode(conflictDiv._rootNodeID);
+    var conflictNode = ReactMount.getNode(conflictDiv._rootNodeID);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -111,7 +111,7 @@ describe('ref swapping', function() {
         theBird: <div class="bird" />
       }
     });
-    var root = ReactID.getNode(myDiv._rootNodeID);
+    var root = ReactMount.getNode(myDiv._rootNodeID);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

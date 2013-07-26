@@ -20,9 +20,10 @@
 
 "use strict";
 
+var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactID = require('ReactID');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -255,7 +256,7 @@ var ReactComponent = {
         this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
-      return ReactID.getNode(this._rootNodeID);
+      return ReactMount.getNode(this._rootNodeID);
     },
 
     /**
@@ -381,7 +382,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
       }
-      ReactID.purgeID(this._rootNodeID);
+      ReactMount.purgeID(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -498,15 +499,28 @@ var ReactComponent = {
         container && container.nodeType === 1,
         'mountComponentIntoNode(...): Target container is not a DOM element.'
       );
-      var renderStart = Date.now();
       var markup = this.mountComponent(rootID, transaction);
-      ReactMount.totalInstantiationTime += (Date.now() - renderStart);
 
       if (shouldReuseMarkup) {
-        return;
+        if (ReactMarkupChecksum.canReuseMarkup(
+              markup,
+              getReactRootElementInContainer(container))) {
+          return;
+        } else {
+          if (__DEV__) {
+            console.warn(
+              'React attempted to use reuse markup in a container but the ' +
+              'checksum was invalid. This generally means that you are using ' +
+              'server rendering and the markup generated on the server was ' +
+              'not what the client was expecting. React injected new markup ' +
+              'to compensate which works but you have lost many of the ' +
+              'benefits of server rendering. Instead, figure out why the ' +
+              'markup being generated is different on the client or server.'
+            );
+          }
+        }
       }
 
-      var injectionStart = Date.now();
       // Asynchronously inject markup by ensuring that the container is not in
       // the document when settings its `innerHTML`.
       var parent = container.parentNode;
@@ -522,7 +536,6 @@ var ReactComponent = {
       } else {
         container.innerHTML = markup;
       }
-      ReactMount.totalInjectionTime += (Date.now() - injectionStart);
     },
 
     /**

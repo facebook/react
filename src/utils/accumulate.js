@@ -18,50 +18,34 @@
 
 "use strict";
 
-var throwIf = require('throwIf');
-
-var INVALID_ARGS = 'INVALID_ACCUM_ARGS';
-
-if (__DEV__) {
-  INVALID_ARGS =
-    'accumulate requires non empty (non-null, defined) next ' +
-    'values. All arrays accumulated must not contain any empty items.';
-}
+var invariant = require('invariant');
 
 /**
- * Accumulates items that must never be empty, into a result in a manner that
- * conserves memory - avoiding allocation of arrays until they are needed. The
- * accumulation may start and/or end up being a single element or an array
- * depending on the total count (if greater than one, an array is allocated).
- * Handles most common case first (starting with an empty current value and
- * acquiring one).
- * @return {Accumulation} An accumulation which is either a single item or an
- * Array of items.
+ * Accumulates items that must not be null or undefined.
+ *
+ * This is used to conserve memory by avoiding array allocations.
+ *
+ * @return {*|array<*>} An accumulation of items.
  */
-function accumulate(cur, next) {
-  var curValIsEmpty = cur == null;   // Will test for emptiness (null/undef)
-  var nextValIsEmpty = next === null;
-  if (__DEV__) {
-    throwIf(nextValIsEmpty, INVALID_ARGS);
-  }
-  if (nextValIsEmpty) {
-    return cur;
+function accumulate(current, next) {
+  invariant(
+    next != null,
+    'accumulate(...): Accumulated items must be not be null or undefined.'
+  );
+  if (current == null) {
+    return next;
   } else {
-    if (curValIsEmpty) {
-      return next;
+    // Both are not empty. Warning: Never call x.concat(y) when you are not
+    // certain that x is an Array (x could be a string with concat method).
+    var currentIsArray = Array.isArray(current);
+    var nextIsArray = Array.isArray(next);
+    if (currentIsArray) {
+      return current.concat(next);
     } else {
-      // Both are not empty. Warning: Never call x.concat(y) when you are not
-      // certain that x is an Array (x could be a string with concat method).
-      var curIsArray = Array.isArray(cur);
-      var nextIsArray = Array.isArray(next);
-      if (curIsArray) {
-        return cur.concat(next);
+      if (nextIsArray) {
+        return [current].concat(next);
       } else {
-        if (nextIsArray) {
-          return [cur].concat(next);
-        } else {
-          return [cur, next];
-        }
+        return [current, next];
       }
     }
   }

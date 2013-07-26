@@ -18,6 +18,7 @@
  */
 "use strict";
 
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
@@ -33,7 +34,9 @@ function renderComponentToString(component, callback) {
   transaction.reinitializeTransaction();
   try {
     transaction.perform(function() {
-      callback(component.mountComponent(id, transaction));
+      var markup = component.mountComponent(id, transaction);
+      markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
+      callback(markup);
     }, null);
   } finally {
     ReactReconcileTransaction.release(transaction);
