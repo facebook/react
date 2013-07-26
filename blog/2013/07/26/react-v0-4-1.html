@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.3.3</title>
+  <title>React | React v0.4.1</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.3.3" />
+  <meta property="og:title" content="React | React v0.4.1" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -57,7 +57,7 @@
     <h3>Recent posts</h3>
     <ul>
     
-      <li><a href="/react/blog/2013/07/26/react-v0-4-1.html">React v0.4.1</a></li>
+      <li><a href="/react/blog/2013/07/26/react-v0-4-1.html" class="active">React v0.4.1</a></li>
     
       <li><a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a></li>
     
@@ -71,7 +71,7 @@
     
       <li><a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a></li>
     
-      <li><a href="/react/blog/2013/06/21/react-v0-3-3.html" class="active">React v0.3.3</a></li>
+      <li><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></li>
     
       <li><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></li>
     
@@ -86,38 +86,37 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.3.3</h1>
-    <p class="meta">June 21, 2013 by Paul O'Shannessy</p>
+    <h1>React v0.4.1</h1>
+    <p class="meta">July 26, 2013 by Paul O'Shannessy</p>
 
     <hr>
 
     <div class="post">
-      <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
-
-<h2>react-tools</h2>
-
-<ul>
-<li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
-<li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
-<li>Freeze our esprima dependency.</li>
-</ul>
+      <p>React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.</p>
 
 <h2>React</h2>
 
 <ul>
-<li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
+<li><code>setState</code> callbacks are now executed in the scope of your component.</li>
+<li><code>click</code> events now work on Mobile Safari.</li>
+<li>Prevent a potential error in event handling if <code>Object.prototype</code> is extended.</li>
+<li>Don&#39;t set DOM attributes to the string <code>&quot;undefined&quot;</code> on update when previously defined.</li>
+<li>Improved support for <code>&lt;iframe&gt;</code> attributes.</li>
+<li>Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.</li>
 </ul>
 
 <h2>JSXTransformer</h2>
 
 <ul>
-<li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
+<li>Improved environment detection so it can be run in a non-browser environment.</li>
 </ul>
+
+<p><a href="/react/downloads.html">Download it now!</a></p>
 
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html"></div>
   </div>
 </section>
 
