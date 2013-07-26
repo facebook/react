@@ -23,7 +23,7 @@ var React = require('React');
 
 describe('Danger', function() {
 
-  describe('dangerouslyInsertMarkupAt', function() {
+  describe('dangerouslyRenderMarkup', function() {
     var Danger;
     var transaction;
 
@@ -37,33 +37,71 @@ describe('Danger', function() {
 
     it('should render markup', function() {
       var markup = (<div />).mountComponent('.rX', transaction);
-      var parent = document.createElement('div');
+      var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
-      Danger.dangerouslyInsertMarkupAt(parent, markup, 0);
-
-      expect(parent.innerHTML).toBe('<div data-reactid=".rX"></div>');
+      expect(output.nodeName).toBe('DIV');
     });
 
     it('should render markup with props', function() {
       var markup = (<div className="foo" />).mountComponent('.rX', transaction);
-      var parent = document.createElement('div');
+      var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
-      Danger.dangerouslyInsertMarkupAt(parent, markup, 0);
-
-      expect(parent.innerHTML).toBe(
-        '<div class="foo" data-reactid=".rX"></div>'
-      );
+      expect(output.nodeName).toBe('DIV');
+      expect(output.className).toBe('foo');
     });
 
     it('should render wrapped markup', function() {
       var markup = (<th />).mountComponent('.rX', transaction);
-      var parent = document.createElement('div');
+      var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
-      Danger.dangerouslyInsertMarkupAt(parent, markup, 0);
-
-      expect(parent.innerHTML).toBe('<th data-reactid=".rX"></th>');
+      expect(output.nodeName).toBe('TH');
     });
 
+    it('should render lists of markup with similar `nodeName`', function() {
+      var renderedMarkup = Danger.dangerouslyRenderMarkup(
+        ['<p>1</p>', '<p>2</p>', '<p>3</p>']
+      );
+
+      expect(renderedMarkup.length).toBe(3);
+
+      expect(renderedMarkup[0].nodeName).toBe('P');
+      expect(renderedMarkup[1].nodeName).toBe('P');
+      expect(renderedMarkup[2].nodeName).toBe('P');
+
+      expect(renderedMarkup[0].innerHTML).toBe('1');
+      expect(renderedMarkup[1].innerHTML).toBe('2');
+      expect(renderedMarkup[2].innerHTML).toBe('3');
+    });
+
+    it('should render lists of markup with different `nodeName`', function() {
+      var renderedMarkup = Danger.dangerouslyRenderMarkup(
+        ['<p>1</p>', '<tr>2</tr>', '<p>3</p>']
+      );
+
+      expect(renderedMarkup.length).toBe(3);
+
+      expect(renderedMarkup[0].nodeName).toBe('P');
+      expect(renderedMarkup[1].nodeName).toBe('TR');
+      expect(renderedMarkup[2].nodeName).toBe('P');
+
+      expect(renderedMarkup[0].innerHTML).toBe('1');
+      expect(renderedMarkup[1].innerHTML).toBe('2');
+      expect(renderedMarkup[2].innerHTML).toBe('3');
+    });
+
+    it('should throw when rendering invalid markup', function() {
+      expect(function() {
+        Danger.dangerouslyRenderMarkup(['']);
+      }).toThrow(
+        'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
+      );
+
+      expect(function() {
+        Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
+      }).toThrow(
+        'Invariant Violation: dangerouslyRenderMarkupO(...): Unexpected nodes.'
+      );
+    });
   });
 
 });

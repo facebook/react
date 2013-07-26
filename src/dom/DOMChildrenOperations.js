@@ -14,131 +14,108 @@
  * limitations under the License.
  *
  * @providesModule DOMChildrenOperations
+ * @typechecks static-only
  */
-
-// Empty blocks improve readability so disable that warning
-// jshint -W035
 
 "use strict";
 
 var Danger = require('Danger');
+var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
-var insertNodeAt = require('insertNodeAt');
-var keyOf = require('keyOf');
-var throwIf = require('throwIf');
-
-var NON_INCREASING_OPERATIONS;
-if (__DEV__) {
-  NON_INCREASING_OPERATIONS =
-    'DOM child management operations must be provided in order ' +
-    'of increasing destination index. This is likely an issue with ' +
-    'the core framework.';
+/**
+ * Inserts `childNode` as a child of `parentNode` at the `index`.
+ *
+ * @param {DOMElement} parentNode Parent node in which to insert.
+ * @param {DOMElement} childNode Child node to insert.
+ * @param {number} index Index at which to insert the child.
+ * @internal
+ */
+function insertChildAt(parentNode, childNode, index) {
+  var childNodes = parentNode.childNodes;
+  if (childNodes[index] === childNode) {
+    return;
+  }
+  // If `childNode` is already a child of `parentNode`, remove it so that
+  // computing `childNodes[index]` takes into account the removal.
+  if (childNode.parentNode === parentNode) {
+    parentNode.removeChild(childNode);
+  }
+  if (index >= childNodes.length) {
+    parentNode.appendChild(childNode);
+  } else {
+    parentNode.insertBefore(childNode, childNodes[index]);
+  }
 }
 
-var MOVE_NODE_AT_ORIG_INDEX = keyOf({moveFrom: null});
-var INSERT_MARKUP = keyOf({insertMarkup: null});
-var REMOVE_AT = keyOf({removeAt: null});
-
 /**
- * In order to carry out movement of DOM nodes without knowing their IDs, we
- * have to first store knowledge about nodes' original indices before beginning
- * to carry out the sequence of operations. Once we begin the sequence, the DOM
- * indices in future instructions are no longer valid.
- *
- * @param {Element} parent Parent DOM node.
- * @param {Object} childOperations Description of child operations.
- * @return {Array?} Sparse array containing elements by their current index in
- * the DOM.
- */
-var _getNodesByOriginalIndex = function(parent, childOperations) {
-  var nodesByOriginalIndex; // Sparse array.
-  var childOperation;
-  var origIndex;
-  for (var i = 0; i < childOperations.length; i++) {
-    childOperation = childOperations[i];
-    if (MOVE_NODE_AT_ORIG_INDEX in childOperation) {
-      nodesByOriginalIndex = nodesByOriginalIndex || [];
-      origIndex = childOperation.moveFrom;
-      nodesByOriginalIndex[origIndex] = parent.childNodes[origIndex];
-    } else if (REMOVE_AT in childOperation) {
-      nodesByOriginalIndex = nodesByOriginalIndex || [];
-      origIndex = childOperation.removeAt;
-      nodesByOriginalIndex[origIndex] = parent.childNodes[origIndex];
-    }
-  }
-  return nodesByOriginalIndex;
-};
-
-/**
- * Removes DOM elements from their parent, or moved.
- * @param {Element} parent Parent DOM node.
- * @param {Array} nodesByOriginalIndex Child nodes by their original index
- * (potentially sparse.)
- */
-var _removeChildrenByOriginalIndex = function(parent, nodesByOriginalIndex) {
-  for (var j = 0; j < nodesByOriginalIndex.length; j++) {
-    var nodeToRemove = nodesByOriginalIndex[j];
-    if (nodeToRemove) {     // We used a sparse array.
-      parent.removeChild(nodesByOriginalIndex[j]);
-    }
-  }
-};
-
-/**
- * Once all nodes that will be removed or moved - are removed from the parent
- * node, we can begin the process of placing nodes into their final locations.
- * We must perform all operations in the order of the final DOM index -
- * otherwise, we couldn't count on the fact that an insertion at index X, will
- * remain at index X. This will iterate through the child operations, adding
- * content where needed, skip over removals (they've already been removed) and
- * insert "moved" Elements that were previously removed. The "moved" elements
- * are only temporarily removed from the parent, so that index calculations can
- * be manageable and perform well in the cases that matter.
- */
-var _placeNodesAtDestination =
-  function(parent, childOperations, nodesByOriginalIndex) {
-    var origNode;
-    var finalIndex;
-    var lastFinalIndex = -1;
-    var childOperation;
-    for (var k = 0; k < childOperations.length; k++) {
-      childOperation = childOperations[k];
-      if (MOVE_NODE_AT_ORIG_INDEX in childOperation) {
-        origNode = nodesByOriginalIndex[childOperation.moveFrom];
-        finalIndex = childOperation.finalIndex;
-        insertNodeAt(parent, origNode, finalIndex);
-        if (__DEV__) {
-          throwIf(finalIndex <= lastFinalIndex, NON_INCREASING_OPERATIONS);
-          lastFinalIndex = finalIndex;
-        }
-      } else if (REMOVE_AT in childOperation) {
-      } else if (INSERT_MARKUP in childOperation) {
-        finalIndex = childOperation.finalIndex;
-        var markup = childOperation.insertMarkup;
-        Danger.dangerouslyInsertMarkupAt(parent, markup, finalIndex);
-        if (__DEV__) {
-          throwIf(finalIndex <= lastFinalIndex, NON_INCREASING_OPERATIONS);
-          lastFinalIndex = finalIndex;
-        }
-      }
-    }
-  };
-
-var manageChildren = function(parent, childOperations) {
-  var nodesByOriginalIndex = _getNodesByOriginalIndex(parent, childOperations);
-  if (nodesByOriginalIndex) {
-    _removeChildrenByOriginalIndex(parent, nodesByOriginalIndex);
-  }
-  _placeNodesAtDestination(parent, childOperations, nodesByOriginalIndex);
-};
-
-/**
- * Also reexport all of the dangerous functions. It helps to have all dangerous
- * functions located in a single module `Danger`.
+ * Operations for updating with DOM children.
  */
 var DOMChildrenOperations = {
+
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
-  manageChildren: manageChildren
+
+  /**
+   * Updates a component's children by processing a series of updates. The
+   * update configurations are each expected to have a `parentNode` property.
+   *
+   * @param {array<object>} updates List of update configurations.
+   * @param {array<string>} markupList List of markup strings.
+   * @internal
+   */
+  processUpdates: function(updates, markupList) {
+    var update;
+    // Mapping from parent IDs to initial child orderings.
+    var initialChildren = null;
+    // List of children that will be moved or removed.
+    var updatedChildren = null;
+
+    for (var i = 0; update = updates[i]; i++) {
+      if (update.type !== ReactMultiChildUpdateTypes.INSERT_MARKUP) {
+        var updatedIndex = update.fromIndex;
+        var updatedChild = update.parentNode.childNodes[updatedIndex];
+        var parentID = update.parentID;
+
+        initialChildren = initialChildren || {};
+        initialChildren[parentID] = initialChildren[parentID] || [];
+        initialChildren[parentID][updatedIndex] = updatedChild;
+
+        updatedChildren = updatedChildren || [];
+        updatedChildren.push(updatedChild);
+      }
+    }
+
+    var renderedMarkup = Danger.dangerouslyRenderMarkup(markupList);
+
+    // Remove updated children first so that `toIndex` is consistent.
+    if (updatedChildren) {
+      for (var j = 0; j < updatedChildren.length; j++) {
+        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+      }
+    }
+
+    for (var k = 0; update = updates[k]; k++) {
+      switch (update.type) {
+        case ReactMultiChildUpdateTypes.INSERT_MARKUP:
+          insertChildAt(
+            update.parentNode,
+            renderedMarkup[update.markupIndex],
+            update.toIndex
+          );
+          break;
+        case ReactMultiChildUpdateTypes.MOVE_EXISTING:
+          insertChildAt(
+            update.parentNode,
+            initialChildren[update.parentID][update.fromIndex],
+            update.toIndex
+          );
+          break;
+        case ReactMultiChildUpdateTypes.REMOVE_NODE:
+          // Already removed by the for-loop above.
+          break;
+      }
+    }
+  }
+
 };
 
 module.exports = DOMChildrenOperations;

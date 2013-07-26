@@ -160,10 +160,11 @@ ReactNativeComponent.Mixin = {
       if (contentToUse != null) {
         return escapeTextForBrowser(contentToUse);
       } else if (childrenToUse != null) {
-        return this.mountMultiChild(
+        var mountImages = this.mountChildren(
           flattenChildren(childrenToUse),
           transaction
         );
+        return mountImages.join('');
       }
     }
     return '';
@@ -320,7 +321,7 @@ ReactNativeComponent.Mixin = {
     if (contentToUse != null) {
       var childrenRemoved = lastUsedChildren != null && childrenToUse == null;
       if (childrenRemoved) {
-        this.updateMultiChild(null, transaction);
+        this.updateChildren(null, transaction);
       }
       if (lastUsedContent !== contentToUse) {
         ReactComponent.DOMIDOperations.updateTextContentByID(
@@ -336,7 +337,7 @@ ReactNativeComponent.Mixin = {
           ''
         );
       }
-      this.updateMultiChild(flattenChildren(nextProps.children), transaction);
+      this.updateChildren(flattenChildren(nextProps.children), transaction);
     }
   },
 
@@ -349,7 +350,7 @@ ReactNativeComponent.Mixin = {
   unmountComponent: function() {
     ReactEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
-    this.unmountMultiChild();
+    this.unmountChildren();
   }
 
 };

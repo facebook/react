@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * @providesModule Danger
+ * @typechecks static-only
  */
 
 /*jslint evil: true, sub: true */
@@ -22,33 +23,7 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var throwIf = require('throwIf');
-
-var DOM_UNSUPPORTED;
-var NO_MARKUP_PARENT;
-var NO_MULTI_MARKUP;
-if (__DEV__) {
-  DOM_UNSUPPORTED =
-    'You may not insert markup into the document while you are in a worker ' +
-    'thread. It\'s not you, it\'s me. This is likely the fault of the ' +
-    'framework. Please report this immediately.';
-  NO_MARKUP_PARENT =
-    'You have attempted to inject markup without a suitable parent. This is ' +
-    'likely the fault of the framework - please report immediately.';
-  NO_MULTI_MARKUP =
-    'The framework has attempted to either insert zero or multiple markup ' +
-    'roots into a single location when it should not. This is a serious ' +
-    'error - a fault of the framework - please report immediately.';
-}
-
-var validateMarkupParams;
-if (__DEV__) {
-  validateMarkupParams = function(parentNode, markup) {
-    throwIf(!ExecutionEnvironment.canUseDOM, DOM_UNSUPPORTED);
-    throwIf(!parentNode || !parentNode.tagName, NO_MARKUP_PARENT);
-    throwIf(!markup, NO_MULTI_MARKUP);
-  };
-}
+var invariant = require('invariant');
 
 /**
  * Dummy container used to render all markup.
@@ -103,22 +78,35 @@ if (dummyNode) {
 }
 
 /**
- * Renders markup into nodes. The returned HTMLCollection is live and should be
- * used immediately (or at least before the next invocation to `renderMarkup`).
+ * Extracts the `nodeName` from a string of markup. This does not require a
+ * regular expression match because we make assumptions about React-generated
+ * markup (i.e. there are no spaces surrounding the opening tag and there is at
+ * least an ID attribute).
  *
  * NOTE: Extracting the `nodeName` does not require a regular expression match
  * because we make assumptions about React-generated markup (i.e. there are no
  * spaces surrounding the opening tag and there is at least one attribute).
- * @see http://jsperf.com/extract-nodename
  *
- * @param {string} markup
+ * @param {string} markup String of markup.
+ * @return {string} Node name of the supplied markup.
+ * @see http://jsperf.com/extract-nodename
+ */
+function getNodeName(markup) {
+  return markup.substring(1, markup.indexOf(' '));
+}
+
+/**
+ * Renders markup into nodes. The returned HTMLCollection is live and should be
+ * used immediately (or at least before the next invocation to `renderMarkup`).
+ *
+ * @param {string} markup Markup for one or more nodes with the same `nodeName`.
+ * @param {?string} nodeName Optional, the lowercase node name of the markup.
  * @return {*} An HTMLCollection.
  */
-function renderMarkup(markup) {
+function renderMarkup(markup, nodeName) {
+  nodeName = nodeName || getNodeName(markup);
   var node = dummyNode;
-  var nodeName = markup.substring(1, markup.indexOf(' '));
-
-  var wrap = markupWrap[nodeName.toLowerCase()] || defaultWrap;
+  var wrap = markupWrap[nodeName] || defaultWrap;
   if (wrap) {
     node.innerHTML = wrap[1] + markup + wrap[2];
 
@@ -132,99 +120,80 @@ function renderMarkup(markup) {
   return node.childNodes;
 }
 
-/**
- * Inserts node after 'after'. If 'after' is null, inserts it after nothing,
- * which is inserting it at the beginning.
- *
- * @param {Element} elem Parent element.
- * @param {Element} insert Element to insert.
- * @param {Element} after Element to insert after.
- * @return {Element} Element that was inserted.
- */
-function insertNodeAfterNode(elem, insert, after) {
-  if (__DEV__) {
-    throwIf(!ExecutionEnvironment.canUseDOM, DOM_UNSUPPORTED);
-  }
-  if (after) {
-    if (after.nextSibling) {
-      return elem.insertBefore(insert, after.nextSibling);
-    } else {
-      return elem.appendChild(insert);
-    }
-  } else {
-    return elem.insertBefore(insert, elem.firstChild);
-  }
-}
-
-/**
- * Slow: Should only be used when it is known there are a few (or one) element
- * in the node list.
- * @param {Element} parentRootDomNode Parent element.
- * @param {HTMLCollection} htmlCollection HTMLCollection to insert.
- * @param {Element} after Element to insert the node list after.
- */
-function inefficientlyInsertHTMLCollectionAfter(
-    parentRootDomNode,
-    htmlCollection,
-    after) {
-
-  if (__DEV__) {
-    throwIf(!ExecutionEnvironment.canUseDOM, DOM_UNSUPPORTED);
-  }
-  var ret;
-  var originalLength = htmlCollection.length;
-  // Access htmlCollection[0] because htmlCollection shrinks as we remove items.
-  // `insertNodeAfterNode` will remove items from the htmlCollection.
-  for (var i = 0; i < originalLength; i++) {
-    ret =
-      insertNodeAfterNode(parentRootDomNode, htmlCollection[0], ret || after);
-  }
-}
-
-/**
- * Super-dangerously inserts markup into existing DOM structure. Seriously, you
- * don't want to use this module unless you are building a framework. This
- * requires that the markup that you are inserting represents the root of a
- * tree. We do not support the case where there `markup` represents several
- * roots.
- *
- * @param {Element} parentNode Parent DOM element.
- * @param {string} markup Markup to dangerously insert.
- * @param {number} index Position to insert markup at.
- */
-function dangerouslyInsertMarkupAt(parentNode, markup, index) {
-  if (__DEV__) {
-    validateMarkupParams(parentNode, markup);
-  }
-  var htmlCollection = renderMarkup(markup);
-  var afterNode = index ? parentNode.childNodes[index - 1] : null;
-  inefficientlyInsertHTMLCollectionAfter(parentNode, htmlCollection, afterNode);
-}
-
-/**
- * Replaces a node with a string of markup at its current position within its
- * parent. `childNode` must be in the document (or at least within a parent
- * node). The string of markup must represent a tree of markup with a single
- * root.
- *
- * @param {Element} childNode Child node to replace.
- * @param {string} markup Markup to dangerously replace child with.
- */
-function dangerouslyReplaceNodeWithMarkup(childNode, markup) {
-  var parentNode = childNode.parentNode;
-  if (__DEV__) {
-    validateMarkupParams(parentNode, markup);
-  }
-  var htmlCollection = renderMarkup(markup);
-  if (__DEV__) {
-    throwIf(htmlCollection.length !== 1, NO_MULTI_MARKUP);
-  }
-  parentNode.replaceChild(htmlCollection[0], childNode);
-}
-
 var Danger = {
-  dangerouslyInsertMarkupAt: dangerouslyInsertMarkupAt,
-  dangerouslyReplaceNodeWithMarkup: dangerouslyReplaceNodeWithMarkup
+
+  /**
+   * Renders markup into an array of nodes. The markup is expected to render
+   * into a list of root nodes. Also, the length of `parentNodes` and `markup`
+   * should be the same.
+   *
+   * @param {array<string>} markupList List of markup strings to render.
+   * @return {array<DOMElement>} List of rendered nodes.
+   * @internal
+   */
+  dangerouslyRenderMarkup: function(markupList) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'dangerouslyRenderMarkup(...): Cannot render markup in a Worker ' +
+      'thread. This is likely a bug in the framework. Please report ' +
+      'immediately.'
+    );
+    var nodeName;
+    var markupByNodeName = {};
+    // Group markup by `nodeName` if a wrap is necessary, else by '*'.
+    for (var i = 0; i < markupList.length; i++) {
+      invariant(
+        markupList[i],
+        'dangerouslyRenderMarkup(...): Missing markup.'
+      );
+      nodeName = getNodeName(markupList[i]);
+      nodeName = markupWrap[nodeName] ? nodeName : '*';
+      markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
+      markupByNodeName[nodeName][i] = markupList[i];
+    }
+    var renderedMarkup = [];
+    for (nodeName in markupByNodeName) {
+      if (!markupByNodeName.hasOwnProperty(nodeName)) {
+        continue;
+      }
+      var markupListByNodeName = markupByNodeName[nodeName];
+      var markup = markupListByNodeName.join('');
+      // Render each group of markup.
+      var childNode = renderMarkup(markup, nodeName)[0];
+      // Restore the initial ordering.
+      for (var j = 0; j < markupListByNodeName.length; j++) {
+        // `markupListByNodeName` may be a sparse array.
+        if (markupListByNodeName[j]) {
+          invariant(childNode, 'dangerouslyRenderMarkup(...): Missing node.');
+          renderedMarkup[j] = childNode;
+          childNode = childNode.nextSibling;
+        }
+      }
+      invariant(!childNode, 'dangerouslyRenderMarkupO(...): Unexpected nodes.');
+    }
+    return renderedMarkup;
+  },
+
+  /**
+   * Replaces a node with a string of markup at its current position within its
+   * parent. The markup must render into a single root node.
+   *
+   * @param {DOMElement} oldChild Child node to replace.
+   * @param {string} markup Markup to render in place of the child node.
+   * @internal
+   */
+  dangerouslyReplaceNodeWithMarkup: function(oldChild, markup) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
+      'worker thread. This is likely a bug in the framework. Please report ' +
+      'immediately.'
+    );
+    invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
+    var newChild = renderMarkup(markup)[0];
+    oldChild.parentNode.replaceChild(newChild, oldChild);
+  }
+
 };
 
 module.exports = Danger;

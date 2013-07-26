@@ -229,12 +229,22 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
  */
 var ReactInstanceHandles = {
 
-  separator: SEPARATOR,
-
   createReactRootID: function() {
     return getReactRootIDString(
       Math.ceil(Math.random() * GLOBAL_MOUNT_POINT_MAX)
     );
+  },
+
+  /**
+   * Constructs a React ID by joining a root ID with a name.
+   *
+   * @param {string} rootID Root ID of a parent component.
+   * @param {string} name A component's name (as flattened children).
+   * @return {string} A React ID.
+   * @internal
+   */
+  createReactID: function(rootID, name) {
+    return rootID + SEPARATOR + name;
   },
 
   /**

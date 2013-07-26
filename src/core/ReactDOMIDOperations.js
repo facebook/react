@@ -172,12 +172,17 @@ var ReactDOMIDOperations = {
   },
 
   /**
-   * TODO: We only actually *need* to purge the cache when we remove elements.
-   *       Detect if any elements were removed instead of blindly purging.
+   * Updates a component's children by processing a series of updates.
+   *
+   * @param {array<object>} updates List of update configurations.
+   * @param {array<string>} markup List of markup strings.
+   * @internal
    */
-  manageChildrenByParentID: function(parentID, domOperations) {
-    var parent = ReactMount.getNode(parentID);
-    DOMChildrenOperations.manageChildren(parent, domOperations);
+  dangerouslyProcessChildrenUpdates: function(updates, markup) {
+    for (var i = 0; i < updates.length; i++) {
+      updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
+    }
+    DOMChildrenOperations.processUpdates(updates, markup);
   }
 
 };
