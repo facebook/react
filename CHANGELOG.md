@@ -1,3 +1,19 @@
+## 0.4.1 (July 26, 2013)
+
+### React
+
+* `setState` callbacks are now executed in the scope of your component.
+* `click` events now work on Mobile Safari.
+* Prevent a potential error in event handling if `Object.prototype` is extended.
+* Don't set DOM attributes to the string `"undefined"` on update when previously defined.
+* Improved support for `<iframe>` attributes.
+* Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.
+
+### JSXTransformer
+
+* Improved environment detection so it can be run in a non-browser environment.
+
+
 ## 0.4.0 (July 17, 2013)
 
 ### React
