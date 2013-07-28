@@ -21,14 +21,19 @@ describe('ReactMultiChild', function() {
   var React;
   var setInnerHTML;
 
+  // Only run this test suite if `Element.prototype.innerHTML` can be spied on.
+  var innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
+    Element.prototype,
+    'innerHTML'
+  );
+  if (!innerHTMLDescriptor) {
+    return;
+  }
+
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
 
-    var innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
-      Element.prototype,
-      'innerHTML'
-    );
     Object.defineProperty(Element.prototype, 'innerHTML', {
       set: setInnerHTML = jasmine.createSpy().andCallFake(
         innerHTMLDescriptor.set

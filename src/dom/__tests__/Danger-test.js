@@ -59,7 +59,7 @@ describe('Danger', function() {
 
     it('should render lists of markup with similar `nodeName`', function() {
       var renderedMarkup = Danger.dangerouslyRenderMarkup(
-        ['<p>1</p>', '<p>2</p>', '<p>3</p>']
+        ['<p id="A">1</p>', '<p id="B">2</p>', '<p id="C">3</p>']
       );
 
       expect(renderedMarkup.length).toBe(3);
@@ -75,13 +75,13 @@ describe('Danger', function() {
 
     it('should render lists of markup with different `nodeName`', function() {
       var renderedMarkup = Danger.dangerouslyRenderMarkup(
-        ['<p>1</p>', '<tr>2</tr>', '<p>3</p>']
+        ['<p id="A">1</p>', '<td id="B">2</td>', '<p id="C">3</p>']
       );
 
       expect(renderedMarkup.length).toBe(3);
 
       expect(renderedMarkup[0].nodeName).toBe('P');
-      expect(renderedMarkup[1].nodeName).toBe('TR');
+      expect(renderedMarkup[1].nodeName).toBe('TD');
       expect(renderedMarkup[2].nodeName).toBe('P');
 
       expect(renderedMarkup[0].innerHTML).toBe('1');
