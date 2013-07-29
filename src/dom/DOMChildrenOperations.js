@@ -22,6 +22,16 @@
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
+var getTextContentAccessor = require('getTextContentAccessor');
+
+/**
+ * The DOM property to use when setting text content.
+ *
+ * @type {string}
+ * @private
+ */
+var textContentAccessor = getTextContentAccessor() || 'NA';
+
 /**
  * Inserts `childNode` as a child of `parentNode` at the `index`.
  *
@@ -70,7 +80,8 @@ var DOMChildrenOperations = {
     var updatedChildren = null;
 
     for (var i = 0; update = updates[i]; i++) {
-      if (update.type !== ReactMultiChildUpdateTypes.INSERT_MARKUP) {
+      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
+          update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
         var updatedChild = update.parentNode.childNodes[updatedIndex];
         var parentID = update.parentID;
@@ -108,6 +119,9 @@ var DOMChildrenOperations = {
             initialChildren[update.parentID][update.fromIndex],
             update.toIndex
           );
+          break;
+        case ReactMultiChildUpdateTypes.TEXT_CONTENT:
+          update.parentNode[textContentAccessor] = update.textContent;
           break;
         case ReactMultiChildUpdateTypes.REMOVE_NODE:
           // Already removed by the for-loop above.

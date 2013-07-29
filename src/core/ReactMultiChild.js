@@ -78,6 +78,7 @@ function enqueueMarkup(parentID, markup, toIndex) {
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
     fromIndex: null,
+    textContent: null,
     toIndex: toIndex
   });
 }
@@ -97,6 +98,7 @@ function enqueueMove(parentID, fromIndex, toIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     markupIndex: null,
+    textContent: null,
     fromIndex: fromIndex,
     toIndex: toIndex
   });
@@ -116,7 +118,28 @@ function enqueueRemove(parentID, fromIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
     markupIndex: null,
+    textContent: null,
     fromIndex: fromIndex,
+    toIndex: null
+  });
+}
+
+/**
+ * Enqueues setting the text content.
+ *
+ * @param {string} parentID ID of the parent component.
+ * @param {string} textContent Text content to set.
+ * @private
+ */
+function enqueueTextContent(parentID, textContent) {
+  // NOTE: Null values reduce hidden classes.
+  updateQueue.push({
+    parentID: parentID,
+    parentNode: null,
+    type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
+    markupIndex: null,
+    textContent: textContent,
+    fromIndex: null,
     toIndex: null
   });
 }
@@ -193,6 +216,34 @@ var ReactMultiChild = {
     },
 
     /**
+     * Replaces any rendered children with a text content string.
+     *
+     * @param {string} nextContent String of content.
+     * @internal
+     */
+    updateTextContent: function(nextContent) {
+      updateDepth++;
+      try {
+        var prevChildren = this._renderedChildren;
+        // Remove any rendered children.
+        for (var name in prevChildren) {
+          if (prevChildren.hasOwnProperty(name) &&
+              prevChildren[name]) {
+            this._unmountChildByName(prevChildren[name], name);
+          }
+        }
+        // Set new text content.
+        this.setTextContent(nextContent);
+      } catch (error) {
+        updateDepth--;
+        updateDepth || clearQueue();
+        throw error;
+      }
+      updateDepth--;
+      updateDepth || processQueue();
+    },
+
+    /**
      * Updates the rendered children with new children.
      *
      * @param {?object} nextChildren As returned by `flattenChildren`.
@@ -244,8 +295,9 @@ var ReactMultiChild = {
           prevChild._mountIndex = nextIndex;
         } else {
           if (prevChild) {
-            this._unmountChildByName(prevChild, name);
+            // Update `lastIndex` before `_mountIndex` gets unset by unmounting.
             lastIndex = Math.max(prevChild._mountIndex, lastIndex);
+            this._unmountChildByName(prevChild, name);
           }
           if (nextChild) {
             this._mountChildByNameAtIndex(
@@ -319,6 +371,16 @@ var ReactMultiChild = {
      */
     removeChild: function(child) {
       enqueueRemove(this._rootNodeID, child._mountIndex);
+    },
+
+    /**
+     * Sets this text content string.
+     *
+     * @param {string} textContent Text content to set.
+     * @protected
+     */
+    setTextContent: function(textContent) {
+      enqueueTextContent(this._rootNodeID, textContent);
     },
 
     /**

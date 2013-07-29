@@ -324,18 +324,12 @@ ReactNativeComponent.Mixin = {
         this.updateChildren(null, transaction);
       }
       if (lastUsedContent !== contentToUse) {
-        ReactComponent.DOMIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          '' + contentToUse
-        );
+        this.updateTextContent('' + contentToUse);
       }
     } else {
       var contentRemoved = lastUsedContent != null && contentToUse == null;
       if (contentRemoved) {
-        ReactComponent.DOMIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          ''
-        );
+        this.updateTextContent('');
       }
       this.updateChildren(flattenChildren(nextProps.children), transaction);
     }
