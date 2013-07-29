@@ -99,7 +99,7 @@ React.renderComponent(
 );
 ```
 
-Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](syntax.html).
+Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](jsx-in-depth.html).
 
 #### What's going on
 
@@ -107,7 +107,7 @@ We pass some methods in a JavaScript object to `React.createClass()` to create a
 
 The `<div>` tags are not actual DOM nodes; they are instantiations of React `div` components. You can think of these as markers or pieces of data that React knows how to handle. React is **safe**. We are not generating HTML strings so XSS protection is the default.
 
-You do not have to return basic HTML. You can return a tree of components that you (or someone else built). This is what makes React **composable**: a key tenet of maintainable frontends.
+You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
 
 `React.renderComponent()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
@@ -489,7 +489,7 @@ var CommentForm = React.createClass({
 
 React attaches event handlers to components using a camelCase naming convention. We attach an `onSubmit` handler to the form that clears the form fields when the form is submitted with valid input.
 
-We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it &ndash; read more about [event handling](event-handling.html).)
+We always return `false` from the event handler to prevent the browser's default action of submitting the form. (If you prefer, you can instead take the event as an argument and call `preventDefault()` on it.)
 
 ##### Refs
 
