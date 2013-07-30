@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.4.1</title>
+  <title>React | Use React and JSX in Ruby on Rails</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.4.1" />
+  <meta property="og:title" content="React | Use React and JSX in Ruby on Rails" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -57,9 +57,9 @@
     <h3>Recent posts</h3>
     <ul>
     
-      <li><a href="/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html">Use React and JSX in Ruby on Rails</a></li>
+      <li><a href="/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html" class="active">Use React and JSX in Ruby on Rails</a></li>
     
-      <li><a href="/react/blog/2013/07/26/react-v0-4-1.html" class="active">React v0.4.1</a></li>
+      <li><a href="/react/blog/2013/07/26/react-v0-4-1.html">React v0.4.1</a></li>
     
       <li><a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a></li>
     
@@ -88,37 +88,52 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.4.1</h1>
-    <p class="meta">July 26, 2013 by Paul O'Shannessy</p>
+    <h1>Use React and JSX in Ruby on Rails</h1>
+    <p class="meta">July 30, 2013 by Paul O'Shannessy</p>
 
     <hr>
 
     <div class="post">
-      <p>React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.</p>
+      <p>Today we&#39;re releasing a gem to make it easier to use React and JSX in Ruby on Rails applications: <a href="https://github.com/facebook/react-rails">react-rails</a>.</p>
 
-<h2>React</h2>
+<p>This gem has 2 primary purposes:</p>
 
-<ul>
-<li><code>setState</code> callbacks are now executed in the scope of your component.</li>
-<li><code>click</code> events now work on Mobile Safari.</li>
-<li>Prevent a potential error in event handling if <code>Object.prototype</code> is extended.</li>
-<li>Don&#39;t set DOM attributes to the string <code>&quot;undefined&quot;</code> on update when previously defined.</li>
-<li>Improved support for <code>&lt;iframe&gt;</code> attributes.</li>
-<li>Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.</li>
-</ul>
+<ol>
+<li>To package <code>react.js</code> in a way that&#39;s easy to use and easy to update.</li>
+<li>To allow you to write JSX without an external build step to transform that into JS.</li>
+</ol>
 
-<h2>JSXTransformer</h2>
+<h2>Packaging react.js</h2>
 
-<ul>
-<li>Improved environment detection so it can be run in a non-browser environment.</li>
-</ul>
+<p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
+<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
 
-<p><a href="/react/downloads.html">Download it now!</a></p>
+<span class="ss">MyApp</span><span class="p">:</span><span class="ss">:Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
+  <span class="n">config</span><span class="o">.</span><span class="n">react</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="ss">:development</span>
+  <span class="c1"># use :production in production.rb</span>
+<span class="k">end</span>
+</code></pre></div><div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// app/assets/javascript/application.js</span>
+
+<span class="c1">//= require react</span>
+</code></pre></div>
+<h2>Writing JSX</h2>
+
+<p>When you name your file with <code>myfile.js.jsx</code>, <code>react-rails</code> will automatically try to transform that file. For the time being, we still require that you include the docblock at the beginning of the file. For example, this file will get transformed on request.</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
+</code></pre></div>
+<h2>Asset Pipeline</h2>
+
+<p><code>react-rails</code> takes advantage of the <a href="http://guides.rubyonrails.org/asset_pipeline.html">asset pipeline</a> that was introduced in Rails 3.1. A very important part of that pipeline is the <code>assets:precompile</code> Rake task. <code>react-rails</code> will ensure that your JSX files will be transformed into regular JS before all of your assets are minified and packaged.</p>
+
+<h2>Installation</h2>
+
+<p>Installation follows the same process you&#39;re familiar with. You can install it globally with <code>gem install react-rails</code>, though we suggest you add the dependency to your <code>Gemfile</code> directly.</p>
 
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html"></div>
   </div>
 </section>
 

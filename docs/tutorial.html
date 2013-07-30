@@ -265,7 +265,7 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>Its use is optional but we&#39;ve found JSX syntax easier to use than plain JavaScript. Read more on the <a href="syntax.html">JSX Syntax article</a>.</p>
+<p>Its use is optional but we&#39;ve found JSX syntax easier to use than plain JavaScript. Read more on the <a href="jsx-in-depth.html">JSX Syntax article</a>.</p>
 
 <h4>What&#39;s going on</h4>
 
@@ -273,7 +273,7 @@
 
 <p>The <code>&lt;div&gt;</code> tags are not actual DOM nodes; they are instantiations of React <code>div</code> components. You can think of these as markers or pieces of data that React knows how to handle. React is <strong>safe</strong>. We are not generating HTML strings so XSS protection is the default.</p>
 
-<p>You do not have to return basic HTML. You can return a tree of components that you (or someone else built). This is what makes React <strong>composable</strong>: a key tenet of maintainable frontends.</p>
+<p>You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React <strong>composable</strong>: a key tenet of maintainable frontends.</p>
 
 <p><code>React.renderComponent()</code> instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.</p>
 
@@ -607,7 +607,7 @@
 
 <p>React attaches event handlers to components using a camelCase naming convention. We attach an <code>onSubmit</code> handler to the form that clears the form fields when the form is submitted with valid input.</p>
 
-<p>We always return <code>false</code> from the event handler to prevent the browser&#39;s default action of submitting the form. (If you prefer, you can instead take the event as an argument and call <code>preventDefault()</code> on it &ndash; read more about <a href="event-handling.html">event handling</a>.)</p>
+<p>We always return <code>false</code> from the event handler to prevent the browser&#39;s default action of submitting the form. (If you prefer, you can instead take the event as an argument and call <code>preventDefault()</code> on it.)</p>
 
 <h5>Refs</h5>
 
