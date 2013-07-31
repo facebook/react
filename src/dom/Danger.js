@@ -23,65 +23,13 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
+var createNodesFromMarkup = require('createNodesFromMarkup');
+var emptyFunction = require('emptyFunction');
+var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
 
 /**
- * Dummy container used to render all markup.
- */
-var dummyNode = ExecutionEnvironment.canUseDOM ?
-  document.createElement('div') :
-  null;
-
-/**
- * Some browsers cannot use `innerHTML` to render certain elements standalone,
- * so we wrap them, render the wrapped nodes, then extract the desired node.
- */
-var markupWrap = {
-  'option': [1, '<select multiple="true">', '</select>'],
-  'legend': [1, '<fieldset>', '</fieldset>'],
-  'area': [1, '<map>', '</map>'],
-  'param': [1, '<object>', '</object>'],
-  'thead': [1, '<table>', '</table>'],
-  'tr': [2, '<table><tbody>', '</tbody></table>'],
-  'col': [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
-  'td': [3, '<table><tbody><tr>', '</tr></tbody></table>']
-};
-markupWrap['optgroup'] = markupWrap['option'];
-markupWrap['tbody'] = markupWrap['thead'];
-markupWrap['tfoot'] = markupWrap['thead'];
-markupWrap['colgroup'] = markupWrap['thead'];
-markupWrap['caption'] = markupWrap['thead'];
-markupWrap['th'] = markupWrap['td'];
-
-/**
- * In IE8, certain elements cannot render alone, so wrap all elements.
- */
-var defaultWrap = [1, '?<div>', '</div>'];
-
-/**
- * Feature detection, remove wraps that are unnecessary for the current browser.
- */
-if (dummyNode) {
-  for (var nodeName in markupWrap) {
-    if (!markupWrap.hasOwnProperty(nodeName)) {
-      continue;
-    }
-    dummyNode.innerHTML = '<' + nodeName + '></' + nodeName + '>';
-    if (dummyNode.firstChild) {
-      markupWrap[nodeName] = null;
-    }
-  }
-  dummyNode.innerHTML = '<link />';
-  if (dummyNode.firstChild) {
-    defaultWrap = null;
-  }
-}
-
-/**
- * Extracts the `nodeName` from a string of markup. This does not require a
- * regular expression match because we make assumptions about React-generated
- * markup (i.e. there are no spaces surrounding the opening tag and there is at
- * least an ID attribute).
+ * Extracts the `nodeName` from a string of markup.
  *
  * NOTE: Extracting the `nodeName` does not require a regular expression match
  * because we make assumptions about React-generated markup (i.e. there are no
@@ -93,31 +41,6 @@ if (dummyNode) {
  */
 function getNodeName(markup) {
   return markup.substring(1, markup.indexOf(' '));
-}
-
-/**
- * Renders markup into nodes. The returned HTMLCollection is live and should be
- * used immediately (or at least before the next invocation to `renderMarkup`).
- *
- * @param {string} markup Markup for one or more nodes with the same `nodeName`.
- * @param {?string} nodeName Optional, the lowercase node name of the markup.
- * @return {*} An HTMLCollection.
- */
-function renderMarkup(markup, nodeName) {
-  nodeName = nodeName || getNodeName(markup);
-  var node = dummyNode;
-  var wrap = markupWrap[nodeName] || defaultWrap;
-  if (wrap) {
-    node.innerHTML = wrap[1] + markup + wrap[2];
-
-    var wrapDepth = wrap[0];
-    while (wrapDepth--) {
-      node = node.lastChild;
-    }
-  } else {
-    node.innerHTML = markup;
-  }
-  return node.childNodes;
 }
 
 var Danger = {
@@ -147,31 +70,39 @@ var Danger = {
         'dangerouslyRenderMarkup(...): Missing markup.'
       );
       nodeName = getNodeName(markupList[i]);
-      nodeName = markupWrap[nodeName] ? nodeName : '*';
+      nodeName = getMarkupWrap(nodeName) ? nodeName : '*';
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
       markupByNodeName[nodeName][i] = markupList[i];
     }
-    var renderedMarkup = [];
+    var resultList = [];
     for (nodeName in markupByNodeName) {
       if (!markupByNodeName.hasOwnProperty(nodeName)) {
         continue;
       }
       var markupListByNodeName = markupByNodeName[nodeName];
       var markup = markupListByNodeName.join('');
-      // Render each group of markup.
-      var childNode = renderMarkup(markup, nodeName)[0];
+      // Render each group of markup with similar `nodeName`.
+      var renderNodes = createNodesFromMarkup(markup, emptyFunction);
       // Restore the initial ordering.
-      for (var j = 0; j < markupListByNodeName.length; j++) {
+      var renderIndex = 0;
+      var resultIndex = 0;
+      while (resultIndex < markupListByNodeName.length) {
         // `markupListByNodeName` may be a sparse array.
-        if (markupListByNodeName[j]) {
-          invariant(childNode, 'dangerouslyRenderMarkup(...): Missing node.');
-          renderedMarkup[j] = childNode;
-          childNode = childNode.nextSibling;
+        if (markupListByNodeName[resultIndex]) {
+          invariant(
+            resultList[resultIndex] = renderNodes[renderIndex],
+            'dangerouslyRenderMarkup(...): Missing node.'
+          );
+          renderIndex++;
         }
+        resultIndex++;
       }
-      invariant(!childNode, 'dangerouslyRenderMarkupO(...): Unexpected nodes.');
+      invariant(
+        renderIndex === renderNodes.length,
+        'dangerouslyRenderMarkupO(...): Unexpected nodes.'
+      );
     }
-    return renderedMarkup;
+    return resultList;
   },
 
   /**
@@ -190,7 +121,7 @@ var Danger = {
       'immediately.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
-    var newChild = renderMarkup(markup)[0];
+    var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
   }
 
