@@ -52,14 +52,23 @@ describe('ReactMultiChild', function() {
       </div>,
       container
     );
-    expect(setInnerHTML).toHaveBeenCalled();
-    var callCountOnMount = setInnerHTML.callCount;
-
+    // Warm the cache used by `getMarkupWrap`.
     React.renderComponent(
       <div>
         <p><span /><span /></p>
         <p><span /><span /></p>
         <p><span /><span /></p>
+      </div>,
+      container
+    );
+    expect(setInnerHTML).toHaveBeenCalled();
+    var callCountOnMount = setInnerHTML.callCount;
+
+    React.renderComponent(
+      <div>
+        <p><span /><span /><span /></p>
+        <p><span /><span /><span /></p>
+        <p><span /><span /><span /></p>
       </div>,
       container
     );
