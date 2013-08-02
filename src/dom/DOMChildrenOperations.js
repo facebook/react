@@ -109,6 +109,7 @@ var DOMChildrenOperations = {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertChildAt(
             update.parentNode,
+            // This might be a document fragment, but that's cool.
             renderedMarkup[update.markupIndex],
             update.toIndex
           );
