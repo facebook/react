@@ -96,7 +96,13 @@ describe('Danger', function() {
       expect(function() {
         renderedMarkup = Danger.dangerouslyRenderMarkup([
           '<a id="before">before anchor</a>',
-          '<a id="outer"><a id="inner">nested anchors</a></a>',
+          // This sequence of <a> tags is the expected result when <a>
+          // tags are nested.  Although it weakens the test to de-nest
+          // them manually like this, the same logic is exercised in
+          // dangerouslyRenderMarkup, and this way parsers that do not
+          // automatically de-nest <a> tags (like the jsdom .innerHTML
+          // parser) can still pass this test.
+          '<a id="outer"></a><a id="inner">nested anchors</a>',
           '<a id="after">after anchor</a>'
         ]);
       }).not.toThrow();
