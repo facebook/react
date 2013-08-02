@@ -20,6 +20,7 @@
 /*jslint evil: true */
 
 var React = require('React');
+var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
 describe('Danger', function() {
 
@@ -89,6 +90,32 @@ describe('Danger', function() {
       expect(renderedMarkup[2].innerHTML).toBe('3');
     });
 
+    it('should use document fragments to group nodes that parse to more than one node', function() {
+      var renderedMarkup;
+
+      expect(function() {
+        renderedMarkup = Danger.dangerouslyRenderMarkup([
+          '<a id="before">before anchor</a>',
+          '<a id="outer"><a id="inner">nested anchors</a></a>',
+          '<a id="after">after anchor</a>'
+        ]);
+      }).not.toThrow();
+
+      expect(renderedMarkup.length).toBe(3);
+
+      // Easy cases / sanity check.
+      expect(renderedMarkup[0].nodeName).toBe('A');
+      expect(renderedMarkup[0].id).toBe('before');
+      expect(renderedMarkup[2].nodeName).toBe('A');
+      expect(renderedMarkup[2].id).toBe('after');
+
+      // Document fragment!
+      expect(renderedMarkup[1].nodeType).toBe(DOCUMENT_FRAGMENT_NODE_TYPE);
+      expect(renderedMarkup[1].childNodes.length).toBe(2);
+      expect(renderedMarkup[1].firstChild.nodeName).toBe('A');
+      expect(renderedMarkup[1].lastChild.nodeName).toBe('A');
+    });
+
     it('should throw when rendering invalid markup', function() {
       expect(function() {
         Danger.dangerouslyRenderMarkup(['']);
@@ -96,11 +123,17 @@ describe('Danger', function() {
         'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
       );
 
+      var renderedMarkup;
+
       expect(function() {
-        Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
-      }).toThrow(
-        'Invariant Violation: dangerouslyRenderMarkupO(...): Unexpected nodes.'
-      );
+        renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
+      }).not.toThrow();
+
+      expect(renderedMarkup.length).toBe(1);
+      expect(renderedMarkup[0].nodeType).toBe(DOCUMENT_FRAGMENT_NODE_TYPE);
+      expect(renderedMarkup[0].childNodes.length).toBe(2);
+      expect(renderedMarkup[0].firstChild.nodeName).toBe('P');
+      expect(renderedMarkup[0].lastChild.nodeName).toBe('P');
     });
   });
 
