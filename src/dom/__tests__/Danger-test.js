@@ -90,7 +90,8 @@ describe('Danger', function() {
       expect(renderedMarkup[2].innerHTML).toBe('3');
     });
 
-    it('should use document fragments to group nodes that parse to more than one node', function() {
+    it('should use document fragments to group nodes that parse ' +
+       'as zero nodes or more than one node', function() {
       var renderedMarkup;
 
       expect(function() {

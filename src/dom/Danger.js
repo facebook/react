@@ -25,7 +25,6 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var createNodesFromMarkup = require('createNodesFromMarkup');
 var emptyFunction = require('emptyFunction');
-var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
 
 var COMMENT_NODE_TYPE = 8;
