@@ -107,17 +107,15 @@ var Danger = {
         emptyFunction // Do nothing special with <script> tags.
       );
 
-      for (var renderIndex = 0,
-               renderLength = renderNodes.length,
-               fragment = document.createDocumentFragment();
-           renderIndex < renderLength;
-           renderIndex += 1) {
+      var renderLength = renderNodes.length;
+      var fragment = document.createDocumentFragment();
 
-        var renderNode = renderNodes[renderIndex];
+      for (i = 0; i < renderLength; ++i) {
+        var renderNode = renderNodes[i];
         if (renderNode.nodeType === COMMENT_NODE_TYPE) {
-          var splat = renderNode.nodeValue.split(':');
-          if (splat[0] === "danger") {
-            resultIndex = splat[1];
+          var comment = renderNode.nodeValue.split(':');
+          if (comment[0] === "danger") {
+            resultIndex = comment[1];
             invariant(
               !resultList.hasOwnProperty(resultIndex),
               "Danger: Assigning to an already-occupied result index."
@@ -139,7 +137,7 @@ var Danger = {
             }
 
             // This should match resultList.length when we're done.
-            resultListAssignmentCount += 1;
+            ++resultListAssignmentCount;
 
           } else {
             // It's some other kind of comment that we didn't create.
