@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #6</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #6" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/08/05/community-roundup-6.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+    
+      <li><a href="/react/blog/2013/08/05/community-roundup-6.html" class="active">Community Round-up #6</a></li>
+    
+      <li><a href="/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html">Use React and JSX in Ruby on Rails</a></li>
+    
+      <li><a href="/react/blog/2013/07/26/react-v0-4-1.html">React v0.4.1</a></li>
+    
+      <li><a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a></li>
+    
+      <li><a href="/react/blog/2013/07/17/react-v0-4-0.html">React v0.4.0</a></li>
+    
+      <li><a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">New in React v0.4: Prop Validation and Default Values</a></li>
+    
+      <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
+    
+      <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
+    
+      <li><a href="/react/blog/2013/06/27/community-roundup-3.html">Community Round-up #3</a></li>
+    
+      <li><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></li>
+    
+      <li><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></li>
+    
+      <li><a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a></li>
+    
+      <li><a href="/react/blog/2013/06/05/why-react.html">Why did we build React?</a></li>
+    
+      <li><a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a></li>
+    
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #6</h1>
+    <p class="meta">August  5, 2013 by Vjeux</p>
+
+    <hr>
+
+    <div class="post">
+      <p>This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&#39;s great to see the adoption of React growing.</p>
+
+<h2>React Game Tutorial</h2>
+
+<p><a href="https://twitter.com/CalebCassel">Caleb Cassel</a> wrote a <a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html">step-by-step tutorial</a> about making a small game. It covers JSX, State and Events, Embedded Components and Integration with Backbone.
+<figure><a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html"><img src="/react/img/blog/dog-tutorial.png" alt=""></a></figure></p>
+
+<h2>Reactify</h2>
+
+<p><a href="http://andreypopp.com/">Andrey Popp</a> created a <a href="http://browserify.org/">Browserify</a> helper to compile JSX files.</p>
+
+<blockquote>
+<p>Browserify v2 transform for <code>text/jsx</code>. Basic usage is:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">% browserify -t reactify main.jsx
+</code></pre></div>
+<p><code>reactify</code> transform activates for files with either <code>.jsx</code> extension or <code>/** @jsx React.DOM */</code> pragma as a first line for any <code>.js</code> file.</p>
+
+<p><a href="https://github.com/andreypopp/reactify">Check it out on Github...</a></p>
+</blockquote>
+
+<h2>React Integration with Este</h2>
+
+<p><a href="http://daniel.steigerwald.cz/">Daniel Steigerwald</a> is now using React within <a href="https://github.com/steida/este">Este</a>, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.</p>
+<div class="highlight"><pre><code class="coffeescript language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
+  <span class="nv">render: </span><span class="nf">-&gt;</span>
+    <span class="nx">@div</span> <span class="p">[</span>
+      <span class="nx">este</span><span class="p">.</span><span class="nx">demos</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">todoList</span> <span class="s">&#39;items&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span>
+        <span class="nx">@p</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span><span class="si">}</span><span class="s"> items.&quot;</span>
+      <span class="nx">@form</span> <span class="s">&#39;onSubmit&#39;</span><span class="o">:</span> <span class="nx">@onFormSubmit</span><span class="p">,</span> <span class="p">[</span>
+        <span class="nx">@input</span>
+          <span class="s">&#39;onChange&#39;</span><span class="o">:</span> <span class="nx">@onChange</span>
+          <span class="s">&#39;value&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span>
+          <span class="s">&#39;autoFocus&#39;</span><span class="o">:</span> <span class="kc">true</span>
+          <span class="s">&#39;ref&#39;</span><span class="o">:</span> <span class="s">&#39;textInput&#39;</span>
+        <span class="nx">@button</span> <span class="s">&quot;Add </span><span class="err">#</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="p">]</span>
+    <span class="p">]</span>
+</code></pre></div>
+<p><a href="https://github.com/steida/este-library/blob/master/este/demos/thirdparty/react/start.coffee">Check it out on Github...</a></p>
+
+<h2>React Stylus Boilerplate</h2>
+
+<p><a href="http://zaim.github.io/">Zaim Bakar</a> shared his boilerplate to get started with Stylus CSS processor.</p>
+
+<blockquote>
+<p>This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.</p>
+
+<ul>
+<li>Very minimal HTML boilerplate</li>
+<li>Uses Stylus, with nib included</li>
+<li>Uses two build targets:
+
+<ul>
+<li><code>grunt build</code> to compile JSX and Stylus into a development build</li>
+<li><code>grunt dist</code> to minify and optimize the development build for production</li>
+</ul></li>
+</ul>
+
+<p><a href="https://github.com/zaim/react-stylus-boilerplate">Check it out on Github...</a></p>
+</blockquote>
+
+<h2>WebFUI</h2>
+
+<p><a href="http://lisperati.com/">Conrad Barski</a>, author of the popular book <a href="http://landoflisp.com/">Land of Lisp</a>, wants to use React for his ClojureScript library called <a href="https://github.com/drcode/webfui">WebFUI</a>.</p>
+
+<blockquote>
+<p>I&#39;m the author of &quot;<a href="http://landoflisp.com/">Land of Lisp</a>&quot; and I love your framework. I built a somewhat similar framework a year ago <a href="https://github.com/drcode/webfui">WebFUI</a> aimed at ClojureScript. My framework also uses global event delegates, a global &quot;render&quot; function, DOM reconciliation, etc just like react.js. (Of course these ideas all have been floating around the ether for ages, always great to see more people building on them.)</p>
+
+<p>Your implementation is more robust, and so I think the next point release of webfui will simply delegate all the &quot;hard work&quot; to react.js and will only focus on the areas where it adds value (enabling purely functional UI programming in clojurescript, and some other stuff related to streamlining event handling)
+<figure><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ"><img src="/react/img/blog/landoflisp.png" alt=""></a></figure></p>
+
+<p><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ">Read the full post...</a></p>
+</blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/08/05/community-roundup-6.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
