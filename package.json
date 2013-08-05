@@ -32,7 +32,7 @@
     "url": "https://github.com/facebook/react"
   },
   "scripts": {
-    "test": "grunt build && grunt test"
+    "test": "EXIT=0; grunt lint || EXIT=$?; (grunt build && grunt test) || EXIT=$?; exit $EXIT"
   },
   "dependencies": {
     "base62": "~0.1.1",
