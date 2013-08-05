@@ -44,7 +44,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 </html>
 ```
 
-The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](syntax.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
+The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
 
 ### Separate File
 
