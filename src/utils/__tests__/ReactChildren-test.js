@@ -19,18 +19,18 @@
 
 "use strict";
 
-describe('mapAllChildren', function() {
-  var mapAllChildren;
+describe('ReactChildren', function() {
+  var ReactChildren;
   var React;
 
   beforeEach(function() {
-    mapAllChildren = require('mapAllChildren');
+    ReactChildren = require('ReactChildren');
     React = require('React');
   });
 
 
   it('should support identity for simple', function() {
-    var mapFn = jasmine.createSpy().andCallFake(function (kid, key, index) {
+    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
 
@@ -40,44 +40,53 @@ describe('mapAllChildren', function() {
     // using structures that arrive from transforms.
 
     var instance = <div>{simpleKid}</div>;
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
-    expect(mapFn).toHaveBeenCalledWith(simpleKid, '[simple]', 0);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    callback.reset();
+    var mappedChildren = ReactChildren.map(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
   it('should treat single arrayless child as being in array', function() {
-    var mapFn = jasmine.createSpy().andCallFake(function (kid, key, index) {
+    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
 
     var simpleKid = <span />;
     var instance = <div>{simpleKid}</div>;
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
-    expect(mapFn).toHaveBeenCalledWith(simpleKid, '[0]', 0);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    callback.reset();
+    var mappedChildren = ReactChildren.map(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
   it('should treat single child in array as expected', function() {
-    var mapFn = jasmine.createSpy().andCallFake(function (kid, key, index) {
+    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
 
     var simpleKid = <span />;
     var instance = <div>{[simpleKid]}</div>;
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
-    expect(mapFn).toHaveBeenCalledWith(simpleKid, '[0]', 0);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    callback.reset();
+    var mappedChildren = ReactChildren.map(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
   it('should pass key to returned component', function() {
-    var mapFn = function (kid, key, index) {
+    var mapFn = function (kid, index) {
       return <div>{kid}</div>;
     };
 
     var simpleKid = <span key="simple" />;
 
     var instance = <div>{simpleKid}</div>;
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
+    var mappedChildren = ReactChildren.map(instance.props.children, mapFn);
 
     var mappedKeys = Object.keys(mappedChildren);
     expect(mappedKeys.length).toBe(1);
@@ -87,7 +96,9 @@ describe('mapAllChildren', function() {
   });
 
   it('should invoke callback with the right context', function() {
-    var mapFn = function (kid, key, index) {
+    var lastContext;
+    var callback = function (kid, index) {
+      lastContext = this;
       return this;
     };
 
@@ -95,8 +106,11 @@ describe('mapAllChildren', function() {
 
     var simpleKid = <span key="simple" />;
     var instance = <div>{simpleKid}</div>;
+    ReactChildren.forEach(instance.props.children, callback, scopeTester);
+    expect(lastContext).toBe(scopeTester);
+
     var mappedChildren =
-      mapAllChildren(instance.props.children, mapFn, scopeTester);
+      ReactChildren.map(instance.props.children, callback, scopeTester);
 
     var mappedKeys = Object.keys(mappedChildren);
     expect(mappedKeys.length).toBe(1);
@@ -116,7 +130,7 @@ describe('mapAllChildren', function() {
     var threeMapped = <span />; // Map from null to something.
     var fourMapped = <div key="keyFour" />;
 
-    var mapFn = jasmine.createSpy().andCallFake(function (kid, key, index) {
+    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return index === 0 ? zeroMapped :
         index === 1 ? oneMapped :
         index === 2 ? twoMapped :
@@ -133,28 +147,37 @@ describe('mapAllChildren', function() {
       </div>
     );
 
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
+    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(four, 4);
+    callback.reset();
+
+    var mappedChildren =
+      ReactChildren.map(instance.props.children, callback);
     var mappedKeys = Object.keys(mappedChildren);
-    expect(mapFn.calls.length).toBe(5);
+    expect(callback.calls.length).toBe(5);
     expect(mappedKeys.length).toBe(5);
     // Keys default to indices.
     expect(mappedKeys).toEqual(
       ['[keyZero]', '[1]', '[keyTwo]', '[3]', '[keyFour]']
     );
 
-    expect(mapFn).toHaveBeenCalledWith(zero, '[keyZero]', 0);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
     expect(mappedChildren[mappedKeys[0]]).toBe(zeroMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(one, '[1]', 1);
+    expect(callback).toHaveBeenCalledWith(one, 1);
     expect(mappedChildren[mappedKeys[1]]).toBe(oneMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(two, '[keyTwo]', 2);
+    expect(callback).toHaveBeenCalledWith(two, 2);
     expect(mappedChildren[mappedKeys[2]]).toBe(twoMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(three, '[3]', 3);
+    expect(callback).toHaveBeenCalledWith(three, 3);
     expect(mappedChildren[mappedKeys[3]]).toBe(threeMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(four, '[keyFour]', 4);
+    expect(callback).toHaveBeenCalledWith(four, 4);
     expect(mappedChildren[mappedKeys[4]]).toBe(fourMapped);
   });
 
@@ -180,7 +203,7 @@ describe('mapAllChildren', function() {
     var fourMapped = <div key="keyFour" />;
     var fiveMapped = <div />;
 
-    var mapFn = jasmine.createSpy().andCallFake(function (kid, key, index) {
+    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return index === 0 ? zeroMapped :
         index === 1 ? oneMapped :
         index === 2 ? twoMapped :
@@ -198,9 +221,18 @@ describe('mapAllChildren', function() {
       }</div>
     );
 
-    var mappedChildren = mapAllChildren(instance.props.children, mapFn);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
+    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(five, 5);
+    callback.reset();
+
+    var mappedChildren = ReactChildren.map(instance.props.children, callback);
     var mappedKeys = Object.keys(mappedChildren);
-    expect(mapFn.calls.length).toBe(6);
+    expect(callback.calls.length).toBe(6);
     expect(mappedKeys.length).toBe(6);
     // Keys default to indices.
     expect(mappedKeys).toEqual([
@@ -212,22 +244,22 @@ describe('mapAllChildren', function() {
       '[0]{keyFive}'
     ]);
 
-    expect(mapFn).toHaveBeenCalledWith(zero, '[0]{firstHalfKey}[keyZero]', 0);
+    expect(callback).toHaveBeenCalledWith(zero, 0);
     expect(mappedChildren[mappedKeys[0]]).toBe(zeroMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(one, '[0]{firstHalfKey}[1]', 1);
+    expect(callback).toHaveBeenCalledWith(one, 1);
     expect(mappedChildren[mappedKeys[1]]).toBe(oneMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(two, '[0]{firstHalfKey}[keyTwo]', 2);
+    expect(callback).toHaveBeenCalledWith(two, 2);
     expect(mappedChildren[mappedKeys[2]]).toBe(twoMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(three, '[0]{secondHalfKey}[0]', 3);
+    expect(callback).toHaveBeenCalledWith(three, 3);
     expect(mappedChildren[mappedKeys[3]]).toBe(threeMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(four, '[0]{secondHalfKey}[keyFour]', 4);
+    expect(callback).toHaveBeenCalledWith(four, 4);
     expect(mappedChildren[mappedKeys[4]]).toBe(fourMapped);
 
-    expect(mapFn).toHaveBeenCalledWith(five, '[0]{keyFive}', 5);
+    expect(callback).toHaveBeenCalledWith(five, 5);
     expect(mappedChildren[mappedKeys[5]]).toBe(fiveMapped);
   });
 
@@ -240,7 +272,7 @@ describe('mapAllChildren', function() {
     // Key should be added even if we don't supply it!
     var oneForceKeyMapped = <div />;
 
-    var mapFn = function(kid, key, index) {
+    var mapFn = function(kid, index) {
       return index === 0 ? zeroForceKeyMapped : oneForceKeyMapped;
     };
 
@@ -253,13 +285,13 @@ describe('mapAllChildren', function() {
 
     var expectedForcedKeys = ['[keyZero]', '[keyOne]'];
     var mappedChildrenForcedKeys =
-      mapAllChildren(forcedKeys.props.children, mapFn);
+      ReactChildren.map(forcedKeys.props.children, mapFn);
     var mappedForcedKeys = Object.keys(mappedChildrenForcedKeys);
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
     var expectedRemappedForcedKeys = ['{[keyZero]}', '{[keyOne]}'];
     var remappedChildrenForcedKeys =
-      mapAllChildren(mappedChildrenForcedKeys, mapFn);
+      ReactChildren.map(mappedChildrenForcedKeys, mapFn);
     expect(
       Object.keys(remappedChildrenForcedKeys)
     ).toEqual(expectedRemappedForcedKeys);
@@ -282,7 +314,7 @@ describe('mapAllChildren', function() {
     );
 
     expect(function() {
-      mapAllChildren(instance.props.children, mapFn);
+      ReactChildren.map(instance.props.children, mapFn);
     }).toThrow();
   });
 
@@ -296,7 +328,7 @@ describe('mapAllChildren', function() {
     );
 
     expect(function() {
-      mapAllChildren(instance.props.children, mapFn);
+      ReactChildren.map(instance.props.children, mapFn);
     }).toThrow();
   });
 });
