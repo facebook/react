@@ -97,6 +97,12 @@ var DefaultDOMPropertyConfig = {
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
+
+    /**
+     * Non-standard Properties
+     */
+    autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
+
     /**
      * SVG Properties
      */
@@ -136,6 +142,7 @@ var DefaultDOMPropertyConfig = {
     stopOpacity: 'stop-opacity'
   },
   DOMPropertyNames: {
+    autoCapitalize: 'autocapitalize',
     autoComplete: 'autocomplete',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
