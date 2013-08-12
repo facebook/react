@@ -51,6 +51,13 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('giraffe');
   });
 
+  it('should display `defaultValue` of number 0', function() {
+    var stub = <textarea defaultValue={0} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('0');
+  });
+
   it('should allow setting `value`', function() {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
@@ -59,6 +66,13 @@ describe('ReactDOMTextarea', function() {
 
     stub.replaceProps({value: 'gorilla'});
     expect(node.value).toEqual('gorilla');
+  });
+
+  it('should display `value` of number 0', function() {
+    var stub = <textarea value={0} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('0');
   });
 
   it('should treat children like `defaultValue`', function() {
@@ -101,4 +115,37 @@ describe('ReactDOMTextarea', function() {
 
     expect(console.warn.argsForCall.length).toBe(2);
   });
+});
+
+describe('ReactDOMInput', function() {
+  var React;
+  var ReactTestUtils;
+
+  var renderTextarea;
+
+  beforeEach(function() {
+    React = require('React');
+    ReactTestUtils = require('ReactTestUtils');
+
+    renderTextarea = function(component) {
+      var stub = ReactTestUtils.renderIntoDocument(component);
+      var node = stub.getDOMNode();
+      return node;
+    };
+  });
+
+  it('should display `defaultValue` of number 0', function() {
+    var stub = <input type="text" defaultValue={0} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('0');
+  });
+
+  it('should display `value` of number 0', function() {
+    var stub = <input type="text" value={0} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('0');
+  });
+
 });
