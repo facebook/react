@@ -48,7 +48,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   getInitialState: function() {
     return {
       checked: this.props.defaultChecked || false,
-      value: this.props.defaultValue || ''
+      value: this.props.defaultValue != null ? this.props.defaultValue : ''
     };
   },
 
