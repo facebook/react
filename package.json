@@ -50,7 +50,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-jshint": "~0.6.0",
     "optimist": "~0.4.0",
-    "phantomjs": ">= 1.9.0",
+    "phantomjs": "1.9.0-1",
     "semver": "~2.0.0",
     "uglify-js": "~2.3.6",
     "grunt-contrib-clean": "~0.4.1",
