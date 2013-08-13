@@ -77,7 +77,9 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       );
       defaultValue = '' + children;
     }
-    defaultValue = defaultValue || '';
+    if (defaultValue == null) {
+      defaultValue = '';
+    }
     return {
       // We save the initial value so that `ReactNativeComponent` doesn't update
       // `textContent` (unnecessary since we update value).
