@@ -150,11 +150,10 @@ function registerScrollValueMonitoring() {
  * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
  * they bubble to document.
  *
- * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
  * @private
  * @see http://www.quirksmode.org/dom/events/keys.html.
  */
-function listenAtTopLevel(touchNotMouse) {
+function listenAtTopLevel() {
   invariant(
     !_isListening,
     'listenAtTopLevel(...): Cannot setup top-level listener more than once.'
@@ -170,12 +169,10 @@ function listenAtTopLevel(touchNotMouse) {
   trapBubbledEvent(topLevelTypes.topMouseOut, 'mouseout', mountAt);
   trapBubbledEvent(topLevelTypes.topClick, 'click', mountAt);
   trapBubbledEvent(topLevelTypes.topDoubleClick, 'dblclick', mountAt);
-  if (touchNotMouse) {
-    trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
-    trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
-    trapBubbledEvent(topLevelTypes.topTouchMove, 'touchmove', mountAt);
-    trapBubbledEvent(topLevelTypes.topTouchCancel, 'touchcancel', mountAt);
-  }
+  trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
+  trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
+  trapBubbledEvent(topLevelTypes.topTouchMove, 'touchmove', mountAt);
+  trapBubbledEvent(topLevelTypes.topTouchCancel, 'touchcancel', mountAt);
   trapBubbledEvent(topLevelTypes.topKeyUp, 'keyup', mountAt);
   trapBubbledEvent(topLevelTypes.topKeyPress, 'keypress', mountAt);
   trapBubbledEvent(topLevelTypes.topKeyDown, 'keydown', mountAt);
@@ -256,9 +253,8 @@ var ReactEventEmitter = {
    * there's a touch top-level listeners, anchors don't receive clicks for some
    * reason, and only in some cases).
    *
-   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
    */
-  ensureListening: function(touchNotMouse) {
+  ensureListening: function() {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'ensureListening(...): Cannot toggle event listening in a Worker ' +
@@ -271,7 +267,7 @@ var ReactEventEmitter = {
       'creator being injected.'
     );
     if (!_isListening) {
-      listenAtTopLevel(touchNotMouse);
+      listenAtTopLevel();
       _isListening = true;
     }
   },
