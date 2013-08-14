@@ -55,6 +55,9 @@ function run(config, done) {
 }
 
 module.exports = function() {
+  // Let's see what's in travis' PATH
+  console.log("\n\n$PATH: " + process.env.PATH, "\n\n");
+  console.log(phantomjs);
   var config = this.data;
   var done = this.async();
 
