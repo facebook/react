@@ -819,7 +819,7 @@ var ReactCompositeComponentMixin = {
         // User is trying to bind() an autobound method; we effectively will
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
-        if (newThis !== component) {
+        if (newThis !== component && newThis !== null) {
           console.warn(
             'bind(): React component methods may only be bound to the ' +
             'component instance. See ' + componentName
