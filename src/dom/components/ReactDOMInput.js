@@ -61,6 +61,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
+    props.defaultChecked = null;
+    props.defaultValue = null;
     props.checked =
       this.props.checked != null ? this.props.checked : this.state.checked;
     // Cast `this.props.value` to a string so equality checks pass.
