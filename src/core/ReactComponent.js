@@ -16,17 +16,11 @@
  * @providesModule ReactComponent
  */
 
-/*jslint evil: true */
-
 "use strict";
 
-var getReactRootElementInContainer = require('getReactRootElementInContainer');
+var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
-var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactMount = require('ReactMount');
 var ReactOwner = require('ReactOwner');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -195,12 +189,33 @@ var ReactComponent = {
   LifeCycle: ComponentLifeCycle,
 
   /**
-   * React references `ReactDOMIDOperations` using this property in order to
-   * allow dependency injection.
+   * Injected module that provides ability to mutate individual properties.
+   * Injected into the base class because many different subclasses need access
+   * to this.
    *
    * @internal
    */
-  DOMIDOperations: ReactDOMIDOperations,
+  DOMIDOperations: ReactComponentEnvironment.DOMIDOperations,
+
+  /**
+   * Optionally injectable environment dependent cleanup hook. (server vs.
+   * browser etc). Example: A browser system caches DOM nodes based on component
+   * ID and must remove that cache entry when this instance is unmounted.
+   *
+   * @private
+   */
+  unmountIDFromEnvironment: ReactComponentEnvironment.unmountIDFromEnvironment,
+
+  /**
+   * The "image" of a component tree, is the platform specific (typically
+   * serialized) data that represents a tree of lower level UI building blocks.
+   * On the web, this "image" is HTML markup which describes a construction of
+   * low level `div` and `span` nodes. Other platforms may have different
+   * encoding of this "image". This must be injected.
+   *
+   * @private
+   */
+  mountImageIntoNode: ReactComponentEnvironment.mountImageIntoNode,
 
   /**
    * React references `ReactReconcileTransaction` using this property in order
@@ -208,30 +223,16 @@ var ReactComponent = {
    *
    * @internal
    */
-  ReactReconcileTransaction: ReactReconcileTransaction,
+  ReactReconcileTransaction:
+    ReactComponentEnvironment.ReactReconcileTransaction,
 
   /**
-   * @param {object} DOMIDOperations
-   * @final
-   */
-  setDOMOperations: function(DOMIDOperations) {
-    ReactComponent.DOMIDOperations = DOMIDOperations;
-  },
-
-  /**
-   * @param {Transaction} ReactReconcileTransaction
-   * @final
-   */
-  setReactReconcileTransaction: function(ReactReconcileTransaction) {
-    ReactComponent.ReactReconcileTransaction = ReactReconcileTransaction;
-  },
-
-  /**
-   * Base functionality for every ReactComponent constructor.
+   * Base functionality for every ReactComponent constructor. Mixed into the
+   * `ReactComponent` prototype, but exposed statically for easy access.
    *
    * @lends {ReactComponent.prototype}
    */
-  Mixin: {
+  Mixin: merge(ReactComponentEnvironment.Mixin, {
 
     /**
      * Checks whether or not this component is mounted.
@@ -242,21 +243,6 @@ var ReactComponent = {
      */
     isMounted: function() {
       return this._lifeCycleState === ComponentLifeCycle.MOUNTED;
-    },
-
-    /**
-     * Returns the DOM node rendered by this component.
-     *
-     * @return {DOMElement} The root node of this component.
-     * @final
-     * @protected
-     */
-    getDOMNode: function() {
-      invariant(
-        this.isMounted(),
-        'getDOMNode(): A component must be mounted to have a DOM node.'
-      );
-      return ReactMount.getNode(this._rootNodeID);
     },
 
     /**
@@ -382,7 +368,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
       }
-      ReactMount.purgeID(this._rootNodeID);
+      ReactComponent.unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -495,63 +481,8 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
-      invariant(
-        container && container.nodeType === 1,
-        'mountComponentIntoNode(...): Target container is not a DOM element.'
-      );
       var markup = this.mountComponent(rootID, transaction);
-
-      if (shouldReuseMarkup) {
-        if (ReactMarkupChecksum.canReuseMarkup(
-              markup,
-              getReactRootElementInContainer(container))) {
-          return;
-        } else {
-          if (__DEV__) {
-            console.warn(
-              'React attempted to use reuse markup in a container but the ' +
-              'checksum was invalid. This generally means that you are using ' +
-              'server rendering and the markup generated on the server was ' +
-              'not what the client was expecting. React injected new markup ' +
-              'to compensate which works but you have lost many of the ' +
-              'benefits of server rendering. Instead, figure out why the ' +
-              'markup being generated is different on the client or server.'
-            );
-          }
-        }
-      }
-
-      // Asynchronously inject markup by ensuring that the container is not in
-      // the document when settings its `innerHTML`.
-      var parent = container.parentNode;
-      if (parent) {
-        var next = container.nextSibling;
-        parent.removeChild(container);
-        container.innerHTML = markup;
-        if (next) {
-          parent.insertBefore(container, next);
-        } else {
-          parent.appendChild(container);
-        }
-      } else {
-        container.innerHTML = markup;
-      }
-    },
-
-    /**
-     * Unmounts this component and removes it from the DOM.
-     *
-     * @param {DOMElement} container DOM element to unmount from.
-     * @final
-     * @internal
-     * @see {ReactMount.unmountAndReleaseReactRootNode}
-     */
-    unmountComponentFromNode: function(container) {
-      this.unmountComponent();
-      // http://jsperf.com/emptying-a-node
-      while (container.lastChild) {
-        container.removeChild(container.lastChild);
-      }
+      ReactComponent.mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 
     /**
@@ -581,9 +512,7 @@ var ReactComponent = {
       }
       return owner.refs[ref];
     }
-
-  }
-
+  })
 };
 
 module.exports = ReactComponent;

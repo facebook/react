@@ -44,7 +44,7 @@ var ReactEventEmitterMixin = {
    * there's a touch top-level listeners, anchors don't receive clicks for some
    * reason, and only in some cases).
    *
-   * @param {*} Configuration passed through to `listenAtTopLevel`.
+   * @param {*} config Configuration passed through to `listenAtTopLevel`.
    */
   ensureListening: function(config) {
     if (!this._isListening) {

@@ -225,7 +225,7 @@ var ReactMount = {
    *
    * @private
    */
-  prepareTopLevelEvents: function() {
+  prepareEnvironmentForDOM: function() {
     ReactEventEmitter.ensureListening(ReactMount.useTouchEvents);
   },
 
@@ -262,7 +262,7 @@ var ReactMount = {
    * @return {string} reactRoot ID prefix
    */
   _registerComponent: function(nextComponent, container) {
-    ReactMount.prepareTopLevelEvents();
+    ReactMount.prepareEnvironmentForDOM();
 
     var reactRootID = ReactMount.registerContainer(container);
     instanceByReactRootID[reactRootID] = nextComponent;
@@ -400,13 +400,31 @@ var ReactMount = {
     if (!component) {
       return false;
     }
-    component.unmountComponentFromNode(container);
+    ReactMount.unmountComponentFromNode(component, container);
     delete instanceByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
     if (__DEV__) {
       delete rootElementsByReactRootID[reactRootID];
     }
     return true;
+  },
+
+  /**
+   * Unmounts a component and removes it from the DOM.
+   *
+   * @param {ReactComponent} instance React component instance.
+   * @param {DOMElement} container DOM element to unmount from.
+   * @final
+   * @internal
+   * @see {ReactMount.unmountAndReleaseReactRootNode}
+   */
+  unmountComponentFromNode: function(instance, container) {
+    instance.unmountComponent();
+
+    // http://jsperf.com/emptying-a-node
+    while (container.lastChild) {
+      container.removeChild(container.lastChild);
+    }
   },
 
   /**
