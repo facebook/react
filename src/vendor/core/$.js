@@ -21,9 +21,6 @@ var ge = require('ge');
 var ex = require('ex');
 
 /**
- * @param {string|DOMDocument|DOMElement|DOMTextNode} id
- * @return {DOMDocument|DOMElement|DOMTextNode}
- *
  * Find a node by ID.
  *
  * If your application code depends on the existence of the element, use $,
@@ -31,6 +28,9 @@ var ex = require('ex');
  *
  * If you're not sure whether or not the element exists, use ge instead, and
  * manually check for the element's existence in your application code.
+ *
+ * @param {string|DOMDocument|DOMElement|DOMTextNode|Comment} id
+ * @return {DOMDocument|DOMElement|DOMTextNode|Comment}
  */
 function $(id) {
   var element = ge(id);

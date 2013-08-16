@@ -16,8 +16,6 @@
  * @providesModule createObjectFrom
  */
 
-var hasArrayNature = require('hasArrayNature');
-
 /**
  * Construct an object from an array of keys
  * and optionally specified value or list of values.
@@ -43,19 +41,19 @@ var hasArrayNature = require('hasArrayNature');
  */
 function createObjectFrom(keys, values /* = true */) {
   if (__DEV__) {
-    if (!hasArrayNature(keys)) {
+    if (!Array.isArray(keys)) {
       throw new TypeError('Must pass an array of keys.');
     }
   }
 
   var object = {};
-  var is_array = hasArrayNature(values);
+  var isArray = Array.isArray(values);
   if (typeof values == 'undefined') {
     values = true;
   }
 
   for (var ii = keys.length; ii--;) {
-    object[keys[ii]] = is_array ? values[ii] : values;
+    object[keys[ii]] = isArray ? values[ii] : values;
   }
   return object;
 }

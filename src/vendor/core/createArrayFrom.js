@@ -17,7 +17,46 @@
  * @typechecks
  */
 
-var hasArrayNature = require('hasArrayNature');
+/**
+ * NOTE: if you are a previous user of this function, it has been considered
+ * unsafe because it's inconsistent across browsers for some inputs.
+ * Instead use `Array.isArray()`.
+ *
+ * Perform a heuristic test to determine if an object is "array-like".
+ *
+ *   A monk asked Joshu, a Zen master, "Has a dog Buddha nature?"
+ *   Joshu replied: "Mu."
+ *
+ * This function determines if its argument has "array nature": it returns
+ * true if the argument is an actual array, an `arguments' object, or an
+ * HTMLCollection (e.g. node.childNodes or node.getElementsByTagName()).
+ *
+ * @param {*} obj
+ * @return {boolean}
+ */
+function hasArrayNature(obj) {
+  return (
+    // not null/false
+    !!obj &&
+    // arrays are objects, NodeLists are functions in Safari
+    (typeof obj == 'object' || typeof obj == 'function') &&
+    // quacks like an array
+    ('length' in obj) &&
+    // not window
+    !('setInterval' in obj) &&
+    // no DOM node should be considered an array-like
+    // a 'select' element has 'length' and 'item' properties on IE8
+    (typeof obj.nodeType != 'number') &&
+    (
+      // a real array
+      Array.isArray(obj) ||
+      // arguments
+      ('callee' in obj) ||
+      // HTMLCollection/NodeList
+      ('item' in obj)
+    )
+  );
+}
 
 /**
  * Ensure that the argument is an array by wrapping it in an array if it is not.
