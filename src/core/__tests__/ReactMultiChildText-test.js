@@ -147,9 +147,9 @@ describe('ReactMultiChildText', function() {
   });
 
   it('should render zero number as text node then switch to spans', function() {
-    var d = renderSingleTextChild('0');
+    var d = renderSingleTextChild(0);
     // false should act exactly as a null child
-    assertNodeText(d, 0);
+    assertNodeText(d, '0');
     d.replaceProps({children: ['hello', 'goodbye']});
     assertMultiChild(d, 'hello', 'goodbye');
   });
