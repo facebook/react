@@ -45,7 +45,8 @@ var quoteAttrName = require('./xjs').quoteAttrName;
 
 var JSX_ATTRIBUTE_RENAMES = {
   'class': 'className',
-  cxName: 'className'
+  cxName: 'className',
+  'for': 'htmlFor'
 };
 
 var JSX_ATTRIBUTE_TRANSFORMS = {
