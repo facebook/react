@@ -45,10 +45,33 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
+  it('should display "" for `defaultValue` of `false`', function() {
+    var stub = <input type="text" defaultValue={false} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('');
+  });
+
   it('should display `value` of number 0', function() {
     var stub = <input type="text" value={0} />;
     var node = renderTextInput(stub);
 
+    expect(node.value).toBe('0');
+  });
+
+  it('should display "" for `value` of `false`', function() {
+    var stub = <input type="text" value={false} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('');
+  });
+
+  it('should properly control a value of number `0`', function() {
+    var stub = <input type="text" value={0} />;
+    var node = renderTextInput(stub);
+
+    node.value = 'giraffe';
+    ReactTestUtils.Simulate.input(node);
     expect(node.value).toBe('0');
   });
 
