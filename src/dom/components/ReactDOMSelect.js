@@ -116,7 +116,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.onChange = this.handleChange;
+    props.onChange = this._handleChange;
     props.value = null;
 
     return select(props, this.props.children);
@@ -126,7 +126,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
   componentDidUpdate: updateOptions,
 
-  handleChange: function(event) {
+  _handleChange: function(event) {
     var returnValue;
     if (this.props.onChange) {
       this._isChanging = true;
