@@ -58,11 +58,9 @@ function selectValueType(props, propName, componentName) {
  */
 function updateOptions() {
   /*jshint validthis:true */
-  if (this.props.value == null) {
-    return;
-  }
+  var value = this.props.value != null ? this.props.value : this.state.value;
   var options = this.getDOMNode().options;
-  var selectedValue = '' + this.props.value;
+  var selectedValue = '' + value;
 
   for (var i = 0, l = options.length; i < l; i++) {
     var selected = this.props.multiple ?
