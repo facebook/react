@@ -93,10 +93,6 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     return !this._isChanging;
   },
 
-  getValue: function() {
-    return this.props.value != null ? this.props.value : this.state.value;
-  },
-
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
@@ -106,8 +102,9 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
 
-    props.value = this.getValue();
-    props.onChange = this.handleChange;
+    props.value =
+      this.props.value != null ? this.props.value : this.state.value;
+    props.onChange = this._handleChange;
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
@@ -124,7 +121,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     }
   },
 
-  handleChange: function(event) {
+  _handleChange: function(event) {
     var returnValue;
     if (this.props.onChange) {
       this._isChanging = true;
