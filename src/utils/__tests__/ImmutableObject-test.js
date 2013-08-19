@@ -89,6 +89,12 @@ describe('ImmutableObject', function() {
     }).not.toThrow();
   });
 
+  testDev('should not exceed maximum call stack size with nodes', function() {
+    var node = document.createElement('div');
+    var object = new ImmutableObject({node: node});
+    expect(object.node).toBe(node);
+  });
+
   testDevAndProd('should not throw when not mutating directly', function() {
     var io = new ImmutableObject({oldField: 'asdf'});
     expect(function() {
