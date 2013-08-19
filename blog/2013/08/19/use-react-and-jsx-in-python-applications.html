@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Why did we build React?</title>
+  <title>React | Use React and JSX in Python Applications</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Why did we build React?" />
+  <meta property="og:title" content="React | Use React and JSX in Python Applications" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/06/05/why-react.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -57,7 +57,7 @@
     <h3>Recent posts</h3>
     <ul>
     
-      <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
+      <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html" class="active">Use React and JSX in Python Applications</a></li>
     
       <li><a href="/react/blog/2013/08/05/community-roundup-6.html">Community Round-up #6</a></li>
     
@@ -83,7 +83,7 @@
     
       <li><a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a></li>
     
-      <li><a href="/react/blog/2013/06/05/why-react.html" class="active">Why did we build React?</a></li>
+      <li><a href="/react/blog/2013/06/05/why-react.html">Why did we build React?</a></li>
     
       <li><a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a></li>
     
@@ -92,108 +92,56 @@
 </div>
 
   <div class="inner-content">
-    <h1>Why did we build React?</h1>
-    <p class="meta">June  5, 2013 by Pete Hunt</p>
+    <h1>Use React and JSX in Python Applications</h1>
+    <p class="meta">August 19, 2013 by Kunal Mehta</p>
 
     <hr>
 
     <div class="post">
-      <p>There are a lot of JavaScript MVC frameworks out there. Why did we build React
-and why would you want to use it?</p>
+      <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
 
-<h2>React isn&#39;t an MVC framework.</h2>
+<h2>Usage</h2>
 
-<p>React is a library for building composable user interfaces. It encourages
-the creation of reusable UI components which present data that changes over
-time.</p>
+<p>Transform your JSX files via the provided <code>jsx</code> module:</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
 
-<h2>React doesn&#39;t use templates.</h2>
+<span class="c"># For multiple paths, use the JSXTransformer class.</span>
+<span class="n">transformer</span> <span class="o">=</span> <span class="n">jsx</span><span class="o">.</span><span class="n">JSXTransformer</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">jsx_path</span><span class="p">,</span> <span class="n">js_path</span> <span class="ow">in</span> <span class="n">my_paths</span><span class="p">:</span>
+    <span class="n">transformer</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">jsx_path</span><span class="p">,</span> <span class="n">js_path</span><span class="p">)</span>
 
-<p>Traditionally, web application UIs are built using templates or HTML directives.
-These templates dictate the full set of abstractions that you are allowed to use
-to build your UI.</p>
+<span class="c"># For a single file, you can use a shortcut method.</span>
+<span class="n">jsx</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&#39;path/to/input/file.jsx&#39;</span><span class="p">,</span> <span class="s">&#39;path/to/output/file.js&#39;</span><span class="p">)</span>
+</code></pre></div>
+<p>For full paths to React files, use the <code>source</code> module:</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
 
-<p>React approaches building user interfaces differently by breaking them into
-<strong>components</strong>. This means React uses JavaScript to generate markup, which we
-see as an advantage over templates for a few reasons:</p>
+<span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
+<span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
+</code></pre></div>
+<h2>Django</h2>
 
-<ul>
-<li><strong>JavaScript is a flexible, powerful programming language</strong> with the ability
-to build abstractions. This is incredibly important in large applications.</li>
-<li>By unifying your markup with its corresponding view logic, React can actually
-make views <strong>easier to extend and maintain</strong>.</li>
-<li>By baking an understanding of markup and content into JavaScript, there&#39;s
-<strong>no manual string concatenation</strong> and therefore less surface area for XSS
-vulnerabilities.</li>
-</ul>
+<p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
+<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<h2>Installation</h2>
 
-<p>We&#39;ve also created <a href="http://facebook.github.io/react/docs/syntax.html">JSX</a>, an optional
-syntax extension, in case you prefer the readability of HTML to raw JavaScript.</p>
+<p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">$ pip install PyReact
+</code></pre></div>
+<p>Alternatively, add it into your <code>requirements</code> file:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">PyReact==0.1.1
+</code></pre></div>
+<p><strong>Dependencies</strong>: PyReact uses <a href="https://github.com/doloopwhile/PyExecJS">PyExecJS</a> to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&#39;re on a different platform, we recommend <a href="https://code.google.com/p/pyv8/">PyV8</a>.</p>
 
-<h2>Reactive updates are dead simple.</h2>
-
-<p>React really shines when your data changes over time.</p>
-
-<p>In a traditional JavaScript application, you need to look at what data changed
-and imperatively make changes to the DOM to keep it up-to-date. Even AngularJS,
-which provides a declarative interface via directives and data binding <a href="http://docs.angularjs.org/guide/directive#reasonsbehindthecompilelinkseparation">requires
-a linking function to manually update DOM nodes</a>.</p>
-
-<p>React takes a different approach.</p>
-
-<p>When your component is first initialized, the <code>render</code> method is called,
-generating a lightweight representation of your view. From that representation,
-a string of markup is produced, and injected into the document. When your data
-changes, the <code>render</code> method is called again. In order to perform updates as
-efficiently as possible, we diff the return value from the previous call to
-<code>render</code> with the new one, and generate a minimal set of changes to be applied
-to the DOM.</p>
-
-<blockquote>
-<p>The data returned from <code>render</code> is neither a string nor a DOM node -- it&#39;s a
-lightweight description of what the DOM should look like.</p>
-</blockquote>
-
-<p>We call this process <strong>reconciliation</strong>. Check out
-<a href="http://jsfiddle.net/fv6RD/3/">this jsFiddle</a> to see an example of
-reconciliation in action.</p>
-
-<p>Because this re-render is so fast (around 1ms for TodoMVC), the developer
-doesn&#39;t need to explicitly specify data bindings. We&#39;ve found this approach
-makes it easier to build apps.</p>
-
-<h2>HTML is just the beginning.</h2>
-
-<p>Because React has its own lightweight representation of the document, we can do
-some pretty cool things with it:</p>
-
-<ul>
-<li>Facebook has dynamic charts that render to <code>&lt;canvas&gt;</code> instead of HTML.</li>
-<li>Instagram is a &quot;single page&quot; web app built entirely with React and
-<code>Backbone.Router</code>. Designers regularly contribute React code with JSX.</li>
-<li>We&#39;ve built internal prototypes that run React apps in a web worker and use
-React to drive <strong>native iOS views</strong> via an Objective-C bridge.</li>
-<li>You can run React
-<a href="http://github.com/petehunt/react-server-rendering">on the server</a>
-for SEO, performance, code sharing and overall flexibility.</li>
-<li>Events behave in a consistent, standards-compliant way in all browsers
-(including IE8) and automatically use
-<a href="http://davidwalsh.name/event-delegate">event delegation</a>.</li>
-</ul>
-
-<p>Head on over to
-<a href="http://facebook.github.io/react">facebook.github.io/react</a> to check
-out what we have built. Our documentation is geared towards building
-apps with the framework, but if you are interested in the
-nuts and bolts
-<a href="http://facebook.github.io/react/support.html">get in touch</a> with us!</p>
-
-<p>Thanks for reading!</p>
+<p>For the initial release, we&#39;ve only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your <a href="https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md">contributions</a>!</p>
 
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/06/05/why-react.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html"></div>
   </div>
 </section>
 

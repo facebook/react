@@ -7,6 +7,53 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Use React and JSX in Python Applications</title>
+				<description>&lt;p&gt;Today we&amp;#39;re happy to announce the initial release of &lt;a href=&quot;https://github.com/facebook/react-python&quot;&gt;PyReact&lt;/a&gt;, which makes it easier to use React and JSX in your Python applications. It&amp;#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.&lt;/p&gt;
+
+&lt;h2&gt;Usage&lt;/h2&gt;
+
+&lt;p&gt;Transform your JSX files via the provided &lt;code&gt;jsx&lt;/code&gt; module:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;react&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# For multiple paths, use the JSXTransformer class.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;transformer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JSXTransformer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;js_path&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;my_paths&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;transformer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jsx_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;js_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# For a single file, you can use a shortcut method.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;path/to/input/file.jsx&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;path/to/output/file.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;For full paths to React files, use the &lt;code&gt;source&lt;/code&gt; module:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;react&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;
+
+&lt;span class=&quot;c&quot;&gt;# path_for raises IOError if the file doesn&amp;#39;t exist.&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;react_js&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path_for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;react.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Django&lt;/h2&gt;
+
+&lt;p&gt;PyReact includes a JSX compiler for &lt;a href=&quot;https://github.com/cyberdelia/django-pipeline&quot;&gt;django-pipeline&lt;/a&gt;. Add it to your project&amp;#39;s pipeline settings like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;PIPELINE_COMPILERS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;s&quot;&gt;&amp;#39;react.utils.pipeline.JSXCompiler&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Installation&lt;/h2&gt;
+
+&lt;p&gt;PyReact is hosted on PyPI, and can be installed with &lt;code&gt;pip&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;$ pip install PyReact
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Alternatively, add it into your &lt;code&gt;requirements&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;PyReact==0.1.1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Dependencies&lt;/strong&gt;: PyReact uses &lt;a href=&quot;https://github.com/doloopwhile/PyExecJS&quot;&gt;PyExecJS&lt;/a&gt; to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&amp;#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&amp;#39;re on a different platform, we recommend &lt;a href=&quot;https://code.google.com/p/pyv8/&quot;&gt;PyV8&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;For the initial release, we&amp;#39;ve only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your &lt;a href=&quot;https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md&quot;&gt;contributions&lt;/a&gt;!&lt;/p&gt;
+</description>
+				<pubDate>2013-08-19T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #6</title>
 				<description>&lt;p&gt;This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&amp;#39;s great to see the adoption of React growing.&lt;/p&gt;
 
@@ -579,35 +626,6 @@ If you were using React without JSX previously, your code should still work.&lt;
 				<pubDate>2013-06-27T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.3.3</title>
-				<description>&lt;p&gt;We have a ton of great stuff coming in v0.4, but in the meantime we&amp;#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.&lt;/p&gt;
-
-&lt;h2&gt;react-tools&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Upgrade Commoner so &lt;code&gt;require&lt;/code&gt; statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&amp;#39;t translate well for other consumers of &lt;code&gt;bin/jsx&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.&lt;/li&gt;
-&lt;li&gt;Freeze our esprima dependency.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;React&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Allow reusing the same DOM node to render different components. e.g. &lt;code&gt;React.renderComponent(&amp;lt;div/&amp;gt;, domNode); React.renderComponent(&amp;lt;span/&amp;gt;, domNode);&lt;/code&gt; will work now.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;JSXTransformer&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2013-06-21T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html</guid>
 			</item>
 		
 	</channel>
