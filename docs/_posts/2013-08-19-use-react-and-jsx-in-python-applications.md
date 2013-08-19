@@ -4,7 +4,7 @@ layout: post
 author: Kunal Mehta
 ---
 
-Today we're happy to announce the beta release of **PyReact**, which makes it easier to use React and JSX in your Python applications. It's designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.
+Today we're happy to announce the initial release of [PyReact](https://github.com/facebook/react-python), which makes it easier to use React and JSX in your Python applications. It's designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.
 
 ## Usage
 
@@ -53,4 +53,4 @@ Alternatively, add it into your `requirements` file:
 
 **Dependencies**: PyReact uses [PyExecJS](https://github.com/doloopwhile/PyExecJS) to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don't explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you're on a different platform, we recommend [PyV8](https://code.google.com/p/pyv8/).
 
-For the beta, we've only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your [contributions](https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md)!
+For the initial release, we've only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your [contributions](https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md)!
