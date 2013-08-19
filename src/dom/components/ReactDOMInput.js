@@ -57,22 +57,16 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     return !this._isChanging;
   },
 
-  getChecked: function() {
-    return this.props.checked != null ? this.props.checked : this.state.checked;
-  },
-
-  getValue: function() {
-    // Cast `this.props.value` to a string so equality checks pass.
-    return this.props.value != null ? '' + this.props.value : this.state.value;
-  },
-
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.checked = this.getChecked();
-    props.value = this.getValue();
-    props.onChange = this.handleChange;
+    props.checked =
+      this.props.checked != null ? this.props.checked : this.state.checked;
+    // Cast `this.props.value` to a string so equality checks pass.
+    props.value =
+      this.props.value != null ? '' + this.props.value : this.state.value;
+    props.onChange = this._handleChange;
 
     return input(props, this.props.children);
   },
@@ -96,7 +90,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     }
   },
 
-  handleChange: function(event) {
+  _handleChange: function(event) {
     var returnValue;
     if (this.props.onChange) {
       this._isChanging = true;
