@@ -2,7 +2,7 @@
 
 var React = require('./build/modules/React');
 var visitors = require('./vendor/fbtransform/visitors').transformVisitors;
-var transform = require('./vendor/fbtransform/lib/transform').transform;
+var transform = require('jstransform').transform;
 
 module.exports = {
   React: React,

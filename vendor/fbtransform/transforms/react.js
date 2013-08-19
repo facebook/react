@@ -16,12 +16,12 @@
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima').Syntax;
+var Syntax = require('esprima-fb').Syntax;
 
-var catchup = require('../lib/utils').catchup;
-var append = require('../lib/utils').append;
-var move = require('../lib/utils').move;
-var getDocblock = require('../lib/utils').getDocblock;
+var catchup = require('jstransform/src/utils').catchup;
+var append = require('jstransform/src/utils').append;
+var move = require('jstransform/src/utils').move;
+var getDocblock = require('jstransform/src/utils').getDocblock;
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
 var renderXJSExpressionContainer =

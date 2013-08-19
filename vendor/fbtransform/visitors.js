@@ -1,5 +1,5 @@
 /*global exports:true*/
-var classes = require('./transforms/classes');
+var es6Classes = require('jstransform/visitors/es6-class-visitors').visitorList;
 var react = require('./transforms/react');
 var reactDisplayName = require('./transforms/reactDisplayName');
 
@@ -7,20 +7,12 @@ var reactDisplayName = require('./transforms/reactDisplayName');
  * Map from transformName => orderedListOfVisitors.
  */
 var transformVisitors = {
-  'es6-classes': [
-    classes.visitClassExpression,
-    classes.visitClassDeclaration,
-    classes.visitSuperCall,
-    classes.visitPrivateProperty
+  'es6-classes': es6Classes,
+  'react': [
+    react.visitReactTag,
+    reactDisplayName.visitReactDisplayName
   ]
 };
-
-transformVisitors.react = transformVisitors[
-  "es6-classes"
-].concat([
-  react.visitReactTag,
-  reactDisplayName.visitReactDisplayName
-]);
 
 /**
  * Specifies the order in which each transform should run.
