@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var docblockRe = /^\s*(\/\*\*(.|\n)*?\*\/)/;
+var docblockRe = /^\s*(\/\*\*(.|\r?\n)*?\*\/)/;
 var ltrimRe = /^\s*/;
 /**
  * @param {String} contents
@@ -32,9 +32,9 @@ function extract(contents) {
 var commentStartRe = /^\/\*\*?/;
 var commentEndRe = /\*\/$/;
 var wsRe = /[\t ]+/g;
-var stringStartRe = /(\n|^) *\*/g;
-var multilineRe = /(?:^|\n) *(@[^\n]*?) *\n *([^@\n\s][^@\n]+?) *\n/g;
-var propertyRe = /(?:^|\n) *@(\S+) *([^\n]*)/g;
+var stringStartRe = /(\r?\n|^) *\*/g;
+var multilineRe = /(?:^|\r?\n) *(@[^\r\n]*?) *\r?\n *([^@\r\n\s][^@\r\n]+?) *\r?\n/g;
+var propertyRe = /(?:^|\r?\n) *@(\S+) *([^\r\n]*)/g;
 
 /**
  * @param {String} contents
