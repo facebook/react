@@ -616,12 +616,24 @@ var ReactCompositeComponentMixin = {
    * callback that will be executed when the call to setState is actually
    * completed.
    *
-   * @param {object} partialState Next partial state to be merged with state.
+   * @param {object|string} partialState Next partial state to be merged with
+                                         state or a key to be set in state.
+   * @param {?*} value a value to be set in state (requires first argument
+                       to be a key).
    * @param {?function} callback Called after state is updated.
    * @final
    * @protected
    */
-  setState: function(partialState, callback) {
+  setState: function(key, value, callback) {
+    var partialState;
+    if (typeof key === 'string') { // {string, anything, fn}
+        partialState = {};
+        partialState[key] = value;
+    } else { // {object, fn}
+        partialState = key;
+        callback = value;
+    }
+
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
       merge(this._pendingState || this.state, partialState),
