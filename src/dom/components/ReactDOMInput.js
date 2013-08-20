@@ -21,11 +21,15 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
+var ReactMount = require('ReactMount');
 
+var invariant = require('invariant');
 var merge = require('merge');
 
 // Store a reference to the <input> `ReactNativeComponent`.
 var input = ReactDOM.input;
+
+var instancesByReactID = {};
 
 /**
  * Implements an <input> native component that allows setting these optional
@@ -71,6 +75,17 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     return input(props, this.props.children);
   },
 
+  componentDidMount: function(rootNode) {
+    var id = ReactMount.getID(rootNode);
+    instancesByReactID[id] = this;
+  },
+
+  componentWillUnmount: function() {
+    var rootNode = this.getDOMNode();
+    var id = ReactMount.getID(rootNode);
+    delete instancesByReactID[id];
+  },
+
   componentDidUpdate: function(prevProps, prevState, rootNode) {
     if (this.props.checked != null) {
       DOMPropertyOperations.setValueForProperty(
@@ -101,6 +116,46 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       checked: event.target.checked,
       value: event.target.value
     });
+
+    var name = this.props.name;
+    if (this.props.type === 'radio' && name != null) {
+      var rootNode = this.getDOMNode();
+      // If `rootNode.form` was non-null, then we could try `form.elements`,
+      // but that sometimes behaves strangely in IE8. We could also try using
+      // `form.getElementsByName`, but that will only return direct children
+      // and won't include inputs that use the HTML5 `form=` attribute. Since
+      // the input might not even be in a form, let's just use the global
+      // `getElementsByName` to ensure we don't miss anything.
+      var group = document.getElementsByName(name);
+      for (var i = 0; i < group.length; i++) {
+        var otherNode = group[i];
+        if (otherNode === rootNode ||
+            otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
+            otherNode.form !== rootNode.form) {
+          continue;
+        }
+        var otherID = ReactMount.getID(otherNode);
+        invariant(
+          otherID,
+          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+          'same `name` is not supported.'
+        );
+        var otherInstance = instancesByReactID[otherID];
+        invariant(
+          otherInstance,
+          'ReactDOMInput: Unknown radio button ID %s.',
+          otherID
+        );
+        // In some cases, this will actually change the `checked` state value.
+        // In other cases, there's no change but this forces a reconcile upon
+        // which componentDidUpdate will reset the DOM property to whatever it
+        // should be.
+        otherInstance.setState({
+          checked: false
+        });
+      }
+    }
+
     return returnValue;
   }
 
