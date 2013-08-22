@@ -440,7 +440,7 @@ If you were using React without JSX previously, your code should still work.&lt;
 
 &lt;h2&gt;React Snippets&lt;/h2&gt;
 
-&lt;p&gt;Over the past several weeks, members of our team, &lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; and &lt;a href=&quot;http://zpao.com/&quot;&gt;Paul O&amp;#39;Shannessy&lt;/a&gt;, answered many questions that were asked in the &lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;React group&lt;/a&gt;. They give a good overview of how to integrate React with other libraries and APIs through the use of &lt;a href=&quot;/react/docs/mixins.html&quot;&gt;Mixins&lt;/a&gt; and &lt;a href=&quot;/react/docs/advanced-components.html&quot;&gt;Lifecycle Methods&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Over the past several weeks, members of our team, &lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; and &lt;a href=&quot;http://zpao.com/&quot;&gt;Paul O&amp;#39;Shannessy&lt;/a&gt;, answered many questions that were asked in the &lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;React group&lt;/a&gt;. They give a good overview of how to integrate React with other libraries and APIs through the use of &lt;a href=&quot;/react/docs/reusable-components.html&quot;&gt;Mixins&lt;/a&gt; and &lt;a href=&quot;/react/docs/working-with-the-browser.html&quot;&gt;Lifecycle Methods&lt;/a&gt;.&lt;/p&gt;
 
 &lt;blockquote&gt;
 &lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk&quot;&gt;Listening Scroll Event&lt;/a&gt;&lt;/p&gt;
