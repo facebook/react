@@ -29,7 +29,7 @@ The uncompressed, development version of React core with inline documentation.
 ```
 
 #### <a href="http://fb.me/JSXTransformer-{{site.react_version}}.js">JSX Transform</a>
-The JSX transformer used to support [XML syntax](/react/docs/syntax.html) in JavaScript.
+The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) in JavaScript.
 
 ```html
 <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
