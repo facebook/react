@@ -15,10 +15,10 @@
  */
 /*global exports:true*/
 "use strict";
-var append = require('../lib/utils').append;
-var catchup = require('../lib/utils').catchup;
-var move = require('../lib/utils').move;
-var Syntax = require('esprima').Syntax;
+var append = require('jstransform/src/utils').append;
+var catchup = require('jstransform/src/utils').catchup;
+var move = require('jstransform/src/utils').move;
+var Syntax = require('esprima-fb').Syntax;
 
 var knownTags = {
   a: true,
