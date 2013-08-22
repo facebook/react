@@ -23,7 +23,7 @@ The best part is the demo of how React reconciliation process makes live editing
 
 ## React Snippets
 
-Over the past several weeks, members of our team, [Pete Hunt](http://www.petehunt.net/) and [Paul O'Shannessy](http://zpao.com/), answered many questions that were asked in the [React group](https://groups.google.com/forum/#!forum/reactjs). They give a good overview of how to integrate React with other libraries and APIs through the use of [Mixins](/react/docs/mixins.html) and [Lifecycle Methods](/react/docs/advanced-components.html).
+Over the past several weeks, members of our team, [Pete Hunt](http://www.petehunt.net/) and [Paul O'Shannessy](http://zpao.com/), answered many questions that were asked in the [React group](https://groups.google.com/forum/#!forum/reactjs). They give a good overview of how to integrate React with other libraries and APIs through the use of [Mixins](/react/docs/reusable-components.html) and [Lifecycle Methods](/react/docs/working-with-the-browser.html).
 
 > [Listening Scroll Event](https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk)
 >

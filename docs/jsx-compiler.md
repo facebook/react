@@ -6,7 +6,7 @@ id: jsx-compiler
 <div class="jsxCompiler">
   <h1>JSX Compiler</h1>
   <p>
-    This tool demonstrates how <a href="/react/docs/syntax.html">JSX syntax</a>
+    This tool demonstrates how <a href="/react/docs/jsx-in-depth.html">JSX syntax</a>
     is desguared into native JavaScript.
   </p>
   <div id="jsxCompiler"></div>
