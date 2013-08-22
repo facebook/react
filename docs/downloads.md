@@ -35,6 +35,8 @@ The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) 
 <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
 ```
 
+All scripts are also available via [CDNJS](http://cdnjs.com/#react).
+
 ## Bower
 
 ```sh
