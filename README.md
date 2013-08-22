@@ -32,7 +32,7 @@ You'll notice that we used an XML-like syntax; [we call it JSX](http://facebook.
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN:
+The fastest way to get started is to serve JavaScript from the CDN (also available on [CDNJS](http://cdnjs.com/#react)):
 
 ```html
 <!-- The core React library -->
