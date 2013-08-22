@@ -20,10 +20,10 @@
 var runScripts;
 var headEl;
 
-var transform = require('./fbtransform/lib/transform').transform;
+var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
 var transform = transform.bind(null, visitors.react);
-var docblock = require('./fbtransform/lib/docblock');
+var docblock = require('jstransform/src/docblock');
 
 
 exports.transform = transform;

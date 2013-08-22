@@ -16,10 +16,10 @@
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima').Syntax;
-var catchup = require('../lib/utils').catchup;
-var append = require('../lib/utils').append;
-var getDocblock = require('../lib/utils').getDocblock;
+var Syntax = require('esprima-fb').Syntax;
+var catchup = require('jstransform/src/utils').catchup;
+var append = require('jstransform/src/utils').append;
+var getDocblock = require('jstransform/src/utils').getDocblock;
 
 /**
  * Transforms the following:

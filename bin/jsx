@@ -2,7 +2,7 @@
 "use strict";
 
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
-var transform = require('../vendor/fbtransform/lib/transform').transform;
+var transform = require('jstransform').transform;
 var propagate = require("../vendor/constants").propagate;
 
 require("commoner").resolve(function(id) {

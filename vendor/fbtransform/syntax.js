@@ -3,7 +3,7 @@
 /*global exports:true*/
 "use strict";
 
-var transform = require('./lib/transform').transform;
+var transform = require('jstransform').transform;
 var visitors = require('./visitors');
 
 /**
