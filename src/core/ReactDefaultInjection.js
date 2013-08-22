@@ -26,6 +26,7 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactPerf = require('ReactPerf');
 
 var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
 var DOMProperty = require('DOMProperty');
@@ -66,6 +67,10 @@ function inject() {
   });
 
   DOMProperty.injection.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
+
+  if (__DEV__) {
+    ReactPerf.injection.injectMeasure(require('ReactDefaultPerf').measure);
+  }
 }
 
 module.exports = {

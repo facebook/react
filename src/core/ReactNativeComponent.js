@@ -26,6 +26,7 @@ var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactMount = require('ReactMount');
+var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var flattenChildren = require('flattenChildren');
@@ -85,15 +86,19 @@ ReactNativeComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    * @return {string} The computed markup.
    */
-  mountComponent: function(rootID, transaction) {
-    ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
-    assertValidProps(this.props);
-    return (
-      this._createOpenTagMarkup() +
-      this._createContentMarkup(transaction) +
-      this._tagClose
-    );
-  },
+  mountComponent: ReactPerf.measure(
+    'ReactNativeComponent',
+    'mountComponent',
+    function(rootID, transaction) {
+      ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
+      assertValidProps(this.props);
+      return (
+        this._createOpenTagMarkup() +
+        this._createContentMarkup(transaction) +
+        this._tagClose
+      );
+    }
+  ),
 
   /**
    * Creates markup for the open tag and all attributes.
@@ -184,11 +189,15 @@ ReactNativeComponent.Mixin = {
    * @internal
    * @overridable
    */
-  updateComponent: function(transaction, prevProps) {
-    ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
-    this._updateDOMProperties(prevProps);
-    this._updateDOMChildren(prevProps, transaction);
-  },
+  updateComponent: ReactPerf.measure(
+    'ReactNativeComponent',
+    'updateComponent',
+    function(transaction, prevProps) {
+      ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+      this._updateDOMProperties(prevProps);
+      this._updateDOMChildren(prevProps, transaction);
+    }
+  ),
 
   /**
    * Reconciles the properties by detecting differences in property values and

@@ -23,6 +23,7 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactComponent = require('ReactComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
+var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 
@@ -42,7 +43,11 @@ var React = {
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   forEachChildren: ReactChildren.forEach,
   mapChildren: ReactChildren.map,
-  renderComponent: ReactMount.renderComponent,
+  renderComponent: ReactPerf.measure(
+    'React',
+    'renderComponent',
+    ReactMount.renderComponent
+  ),
   renderComponentToString: ReactServerRendering.renderComponentToString,
   unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
   isValidComponent: ReactComponent.isValidComponent

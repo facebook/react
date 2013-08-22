@@ -21,6 +21,7 @@
 var ReactComponent = require('ReactComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactOwner = require('ReactOwner');
+var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
 var ReactUpdates = require('ReactUpdates');
 
@@ -479,41 +480,45 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction) {
-    ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
-    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+  mountComponent: ReactPerf.measure(
+    'ReactCompositeComponent',
+    'mountComponent',
+    function(rootID, transaction) {
+      ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
+      this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
-    this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
-    this._processProps(this.props);
+      this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
+      this._processProps(this.props);
 
-    if (this.__reactAutoBindMap) {
-      this._bindAutoBindMethods();
-    }
-
-    this.state = this.getInitialState ? this.getInitialState() : null;
-    this._pendingState = null;
-    this._pendingForceUpdate = false;
-
-    if (this.componentWillMount) {
-      this.componentWillMount();
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingState` without triggering a re-render.
-      if (this._pendingState) {
-        this.state = this._pendingState;
-        this._pendingState = null;
+      if (this.__reactAutoBindMap) {
+        this._bindAutoBindMethods();
       }
-    }
 
-    this._renderedComponent = this._renderValidatedComponent();
+      this.state = this.getInitialState ? this.getInitialState() : null;
+      this._pendingState = null;
+      this._pendingForceUpdate = false;
 
-    // Done with mounting, `setState` will now trigger UI changes.
-    this._compositeLifeCycleState = null;
-    var markup = this._renderedComponent.mountComponent(rootID, transaction);
-    if (this.componentDidMount) {
-      transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+      if (this.componentWillMount) {
+        this.componentWillMount();
+        // When mounting, calls to `setState` by `componentWillMount` will set
+        // `this._pendingState` without triggering a re-render.
+        if (this._pendingState) {
+          this.state = this._pendingState;
+          this._pendingState = null;
+        }
+      }
+
+      this._renderedComponent = this._renderValidatedComponent();
+
+      // Done with mounting, `setState` will now trigger UI changes.
+      this._compositeLifeCycleState = null;
+      var markup = this._renderedComponent.mountComponent(rootID, transaction);
+      if (this.componentDidMount) {
+        transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+      }
+      return markup;
     }
-    return markup;
-  },
+  ),
 
   /**
    * Releases any resources allocated by `mountComponent`.
@@ -714,25 +719,29 @@ var ReactCompositeComponentMixin = {
    * @internal
    * @overridable
    */
-  updateComponent: function(transaction, prevProps, prevState) {
-    ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
-    var currentComponent = this._renderedComponent;
-    var nextComponent = this._renderValidatedComponent();
-    if (currentComponent.constructor === nextComponent.constructor) {
-      currentComponent.receiveProps(nextComponent.props, transaction);
-    } else {
-      // These two IDs are actually the same! But nothing should rely on that.
-      var thisID = this._rootNodeID;
-      var currentComponentID = currentComponent._rootNodeID;
-      currentComponent.unmountComponent();
-      var nextMarkup = nextComponent.mountComponent(thisID, transaction);
-      ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-        currentComponentID,
-        nextMarkup
-      );
-      this._renderedComponent = nextComponent;
+  updateComponent: ReactPerf.measure(
+    'ReactCompositeComponent',
+    'updateComponent',
+    function(transaction, prevProps, prevState) {
+      ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+      var currentComponent = this._renderedComponent;
+      var nextComponent = this._renderValidatedComponent();
+      if (currentComponent.constructor === nextComponent.constructor) {
+        currentComponent.receiveProps(nextComponent.props, transaction);
+      } else {
+        // These two IDs are actually the same! But nothing should rely on that.
+        var thisID = this._rootNodeID;
+        var currentComponentID = currentComponent._rootNodeID;
+        currentComponent.unmountComponent();
+        var nextMarkup = nextComponent.mountComponent(thisID, transaction);
+        ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+          currentComponentID,
+          nextMarkup
+        );
+        this._renderedComponent = nextComponent;
+      }
     }
-  },
+  ),
 
   /**
    * Forces an update. This should only be invoked when it is known with
