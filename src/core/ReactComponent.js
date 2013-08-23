@@ -177,10 +177,10 @@ var ReactComponent = {
   getKey: function(component, index) {
     if (component && component.props && component.props.key != null) {
       // Explicit key
-      return '' + component.props.key;
+      return '{' + component.props.key + '}';
     }
     // Implicit key determined by the index in the set
-    return '' + index;
+    return '[' + index + ']';
   },
 
   /**

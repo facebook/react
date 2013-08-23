@@ -71,10 +71,10 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
-    checkId(node.childNodes[0], '.r[0].[apple]');
-    checkId(node.childNodes[1], '.r[0].[banana]');
-    checkId(node.childNodes[2], '.r[0].[0]');
-    checkId(node.childNodes[3], '.r[0].[123]');
+    checkId(node.childNodes[0], '.r[0].{apple}');
+    checkId(node.childNodes[1], '.r[0].{banana}');
+    checkId(node.childNodes[2], '.r[0].{0}');
+    checkId(node.childNodes[3], '.r[0].{123}');
   });
 
   it('should use instance identity', function() {
@@ -96,12 +96,12 @@ describe('ReactIdentity', function() {
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
 
-    checkId(node.childNodes[0], '.r[0].[wrap1]');
-    checkId(node.childNodes[0].firstChild, '.r[0].[wrap1].[squirrel]');
-    checkId(node.childNodes[1], '.r[0].[wrap2]');
-    checkId(node.childNodes[1].firstChild, '.r[0].[wrap2].[bunny]');
+    checkId(node.childNodes[0], '.r[0].{wrap1}');
+    checkId(node.childNodes[0].firstChild, '.r[0].{wrap1}.{squirrel}');
+    checkId(node.childNodes[1], '.r[0].{wrap2}');
+    checkId(node.childNodes[1].firstChild, '.r[0].{wrap2}.{bunny}');
     checkId(node.childNodes[2], '.r[0].[2]');
-    checkId(node.childNodes[2].firstChild, '.r[0].[2].[chipmunk]');
+    checkId(node.childNodes[2].firstChild, '.r[0].[2].{chipmunk}');
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
@@ -116,7 +116,7 @@ describe('ReactIdentity', function() {
     expect(span1.getDOMNode()).not.toBe(null);
     expect(span2.getDOMNode()).not.toBe(null);
 
-    checkId(span1.getDOMNode(), '.r[0].[' + key + ']');
+    checkId(span1.getDOMNode(), '.r[0].{' + key + '}');
     checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}');
   }
 
@@ -290,5 +290,18 @@ describe('ReactIdentity', function() {
     expect(beforeID).not.toEqual(afterID);
 
   });
+
+  it('should not allow implicit and explicit keys to collide', function() {
+    var component =
+      <div>
+        <span />
+        <span key="0" />
+      </div>;
+
+    expect(function() {
+      React.renderComponent(component, document.createElement('div'));
+    }).not.toThrow();
+  });
+
 
 });

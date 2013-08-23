@@ -92,7 +92,7 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(1);
     expect(mappedChildren[mappedKeys[0]]).not.toBe(simpleKid);
     expect(mappedChildren[mappedKeys[0]].props.children).toBe(simpleKid);
-    expect(mappedKeys[0]).toBe('[simple]');
+    expect(mappedKeys[0]).toBe('{simple}');
   });
 
   it('should invoke callback with the right context', function() {
@@ -162,7 +162,7 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(5);
     // Keys default to indices.
     expect(mappedKeys).toEqual(
-      ['[keyZero]', '[1]', '[keyTwo]', '[3]', '[keyFour]']
+      ['{keyZero}', '[1]', '{keyTwo}', '[3]', '{keyFour}']
     );
 
     expect(callback).toHaveBeenCalledWith(zero, 0);
@@ -236,11 +236,11 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(6);
     // Keys default to indices.
     expect(mappedKeys).toEqual([
-      '[0]{firstHalfKey}[keyZero]',
+      '[0]{firstHalfKey}{keyZero}',
       '[0]{firstHalfKey}[1]',
-      '[0]{firstHalfKey}[keyTwo]',
+      '[0]{firstHalfKey}{keyTwo}',
       '[0]{secondHalfKey}[0]',
-      '[0]{secondHalfKey}[keyFour]',
+      '[0]{secondHalfKey}{keyFour}',
       '[0]{keyFive}'
     ]);
 
@@ -283,13 +283,13 @@ describe('ReactChildren', function() {
       </div>
     );
 
-    var expectedForcedKeys = ['[keyZero]', '[keyOne]'];
+    var expectedForcedKeys = ['{keyZero}', '{keyOne}'];
     var mappedChildrenForcedKeys =
       ReactChildren.map(forcedKeys.props.children, mapFn);
     var mappedForcedKeys = Object.keys(mappedChildrenForcedKeys);
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
-    var expectedRemappedForcedKeys = ['{[keyZero]}', '{[keyOne]}'];
+    var expectedRemappedForcedKeys = ['{{keyZero}}', '{{keyOne}}'];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);
     expect(
@@ -298,7 +298,7 @@ describe('ReactChildren', function() {
 
   });
 
-  it('should throw if key provided is a dupe with array key', function() {
+  it('should not throw if key provided is a dupe with array key', function() {
     var zero = <div />;
     var one = <div key="0" />;
 
@@ -315,7 +315,7 @@ describe('ReactChildren', function() {
 
     expect(function() {
       ReactChildren.map(instance.props.children, mapFn);
-    }).toThrow();
+    }).not.toThrow();
   });
 
   it('should throw if key provided is a dupe with explicit key', function() {
