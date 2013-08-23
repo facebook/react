@@ -16,6 +16,8 @@
  * @providesModule ReactEventEmitterMixin
  */
 
+"use strict";
+
 var EventPluginHub = require('EventPluginHub');
 var ReactUpdates = require('ReactUpdates');
 
