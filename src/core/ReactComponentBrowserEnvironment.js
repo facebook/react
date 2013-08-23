@@ -85,7 +85,7 @@ var ReactComponentBrowserEnvironment = {
         container.nodeType === ELEMENT_NODE_TYPE ||
         container.nodeType === DOC_NODE_TYPE && ReactMount.allowFullPageRender
       ),
-      'mountComponentIntoNode(...): Target container is not a DOM element.'
+      'mountComponentIntoNode(...): Target container is not valid.'
     );
     if (shouldReuseMarkup) {
       if (ReactMarkupChecksum.canReuseMarkup(

@@ -20,6 +20,7 @@
 "use strict";
 
 var React;
+var ReactMount;
 var ReactTestUtils;
 
 var reactComponentExpect;
@@ -27,8 +28,23 @@ var reactComponentExpect;
 describe('ReactComponent', function() {
   beforeEach(function() {
     React = require('React');
+    ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
+  });
+
+  it('should not throw on full document rendering', function() {
+    var container = {nodeType: 9};
+    expect(function() {
+      React.renderComponent(<div></div>, container);
+    }).toThrow(
+      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
+      'not valid.'
+    );
+    ReactMount.allowFullPageRender = true;
+    expect(function() {
+      React.renderComponent(<div></div>, container);
+    }).not.toThrow();
   });
 
   it('should throw on invalid render targets', function() {
@@ -38,14 +54,14 @@ describe('ReactComponent', function() {
       React.renderComponent(<div></div>, [container]);
     }).toThrow(
       'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
-      'not a DOM element.'
+      'not valid.'
     );
 
     expect(function() {
       React.renderComponent(<div></div>, null);
     }).toThrow(
       'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
-      'not a DOM element.'
+      'not valid.'
     );
   });
 
