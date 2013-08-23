@@ -16,10 +16,15 @@
  * @providesModule getMarkupWrap
  */
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
+var invariant = require('invariant');
+
 /**
  * Dummy container used to detect which wraps are necessary.
  */
-var dummyNode = document.createElement('div');
+var dummyNode =
+  ExecutionEnvironment.canUseDOM ? document.createElement('div') : null;
 
 /**
  * Some browsers cannot use `innerHTML` to render certain elements standalone,
@@ -55,6 +60,7 @@ var markupWrap = {
  * @return {?array} Markup wrap configuration, if applicable.
  */
 function getMarkupWrap(nodeName) {
+  invariant(!!dummyNode, 'Markup wrapping node not initialized');
   if (!markupWrap.hasOwnProperty(nodeName)) {
     nodeName = '*';
   }

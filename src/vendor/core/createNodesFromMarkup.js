@@ -19,6 +19,8 @@
 
 /*jslint evil: true, sub: true */
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var createArrayFrom = require('createArrayFrom');
 var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
@@ -26,7 +28,8 @@ var invariant = require('invariant');
 /**
  * Dummy container used to render all markup.
  */
-var dummyNode = document.createElement('div');
+var dummyNode =
+  ExecutionEnvironment.canUseDOM ? document.createElement('div') : null;
 
 /**
  * Pattern used by `getNodeName`.
@@ -56,6 +59,7 @@ function getNodeName(markup) {
  */
 function createNodesFromMarkup(markup, handleScript) {
   var node = dummyNode;
+  invariant(!!dummyNode, 'createNodesFromMarkup dummy not initialized');
   var nodeName = getNodeName(markup);
 
   var wrap = nodeName && getMarkupWrap(nodeName);
