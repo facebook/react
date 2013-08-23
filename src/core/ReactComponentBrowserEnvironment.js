@@ -29,6 +29,9 @@ var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
 
 
+var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+
 
 /**
  * Abstracts away all functionality of `ReactComponent` requires knowledge of
@@ -78,8 +81,11 @@ var ReactComponentBrowserEnvironment = {
    */
   mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
     invariant(
-      container && container.nodeType === 1,
-      'mountComponentIntoNode(...): Target container is not a DOM element.'
+      container && (
+        container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOC_NODE_TYPE && ReactMount.allowFullPageRender
+      ),
+      'mountComponentIntoNode(...): Target container is not valid.'
     );
     if (shouldReuseMarkup) {
       if (ReactMarkupChecksum.canReuseMarkup(
