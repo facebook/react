@@ -34,9 +34,7 @@ var ExecutionEnvironment = {
 
   canUseWorkers: typeof Worker !== 'undefined',
 
-  isInWorker: !canUseDOM, // For now, this is true - might change in the future.
-
-  global: new Function('return this;')()
+  isInWorker: !canUseDOM // For now, this is true - might change in the future.
 
 };
 

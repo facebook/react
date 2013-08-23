@@ -21,7 +21,6 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 var ReactMount = require('ReactMount');
@@ -73,9 +72,9 @@ var EnterLeaveEventPlugin = {
       from = topLevelTarget;
       to =
         getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-        ExecutionEnvironment.global;
+        window;
     } else {
-      from = ExecutionEnvironment.global;
+      from = window;
       to = topLevelTarget;
     }
 
