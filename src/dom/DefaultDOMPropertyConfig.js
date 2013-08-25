@@ -82,6 +82,7 @@ var DefaultDOMPropertyConfig = {
     readOnly: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     required: HAS_BOOLEAN_VALUE,
     role: MUST_USE_ATTRIBUTE,
+    rowSpan: null,
     scrollLeft: MUST_USE_PROPERTY,
     scrollTop: MUST_USE_PROPERTY,
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
