@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Tooling integration</title>
+  <title>React | Tooling Integration</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Tooling integration" />
+  <meta property="og:title" content="React | Tooling Integration" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="http://facebook.github.io/react/docs/tooling-integration.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
@@ -156,7 +156,7 @@
         
           <li>
             <a href="/react/docs/tooling-integration.html" class="active">
-              Tooling integration
+              Tooling Integration
             </a>
             
           </li>
@@ -175,19 +175,23 @@
 
 
   <div class="inner-content">
-    <h1>Tooling integration</h1>
+    <h1>Tooling Integration</h1>
     <div class="subHeader"></div>
     <p>Every project uses a different system for building and deploying JavaScript. We&#39;ve tried to make React as environment-agnostic as possible.</p>
 
-<h2>CDN-hosted React</h2>
+<h2>React</h2>
+
+<h3>CDN-hosted React</h3>
 
 <p>We provide CDN-hosted versions of React <a href="/react/downloads.html">on our download page</a>. These prebuilt files use the UMD module format. Dropping them in with a simple <code>&lt;script&gt;</code> tag will inject a <code>React</code> global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.</p>
 
-<h2>Using master</h2>
+<h3>Using master</h3>
 
 <p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
 
-<h2>In-browser JSX Transform</h2>
+<h2>JSX</h2>
+
+<h3>In-browser JSX Transform</h3>
 
 <p>If you like using JSX, we provide an in-browser JSX transformer for development <a href="/react/downloads.html">on our download page</a>. Simply include a <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> tag to engage the JSX transformer. Be sure to include the <code>/** @jsx React.DOM */</code> comment as well, otherwise the transformer will not run the transforms.</p>
 
@@ -197,20 +201,25 @@
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
 
-<h2>Productionizing: Precompiled JSX</h2>
+<h3>Productionizing: Precompiled JSX</h3>
 
 <p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>. Run <code>jsx --help</code> for more information on how to use this tool.</p>
 
-<h2>Helpful Open-Source Projects</h2>
+<h3>Helpful Open-Source Projects</h3>
 
 <p>The open-source community has built tools that integrate JSX with several build systems.</p>
 
 <ul>
-<li><a href="https://github.com/andreypopp/reactify">reactify</a> - use JSX with <a href="http://browserify.org/">browserify</a>.</li>
+<li><a href="https://github.com/andreypopp/reactify">reactify</a> - use JSX with <a href="http://browserify.org/">browserify</a></li>
 <li><a href="https://github.com/ericclemmons/grunt-react">grunt-react</a> - <a href="http://gruntjs.com/">grunt</a> task for JSX</li>
 <li><a href="https://github.com/seiffert/require-jsx">require-jsx</a> - use JSX with <a href="http://requirejs.org/">require.js</a></li>
-<li><a href="https://github.com/jordwalke/reactapp">reactapp</a> - a sample project to get up-and-running with React quickly</li>
+<li><a href="https://github.com/facebook/react-python">pyReact</a> - use JSX with <a href="http://www.python.org/">Python</a></li>
+<li><a href="https://github.com/facebook/react-rails">react-rails</a> - use JSX with <a href="http://rubyonrails.org/">Ruby on Rails</a></li>
 </ul>
+
+<h2>React Page</h2>
+
+<p>To get started on a new project, you can use <a href="https://github.com/facebook/react-page/">react-page</a>, a complete React project creator. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
 
 
     <div class="docs-prevnext">

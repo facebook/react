@@ -7,6 +7,93 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #7</title>
+				<description>&lt;p&gt;It&amp;#39;s been three months since we open sourced React and it is going well. Some stats so far:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;114 285 unique visitors on this website&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/stargazers&quot;&gt;1933 stars&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/network/members&quot;&gt;210 forks&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;226 posts on Google Group&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://gist.github.com/vjeux/6335762&quot;&gt;76 Github projects using React&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/graphs/contributors&quot;&gt;30 contributors&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;http://facebook.github.io/react/blog/&quot;&gt;15 blog posts&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;2 early adopters: &lt;a href=&quot;http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html&quot;&gt;Khan Academy&lt;/a&gt; and &lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;Propeller&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2&gt;Wolfenstein Rendering Engine Ported to React&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; ported the render code of the web version of Wolfenstein 3D to React. Check out &lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;the demo&lt;/a&gt; and &lt;a href=&quot;https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183&quot;&gt;render.js&lt;/a&gt; file for the implementation.
+&lt;figure&gt;&lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;&lt;img src=&quot;/react/img/blog/wolfenstein_react.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;h2&gt;React &amp;amp; Meteor&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/benjamn&quot;&gt;Ben Newman&lt;/a&gt; made a &lt;a href=&quot;https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js&quot;&gt;13-lines wrapper&lt;/a&gt; to use React and Meteor together. &lt;a href=&quot;http://www.meteor.com/&quot;&gt;Meteor&lt;/a&gt; handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.&lt;/p&gt;
+
+&lt;p&gt;The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+ &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MeteorMixin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+
+ &lt;span class=&quot;nx&quot;&gt;getMeteorState&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+
+ &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
+ &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Dependencies will be registered for any data accesses performed by getMeteorState so that the component can be automatically re-rendered whenever the data changes.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/benjamn/meteor-react&quot;&gt;Read more ...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2&gt;React Page&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt; implemented a complete React project creator called &lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;react-page&lt;/a&gt;. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Easy Application Development with React JavaScript
+&lt;figure&gt;&lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-page.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Why Server Rendering?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Faster initial page speed:
+
+&lt;ul&gt;
+&lt;li&gt;Markup displayed before downloading large JavaScript.&lt;/li&gt;
+&lt;li&gt;Markup can be generated more quickly on a fast server than low power client devices.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Faster Development and Prototyping:
+
+&lt;ul&gt;
+&lt;li&gt;Instantly refresh your app without waiting for any watch scripts or bundlers.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Easy deployment of static content pages/blogs: just archive using recursive wget.&lt;/li&gt;
+&lt;li&gt;SEO benefits of indexability and perf.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;How Does Server Rendering Work?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;react-page&lt;/code&gt; computes page markup on the server, sends it to the client so the user can see it quickly.&lt;/li&gt;
+&lt;li&gt;The corresponding JavaScript is then packaged and sent.&lt;/li&gt;
+&lt;li&gt;The browser runs that JavaScript, so that all of the event handlers, interactions and update code will run seamlessly on top of the server generated markup.&lt;/li&gt;
+&lt;li&gt;From the developer&amp;#39;s (and the user&amp;#39;s) perspective, it&amp;#39;s just as if the rendering occurred on the client, only faster.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;Try it out ...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+				<pubDate>2013-08-26T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</guid>
+			</item>
+		
+			<item>
 				<title>Use React and JSX in Python Applications</title>
 				<description>&lt;p&gt;Today we&amp;#39;re happy to announce the initial release of &lt;a href=&quot;https://github.com/facebook/react-python&quot;&gt;PyReact&lt;/a&gt;, which makes it easier to use React and JSX in your Python applications. It&amp;#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.&lt;/p&gt;
 
@@ -532,100 +619,6 @@ If you were using React without JSX previously, your code should still work.&lt;
 				<pubDate>2013-07-02T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #3</title>
-				<description>&lt;p&gt;The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.&lt;/p&gt;
-
-&lt;h2&gt;Moving From Backbone To React&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://twitter.com/clayallsopp&quot;&gt;Clay Allsopp&lt;/a&gt; successfully ported &lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;Propeller&lt;/a&gt;, a fairly big, interaction-heavy JavaScript app, to React.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;&lt;img style=&quot;float: right; margin: 0 0 10px 10px;&quot; src=&quot;/react/img/blog/propeller-logo.png&quot; /&gt;&lt;/a&gt;Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn&amp;#39;t automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they&amp;#39;re all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.&lt;/p&gt;
-
-&lt;p&gt;React, on the other hand, manages the DOM and only exposes real nodes at select points in its API. The &amp;quot;elements&amp;quot; you code in React are actually objects which wrap DOM nodes, not the actual objects which get inserted into the DOM. Internally, React converts those abstractions into actual DOMElements and fills out the document accordingly. [...]&lt;/p&gt;
-
-&lt;p&gt;We moved about 20 different Backbone view classes to React over the past few weeks, including the live-preview pane that you see in our little iOS demo. Most importantly, it&amp;#39;s allowed us to put energy into making each component work great on its own, instead of spending extra cycles to ensure they function in unison. For that reason, we think React is a more scalable way to build view-intensive apps than Backbone alone, and it doesn&amp;#39;t require you to drop-everything-and-refactor like a move to Ember or Angular would demand.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2&gt;Grunt Task for JSX&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://ericclemmons.github.io/&quot;&gt;Eric Clemmons&lt;/a&gt; wrote a task for &lt;a href=&quot;http://gruntjs.com/&quot;&gt;Grunt&lt;/a&gt; that applies the JSX transformation to your Javascript files. It also works with &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; if you want all your files to be concatenated and minified together.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Grunt task for compiling Facebook React&amp;#39;s .jsx templates into .js&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;grunt&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;initConfig&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;react&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;extension&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;js&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;files&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;path/to/output/dir&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;path/to/jsx/templates/dir&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;It also works great with &lt;code&gt;grunt-browserify&lt;/code&gt;!&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;browserify&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;options&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;grunt-react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;browserify&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;app&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;path/to/source/main.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;dest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;path/to/target/output.js&amp;#39;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/ericclemmons/grunt-react&quot;&gt;Check out the project ...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2&gt;Backbone/Handlebars Nested Views&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://joelburget.com/&quot;&gt;Joel Burget&lt;/a&gt; wrote a blog post talking about the way we would write React-like components in Backbone and Handlebars.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;The problem here is that we&amp;#39;re trying to maniplate a tree, but there&amp;#39;s a textual layer we have to go through. Our views are represented as a tree - the subviews are children of CommentCollectionView - and they end up as part of a tree in the DOM. But there&amp;#39;s a Handlebars layer in the middle (which deals in flat strings), so the hierarchy must be destructed and rebuilt when we render.&lt;/p&gt;
-
-&lt;p&gt;What does it take to render a collection view? In the Backbone/Handlebars view of the world you have to render the template (with stubs), render each subview which replaces a stub, and keep a reference to each subview (or anything within the view that could change in the future).&lt;/p&gt;
-
-&lt;p&gt;So while our view is conceptually hierarchical, due to the fact that it has to go through a flat textual representation, we need to do a lot of extra work to reassemble that structure after rendering.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://joelburget.com/react/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2&gt;JSRomandie Meetup&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/renajohn/&quot;&gt;Renault John Lecoultre&lt;/a&gt; from &lt;a href=&quot;http://www.bugbuster.com&quot;&gt;BugBuster&lt;/a&gt; did a React introduction talk at a JS meetup called &lt;a href=&quot;https://twitter.com/jsromandie&quot;&gt;JS Romandie&lt;/a&gt; last week.&lt;/p&gt;
-
-&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;888a9d50c01b01300df36658d0894ac1&quot; data-ratio=&quot;1.33333333333333&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
-
-&lt;h2&gt;CoffeeScript integration&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://blog.vjeux.com/&quot;&gt;Vjeux&lt;/a&gt; used the fact that JSX is just a syntactic sugar on-top of regular JS to rewrite the React front-page examples in CoffeeScript.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Multiple people asked what&amp;#39;s the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I&amp;#39;m not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;h3&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;textarea&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;MarkdownEditor&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;h3&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{},&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Input&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;textarea&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;onKeyUp&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;handleKeyUp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;textarea&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-    &lt;span class=&quot;err&quot;&gt;@&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;a href=&quot;http://blog.vjeux.com/2013/javascript/react-coffeescript.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2&gt;Tutorial in Plain Javascript&lt;/h2&gt;
-
-&lt;p&gt;We&amp;#39;ve seen a lot of people comparing React with various frameworks. &lt;a href=&quot;http://ricardo.cc/&quot;&gt;Ricardo Tomasi&lt;/a&gt; decided to re-implement the tutorial without any framework, just plain Javascript.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Facebook &amp;amp; Instagram launched the React framework and an accompanying tutorial. Developer Vlad Yazhbin decided to rewrite that using AngularJS. The end result is pretty neat, but if you&amp;#39;re like me you will not actually appreciate the HTML speaking for itself and doing all the hard work. So let&amp;#39;s see what that looks like in plain javascript.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-06-27T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/06/27/community-roundup-3.html</guid>
 			</item>
 		
 	</channel>
