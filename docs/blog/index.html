@@ -15,13 +15,10 @@ sectionid: blog
         <hr>
 
         <div class="post">
-         {{ page.excerpt }}
-         {% if page.excerpt != page.content %}
-           <p>
-             <a href="/react{{ page.url }}">Continue Reading &rarr;</a>
-          </p>
-         {% endif %}
+         {{ page.content }}
         </div>
+
+        <div class="fb-like" data-send="true" data-width="650" data-show-faces="false" data-href="{{ site.url }}{{ site.baseurl }}{{ page.url }}"></div>
       </div>
     {% endfor %}
   </div>
