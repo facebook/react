@@ -1,6 +1,6 @@
 ---
 id: tooling-integration
-title: Tooling integration
+title: Tooling Integration
 layout: docs
 permalink: tooling-integration.html
 prev: more-about-refs.html

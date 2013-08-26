@@ -48,6 +48,6 @@ nav_docs_sections:
     - id: more-about-refs
       title: More About Refs
   - id: tooling-integration
-    title: Tooling integration
+    title: Tooling Integration
   - id: reference
     title: Reference
