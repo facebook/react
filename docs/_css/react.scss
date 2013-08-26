@@ -285,14 +285,14 @@ li {
   margin-right: 0;
 }
 
-#examples {
-  h3 {
-    color: $darkColor;
-    font-size: 24px;
-    font-weight: normal;
-    margin-bottom: 5px;
-  }
+#examples h3, .home-presentation h3 {
+  color: $darkColor;
+  font-size: 24px;
+  font-weight: normal;
+  margin-bottom: 5px;
+}
 
+#examples {
   p {
     margin: 0 0 25px 0;
     max-width: $twoColumnWidth;
