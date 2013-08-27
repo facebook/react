@@ -312,4 +312,73 @@ describe('ReactCompositeComponent', function() {
     expect(ReactCurrentOwner.current).toBe(null);
   });
 
+  it('should support mixins with getInitialState()', function() {
+    var Mixin = {
+      getInitialState: function() {
+        return {mixin: true};
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return {component: true};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state.component).toBe(true);
+    expect(instance.state.mixin).toBe(true);
+  });
+
+  it('should throw with conflicting getInitialState() methods', function() {
+    var Mixin = {
+      getInitialState: function() {
+        return {x: true};
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return {x: true};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
+      'Tried to merge two objects with the same key: x'
+    );
+  });
+
+  it('should throw with bad getInitialState() return values', function() {
+    var Mixin = {
+      getInitialState: function() {
+        return null;
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return {x: true};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
+      'Cannot merge non-objects'
+    );
+  });
+
 });

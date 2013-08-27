@@ -29,6 +29,7 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var objMap = require('objMap');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -46,7 +47,13 @@ var SpecPolicy = keyMirror({
   /**
    * These methods are overriding the base ReactCompositeComponent class.
    */
-  OVERRIDE_BASE: null
+  OVERRIDE_BASE: null,
+  /**
+   * These methods are similar to DEFINE_MANY, except we assume they return
+   * objects. We try to merge the keys of the return values of all the mixed in
+   * functions. If there is a key conflict we throw.
+   */
+  DEFINE_MANY_MERGED: null
 });
 
 /**
@@ -119,7 +126,7 @@ var ReactCompositeComponentInterface = {
    * @return {object}
    * @optional
    */
-  getInitialState: SpecPolicy.DEFINE_ONCE,
+  getInitialState: SpecPolicy.DEFINE_MANY_MERGED,
 
   /**
    * Uses props from `this.props` and state from `this.state` to render the
@@ -301,7 +308,8 @@ function validateMethodOverride(proto, name) {
   // Disallow defining methods more than once unless explicitly allowed.
   if (proto.hasOwnProperty(name)) {
     invariant(
-      specPolicy === SpecPolicy.DEFINE_MANY,
+      specPolicy === SpecPolicy.DEFINE_MANY ||
+      specPolicy === SpecPolicy.DEFINE_MANY_MERGED,
       'ReactCompositeComponentInterface: You are attempting to define ' +
       '`%s` on your component more than once. This conflict may be due ' +
       'to a mixin.',
@@ -366,13 +374,60 @@ function mixSpecIntoComponent(Constructor, spec) {
         if (isInherited) {
           // For methods which are defined more than once, call the existing
           // methods before calling the new property.
-          proto[name] = createChainedFunction(proto[name], property);
+          if (ReactCompositeComponentInterface[name] ===
+              SpecPolicy.DEFINE_MANY_MERGED) {
+            proto[name] = createMergedResultFunction(proto[name], property);
+          } else {
+            proto[name] = createChainedFunction(proto[name], property);
+          }
         } else {
           proto[name] = property;
         }
       }
     }
   }
+}
+
+/**
+ * Merge two objects, but throw if both contain the same key.
+ *
+ * @param {object} one The first object, which is mutated.
+ * @param {object} two The second object
+ * @return {object} one after it has been mutated to contain everything in two.
+ */
+function mergeObjectsWithNoDuplicateKeys(one, two) {
+  invariant(
+    one && two && typeof one === 'object' && typeof two === 'object',
+    'mergeObjectsWithNoDuplicateKeys(): Cannot merge non-objects'
+  );
+
+  objMap(two, function(value, key) {
+    invariant(
+      one[key] === undefined,
+      'mergeObjectsWithNoDuplicateKeys(): ' +
+      'Tried to merge two objects with the same key: %s',
+      key
+    );
+    one[key] = value;
+  });
+  return one;
+}
+
+/**
+ * Creates a function that invokes two functions and merges their return values.
+ *
+ * @param {function} one Function to invoke first.
+ * @param {function} two Function to invoke second.
+ * @return {function} Function that invokes the two argument functions.
+ * @private
+ */
+function createMergedResultFunction(one, two) {
+  return function mergedResult() {
+    return mergeObjectsWithNoDuplicateKeys(
+      one.apply(this, arguments),
+      two.apply(this, arguments)
+    );
+  };
 }
 
 /**
