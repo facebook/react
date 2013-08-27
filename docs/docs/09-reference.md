@@ -186,13 +186,13 @@ Normally you should try to avoid all uses of `forceUpdate()` and only read from 
 ```javascript
 object getInitialState()
 componentWillMount()
-componentDidMount(DOMElement domNode)
+componentDidMount(DOMElement rootNode)
 componentWillReceiveProps(object nextProps)
 boolean shouldComponentUpdate(object nextProps, object nextState)
-componentWillUpdate(object nextProps, object nextState)
+componentWillUpdate(object nextProps, object nextState, DOMElement rootNode)
 ReactComponent render()
-componentDidUpdate(object prevProps, object prevState, DOMElement domNode)
-componentWillUnmount()
+componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)
+componentWillUnmount(DOMElement rootNode)
 ```
 
 See the [working with the browser](./working-with-the-browser.html) documentation for more details on these lifecycle methods.

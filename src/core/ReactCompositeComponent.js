@@ -584,7 +584,7 @@ var ReactCompositeComponentMixin = {
   unmountComponent: function() {
     this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
     if (this.componentWillUnmount) {
-      this.componentWillUnmount();
+      this.componentWillUnmount(this.getDOMNode());
     }
     this._compositeLifeCycleState = null;
 
@@ -746,7 +746,7 @@ var ReactCompositeComponentMixin = {
     var prevState = this.state;
 
     if (this.componentWillUpdate) {
-      this.componentWillUpdate(nextProps, nextState, transaction);
+      this.componentWillUpdate(nextProps, nextState, this.getDOMNode());
     }
 
     this.props = nextProps;

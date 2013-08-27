@@ -87,13 +87,13 @@ React provides lifecycle methods that you can specify to hook into this process.
 
 * `componentWillReceiveProps(object nextProps)` is invoked when a mounted component receives new props. This method should be used to compare `this.props` and `nextProps` to perform state transitions using `this.setState()`.
 * `shouldComponentUpdate(object nextProps, object nextState): boolean` is invoked when a component decides whether any changes warrant an update to the DOM. Implement this as an optimization to compare `this.props` with `nextProps` and `this.state` with `nextState` and return false if React should skip updating.
-* `componentWillUpdate(object nextProps, object nextState)` is invoked immediately before updating occurs. You cannot call `this.setState()` here.
+* `componentWillUpdate(object nextProps, object nextState, DOMElement rootNode)` is invoked immediately before updating occurs. You cannot call `this.setState()` here.
 * `componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)` is invoked immediately after updating occurs.
 
 
 ### Unmounting
 
-* `componentWillUnmount()` is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.
+* `componentWillUnmount(DOMElement rootNode)` is invoked immediately before a component is unmounted and destroyed. Cleanup should go here.
 
 
 ### Mounted Methods
