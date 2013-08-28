@@ -314,7 +314,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 // tutorial11.js
 React.renderComponent(
   <CommentBox url="comments.json" />,
-  document.getElementById('example')
+  document.getElementById('content')
 );
 ```
 
@@ -438,7 +438,7 @@ All we have done here is move the AJAX call to a separate method and call it whe
 
 Now it's time to build the form. Our `CommentForm` component should ask the user for their name and comment text and send a request to the server to save the comment.
 
-```javascript{5-8}
+```javascript{5-9}
 // tutorial15.js
 var CommentForm = React.createClass({
   render: function() {
