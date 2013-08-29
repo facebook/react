@@ -25,8 +25,9 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var createNodesFromMarkup = require('createNodesFromMarkup');
 var emptyFunction = require('emptyFunction');
-var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
+
+var COMMENT_NODE_TYPE = 8;
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -46,9 +47,10 @@ function getNodeName(markup) {
 var Danger = {
 
   /**
-   * Renders markup into an array of nodes. The markup is expected to render
-   * into a list of root nodes. Also, the length of `parentNodes` and `markup`
-   * should be the same.
+   * Renders markup into an array of nodes. The markup is expected to
+   * render into a list of root nodes. Also, the length of `resultList`
+   * and `markupList` should be the same. Note that some nodes in
+   * `resultList` may be document fragments.
    *
    * @param {array<string>} markupList List of markup strings to render.
    * @return {array<DOMElement>} List of rendered nodes.
@@ -70,38 +72,93 @@ var Danger = {
         'dangerouslyRenderMarkup(...): Missing markup.'
       );
       nodeName = getNodeName(markupList[i]);
-      nodeName = getMarkupWrap(nodeName) ? nodeName : '*';
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
       markupByNodeName[nodeName][i] = markupList[i];
     }
     var resultList = [];
+    var resultListAssignmentCount = 0;
     for (nodeName in markupByNodeName) {
       if (!markupByNodeName.hasOwnProperty(nodeName)) {
         continue;
       }
       var markupListByNodeName = markupByNodeName[nodeName];
-      var markup = markupListByNodeName.join('');
-      // Render each group of markup with similar `nodeName`.
-      var renderNodes = createNodesFromMarkup(markup, emptyFunction);
-      // Restore the initial ordering.
-      var renderIndex = 0;
-      var resultIndex = 0;
-      while (resultIndex < markupListByNodeName.length) {
-        // `markupListByNodeName` may be a sparse array.
-        if (markupListByNodeName[resultIndex]) {
-          invariant(
-            resultList[resultIndex] = renderNodes[renderIndex],
-            'dangerouslyRenderMarkup(...): Missing node.'
+
+      var commentedMarkupList = [];
+      // This for-in loop skips the holes of the sparse array. The order
+      // of iteration should follow the order of assignment, which happens
+      // to match numerical index order, but we don't rely on that.
+      for (var resultIndex in markupListByNodeName) {
+        if (markupListByNodeName.hasOwnProperty(resultIndex)) {
+          // Push the requested markup followed by a sentinel HTML
+          // comment. Comments are a good choice for sentinels because
+          // they can appear as children of any HTML node.
+          commentedMarkupList.push(
+            markupListByNodeName[resultIndex],
+            // This resultIndex will be parsed back out below.
+            "<!--danger:", resultIndex, "-->"
           );
-          renderIndex++;
         }
-        resultIndex++;
       }
-      invariant(
-        renderIndex === renderNodes.length,
-        'dangerouslyRenderMarkupO(...): Unexpected nodes.'
+
+      // Render each group of markup with similar `nodeName`, with
+      // sentinel comments interspersed.
+      var renderNodes = createNodesFromMarkup(
+        commentedMarkupList.join(''),
+        emptyFunction // Do nothing special with <script> tags.
       );
+
+      var renderLength = renderNodes.length;
+      var fragment = document.createDocumentFragment();
+
+      for (i = 0; i < renderLength; ++i) {
+        var renderNode = renderNodes[i];
+        if (renderNode.nodeType === COMMENT_NODE_TYPE) {
+          var comment = renderNode.nodeValue.split(':');
+          if (comment[0] === "danger") {
+            resultIndex = comment[1];
+            invariant(
+              !resultList.hasOwnProperty(resultIndex),
+              "Danger: Assigning to an already-occupied result index."
+            );
+
+            if (fragment.childNodes.length === 1) {
+              // In the normal case, when one node's worth of markup gets
+              // rendered as a single node, extract that node from the
+              // document fragment to preserve the behavior of this code
+              // from the days before document fragments.
+              resultList[resultIndex] = fragment.firstChild;
+              fragment.removeChild(fragment.firstChild);
+
+            } else {
+              // If zero nodes or more than one node were rendered, return
+              // the document fragment itself, and make a new one.
+              resultList[resultIndex] = fragment;
+              fragment = document.createDocumentFragment();
+            }
+
+            // This should match resultList.length when we're done.
+            ++resultListAssignmentCount;
+
+          } else {
+            // It's some other kind of comment that we didn't create.
+            // Weirder things have happened.
+            fragment.appendChild(renderNode);
+          }
+
+        } else {
+          // Append all non-comment nodes to the current document fragment.
+          fragment.appendChild(renderNode);
+        }
+      }
     }
+
+    // Although resultList was populated out of order, it should now be a
+    // dense array.
+    invariant(
+      resultListAssignmentCount === resultList.length,
+      "Danger: Did not assign to every index of resultList."
+    );
+
     return resultList;
   },
 
