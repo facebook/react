@@ -40,6 +40,9 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var ReactUpdates = require('ReactUpdates');
+
 function inject() {
   ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
@@ -73,6 +76,10 @@ function inject() {
   if (__DEV__) {
     ReactPerf.injection.injectMeasure(require('ReactDefaultPerf').measure);
   }
+
+  ReactUpdates.injection.injectBatchingStrategy(
+    ReactDefaultBatchingStrategy
+  );
 }
 
 module.exports = {

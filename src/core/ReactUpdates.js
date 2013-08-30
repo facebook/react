@@ -20,51 +20,54 @@
 
 var invariant = require('invariant');
 
-var isBatchingUpdates = false;
-
 var dirtyComponents = [];
 
-/**
- * Call the provided function in a context within which calls to `setState` and
- * friends are batched such that components aren't updated unnecessarily.
- */
+var batchingStrategy = null;
+
+function ensureBatchingStrategy() {
+  invariant(batchingStrategy, 'ReactUpdates: must inject a batching strategy');
+}
+
 function batchedUpdates(callback) {
-  if (isBatchingUpdates) {
-    // We're already executing in an environment where updates will be batched,
-    // so this is a no-op.
-    callback();
-    return;
-  }
+  ensureBatchingStrategy();
+  batchingStrategy.batchedUpdates(callback);
+}
 
-  isBatchingUpdates = true;
-
-  try {
-    callback();
-    // TODO: Sort components by depth such that parent components update first
-    for (var i = 0; i < dirtyComponents.length; i++) {
-      // If a component is unmounted before pending changes apply, ignore them
-      // TODO: Queue unmounts in the same list to avoid this happening at all
-      var component = dirtyComponents[i];
-      if (component.isMounted()) {
-        // If performUpdateIfNecessary happens to enqueue any new updates, we
-        // shouldn't execute the callbacks until the next render happens, so
-        // stash the callbacks first
-        var callbacks = component._pendingCallbacks;
-        component._pendingCallbacks = null;
-        component.performUpdateIfNecessary();
-        if (callbacks) {
-          for (var j = 0; j < callbacks.length; j++) {
-            callbacks[j].call(component);
-          }
+function runBatchedUpdates() {
+  // TODO: Sort components by depth such that parent components update first
+  for (var i = 0; i < dirtyComponents.length; i++) {
+    // If a component is unmounted before pending changes apply, ignore them
+    // TODO: Queue unmounts in the same list to avoid this happening at all
+    var component = dirtyComponents[i];
+    if (component.isMounted()) {
+      // If performUpdateIfNecessary happens to enqueue any new updates, we
+      // shouldn't execute the callbacks until the next render happens, so
+      // stash the callbacks first
+      var callbacks = component._pendingCallbacks;
+      component._pendingCallbacks = null;
+      component.performUpdateIfNecessary();
+      if (callbacks) {
+        for (var j = 0; j < callbacks.length; j++) {
+          callbacks[j].call(component);
         }
       }
     }
-  } catch (error) {
-    // IE8 requires `catch` in order to use `finally`.
-    throw error;
+  }
+}
+
+function clearDirtyComponents() {
+  dirtyComponents.length = 0;
+}
+
+function flushBatchedUpdates() {
+  // Run these in separate functions so the JIT can optimize
+  try {
+    runBatchedUpdates();
+  } catch (e) {
+    // IE 8 requires catch to use finally.
+    throw e;
   } finally {
-    dirtyComponents.length = 0;
-    isBatchingUpdates = false;
+    clearDirtyComponents();
   }
 }
 
@@ -79,8 +82,9 @@ function enqueueUpdate(component, callback) {
     '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
     'isn\'t callable.'
   );
+  ensureBatchingStrategy();
 
-  if (!isBatchingUpdates) {
+  if (!batchingStrategy.isBatchingUpdates) {
     component.performUpdateIfNecessary();
     callback && callback();
     return;
@@ -97,9 +101,29 @@ function enqueueUpdate(component, callback) {
   }
 }
 
+var ReactUpdatesInjection = {
+  injectBatchingStrategy: function(_batchingStrategy) {
+    invariant(
+      _batchingStrategy,
+      'ReactUpdates: must provide a batching strategy'
+    );
+    invariant(
+      typeof _batchingStrategy.batchedUpdates === 'function',
+      'ReactUpdates: must provide a batchedUpdates() function'
+    );
+    invariant(
+      typeof _batchingStrategy.isBatchingUpdates === 'boolean',
+      'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
+    );
+    batchingStrategy = _batchingStrategy;
+  }
+};
+
 var ReactUpdates = {
   batchedUpdates: batchedUpdates,
-  enqueueUpdate: enqueueUpdate
+  enqueueUpdate: enqueueUpdate,
+  flushBatchedUpdates: flushBatchedUpdates,
+  injection: ReactUpdatesInjection
 };
 
 module.exports = ReactUpdates;
