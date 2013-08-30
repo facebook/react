@@ -23,11 +23,10 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
-var ReactTestUtils = require('ReactTestUtils');
-var React = require('React');
 var ReactMount = require('ReactMount');
+var ReactTestUtils = require('ReactTestUtils');
 
-describe('ref swapping', function() {
+describe('ReactDOM', function() {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
   /*
@@ -114,5 +113,9 @@ describe('ref swapping', function() {
     var root = ReactMount.getNode(myDiv._rootNodeID);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
+  });
+
+  it('should be a valid class', function() {
+    expect(React.isValidClass(ReactDOM.div)).toBe(true);
   });
 });

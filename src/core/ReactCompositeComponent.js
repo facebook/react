@@ -957,6 +957,19 @@ var ReactCompositeComponent = {
   },
 
   /**
+   * Checks if a value is a valid component constructor.
+   *
+   * @param {*}
+   * @return {boolean}
+   * @public
+   */
+  isValidClass: function(componentClass) {
+    return componentClass instanceof Function &&
+           'componentConstructor' in componentClass &&
+           componentClass.componentConstructor instanceof Function;
+  },
+
+  /**
    * TODO: Delete this when all callers have been updated to rely on this
    * behavior being the default.
    *

@@ -50,6 +50,7 @@ var React = {
   ),
   renderComponentToString: ReactServerRendering.renderComponentToString,
   unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
+  isValidClass: ReactCompositeComponent.isValidClass,
   isValidComponent: ReactComponent.isValidComponent
 };
 

@@ -381,4 +381,30 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should detect valid CompositeComponent classes', function() {
+    var Component = React.createClass({
+      render: function() {
+        return <div/>;
+      }
+    });
+
+    expect(React.isValidClass(Component)).toBe(true);
+  });
+
+  it('should detect invalid CompositeComponent classes', function() {
+    var FnComponent = function() {
+      return false;
+    }
+
+    var NullComponent = null;
+
+    var TrickFnComponent = function() {
+      return true;
+    }
+    TrickFnComponent.componentConstructor = true;
+
+    expect(React.isValidClass(FnComponent)).toBe(false);
+    expect(React.isValidClass(NullComponent)).toBe(false);
+    expect(React.isValidClass(TrickFnComponent)).toBe(false);
+  });
 });
