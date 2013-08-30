@@ -205,7 +205,8 @@ Markdown is a simple way to format your text inline. For example, surrounding te
 
 First, add the third-party **Showdown** library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
 
-```html{5}
+```html{6}
+<!-- template.html -->
 <head>
   <title>Hello React</title>
   <script src="http://fb.me/react-{{site.react_version}}.js"></script>
