@@ -20,7 +20,7 @@
 "use strict";
 
 var invariant = require('invariant');
-var isDOMNode = require('isDOMNode');
+var isNode = require('isNode');
 var merge = require('merge');
 var mergeInto = require('mergeInto');
 var mergeHelpers = require('mergeHelpers');
@@ -76,7 +76,7 @@ if (__DEV__) {
    * @param {*} object The object to freeze.
    */
   var deepFreeze = function(object) {
-    if (isDOMNode(object)) {
+    if (isNode(object)) {
       return; // Don't try to freeze DOM nodes.
     }
     Object.freeze(object); // First freeze the object.

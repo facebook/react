@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule isDOMNode
+ * @providesModule isNode
  * @typechecks
  */
 
@@ -21,7 +21,7 @@
  * @param {*} object The object to check.
  * @return {boolean} Whether or not the object is a DOM node.
  */
-function isDOMNode(object) {
+function isNode(object) {
   return !!(object && (
     typeof Node !== 'undefined' ? object instanceof Node :
       typeof object === 'object' &&
@@ -30,4 +30,4 @@ function isDOMNode(object) {
   ));
 }
 
-module.exports = isDOMNode;
+module.exports = isNode;
