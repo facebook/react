@@ -19,6 +19,8 @@
 
 "use strict";
 
+var performanceNow = require('performanceNow');
+
 var ReactDefaultPerf = {};
 
 if (__DEV__) {
@@ -186,9 +188,9 @@ if (__DEV__) {
       var fnArgs = _getFnArguments(func);
 
       return function() {
-        var timeBeforeFn = now();
+        var timeBeforeFn = performanceNow();
         var fnReturn = func.apply(this, arguments);
-        var timeAfterFn = now();
+        var timeAfterFn = performanceNow();
 
         /**
          * Hold onto arguments in a readable way: args[1] -> args.component.
@@ -224,7 +226,7 @@ if (__DEV__) {
         var callback = _getCallback(objName, fnName);
         callback && callback(this, args, fnReturn, log, info);
 
-        log.timing.timeToLog = now() - timeAfterFn;
+        log.timing.timeToLog = performanceNow() - timeAfterFn;
 
         return fnReturn;
       };
@@ -400,17 +402,6 @@ if (__DEV__) {
   var _microTime = function(time) {
     return Math.round(time * 1000) / 1000;
   };
-
-  /**
-   * Shim window.performance.now
-   * We can't assign window.performance.now and then call it, so need to bind.
-   * TODO: Support Firefox < 15 for now
-   */
-  var performance = window && (window.performance || window.webkitPeformance);
-  if (!performance || !performance.now) {
-    performance = Date;
-  }
-  var now = performance.now.bind(performance);
 }
 
 module.exports = ReactDefaultPerf;
