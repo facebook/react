@@ -19,6 +19,7 @@
 "use strict";
 
 var ReactDOM = require('ReactDOM');
+var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
@@ -59,6 +60,7 @@ function inject() {
   });
 
   ReactDOM.injection.injectComponentClasses({
+    button: ReactDOMButton,
     form: ReactDOMForm,
     input: ReactDOMInput,
     option: ReactDOMOption,
