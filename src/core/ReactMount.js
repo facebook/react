@@ -211,6 +211,9 @@ var ReactMount = {
   /** Whether support for touch events should be initialized. */
   useTouchEvents: false,
 
+  /** Exposed for debugging purposes **/
+  _instanceByReactRootID: instanceByReactRootID,
+
   /**
    * This is a hook provided to support rendering React components while
    * ensuring that the apparent scroll position of its `container` does not
