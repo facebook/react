@@ -75,7 +75,7 @@ var TodoItem = React.createClass({
           <input
             ref="editField"
             class="edit"
-            value={this.state.editText}
+            defaultValue={this.state.editText}
             onBlur={this.handleSubmit}
             onKeyUp={this.handleKey}
           />
