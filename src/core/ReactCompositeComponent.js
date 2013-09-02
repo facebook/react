@@ -726,11 +726,6 @@ var ReactCompositeComponentMixin = {
       ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
       var currentComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
-      invariant(
-        typeof currentComponent !== 'undefined',
-        'updateComponent(...): You are attempting to update an unrendered ' +
-        'component.'
-      );
       if (currentComponent.constructor === nextComponent.constructor) {
         currentComponent.receiveProps(nextComponent.props, transaction);
       } else {

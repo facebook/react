@@ -278,6 +278,10 @@ var ReactComponent = {
         '`render` method to pass the correct value as props to the component ' +
         'where it is created.'
       );
+      invariant(
+        this.isMounted(),
+        'replaceProps(...): Can only update a mounted component.'
+      );
       this._pendingProps = props;
       ReactUpdates.enqueueUpdate(this, callback);
     },
