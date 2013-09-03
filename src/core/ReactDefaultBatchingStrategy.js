@@ -49,6 +49,8 @@ mixInto(ReactDefaultBatchingStrategyTransaction, {
   }
 });
 
+var transaction = new ReactDefaultBatchingStrategyTransaction();
+
 var ReactDefaultBatchingStrategy = {
   isBatchingUpdates: false,
 
@@ -56,17 +58,16 @@ var ReactDefaultBatchingStrategy = {
    * Call the provided function in a context within which calls to `setState`
    * and friends are batched such that components aren't updated unnecessarily.
    */
-  batchedUpdates: function(callback) {
+  batchedUpdates: function(callback, param) {
     var alreadyBatchingUpdates = ReactDefaultBatchingStrategy.isBatchingUpdates;
 
     ReactDefaultBatchingStrategy.isBatchingUpdates = true;
 
     // The code is written this way to avoid extra allocations
     if (alreadyBatchingUpdates) {
-      callback();
+      callback(param);
     } else {
-      var transaction = new ReactDefaultBatchingStrategyTransaction();
-      transaction.perform(callback);
+      transaction.perform(callback, null, param);
     }
   }
 };

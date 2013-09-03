@@ -35,6 +35,8 @@ var eventTypes = {
   mouseLeave: {registrationName: keyOf({onMouseLeave: null})}
 };
 
+var extractedEvents = [null, null];
+
 var EnterLeaveEventPlugin = {
 
   eventTypes: eventTypes,
@@ -99,7 +101,11 @@ var EnterLeaveEventPlugin = {
     );
 
     EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
-    return [leave, enter];
+
+    extractedEvents[0] = leave;
+    extractedEvents[1] = enter;
+
+    return extractedEvents;
   }
 
 };

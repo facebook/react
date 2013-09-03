@@ -21,6 +21,11 @@
 var EventPluginHub = require('EventPluginHub');
 var ReactUpdates = require('ReactUpdates');
 
+function runEventQueueInBatch(events) {
+  EventPluginHub.enqueueEvents(events);
+  EventPluginHub.processEventQueue();
+}
+
 var ReactEventEmitterMixin = {
   /**
    * Whether or not `ensureListening` has been invoked.
@@ -77,10 +82,7 @@ var ReactEventEmitterMixin = {
     );
 
     // Event queue being processed in the same cycle allows `preventDefault`.
-    ReactUpdates.batchedUpdates(function() {
-      EventPluginHub.enqueueEvents(events);
-      EventPluginHub.processEventQueue();
-    });
+    ReactUpdates.batchedUpdates(runEventQueueInBatch, events);
   }
 };
 

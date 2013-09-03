@@ -28,9 +28,9 @@ function ensureBatchingStrategy() {
   invariant(batchingStrategy, 'ReactUpdates: must inject a batching strategy');
 }
 
-function batchedUpdates(callback) {
+function batchedUpdates(callback, param) {
   ensureBatchingStrategy();
-  batchingStrategy.batchedUpdates(callback);
+  batchingStrategy.batchedUpdates(callback, param);
 }
 
 function runBatchedUpdates() {
