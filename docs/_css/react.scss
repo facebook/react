@@ -248,6 +248,12 @@ li {
 
 }
 
+.nav-blog {
+  li {
+    margin-bottom: 5px;
+  }
+}
+
 // Home Page specifics
 
 .home-section {
@@ -285,14 +291,14 @@ li {
   margin-right: 0;
 }
 
-#examples {
-  h3 {
-    color: $darkColor;
-    font-size: 24px;
-    font-weight: normal;
-    margin-bottom: 5px;
-  }
+#examples h3, .home-presentation h3 {
+  color: $darkColor;
+  font-size: 24px;
+  font-weight: normal;
+  margin-bottom: 5px;
+}
 
+#examples {
   p {
     margin: 0 0 25px 0;
     max-width: $twoColumnWidth;
@@ -684,4 +690,16 @@ p code {
 
 .post {
   margin-bottom: 30px;
+}
+
+.pagination {
+  margin-bottom: 30px;
+
+  /* Trick to get the wrapper to expand to fit floating elements */
+  width: 100%;
+  overflow: hidden;
+
+  .next {
+    float: right;
+  }
 }
