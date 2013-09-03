@@ -16,6 +16,8 @@ markdown: redcarpet
 react_version: 0.4.0
 description: A JavaScript library for building user interfaces
 relative_permalinks: true
+paginate: 5
+paginate_path: /blog/page:num
 nav_docs_sections:
 - title: Quick Start
   items:
