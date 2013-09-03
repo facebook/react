@@ -37,7 +37,6 @@ var React = {
   initializeTouchEvents: function(shouldUseTouch) {
     ReactMount.useTouchEvents = shouldUseTouch;
   },
-  autoBind: ReactCompositeComponent.autoBind,
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,

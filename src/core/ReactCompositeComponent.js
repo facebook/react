@@ -967,25 +967,6 @@ var ReactCompositeComponent = {
     return componentClass instanceof Function &&
            'componentConstructor' in componentClass &&
            componentClass.componentConstructor instanceof Function;
-  },
-
-  /**
-   * TODO: Delete this when all callers have been updated to rely on this
-   * behavior being the default.
-   *
-   * Backwards compatible stub for what is now the default behavior.
-   * @param {function} method Method to be bound.
-   * @public
-   */
-  autoBind: function(method) {
-    if (__DEV__) {
-      console.warn(
-        'React.autoBind() is now deprecated. All React component methods ' +
-        'are auto bound by default, so React.autoBind() is a no-op. It ' +
-        'will be removed in the next version of React'
-      );
-    }
-    return method;
   }
 };
 
