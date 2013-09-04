@@ -96,11 +96,21 @@ describe('Danger', function() {
         'Invariant Violation: dangerouslyRenderMarkup(...): Missing markup.'
       );
 
-      expect(function() {
-        Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
-      }).toThrow(
-        'Invariant Violation: dangerouslyRenderMarkupO(...): Unexpected nodes.'
-      );
+      spyOn(console, "error");
+
+      var renderedMarkup = Danger.dangerouslyRenderMarkup(['<p></p><p></p>']);
+      var args = console.error.argsForCall[0];
+
+      expect(renderedMarkup.length).toBe(1);
+      expect(renderedMarkup[0].nodeName).toBe('P');
+
+      expect(console.error.argsForCall.length).toBe(1);
+
+      expect(args.length).toBe(3);
+      expect(args[0]).toBe(
+        "Danger: '<p></p><p></p>' rendered as 2 nodes instead of 1:");
+      expect(args[1]).toBe(renderedMarkup[0]);
+      expect(args[2].nodeName).toBe('P');
     });
   });
 
