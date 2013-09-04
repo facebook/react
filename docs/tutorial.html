@@ -357,8 +357,15 @@
 
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
-<p>First, add the third-party <strong>Showdown</strong> library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground).</p>
-
+<p>First, add the third-party <strong>Showdown</strong> library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
+<span class="nt">&lt;head&gt;</span>
+  <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.4.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.4.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</span><span class="nt">&lt;/head&gt;</span>
+</code></pre></div>
 <p>Next, let&#39;s convert the comment text to Markdown and output it:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="hll"><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Showdown</span><span class="p">.</span><span class="nx">converter</span><span class="p">();</span>
@@ -451,7 +458,7 @@
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
 <span class="hll"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
 </span>  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
 <p>This component is different from the prior components because it will have to re-render itself. The component won&#39;t have any data until the request from the server comes back, at which point the component may need to render some new comments.</p>
@@ -569,8 +576,8 @@
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
-</span>      <span class="o">&lt;</span><span class="err">/form&gt;</span>
-    <span class="p">);</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+</span>    <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
