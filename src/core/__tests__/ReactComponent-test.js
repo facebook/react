@@ -27,14 +27,12 @@ var reactComponentExpect;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
+    require('mock-modules').dumpCache();
+
     React = require('React');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-
-    // This module is whitelisted from automocking so manually
-    // reset it.
-    ReactMount.allowFullPageRender = false;
   });
 
   it('should be able to switch root constructors via state', function() {
