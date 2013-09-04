@@ -51,5 +51,7 @@ nav_docs_sections:
       title: More About Refs
   - id: tooling-integration
     title: Tooling Integration
+  - id: addons
+    title: Add-ons
   - id: reference
     title: Reference
