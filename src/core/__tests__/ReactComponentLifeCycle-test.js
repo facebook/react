@@ -408,7 +408,8 @@ describe('ReactComponentLifeCycle', function() {
       .toThrow();
   });
 
-  it('should throw when calling setProps() on an unmounted component', function() {
+  it('should throw when calling setProps() on an unmounted component',
+     function() {
     var PropsToUpdate = React.createClass({
       render: function() {
         return (
@@ -419,13 +420,13 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    var instance =
-      <PropsToUpdate
-        value="hello"
-      />;
+    var instance = <PropsToUpdate value="hello" />;
     expect(function() {
       instance.setProps({value: "goodbye"});
-    }).toThrow();
+    }).toThrow(
+      'Invariant Violation: replaceProps(...): Can only update a ' +
+      'mounted component.'
+    );
   });
 
   it('should allow state updates in componentDidMount', function() {
