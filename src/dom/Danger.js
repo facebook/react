@@ -27,8 +27,10 @@ var createNodesFromMarkup = require('createNodesFromMarkup');
 var emptyFunction = require('emptyFunction');
 var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
+var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
 var COMMENT_NODE_TYPE = 8;
+
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -199,6 +201,12 @@ var Danger = {
       'immediately.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
+    // createNodesFromMarkup() won't work if the markup is rooted by <html>
+    // since it has special semantic meaning. So we use an alternatie strategy.
+    if (oldChild.tagName.toLowerCase() === 'html') {
+      mutateHTMLNodeWithMarkup(oldChild, markup);
+      return;
+    }
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
   }
