@@ -19,20 +19,20 @@
 
 "use strict";
 
-var React = require('React');
+var ReactChildren = require('ReactChildren');
 
 var MERGE_KEY_SETS_TAIL_SENTINEL = {};
 
 var ReactTransitionKeySet = {
   /**
    * Given `this.props.children`, return an object mapping key to child. Just
-   * simple syntactic sugar around React.mapChildren().
+   * simple syntactic sugar around ReactChildren.map().
    *
    * @param {*} children `this.props.children`
    * @return {object} Mapping of key to child
    */
   getChildMapping: function(children) {
-    return React.mapChildren(children, function(child) {
+    return ReactChildren.map(children, function(child) {
       return child;
     });
   },
@@ -45,7 +45,7 @@ var ReactTransitionKeySet = {
    * @return {object} Mapping of key to the value "true"
    */
   getKeySet: function(children) {
-    return React.mapChildren(children, function() {
+    return ReactChildren.map(children, function() {
       return true;
     });
   },

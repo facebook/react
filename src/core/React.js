@@ -18,7 +18,6 @@
 
 "use strict";
 
-var ReactChildren = require('ReactChildren');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactComponent = require('ReactComponent');
 var ReactDOM = require('ReactDOM');
@@ -40,8 +39,6 @@ var React = {
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
-  forEachChildren: ReactChildren.forEach,
-  mapChildren: ReactChildren.map,
   renderComponent: ReactPerf.measure(
     'React',
     'renderComponent',
