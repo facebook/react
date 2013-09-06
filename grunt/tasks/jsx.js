@@ -27,7 +27,7 @@ module.exports = function() {
   args.push("--config", config.configFile);
 
   var child = spawn({
-    cmd: "bin/jsx",
+    cmd: "bin/jsx-internal",
     args: args
   }, function(error, result, code) {
     if (error) {
