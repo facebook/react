@@ -1,7 +1,8 @@
 'use strict';
 
 var rootIDs = [
-  "React"
+  "React",
+  "ReactTransitionGroup"
 ];
 
 var debug = {
