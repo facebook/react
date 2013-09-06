@@ -28,6 +28,36 @@ var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
   return escapeTextForBrowser(name) + '="';
 });
 
+if (__DEV__) {
+  var reactProps = {
+    '{owner}': true,
+    children: true,
+    dangerouslySetInnerHTML: true,
+    key: true,
+    ref: true
+  };
+  var warnedProperties = {};
+
+  var warnUnknownProperty = function(name) {
+    if (reactProps[name] || warnedProperties[name]) {
+      return;
+    }
+
+    warnedProperties[name] = true;
+    var message = 'Unknown DOM property ' + name + '.';
+    var lowerCasedName = name.toLowerCase();
+
+    // data-* attributes should be lowercase; suggest the lowercase version
+    var standardName = DOMProperty.isCustomAttribute(lowerCasedName) ?
+      lowerCasedName : DOMProperty.getPossibleStandardName[lowerCasedName];
+    if (standardName != null) {
+      message += ' Did you mean ' + standardName + '?';
+    }
+
+    console.warn(message);
+  };
+}
+
 /**
  * Operations for dealing with DOM properties.
  */
@@ -55,6 +85,9 @@ var DOMPropertyOperations = {
       return processAttributeNameAndPrefix(name) +
         escapeTextForBrowser(value) + '"';
     } else {
+      if (__DEV__) {
+        warnUnknownProperty(name);
+      }
       return null;
     }
   },
@@ -85,6 +118,10 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.setAttribute(name, value);
+    } else {
+      if (__DEV__) {
+        warnUnknownProperty(name);
+      }
     }
   },
 
@@ -110,6 +147,8 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
+    } else if (__DEV__) {
+      warnUnknownProperty(name);
     }
   }
 

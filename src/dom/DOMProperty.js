@@ -82,8 +82,11 @@ var DOMPropertyInjection = {
 
       DOMProperty.isStandardName[propName] = true;
 
+      var lowerCased = propName.toLowerCase();
+      DOMProperty.getPossibleStandardName[lowerCased] = propName;
+
       DOMProperty.getAttributeName[propName] =
-        DOMAttributeNames[propName] || propName.toLowerCase();
+        DOMAttributeNames[propName] || lowerCased;
 
       DOMProperty.getPropertyName[propName] =
         DOMPropertyNames[propName] || propName;
@@ -140,6 +143,13 @@ var DOMProperty = {
    * @type {Object}
    */
   isStandardName: {},
+
+  /**
+   * Mapping from lowercase property names to the properly cased version, used
+   * to warn in the case of missing properties.
+   * @type {Object}
+   */
+  getPossibleStandardName: {},
 
   /**
    * Mapping from normalized names to attribute names that differ. Attribute

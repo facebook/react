@@ -102,6 +102,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
 
+    props.defaultValue = null;
     props.value =
       this.props.value != null ? this.props.value : this.state.value;
     props.onChange = this._handleChange;
