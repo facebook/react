@@ -147,8 +147,10 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
-    } else if (__DEV__) {
-      warnUnknownProperty(name);
+    } else {
+      if (__DEV__) {
+        warnUnknownProperty(name);
+      }
     }
   }
 
