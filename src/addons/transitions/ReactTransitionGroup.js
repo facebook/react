@@ -102,7 +102,12 @@ var ReactTransitionGroup = React.createClass({
   render: function() {
     return this.transferPropsTo(
       this.props.component(
-        null,
+        {
+          transitionName: null,
+          transitionEnter: null,
+          transitionLeave: null,
+          component: null
+        },
         this.renderTransitionableChildren(this.props.children)
       )
     );

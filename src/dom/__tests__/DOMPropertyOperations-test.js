@@ -58,6 +58,16 @@ describe('DOMPropertyOperations', function() {
       )).toBe('id="simple"');
     });
 
+    it('should warn about incorrect casing', function() {
+      spyOn(console, 'warn');
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'tabindex',
+        '1'
+      )).toBe(null);
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('tabIndex');
+    });
+
     it('should create markup for boolean properties', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
@@ -141,17 +151,23 @@ describe('DOMPropertyOperations', function() {
 
   describe('injectDOMPropertyConfig', function() {
     it('should support custom attributes', function() {
+      spyOn(console, 'warn');
+
       // foobar does not exist yet
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foobar',
         'simple'
       )).toBe(null);
 
+      expect(console.warn.argsForCall.length).toBe(1);
+
       // foo-* does not exist yet
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foo-xyz',
         'simple'
       )).toBe(null);
+
+      expect(console.warn.argsForCall.length).toBe(2);
 
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
