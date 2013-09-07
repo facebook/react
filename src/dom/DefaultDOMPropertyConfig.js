@@ -59,6 +59,7 @@ var DefaultDOMPropertyConfig = {
     disabled: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     draggable: null,
     encType: null,
+    form: MUST_USE_ATTRIBUTE,
     frameBorder: MUST_USE_ATTRIBUTE,
     height: MUST_USE_ATTRIBUTE,
     hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,

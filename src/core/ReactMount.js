@@ -31,7 +31,7 @@ var nodeCache = {};
 var $ = require('$');
 
 /** Mapping from reactRootID to React component instance. */
-var instanceByReactRootID = {};
+var instancesByReactRootID = {};
 
 /** Mapping from reactRootID to `container` nodes. */
 var containersByReactRootID = {};
@@ -212,7 +212,7 @@ var ReactMount = {
   useTouchEvents: false,
 
   /** Exposed for debugging purposes **/
-  _instanceByReactRootID: instanceByReactRootID,
+  _instancesByReactRootID: instancesByReactRootID,
 
   /**
    * This is a hook provided to support rendering React components while
@@ -272,7 +272,7 @@ var ReactMount = {
     ReactMount.prepareEnvironmentForDOM();
 
     var reactRootID = ReactMount.registerContainer(container);
-    instanceByReactRootID[reactRootID] = nextComponent;
+    instancesByReactRootID[reactRootID] = nextComponent;
     return reactRootID;
   },
 
@@ -316,7 +316,7 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   renderComponent: function(nextComponent, container, callback) {
-    var registeredComponent = instanceByReactRootID[getReactRootID(container)];
+    var registeredComponent = instancesByReactRootID[getReactRootID(container)];
 
     if (registeredComponent) {
       if (registeredComponent.constructor === nextComponent.constructor) {
@@ -403,12 +403,12 @@ var ReactMount = {
    */
   unmountAndReleaseReactRootNode: function(container) {
     var reactRootID = getReactRootID(container);
-    var component = instanceByReactRootID[reactRootID];
+    var component = instancesByReactRootID[reactRootID];
     if (!component) {
       return false;
     }
     ReactMount.unmountComponentFromNode(component, container);
-    delete instanceByReactRootID[reactRootID];
+    delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
     if (__DEV__) {
       delete rootElementsByReactRootID[reactRootID];
