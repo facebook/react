@@ -76,8 +76,19 @@ var transformer = {
   after: [simpleBannerify]
 };
 
+var transitions = {
+  entries: [
+    './build/modules/ReactTransitionGroup.js'
+  ],
+  outfile: './build/react-transitiongroup.js',
+  debug: false,
+  standalone: 'ReactTransitionGroup',
+  after: [simpleBannerify]
+};
+
 module.exports = {
   basic: basic,
   min: min,
-  transformer: transformer
+  transformer: transformer,
+  transitions: transitions
 };
