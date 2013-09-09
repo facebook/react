@@ -29,11 +29,8 @@ var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
 var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
-var COMMENT_NODE_TYPE = 8;
-
-// This buffer will be reused in dangerouslyRenderMarkup to avoid unnecessary
-// array allocations.
-var reusableBuffer = [];
+var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
+var RESULT_INDEX_ATTR = 'data-danger-index';
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -89,96 +86,57 @@ var Danger = {
       }
       var markupListByNodeName = markupByNodeName[nodeName];
 
-      var commentedMarkupList = reusableBuffer;
-      commentedMarkupList.length = 0;
-
       // This for-in loop skips the holes of the sparse array. The order of
       // iteration should follow the order of assignment, which happens to match
       // numerical index order, but we don't rely on that.
       for (var resultIndex in markupListByNodeName) {
         if (markupListByNodeName.hasOwnProperty(resultIndex)) {
-          // Push the requested markup followed by a sentinel HTML
-          // comment. Comments are a good choice for sentinels because they can
-          // appear as children of any HTML node.
-          commentedMarkupList.push(
-            markupListByNodeName[resultIndex],
-            // This resultIndex will be parsed back out below.
-            '<!--danger:', resultIndex, '-->'
+          var markup = markupListByNodeName[resultIndex];
+
+          // Push the requested markup with an additional RESULT_INDEX_ATTR
+          // attribute.  If the markup does not start with a < character, it
+          // will be discarded below (with an appropriate console.error).
+          markupListByNodeName[resultIndex] = markup.replace(
+            OPEN_TAG_NAME_EXP,
+            // This index will be parsed back out below.
+            '$1 ' + RESULT_INDEX_ATTR + '="' + resultIndex + '" '
           );
         }
       }
 
-      // Render each group of markup with similar wrapping `nodeName`, with
-      // sentinel comments interspersed.
+      // Render each group of markup with similar wrapping `nodeName`.
       var renderNodes = createNodesFromMarkup(
-        commentedMarkupList.join(''),
+        markupListByNodeName.join(''),
         emptyFunction // Do nothing special with <script> tags.
       );
 
-      var renderBuffer = reusableBuffer;
-      renderBuffer.length = 0;
-
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
-        if (renderNode.nodeType !== COMMENT_NODE_TYPE) {
-          // Append all non-comment nodes to the buffer.
-          renderBuffer.push(renderNode);
+        if (renderNode.hasAttribute &&
+            renderNode.hasAttribute(RESULT_INDEX_ATTR)) {
 
-        } else {
-          var comment = renderNode.nodeValue.split(':');
-          if (comment[0] === 'danger') {
-            resultIndex = comment[1];
-            invariant(
-              !resultList.hasOwnProperty(resultIndex),
-              'Danger: Assigning to an already-occupied result index.'
-            );
+          resultIndex = +renderNode.getAttribute(RESULT_INDEX_ATTR);
+          renderNode.removeAttribute(RESULT_INDEX_ATTR);
 
-            // Take the first node no matter how many were rendered.
-            resultList[resultIndex] = renderBuffer[0] || null;
+          invariant(
+            !resultList.hasOwnProperty(resultIndex),
+            'Danger: Assigning to an already-occupied result index.'
+          );
 
-            if (__DEV__) {
-              if (renderBuffer.length !== 1) {
-                var args = [
-                  "Danger: '" + markupListByNodeName[resultIndex] + "' " +
-                  "rendered as " + renderBuffer.length + " nodes instead of 1:"
-                ];
+          resultList[resultIndex] = renderNode;
 
-                // Pass the nodes as arguments to console.error so that they can
-                // be inspected in the browser.
-                args.push.apply(args, renderBuffer);
+          // This should match resultList.length and markupList.length when
+          // we're done.
+          resultListAssignmentCount += 1;
 
-                // Use console.error instead of throwing so that we don't
-                // interfere with the rendering of other markup.
-                console.error.apply(console, args);
-              }
-            }
-
-            // Empty the buffer after assigning its contents to
-            // resultList[resultIndex];
-            renderBuffer.length = 0;
-
-            // This should match resultList.length and markupList.length when
-            // we're done.
-            resultListAssignmentCount += 1;
-
-          } else {
-            // It's some other kind of comment that we didn't create.  Weirder
-            // things have happened.
-            renderBuffer.push(renderNode);
-            console.warn(
-              'Danger: Markup unexpectedly rendered a comment node:',
-              '<!--' + renderNode.nodeValue + '-->.'
-            );
-          }
+        } else if (__DEV__) {
+          console.error(
+            "Danger: Discarding unexpected node:",
+            renderNode
+          );
         }
       }
     }
-
-    invariant(
-      reusableBuffer.length === 0,
-      'Danger: Rendered malformed markup: %s.',
-      reusableBuffer
-    );
 
     // Although resultList was populated out of order, it should now be a dense
     // array.

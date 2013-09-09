@@ -106,11 +106,9 @@ describe('Danger', function() {
 
       expect(console.error.argsForCall.length).toBe(1);
 
-      expect(args.length).toBe(3);
-      expect(args[0]).toBe(
-        "Danger: '<p></p><p></p>' rendered as 2 nodes instead of 1:");
-      expect(args[1]).toBe(renderedMarkup[0]);
-      expect(args[2].nodeName).toBe('P');
+      expect(args.length).toBe(2);
+      expect(args[0]).toBe('Danger: Discarding unexpected node:');
+      expect(args[1].nodeName).toBe('P');
     });
   });
 
