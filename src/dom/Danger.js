@@ -31,6 +31,9 @@ var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
 var COMMENT_NODE_TYPE = 8;
 
+// This buffer will be reused in dangerouslyRenderMarkup to avoid unnecessary
+// array allocations.
+var reusableBuffer = [];
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -50,9 +53,9 @@ function getNodeName(markup) {
 var Danger = {
 
   /**
-   * Renders markup into an array of nodes. The markup is expected to
-   * render into a list of root nodes. Also, the length of `resultList`
-   * and `markupList` should be the same.
+   * Renders markup into an array of nodes. The markup is expected to render
+   * into a list of root nodes. Also, the length of `resultList` and
+   * `markupList` should be the same.
    *
    * @param {array<string>} markupList List of markup strings to render.
    * @return {array<DOMElement>} List of rendered nodes.
@@ -86,15 +89,17 @@ var Danger = {
       }
       var markupListByNodeName = markupByNodeName[nodeName];
 
-      var commentedMarkupList = [];
-      // This for-in loop skips the holes of the sparse array. The order
-      // of iteration should follow the order of assignment, which happens
-      // to match numerical index order, but we don't rely on that.
+      var commentedMarkupList = reusableBuffer;
+      commentedMarkupList.length = 0;
+
+      // This for-in loop skips the holes of the sparse array. The order of
+      // iteration should follow the order of assignment, which happens to match
+      // numerical index order, but we don't rely on that.
       for (var resultIndex in markupListByNodeName) {
         if (markupListByNodeName.hasOwnProperty(resultIndex)) {
           // Push the requested markup followed by a sentinel HTML
-          // comment. Comments are a good choice for sentinels because
-          // they can appear as children of any HTML node.
+          // comment. Comments are a good choice for sentinels because they can
+          // appear as children of any HTML node.
           commentedMarkupList.push(
             markupListByNodeName[resultIndex],
             // This resultIndex will be parsed back out below.
@@ -103,14 +108,15 @@ var Danger = {
         }
       }
 
-      // Render each group of markup with similar wrapping `nodeName`,
-      // with sentinel comments interspersed.
+      // Render each group of markup with similar wrapping `nodeName`, with
+      // sentinel comments interspersed.
       var renderNodes = createNodesFromMarkup(
         commentedMarkupList.join(''),
         emptyFunction // Do nothing special with <script> tags.
       );
 
-      var renderBuffer = [];
+      var renderBuffer = reusableBuffer;
+      renderBuffer.length = 0;
 
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
@@ -137,8 +143,8 @@ var Danger = {
                   "rendered as " + renderBuffer.length + " nodes instead of 1:"
                 ];
 
-                // Pass the nodes as arguments to console.error so that
-                // they can be inspected in the browser.
+                // Pass the nodes as arguments to console.error so that they can
+                // be inspected in the browser.
                 args.push.apply(args, renderBuffer);
 
                 // Use console.error instead of throwing so that we don't
@@ -151,13 +157,13 @@ var Danger = {
             // resultList[resultIndex];
             renderBuffer.length = 0;
 
-            // This should match resultList.length and markupList.length
-            // when we're done.
+            // This should match resultList.length and markupList.length when
+            // we're done.
             resultListAssignmentCount += 1;
 
           } else {
-            // It's some other kind of comment that we didn't create.
-            // Weirder things have happened.
+            // It's some other kind of comment that we didn't create.  Weirder
+            // things have happened.
             renderBuffer.push(renderNode);
             console.warn(
               'Danger: Markup unexpectedly rendered a comment node:',
@@ -168,8 +174,14 @@ var Danger = {
       }
     }
 
-    // Although resultList was populated out of order, it should now be a
-    // dense array.
+    invariant(
+      reusableBuffer.length === 0,
+      'Danger: Rendered malformed markup: %s.',
+      reusableBuffer
+    );
+
+    // Although resultList was populated out of order, it should now be a dense
+    // array.
     invariant(
       resultListAssignmentCount === resultList.length,
       'Danger: Did not assign to every index of resultList.'
