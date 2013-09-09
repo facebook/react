@@ -95,10 +95,7 @@ var ReactTransitionableChild = React.createClass({
 
   queueClass: function(className) {
     this.classNameQueue.push(className);
-    this.runNextTick(this.flushClassNameQueue);
-  },
 
-  runNextTick: function() {
     if (this.props.runNextTick) {
       this.props.runNextTick(this.flushClassNameQueue);
       return;

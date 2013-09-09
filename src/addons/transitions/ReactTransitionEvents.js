@@ -21,22 +21,34 @@
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var EVENT_NAME_MAP = {
-  'transition': ['animationend', 'transitionend'],
-  'WebkitTransition': ['webkitAnimationEnd', 'webkitTransitionEnd'],
-  'MozTransition': ['mozAnimationEnd', 'mozTransitionEnd'],
-  'OTransition': ['oAnimationEnd', 'oTransitionEnd'],
-  'msTransition': ['MSAnimationEnd', 'MSTransitionEnd']
+  transitionend: {
+    'transition': 'transitionend',
+    'WebkitTransition': 'webkitTransitionEnd',
+    'MozTransition': 'mozTransitionEnd',
+    'OTransition': 'oTransitionEnd',
+    'msTransition': 'MSTransitionEnd'
+  },
+
+  animationend: {
+    'animation': 'animationend',
+    'WebkitAnimation': 'webkitAnimationEnd',
+    'MozAnimation': 'mozAnimationEnd',
+    'OAnimation': 'oAnimationEnd',
+    'msAnimation': 'MSAnimationEnd'
+  }
 };
 
-var endEvents = null;
+var endEvents = [];
 
 function detectEvents() {
   var testEl = document.createElement('div');
   var style = testEl.style;
-  for (var styleName in EVENT_NAME_MAP) {
-    if (styleName in style) {
-      endEvents = EVENT_NAME_MAP[styleName];
-      return;
+  for (var baseEventName in EVENT_NAME_MAP) {
+    for (var styleName in baseEventName) {
+      if (styleName in style) {
+        endEvents.push(EVENT_NAME_MAP[styleName]);
+        break;
+      }
     }
   }
 }
@@ -60,7 +72,7 @@ function removeEventListener(node, eventName, eventListener) {
 
 var ReactTransitionEvents = {
   addEndEventListener: function(node, eventListener) {
-    if (!endEvents) {
+    if (endEvents.length === 0) {
       // If CSS transitions are not supported, trigger an "end animation"
       // event immediately.
       window.setTimeout(eventListener, 0);
@@ -72,7 +84,7 @@ var ReactTransitionEvents = {
   },
 
   removeEndEventListener: function(node, eventListener) {
-    if (!endEvents) {
+    if (endEvents.length === 0) {
       return;
     }
     endEvents.forEach(function(endEvent) {
