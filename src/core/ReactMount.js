@@ -229,11 +229,19 @@ var ReactMount = {
   /**
    * Ensures that the top-level event delegation listener is set up. This will
    * be invoked some time before the first time any React component is rendered.
+   * @param {DOMElement} container container we're rendering into
    *
    * @private
    */
-  prepareEnvironmentForDOM: function() {
-    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents);
+  prepareEnvironmentForDOM: function(container) {
+    invariant(
+      container && container.nodeType === 1,
+      'prepareEnvironmentForDOM(...): Target container is not a DOM element.'
+    );
+    ReactEventEmitter.ensureListening(
+      ReactMount.useTouchEvents,
+      container.ownerDocument
+    );
   },
 
   /**
@@ -269,7 +277,7 @@ var ReactMount = {
    * @return {string} reactRoot ID prefix
    */
   _registerComponent: function(nextComponent, container) {
-    ReactMount.prepareEnvironmentForDOM();
+    ReactMount.prepareEnvironmentForDOM(container);
 
     var reactRootID = ReactMount.registerContainer(container);
     instancesByReactRootID[reactRootID] = nextComponent;

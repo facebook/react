@@ -37,15 +37,15 @@ describe('ReactComponent', function() {
     expect(function() {
       React.renderComponent(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
-      'not valid.'
+      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'is not a DOM element.'
     );
 
     expect(function() {
       React.renderComponent(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
-      'not valid.'
+      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'is not a DOM element.'
     );
   });
 

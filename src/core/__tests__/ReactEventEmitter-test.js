@@ -95,7 +95,7 @@ describe('ReactEventEmitter', function() {
     ReactTestUtils = require('ReactTestUtils');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEventEmitter.ensureListening(false);
+    ReactEventEmitter.ensureListening(false, document);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });

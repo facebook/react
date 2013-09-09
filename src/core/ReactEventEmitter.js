@@ -152,8 +152,9 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * reason, and only in some cases).
    *
    * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
+   * @param {DOMDocument} contentDocument DOM document to listen on
    */
-  ensureListening: function(touchNotMouse) {
+  ensureListening: function(touchNotMouse, contentDocument) {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'ensureListening(...): Cannot toggle event listening in a Worker ' +
@@ -168,7 +169,10 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     // Call out to base implementation.
     ReactEventEmitterMixin.ensureListening.call(
       ReactEventEmitter,
-      touchNotMouse
+      {
+        touchNotMouse: touchNotMouse,
+        contentDocument: contentDocument
+      }
     );
   },
 
@@ -217,16 +221,17 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * they bubble to document.
    *
    * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
+   * @param {DOMDocument} contentDocument Document which owns the container
    * @private
    * @see http://www.quirksmode.org/dom/events/keys.html.
    */
-  listenAtTopLevel: function(touchNotMouse) {
+  listenAtTopLevel: function(touchNotMouse, contentDocument) {
     invariant(
-      !this._isListening,
+      !contentDocument._isListening,
       'listenAtTopLevel(...): Cannot setup top-level listener more than once.'
     );
     var topLevelTypes = EventConstants.topLevelTypes;
-    var mountAt = document;
+    var mountAt = contentDocument;
 
     registerScrollValueMonitoring();
     trapBubbledEvent(topLevelTypes.topMouseOver, 'mouseover', mountAt);

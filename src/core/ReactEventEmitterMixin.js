@@ -54,9 +54,9 @@ var ReactEventEmitterMixin = {
    * @param {*} config Configuration passed through to `listenAtTopLevel`.
    */
   ensureListening: function(config) {
-    if (!this._isListening) {
-      this.listenAtTopLevel(config);
-      this._isListening = true;
+    if (!config.contentDocument._reactIsListening) {
+      this.listenAtTopLevel(config.touchNotMouse, config.contentDocument);
+      config.contentDocument._reactIsListening = true;
     }
   },
 
