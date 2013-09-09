@@ -19,8 +19,6 @@
 
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
-
 /**
  * Gets the target node from a native browser event by accounting for
  * inconsistencies in browser DOM APIs.
@@ -29,10 +27,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
  * @return {DOMEventTarget} Target node.
  */
 function getEventTarget(nativeEvent) {
-  var target =
-    nativeEvent.target ||
-    nativeEvent.srcElement ||
-    ExecutionEnvironment.global;
+  var target = nativeEvent.target || nativeEvent.srcElement || window;
   // Safari may fire events on text nodes (Node.TEXT_NODE is 3).
   // @see http://www.quirksmode.org/js/events_properties.html
   return target.nodeType === 3 ? target.parentNode : target;
