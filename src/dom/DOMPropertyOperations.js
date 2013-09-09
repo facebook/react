@@ -44,17 +44,20 @@ if (__DEV__) {
     }
 
     warnedProperties[name] = true;
-    var message = 'Unknown DOM property ' + name + '.';
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version
     var standardName = DOMProperty.isCustomAttribute(lowerCasedName) ?
       lowerCasedName : DOMProperty.getPossibleStandardName[lowerCasedName];
+
+    // For now, only warn when we have a suggested correction. This prevents
+    // logging too much when using transferPropsTo.
     if (standardName != null) {
-      message += ' Did you mean ' + standardName + '?';
+      console.warn(
+        'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
+      );
     }
 
-    console.warn(message);
   };
 }
 
