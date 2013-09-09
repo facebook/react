@@ -19,7 +19,6 @@
 
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
 
@@ -74,7 +73,7 @@ var ReactEventTopLevelCallback = {
       }
       var topLevelTarget = ReactMount.getFirstReactDOM(
         getEventTarget(nativeEvent)
-      ) || ExecutionEnvironment.global;
+      ) || window;
       var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
       ReactEventEmitter.handleTopLevel(
         topLevelType,
