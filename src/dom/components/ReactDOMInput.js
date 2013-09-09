@@ -129,7 +129,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       // the input might not even be in a form, let's just use the global
       // `getElementsByName` to ensure we don't miss anything.
       var group = document.getElementsByName(name);
-      for (var i = 0; i < group.length; i++) {
+      for (var i = 0, groupLen = group.length; i < groupLen; i++) {
         var otherNode = group[i];
         if (otherNode === rootNode ||
             otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
