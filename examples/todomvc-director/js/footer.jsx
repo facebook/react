@@ -39,15 +39,15 @@
 					</span>
 					<ul id="filters">
 						<li>
-							<a href="#/" class={show[ALL_TODOS]}>All</a>
+							<a href="#/" className={show[ALL_TODOS]}>All</a>
 						</li>
 						{' '}
 						<li>
-							<a href="#/active" class={show[ACTIVE_TODOS]}>Active</a>
+							<a href="#/active" className={show[ACTIVE_TODOS]}>Active</a>
 						</li>
 						{' '}
 						<li>
-							<a href="#/completed" class={show[COMPLETED_TODOS]}>Completed</a>
+							<a href="#/completed" className={show[COMPLETED_TODOS]}>Completed</a>
 						</li>
 					</ul>
 					{clearButton}
