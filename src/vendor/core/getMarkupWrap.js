@@ -32,23 +32,55 @@ var dummyNode =
  *
  * In IE8, certain elements cannot render alone, so wrap all elements ('*').
  */
-var shouldWrap = {};
+var shouldWrap = {
+  // For SVG elements, we force wrapping even if the browser creates a node
+  // when inserting into a <div> because there doesn't appear to be any way to
+  // distinguish between nodes created inside a <div> and nodes created inside
+  // an <svg> except that the former case produces nodes that mysteriously
+  // don't display.
+  'circle': true,
+  'g': true,
+  'line': true,
+  'path': true,
+  'polyline': true,
+  'rect': true,
+  'text': true
+};
+
+var selectWrap = [1, '<select multiple="true">', '</select>'];
+var tableWrap = [1, '<table>', '</table>'];
+var trWrap = [3, '<table><tbody><tr>', '</tr></tbody></table>'];
+
+var svgWrap = [1, '<svg>', '</svg>'];
+
 var markupWrap = {
+  '*': [1, '?<div>', '</div>'],
+
   'area': [1, '<map>', '</map>'],
-  'caption': [1, '<table>', '</table>'],
   'col': [2, '<table><tbody></tbody><colgroup>', '</colgroup></table>'],
-  'colgroup': [1, '<table>', '</table>'],
   'legend': [1, '<fieldset>', '</fieldset>'],
-  'optgroup': [1, '<select multiple="true">', '</select>'],
-  'option': [1, '<select multiple="true">', '</select>'],
   'param': [1, '<object>', '</object>'],
-  'tbody': [1, '<table>', '</table>'],
-  'td': [3, '<table><tbody><tr>', '</tr></tbody></table>'],
-  'tfoot': [1, '<table>', '</table>'],
-  'th': [3, '<table><tbody><tr>', '</tr></tbody></table>'],
-  'thead': [1, '<table>', '</table>'],
   'tr': [2, '<table><tbody>', '</tbody></table>'],
-  '*': [1, '?<div>', '</div>']
+
+  'optgroup': selectWrap,
+  'option': selectWrap,
+
+  'caption': tableWrap,
+  'colgroup': tableWrap,
+  'tbody': tableWrap,
+  'tfoot': tableWrap,
+  'thead': tableWrap,
+
+  'td': trWrap,
+  'th': trWrap,
+
+  'circle': svgWrap,
+  'g': svgWrap,
+  'line': svgWrap,
+  'path': svgWrap,
+  'polyline': svgWrap,
+  'rect': svgWrap,
+  'text': svgWrap
 };
 
 /**
