@@ -92,10 +92,10 @@ var TodoItem = React.createClass({
       completed: this.props.todo.get('completed'), editing: this.props.editing
     });
     return (
-      <li class={classes}>
-        <div class="view">
+      <li className={classes}>
+        <div className="view">
           <input
-            class="toggle"
+            className="toggle"
             type="checkbox"
             checked={this.props.todo.get('completed')}
             onChange={this.props.onToggle}
@@ -104,12 +104,12 @@ var TodoItem = React.createClass({
           <label onDoubleClick={this.onEdit}>
             {this.props.todo.get('title')}
           </label>
-          <button class="destroy" onClick={this.props.onDestroy} />
+          <button className="destroy" onClick={this.props.onDestroy} />
         </div>
         <form onSubmit={this.handleSubmit}>
           <input
             ref="editField"
-            class="edit"
+            className="edit"
             defaultValue={this.props.todo.get('title')}
             onBlur={this.handleSubmit}
             autoFocus="autofocus"

@@ -43,11 +43,6 @@ var quoteAttrName = require('./xjs').quoteAttrName;
  * javascript since "class" is not a valid object key in javascript.
  */
 
-var JSX_ATTRIBUTE_RENAMES = {
-  'class': 'className',
-  cxName: 'className'
-};
-
 var JSX_ATTRIBUTE_TRANSFORMS = {
   cxName: function(attr) {
     if (attr.value.type !== Syntax.Literal) {
@@ -93,7 +88,7 @@ function visitReactTag(traverse, object, path, state) {
       throw new Error(
          'Namespace attributes are not supported. ReactJSX is not XML.');
     }
-    var name = JSX_ATTRIBUTE_RENAMES[attr.name.name] || attr.name.name;
+    var name = attr.name.name;
     var isFirst = index === 0;
     var isLast = index === object.attributes.length - 1;
 
