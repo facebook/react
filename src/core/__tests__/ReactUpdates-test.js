@@ -293,4 +293,29 @@ describe('ReactUpdates', function() {
     expect(instance.state.x).toBe(1);
     expect(updateCount).toBe(1);
   });
+
+  it('should be possible to set single key with setState', function() {
+    var updateCount = 0;
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      componentDidUpdate: function() {
+        updateCount++;
+      },
+      render: function() {
+        return <div>{this.state.x}</div>;
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(instance.state.x).toBe(0);
+
+    ReactUpdates.batchedUpdates(function() {
+      instance.setState('x', 1);
+    });
+
+    expect(instance.state.x).toBe(1);
+    expect(updateCount).toBe(1);
+  });
 });
