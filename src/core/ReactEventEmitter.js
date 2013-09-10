@@ -301,6 +301,12 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
       trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
     }
+
+    if (isEventSupported('copy')) {
+      trapBubbledEvent(topLevelTypes.topCopy, 'copy', mountAt);
+      trapBubbledEvent(topLevelTypes.topCut, 'cut', mountAt);
+      trapBubbledEvent(topLevelTypes.topPaste, 'paste', mountAt);
+    }
   },
 
   registrationNames: EventPluginHub.registrationNames,

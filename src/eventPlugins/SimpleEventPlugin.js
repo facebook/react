@@ -20,6 +20,7 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
+var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
 var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
@@ -45,6 +46,18 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onClick: true}),
       captured: keyOf({onClickCapture: true})
+    }
+  },
+  copy: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onCopy: true}),
+      captured: keyOf({onCopyCapture: true})
+    }
+  },
+  cut: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onCut: true}),
+      captured: keyOf({onCutCapture: true})
     }
   },
   doubleClick: {
@@ -157,6 +170,12 @@ var eventTypes = {
       captured: keyOf({onMouseUpCapture: true})
     }
   },
+  paste: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPaste: true}),
+      captured: keyOf({onPasteCapture: true})
+    }
+  },
   scroll: {
     phasedRegistrationNames: {
       bubbled: keyOf({onScroll: true}),
@@ -204,6 +223,8 @@ var eventTypes = {
 var topLevelEventsToDispatchConfig = {
   topBlur:        eventTypes.blur,
   topClick:       eventTypes.click,
+  topCopy:        eventTypes.copy,
+  topCut:         eventTypes.cut,
   topDoubleClick: eventTypes.doubleClick,
   topDOMCharacterDataModified: eventTypes.DOMCharacterDataModified,
   topDrag:        eventTypes.drag,
@@ -222,6 +243,7 @@ var topLevelEventsToDispatchConfig = {
   topMouseDown:   eventTypes.mouseDown,
   topMouseMove:   eventTypes.mouseMove,
   topMouseUp:     eventTypes.mouseUp,
+  topPaste:       eventTypes.paste,
   topScroll:      eventTypes.scroll,
   topSubmit:      eventTypes.submit,
   topTouchCancel: eventTypes.touchCancel,
@@ -314,6 +336,11 @@ var SimpleEventPlugin = {
         break;
       case topLevelTypes.topWheel:
         EventConstructor = SyntheticWheelEvent;
+        break;
+      case topLevelTypes.topCopy:
+      case topLevelTypes.topCut:
+      case topLevelTypes.topPaste:
+        EventConstructor = SyntheticClipboardEvent;
         break;
     }
     invariant(
