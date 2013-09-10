@@ -85,8 +85,12 @@ var DOMPropertyInjection = {
       var lowerCased = propName.toLowerCase();
       DOMProperty.getPossibleStandardName[lowerCased] = propName;
 
-      DOMProperty.getAttributeName[propName] =
-        DOMAttributeNames[propName] || lowerCased;
+      var attributeName = DOMAttributeNames[propName];
+      if (attributeName) {
+        DOMProperty.getPossibleStandardName[attributeName] = propName;
+      }
+
+      DOMProperty.getAttributeName[propName] = attributeName || lowerCased;
 
       DOMProperty.getPropertyName[propName] =
         DOMPropertyNames[propName] || propName;

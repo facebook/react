@@ -68,6 +68,16 @@ describe('DOMPropertyOperations', function() {
       expect(console.warn.argsForCall[0][0]).toContain('tabIndex');
     });
 
+    it('should warn about class', function() {
+      spyOn(console, 'warn');
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'class',
+        'muffins'
+      )).toBe(null);
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('className');
+    });
+
     it('should create markup for boolean properties', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
