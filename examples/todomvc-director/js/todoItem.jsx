@@ -62,13 +62,13 @@
 
 		render: function () {
 			return (
-				<li class={Utils.stringifyObjKeys({
+				<li className={Utils.stringifyObjKeys({
 					completed: this.props.todo.completed,
 					editing: this.props.editing
 				})}>
-					<div class="view">
+					<div className="view">
 						<input
-							class="toggle"
+							className="toggle"
 							type="checkbox"
 							checked={this.props.todo.completed ? 'checked' : null}
 							onChange={this.props.onToggle}
@@ -76,11 +76,11 @@
 						<label onDoubleClick={this.handleEdit}>
 							{this.props.todo.title}
 						</label>
-						<button class='destroy' onClick={this.props.onDestroy} />
+						<button className='destroy' onClick={this.props.onDestroy} />
 					</div>
 					<input
 						ref="editField"
-						class="edit"
+						className="edit"
 						value={this.state.editText}
 						onBlur={this.handleSubmit}
 						onChange={this.handleChange}
