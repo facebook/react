@@ -50,9 +50,10 @@ var instancesByReactID = {};
 var ReactDOMInput = ReactCompositeComponent.createClass({
 
   getInitialState: function() {
+    var defaultValue = this.props.defaultValue;
     return {
       checked: this.props.defaultChecked || false,
-      value: this.props.defaultValue != null ? this.props.defaultValue : ''
+      value: defaultValue != null && defaultValue !== false ? defaultValue : ''
     };
   },
 
@@ -69,9 +70,11 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     props.defaultValue = null;
     props.checked =
       this.props.checked != null ? this.props.checked : this.state.checked;
-    // Cast `this.props.value` to a string so equality checks pass.
-    props.value =
-      this.props.value != null ? '' + this.props.value : this.state.value;
+
+    props.value = this.props.value != null && this.props.value !== false
+      ? '' + this.props.value
+      : this.state.value;
+
     props.onChange = this._handleChange;
 
     return input(props, this.props.children);
@@ -102,7 +105,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        '' + this.props.value || ''
+        this.props.value !== false ? '' + this.props.value : ''
       );
     }
   },

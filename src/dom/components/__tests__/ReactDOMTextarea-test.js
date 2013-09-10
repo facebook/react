@@ -58,6 +58,13 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('0');
   });
 
+  it('should display "" for `defaultValue` of `false`', function() {
+    var stub = <textarea type="text" defaultValue={false} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('');
+  });
+
   it('should allow setting `value`', function() {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
@@ -72,6 +79,22 @@ describe('ReactDOMTextarea', function() {
     var stub = <textarea value={0} />;
     var node = renderTextarea(stub);
 
+    expect(node.value).toBe('0');
+  });
+
+  it('should display "" for `value` of `false`', function() {
+    var stub = <textarea type="text" value={false} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('');
+  });
+
+  it('should properly control a value of number `0`', function() {
+    var stub = <textarea value={0} />;
+    var node = renderTextarea(stub);
+
+    node.value = 'giraffe';
+    ReactTestUtils.Simulate.input(node);
     expect(node.value).toBe('0');
   });
 
