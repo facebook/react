@@ -84,8 +84,7 @@ describe('ReactDOMInput', function() {
             <input ref="b" type="radio" name="fruit" />B
 
             <form>
-              <input ref="c" type="radio" name="fruit" form="pluto"
-                defaultChecked={true} />
+              <input ref="c" type="radio" name="fruit" defaultChecked={true} />
             </form>
           </div>
         );
