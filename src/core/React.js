@@ -50,4 +50,8 @@ var React = {
   isValidComponent: ReactComponent.isValidComponent
 };
 
+// Version exists only in the open-source version of React, not in Facebook's
+// internal version.
+React.version = __VERSION__;
+
 module.exports = React;
