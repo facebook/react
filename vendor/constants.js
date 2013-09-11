@@ -53,7 +53,13 @@ var ConstantVisitor = recast.Visitor.extend({
       } else if (stmt.alternate) {
         return stmt.alternate;
       } else {
-        this.remove();
+        // In case this if statement is an alternate clause for another
+        // if-statement, replacing that alternate with null will have the
+        // effect of pruning the unnecessary clause.  If this is just a
+        // free-floating if statement, replacing it with null will have
+        // the effect of removing it from the enclosing list of
+        // statements.
+        return null;
       }
     }
   }
