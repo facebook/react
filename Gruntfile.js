@@ -55,8 +55,11 @@ module.exports = function(grunt) {
   // Check that the version we're exporting is the same one we expect in the
   // package. This is not an ideal way to do this, but makes sure that we keep
   // them in sync.
+  var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
   grunt.registerTask('version-check', function() {
-    var version = require('./build/modules/React').version;
+    var version = reactVersionExp.exec(
+      grunt.file.read('./build/modules/React.js')
+    )[1];
     var expectedVersion = grunt.config.data.pkg.version;
     if (version !== expectedVersion) {
       grunt.log.error('Versions do not match. Expected %s, saw %s', expectedVersion, version);
