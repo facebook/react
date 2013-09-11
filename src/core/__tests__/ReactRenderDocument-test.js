@@ -37,12 +37,12 @@ describe('rendering React components at document', function() {
     testDocument = getTestDocument();
   });
 
-  if (!testDocument) {
-    // These tests are not applicable in jst, since jsdom is buggy.
-    return;
-  }
-
   it('should be able to switch root constructors via state', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
     var Component = React.createClass({
       render: function() {
         return (
@@ -100,6 +100,11 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to switch root constructors', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
     var Component = React.createClass({
       render: function() {
         return (
@@ -143,6 +148,11 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to mount into document', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
     var Component = React.createClass({
       render: function() {
         return (
@@ -164,6 +174,11 @@ describe('rendering React components at document', function() {
   });
 
   it('should throw on full document render', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
     var container = testDocument;
     expect(function() {
       React.renderComponent(<html />, container);
@@ -178,6 +193,11 @@ describe('rendering React components at document', function() {
   });
 
   it('should throw on full document render of non-html', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
     var container = testDocument;
     ReactMount.allowFullPageRender = true;
     expect(function() {
