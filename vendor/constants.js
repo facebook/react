@@ -34,6 +34,29 @@ var ConstantVisitor = recast.Visitor.extend({
     }
   },
 
+  visitUnaryExpression: function(unary) {
+    this.genericVisit(unary);
+    if (unary.operator === 'typeof' &&
+        unary.argument.type === recast.Syntax.Literal) {
+      return recast.builder.literal(typeof unary.argument.value);
+    }
+  },
+
+  visitBinaryExpression: function(binary) {
+    this.genericVisit(binary);
+    if (binary.left.type === recast.Syntax.Literal &&
+        binary.right.type === recast.Syntax.Literal) {
+      var left = binary.left.value;
+      var right = binary.right.value;
+      switch (binary.operator) {
+        case "===":
+          return recast.builder.literal(left === right);
+        case "!==":
+          return recast.builder.literal(left !== right);
+      }
+    }
+  },
+
   visitCallExpression: function(call) {
     if (!this.constants.__DEV__) {
       if (call.callee.type === 'Identifier' && call.callee.name === 'invariant') {

@@ -52,6 +52,8 @@ var React = {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = __VERSION__;
+if (typeof __VERSION__ !== 'undefined') {
+  React.version = __VERSION__;
+}
 
 module.exports = React;
