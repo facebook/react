@@ -117,7 +117,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        this.props.value || ''
+        this.props.value !== false ? '' + this.props.value : ''
       );
     }
   },
