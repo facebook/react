@@ -52,13 +52,26 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('npm', npmTask);
 
-  grunt.registerTask('build:basic', ['jsx:debug', 'browserify:basic']);
+  // Check that the version we're exporting is the same one we expect in the
+  // package. This is not an ideal way to do this, but makes sure that we keep
+  // them in sync.
+  grunt.registerTask('version-check', function() {
+    var version = require('./build/modules/React').version;
+    var expectedVersion = grunt.config.data.pkg.version;
+    if (version !== expectedVersion) {
+      grunt.log.error('Versions do not match. Expected %s, saw %s', expectedVersion, version);
+      return false;
+    }
+  });
+
+  grunt.registerTask('build:basic', ['jsx:debug', 'version-check', 'browserify:basic']);
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
   grunt.registerTask('build:transitions', ['jsx:debug', 'browserify:transitions']);
-  grunt.registerTask('build:min', ['jsx:release', 'browserify:min']);
+  grunt.registerTask('build:min', ['jsx:release', 'version-check', 'browserify:min']);
   grunt.registerTask('build:test', [
     'jsx:jasmine',
     'jsx:test',
+    'version-check',
     'populist:jasmine',
     'populist:test'
   ]);
@@ -70,6 +83,7 @@ module.exports = function(grunt) {
   // in order so we can take advantage of that and only run jsx:debug once.
   grunt.registerTask('build', [
     'jsx:debug',
+    'version-check',
     'browserify:basic',
     'browserify:transformer',
     'browserify:transitions',
