@@ -28,6 +28,9 @@ var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 var ATTR_NAME = 'data-reactid';
 var nodeCache = {};
 
+var ELEMENT_NODE_TYPE = 1;
+var DOC_NODE_TYPE = 9;
+
 var $ = require('$');
 
 /** Mapping from reactRootID to React component instance. */
@@ -235,13 +238,16 @@ var ReactMount = {
    */
   prepareEnvironmentForDOM: function(container) {
     invariant(
-      container && container.nodeType === 1,
+      container && (
+        container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOC_NODE_TYPE
+      ),
       'prepareEnvironmentForDOM(...): Target container is not a DOM element.'
     );
-    ReactEventEmitter.ensureListening(
-      ReactMount.useTouchEvents,
-      container.ownerDocument
-    );
+    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+      container.ownerDocument :
+      container;
+    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents, doc);
   },
 
   /**
