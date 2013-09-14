@@ -18,6 +18,8 @@
 
 "use strict";
 
+var getTextContentAccessor = require('getTextContentAccessor');
+
 // It is not safe to read the document.activeElement property in IE if there's
 // nothing focused.
 function getActiveElement() {
@@ -80,8 +82,9 @@ var ReactInputSelection = {
   },
 
   /**
-   * @getSelection: Gets the selection bounds of a textarea or input.
-   * -@input: Look up selection bounds of this input or textarea
+   * @getSelection: Gets the selection bounds of a focused textarea, input or
+   * contentEditable node.
+   * -@input: Look up selection bounds of this input
    * -@return {start: selectionStart, end: selectionEnd}
    */
   getSelection: function(input) {
@@ -114,7 +117,8 @@ var ReactInputSelection = {
       return {start: 0, end: 0};
     }
 
-    var length = input.value.length;
+    var value = input.value || input[getTextContentAccessor()];
+    var length = value.length;
 
     if (input.nodeName === 'INPUT') {
       return {
@@ -129,7 +133,7 @@ var ReactInputSelection = {
       range2.setEndPoint('StartToStart', range);
       return {
         start: length - range2.text.length,
-        end:   end
+        end: end
       };
     }
   },
