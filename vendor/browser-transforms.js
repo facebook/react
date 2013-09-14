@@ -20,9 +20,13 @@
 var runScripts;
 var headEl;
 
-var transform = require('./fbtransform/lib/transform').transform;
-var visitors = require('./fbtransform/visitors').transformVisitors;
-var transform = transform.bind(null, visitors.react);
+var transform = (function () {
+  var transform = require('./fbtransform/lib/transform').transform;
+  var visitors = require('./fbtransform/visitors').transformVisitors;
+  return function (options) {
+    return transform(null, visitors.react, options);
+  };
+})();
 var docblock = require('./fbtransform/lib/docblock');
 
 
