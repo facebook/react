@@ -87,16 +87,18 @@ var ReactInputSelection = {
   getSelection: function(input) {
     var range;
     if (input.contentEditable === 'true' && window.getSelection) {
-      range = window.getSelection().getRangeAt(0);
-      var commonAncestor = range.commonAncestorContainer;
-      if (commonAncestor && commonAncestor.nodeType === 3) {
-        commonAncestor = commonAncestor.parentNode;
+      var selection = window.getSelection();
+      if (selection.rangeCount > 0) {
+        range = selection.getRangeAt(0);
+        var commonAncestor = range.commonAncestorContainer;
+        if (commonAncestor && commonAncestor.nodeType === 3) {
+          commonAncestor = commonAncestor.parentNode;
+        }
+        if (commonAncestor === input) {
+          return {start: range.startOffset, end: range.endOffset};
+        }
       }
-      if (commonAncestor !== input) {
-        return {start: 0, end: 0};
-      } else {
-        return {start: range.startOffset, end: range.endOffset};
-      }
+      return {start: 0, end: 0};
     }
 
     if (!document.selection) {
