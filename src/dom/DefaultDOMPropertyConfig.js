@@ -25,9 +25,10 @@ var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
 
+var isCustomAttributeRegexp = /^(data|aria)-[a-z_][a-z\d_.\-]*$/;
 var DefaultDOMPropertyConfig = {
   isCustomAttribute: function (arg) {
-    return RegExp.prototype.test.call(/^(data|aria)-[a-z_][a-z\d_.\-]*$/, arg);
+    return isCustomAttributeRegexp.test(arg);
   },
   Properties: {
     /**
