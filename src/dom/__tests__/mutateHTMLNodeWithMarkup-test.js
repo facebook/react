@@ -17,6 +17,8 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var getTestDocument = require('getTestDocument');
