@@ -45,7 +45,6 @@
           <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>blog</a></li>
           <li><a href="http://github.com/facebook/react">github</a>
         </ul>
-        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
       </div>
     </div>
 
@@ -56,11 +55,7 @@
         <div class="minitext">
           A JavaScript library for building user interfaces
         </div>
-
-        <div class="buttons-unit">
-          <a href="/react/docs/getting-started.html" class="button">Get Started</a>
-          <a href="/react/downloads.html" class="button">Download React v{{site.react_version}}</a>
-        </div>
+        {% include buttons_unit.html %}
       </div>
     </div>
     {% endif %}

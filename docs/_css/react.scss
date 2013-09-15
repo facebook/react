@@ -703,3 +703,16 @@ p code {
     float: right;
   }
 }
+
+.social-buttons {
+  position: absolute;
+  display: inline-block;
+  text-align: left;
+
+  table {
+    font-size: 0;
+    height: 50px;
+    margin-top: -2px;
+    margin-left: 10px;
+  }
+}
