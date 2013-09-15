@@ -703,3 +703,14 @@ p code {
     float: right;
   }
 }
+
+.github-count {
+  overflow: hidden;
+  display: inline-block;
+  top: 4px;
+  position: relative;
+
+  iframe {
+    margin-left: -52px;
+  }
+}
