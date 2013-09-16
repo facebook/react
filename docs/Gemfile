@@ -1,5 +1,7 @@
 source 'https://rubygems.org'
 
+gem 'rake'
+
 # jekyll, which builds it all
 gem 'jekyll', '~>1.0'
 

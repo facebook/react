@@ -4,7 +4,7 @@ title: Tooling Integration
 layout: docs
 permalink: tooling-integration.html
 prev: more-about-refs.html
-next: reference.html
+next: examples.html
 ---
 
 Every project uses a different system for building and deploying JavaScript. We've tried to make React as environment-agnostic as possible.
