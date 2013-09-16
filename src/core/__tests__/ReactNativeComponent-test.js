@@ -193,8 +193,8 @@ describe('ReactNativeComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var ReactDefaultInjection = require('ReactDefaultInjection');
-      ReactDefaultInjection.inject();
+      var ReactDOMInjection = require('ReactDOMInjection');
+      ReactDOMInjection.inject();
 
       var mixInto = require('mixInto');
       var ReactNativeComponent = require('ReactNativeComponent');

@@ -26,9 +26,9 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 
-var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactDOMInjection = require('ReactDOMInjection');
 
-ReactDefaultInjection.inject();
+ReactDOMInjection.inject();
 
 var React = {
   DOM: ReactDOM,

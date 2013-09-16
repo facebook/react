@@ -25,8 +25,8 @@ describe('DOMPropertyOperations', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    var ReactDefaultInjection = require('ReactDefaultInjection');
-    ReactDefaultInjection.inject();
+    var ReactDOMInjection = require('ReactDOMInjection');
+    ReactDOMInjection.inject();
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
