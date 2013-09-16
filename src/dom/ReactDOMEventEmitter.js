@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactEventEmitter
+ * @providesModule ReactDOMEventEmitter
  * @typechecks static-only
  */
 
@@ -31,7 +31,7 @@ var isEventSupported = require('isEventSupported');
 var merge = require('merge');
 
 /**
- * Summary of `ReactEventEmitter` event handling:
+ * Summary of `ReactDOMEventEmitter` event handling:
  *
  *  - Top-level delegation is used to trap native browser events. We normalize
  *    and de-duplicate events to account for browser quirks.
@@ -87,7 +87,7 @@ function trapBubbledEvent(topLevelType, handlerBaseName, element) {
   EventListener.listen(
     element,
     handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+    ReactDOMEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
       topLevelType
     )
   );
@@ -105,7 +105,7 @@ function trapCapturedEvent(topLevelType, handlerBaseName, element) {
   EventListener.capture(
     element,
     handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+    ReactDOMEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
       topLevelType
     )
   );
@@ -127,15 +127,15 @@ function registerScrollValueMonitoring() {
 }
 
 /**
- * `ReactEventEmitter` is used to attach top-level event listeners. For example:
+ * `ReactDOMEventEmitter` is used to attach top-level event listeners. For example:
  *
- *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
+ *   ReactDOMEventEmitter.putListener('myID', 'onClick', myFunction);
  *
  * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  *
  * @internal
  */
-var ReactEventEmitter = merge(ReactEventEmitterMixin, {
+var ReactDOMEventEmitter = merge(ReactEventEmitterMixin, {
 
   /**
    * React references `ReactEventTopLevelCallback` using this property in order
@@ -162,13 +162,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       'immediately.'
     );
     invariant(
-      ReactEventEmitter.TopLevelCallbackCreator,
+      ReactDOMEventEmitter.TopLevelCallbackCreator,
       'ensureListening(...): Cannot be called without a top level callback ' +
       'creator being injected.'
     );
     // Call out to base implementation.
     ReactEventEmitterMixin.ensureListening.call(
-      ReactEventEmitter,
+      ReactDOMEventEmitter,
       {
         touchNotMouse: touchNotMouse,
         contentDocument: contentDocument
@@ -187,8 +187,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
       'This is likely a bug in the framework. Please report immediately.'
     );
-    if (ReactEventEmitter.TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
+    if (ReactDOMEventEmitter.TopLevelCallbackCreator) {
+      ReactDOMEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
     }
   },
 
@@ -197,8 +197,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   isEnabled: function() {
     return !!(
-      ReactEventEmitter.TopLevelCallbackCreator &&
-      ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
+      ReactDOMEventEmitter.TopLevelCallbackCreator &&
+      ReactDOMEventEmitter.TopLevelCallbackCreator.isEnabled()
     );
   },
 
@@ -326,4 +326,4 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 });
 
 
-module.exports = ReactEventEmitter;
+module.exports = ReactDOMEventEmitter;

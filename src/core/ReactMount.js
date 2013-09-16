@@ -20,7 +20,7 @@
 
 var invariant = require('invariant');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
@@ -247,7 +247,7 @@ var ReactMount = {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
       container.ownerDocument :
       container;
-    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents, doc);
+    ReactDOMEventEmitter.ensureListening(ReactMount.useTouchEvents, doc);
   },
 
   /**

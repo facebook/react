@@ -19,7 +19,7 @@
 var EventConstants = require('EventConstants');
 var React = require('React');
 var ReactComponent = require('ReactComponent');
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
 var ReactMount = require('ReactMount');
 
@@ -199,7 +199,7 @@ var ReactTestUtils = {
    */
   simulateEventOnNode: function(topLevelType, node, fakeNativeEvent) {
     var virtualHandler =
-      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      ReactDOMEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
         topLevelType
       );
     fakeNativeEvent.target = node;
@@ -219,7 +219,7 @@ var ReactTestUtils = {
       throw new Error('Simulating event on non-rendered component');
     }
     var virtualHandler =
-      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
+      ReactDOMEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
         topLevelType
       );
     var node = ReactMount.getNode(reactRootID);

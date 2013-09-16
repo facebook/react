@@ -19,7 +19,7 @@
 
 "use strict";
 
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
 var ReactMount = require('ReactMount');
 
 var getEventTarget = require('getEventTarget');
@@ -75,7 +75,7 @@ var ReactEventTopLevelCallback = {
         getEventTarget(nativeEvent)
       ) || window;
       var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
-      ReactEventEmitter.handleTopLevel(
+      ReactDOMEventEmitter.handleTopLevel(
         topLevelType,
         topLevelTarget,
         topLevelTargetID,

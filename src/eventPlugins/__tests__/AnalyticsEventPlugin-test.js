@@ -26,7 +26,7 @@ describe('AnalyticsEventPlugin', function() {
   var EventPluginHub;
   var EventPluginRegistry;
   var React;
-  var ReactEventEmitter;
+  var ReactDOMEventEmitter;
   var ReactTestUtils;
 
   var DefaultEventPluginOrder;
@@ -40,7 +40,7 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
-    ReactEventEmitter = require('ReactEventEmitter');
+    ReactDOMEventEmitter = require('ReactDOMEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
 
     EventPluginRegistry._resetEventPlugins();
@@ -61,7 +61,7 @@ describe('AnalyticsEventPlugin', function() {
       'ChangeEventPlugin': ChangeEventPlugin
     });
 
-    ReactEventEmitter.ensureListening(false, document);
+    ReactDOMEventEmitter.ensureListening(false, document);
   });
 
   it('should count events correctly', function() {

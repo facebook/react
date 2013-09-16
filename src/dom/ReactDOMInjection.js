@@ -25,7 +25,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 var ReactPerf = require('ReactPerf');
 
@@ -44,7 +44,7 @@ var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactUpdates = require('ReactUpdates');
 
 function inject() {
-  ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
+  ReactDOMEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
    * Inject module for resolving DOM hierarchy and plugin ordering.
    */

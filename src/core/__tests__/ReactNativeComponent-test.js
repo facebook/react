@@ -316,7 +316,7 @@ describe('ReactNativeComponent', function() {
   describe('unmountComponent', function() {
     it("should clean up listeners", function() {
       var React = require('React');
-      var ReactEventEmitter = require('ReactEventEmitter');
+      var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
       var ReactMount = require('ReactMount');
 
       var container = document.createElement('div');
@@ -329,13 +329,13 @@ describe('ReactNativeComponent', function() {
       var rootNode = instance.getDOMNode();
       var rootNodeID = ReactMount.getID(rootNode);
       expect(
-        ReactEventEmitter.getListener(rootNodeID, 'onClick')
+        ReactDOMEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);
 
       React.unmountAndReleaseReactRootNode(container);
 
       expect(
-        ReactEventEmitter.getListener(rootNodeID, 'onClick')
+        ReactDOMEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(undefined);
     });
   });
