@@ -195,7 +195,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  DOMIDOperations: ReactComponentEnvironment.DOMIDOperations,
+  IDOperations: ReactComponentEnvironment.IDOperations,
 
   /**
    * Optionally injectable environment dependent cleanup hook. (server vs.

@@ -233,14 +233,14 @@ ReactNativeComponent.Mixin = {
         }
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         // http://jsperf.com/emptying-speed
-        ReactComponent.DOMIDOperations.updateTextContentByID(
+        ReactComponent.IDOperations.updateTextContentByID(
           this._rootNodeID,
           ''
         );
       } else if (registrationNames[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else {
-        ReactComponent.DOMIDOperations.deletePropertyByID(
+        ReactComponent.IDOperations.deletePropertyByID(
           this._rootNodeID,
           propKey
         );
@@ -281,7 +281,7 @@ ReactNativeComponent.Mixin = {
         var lastHtml = lastProp && lastProp.__html;
         var nextHtml = nextProp && nextProp.__html;
         if (lastHtml !== nextHtml) {
-          ReactComponent.DOMIDOperations.updateInnerHTMLByID(
+          ReactComponent.IDOperations.updateInnerHTMLByID(
             this._rootNodeID,
             nextProp
           );
@@ -291,7 +291,7 @@ ReactNativeComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.DOMIDOperations.updatePropertyByID(
+        ReactComponent.IDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
           nextProp
@@ -299,7 +299,7 @@ ReactNativeComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      ReactComponent.DOMIDOperations.updateStylesByID(
+      ReactComponent.IDOperations.updateStylesByID(
         this._rootNodeID,
         styleUpdates
       );

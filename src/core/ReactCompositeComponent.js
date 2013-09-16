@@ -789,7 +789,7 @@ var ReactCompositeComponentMixin = {
         var currentComponentID = currentComponent._rootNodeID;
         currentComponent.unmountComponent();
         var nextMarkup = nextComponent.mountComponent(thisID, transaction);
-        ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+        ReactComponent.IDOperations.dangerouslyReplaceNodeWithMarkupByID(
           currentComponentID,
           nextMarkup
         );

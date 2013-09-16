@@ -74,7 +74,7 @@ mixInto(ReactTextComponent, {
   receiveProps: function(nextProps, transaction) {
     if (nextProps.text !== this.props.text) {
       this.props.text = nextProps.text;
-      ReactComponent.DOMIDOperations.updateTextContentByID(
+      ReactComponent.IDOperations.updateTextContentByID(
         this._rootNodeID,
         nextProps.text
       );

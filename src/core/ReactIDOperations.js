@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMIDOperations
+ * @providesModule ReactIDOperations
  * @typechecks static-only
  */
 
@@ -51,9 +51,9 @@ var textContentAccessor = getTextContentAccessor() || 'NA';
 
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
- * `ReactComponent.DOMIDOperations`.
+ * `ReactComponent.IDOperations`.
  */
-var ReactDOMIDOperations = {
+var ReactIDOperations = {
 
   /**
    * Updates a DOM node with new property values. This should only be used to
@@ -108,14 +108,14 @@ var ReactDOMIDOperations = {
    * @param {string} id ID of the node to update.
    * @param {object} properties A mapping of valid property names.
    * @internal
-   * @see {ReactDOMIDOperations.updatePropertyByID}
+   * @see {ReactIDOperations.updatePropertyByID}
    */
   updatePropertiesByID: function(id, properties) {
     for (var name in properties) {
       if (!properties.hasOwnProperty(name)) {
         continue;
       }
-      ReactDOMIDOperations.updatePropertiesByID(id, name, properties[name]);
+      ReactIDOperations.updatePropertiesByID(id, name, properties[name]);
     }
   },
 
@@ -187,4 +187,4 @@ var ReactDOMIDOperations = {
 
 };
 
-module.exports = ReactDOMIDOperations;
+module.exports = ReactIDOperations;

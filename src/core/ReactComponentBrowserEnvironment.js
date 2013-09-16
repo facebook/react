@@ -20,7 +20,7 @@
 
 "use strict";
 
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactIDOperations = require('ReactIDOperations');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -61,7 +61,7 @@ var ReactComponentBrowserEnvironment = {
 
   ReactReconcileTransaction: ReactReconcileTransaction,
 
-  DOMIDOperations: ReactDOMIDOperations,
+  IDOperations: ReactIDOperations,
 
   /**
    * If a particular environment requires that some resources be cleaned up,
