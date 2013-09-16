@@ -23,7 +23,7 @@ var ReactDOM = require('ReactDOM');
 
 var keyMirror = require('keyMirror');
 
-// Store a reference to the <button> `ReactNativeComponent`.
+// Store a reference to the <button> `ReactDOMNativeComponent`.
 var button = ReactDOM.button;
 
 var mouseListenerNames = keyMirror({

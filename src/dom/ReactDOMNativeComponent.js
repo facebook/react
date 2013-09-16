@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactNativeComponent
+ * @providesModule ReactDOMNativeComponent
  * @typechecks static-only
  */
 
@@ -65,17 +65,17 @@ function assertValidProps(props) {
 }
 
 /**
- * @constructor ReactNativeComponent
+ * @constructor ReactDOMNativeComponent
  * @extends ReactComponent
  * @extends ReactMultiChild
  */
-function ReactNativeComponent(tag, omitClose) {
+function ReactDOMNativeComponent(tag, omitClose) {
   this._tagOpen = '<' + tag;
   this._tagClose = omitClose ? '' : '</' + tag + '>';
   this.tagName = tag.toUpperCase();
 }
 
-ReactNativeComponent.Mixin = {
+ReactDOMNativeComponent.Mixin = {
 
   /**
    * Generates root tag markup then recurses. This method has side effects and
@@ -87,7 +87,7 @@ ReactNativeComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: ReactPerf.measure(
-    'ReactNativeComponent',
+    'ReactDOMNativeComponent',
     'mountComponent',
     function(rootID, transaction) {
       ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
@@ -190,7 +190,7 @@ ReactNativeComponent.Mixin = {
    * @overridable
    */
   updateComponent: ReactPerf.measure(
-    'ReactNativeComponent',
+    'ReactDOMNativeComponent',
     'updateComponent',
     function(transaction, prevProps) {
       ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
@@ -358,8 +358,8 @@ ReactNativeComponent.Mixin = {
 
 };
 
-mixInto(ReactNativeComponent, ReactComponent.Mixin);
-mixInto(ReactNativeComponent, ReactNativeComponent.Mixin);
-mixInto(ReactNativeComponent, ReactMultiChild.Mixin);
+mixInto(ReactDOMNativeComponent, ReactComponent.Mixin);
+mixInto(ReactDOMNativeComponent, ReactDOMNativeComponent.Mixin);
+mixInto(ReactDOMNativeComponent, ReactMultiChild.Mixin);
 
-module.exports = ReactNativeComponent;
+module.exports = ReactDOMNativeComponent;

@@ -307,8 +307,8 @@ if (__DEV__) {
     switch (objName + '.' + fnName) {
       case 'React.renderComponent':
         return _renderComponentCallback;
-      case 'ReactNativeComponent.mountComponent':
-      case 'ReactNativeComponent.updateComponent':
+      case 'ReactDOMNativeComponent.mountComponent':
+      case 'ReactDOMNativeComponent.updateComponent':
         return _nativeComponentCallback;
       case 'ReactCompositeComponent.mountComponent':
       case 'ReactCompositeComponent.updateComponent':
@@ -355,7 +355,7 @@ if (__DEV__) {
   };
 
   /**
-   * Callback function for ReactNativeComponent
+   * Callback function for ReactDOMNativeComponent
    *
    * @param {object} component
    * @param {object} args

@@ -23,7 +23,7 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMEventEmitter = require('ReactDOMEventEmitter');
 var EventConstants = require('EventConstants');
 
-// Store a reference to the <form> `ReactNativeComponent`.
+// Store a reference to the <form> `ReactDOMNativeComponent`.
 var form = ReactDOM.form;
 
 /**
