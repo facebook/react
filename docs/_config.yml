@@ -51,5 +51,19 @@ nav_docs_sections:
       title: More About Refs
   - id: tooling-integration
     title: Tooling Integration
-  - id: reference
-    title: Reference
+  - id: examples
+    title: Examples
+- title: Reference
+  items:
+  - id: top-level-api
+    title: Top-Level API
+  - id: component-api
+    title: Component API
+  - id: component-specs
+    title: Component Specs and Lifecycle
+  - id: tags-and-attributes
+    title: Supported Tags and Attributes
+  - id: events
+    title: Event System
+  - id: dom-differences
+    title: DOM Differences
