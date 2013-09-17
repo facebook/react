@@ -74,7 +74,7 @@ var traverseAllChildrenImpl =
       } else {
         if (type === 'object') {
           invariant(
-            children || children.nodeType !== 1,
+            !children || children.nodeType !== 1,
             'traverseAllChildren(...): Encountered an invalid child; DOM ' +
             'elements are not valid children of React components.'
           );
