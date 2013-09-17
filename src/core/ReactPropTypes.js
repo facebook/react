@@ -42,7 +42,7 @@ var invariant = require('invariant');
  *
  * A more formal specification of how these methods are used:
  *
- *   type := array|bool|object|number|string|oneOf([...])|instanceOf(...)
+ *   type := array|bool|func|object|number|string|oneOf([...])|instanceOf(...)
  *   decl := ReactPropTypes.{type}(.isRequired)?
  *
  * Each and every declaration produces a function with the same signature. This
@@ -56,7 +56,7 @@ var invariant = require('invariant');
  *         var propValue = props[propName];
  *         invariant(
  *           propValue == null ||
- *           typeof propValue === string ||
+ *           typeof propValue === 'string' ||
  *           propValue instanceof URI,
  *           'Invalid `%s` supplied to `%s`, expected string or URI.',
  *           propName,
