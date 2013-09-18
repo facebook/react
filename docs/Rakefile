@@ -13,7 +13,7 @@ task :js do
 end
 
 desc "watch css & js"
-task :watch => [:update_version] do
+task :watch do
   Process.spawn "sass --style=compressed --watch _css/react.scss:css/react.css"
   Process.spawn "../bin/jsx --watch _js js"
   Process.waitall
@@ -30,8 +30,8 @@ task :update_version do
 end
 
 desc "build into ../../react-gh-pages"
-task :release => [:default] do
+task :release => [:update_version, :default] do
   system "jekyll build -d ../../react-gh-pages"
 end
 
-task :default => [:update_version, :css, :js]
+task :default => [:css, :js]
