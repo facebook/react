@@ -87,12 +87,10 @@ var DOMPropertyOperations = {
       }
       return processAttributeNameAndPrefix(name) +
         escapeTextForBrowser(value) + '"';
-    } else {
-      if (__DEV__) {
-        warnUnknownProperty(name);
-      }
-      return null;
+    } else if (__DEV__) {
+      warnUnknownProperty(name);
     }
+    return null;
   },
 
   /**
@@ -121,10 +119,8 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.setAttribute(name, value);
-    } else {
-      if (__DEV__) {
-        warnUnknownProperty(name);
-      }
+    } else if (__DEV__) {
+      warnUnknownProperty(name);
     }
   },
 
@@ -150,10 +146,8 @@ var DOMPropertyOperations = {
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
-    } else {
-      if (__DEV__) {
-        warnUnknownProperty(name);
-      }
+    } else if (__DEV__) {
+      warnUnknownProperty(name);
     }
   }
 
