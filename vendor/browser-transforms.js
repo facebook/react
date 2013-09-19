@@ -80,9 +80,7 @@ runScripts = function() {
     return script.type === 'text/jsx';
   });
 
-  if(jsxScripts.length){
-    console.warn("You are using unoptimized JSX (to optimize for production see: http://facebook.github.io/react/docs/tooling-integration.html#jsx)");
-  }
+  console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#JSX");
 
   jsxScripts.forEach(function(script) {
     if (script.src) {

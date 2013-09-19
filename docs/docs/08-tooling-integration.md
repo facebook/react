@@ -20,7 +20,7 @@ We provide CDN-hosted versions of React [on our download page](/react/downloads.
 
 We have instructions for building from `master` [in our GitHub repository](https://github.com/facebook/react). We build a tree of CommonJS modules under `build/modules` which you can drop into any environment or packaging tool that supports CommonJS.
 
-## <a id="jsx"></a>JSX
+## JSX
 
 ### In-browser JSX Transform
 
