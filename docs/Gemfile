@@ -16,3 +16,6 @@ gem 'rb-fsevent'
 
 # Redcarpet for Markdown
 gem 'redcarpet'
+
+# For markdown header cleanup
+gem 'sanitize'

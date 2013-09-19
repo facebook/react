@@ -24,6 +24,9 @@ GEM
     liquid (2.5.0)
     maruku (0.6.1)
       syntax (>= 1.0.0)
+    mini_portile (0.5.1)
+    nokogiri (1.6.0)
+      mini_portile (~> 0.5.0)
     posix-spawn (0.3.6)
     pygments.rb (0.5.0)
       posix-spawn (~> 0.3.6)
@@ -32,6 +35,8 @@ GEM
     rb-fsevent (0.9.3)
     redcarpet (2.2.2)
     safe_yaml (0.7.1)
+    sanitize (2.0.6)
+      nokogiri (>= 1.4.4)
     sass (3.2.9)
     syntax (1.0.0)
     yajl-ruby (1.1.0)
@@ -45,4 +50,5 @@ DEPENDENCIES
   rake
   rb-fsevent
   redcarpet
+  sanitize
   sass
