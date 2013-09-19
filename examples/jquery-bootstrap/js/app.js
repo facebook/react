@@ -25,12 +25,12 @@ var BootstrapModal = React.createClass({
   componentWillUnmount: function() {
     $(this.getDOMNode()).off('hidden', this.handleHidden);
   },
-  close: function() {
+  close: React.autoBind(function() {
     $(this.getDOMNode()).modal('hide');
-  },
-  open: function() {
+  }),
+  open: React.autoBind(function() {
     $(this.getDOMNode()).modal('show');
-  },
+  }),
   render: function() {
     var confirmButton = null;
     var cancelButton = null;
@@ -73,16 +73,16 @@ var BootstrapModal = React.createClass({
       </div>
     );
   },
-  handleCancel: function() {
+  handleCancel: React.autoBind(function() {
     if (this.props.onCancel) {
       this.props.onCancel();
     }
-  },
-  handleConfirm: function() {
+  }),
+  handleConfirm: React.autoBind(function() {
     if (this.props.onConfirm) {
       this.props.onConfirm();
     }
-  }
+  })
 });
 
 var Example = React.createClass({
@@ -111,12 +111,12 @@ var Example = React.createClass({
       </div>
     );
   },
-  openModal: function() {
+  openModal: React.autoBind(function() {
     this.refs.modal.open();
-  },
-  closeModal: function() {
+  }),
+  closeModal: React.autoBind(function() {
     this.refs.modal.close();
-  }
+  })
 });
 
 React.renderComponent(<Example />, document.getElementById('jqueryexample'));
