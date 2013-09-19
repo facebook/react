@@ -263,6 +263,22 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       mountAt
     );
 
+    trapBubbledEvent(
+      topLevelTypes.topCompositionEnd,
+      'compositionend',
+      mountAt
+    );
+    trapBubbledEvent(
+      topLevelTypes.topCompositionStart,
+      'compositionstart',
+      mountAt
+    );
+    trapBubbledEvent(
+      topLevelTypes.topCompositionUpdate,
+      'compositionupdate',
+      mountAt
+    );
+
     if (isEventSupported('drag')) {
       trapBubbledEvent(topLevelTypes.topDrag, 'drag', mountAt);
       trapBubbledEvent(topLevelTypes.topDragEnd, 'dragend', mountAt);
