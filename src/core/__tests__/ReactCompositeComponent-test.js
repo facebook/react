@@ -286,7 +286,7 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).not.toThrow();
 
-    React.unmountAndReleaseReactRootNode(container);
+    React.unmountComponentAtNode(container);
     expect(function() {
       instance.forceUpdate();
     }).toThrow(

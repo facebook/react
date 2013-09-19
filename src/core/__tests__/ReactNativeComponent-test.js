@@ -332,7 +332,7 @@ describe('ReactNativeComponent', function() {
         ReactEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);
 
-      React.unmountAndReleaseReactRootNode(container);
+      React.unmountComponentAtNode(container);
 
       expect(
         ReactEventEmitter.getListener(rootNodeID, 'onClick')

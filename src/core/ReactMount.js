@@ -341,7 +341,7 @@ var ReactMount = {
           callback
         );
       } else {
-        ReactMount.unmountAndReleaseReactRootNode(container);
+        ReactMount.unmountComponentAtNode(container);
       }
     }
 
@@ -415,7 +415,7 @@ var ReactMount = {
    * @return {boolean} True if a component was found in and unmounted from
    *                   `container`
    */
-  unmountAndReleaseReactRootNode: function(container) {
+  unmountComponentAtNode: function(container) {
     var reactRootID = getReactRootID(container);
     var component = instancesByReactRootID[reactRootID];
     if (!component) {
@@ -431,13 +431,27 @@ var ReactMount = {
   },
 
   /**
+   * @deprecated
+   */
+  unmountAndReleaseReactRootNode: function() {
+    if (__DEV__) {
+      console.warn(
+        'unmountAndReleaseReactRootNode() has been renamed to ' +
+        'unmountComponentAtNode() and will be removed in the next ' +
+        'version of React.'
+      );
+    }
+    return ReactMount.unmountComponentAtNode.apply(this, arguments);
+  },
+
+  /**
    * Unmounts a component and removes it from the DOM.
    *
    * @param {ReactComponent} instance React component instance.
    * @param {DOMElement} container DOM element to unmount from.
    * @final
    * @internal
-   * @see {ReactMount.unmountAndReleaseReactRootNode}
+   * @see {ReactMount.unmountComponentAtNode}
    */
   unmountComponentFromNode: function(instance, container) {
     instance.unmountComponent();

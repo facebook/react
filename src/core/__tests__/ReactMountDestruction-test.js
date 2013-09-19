@@ -49,10 +49,10 @@ describe('ReactMount', function() {
       .toBe(1);
 
     // Test that after unmounting each, they are no longer in the document.
-    React.unmountAndReleaseReactRootNode(firstRootDiv);
+    React.unmountComponentAtNode(firstRootDiv);
     expect(firstRootDiv.getElementsByClassName('firstReactDiv').length)
       .toBe(0);
-    React.unmountAndReleaseReactRootNode(secondRootDiv);
+    React.unmountComponentAtNode(secondRootDiv);
     expect(secondRootDiv.getElementsByClassName('secondReactDiv').length)
       .toBe(0);
   });

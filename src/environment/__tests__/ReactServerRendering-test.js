@@ -181,7 +181,7 @@ describe('ReactServerRendering', function() {
 
     // Unmount and remount. We should get another mount event and
     // we should get different markup, as the IDs are unique each time.
-    React.unmountAndReleaseReactRootNode(element);
+    React.unmountComponentAtNode(element);
     expect(element.innerHTML).toEqual('');
     React.renderComponent(<TestComponent name="x" />, element);
     expect(mountCount).toEqual(2);
@@ -191,7 +191,7 @@ describe('ReactServerRendering', function() {
     // we used server rendering. We should mount again, but the markup should be
     // unchanged. We will append a sentinel at the end of innerHTML to be sure
     // that innerHTML was not changed.
-    React.unmountAndReleaseReactRootNode(element);
+    React.unmountComponentAtNode(element);
     expect(element.innerHTML).toEqual('');
 
     ExecutionEnvironment.canUseDOM = false;
@@ -208,7 +208,7 @@ describe('ReactServerRendering', function() {
     React.renderComponent(<TestComponent name="x" />, element);
     expect(mountCount).toEqual(3);
     expect(element.innerHTML.indexOf('__sentinel__') > -1).toBe(true);
-    React.unmountAndReleaseReactRootNode(element);
+    React.unmountComponentAtNode(element);
     expect(element.innerHTML).toEqual('');
 
     // Now simulate a situation where the app is not idempotent. React should
