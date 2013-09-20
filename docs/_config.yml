@@ -55,6 +55,12 @@ nav_docs_sections:
     title: Add-ons
   - id: examples
     title: Examples
+- title: Cookbook
+  items:
+  - id: introduction
+    title: Introduction
+  - id: inline-styles
+    title: Inline Styles
 - title: Reference
   items:
   - id: top-level-api
