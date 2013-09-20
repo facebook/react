@@ -19,6 +19,7 @@
 var Syntax = require('esprima-fb').Syntax;
 
 var catchup = require('jstransform/src/utils').catchup;
+var catchupWhiteSpace = require('jstransform/src/utils').catchupWhiteSpace;
 var append = require('jstransform/src/utils').append;
 var move = require('jstransform/src/utils').move;
 var getDocblock = require('jstransform/src/utils').getDocblock;
@@ -105,19 +106,21 @@ function visitReactTag(traverse, object, path, state) {
       if (!isLast) {
         append(',', state);
       }
-    } else if (JSX_ATTRIBUTE_TRANSFORMS[attr.name.name]) {
-      move(attr.value.range[0], state);
-      append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
-      move(attr.value.range[1], state);
-      if (!isLast) {
-        append(',', state);
-      }
-    } else if (attr.value.type === Syntax.Literal) {
-      move(attr.value.range[0], state);
-      renderXJSLiteral(attr.value, isLast, state);
     } else {
-      move(attr.value.range[0], state);
-      renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
+      move(attr.name.range[1], state);
+      // Use catchupWhiteSpace to skip over the '=' in the attribute
+      catchupWhiteSpace(attr.value.range[0], state);
+      if (JSX_ATTRIBUTE_TRANSFORMS[attr.name.name]) {
+        append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
+        move(attr.value.range[1], state);
+        if (!isLast) {
+          append(',', state);
+        }
+      } else if (attr.value.type === Syntax.Literal) {
+        renderXJSLiteral(attr.value, isLast, state);
+      } else {
+        renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
+      }
     }
 
     if (isLast) {

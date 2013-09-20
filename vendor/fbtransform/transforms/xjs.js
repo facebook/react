@@ -172,6 +172,7 @@ function trimWithSingleSpace(string) {
 function renderXJSLiteral(object, isLast, state, start, end) {
   /** Added blank check filtering and triming*/
   var trimmedChildValue = safeTrim(object.value);
+  var hasFinalNewLine = false;
 
   if (trimmedChildValue) {
     // head whitespace
@@ -191,7 +192,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
     });
 
     var hasInitialNewLine = initialLines[0] !== lines[0];
-    var hasFinalNewLine =
+    hasFinalNewLine =
       initialLines[initialLines.length - 1] !== lines[lines.length - 1];
 
     var numLines = lines.length;
@@ -203,20 +204,18 @@ function renderXJSLiteral(object, isLast, state, start, end) {
       } else {
         var preString = '';
         var postString = '';
-        var leading = '';
+        var leading = line.match(/^[ \t]*/)[0];
 
         if (ii === 0) {
           if (hasInitialNewLine) {
             preString = ' ';
-            leading = '\n';
+            leading = '\n' + leading;
           }
           if (trimmedChildValueWithSpace.substring(0, 1) === ' ') {
             // If this is the first line, and the original content starts with
             // whitespace, place a single space at the beginning.
             preString = ' ';
           }
-        } else {
-          leading = line.match(/^[ \t]*/)[0];
         }
         if (!lastLine || trimmedChildValueWithSpace.substr(
              trimmedChildValueWithSpace.length - 1, 1) === ' ' ||
@@ -256,6 +255,9 @@ function renderXJSLiteral(object, isLast, state, start, end) {
   }
 
   // tail whitespace
+  if (hasFinalNewLine) {
+    append('\n', state);
+  }
   append(object.value.match(/[ \t]*$/)[0], state);
   move(object.range[1], state);
 }
