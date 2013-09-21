@@ -56,7 +56,7 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
 };
 
 function visitReactTag(traverse, object, path, state) {
-  var jsxObjIdent = getDocblock(state).jsx;
+  var jsxObjIdent = getDocblock(state).jsx || "React.DOM";
 
   catchup(object.openingElement.range[0], state);
 
@@ -177,10 +177,8 @@ function visitReactTag(traverse, object, path, state) {
   return false;
 }
 
-visitReactTag.test = function(object, path, state) {
-  // only run react when react @jsx namespace is specified in docblock
-  var jsx = getDocblock(state).jsx;
-  return object.type === Syntax.XJSElement && jsx && jsx.length;
+visitReactTag.test = function(object) {
+  return object.type === Syntax.XJSElement;
 };
 
 exports.visitReactTag = visitReactTag;
