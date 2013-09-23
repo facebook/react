@@ -46,6 +46,9 @@ if (__DEV__) {
   var rootElementsByReactRootID = {};
 }
 
+/** Used to store breadth-first search state in findComponentRoot. */
+var reusableArray = [];
+
 /**
  * @param {DOMElement} container DOM element that may contain a React component.
  * @return {?string} A "reactRoot" ID, if a React component is rendered.
@@ -538,8 +541,11 @@ var ReactMount = {
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
-    var firstChildren = [ancestorNode.firstChild];
+    var firstChildren = reusableArray;
     var childIndex = 0;
+
+    firstChildren.length = 0;
+    firstChildren.push(ancestorNode.firstChild);
 
     while (childIndex < firstChildren.length) {
       var child = firstChildren[childIndex++];
@@ -547,6 +553,7 @@ var ReactMount = {
         var childID = ReactMount.getID(child);
         if (childID) {
           if (id === childID) {
+            firstChildren.length = 0;
             return child;
           } else if (ReactInstanceHandles.isAncestorIDOf(childID, id)) {
             // If we find a child whose ID is an ancestor of the given ID,
@@ -556,11 +563,6 @@ var ReactMount = {
             firstChildren.length = childIndex = 0;
             firstChildren.push(child.firstChild);
             break;
-          } else {
-            // TODO This should not be necessary if the ID hierarchy is
-            // correct, but is occasionally necessary if the DOM has been
-            // modified in unexpected ways.
-            firstChildren.push(child.firstChild);
           }
         } else {
           // If this child had no ID, then there's a chance that it was
@@ -573,6 +575,8 @@ var ReactMount = {
         child = child.nextSibling;
       }
     }
+
+    firstChildren.length = 0;
 
     if (__DEV__) {
       console.error(
