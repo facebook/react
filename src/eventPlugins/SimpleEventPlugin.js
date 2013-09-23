@@ -21,7 +21,6 @@
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
 var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
@@ -47,24 +46,6 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onClick: true}),
       captured: keyOf({onClickCapture: true})
-    }
-  },
-  compositionEnd: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionEnd: true}),
-      captured: keyOf({onCompositionEndCapture: true})
-    }
-  },
-  compositionStart: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionStart: true}),
-      captured: keyOf({onCompositionStartCapture: true})
-    }
-  },
-  compositionUpdate: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onCompositionUpdate: true}),
-      captured: keyOf({onCompositionUpdateCapture: true})
     }
   },
   copy: {
@@ -244,9 +225,6 @@ var topLevelEventsToDispatchConfig = {
   topClick:       eventTypes.click,
   topCopy:        eventTypes.copy,
   topCut:         eventTypes.cut,
-  topCompositionEnd: eventTypes.compositionEnd,
-  topCompositionStart: eventTypes.compositionStart,
-  topCompositionUpdate: eventTypes.compositionUpdate,
   topDoubleClick: eventTypes.doubleClick,
   topDOMCharacterDataModified: eventTypes.DOMCharacterDataModified,
   topDrag:        eventTypes.drag,
@@ -363,11 +341,6 @@ var SimpleEventPlugin = {
       case topLevelTypes.topCut:
       case topLevelTypes.topPaste:
         EventConstructor = SyntheticClipboardEvent;
-        break;
-      case topLevelTypes.topCompositionStart:
-      case topLevelTypes.topCompositionEnd:
-      case topLevelTypes.topCompositionUpdate:
-        EventConstructor = SyntheticCompositionEvent;
         break;
     }
     invariant(
