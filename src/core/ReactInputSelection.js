@@ -18,7 +18,7 @@
 
 "use strict";
 
-var getTextContentAccessor = require('getTextContentAccessor');
+var ReactDOMSelection = require('ReactDOMSelection');
 
 // It is not safe to read the document.activeElement property in IE if there's
 // nothing focused.
@@ -88,103 +88,59 @@ var ReactInputSelection = {
    * -@return {start: selectionStart, end: selectionEnd}
    */
   getSelection: function(input) {
-    var range;
-    if (input.contentEditable === 'true' && window.getSelection) {
-      var selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        range = selection.getRangeAt(0);
-        var commonAncestor = range.commonAncestorContainer;
-        if (commonAncestor && commonAncestor.nodeType === 3) {
-          commonAncestor = commonAncestor.parentNode;
-        }
-        if (commonAncestor === input) {
-          return {start: range.startOffset, end: range.endOffset};
-        }
+    var selection;
+
+    if ('selectionStart' in input) {
+      // Modern browser with input or textarea.
+      selection = {
+        start: input.selectionStart,
+        end: input.selectionEnd
+      };
+    } else if (document.selection && input.nodeName === 'INPUT') {
+      // IE8 input.
+      var range = document.selection.createRange();
+      // There can only be one selection per document in IE, so it must
+      // be in our element.
+      if (range.parentElement() === input) {
+        selection = {
+          start: -range.moveStart('character', -input.value.length),
+          end: -range.moveEnd('character', -input.value.length)
+        };
       }
-      return {start: 0, end: 0};
-    }
-
-    if (!document.selection) {
-      // Mozilla, Safari, etc.
-      return {start: input.selectionStart, end: input.selectionEnd};
-    }
-
-    range = document.selection.createRange();
-    if (range.parentElement() !== input) {
-      // There can only be one selection per document in IE, so if the
-      // containing element of the document's selection isn't our text field,
-      // our text field must have no selection.
-      return {start: 0, end: 0};
-    }
-
-    var value = input.value || input[getTextContentAccessor()];
-    var length = value.length;
-
-    if (input.nodeName === 'INPUT') {
-      return {
-        start: -range.moveStart('character', -length),
-        end: -range.moveEnd('character', -length)
-      };
     } else {
-      var range2 = range.duplicate();
-      range2.moveToElementText(input);
-      range2.setEndPoint('StartToEnd', range);
-      var end = length - range2.text.length;
-      range2.setEndPoint('StartToStart', range);
-      return {
-        start: length - range2.text.length,
-        end: end
-      };
+      // Content editable or old IE textarea.
+      selection = ReactDOMSelection.get(input);
     }
+
+    return selection || {start: 0, end: 0};
   },
 
   /**
    * @setSelection: Sets the selection bounds of a textarea or input and focuses
    * the input.
    * -@input     Set selection bounds of this input or textarea
-   * -@rangeObj Object of same form that is returned from get*
+   * -@offsets   Object of same form that is returned from get*
    */
-  setSelection: function(input, rangeObj) {
-    var range;
-    var start = rangeObj.start;
-    var end = rangeObj.end;
+  setSelection: function(input, offsets) {
+    var start = offsets.start;
+    var end = offsets.end;
     if (typeof end === 'undefined') {
       end = start;
     }
-    if (document.selection) {
-      // IE is inconsistent about character offsets when it comes to carriage
-      // returns, so we need to manually take them into account
-      if (input.tagName === 'TEXTAREA') {
-        var cr_before =
-          (input.value.slice(0, start).match(/\r/g) || []).length;
-        var cr_inside =
-          (input.value.slice(start, end).match(/\r/g) || []).length;
-        start -= cr_before;
-        end -= cr_before + cr_inside;
-      }
-      range = input.createTextRange();
+
+    if ('selectionStart' in input) {
+      input.selectionStart = start;
+      input.selectionEnd = Math.min(end, input.value.length);
+    } else if (document.selection && input.nodeName === 'INPUT') {
+      var range = input.createTextRange();
       range.collapse(true);
       range.moveStart('character', start);
       range.moveEnd('character', end - start);
       range.select();
     } else {
-      if (input.contentEditable === 'true') {
-        if (input.childNodes.length === 1) {
-          range = document.createRange();
-          range.setStart(input.childNodes[0], start);
-          range.setEnd(input.childNodes[0], end);
-          var sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(range);
-        }
-      } else {
-        input.selectionStart = start;
-        input.selectionEnd = Math.min(end, input.value.length);
-        input.focus();
-      }
+      ReactDOMSelection.set(input, offsets);
     }
   }
-
 };
 
 module.exports = ReactInputSelection;
