@@ -21,6 +21,7 @@
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 
@@ -30,7 +31,8 @@ var keyOf = require('keyOf');
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
 
-var useCompositionEvent = 'CompositionEvent' in window;
+var useCompositionEvent = ExecutionEnvironment.canUseDOM &&
+  'CompositionEvent' in window;
 var topLevelTypes = EventConstants.topLevelTypes;
 var currentComposition = null;
 
