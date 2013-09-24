@@ -178,21 +178,11 @@
     <h1>Tooling Integration</h1>
     <div class="subHeader"></div>
     <p>Every project uses a different system for building and deploying JavaScript. We&#39;ve tried to make React as environment-agnostic as possible.</p>
-
-<h2>React</h2>
-
-<h3>CDN-hosted React</h3>
-
+<h2 id="react">React</h2><h3 id="cdn-hosted-react">CDN-hosted React</h3>
 <p>We provide CDN-hosted versions of React <a href="/react/downloads.html">on our download page</a>. These prebuilt files use the UMD module format. Dropping them in with a simple <code>&lt;script&gt;</code> tag will inject a <code>React</code> global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.</p>
-
-<h3>Using master</h3>
-
+<h3 id="using-master">Using master</h3>
 <p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
-
-<h2>JSX</h2>
-
-<h3>In-browser JSX Transform</h3>
-
+<h2 id="jsx">JSX</h2><h3 id="in-browser-jsx-transform">In-browser JSX Transform</h3>
 <p>If you like using JSX, we provide an in-browser JSX transformer for development <a href="/react/downloads.html">on our download page</a>. Simply include a <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> tag to engage the JSX transformer. Be sure to include the <code>/** @jsx React.DOM */</code> comment as well, otherwise the transformer will not run the transforms.</p>
 
 <blockquote>
@@ -200,13 +190,9 @@
 
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
-
-<h3>Productionizing: Precompiled JSX</h3>
-
+<h3 id="productionizing-precompiled-jsx">Productionizing: Precompiled JSX</h3>
 <p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>. Run <code>jsx --help</code> for more information on how to use this tool.</p>
-
-<h3>Helpful Open-Source Projects</h3>
-
+<h3 id="helpful-open-source-projects">Helpful Open-Source Projects</h3>
 <p>The open-source community has built tools that integrate JSX with several build systems.</p>
 
 <ul>
@@ -216,9 +202,7 @@
 <li><a href="https://github.com/facebook/react-python">pyReact</a> - use JSX with <a href="http://www.python.org/">Python</a></li>
 <li><a href="https://github.com/facebook/react-rails">react-rails</a> - use JSX with <a href="http://rubyonrails.org/">Ruby on Rails</a></li>
 </ul>
-
-<h2>React Page</h2>
-
+<h2 id="react-page">React Page</h2>
 <p>To get started on a new project, you can use <a href="https://github.com/facebook/react-page/">react-page</a>, a complete React project creator. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
 
 

@@ -57,6 +57,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
         <li><a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a></li>
       
         <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
@@ -74,8 +76,6 @@
         <li><a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">New in React v0.4: Prop Validation and Default Values</a></li>
       
         <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
-      
-        <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -97,9 +97,7 @@
 <li>To package <code>react.js</code> in a way that&#39;s easy to use and easy to update.</li>
 <li>To allow you to write JSX without an external build step to transform that into JS.</li>
 </ol>
-
-<h2>Packaging react.js</h2>
-
+<h2 id="packaging-react.js">Packaging react.js</h2>
 <p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
 <div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
 
@@ -110,19 +108,13 @@
 </code></pre></div><div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// app/assets/javascript/application.js</span>
 
 <span class="c1">//= require react</span>
-</code></pre></div>
-<h2>Writing JSX</h2>
-
+</code></pre></div><h2 id="writing-jsx">Writing JSX</h2>
 <p>When you name your file with <code>myfile.js.jsx</code>, <code>react-rails</code> will automatically try to transform that file. For the time being, we still require that you include the docblock at the beginning of the file. For example, this file will get transformed on request.</p>
 <div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
-</code></pre></div>
-<h2>Asset Pipeline</h2>
-
+</code></pre></div><h2 id="asset-pipeline">Asset Pipeline</h2>
 <p><code>react-rails</code> takes advantage of the <a href="http://guides.rubyonrails.org/asset_pipeline.html">asset pipeline</a> that was introduced in Rails 3.1. A very important part of that pipeline is the <code>assets:precompile</code> Rake task. <code>react-rails</code> will ensure that your JSX files will be transformed into regular JS before all of your assets are minified and packaged.</p>
-
-<h2>Installation</h2>
-
+<h2 id="installation">Installation</h2>
 <p>Installation follows the same process you&#39;re familiar with. You can install it globally with <code>gem install react-rails</code>, though we suggest you add the dependency to your <code>Gemfile</code> directly.</p>
 
     </div>

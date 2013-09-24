@@ -57,6 +57,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
         <li><a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a></li>
       
         <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html" class="active">Use React and JSX in Python Applications</a></li>
@@ -75,8 +77,6 @@
       
         <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
       
-        <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -90,9 +90,7 @@
 
     <div class="post">
       <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
-
-<h2>Usage</h2>
-
+<h2 id="usage">Usage</h2>
 <p>Transform your JSX files via the provided <code>jsx</code> module:</p>
 <div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
 
@@ -109,16 +107,12 @@
 
 <span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
 <span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
-</code></pre></div>
-<h2>Django</h2>
-
+</code></pre></div><h2 id="django">Django</h2>
 <p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
 <div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
   <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
 <span class="p">)</span>
-</code></pre></div>
-<h2>Installation</h2>
-
+</code></pre></div><h2 id="installation">Installation</h2>
 <p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">$ pip install PyReact
 </code></pre></div>

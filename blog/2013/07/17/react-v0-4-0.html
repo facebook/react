@@ -57,6 +57,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
         <li><a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a></li>
       
         <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
@@ -74,8 +76,6 @@
         <li><a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">New in React v0.4: Prop Validation and Default Values</a></li>
       
         <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
-      
-        <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -96,9 +96,7 @@
 <p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
 
 <p>When you&#39;re ready, <a href="/react/downloads.html">go download it</a>!</p>
-
-<h3>React</h3>
-
+<h3 id="react">React</h3>
 <ul>
 <li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
 <li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
@@ -108,11 +106,9 @@
 <li>Removed <code>React.autoBind</code>. <a href="http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
 <li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="http://facebook.github.io/react/docs/forms.html">Read the docs for details...</a></li>
 <li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
-<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as it&#39;s second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
+<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
 </ul>
-
-<h3>JSX</h3>
-
+<h3 id="jsx">JSX</h3>
 <ul>
 <li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
 <li>Children are now transformed directly into arguments instead of being wrapped in an array
@@ -120,9 +116,7 @@ E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> 
 Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
 If you were using React without JSX previously, your code should still work.</li>
 </ul>
-
-<h3>react-tools</h3>
-
+<h3 id="react-tools">react-tools</h3>
 <ul>
 <li>Fixed a number of bugs when transforming directories</li>
 <li>No longer re-write <code>require()</code>s to be relative unless specified</li>

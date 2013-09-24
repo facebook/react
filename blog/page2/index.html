@@ -57,6 +57,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
         <li><a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a></li>
       
         <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
@@ -75,8 +77,6 @@
       
         <li><a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a></li>
       
-        <li><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -85,14 +85,37 @@
   <div class="inner-content">
     
       <div class="post-list-item">
+        <h1><a href="/react/blog/2013/07/26/react-v0-4-1.html">React v0.4.1</a></h1>
+        <p class="meta">July 26, 2013 by Paul O'Shannessy</p>
+        <hr />
+        <div class="post">
+         <p>React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.</p>
+<h2 id="react">React</h2>
+<ul>
+<li><code>setState</code> callbacks are now executed in the scope of your component.</li>
+<li><code>click</code> events now work on Mobile Safari.</li>
+<li>Prevent a potential error in event handling if <code>Object.prototype</code> is extended.</li>
+<li>Don&#39;t set DOM attributes to the string <code>&quot;undefined&quot;</code> on update when previously defined.</li>
+<li>Improved support for <code>&lt;iframe&gt;</code> attributes.</li>
+<li>Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.</li>
+</ul>
+<h2 id="jsxtransformer">JSXTransformer</h2>
+<ul>
+<li>Improved environment detection so it can be run in a non-browser environment.</li>
+</ul>
+
+<p><a href="/react/downloads.html">Download it now!</a></p>
+
+        </div>
+      </div>
+    
+      <div class="post-list-item">
         <h1><a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a></h1>
         <p class="meta">July 23, 2013 by Vjeux</p>
         <hr />
         <div class="post">
          <p>We launched the <a href="https://www.facebook.com/react">React Facebook Page</a> along with the React v0.4 launch. 700 people already liked it to get updated on the project :)</p>
-
-<h2>Cross-browser onChange</h2>
-
+<h2 id="cross-browser-onchange">Cross-browser onChange</h2>
 <p><a href="http://benalpert.com/">Ben Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.</p>
 
 <blockquote>
@@ -102,9 +125,7 @@
 
 <p><a href="http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
 </blockquote>
-
-<h2>React Samples</h2>
-
+<h2 id="react-samples">React Samples</h2>
 <p>Learning a new library is always easier when you have working examples you can play with. <a href="https://github.com/jhw">jwh</a> put many of them on his <a href="https://github.com/jhw/react-samples">react-samples Github repo</a>.</p>
 
 <blockquote>
@@ -139,9 +160,7 @@
 <li>Toggle <a href="https://rawgithub.com/jhw/react-samples/master/html/toggle.html">#1</a></li>
 </ul>
 </blockquote>
-
-<h2>React Chosen Wrapper</h2>
-
+<h2 id="react-chosen-wrapper">React Chosen Wrapper</h2>
 <p><a href="https://github.com/chenglou">Cheng Lou</a> wrote a wrapper for the <a href="http://harvesthq.github.io/chosen/">Chosen</a> input library called <a href="https://github.com/chenglou/react-chosen">react-chosen</a>. It took just 25 lines to be able to use jQuery component as a React one.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Chosen</span> <span class="nx">noResultsText</span><span class="o">=</span><span class="s2">&quot;No result&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">doSomething</span><span class="p">}</span><span class="o">&gt;</span>
@@ -149,21 +168,15 @@
     <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span><span class="o">&gt;</span><span class="nx">Harvest</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
   <span class="o">&lt;</span><span class="err">/Chosen&gt;</span>
 <span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
-</code></pre></div>
-<h2>JSX and ES6 Template Strings</h2>
-
+</code></pre></div><h2 id="jsx-and-es6-template-strings">JSX and ES6 Template Strings</h2>
 <p><a href="http://domenicdenicola.com/">Domenic Denicola</a> wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.</p>
 
 <figure><iframe src="http://www.slideshare.net/slideshow/embed_code/24187146?rel=0&startSlide=36" width="600" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe></figure>
-
-<h2>React Presentation</h2>
-
+<h2 id="react-presentation">React Presentation</h2>
 <p><a href="http://tomocchino.com/">Tom Occhino</a> and <a href="https://github.com/jordwalke">Jordan Walke</a>, React developers, did a presentation of React at Facebook Seattle&#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;A. I highly recommend you watching this video.</p>
 
 <figure><iframe width="650" height="400" src="//www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
-
-<h2>Docs</h2>
-
+<h2 id="docs">Docs</h2>
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.</p>
 
 <blockquote>
@@ -206,9 +219,7 @@
 <p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
 
 <p>When you&#39;re ready, <a href="/react/downloads.html">go download it</a>!</p>
-
-<h3>React</h3>
-
+<h3 id="react">React</h3>
 <ul>
 <li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
 <li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
@@ -218,11 +229,9 @@
 <li>Removed <code>React.autoBind</code>. <a href="http://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
 <li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="http://facebook.github.io/react/docs/forms.html">Read the docs for details...</a></li>
 <li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
-<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as it&#39;s second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
+<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
 </ul>
-
-<h3>JSX</h3>
-
+<h3 id="jsx">JSX</h3>
 <ul>
 <li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
 <li>Children are now transformed directly into arguments instead of being wrapped in an array
@@ -230,9 +239,7 @@ E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> 
 Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
 If you were using React without JSX previously, your code should still work.</li>
 </ul>
-
-<h3>react-tools</h3>
-
+<h3 id="react-tools">react-tools</h3>
 <ul>
 <li>Fixed a number of bugs when transforming directories</li>
 <li>No longer re-write <code>require()</code>s to be relative unless specified</li>
@@ -247,9 +254,7 @@ If you were using React without JSX previously, your code should still work.</li
         <hr />
         <div class="post">
          <p>Many of the questions we got following the public launch of React revolved around <code>props</code>, specifically that people wanted to do validation and to make sure their components had sensible defaults.</p>
-
-<h2>Validation</h2>
-
+<h2 id="validation">Validation</h2>
 <p>Oftentimes you want to validate your <code>props</code> before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your <code>render</code> or <code>componentWillReceiveProps</code> functions, but that gets clunky fast.</p>
 
 <p>React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.</p>
@@ -266,9 +271,7 @@ If you were using React without JSX previously, your code should still work.</li
   <span class="p">},</span>
   <span class="p">...</span>
 <span class="p">});</span>
-</code></pre></div>
-<h2>Default Values</h2>
-
+</code></pre></div><h2 id="default-values">Default Values</h2>
 <p>One common pattern we&#39;ve seen with our React code is to do something like this:</p>
 <div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -302,9 +305,7 @@ If you were using React without JSX previously, your code should still work.</li
         <hr />
         <div class="post">
          <p>React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.</p>
-
-<h2>Khan Academy</h2>
-
+<h2 id="khan-academy">Khan Academy</h2>
 <p><a href="http://bjk5.com/">Ben Kamens</a> explains how <a href="http://benalpert.com/">Ben Alpert</a> and <a href="http://joelburget.com/">Joel Burget</a> are promoting React inside of <a href="https://www.khanacademy.org/">Khan Academy</a>. They now have three projects in the works using React.</p>
 
 <blockquote>
@@ -321,9 +322,7 @@ If you were using React without JSX previously, your code should still work.</li
 <p>Our renderer, post-React, is on the left. A typical math editor&#39;s preview is on the right.
 <figure><a href="http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology"><img src="/react/img/blog/monkeys.gif" width="70%" /></a></figure></p>
 </blockquote>
-
-<h2>React Snippets</h2>
-
+<h2 id="react-snippets">React Snippets</h2>
 <p>Over the past several weeks, members of our team, <a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="http://zpao.com/">Paul O&#39;Shannessy</a>, answered many questions that were asked in the <a href="https://groups.google.com/forum/#!forum/reactjs">React group</a>. They give a good overview of how to integrate React with other libraries and APIs through the use of <a href="/react/docs/reusable-components.html">Mixins</a> and <a href="/react/docs/working-with-the-browser.html">Lifecycle Methods</a>.</p>
 
 <blockquote>
@@ -354,65 +353,17 @@ If you were using React without JSX previously, your code should still work.</li
 <li><a href="http://jsfiddle.net/LQxy7/">JSFiddle</a>: Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().</li>
 </ul>
 </blockquote>
-
-<h2>Introduction to React Screencast</h2>
-
+<h2 id="introduction-to-react-screencast">Introduction to React Screencast</h2>
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> recorded himself implementing a simple <code>&lt;Blink&gt;</code> tag in React.</p>
 
 <figure><iframe src="http://player.vimeo.com/video/67248575" width="500" height="340" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></figure>
-
-<h2>Snake in React</h2>
-
+<h2 id="snake-in-react">Snake in React</h2>
 <p><a href="http://tomocchino.com/">Tom Occhino</a> implemented Snake in 150 lines with React.</p>
 
 <blockquote>
 <p><a href="https://github.com/tomocchino/react-snake/blob/master/src/snake.js">Check the source on Github</a>
 <figure><a href="http://tomocchino.github.io/react-snake/"><img src="/react/img/blog/snake.png" alt=""></a></figure></p>
 </blockquote>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">New in React v0.4: Autobind by Default</a></h1>
-        <p class="meta">July  2, 2013 by Paul O'Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>React v0.4 is very close to completion. As we finish it off, we&#39;d like to share with you some of the major changes we&#39;ve made since v0.3. This is the first of several posts we&#39;ll be making over the next week.</p>
-
-<h2>What is React.autoBind?</h2>
-
-<p>If you take a look at most of our current examples, you&#39;ll see us using <code>React.autoBind</code> for event handlers. This is used in place of <code>Function.prototype.bind</code>. Remember that in JS, <a href="http://bonsaiden.github.io/JavaScript-Garden/#function.this">function calls are late-bound</a>. That means that if you simply pass a function around, the <code>this</code> used inside won&#39;t necessarily be the <code>this</code> you expect. <code>Function.prototype.bind</code> creates a new, properly bound, function so that when called, <code>this</code> is exactly what you expect it to be.</p>
-
-<p>Before we launched React, we would write this:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>We wrote <code>React.autoBind</code> as a way to cache the function creation and save on memory usage. Since <code>render</code> can get called multiple times, if you used <code>this.onClick.bind(this)</code> you would actually create a new function on each pass. With React v0.3 you were able to write this instead:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">}),</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<h2>What&#39;s Changing in v0.4?</h2>
-
-<p>After using <code>React.autoBind</code> for a few weeks, we realized that there were very few times that we didn&#39;t want that behavior. So we made it the default! Now all methods defined within <code>React.createClass</code> will already be bound to the correct instance.</p>
-
-<p>Starting with v0.4 you can just write this:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>For v0.4 we will simply be making <code>React.autoBind</code> a no-op — it will just return the function you pass to it. Most likely you won&#39;t have to change your code to account for this change, though we encourage you to update. We&#39;ll publish a migration guide documenting this and other changes that come along with React v0.4.</p>
 
         </div>
       </div>

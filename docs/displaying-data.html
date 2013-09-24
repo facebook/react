@@ -178,9 +178,7 @@
     <h1>Displaying Data</h1>
     <div class="subHeader"></div>
     <p>The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.</p>
-
-<h2>Getting Started</h2>
-
+<h2 id="getting-started">Getting Started</h2>
 <p>Let&#39;s look at a really simple example. Create a <code>hello-react.html</code> file with the following code:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -219,17 +217,13 @@
     <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
   <span class="p">);</span>
 <span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div>
-<h2>Reactive Updates</h2>
-
+</code></pre></div><h2 id="reactive-updates">Reactive Updates</h2>
 <p>Open <code>hello-react.html</code> in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI — any input you put in the text field remains, even though you haven&#39;t written any code to manage this behavior. React figures it out for you and does the right thing.</p>
 
 <p>The way we are able to figure this out is that React does not manipulate the DOM unless it needs to. <strong>It uses a fast, internal mock DOM to perform diffs and computes the most efficient DOM mutation for you.</strong></p>
 
 <p>The inputs to this component are called <code>props</code> — short for &quot;properties&quot;. They&#39;re passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, <strong>never write to <code>this.props</code></strong>.</p>
-
-<h2>Components are Just Like Functions</h2>
-
+<h2 id="components-are-just-like-functions">Components are Just Like Functions</h2>
 <p>React components are very simple. You can think of them as simple function that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. Because they&#39;re so simple, it makes them very easy to reason about.</p>
 
 <blockquote>
@@ -237,9 +231,7 @@
 
 <p><strong>One limitation</strong>: React components can only render a single root node. If you want to return multiple nodes they <em>must</em> be wrapped in a single root.</p>
 </blockquote>
-
-<h2>JSX Syntax</h2>
-
+<h2 id="jsx-syntax">JSX Syntax</h2>
 <p>We strongly believe that components are the right way to separate concerns rather than &quot;templates&quot; and &quot;display logic.&quot; We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.</p>
 
 <p>We&#39;ve found that the best solution for this problem is to generate markup directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs. In order to make this easier, we&#39;ve added a very simple, <strong>optional</strong> HTML-like syntax for the function calls that generate markup called JSX.</p>
