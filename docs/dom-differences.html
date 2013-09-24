@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | JSX Gotchas</title>
+  <title>React | DOM Differences</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | JSX Gotchas" />
+  <meta property="og:title" content="React | DOM Differences" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-gotchas.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/dom-differences.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -100,7 +100,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/jsx-gotchas.html" class="active">
+                    <a href="/react/docs/jsx-gotchas.html">
                       JSX Gotchas
                     </a>
                   </li>
@@ -211,7 +211,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/dom-differences.html">
+            <a href="/react/docs/dom-differences.html" class="active">
               DOM Differences
             </a>
             
@@ -224,52 +224,26 @@
 
 
   <div class="inner-content">
-    <h1>JSX Gotchas</h1>
+    <h1>DOM Differences</h1>
     <div class="subHeader"></div>
-    <p>JSX looks like HTML but there are some important differences you may run into.</p>
-<h2 id="whitespace-removal">Whitespace Removal</h2>
-<p>JSX doesn&#39;t follow the same whitespace elimination rules as HTML. JSX removes all whitespace between two curly braces expressions. If you want to have whitespace, simply add <code>{&#39; &#39;}</code>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="p">}</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">surname</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>Follow <a href="https://github.com/facebook/react/issues/65">Issue #65</a> for discussion on this behavior.</p>
-<h2 id="html-entities">HTML Entities</h2>
-<p>You can insert HTML entities within literal text in JSX:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>If you want to display an HTML entity within dynamic content, you will run into double escaping issues as React escapes all the strings you are displaying in order to prevent a wide range of XSS attacks by default.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Bad: It displays &quot;First &amp;middot; Second&quot;</span>
-<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>There are various ways to work-around this issue. The easiest one is to write unicode character directly in Javascript. You need to make sure that the file is saved as UTF-8 and that the proper UTF-8 directives are set so the browser will display it correctly.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First · Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>A safer alternative is to find the <a href="http://www.fileformat.info/info/unicode/char/b7/index.htm">unicode number corresponding to the entity</a> and use it inside of a JavaScript string.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First \u00b7 Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &#39;</span> <span class="o">+</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="mi">183</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>You can use mixed arrays with strings and JSX elements.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{[</span><span class="s1">&#39;First &#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;&amp;</span><span class="nx">middot</span><span class="p">;</span><span class="o">&lt;</span><span class="err">/span&gt;, &#39; Second&#39;]}&lt;/div&gt;</span>
-</code></pre></div>
-<p>As a last resort, you always have the ability to insert raw HTML.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</code></pre></div><h2 id="custom-html-attributes">Custom HTML Attributes</h2>
-<p>If you pass properties to native HTML elements that do not exist in the HTML specification, React will not render them. If you want to use a custom attribute, you should prefix it with <code>data-</code>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
-</code></pre></div>
-<p><a href="http://www.w3.org/WAI/intro/aria">Web Accessibility</a> attributes starting with <code>aria-</code> will be rendered properly.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">hidden</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
-</code></pre></div>
+    <p>React has implemented a browser-independent events and DOM system for performance and cross-browser compatibility reasons. We took the opportunity to clean up a few rough edges in browser DOM implementations.</p>
+
+<ul>
+<li>All DOM properties and attributes (including event handlers) should be camelCased to be consistent with standard JavaScript style. We intentionally break with the spec here since the spec is inconsistent.</li>
+<li>The <code>style</code> attribute accepts a JavaScript object with camelCased properties rather than a CSS string. This is consistent with the DOM <code>style</code> JavaScript property, is more efficient, and prevents XSS security holes.</li>
+<li>All event objects conform to the W3C spec, and all events (including submit) bubble correctly per the W3C spec. See <a href="events.html">Event System</a> for more details.</li>
+<li>The <code>onChange</code> event behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because <code>onChange</code> is a misnomer for its behavior and React relies on this event to react to user input in real time. See <a href="forms.html">Forms</a> for more details.</li>
+</ul>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/jsx-in-depth.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/events.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/docs/interactivity-and-dynamic-uis.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/jsx-gotchas.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/dom-differences.html"></div>
   </div>
 </section>
 

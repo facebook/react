@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Component API</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Component API" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/component-api.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">
+              Getting Started
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">
+              Tutorial
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">
+              Why React?
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">
+              Displaying Data
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">
+                      JSX in Depth
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">
+                      JSX Gotchas
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">
+              Interactivity and Dynamic UIs
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">
+              Multiple Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">
+              Reusable Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">
+              Forms
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">
+              Working With the Browser
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">
+                      More About Refs
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">
+              Tooling Integration
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">
+              Examples
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">
+              Top-Level API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html" class="active">
+              Component API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">
+              Component Specs and Lifecycle
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">
+              Supported Tags and Attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">
+              Event System
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">
+              DOM Differences
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>Component API</h1>
+    <div class="subHeader"></div>
+    <h2 id="reactcomponent">ReactComponent</h2>
+<p>Component classses created by <code>createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
+<h3 id="getdomnode">getDOMNode</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
+</code></pre></div>
+<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.</p>
+<h3 id="setprops">setProps</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+</code></pre></div>
+<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>renderComponent()</code>. Simply call <code>setProps()</code> to change its properties and trigger a re-render.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
+</blockquote>
+<h3 id="replaceprops">replaceProps</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+</code></pre></div>
+<p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
+<h3 id="transferpropsto">transferPropsTo</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
+</code></pre></div>
+<p>Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, <code>targetComponent</code> is returned as a convenience. This function is useful when creating simple HTML-like components:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">transferPropsTo</span><span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;/avatars/&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">}</span> <span class="nx">userId</span><span class="o">=</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// &lt;AvatarImage userId={17} width={200} height={200} /&gt;</span>
+</code></pre></div>
+<p>Properties that are specified directly on the target component instance (such as <code>src</code> and <code>userId</code> in the above example) will not be overwritten by <code>transferPropsTo</code>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Use <code>transferPropsTo</code> with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it&#39;s safer to explicitly copy the properties that you need onto the child component.</p>
+</blockquote>
+<h3 id="setstate">setState</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once <code>setState</code> is completed.</p>
+
+<blockquote>
+<p>Notes:</p>
+
+<p><em>NEVER</em> mutate <code>this.state</code> directly, as calling <code>setState()</code> afterwards may replace the mutation you made. Treat <code>this.state</code> as if it were immutable.</p>
+
+<p><code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
+
+<p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
+</blockquote>
+<h3 id="replacestate">replaceState</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>Like <code>setState()</code> but deletes any pre-existing state keys that are not in nextState.</p>
+<h3 id="forceupdate">forceUpdate()</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>If your <code>render()</code> method reads from something other than <code>this.props</code> or <code>this.state</code>, you&#39;ll need to tell React when it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>. You&#39;ll also need to call <code>forceUpdate()</code> if you mutate <code>this.state</code> directly.</p>
+
+<p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component and its children, but React will still only update the DOM if the markup changes.</p>
+
+<p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your application much simpler and more efficient.</p>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/top-level-api.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/component-specs.html">Next &rarr;</a>
+      
+    </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/component-api.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

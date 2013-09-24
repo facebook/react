@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | JSX Gotchas</title>
+  <title>React | Tags and Attributes</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | JSX Gotchas" />
+  <meta property="og:title" content="React | Tags and Attributes" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-gotchas.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/tags-and-attributes.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
 
@@ -100,7 +100,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/jsx-gotchas.html" class="active">
+                    <a href="/react/docs/jsx-gotchas.html">
                       JSX Gotchas
                     </a>
                   </li>
@@ -197,7 +197,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/tags-and-attributes.html">
+            <a href="/react/docs/tags-and-attributes.html" class="active">
               Supported Tags and Attributes
             </a>
             
@@ -224,52 +224,51 @@
 
 
   <div class="inner-content">
-    <h1>JSX Gotchas</h1>
+    <h1>Tags and Attributes</h1>
     <div class="subHeader"></div>
-    <p>JSX looks like HTML but there are some important differences you may run into.</p>
-<h2 id="whitespace-removal">Whitespace Removal</h2>
-<p>JSX doesn&#39;t follow the same whitespace elimination rules as HTML. JSX removes all whitespace between two curly braces expressions. If you want to have whitespace, simply add <code>{&#39; &#39;}</code>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="p">}</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">surname</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <h2 id="supported-tags">Supported Tags</h2>
+<p>React attempts to support all common elements. If you need an element that isn&#39;t listed here, please file an issue.</p>
+
+<p>The following elements are supported:</p>
+<h3 id="html-elements">HTML Elements</h3><div class="highlight"><pre><code class="text language-text" data-lang="text">a abbr address area article aside audio b base bdi bdo big blockquote body br
+button canvas caption cite code col colgroup data datalist dd del details dfn
+div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6
+head header hr html i iframe img input ins kbd keygen label legend li link
+main map mark menu menuitem meta meter nav noscript object ol optgroup option
+output p param pre progress q rp rt ruby s samp script section select small
+source span strong style sub summary sup table tbody td textarea tfoot th
+thead time title tr track u ul var video wbr
+</code></pre></div><h3 id="svg-elements">SVG elements</h3><div class="highlight"><pre><code class="text language-text" data-lang="text">circle g line path polyline rect svg text
+</code></pre></div><h2 id="supported-attributes">Supported Attributes</h2>
+<p>React supports all <code>data-*</code> and <code>aria-*</code> attributes as well as every attribute
+in the following lists. Note that all attributes are camel-cased and the attributes <code>class</code> and <code>for</code> are <code>className</code> and <code>htmlFor</code>, respectively, to match the DOM API specification.</p>
+
+<p>For a list of events, see <a href="events.html">Supported Events</a>.</p>
+<h3 id="html-attributes">HTML Attributes</h3><div class="highlight"><pre><code class="text language-text" data-lang="text">accessKey accept action ajaxify allowFullScreen allowTransparency alt
+autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
+className colSpan content contentEditable contextMenu controls data dateTime
+dir disabled draggable encType form frameBorder height hidden href htmlFor
+httpEquiv icon id label lang list max maxLength method min multiple name
+pattern poster preload placeholder radioGroup rel readOnly required role
+rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
+target title type value width wmode
 </code></pre></div>
-<p>Follow <a href="https://github.com/facebook/react/issues/65">Issue #65</a> for discussion on this behavior.</p>
-<h2 id="html-entities">HTML Entities</h2>
-<p>You can insert HTML entities within literal text in JSX:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>If you want to display an HTML entity within dynamic content, you will run into double escaping issues as React escapes all the strings you are displaying in order to prevent a wide range of XSS attacks by default.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Bad: It displays &quot;First &amp;middot; Second&quot;</span>
-<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>There are various ways to work-around this issue. The easiest one is to write unicode character directly in Javascript. You need to make sure that the file is saved as UTF-8 and that the proper UTF-8 directives are set so the browser will display it correctly.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First · Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>A safer alternative is to find the <a href="http://www.fileformat.info/info/unicode/char/b7/index.htm">unicode number corresponding to the entity</a> and use it inside of a JavaScript string.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First \u00b7 Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &#39;</span> <span class="o">+</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="mi">183</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
-</code></pre></div>
-<p>You can use mixed arrays with strings and JSX elements.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{[</span><span class="s1">&#39;First &#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;&amp;</span><span class="nx">middot</span><span class="p">;</span><span class="o">&lt;</span><span class="err">/span&gt;, &#39; Second&#39;]}&lt;/div&gt;</span>
-</code></pre></div>
-<p>As a last resort, you always have the ability to insert raw HTML.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</code></pre></div><h2 id="custom-html-attributes">Custom HTML Attributes</h2>
-<p>If you pass properties to native HTML elements that do not exist in the HTML specification, React will not render them. If you want to use a custom attribute, you should prefix it with <code>data-</code>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
-</code></pre></div>
-<p><a href="http://www.w3.org/WAI/intro/aria">Web Accessibility</a> attributes starting with <code>aria-</code> will be rendered properly.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">hidden</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
+<p>In addition, the non-standard <code>autoCapitalize</code> attribute is supported for Mobile Safari.</p>
+<h3 id="svg-attributes">SVG Attributes</h3><div class="highlight"><pre><code class="text language-text" data-lang="text">cx cy d fill fx fy points r stroke strokeLinecap strokeWidth transform x x1 x2
+version viewBox y y1 y2 spreadMethod offset stopColor stopOpacity
+gradientUnits gradientTransform
 </code></pre></div>
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/jsx-in-depth.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/component-specs.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/interactivity-and-dynamic-uis.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/events.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/jsx-gotchas.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/tags-and-attributes.html"></div>
   </div>
 </section>
 
