@@ -96,4 +96,4 @@ React.renderComponent(
 > * [Working With the Browser](/react/docs/working-with-the-browser.html)
 >   * [More About Refs](/react/docs/more-about-refs.html)
 > * [Tooling integration](/react/docs/tooling-integration.html)
-> * [Reference](/react/docs/core-api.html)
+> * [Reference](/react/docs/top-level-api.html)
