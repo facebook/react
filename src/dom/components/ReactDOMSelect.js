@@ -18,6 +18,7 @@
 
 "use strict";
 
+var LinkedValueMixin = require('LinkedValueMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -58,7 +59,8 @@ function selectValueType(props, propName, componentName) {
  */
 function updateOptions() {
   /*jshint validthis:true */
-  var value = this.props.value != null ? this.props.value : this.state.value;
+  var propValue = this.getValue();
+  var value = propValue != null ? propValue : this.state.value;
   var options = this.getDOMNode().options;
   var selectedValue = '' + value;
 
@@ -89,6 +91,7 @@ function updateOptions() {
  * selected.
  */
 var ReactDOMSelect = ReactCompositeComponent.createClass({
+  mixins: [LinkedValueMixin],
 
   propTypes: {
     defaultValue: selectValueType,
@@ -128,9 +131,10 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    if (this.props.onChange) {
+    var onChange = this.getOnChange();
+    if (onChange) {
       this._isChanging = true;
-      returnValue = this.props.onChange(event);
+      returnValue = onChange(event);
       this._isChanging = false;
     }
 

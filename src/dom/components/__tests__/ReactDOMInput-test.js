@@ -21,14 +21,19 @@
 
 /*jshint evil:true */
 
+var emptyFunction = require('emptyFunction');
+var mocks = require('mocks');
+
 describe('ReactDOMInput', function() {
   var React;
+  var ReactLink;
   var ReactTestUtils;
 
   var renderTextInput;
 
   beforeEach(function() {
     React = require('React');
+    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 
     renderTextInput = function(component) {
@@ -117,4 +122,36 @@ describe('ReactDOMInput', function() {
     expect(cNode.checked).toBe(true);
   });
 
+  it('should support ReactLink', function() {
+    var container = document.createElement('div');
+    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var instance = <input type="text" valueLink={link} />;
+
+    React.renderComponent(instance, container);
+
+    expect(instance.getDOMNode().value).toBe('yolo');
+    expect(link.value).toBe('yolo');
+    expect(link.requestChange.mock.calls.length).toBe(0);
+
+    instance.getDOMNode().value = 'test';
+    ReactTestUtils.Simulate.input(instance.getDOMNode());
+
+    expect(link.requestChange.mock.calls.length).toBe(1);
+    expect(link.requestChange.mock.calls[0][0]).toEqual('test');
+  });
+
+  it('should throw if both value and valueLink are provided', function() {
+    var node = document.createElement('div');
+    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var instance = <input type="text" valueLink={link} />;
+
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+
+    instance = <input type="text" valueLink={link} value="test" />;
+    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+
+    instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
+    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+
+  });
 });

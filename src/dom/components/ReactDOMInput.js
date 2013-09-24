@@ -19,6 +19,7 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var LinkedValueMixin = require('LinkedValueMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
@@ -48,6 +49,7 @@ var instancesByReactID = {};
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = ReactCompositeComponent.createClass({
+  mixins: [LinkedValueMixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
@@ -71,8 +73,9 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     props.checked =
       this.props.checked != null ? this.props.checked : this.state.checked;
 
-    props.value = this.props.value != null && this.props.value !== false
-      ? '' + this.props.value
+    var value = this.getValue();
+    props.value = value != null && value !== false
+      ? '' + value
       : this.state.value;
 
     props.onChange = this._handleChange;
@@ -99,22 +102,25 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
         this.props.checked || false
       );
     }
-    if (this.props.value != null) {
+
+    var value = this.getValue();
+    if (value != null) {
       // Cast `this.props.value` to a string so falsey values that cast to
       // truthy strings are not ignored.
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        this.props.value !== false ? '' + this.props.value : ''
+        value !== false ? '' + value : ''
       );
     }
   },
 
   _handleChange: function(event) {
     var returnValue;
-    if (this.props.onChange) {
+    var onChange = this.getOnChange();
+    if (onChange) {
       this._isChanging = true;
-      returnValue = this.props.onChange(event);
+      returnValue = onChange(event);
       this._isChanging = false;
     }
     this.setState({

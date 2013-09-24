@@ -19,6 +19,7 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var LinkedValueMixin = require('LinkedValueMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -47,6 +48,7 @@ var CONTENT_TYPES = {'string': true, 'number': true};
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
+  mixins: [LinkedValueMixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
@@ -80,10 +82,11 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     if (defaultValue == null) {
       defaultValue = '';
     }
+    var value = this.getValue();
     return {
       // We save the initial value so that `ReactNativeComponent` doesn't update
       // `textContent` (unnecessary since we update value).
-      initialValue: this.props.value != null ? this.props.value : defaultValue,
+      initialValue: value != null ? value : defaultValue,
       value: defaultValue
     };
   },
@@ -96,6 +99,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
+    var value = this.getValue();
 
     invariant(
       props.dangerouslySetInnerHTML == null,
@@ -103,8 +107,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     );
 
     props.defaultValue = null;
-    props.value =
-      this.props.value != null ? this.props.value : this.state.value;
+    props.value = value != null ? value : this.state.value;
     props.onChange = this._handleChange;
 
     // Always set children to the same thing. In IE9, the selection range will
@@ -113,20 +116,22 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   },
 
   componentDidUpdate: function(prevProps, prevState, rootNode) {
-    if (this.props.value != null) {
+    var value = this.getValue();
+    if (value != null) {
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        this.props.value !== false ? '' + this.props.value : ''
+        value !== false ? '' + value : ''
       );
     }
   },
 
   _handleChange: function(event) {
     var returnValue;
-    if (this.props.onChange) {
+    var onChange = this.getOnChange();
+    if (onChange) {
       this._isChanging = true;
-      returnValue = this.props.onChange(event);
+      returnValue = onChange(event);
       this._isChanging = false;
     }
     this.setState({value: event.target.value});

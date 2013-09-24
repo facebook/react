@@ -21,14 +21,18 @@
 
 /*jshint evil:true */
 
+var mocks = require('mocks');
+
 describe('ReactDOMTextarea', function() {
   var React;
+  var ReactLink;
   var ReactTestUtils;
 
   var renderTextarea;
 
   beforeEach(function() {
     React = require('React');
+    ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 
     renderTextarea = function(component) {
@@ -119,7 +123,7 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('17');
   });
 
-  it("should throw with multiple or invalid children", function() {
+  it('should throw with multiple or invalid children', function() {
     spyOn(console, 'warn');
 
     expect(function() {
@@ -137,5 +141,23 @@ describe('ReactDOMTextarea', function() {
     }).toThrow();
 
     expect(console.warn.argsForCall.length).toBe(2);
+  });
+
+  it('should support ReactLink', function() {
+    var container = document.createElement('div');
+    var link = new ReactLink('yolo', mocks.getMockFunction());
+    var instance = <textarea valueLink={link} />;
+
+    React.renderComponent(instance, container);
+
+    expect(instance.getDOMNode().value).toBe('yolo');
+    expect(link.value).toBe('yolo');
+    expect(link.requestChange.mock.calls.length).toBe(0);
+
+    instance.getDOMNode().value = 'test';
+    ReactTestUtils.Simulate.input(instance.getDOMNode());
+
+    expect(link.requestChange.mock.calls.length).toBe(1);
+    expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
 });
