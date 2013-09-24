@@ -46,8 +46,8 @@ if (__DEV__) {
   var rootElementsByReactRootID = {};
 }
 
-/** Used to store breadth-first search state in findComponentRoot. */
-var reusableArray = [];
+// Used to store breadth-first search state in findComponentRoot.
+var findComponentRootReusableArray = [];
 
 /**
  * @param {DOMElement} container DOM element that may contain a React component.
@@ -541,11 +541,11 @@ var ReactMount = {
    * @internal
    */
   findComponentRoot: function(ancestorNode, id) {
-    var firstChildren = reusableArray;
+    var firstChildren = findComponentRootReusableArray;
     var childIndex = 0;
 
-    firstChildren.length = 0;
-    firstChildren.push(ancestorNode.firstChild);
+    firstChildren[0] = ancestorNode.firstChild;
+    firstChildren.length = 1;
 
     while (childIndex < firstChildren.length) {
       var child = firstChildren[childIndex++];
@@ -553,17 +553,27 @@ var ReactMount = {
         var childID = ReactMount.getID(child);
         if (childID) {
           if (id === childID) {
+            // Emptying firstChildren/findComponentRootReusableArray is
+            // not necessary for correctness, but it helps the GC reclaim
+            // any nodes that were left at the end of the search.
             firstChildren.length = 0;
+
             return child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, id)) {
+          }
+
+          if (ReactInstanceHandles.isAncestorIDOf(childID, id)) {
             // If we find a child whose ID is an ancestor of the given ID,
             // then we can be sure that we only want to search the subtree
             // rooted at this child, so we can throw out the rest of the
             // search state.
             firstChildren.length = childIndex = 0;
             firstChildren.push(child.firstChild);
+
+            // Ignore the rest of this child's siblings and immediately
+            // continue the outer loop with child.firstChild as child.
             break;
           }
+
         } else {
           // If this child had no ID, then there's a chance that it was
           // injected automatically by the browser, as when a `<table>`
@@ -572,6 +582,7 @@ var ReactMount = {
           // branch, but not before examining the other siblings.
           firstChildren.push(child.firstChild);
         }
+
         child = child.nextSibling;
       }
     }
