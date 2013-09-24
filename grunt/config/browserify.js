@@ -37,14 +37,16 @@ function minify(src) {
 // TODO: move this out to another build step maybe.
 function bannerify(src) {
   var version = grunt.config.data.pkg.version;
-  return LICENSE_TEMPLATE.replace('@PACKAGE@', this.data.standalone)
+  var packageName = this.data.packageName || this.data.standalone;
+  return LICENSE_TEMPLATE.replace('@PACKAGE@', packageName)
                          .replace('@VERSION@', version) +
          '\n' + src;
 }
 
 function simpleBannerify(src) {
   var version = grunt.config.data.pkg.version;
-  return SIMPLE_TEMPLATE.replace('@PACKAGE@', this.data.standalone)
+  var packageName = this.data.packageName || this.data.standalone;
+  return SIMPLE_TEMPLATE.replace('@PACKAGE@', packageName)
                         .replace('@VERSION@', version) +
          '\n' + src;
 }
@@ -76,19 +78,27 @@ var transformer = {
   after: [simpleBannerify]
 };
 
-var transitions = {
+var addons = {
   entries: [
-    './build/modules/ReactTransitionGroup.js'
+    './build/modules/ReactWithAddons.js'
   ],
-  outfile: './build/react-transitiongroup.js',
+  outfile: './build/react-with-addons.js',
   debug: false,
-  standalone: 'ReactTransitionGroup',
+  standalone: 'React',
+  packageName: 'React (with addons)',
   after: [simpleBannerify]
 };
+
+var addonsMin = grunt.util._.merge({}, addons, {
+  outfile: './build/react-with-addons.min.js',
+  debug: false,
+  after: [minify, bannerify]
+});
 
 module.exports = {
   basic: basic,
   min: min,
   transformer: transformer,
-  transitions: transitions
+  addons: addons,
+  addonsMin: addonsMin
 };

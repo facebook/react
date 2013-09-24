@@ -68,9 +68,10 @@ module.exports = function(grunt) {
   });
 
   grunt.registerTask('build:basic', ['jsx:debug', 'version-check', 'browserify:basic']);
+  grunt.registerTask('build:addons', ['jsx:debug', 'browserify:addons']);
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
-  grunt.registerTask('build:transitions', ['jsx:debug', 'browserify:transitions']);
   grunt.registerTask('build:min', ['jsx:release', 'version-check', 'browserify:min']);
+  grunt.registerTask('build:addons-min', ['jsx:debug', 'browserify:addonsMin']);
   grunt.registerTask('build:test', [
     'jsx:jasmine',
     'jsx:test',
@@ -89,9 +90,10 @@ module.exports = function(grunt) {
     'version-check',
     'browserify:basic',
     'browserify:transformer',
-    'browserify:transitions',
+    'browserify:addons',
     'jsx:release',
     'browserify:min',
+    'browserify:addonsMin',
     'copy:react_docs',
     'compare_size'
   ]);
