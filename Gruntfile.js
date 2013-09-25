@@ -79,7 +79,7 @@ module.exports = function(grunt) {
     'populist:test'
   ]);
 
-  grunt.registerTask('test', ['build:test', 'phantom:run']);
+  grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
