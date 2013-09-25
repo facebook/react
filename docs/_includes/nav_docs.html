@@ -1,4 +1,5 @@
 <div class="nav-docs">
+  <!-- Docs Nav -->
   {% for section in site.nav_docs_sections %}
     <div class="nav-docs-section">
       <h3>{{ section.title }}</h3>
@@ -19,6 +20,20 @@
                 {% endfor %}
               </ul>
             {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endfor %}
+
+  <!-- Cookbook Nav -->
+  {% for section in site.nav_cookbook %}
+    <div class="nav-docs-section">
+      <h3>{{ section.title }}</h3>
+      <ul>
+        {% for item in section.items %}
+          <li>
+            <a href="/react/cookbook/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
           </li>
         {% endfor %}
       </ul>
