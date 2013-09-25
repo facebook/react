@@ -50,6 +50,9 @@ function escapeTextForBrowser(text) {
     return '';
   } else {
     if (type === 'string') {
+      if (text.match(/\{(([\d|.]*)|(true)|(false))\}/gi)) {
+        text = text.substr(1, text.length - 2);
+      }
       return text.replace(/[&><"'\/]/g, escaper);
     } else {
       return (''+text).replace(/[&><"'\/]/g, escaper);
