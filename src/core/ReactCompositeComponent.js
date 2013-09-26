@@ -110,7 +110,7 @@ var ReactCompositeComponentInterface = {
    * @return {object}
    * @optional
    */
-  getDefaultProps: SpecPolicy.DEFINE_ONCE,
+  getDefaultProps: SpecPolicy.DEFINE_MANY_MERGED,
 
   /**
    * Invoked once before the component is mounted. The return value will be used
