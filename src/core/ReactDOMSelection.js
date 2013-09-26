@@ -149,13 +149,19 @@ var ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */
-  get: document.selection ? getIESelection : getModernSelection,
+  get: function(node) {
+    var getSelection = document.selection ? getIESelection : getModernSelection;
+    return getSelection(node);
+  },
 
   /**
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  set: document.selection ? setIESelection : setModernSelection
+  set: function(node, offsets) {
+    var setSelection = document.selection ? setIESelection : setModernSelection;
+    setSelection(node, offsets);
+  }
 };
 
 module.exports = ReactDOMSelection;
