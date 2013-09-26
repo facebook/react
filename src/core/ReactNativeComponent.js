@@ -162,7 +162,10 @@ ReactNativeComponent.Mixin = {
       var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
-      if (contentToUse != null) {
+      if (childrenToUse && typeof(childrenToUse) === "string" && childrenToUse.match(/\{(([\d|.]*)|(true)|(false))\}/gi)) {
+        return childrenToUse = childrenToUse.substr(1, text.length - 2);
+      }
+      else if (contentToUse != null) {
         return escapeTextForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
