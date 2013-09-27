@@ -53,7 +53,7 @@ describe('ReactDOMIDOperations', function() {
 
     ReactDOMIDOperations.updateInnerHTMLByID(
       'testID',
-      {__html: ' testContent'}
+      ' testContent'
     );
 
     expect(
