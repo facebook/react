@@ -50,11 +50,24 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should display "" for `defaultValue` of `false`', function() {
+  it('should display "false" for `defaultValue` of `false`', function() {
     var stub = <input type="text" defaultValue={false} />;
     var node = renderTextInput(stub);
 
-    expect(node.value).toBe('');
+    expect(node.value).toBe('false');
+  });
+
+  it('should display "foobar" for `defaultValue` of `objectToString`', function(){
+    var objectToString = {
+      toString:function(){
+        return "foobar";
+      }
+    };
+
+    var stub = <input type="text" defaultValue={objectToString} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('foobar');
   });
 
   it('should display `value` of number 0', function() {
@@ -64,11 +77,24 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should display "" for `value` of `false`', function() {
+  it('should display "false" for `value` of `false`', function() {
     var stub = <input type="text" value={false} />;
     var node = renderTextInput(stub);
 
-    expect(node.value).toBe('');
+    expect(node.value).toBe('false');
+  });
+
+  it('should display "foobar" for `value` of `objectToString`', function(){
+    var objectToString = {
+      toString:function(){
+        return "foobar";
+      }
+    };
+
+    var stub = <input type="text" value={objectToString} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('foobar');
   });
 
   it('should properly control a value of number `0`', function() {
