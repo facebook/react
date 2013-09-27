@@ -8,7 +8,7 @@ script: "cookbook/inline-styles.js"
 
 `if-else` statements don't work inside JSX, since JSX is really just sugar for functions:
 
-```html
+```js
 /** @jsx React.DOM */
 
 // this
@@ -21,7 +21,7 @@ Which means `<div id={if (true){ 'msg' }}>Hello World!</div>` doesn't make sense
 
 What you're searching for is ternary expression:
 
-```html
+```js
 /** @jsx React.DOM */
 
 // this

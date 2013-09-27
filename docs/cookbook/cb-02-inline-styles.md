@@ -7,12 +7,12 @@ script: "cookbook/inline-styles.js"
 ---
 
 ### Problem
-You want to put inline style to an element.
+You want to apply inline style to an element.
 
 ### Solution
 Instead of writing a string, create an object whose key is the camelCased version of the style name, and whose value is the style's value, in string:
 
-```html
+```js
 /** @jsx React.DOM */
 
 var divStyle = {

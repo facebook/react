@@ -12,7 +12,7 @@ You want to use conditional in JSX.
 ### Solution
 Don't forget that JSX is really just sugar for functions:
 
-```html
+```js
 /** @jsx React.DOM */
 
 // this
@@ -25,7 +25,7 @@ Which means `<div id={if (true){ 'msg' }}>Hello World!</div>` doesn't make sense
 
 What you're searching for is ternary expression:
 
-```html
+```js
 /** @jsx React.DOM */
 
 // this
