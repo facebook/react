@@ -17,6 +17,8 @@ gemspec = Gem::Specification.new do |s|
   s.files = Dir[
     'build/react.js',
     'build/react.min.js',
+    'build/react-with-addons.js',
+    'build/react-with-addons.min.js',
     'build/JSXTransformer.js',
     'lib/react/source.rb'
   ]
