@@ -1,9 +1,8 @@
 ---
-id: self-closing-tag
+id: self-closing-tag-tip
 title: Self-Closing Tag
 layout: docs
-permalink: inline-styles.html
-script: "cookbook/inline-styles.js"
+permalink: self-closing-tag-tip.html
 ---
 
 In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't.

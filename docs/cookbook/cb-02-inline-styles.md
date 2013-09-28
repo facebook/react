@@ -3,7 +3,6 @@ id: inline-styles
 title: Inline Styles
 layout: docs
 permalink: inline-styles.html
-script: "cookbook/inline-styles.js"
 ---
 
 ### Problem

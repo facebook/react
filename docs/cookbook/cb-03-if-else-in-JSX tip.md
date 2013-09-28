@@ -2,8 +2,7 @@
 id: if-else-in-JSX-tip
 title: If-Else in JSX
 layout: docs
-permalink: inline-styles.html
-script: "cookbook/inline-styles.js"
+permalink: if-else-in-JSX-tip.html
 ---
 
 `if-else` statements don't work inside JSX, since JSX is really just sugar for functions:

@@ -2,8 +2,7 @@
 id: self-closing-tag
 title: Self-Closing Tag
 layout: docs
-permalink: inline-styles.html
-script: "cookbook/inline-styles.js"
+permalink: self-closing-tag.html
 ---
 
 ### Problem
