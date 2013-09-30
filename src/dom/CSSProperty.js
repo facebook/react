@@ -24,6 +24,7 @@
 var isUnitlessNumber = {
   fillOpacity: true,
   fontWeight: true,
+  lineHeight: true,
   opacity: true,
   orphans: true,
   zIndex: true,
