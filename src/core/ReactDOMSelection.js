@@ -57,7 +57,7 @@ function getIESelection(node) {
  * @param {DOMElement} node
  */
 function getModernSelection(node) {
-  var selection = global.getSelection();
+  var selection = window.getSelection();
   var anchorNode = selection.anchorNode;
   var anchorOffset = selection.anchorOffset;
   var focusNode = selection.focusNode;
@@ -125,7 +125,7 @@ function setIESelection(node, offsets) {
  * @param {object} offsets
  */
 function setModernSelection(node, offsets) {
-  var selection = global.getSelection();
+  var selection = window.getSelection();
 
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
