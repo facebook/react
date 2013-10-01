@@ -29,7 +29,7 @@ var docblock = require('jstransform/src/docblock');
 exports.transform = transform;
 
 exports.exec = function(code) {
-  return eval(transform(code));
+  return eval(transform(code).code);
 };
 
 if (typeof window === "undefined" || window === null) {
