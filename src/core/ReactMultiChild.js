@@ -179,7 +179,7 @@ var ReactMultiChild = {
 
   /**
    * Provides common functionality for components that must reconcile multiple
-   * children. This is used by `ReactNativeComponent` to mount, update, and
+   * children. This is used by `ReactDOMComponent` to mount, update, and
    * unmount child components.
    *
    * @lends {ReactMultiChild.prototype}
@@ -188,7 +188,7 @@ var ReactMultiChild = {
 
     /**
      * Generates a "mount image" for each of the supplied children. In the case
-     * of `ReactNativeComponent`, a mount image is a string of markup.
+     * of `ReactDOMComponent`, a mount image is a string of markup.
      *
      * @param {?object} children As returned by `flattenChildren`.
      * @return {array} An array of mounted representations.

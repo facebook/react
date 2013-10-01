@@ -25,7 +25,7 @@ var ReactDOM = require('ReactDOM');
 var invariant = require('invariant');
 var merge = require('merge');
 
-// Store a reference to the <select> `ReactNativeComponent`.
+// Store a reference to the <select> `ReactDOMComponent`.
 var select = ReactDOM.select;
 
 /**

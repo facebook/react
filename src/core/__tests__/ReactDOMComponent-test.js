@@ -23,7 +23,7 @@
 
 var mocks = require('mocks');
 
-describe('ReactNativeComponent', function() {
+describe('ReactDOMComponent', function() {
 
   describe('updateDOM', function() {
     var React;
@@ -220,13 +220,13 @@ describe('ReactNativeComponent', function() {
       ReactDefaultInjection.inject();
 
       var mixInto = require('mixInto');
-      var ReactNativeComponent = require('ReactNativeComponent');
+      var ReactDOMComponent = require('ReactDOMComponent');
 
       var NodeStub = function(initialProps) {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactNativeComponent.Mixin);
+      mixInto(NodeStub, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         return (new NodeStub(props))._createOpenTagMarkup();
@@ -261,14 +261,14 @@ describe('ReactNativeComponent', function() {
       require('mock-modules').dumpCache();
 
       var mixInto = require('mixInto');
-      var ReactNativeComponent = require('ReactNativeComponent');
+      var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactNativeComponent.Mixin);
+      mixInto(NodeStub, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -300,14 +300,14 @@ describe('ReactNativeComponent', function() {
       var mixInto = require('mixInto');
       var ReactComponent = require('ReactComponent');
       var ReactMultiChild = require('ReactMultiChild');
-      var ReactNativeComponent = require('ReactNativeComponent');
+      var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var StubNativeComponent = function(initialProps) {
         ReactComponent.Mixin.construct.call(this, initialProps);
       };
       mixInto(StubNativeComponent, ReactComponent.Mixin);
-      mixInto(StubNativeComponent, ReactNativeComponent.Mixin);
+      mixInto(StubNativeComponent, ReactDOMComponent.Mixin);
       mixInto(StubNativeComponent, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {

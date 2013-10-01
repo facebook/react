@@ -26,7 +26,7 @@ var ReactDOM = require('ReactDOM');
 var invariant = require('invariant');
 var merge = require('merge');
 
-// Store a reference to the <textarea> `ReactNativeComponent`.
+// Store a reference to the <textarea> `ReactDOMComponent`.
 var textarea = ReactDOM.textarea;
 
 // For quickly matching children type, to test if can be treated as content.
@@ -84,7 +84,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     }
     var value = this.getValue();
     return {
-      // We save the initial value so that `ReactNativeComponent` doesn't update
+      // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
       initialValue: value != null ? value : defaultValue,
       value: defaultValue
