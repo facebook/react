@@ -68,6 +68,21 @@ describe('CSSPropertyOperations', function() {
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
+  it('should not append `px` to styles that might need a number', function() {
+    expect(CSSPropertyOperations.createMarkupForStyles({
+      fillOpacity: 1,
+      fontWeight: 2,
+      opacity: 3,
+      orphans: 4,
+      zIndex: 5,
+      zoom: 6,
+      lineHeight: 7
+    })).toBe(
+      'fill-opacity:1;font-weight:2;opacity:3;orphans:4;z-index:5;zoom:6;' +
+      'line-height:7;'
+    );
+  });
+
   it('should set style attribute when styles exist', function() {
     var styles = {
       backgroundColor: '#000',
