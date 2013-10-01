@@ -133,4 +133,79 @@ describe('ReactComponent', function() {
     expect(instance.isMounted()).toBeTruthy();
   });
 
+  it('should know its simple mount depth', function() {
+    var Owner = React.createClass({
+      render: function() {
+        return <Child ref="child" />;
+      }
+    });
+
+    var Child = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Owner />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance._mountDepth).toBe(0);
+    expect(instance.refs.child._mountDepth).toBe(1);
+  });
+
+  it('should know its (complicated) mount depth', function() {
+    var Box = React.createClass({
+      render: function() {
+        return <div ref="boxDiv">{this.props.children}</div>;
+      }
+    });
+
+    var Child = React.createClass({
+      render: function() {
+        return <span ref="span">child</span>;
+      }
+    });
+
+    var Switcher = React.createClass({
+      getInitialState: function() {
+        return {tabKey: 'hello'};
+      },
+
+      render: function() {
+        var child = this.props.children;
+
+        return (
+          <Box ref="box">
+            <div
+              ref="switcherDiv"
+              style={{
+                display: this.state.tabKey === child.key ? '' : 'none'
+            }}>
+              {child}
+            </div>
+          </Box>
+        );
+      }
+    });
+
+    var App = React.createClass({
+      render: function() {
+        return (
+          <Switcher ref="switcher">
+            <Child key="hello" ref="child" />
+          </Switcher>
+        );
+      }
+    });
+
+    var root = <App />;
+    ReactTestUtils.renderIntoDocument(root);
+
+    expect(root._mountDepth).toBe(0);
+    expect(root.refs.switcher._mountDepth).toBe(1);
+    expect(root.refs.switcher.refs.box._mountDepth).toBe(2);
+    expect(root.refs.switcher.refs.switcherDiv._mountDepth).toBe(4);
+    expect(root.refs.child._mountDepth).toBe(5);
+    expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
+    expect(root.refs.child.refs.span._mountDepth).toBe(6);
+  });
 });

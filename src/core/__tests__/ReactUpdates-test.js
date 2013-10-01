@@ -210,10 +210,8 @@ describe('ReactUpdates', function() {
     expect(child.state.y).toBe(2);
     expect(parentUpdateCount).toBe(1);
 
-    // When we update the child first, we currently incur two updates because
-    // we aren't smart about what order to process the components in.
-    // TODO: Reduce the update count here to 1
-    expect(childUpdateCount).toBe(2);
+    // Batching reduces the number of updates here to 1.
+    expect(childUpdateCount).toBe(1);
   });
 
   it('should support chained state updates', function() {
@@ -292,5 +290,170 @@ describe('ReactUpdates', function() {
     expect(shouldUpdateCount).toBe(0);
     expect(instance.state.x).toBe(1);
     expect(updateCount).toBe(1);
+  });
+
+  it('should update children even if parent blocks updates', function() {
+    var parentRenderCount = 0;
+    var childRenderCount = 0;
+
+    var Parent = React.createClass({
+      shouldComponentUpdate: function() {
+        return false;
+      },
+
+      render: function() {
+        parentRenderCount++;
+        return <Child ref="child" />;
+      }
+    });
+
+    var Child = React.createClass({
+      render: function() {
+        childRenderCount++;
+        return <div />;
+      }
+    });
+
+    expect(parentRenderCount).toBe(0);
+    expect(childRenderCount).toBe(0);
+
+    var instance = <Parent />;
+    ReactTestUtils.renderIntoDocument(instance);
+
+    expect(parentRenderCount).toBe(1);
+    expect(childRenderCount).toBe(1);
+
+    ReactUpdates.batchedUpdates(function() {
+      instance.setState({x: 1});
+    });
+
+    expect(parentRenderCount).toBe(1);
+    expect(childRenderCount).toBe(1);
+
+    ReactUpdates.batchedUpdates(function() {
+      instance.refs.child.setState({x: 1});
+    });
+
+    expect(parentRenderCount).toBe(1);
+    expect(childRenderCount).toBe(2);
+  });
+
+  it('should flow updates correctly', function() {
+    var willUpdates = [];
+    var didUpdates = [];
+
+    var UpdateLoggingMixin = {
+      componentWillUpdate: function() {
+        willUpdates.push(this.constructor.displayName);
+      },
+      componentDidUpdate: function() {
+        didUpdates.push(this.constructor.displayName);
+      }
+    };
+
+    var Box = React.createClass({
+      mixins: [UpdateLoggingMixin],
+
+      render: function() {
+        return <div ref="boxDiv">{this.props.children}</div>;
+      }
+    });
+
+    var Child = React.createClass({
+      mixins: [UpdateLoggingMixin],
+
+      render: function() {
+        return <span ref="span">child</span>;
+      }
+    });
+
+    var Switcher = React.createClass({
+      mixins: [UpdateLoggingMixin],
+
+      getInitialState: function() {
+        return {tabKey: 'hello'};
+      },
+
+      render: function() {
+        var child = this.props.children;
+
+        return (
+          <Box ref="box">
+            <div
+              ref="switcherDiv"
+              style={{
+                display: this.state.tabKey === child.key ? '' : 'none'
+            }}>
+              {child}
+            </div>
+          </Box>
+        );
+      }
+    });
+
+    var App = React.createClass({
+      mixins: [UpdateLoggingMixin],
+
+      render: function() {
+        return (
+          <Switcher ref="switcher">
+            <Child key="hello" ref="child" />
+          </Switcher>
+        );
+      }
+    });
+
+    var root = <App />;
+    ReactTestUtils.renderIntoDocument(root);
+
+    function expectUpdates(sequence) {
+      // didUpdate() occurs in reverse order
+      didUpdates.reverse();
+      expect(willUpdates).toEqual(didUpdates);
+      expect(willUpdates).toEqual(sequence);
+      willUpdates.length = 0;
+      didUpdates.length = 0;
+    }
+
+    function triggerUpdate(c) {
+      c.setState({x: 1});
+    }
+
+    function testUpdates(components, expectation) {
+      var i;
+
+      ReactUpdates.batchedUpdates(function() {
+        for (i = 0; i < components.length; i++) {
+          triggerUpdate(components[i]);
+        }
+      });
+
+      expectUpdates(expectation);
+
+      // Try them in reverse order
+
+      ReactUpdates.batchedUpdates(function() {
+        for (i = components.length - 1; i >= 0; i--) {
+          triggerUpdate(components[i]);
+        }
+      });
+
+      expectUpdates(expectation);
+    }
+
+    testUpdates(
+      [root.refs.switcher.refs.box, root.refs.switcher],
+      ['Switcher', 'Box', 'Child']
+    );
+
+    testUpdates(
+      [root.refs.child, root.refs.switcher.refs.box],
+      ['Box', 'Child']
+    );
+
+    testUpdates(
+      [root.refs.child, root.refs.switcher],
+      ['Switcher', 'Box', 'Child']
+    );
   });
 });

@@ -531,6 +531,7 @@ var ReactCompositeComponentMixin = {
    *
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction} transaction
+   * @param {number} mountDepth number of components in the owner hierarchy
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -538,8 +539,13 @@ var ReactCompositeComponentMixin = {
   mountComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'mountComponent',
-    function(rootID, transaction) {
-      ReactComponent.Mixin.mountComponent.call(this, rootID, transaction);
+    function(rootID, transaction, mountDepth) {
+      ReactComponent.Mixin.mountComponent.call(
+        this,
+        rootID,
+        transaction,
+        mountDepth
+      );
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
       this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
@@ -567,7 +573,11 @@ var ReactCompositeComponentMixin = {
 
       // Done with mounting, `setState` will now trigger UI changes.
       this._compositeLifeCycleState = null;
-      var markup = this._renderedComponent.mountComponent(rootID, transaction);
+      var markup = this._renderedComponent.mountComponent(
+        rootID,
+        transaction,
+        mountDepth + 1
+      );
       if (this.componentDidMount) {
         transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
       }
@@ -788,7 +798,11 @@ var ReactCompositeComponentMixin = {
         var thisID = this._rootNodeID;
         var currentComponentID = currentComponent._rootNodeID;
         currentComponent.unmountComponent();
-        var nextMarkup = nextComponent.mountComponent(thisID, transaction);
+        var nextMarkup = nextComponent.mountComponent(
+          thisID,
+          transaction,
+          this._mountDepth + 1
+        );
         ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           currentComponentID,
           nextMarkup

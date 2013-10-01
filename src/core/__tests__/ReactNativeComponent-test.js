@@ -290,7 +290,7 @@ describe('ReactNativeComponent', function() {
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();
         var stubComponent = new StubNativeComponent(props);
-        return stubComponent.mountComponent('test', transaction);
+        return stubComponent.mountComponent('test', transaction, 0);
       };
     });
 

@@ -34,7 +34,7 @@ function renderComponentToString(component, callback) {
   transaction.reinitializeTransaction();
   try {
     transaction.perform(function() {
-      var markup = component.mountComponent(id, transaction);
+      var markup = component.mountComponent(id, transaction, 0);
       markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       callback(markup);
     }, null);
