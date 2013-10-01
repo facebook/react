@@ -54,7 +54,7 @@ function isEventSupported(eventNameSuffix, capture) {
   var isSupported = eventName in element;
 
   if (!isSupported) {
-    element.setAttribute(eventName, '');
+    element.setAttribute(eventName, 'return;');
     isSupported = typeof element[eventName] === 'function';
     if (typeof element[eventName] !== 'undefined') {
       element[eventName] = undefined;
