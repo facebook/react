@@ -49,6 +49,8 @@ var INVALID_PROPERTY_ERRORS = {
  */
 var textContentAccessor = getTextContentAccessor() || 'NA';
 
+var LEADING_SPACE = /^ /;
+
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
  * `ReactComponent.DOMIDOperations`.
@@ -133,17 +135,17 @@ var ReactDOMIDOperations = {
   },
 
   /**
-   * Updates a DOM node's innerHTML set by `props.dangerouslySetInnerHTML`.
+   * Updates a DOM node's innerHTML.
    *
    * @param {string} id ID of the node to update.
-   * @param {object} html An HTML object with the `__html` property.
+   * @param {string} html An HTML string.
    * @internal
    */
   updateInnerHTMLByID: function(id, html) {
     var node = ReactMount.getNode(id);
     // HACK: IE8- normalize whitespace in innerHTML, removing leading spaces.
     // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
-    node.innerHTML = (html && html.__html || '').replace(/^ /g, '&nbsp;');
+    node.innerHTML = html.replace(LEADING_SPACE, '&nbsp;');
   },
 
   /**

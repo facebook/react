@@ -152,12 +152,35 @@ describe('ReactNativeComponent', function() {
 
     it("should empty element when removing innerHTML", function() {
       var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: ":)"}} />
+        <div dangerouslySetInnerHTML={{__html: ':)'}} />
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual(':)');
       stub.receiveProps({}, transaction);
       expect(stub.getDOMNode().innerHTML).toEqual('');
+    });
+
+    it("should transition from string content to innerHTML", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div>hello</div>
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual('hello');
+      stub.receiveProps(
+        {dangerouslySetInnerHTML: {__html: 'goodbye'}},
+        transaction
+      );
+      expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
+    });
+
+    it("should transition from innerHTML to string content", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
+      stub.receiveProps({children: 'adieu'}, transaction);
+      expect(stub.getDOMNode().innerHTML).toEqual('adieu');
     });
 
     it("should not incur unnecessary DOM mutations", function() {

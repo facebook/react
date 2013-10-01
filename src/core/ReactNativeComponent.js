@@ -42,7 +42,6 @@ var registrationNames = ReactEventEmitter.registrationNames;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
-var DANGEROUSLY_SET_INNER_HTML = keyOf({dangerouslySetInnerHTML: null});
 var STYLE = keyOf({style: null});
 
 /**
@@ -237,15 +236,11 @@ ReactNativeComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        // http://jsperf.com/emptying-speed
-        ReactComponent.DOMIDOperations.updateTextContentByID(
-          this._rootNodeID,
-          ''
-        );
       } else if (registrationNames[propKey]) {
         deleteListener(this._rootNodeID, propKey);
-      } else {
+      } else if (
+          DOMProperty.isStandardName[propKey] ||
+          DOMProperty.isCustomAttribute(propKey)) {
         ReactComponent.DOMIDOperations.deletePropertyByID(
           this._rootNodeID,
           propKey
@@ -283,15 +278,6 @@ ReactNativeComponent.Mixin = {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
-      } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
-        var lastHtml = lastProp && lastProp.__html;
-        var nextHtml = nextProp && nextProp.__html;
-        if (lastHtml !== nextHtml) {
-          ReactComponent.DOMIDOperations.updateInnerHTMLByID(
-            this._rootNodeID,
-            nextProp
-          );
-        }
       } else if (registrationNames[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else if (
@@ -322,31 +308,45 @@ ReactNativeComponent.Mixin = {
   _updateDOMChildren: function(lastProps, transaction) {
     var nextProps = this.props;
 
-    var lastUsedContent =
+    var lastContent =
       CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-    var contentToUse =
+    var nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
+    var lastHtml =
+      lastProps.dangerouslySetInnerHTML &&
+      lastProps.dangerouslySetInnerHTML.__html;
+    var nextHtml =
+      nextProps.dangerouslySetInnerHTML &&
+      nextProps.dangerouslySetInnerHTML.__html;
+
     // Note the use of `!=` which checks for null or undefined.
+    var lastChildren = lastContent != null ? null : lastProps.children;
+    var nextChildren = nextContent != null ? null : nextProps.children;
 
-    var lastUsedChildren =
-      lastUsedContent != null ? null : lastProps.children;
-    var childrenToUse = contentToUse != null ? null : nextProps.children;
+    // If we're switching from children to content/html or vice versa, remove
+    // the old content
+    var lastHasContentOrHtml = lastContent != null || lastHtml != null;
+    var nextHasContentOrHtml = nextContent != null || nextHtml != null;
+    if (lastChildren != null && nextChildren == null) {
+      this.updateChildren(null, transaction);
+    } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
+      this.updateTextContent('');
+    }
 
-    if (contentToUse != null) {
-      var childrenRemoved = lastUsedChildren != null && childrenToUse == null;
-      if (childrenRemoved) {
-        this.updateChildren(null, transaction);
+    if (nextContent != null) {
+      if (lastContent !== nextContent) {
+        this.updateTextContent('' + nextContent);
       }
-      if (lastUsedContent !== contentToUse) {
-        this.updateTextContent('' + contentToUse);
+    } else if (nextHtml != null) {
+      if (lastHtml !== nextHtml) {
+        ReactComponent.DOMIDOperations.updateInnerHTMLByID(
+          this._rootNodeID,
+          nextHtml
+        );
       }
-    } else {
-      var contentRemoved = lastUsedContent != null && contentToUse == null;
-      if (contentRemoved) {
-        this.updateTextContent('');
-      }
-      this.updateChildren(flattenChildren(nextProps.children), transaction);
+    } else if (nextChildren != null) {
+      this.updateChildren(flattenChildren(nextChildren), transaction);
     }
   },
 
