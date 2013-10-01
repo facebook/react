@@ -57,7 +57,7 @@ function getIESelection(node) {
  * @param {DOMElement} node
  */
 function getModernSelection(node) {
-  var selection = global.getSelection();
+  var selection = window.getSelection();
   var anchorNode = selection.anchorNode;
   var anchorOffset = selection.anchorOffset;
   var focusNode = selection.focusNode;
@@ -125,7 +125,7 @@ function setIESelection(node, offsets) {
  * @param {object} offsets
  */
 function setModernSelection(node, offsets) {
-  var selection = global.getSelection();
+  var selection = window.getSelection();
 
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
@@ -149,13 +149,19 @@ var ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */
-  get: document.selection ? getIESelection : getModernSelection,
+  get: function(node) {
+    var getSelection = document.selection ? getIESelection : getModernSelection;
+    return getSelection(node);
+  },
 
   /**
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  set: document.selection ? setIESelection : setModernSelection
+  set: function(node, offsets) {
+    var setSelection = document.selection ? setIESelection : setModernSelection;
+    setSelection(node, offsets);
+  }
 };
 
 module.exports = ReactDOMSelection;

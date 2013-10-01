@@ -52,11 +52,18 @@ mixInto(ReactTextComponent, {
    * any features besides containing text content.
    *
    * @param {string} rootID DOM ID of the root node.
+   * @param {ReactReconcileTransaction} transaction
+   * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID) {
-    ReactComponent.Mixin.mountComponent.call(this, rootID);
+  mountComponent: function(rootID, transaction, mountDepth) {
+    ReactComponent.Mixin.mountComponent.call(
+      this,
+      rootID,
+      transaction,
+      mountDepth
+    );
     return (
       '<span ' + ReactMount.ATTR_NAME + '="' + rootID + '">' +
         escapeTextForBrowser(this.props.text) +

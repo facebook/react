@@ -36,7 +36,6 @@ var DefaultDOMPropertyConfig = {
     accessKey: null,
     accept: null,
     action: null,
-    ajaxify: MUST_USE_ATTRIBUTE,
     allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     allowTransparency: MUST_USE_ATTRIBUTE,
     alt: null,

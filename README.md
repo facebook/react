@@ -36,7 +36,7 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.4.1.min.js"></script>
+<script src="http://fb.me/react-0.4.1.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
 <script src="http://fb.me/JSXTransformer-0.4.1.js"></script>
 ```

@@ -335,10 +335,11 @@ var ReactComponent = {
      *
      * @param {string} rootID DOM ID of the root node.
      * @param {ReactReconcileTransaction} transaction
+     * @param {number} mountDepth number of components in the owner hierarchy.
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
      */
-    mountComponent: function(rootID, transaction) {
+    mountComponent: function(rootID, transaction, mountDepth) {
       invariant(
         !this.isMounted(),
         'mountComponent(%s, ...): Can only mount an unmounted component.',
@@ -350,6 +351,7 @@ var ReactComponent = {
       }
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
+      this._mountDepth = mountDepth;
       // Effectively: return '';
     },
 
@@ -485,7 +487,7 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
-      var markup = this.mountComponent(rootID, transaction);
+      var markup = this.mountComponent(rootID, transaction, 0);
       ReactComponent.mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 
