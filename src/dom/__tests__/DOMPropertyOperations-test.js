@@ -127,9 +127,9 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should set values as attributes if necessary', function() {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'ajaxify', '#');
-      expect(stubNode.getAttribute('ajaxify')).toBe('#');
-      expect(stubNode.ajaxify).toBeUndefined();
+      DOMPropertyOperations.setValueForProperty(stubNode, 'role', '#');
+      expect(stubNode.getAttribute('role')).toBe('#');
+      expect(stubNode.role).toBeUndefined();
     });
 
     it('should remove for falsey boolean properties', function() {
