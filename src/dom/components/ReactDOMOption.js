@@ -21,7 +21,7 @@
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
-// Store a reference to the <option> `ReactNativeComponent`.
+// Store a reference to the <option> `ReactDOMComponent`.
 var option = ReactDOM.option;
 
 /**

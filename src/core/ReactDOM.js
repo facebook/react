@@ -19,7 +19,7 @@
 
 "use strict";
 
-var ReactNativeComponent = require('ReactNativeComponent');
+var ReactDOMComponent = require('ReactDOMComponent');
 
 var mergeInto = require('mergeInto');
 var objMapKeyVal = require('objMapKeyVal');
@@ -41,7 +41,7 @@ var objMapKeyVal = require('objMapKeyVal');
  */
 function createDOMComponentClass(tag, omitClose) {
   var Constructor = function() {};
-  Constructor.prototype = new ReactNativeComponent(tag, omitClose);
+  Constructor.prototype = new ReactDOMComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
 
   var ConvenienceConstructor = function(props, children) {
@@ -54,7 +54,7 @@ function createDOMComponentClass(tag, omitClose) {
 }
 
 /**
- * Creates a mapping from supported HTML tags to `ReactNativeComponent` classes.
+ * Creates a mapping from supported HTML tags to `ReactDOMComponent` classes.
  * This is also accessible via `React.DOM`.
  *
  * @public

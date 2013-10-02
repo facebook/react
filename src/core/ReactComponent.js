@@ -28,12 +28,6 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 
 /**
- * Prop key that references a component's owner.
- * @private
- */
-var OWNER = '{owner}';
-
-/**
  * Props key that determines if a component's key was already validated.
  * @private
  */
@@ -93,7 +87,8 @@ function validateExplicitKey(component) {
   if (!component.isOwnedBy(ReactCurrentOwner.current)) {
     // Name of the component that originally created this child.
     var childOwnerName =
-      component.props[OWNER] && component.props[OWNER].constructor.displayName;
+      component.props.__owner__ &&
+      component.props.__owner__.constructor.displayName;
 
     // Usually the current owner is the offender, but if it accepts
     // children as a property, it may be the creator of the child that's
@@ -271,7 +266,7 @@ var ReactComponent = {
      */
     replaceProps: function(props, callback) {
       invariant(
-        !this.props[OWNER],
+        !this.props.__owner__,
         'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
         'component with an owner. This is an anti-pattern since props will ' +
         'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -299,7 +294,7 @@ var ReactComponent = {
     construct: function(initialProps, children) {
       this.props = initialProps || {};
       // Record the component responsible for creating this component.
-      this.props[OWNER] = ReactCurrentOwner.current;
+      this.props.__owner__ = ReactCurrentOwner.current;
       // All components start unmounted.
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
 
@@ -347,7 +342,7 @@ var ReactComponent = {
       );
       var props = this.props;
       if (props.ref != null) {
-        ReactOwner.addComponentAsRefTo(this, props.ref, props[OWNER]);
+        ReactOwner.addComponentAsRefTo(this, props.ref, props.__owner__);
       }
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
@@ -372,7 +367,7 @@ var ReactComponent = {
       );
       var props = this.props;
       if (props.ref != null) {
-        ReactOwner.removeComponentAsRefFrom(this, props.ref, props[OWNER]);
+        ReactOwner.removeComponentAsRefFrom(this, props.ref, props.__owner__);
       }
       ReactComponent.unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
@@ -438,15 +433,16 @@ var ReactComponent = {
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`.
-      if (props[OWNER] !== prevProps[OWNER] || props.ref !== prevProps.ref) {
+      if (props.__owner__ !== prevProps.__owner__ ||
+          props.ref !== prevProps.ref) {
         if (prevProps.ref != null) {
           ReactOwner.removeComponentAsRefFrom(
-            this, prevProps.ref, prevProps[OWNER]
+            this, prevProps.ref, prevProps.__owner__
           );
         }
         // Correct, even if the owner is the same, and only the ref has changed.
         if (props.ref != null) {
-          ReactOwner.addComponentAsRefTo(this, props.ref, props[OWNER]);
+          ReactOwner.addComponentAsRefTo(this, props.ref, props.__owner__);
         }
       }
     },
@@ -500,7 +496,7 @@ var ReactComponent = {
      * @internal
      */
     isOwnedBy: function(owner) {
-      return this.props[OWNER] === owner;
+      return this.props.__owner__ === owner;
     },
 
     /**
@@ -512,7 +508,7 @@ var ReactComponent = {
      * @internal
      */
     getSiblingByRef: function(ref) {
-      var owner = this.props[OWNER];
+      var owner = this.props.__owner__;
       if (!owner || !owner.refs) {
         return null;
       }

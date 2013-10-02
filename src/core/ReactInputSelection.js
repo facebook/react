@@ -20,6 +20,8 @@
 
 var ReactDOMSelection = require('ReactDOMSelection');
 
+var nodeContains = require('nodeContains');
+
 // It is not safe to read the document.activeElement property in IE if there's
 // nothing focused.
 function getActiveElement() {
@@ -30,7 +32,7 @@ function getActiveElement() {
 }
 
 function isInDocument(node) {
-  return document.documentElement.contains(node);
+  return nodeContains(document.documentElement, node);
 }
 
 /**

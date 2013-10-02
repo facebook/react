@@ -30,7 +30,7 @@ var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
 
 if (__DEV__) {
   var reactProps = {
-    '{owner}': true,
+    __owner__: true,
     children: true,
     dangerouslySetInnerHTML: true,
     key: true,

@@ -27,7 +27,7 @@ var ReactMount = require('ReactMount');
 var invariant = require('invariant');
 var merge = require('merge');
 
-// Store a reference to the <input> `ReactNativeComponent`.
+// Store a reference to the <input> `ReactDOMComponent`.
 var input = ReactDOM.input;
 
 var instancesByReactID = {};

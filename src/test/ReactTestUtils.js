@@ -122,7 +122,7 @@ var ReactTestUtils = {
    * Like scryRenderedDOMComponentsWithClass but expects there to be one result,
    * and returns that one result, or throws exception if there is any other
    * number of matches besides one.
-   * @return {!ReactNativeComponent} The one match.
+   * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithClass: function(root, className) {
     var all =
@@ -150,7 +150,7 @@ var ReactTestUtils = {
    * Like scryRenderedDOMComponentsWithTag but expects there to be one result,
    * and returns that one result, or throws exception if there is any other
    * number of matches besides one.
-   * @return {!ReactNativeComponent} The one match.
+   * @return {!ReactDOMComponent} The one match.
    */
   findRenderedDOMComponentWithTag: function(root, tagName) {
     var all = ReactTestUtils.scryRenderedDOMComponentsWithTag(root, tagName);
@@ -208,9 +208,9 @@ var ReactTestUtils = {
 
   /**
    * Simulates a top level event being dispatched from a raw event that occured
-   * on the `ReactNativeComponent` `comp`.
+   * on the `ReactDOMComponent` `comp`.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`.
-   * @param comp {!ReactNativeComponent}
+   * @param comp {!ReactDOMComponent}
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnDOMComponent: function(topLevelType, comp, fakeNativeEvent) {
@@ -243,10 +243,10 @@ var ReactTestUtils = {
 /**
  * Exports:
  *
- * - `ReactTestUtils.Simulate.click(Element/ReactNativeComponent)`
- * - `ReactTestUtils.Simulate.mouseMove(Element/ReactNativeComponent)`
- * - `ReactTestUtils.Simulate.mouseIn/ReactNativeComponent)`
- * - `ReactTestUtils.Simulate.mouseOut(Element/ReactNativeComponent)`
+ * - `ReactTestUtils.Simulate.click(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.mouseMove(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.mouseIn/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.mouseOut(Element/ReactDOMComponent)`
  * - ... (All keys from `EventConstants.topLevelTypes`)
  *
  * Note: Top level event types are a subset of the entire set of handler types
@@ -287,7 +287,7 @@ for (eventType in topLevelTypes) {
   var convenienceName = eventType.indexOf('top') === 0 ?
     eventType.charAt(3).toLowerCase() + eventType.substr(4) : eventType;
   /**
-   * @param {!Element || ReactNativeComponent} domComponentOrNode
+   * @param {!Element || ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
    */
   ReactTestUtils.Simulate[convenienceName] = makeSimulator(eventType);
