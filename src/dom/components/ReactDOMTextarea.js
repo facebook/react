@@ -112,7 +112,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    return textarea(props, this.state.initialValue);
+    return textarea(props, String(this.state.initialValue));
   },
 
   componentDidUpdate: function(prevProps, prevState, rootNode) {

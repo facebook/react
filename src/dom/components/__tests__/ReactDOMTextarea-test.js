@@ -69,6 +69,16 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('false');
   });
 
+  it('should allow setting `defaultValue` to `false`', function () {
+    var stub = <textarea defaultValue="giraffe" />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('giraffe');
+
+    stub.replaceProps({value: false});
+    expect(node.value).toEqual('false');
+  });
+
   it('should display "foobar" for `defaultValue` of `objectToString`', function(){
     var objectToString = {
       toString:function(){
@@ -97,6 +107,13 @@ describe('ReactDOMTextarea', function() {
     var node = renderTextarea(stub);
 
     expect(node.value).toBe('0');
+  });
+
+  it('should display "true" for `value` of `true`', function() {
+    var stub = <textarea type="text" value={true} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('true');
   });
 
   it('should display "false" for `value` of `false`', function() {
@@ -147,6 +164,13 @@ describe('ReactDOMTextarea', function() {
     var node = renderTextarea(<textarea>{17}</textarea>);
     expect(console.warn.argsForCall.length).toBe(1);
     expect(node.value).toBe('17');
+  });
+
+  it('should allow booleans as children', function () {
+    spyOn(console, 'warn');
+    var node = renderTextarea(<textarea>{false}</textarea>);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(node.value).toBe('false');
   });
 
   it('should throw with multiple or invalid children', function() {
