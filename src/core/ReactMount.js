@@ -18,10 +18,13 @@
 
 "use strict";
 
-var invariant = require('invariant');
-var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+
+var $ = require('$');
+var getReactRootElementInContainer = require('getReactRootElementInContainer');
+var invariant = require('invariant');
+var nodeContains = require('nodeContains');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
@@ -30,8 +33,6 @@ var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
-
-var $ = require('$');
 
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
@@ -140,36 +141,9 @@ function isValid(node, id) {
     );
 
     var container = ReactMount.findReactContainerForID(id);
-    if (container && contains(container, node)) {
+    if (container && nodeContains(container, node)) {
       return true;
     }
-  }
-
-  return false;
-}
-
-function contains(ancestor, descendant) {
-  if (ancestor.contains) {
-    // Supported natively in virtually all browsers, but not in jsdom.
-    return ancestor.contains(descendant);
-  }
-
-  if (descendant === ancestor) {
-    return true;
-  }
-
-  if (descendant.nodeType === 3) {
-    // If descendant is a text node, start from descendant.parentNode
-    // instead, so that we can assume all ancestors worth considering are
-    // element nodes with nodeType === 1.
-    descendant = descendant.parentNode;
-  }
-
-  while (descendant && descendant.nodeType === 1) {
-    if (descendant === ancestor) {
-      return true;
-    }
-    descendant = descendant.parentNode;
   }
 
   return false;
