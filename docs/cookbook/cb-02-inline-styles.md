@@ -16,7 +16,7 @@ Instead of writing a string, create an object whose key is the camelCased versio
 
 var divStyle = {
   color: 'white',
-  backgroundColor: 'lightblue',
+  backgroundImage: 'url(' + imgUrl + ')',
   WebkitTransition: 'all' // note the capital 'W' here
 };
 

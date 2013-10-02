@@ -12,7 +12,7 @@ In React, inline styles are not specified as a string, but as an object whose ke
 
 var divStyle = {
   color: 'white',
-  backgroundColor: 'lightblue',
+  backgroundImage: 'url(' + imgUrl + ')',
   WebkitTransition: 'all' // note the capital 'W' here
 };
 
