@@ -7,6 +7,91 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #9</title>
+				<description>&lt;p&gt;We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&amp;#39;ll probably organize more in the future.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/react-hackathon.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;h2 id=&quot;react-hackathon-winner&quot;&gt;React Hackathon Winner&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://bold-it.com/&quot;&gt;Alex Swan&lt;/a&gt; implemented &lt;a href=&quot;http://qu.izti.me/&quot;&gt;Qu.izti.me&lt;/a&gt;, a multi-player quiz game. It is real-time via Web Socket and mobile friendly.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The game itself is pretty simple. People join the &amp;quot;room&amp;quot; by going to &lt;a href=&quot;(http://qu.izti.me/&quot;&gt;http://qu.izti.me&lt;/a&gt; on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.&lt;/p&gt;
+
+&lt;p&gt;In my opinion, Socket.io and React go together like chocolate and peanut butter. The page was always an accurate representation of the game object.
+&lt;figure&gt;&lt;a href=&quot;http://bold-it.com/javascript/facebook-react-example/&quot;&gt;&lt;img src=&quot;/react/img/blog/quiztime.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://bold-it.com/javascript/facebook-react-example/&quot;&gt;Read More...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;jsconf-eu-talk-rethinking-best-practices&quot;&gt;JSConf EU Talk: Rethinking Best Practices&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; presented React at JSConf EU. He covers three controversial design decisions of React:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Build &lt;strong&gt;components&lt;/strong&gt;, not templates&lt;/li&gt;
+&lt;li&gt;Re-render the whole app on every update&lt;/li&gt;
+&lt;li&gt;Virtual DOM&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The video will be available soon on the &lt;a href=&quot;http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html&quot;&gt;JSConf EU website&lt;/a&gt;, but in the meantime, here are Pete&amp;#39;s slides:&lt;/p&gt;
+
+&lt;figure&gt;&lt;iframe src=&quot;http://www.slideshare.net/slideshow/embed_code/26589373&quot; width=&quot;550&quot; height=&quot;450&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
+&lt;h2 id=&quot;pump---clojure-bindings-for-react&quot;&gt;Pump - Clojure bindings for React&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://solovyov.net/&quot;&gt;Alexander Solovyov&lt;/a&gt; has been working on React bindings for ClojureScript. This is really exciting as it is using &amp;quot;native&amp;quot; ClojureScript data structures.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;ruby language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ns&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;your&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macros&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pump&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;def&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macros&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;defr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pump&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;core&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;defr&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;Component&lt;/span&gt;
+  &lt;span class=&quot;ss&quot;&gt;:get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;initial&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;#(identity {:some-value &amp;quot;&amp;quot;})&lt;/span&gt;
+
+  &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;component&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;
+
+  &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;test&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/piranha/pump&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;h2 id=&quot;jsxhint&quot;&gt;JSXHint&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://blog.selfassembled.org/&quot;&gt;Todd Kennedy&lt;/a&gt; working at &lt;a href=&quot;http://www.condenast.com/&quot;&gt;Cond&amp;eacute; Nast&lt;/a&gt; implemented a wrapper on-top of &lt;a href=&quot;http://www.jshint.com/&quot;&gt;JSHint&lt;/a&gt; that first converts JSX files to JS.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;A wrapper around JSHint to allow linting of files containg JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;npm install -g jsxhint
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/CondeNast/JSXHint&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;turbo-react&quot;&gt;Turbo React&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/ssorallen&quot;&gt;Ross Allen&lt;/a&gt; working at &lt;a href=&quot;http://mesosphere.io/&quot;&gt;Mesosphere&lt;/a&gt; combined &lt;a href=&quot;https://github.com/rails/turbolinks/&quot;&gt;Turbolinks&lt;/a&gt;, a library used by Ruby on Rails to speed up page transition, and React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;&amp;quot;Re-request this page&amp;quot; is just a link to the current page. When you click it, Turbolinks intercepts the GET request and fetchs the full page via XHR.&lt;/p&gt;
+
+&lt;p&gt;The panel is rendered with a random panel- class on each request, and the progress bar gets a random widthX class.&lt;/p&gt;
+
+&lt;p&gt;With Turbolinks alone, the entire &lt;body&gt; would be replaced, and transitions would not happen. In this little demo though, React adds and removes classes and text, and the attribute changes are animated with CSS transitions. The DOM is otherwise left intact.
+&lt;figure&gt;&lt;a href=&quot;https://turbo-react.herokuapp.com/&quot;&gt;&lt;img src=&quot;/react/img/blog/turboreact.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://turbo-react.herokuapp.com/&quot;&gt;Check out the demo...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;reactive-table&quot;&gt;Reactive Table&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt; continues his series of blog posts about React. This one is an introduction tutorial on rendering a simple table with React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;React is all about components. So let&amp;#39;s build one.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s call it Table (to avoid any confusion what the component is about).&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Table&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;cm&quot;&gt;/*stuff goeth here*/&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You see that React components are defined using a regular JS object. Some properties and methods of the object such as render() have special meanings, the rest is upforgrabs.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/reactive-table/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+</description>
+				<pubDate>2013-10-03T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/10/03/community-roundup-9.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/03/community-roundup-9.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #8</title>
 				<description>&lt;p&gt;A lot has happened in the month since our last update. Here are some of the more interesting things we&amp;#39;ve found. But first, we have a couple updates before we share links.&lt;/p&gt;
 
@@ -505,74 +590,6 @@ If you were using React without JSX previously, your code should still work.&lt;
 				<pubDate>2013-07-11T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #4</title>
-				<description>&lt;p&gt;React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.&lt;/p&gt;
-&lt;h2 id=&quot;khan-academy&quot;&gt;Khan Academy&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://bjk5.com/&quot;&gt;Ben Kamens&lt;/a&gt; explains how &lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; and &lt;a href=&quot;http://joelburget.com/&quot;&gt;Joel Burget&lt;/a&gt; are promoting React inside of &lt;a href=&quot;https://www.khanacademy.org/&quot;&gt;Khan Academy&lt;/a&gt;. They now have three projects in the works using React.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Recently two Khan Academy devs dropped into our team chat and said they were gonna use React to write a new feature. They even hinted that we may want to adopt it product-wide.&lt;/p&gt;
-
-&lt;p&gt;&amp;quot;The library is only a week old. It&amp;#39;s a brand new way of thinking about things. We&amp;#39;re the first to use it outside of Facebook. Heck, even the React devs were surprised to hear we&amp;#39;re using this in production!!!&amp;quot;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;The best part is the demo of how React reconciliation process makes live editing more user-friendly.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Our renderer, post-React, is on the left. A typical math editor&amp;#39;s preview is on the right.
-&lt;figure&gt;&lt;a href=&quot;http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology&quot;&gt;&lt;img src=&quot;/react/img/blog/monkeys.gif&quot; width=&quot;70%&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;react-snippets&quot;&gt;React Snippets&lt;/h2&gt;
-&lt;p&gt;Over the past several weeks, members of our team, &lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; and &lt;a href=&quot;http://zpao.com/&quot;&gt;Paul O&amp;#39;Shannessy&lt;/a&gt;, answered many questions that were asked in the &lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;React group&lt;/a&gt;. They give a good overview of how to integrate React with other libraries and APIs through the use of &lt;a href=&quot;/react/docs/reusable-components.html&quot;&gt;Mixins&lt;/a&gt; and &lt;a href=&quot;/react/docs/working-with-the-browser.html&quot;&gt;Lifecycle Methods&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk&quot;&gt;Listening Scroll Event&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/aabeL/1/&quot;&gt;JSFiddle&lt;/a&gt;: Basically I&amp;#39;ve given you two mixins. The first lets you react to global scroll events. The second is, IMO, much more useful: it gives you scroll start and scroll end events, which you can use with setState() to create components that react based on whether the user is scrolling or not.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/RVAY_eQmdpo&quot;&gt;Fade-in Transition&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/ufe8k/1/&quot;&gt;JSFiddle&lt;/a&gt;: Creating a new &lt;code&gt;&amp;lt;FadeInWhenAdded&amp;gt;&lt;/code&gt; component and using jQuery &lt;code&gt;.fadeIn()&lt;/code&gt; function on the DOM node.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/R8f5L/5/&quot;&gt;JSFiddle&lt;/a&gt;: Using CSS transition instead.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/pyUZBRWcHB4&quot;&gt;Socket.IO Integration&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://gist.github.com/zpao/5686416&quot;&gt;Gist&lt;/a&gt;: The big thing to notice is that my component is pretty dumb (it doesn&amp;#39;t have to be but that&amp;#39;s how I chose to model it). All it does is render itself based on the props that are passed in. renderOrUpdate is where the &amp;quot;magic&amp;quot; happens.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://gist.github.com/petehunt/5687230&quot;&gt;Gist&lt;/a&gt;: This example is doing everything -- including the IO -- inside of a single React component.&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://gist.github.com/petehunt/5687276&quot;&gt;Gist&lt;/a&gt;: One pattern that we use at Instagram a lot is to employ separation of concerns and consolidate I/O and state into components higher in the hierarchy to keep the rest of the components mostly stateless and purely display.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/mHfBGI3Qwz4&quot;&gt;Sortable jQuery Plugin Integration&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;http://jsfiddle.net/LQxy7/&quot;&gt;JSFiddle&lt;/a&gt;: Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;introduction-to-react-screencast&quot;&gt;Introduction to React Screencast&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; recorded himself implementing a simple &lt;code&gt;&amp;lt;Blink&amp;gt;&lt;/code&gt; tag in React.&lt;/p&gt;
-
-&lt;figure&gt;&lt;iframe src=&quot;http://player.vimeo.com/video/67248575&quot; width=&quot;500&quot; height=&quot;340&quot; frameborder=&quot;0&quot; webkitAllowFullScreen mozallowfullscreen allowFullScreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;snake-in-react&quot;&gt;Snake in React&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://tomocchino.com/&quot;&gt;Tom Occhino&lt;/a&gt; implemented Snake in 150 lines with React.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/tomocchino/react-snake/blob/master/src/snake.js&quot;&gt;Check the source on Github&lt;/a&gt;
-&lt;figure&gt;&lt;a href=&quot;http://tomocchino.github.io/react-snake/&quot;&gt;&lt;img src=&quot;/react/img/blog/snake.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-07-03T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/07/03/community-roundup-4.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/03/community-roundup-4.html</guid>
 			</item>
 		
 	</channel>
