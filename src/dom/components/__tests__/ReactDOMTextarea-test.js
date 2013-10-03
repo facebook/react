@@ -136,6 +136,23 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('foobar');
   });
 
+  it('should display "false" for `value` of `false`', function() {
+    var stub = <textarea type="text" value={false} />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('false');
+  });
+
+  it('should allow setting `value` to `false`', function () {
+    var stub = <textarea value="giraffe" />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('giraffe');
+
+    stub.replaceProps({value: false});
+    expect(node.value).toEqual('false');
+  });
+
   it('should properly control a value of number `0`', function() {
     var stub = <textarea value={0} />;
     var node = renderTextarea(stub);

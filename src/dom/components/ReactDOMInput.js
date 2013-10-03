@@ -74,7 +74,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       this.props.checked != null ? this.props.checked : this.state.checked;
 
     var value = this.getValue();
-    props.value = value != null && value !== false ?
+    props.value = value != null ?
       '' + value :
       this.state.value;
 
@@ -110,7 +110,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        value !== false ? '' + value : 'false'
+        value
       );
     }
   },

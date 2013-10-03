@@ -30,6 +30,8 @@ var ESCAPE_LOOKUP = {
   "/": "&#x2f;"
 };
 
+var ESCAPE_REGEX = /[&><"'\/]/g;
+
 function escaper(match) {
   return ESCAPE_LOOKUP[match];
 }
@@ -37,25 +39,11 @@ function escaper(match) {
 /**
  * Escapes text to prevent scripting attacks.
  *
- * @param {number|string} text Text value to escape.
+ * @param {*} text Text value to escape.
  * @return {string} An escaped string.
  */
 function escapeTextForBrowser(text) {
-  var type = typeof text;
-
-  if(type === 'object'){
-    text = text.toString();
-  }
-
-  if (text === '') {
-    return '';
-  } else {
-    if (type === 'string') {
-      return text.replace(/[&><"'\/]/g, escaper);
-    } else {
-      return (''+text).replace(/[&><"'\/]/g, escaper);
-    }
-  }
+  return (''+text).replace(ESCAPE_REGEX, escaper);
 }
 
 module.exports = escapeTextForBrowser;
