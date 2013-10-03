@@ -42,10 +42,11 @@ function escaper(match) {
  */
 function escapeTextForBrowser(text) {
   var type = typeof text;
-  invariant(
-    type !== 'object',
-    'escapeTextForBrowser(...): Attempted to escape an object.'
-  );
+
+  if(type === 'object'){
+    text = text.toString();
+  }
+
   if (text === '') {
     return '';
   } else {

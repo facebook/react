@@ -50,6 +50,16 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
+  it('should allow setting `defaultValue` to `false`', function () {
+    var stub = <input type="text" defaultValue="giraffe" />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('giraffe');
+
+    stub.replaceProps({value: false});
+    expect(node.value).toEqual('false');
+  });
+
   it('should display "true" for `defaultValue` of `true`', function() {
     var stub = <input type="text" defaultValue={true} />;
     var node = renderTextInput(stub);
@@ -84,11 +94,28 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
+  it('should display "true" for `value` of `true`', function() {
+    var stub = <input type="text" value={true} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('true');
+  });
+
   it('should display "false" for `value` of `false`', function() {
     var stub = <input type="text" value={false} />;
     var node = renderTextInput(stub);
 
     expect(node.value).toBe('false');
+  });
+
+  it("should allow changing `value` to `false`", function(){
+    var stub = <input type="text" value="yolo" />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('yolo');
+
+    stub.replaceProps({value:false});
+    expect(node.value).toEqual('false');
   });
 
   it('should display "foobar" for `value` of `objectToString`', function(){
