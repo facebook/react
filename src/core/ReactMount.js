@@ -395,7 +395,7 @@ var ReactMount = {
     if (!component) {
       return false;
     }
-    ReactMount.unmountComponentFromNode(component, container);
+    ReactMount.unmountComponentFromNode(component, container, true);
     delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];
     if (__DEV__) {
@@ -423,16 +423,19 @@ var ReactMount = {
    *
    * @param {ReactComponent} instance React component instance.
    * @param {DOMElement} container DOM element to unmount from.
+   * @param {Boolean} ignoreDocument If true do not remove document's children
    * @final
    * @internal
    * @see {ReactMount.unmountComponentAtNode}
    */
-  unmountComponentFromNode: function(instance, container) {
+  unmountComponentFromNode: function(instance, container, ignoreDocument) {
     instance.unmountComponent();
 
-    // http://jsperf.com/emptying-a-node
-    while (container.lastChild) {
-      container.removeChild(container.lastChild);
+    if (!(ignoreDocument && container.nodeType === DOC_NODE_TYPE)) {
+      // http://jsperf.com/emptying-a-node
+      while (container.lastChild) {
+        container.removeChild(container.lastChild);
+      }
     }
   },
 
