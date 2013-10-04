@@ -19,4 +19,4 @@ var divStyle = {
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
-Style keys are camelCased in order to be consistent with accessing the properties using node.style.___ in DOM. This also explains why WebkitTransition has an uppercase 'W'.
+Style keys are camelCased in order to be consistent with accessing the properties using node.style.___ in DOM. This also explains why WebkitTransition has an uppercase "W".
