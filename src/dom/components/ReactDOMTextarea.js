@@ -30,7 +30,7 @@ var merge = require('merge');
 var textarea = ReactDOM.textarea;
 
 // For quickly matching children type, to test if can be treated as content.
-var CONTENT_TYPES = {'string': true, 'number': true};
+var CONTENT_TYPES = {'string': true, 'number': true, 'boolean':true};
 
 /**
  * Implements a <textarea> native component that allows setting `value`, and
@@ -86,7 +86,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     return {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
-      initialValue: value != null ? value : defaultValue,
+      initialValue: '' + (value != null ? value : defaultValue),
       value: defaultValue
     };
   },
@@ -112,7 +112,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    return textarea(props, String(this.state.initialValue));
+    return textarea(props, this.state.initialValue);
   },
 
   componentDidUpdate: function(prevProps, prevState, rootNode) {

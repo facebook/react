@@ -80,7 +80,7 @@ runScripts = function() {
     return script.type === 'text/jsx';
   });
 
-  console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#JSX");
+  console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
   jsxScripts.forEach(function(script) {
     if (script.src) {

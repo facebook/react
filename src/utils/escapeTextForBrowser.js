@@ -19,8 +19,6 @@
 
 "use strict";
 
-var invariant = require('invariant');
-
 var ESCAPE_LOOKUP = {
   "&": "&amp;",
   ">": "&gt;",
@@ -43,7 +41,12 @@ function escaper(match) {
  * @return {string} An escaped string.
  */
 function escapeTextForBrowser(text) {
-  return (''+text).replace(ESCAPE_REGEX, escaper);
+  // short circuit for optimization
+  if (text === '') {
+    return '';
+  }
+
+  return ('' + text).replace(ESCAPE_REGEX, escaper);
 }
 
 module.exports = escapeTextForBrowser;

@@ -69,7 +69,7 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('false');
   });
 
-  it('should allow setting `defaultValue` to `false`', function () {
+  it('should allow setting `defaultValue` to `false`', function() {
     var stub = <textarea defaultValue="giraffe" />;
     var node = renderTextarea(stub);
 
@@ -79,9 +79,9 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objectToString`', function(){
+  it('should display "foobar" for `defaultValue` of `objectToString`', function() {
     var objectToString = {
-      toString:function(){
+      toString: function() {
         return "foobar";
       }
     };
