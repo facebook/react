@@ -3,7 +3,6 @@ id: introduction
 title: Cookbook Introduction
 layout: docs
 permalink: introduction.html
-next: inline-styles.html
 ---
 
 The React.js cookbook provides solutions for common questions asked when working with the React framework. It's written in the [cookbook format](http://shop.oreilly.com/category/series/cookbooks.do) commonly used by O'Reilly Media. See [Inline Styles](inline-styles.html) recipe as an example.
