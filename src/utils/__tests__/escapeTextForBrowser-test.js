@@ -31,7 +31,12 @@ describe('escapeTextForBrowser', function() {
   });
 
   it('should escape object to string', function() {
-    var escaped = escapeTextForBrowser({toString:function(){return 'ponys';}});
+    var escaped = escapeTextForBrowser({
+      toString: function() {
+        return 'ponys';
+      }
+    });
+
     expect(escaped).toBe('ponys');
   });
 

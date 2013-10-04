@@ -116,10 +116,10 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should allow setting `value` with `objectToString`', function(){
+  it('should allow setting `value` with `objectToString`', function() {
     var objectToString = {
       animal: "giraffe",
-      toString:function(){
+      toString: function() {
         return this.animal;
       }
     };

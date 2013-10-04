@@ -41,7 +41,6 @@ var mixInto = require('mixInto');
  * @internal
  */
 var ReactTextComponent = function(initialText) {
-  alert(1);
   this.construct({text: initialText});
 };
 

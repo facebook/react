@@ -123,9 +123,9 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `value` of `objectToString`', function(){
+  it('should display "foobar" for `value` of `objectToString`', function() {
     var objectToString = {
-      toString:function(){
+      toString: function() {
         return "foobar";
       }
     };

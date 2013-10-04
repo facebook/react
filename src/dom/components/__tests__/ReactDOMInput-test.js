@@ -74,9 +74,9 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objectToString`', function(){
+  it('should display "foobar" for `defaultValue` of `objectToString`', function() {
     var objectToString = {
-      toString:function(){
+      toString: function() {
         return "foobar";
       }
     };
@@ -108,19 +108,19 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('false');
   });
 
-  it("should allow changing `value` to `false`", function(){
+  it("should allow changing `value` to `false`", function() {
     var stub = <input type="text" value="yolo" />;
     var node = renderTextInput(stub);
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value:false});
+    stub.replaceProps({value: false});
     expect(node.value).toEqual('false');
   });
 
-  it('should display "foobar" for `value` of `objectToString`', function(){
+  it('should display "foobar" for `value` of `objectToString`', function() {
     var objectToString = {
-      toString:function(){
+      toString: function() {
         return "foobar";
       }
     };
