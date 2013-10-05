@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactOnDOMReady
+ * @providesModule ReactMountReady
  */
 
 "use strict";
@@ -27,18 +27,18 @@ var mixInto = require('mixInto');
  * be notified when their DOM representations are available for use.
  *
  * This implements `PooledClass`, so you should never need to instantiate this.
- * Instead, use `ReactOnDOMReady.getPooled()`.
+ * Instead, use `ReactMountReady.getPooled()`.
  *
  * @param {?array<function>} initialCollection
- * @class ReactOnDOMReady
+ * @class ReactMountReady
  * @implements PooledClass
  * @internal
  */
-function ReactOnDOMReady(initialCollection) {
+function ReactMountReady(initialCollection) {
   this._queue = initialCollection || null;
 }
 
-mixInto(ReactOnDOMReady, {
+mixInto(ReactMountReady, {
 
   /**
    * Enqueues a callback to be invoked when `notifyAll` is invoked. This is used
@@ -90,6 +90,6 @@ mixInto(ReactOnDOMReady, {
 
 });
 
-PooledClass.addPoolingTo(ReactOnDOMReady);
+PooledClass.addPoolingTo(ReactMountReady);
 
-module.exports = ReactOnDOMReady;
+module.exports = ReactMountReady;

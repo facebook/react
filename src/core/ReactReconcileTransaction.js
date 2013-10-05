@@ -23,7 +23,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
-var ReactOnDOMReady = require('ReactOnDOMReady');
+var ReactMountReady = require('ReactMountReady');
 var Transaction = require('Transaction');
 
 var mixInto = require('mixInto');
@@ -69,7 +69,7 @@ var EVENT_SUPPRESSION = {
 };
 
 /**
- * Provides a `ReactOnDOMReady` queue for collecting `onDOMReady` callbacks
+ * Provides a `ReactMountReady` queue for collecting `onDOMReady` callbacks
  * during the performing of the transaction.
  */
 var ON_DOM_READY_QUEUEING = {
@@ -77,14 +77,14 @@ var ON_DOM_READY_QUEUEING = {
    * Initializes the internal `onDOMReady` queue.
    */
   initialize: function() {
-    this.reactOnDOMReady.reset();
+    this.reactMountReady.reset();
   },
 
   /**
    * After DOM is flushed, invoke all registered `onDOMReady` callbacks.
    */
   close: function() {
-    this.reactOnDOMReady.notifyAll();
+    this.reactMountReady.notifyAll();
   }
 };
 
@@ -115,7 +115,7 @@ var TRANSACTION_WRAPPERS = [
  */
 function ReactReconcileTransaction() {
   this.reinitializeTransaction();
-  this.reactOnDOMReady = ReactOnDOMReady.getPooled(null);
+  this.reactMountReady = ReactMountReady.getPooled(null);
 }
 
 var Mixin = {
@@ -136,10 +136,10 @@ var Mixin = {
 
   /**
    * @return {object} The queue to collect `onDOMReady` callbacks with.
-   *   TODO: convert to ReactOnDOMReady
+   *   TODO: convert to ReactMountReady
    */
-  getReactOnDOMReady: function() {
-    return this.reactOnDOMReady;
+  getReactMountReady: function() {
+    return this.reactMountReady;
   },
 
   /**
@@ -147,8 +147,8 @@ var Mixin = {
    * instance to be resused.
    */
   destructor: function() {
-    ReactOnDOMReady.release(this.reactOnDOMReady);
-    this.reactOnDOMReady = null;
+    ReactMountReady.release(this.reactMountReady);
+    this.reactMountReady = null;
   }
 };
 
