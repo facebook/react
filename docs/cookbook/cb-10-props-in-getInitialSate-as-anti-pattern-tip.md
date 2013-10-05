@@ -7,7 +7,7 @@ permalink: props-in-getInitialSate-as-anti-pattern-tip.html
 
 > Note:
 >
-> This is not really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
+> This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
 
 Using props, passed down from parent, to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
 
@@ -42,7 +42,7 @@ var MessageBox = React.createClass({
 React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
 ```
 
-Also works, for larger logic:
+For more complex logic:
 
 ```js
 /** @jsx React.DOM */

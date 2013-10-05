@@ -38,7 +38,7 @@ var MessageBox = React.createClass({
 React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
 ```
 
-Or, if the logic's big, isolate it so:
+For more complex logic:
 
 ```js
 /** @jsx React.DOM */
@@ -56,6 +56,6 @@ React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
 ```
 
 ### Discussion
-This is not really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
+This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
 
 Using props, passed down from parent, to generate state often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
