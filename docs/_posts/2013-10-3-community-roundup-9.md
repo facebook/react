@@ -13,7 +13,7 @@ We organized a React hackathon last week-end in the Facebook Seattle office. 50 
 
 [Alex Swan](http://bold-it.com/) implemented [Qu.izti.me](http://qu.izti.me/), a multi-player quiz game. It is real-time via Web Socket and mobile friendly.
 
-> The game itself is pretty simple. People join the "room" by going to [http://qu.izti.me]((http://qu.izti.me/) on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.
+> The game itself is pretty simple. People join the "room" by going to [http://qu.izti.me](http://qu.izti.me/) on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.
 >
 > In my opinion, Socket.io and React go together like chocolate and peanut butter. The page was always an accurate representation of the game object.
 ><figure>[![](/react/img/blog/quiztime.png)](http://bold-it.com/javascript/facebook-react-example/)</figure>
