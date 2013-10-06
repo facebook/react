@@ -5,9 +5,11 @@ layout: docs
 permalink: controlled-input-null-value-tip.html
 ---
 
-With a controlled input component, specifying a `value` prevents the user from changing the input unless you desire so (more info [here](forms.html)).
+Specifying the `value` prop on a [controlled component](forms.html) prevents the user from changing the input unless you desire so.
 
-You might have run into a problem where you specified a `value` but the input can still be changed. In this case, you might have accidentally set your `value` to `undefined` or `null`. The snippet below shows this phenomenon; after a second, the text can be edited.
+You might have run into a problem where `value` is specified, but the input can still be changed without consent. In this case, you might have accidentally set `value` to `undefined` or `null`.
+
+The snippet below shows this phenomenon; after a second, the text becomes editable.
 
 ```js
 /** @jsx React.DOM */

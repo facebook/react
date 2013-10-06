@@ -12,4 +12,4 @@ You're getting a parsing error (unexpected token) from JSX.
 One of the reasons might be that you didn't put a `/` for your self-closing tags. `<MyComponent />` is valid while `<MyComponent>` isn't.
 
 ### Discussion
-Every React component can be self-closing where it makes sense: `<div/>`.
+In fact, every React component can be self-closing: `<div/>`.

@@ -23,8 +23,7 @@ What you're searching for is ternary expression:
 ```js
 /** @jsx React.DOM */
 
-// this
 React.renderComponent(<div id={true ? 'msg' : ''}>Hello World!</div>, mountNode);
 ```
 
-Try the [JSX compiler](http://facebook.github.io/react/jsx-compiler.html) to see how this works. It's a very simple transformation, thus making JSX entirely optional to use with React.
+Try the [JSX compiler](http://facebook.github.io/react/jsx-compiler.html).
