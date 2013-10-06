@@ -58,12 +58,12 @@ function inject() {
    * them).
    */
   EventPluginHub.injection.injectEventPluginsByName({
-    'SimpleEventPlugin': SimpleEventPlugin,
-    'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
-    'ChangeEventPlugin': ChangeEventPlugin,
-    'CompositionEventPlugin': CompositionEventPlugin,
-    'MobileSafariClickEventPlugin': MobileSafariClickEventPlugin,
-    'SelectEventPlugin': SelectEventPlugin
+    SimpleEventPlugin: SimpleEventPlugin,
+    EnterLeaveEventPlugin: EnterLeaveEventPlugin,
+    ChangeEventPlugin: ChangeEventPlugin,
+    CompositionEventPlugin: CompositionEventPlugin,
+    MobileSafariClickEventPlugin: MobileSafariClickEventPlugin,
+    SelectEventPlugin: SelectEventPlugin
   });
 
   ReactDOM.injection.injectComponentClasses({
