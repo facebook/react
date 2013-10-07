@@ -10,7 +10,7 @@ prev: addons.html
 
 * All of [Instagram.com](http://instagram.com/) is built on React.
 * Many components on [Facebook.com](http://www.facebook.com/), including the commenting interface, ads creation flows, and page insights.
-* [Khan Academy](http://khanacademy.org/) is using React for most JS development.
+* [Khan Academy](http://khanacademy.org/) is using React for most new JS development.
 
 
 ### Sample Code
