@@ -891,6 +891,9 @@ var ReactCompositeComponentMixin = {
       return method.apply(component, arguments);
     };
     if (__DEV__) {
+      boundMethod.__reactBoundContext = component;
+      boundMethod.__reactBoundMethod = method;
+      boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
       boundMethod.bind = function(newThis) {
@@ -910,7 +913,12 @@ var ReactCompositeComponentMixin = {
           );
           return boundMethod;
         }
-        return _bind.apply(boundMethod, arguments);
+        var reboundMethod = _bind.apply(boundMethod, arguments);
+        reboundMethod.__reactBoundContext = component;
+        reboundMethod.__reactBoundMethod = method;
+        reboundMethod.__reactBoundArguments =
+          Array.prototype.slice.call(arguments, 1);
+        return reboundMethod;
       };
     }
     return boundMethod;
