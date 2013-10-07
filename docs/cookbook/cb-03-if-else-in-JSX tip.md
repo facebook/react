@@ -26,4 +26,4 @@ What you're searching for is ternary expression:
 React.renderComponent(<div id={true ? 'msg' : ''}>Hello World!</div>, mountNode);
 ```
 
-Try the [JSX compiler](http://facebook.github.io/react/jsx-compiler.html).
+Try the [JSX compiler](/react/jsx-compiler.html).

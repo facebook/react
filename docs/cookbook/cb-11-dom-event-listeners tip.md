@@ -7,7 +7,7 @@ permalink: dom-event-listeners-tip.html
 
 > Note:
 >
-> This entry shows how to attach DOM events not provided by React ([check here for more info](events.html)). This is good for integrations with other libraries such as jQuery.
+> This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/cookbook/events.html)). This is good for integrations with other libraries such as jQuery.
 
 This example displays the window width:
 

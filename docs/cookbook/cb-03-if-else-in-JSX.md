@@ -31,4 +31,4 @@ React.renderComponent(<div id={true ? 'msg' : ''}>Hello World!</div>, mountNode)
 ```
 
 ### Discussion
-Try the [JSX compiler](http://facebook.github.io/react/jsx-compiler.html).
+Try the [JSX compiler](react/jsx-compiler.html).
