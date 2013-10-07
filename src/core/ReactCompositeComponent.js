@@ -957,10 +957,23 @@ var ReactCompositeComponent = {
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
     mixSpecIntoComponent(Constructor, spec);
+
     invariant(
       Constructor.prototype.render,
       'createClass(...): Class specification must implement a `render` method.'
     );
+
+    if (__DEV__) {
+      if (Constructor.prototype.componentShouldUpdate) {
+        console.warn(
+          (spec.displayName || 'A component') + ' has a method called ' +
+          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+          'The name is phrased as a question because the function is ' +
+          'expected to return a value.'
+         );
+      }
+    }
+
     // Reduce time spent doing lookups by setting these on the prototype.
     for (var methodName in ReactCompositeComponentInterface) {
       if (!Constructor.prototype[methodName]) {
