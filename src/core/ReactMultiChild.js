@@ -22,6 +22,8 @@
 var ReactComponent = require('ReactComponent');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
+var flattenChildren = require('flattenChildren');
+
 /**
  * Given a `curChild` and `newChild`, determines if `curChild` should be
  * updated as opposed to being destroyed or replaced.
@@ -190,11 +192,12 @@ var ReactMultiChild = {
      * Generates a "mount image" for each of the supplied children. In the case
      * of `ReactDOMComponent`, a mount image is a string of markup.
      *
-     * @param {?object} children As returned by `flattenChildren`.
+     * @param {?object} nestedChildren Nested child maps.
      * @return {array} An array of mounted representations.
      * @internal
      */
-    mountChildren: function(children, transaction) {
+    mountChildren: function(nestedChildren, transaction) {
+      var children = flattenChildren(nestedChildren);
       var mountImages = [];
       var index = 0;
       this._renderedChildren = children;
@@ -248,14 +251,14 @@ var ReactMultiChild = {
     /**
      * Updates the rendered children with new children.
      *
-     * @param {?object} nextChildren As returned by `flattenChildren`.
+     * @param {?object} nextNestedChildren Nested child maps.
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    updateChildren: function(nextChildren, transaction) {
+    updateChildren: function(nextNestedChildren, transaction) {
       updateDepth++;
       try {
-        this._updateChildren(nextChildren, transaction);
+        this._updateChildren(nextNestedChildren, transaction);
       } catch (error) {
         updateDepth--;
         updateDepth || clearQueue();
@@ -269,12 +272,13 @@ var ReactMultiChild = {
      * Improve performance by isolating this hot code path from the try/catch
      * block in `updateChildren`.
      *
-     * @param {?object} nextChildren As returned by `flattenChildren`.
+     * @param {?object} nextNestedChildren Nested child maps.
      * @param {ReactReconcileTransaction} transaction
      * @final
      * @protected
      */
-    _updateChildren: function(nextChildren, transaction) {
+    _updateChildren: function(nextNestedChildren, transaction) {
+      var nextChildren = flattenChildren(nextNestedChildren);
       var prevChildren = this._renderedChildren;
       if (!nextChildren && !prevChildren) {
         return;
