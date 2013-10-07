@@ -197,6 +197,7 @@ var ReactMultiChild = {
     mountChildren: function(children, transaction) {
       var mountImages = [];
       var index = 0;
+      this._renderedChildren = children;
       for (var name in children) {
         var child = children[name];
         if (children.hasOwnProperty(name) && child) {
@@ -213,7 +214,6 @@ var ReactMultiChild = {
           index++;
         }
       }
-      this._renderedChildren = children;
       return mountImages;
     },
 
