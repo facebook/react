@@ -57,3 +57,5 @@
     title: DOM Differences
   - id: special-non-dom-attributes
     title: Special Non-DOM attributes
+  - id: reconciliation
+    title: Reconciliation
