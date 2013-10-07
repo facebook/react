@@ -32,14 +32,15 @@ var ReactPerf = require('ReactPerf');
 var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
 var DOMProperty = require('DOMProperty');
 
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var CompositionEventPlugin = require('CompositionEventPlugin');
+var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginHub = require('EventPluginHub');
-var ReactInstanceHandles = require('ReactInstanceHandles');
-var SimpleEventPlugin = require('SimpleEventPlugin');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
+var ReactInstanceHandles = require('ReactInstanceHandles');
+var SelectEventPlugin = require('SelectEventPlugin');
+var SimpleEventPlugin = require('SimpleEventPlugin');
 
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactUpdates = require('ReactUpdates');
@@ -61,7 +62,8 @@ function inject() {
     'EnterLeaveEventPlugin': EnterLeaveEventPlugin,
     'ChangeEventPlugin': ChangeEventPlugin,
     'CompositionEventPlugin': CompositionEventPlugin,
-    'MobileSafariClickEventPlugin': MobileSafariClickEventPlugin
+    'MobileSafariClickEventPlugin': MobileSafariClickEventPlugin,
+    'SelectEventPlugin': SelectEventPlugin
   });
 
   ReactDOM.injection.injectComponentClasses({

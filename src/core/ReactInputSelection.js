@@ -111,7 +111,7 @@ var ReactInputSelection = {
       }
     } else {
       // Content editable or old IE textarea.
-      selection = ReactDOMSelection.get(input);
+      selection = ReactDOMSelection.getOffsets(input);
     }
 
     return selection || {start: 0, end: 0};
@@ -140,7 +140,7 @@ var ReactInputSelection = {
       range.moveEnd('character', end - start);
       range.select();
     } else {
-      ReactDOMSelection.set(input, offsets);
+      ReactDOMSelection.setOffsets(input, offsets);
     }
   }
 };

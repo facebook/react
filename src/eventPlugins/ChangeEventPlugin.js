@@ -46,7 +46,6 @@ var activeElementID = null;
 var activeElementValue = null;
 var activeElementValueProp = null;
 
-
 /**
  * SECTION: handle `change` event
  */
