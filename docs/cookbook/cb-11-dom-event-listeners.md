@@ -13,7 +13,7 @@ You want to listen to an event inside a component.
 >
 > This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/cookbook/events.html)). This is good for integrations with other libraries such as jQuery.
 
-This example displays the window width:
+Try to resize the window:
 
 ```js
 /** @jsx React.DOM */
