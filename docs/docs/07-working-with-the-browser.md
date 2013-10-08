@@ -119,14 +119,16 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 
 ### Polyfills Needed to Support Older Browsers
 
+These six functions can be polyfilled using `es5-shim.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim):
+
 * `Array.isArray`
 * `Array.prototype.forEach`
 * `Array.prototype.indexOf`
-* `Function.prototype.bind`
+* `Array.prototype.some`
 * `Date.now`
-* `Array.prototype.some` (also in `es5-shim.js`)
+* `Function.prototype.bind`
 
-All of these can be polyfilled using `es5-shim.js` from [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim).
+Other required polyfills:
 
-* `console.*` - Only needed when not using the minified build. If you need to polyfill this, try [https://github.com/paulmillr/console-polyfill](https://github.com/paulmillr/console-polyfill).
-* `Object.create` - Provided in `es5-sham.js` @ [https://github.com/kriskowal/es5-shim](https://github.com/kriskowal/es5-shim).
+* `Object.create` – Provided by `es5-sham.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim).
+* `console.*` – Only needed when using the unminified build. If you need to polyfill this, try [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
