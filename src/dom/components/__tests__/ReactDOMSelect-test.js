@@ -125,7 +125,7 @@ describe('ReactDOMSelect', function() {
     };
 
     var stub =
-      <select multiple={true} value={[{objectToString}]}>
+      <select multiple={true} value={[objectToString]}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -138,7 +138,7 @@ describe('ReactDOMSelect', function() {
 
     // Changing the `value` prop should change the selected options.
     objectToString.animal = "monkey";
-    stub.setProps({value: objectToString});
+    stub.setProps({value: [objectToString]});
 
     expect(node.options[0].selected).toBe(true);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe

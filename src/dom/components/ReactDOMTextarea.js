@@ -29,9 +29,6 @@ var merge = require('merge');
 // Store a reference to the <textarea> `ReactDOMComponent`.
 var textarea = ReactDOM.textarea;
 
-// For quickly matching children type, to test if can be treated as content.
-var CONTENT_TYPES = {'string': true, 'number': true, 'boolean':true};
-
 /**
  * Implements a <textarea> native component that allows setting `value`, and
  * `defaultValue`. This differs from the traditional DOM API because value is
@@ -72,11 +69,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
         );
         children = children[0];
       }
-      invariant(
-        CONTENT_TYPES[typeof children],
-        'If you specify children to <textarea>, it must be a single string ' +
-        'or number., not an array or object.'
-      );
+
       defaultValue = '' + children;
     }
     if (defaultValue == null) {

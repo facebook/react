@@ -136,13 +136,6 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('foobar');
   });
 
-  it('should display "false" for `value` of `false`', function() {
-    var stub = <textarea type="text" value={false} />;
-    var node = renderTextarea(stub);
-
-    expect(node.value).toBe('false');
-  });
-
   it('should allow setting `value` to `false`', function () {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
@@ -151,6 +144,21 @@ describe('ReactDOMTextarea', function() {
 
     stub.replaceProps({value: false});
     expect(node.value).toEqual('false');
+  });
+
+  it('should allow setting `value` to `objectToString`', function () {
+    var stub = <textarea value="giraffe" />;
+    var node = renderTextarea(stub);
+
+    expect(node.value).toBe('giraffe');
+
+    var obj = {
+      toString: function() {
+        return "foo";
+      }
+    };
+    stub.replaceProps({value: obj});
+    expect(node.value).toEqual('foo');
   });
 
   it('should properly control a value of number `0`', function() {
@@ -190,6 +198,18 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('false');
   });
 
+  it('should allow objects as children', function () {
+    spyOn(console, 'warn');
+    var obj = {
+      toString: function() {
+        return "sharkswithlasers";
+      }
+    };
+    var node = renderTextarea(<textarea>{obj}</textarea>);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(node.value).toBe('sharkswithlasers');
+  });
+
   it('should throw with multiple or invalid children', function() {
     spyOn(console, 'warn');
 
@@ -201,13 +221,6 @@ describe('ReactDOMTextarea', function() {
 
     expect(console.warn.argsForCall.length).toBe(1);
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <textarea><strong /></textarea>
-      );
-    }).toThrow();
-
-    expect(console.warn.argsForCall.length).toBe(2);
   });
 
   it('should support ReactLink', function() {
