@@ -579,7 +579,7 @@ var ReactCompositeComponentMixin = {
         mountDepth + 1
       );
       if (this.componentDidMount) {
-        transaction.getReactOnDOMReady().enqueue(this, this.componentDidMount);
+        transaction.getReactMountReady().enqueue(this, this.componentDidMount);
       }
       return markup;
     }
@@ -765,7 +765,7 @@ var ReactCompositeComponentMixin = {
     this.updateComponent(transaction, prevProps, prevState);
 
     if (this.componentDidUpdate) {
-      transaction.getReactOnDOMReady().enqueue(
+      transaction.getReactMountReady().enqueue(
         this,
         this.componentDidUpdate.bind(this, prevProps, prevState)
       );
