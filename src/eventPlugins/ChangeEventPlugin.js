@@ -25,6 +25,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var SyntheticEvent = require('SyntheticEvent');
 
 var isEventSupported = require('isEventSupported');
+var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -127,35 +128,6 @@ if (ExecutionEnvironment.canUseDOM) {
   // deleting text, so we ignore its input events
   isInputEventSupported = isEventSupported('input') && (
     !('documentMode' in document) || document.documentMode > 9
-  );
-}
-
-
-/**
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
- */
-var supportedInputTypes = {
-  'color': true,
-  'date': true,
-  'datetime': true,
-  'datetime-local': true,
-  'email': true,
-  'month': true,
-  'number': true,
-  'password': true,
-  'range': true,
-  'search': true,
-  'tel': true,
-  'text': true,
-  'time': true,
-  'url': true,
-  'week': true
-};
-
-function shouldUseInputEvent(elem) {
-  return (
-    (elem.nodeName === 'INPUT' && supportedInputTypes[elem.type]) ||
-    elem.nodeName === 'TEXTAREA'
   );
 }
 
@@ -322,7 +294,7 @@ function getTargetIDForClickEvent(
  * change the element's value without seeing a flicker.
  *
  * Supported elements are:
- * - input (see `supportedInputTypes`)
+ * - input (see `isTextInputElement`)
  * - textarea
  * - select
  */
@@ -351,7 +323,7 @@ var ChangeEventPlugin = {
       } else {
         handleEventFunc = handleEventsForChangeEventIE8;
       }
-    } else if (shouldUseInputEvent(topLevelTarget)) {
+    } else if (isTextInputElement(topLevelTarget)) {
       if (isInputEventSupported) {
         getTargetIDFunc = getTargetIDForInputEvent;
       } else {

@@ -26,6 +26,7 @@ var SyntheticEvent = require('SyntheticEvent');
 
 var getActiveElement = require('getActiveElement');
 var isEventSupported = require('isEventSupported');
+var isTextInputElement = require('isTextInputElement');
 var keyOf = require('keyOf');
 var shallowEqual = require('shallowEqual');
 
@@ -106,30 +107,35 @@ function constructSelectEvent(nativeEvent) {
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    return SyntheticEvent.getPooled(
+    var syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
       activeElementID,
       nativeEvent
     );
+
+    syntheticEvent.type = 'select';
+    syntheticEvent.target = activeElement;
+
+    EventPropagators.accumulateTwoPhaseDispatches(syntheticEvent);
+
+    return syntheticEvent;
   }
 }
 
 /**
  * Handle deferred event. And manually dispatch synthetic events.
  */
-function handleDeferredEvent() {
+function dispatchDeferredSelectEvent() {
   if (!activeNativeEvent) {
     return;
   }
 
-  var event = constructSelectEvent(activeNativeEvent);
+  var syntheticEvent = constructSelectEvent(activeNativeEvent);
   activeNativeEvent = null;
 
-  if (event) {
-    EventPropagators.accumulateTwoPhaseDispatches(event);
-
-    // Enqueue and process the abstract event manually.
-    EventPluginHub.enqueueEvents(event);
+  // Enqueue and process the abstract event manually.
+  if (syntheticEvent) {
+    EventPluginHub.enqueueEvents(syntheticEvent);
     EventPluginHub.processEventQueue();
   }
 }
@@ -139,8 +145,8 @@ function handleDeferredEvent() {
  * across form elements.
  *
  * Supported elements are:
- * - input (see `supportedInputTypes`)
- * - TEXTAREA
+ * - input (see `isTextInputElement`)
+ * - textarea
  * - contentEditable
  *
  * This differs from native browser implementations in the following ways:
@@ -167,12 +173,15 @@ var SelectEventPlugin = {
       nativeEvent) {
 
     switch (topLevelType) {
+      // Track the input node that has focus.
       case topLevelTypes.topFocus:
-        // Track the input node that has focus.
-        activeElement = topLevelTarget;
-        activeElementID = topLevelTargetID;
-        lastSelection = null;
-        mouseDown = false;
+        if (isTextInputElement(topLevelTarget) ||
+            topLevelTarget.contentEditable === 'true') {
+          activeElement = topLevelTarget;
+          activeElementID = topLevelTargetID;
+          lastSelection = null;
+          mouseDown = false;
+        }
         break;
       case topLevelTypes.topBlur:
         activeElement = null;
@@ -180,29 +189,27 @@ var SelectEventPlugin = {
         lastSelection = null;
         mouseDown = false;
         break;
-      case topLevelTypes.topSelectionChange:
-        // Chrome and IE fire non-standard event whenever selection is
-        // changed (and sometimes when it hasn't).
-        var event = constructSelectEvent(nativeEvent);
-        if (event) {
-          EventPropagators.accumulateTwoPhaseDispatches(event);
-          return event;
-        }
-        break;
+
+      // Don't fire the event while the user is dragging. This matches the
+      // semantics of the native select event.
       case topLevelTypes.topMouseDown:
-        // Don't fire the event while the user is dragging.
         mouseDown = true;
         break;
       case topLevelTypes.topMouseUp:
         mouseDown = false;
-        activeNativeEvent = nativeEvent;
-        handleDeferredEvent.defer();
-        break;
+        return constructSelectEvent(nativeEvent);
+
+      // Chrome and IE fire non-standard event when selection is changed (and
+      // sometimes when it hasn't).
+      case topLevelTypes.topSelectionChange:
+        return constructSelectEvent(nativeEvent);
+
+      // Firefox doesn't support selectionchange, so check selection status
+      // after each key entry.
       case topLevelTypes.topKeyDown:
-        // For Firefox we check seleciton after each key.
         if (!useSelectionChange) {
           activeNativeEvent = nativeEvent;
-          handleDeferredEvent.defer();
+          setTimeout(dispatchDeferredSelectEvent, 0);
         }
         break;
     }
