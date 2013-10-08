@@ -4,7 +4,7 @@ var grunt = require('grunt');
 
 var rootIDs = [
   "React",
-  "ReactTransitionGroup"
+  "ReactWithAddons"
 ];
 
 var getDebugConfig = function() {

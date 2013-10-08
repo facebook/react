@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <title>Basic Example with JSX</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+    <link rel="stylesheet" href="transition.css" />
+  </head>
+  <body>
+    <h1>Example with Transitions</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="http://www.github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is not working right.
+        If you checked out the source from GitHub make sure to run <code>grunt</code>.
+      </p>
+    </div>
+    <h4>Example Details</h4>
+    <ul>
+      <li>
+        This is built with
+        <a href="https://github.com/substack/node-browserify">browserify</a>.
+      </li>
+      <li>
+        This is written with JSX and transformed in the browser.
+      </li>
+    </ul>
+    <p>
+    </p>
+    <p>
+      Learn more at
+      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+    </p>
+    <script src="../../build/react-with-addons.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+    <script type="text/jsx">
+      /**
+       * @jsx React.DOM
+       */
+      var TransitionGroup = React.addons.TransitionGroup;
+      var INTERVAL = 2000;
+
+      var AnimateDemo = React.createClass({
+        getInitialState: function() {
+          return {start: 0};
+        },
+
+        componentDidMount: function() {
+          this.interval = setInterval(this.tick, INTERVAL);
+        },
+
+        componentWillUnmount: function() {
+          clearInterval(this.interval);
+        },
+
+        tick: function() {
+          this.setState({start: this.state.start + 1});
+        },
+
+        render: function() {
+          var children = [];
+          var pos = 0;
+          var colors = ['red', 'gray', 'blue'];
+          for (var i = this.state.start; i < this.state.start + 3; i++) {
+            var style = {
+              left: pos * 128,
+              background: colors[i % 3]
+            };
+            pos++;
+            children.push(<div key={i} className="animateItem" style={style}>{i}</div>);
+          }
+          return (
+            <TransitionGroup
+              className="animateExample"
+              transitionName="example">
+              {children}
+            </TransitionGroup>
+          );
+        }
+      });
+
+      React.renderComponent(
+        <AnimateDemo />,
+        document.getElementById('container')
+      );
+    </script>
+  </body>
+</html>
