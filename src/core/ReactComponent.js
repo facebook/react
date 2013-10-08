@@ -28,12 +28,6 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 
 /**
- * Props key that determines if a component's key was already validated.
- * @private
- */
-var IS_KEY_VALIDATED = '{is.key.validated}';
-
-/**
  * Every React component is in one of these life cycles.
  */
 var ComponentLifeCycle = keyMirror({
@@ -65,10 +59,10 @@ var ownerHasWarned = {};
  * @param {ReactComponent} component Component that requires a key.
  */
 function validateExplicitKey(component) {
-  if (component[IS_KEY_VALIDATED] || component.props.key != null) {
+  if (component.__keyValidated__ || component.props.key != null) {
     return;
   }
-  component[IS_KEY_VALIDATED] = true;
+  component.__keyValidated__ = true;
 
   // We can't provide friendly warnings for top level components.
   if (!ReactCurrentOwner.current) {
@@ -117,7 +111,7 @@ function validateChildKeys(component) {
     }
   } else if (ReactComponent.isValidComponent(component)) {
     // This component was passed in a valid location.
-    component[IS_KEY_VALIDATED] = true;
+    component.__keyValidated__ = true;
   }
 }
 

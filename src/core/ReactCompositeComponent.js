@@ -891,6 +891,9 @@ var ReactCompositeComponentMixin = {
       return method.apply(component, arguments);
     };
     if (__DEV__) {
+      boundMethod.__reactBoundContext = component;
+      boundMethod.__reactBoundMethod = method;
+      boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
       boundMethod.bind = function(newThis) {
@@ -910,7 +913,12 @@ var ReactCompositeComponentMixin = {
           );
           return boundMethod;
         }
-        return _bind.apply(boundMethod, arguments);
+        var reboundMethod = _bind.apply(boundMethod, arguments);
+        reboundMethod.__reactBoundContext = component;
+        reboundMethod.__reactBoundMethod = method;
+        reboundMethod.__reactBoundArguments =
+          Array.prototype.slice.call(arguments, 1);
+        return reboundMethod;
       };
     }
     return boundMethod;
@@ -949,10 +957,23 @@ var ReactCompositeComponent = {
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
     mixSpecIntoComponent(Constructor, spec);
+
     invariant(
       Constructor.prototype.render,
       'createClass(...): Class specification must implement a `render` method.'
     );
+
+    if (__DEV__) {
+      if (Constructor.prototype.componentShouldUpdate) {
+        console.warn(
+          (spec.displayName || 'A component') + ' has a method called ' +
+          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+          'The name is phrased as a question because the function is ' +
+          'expected to return a value.'
+         );
+      }
+    }
+
     // Reduce time spent doing lookups by setting these on the prototype.
     for (var methodName in ReactCompositeComponentInterface) {
       if (!Constructor.prototype[methodName]) {

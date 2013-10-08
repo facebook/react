@@ -35,6 +35,7 @@ var DefaultEventPluginOrder = [
   keyOf({TapEventPlugin: null}),
   keyOf({EnterLeaveEventPlugin: null}),
   keyOf({ChangeEventPlugin: null}),
+  keyOf({SelectEventPlugin: null}),
   keyOf({CompositionEventPlugin: null}),
   keyOf({AnalyticsEventPlugin: null}),
   keyOf({MobileSafariClickEventPlugin: null})

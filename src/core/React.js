@@ -18,15 +18,19 @@
 
 "use strict";
 
-var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactComponent = require('ReactComponent');
+var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOM = require('ReactDOM');
+var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
+var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
-
-var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactTextComponent = require('ReactTextComponent');
 
 ReactDefaultInjection.inject();
 
@@ -48,7 +52,16 @@ var React = {
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
   isValidClass: ReactCompositeComponent.isValidClass,
-  isValidComponent: ReactComponent.isValidComponent
+  isValidComponent: ReactComponent.isValidComponent,
+  __internals: {
+    Component: ReactComponent,
+    CurrentOwner: ReactCurrentOwner,
+    DOMComponent: ReactDOMComponent,
+    InstanceHandles: ReactInstanceHandles,
+    Mount: ReactMount,
+    MultiChild: ReactMultiChild,
+    TextComponent: ReactTextComponent
+  }
 };
 
 // Version exists only in the open-source version of React, not in Facebook's

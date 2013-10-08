@@ -29,7 +29,6 @@ var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
-var flattenChildren = require('flattenChildren');
 var invariant = require('invariant');
 var keyOf = require('keyOf');
 var merge = require('merge');
@@ -171,7 +170,7 @@ ReactDOMComponent.Mixin = {
         return escapeTextForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
-          flattenChildren(childrenToUse),
+          childrenToUse,
           transaction
         );
         return mountImages.join('');
@@ -346,7 +345,7 @@ ReactDOMComponent.Mixin = {
         );
       }
     } else if (nextChildren != null) {
-      this.updateChildren(flattenChildren(nextChildren), transaction);
+      this.updateChildren(nextChildren, transaction);
     }
   },
 

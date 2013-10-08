@@ -25,7 +25,7 @@ var reactComponentExpect;
 
 var TestComponent;
 
-describe('ReactCompositeComponent-transferProps', function() {
+describe('ReactPropTransferer', function() {
 
   beforeEach(function() {
     React = require('React');
@@ -129,5 +129,28 @@ describe('ReactCompositeComponent-transferProps', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<OuterOuterRefTestComponent />);
+  });
+
+  it('should not transferPropsTo() a component you don\'t own', function() {
+    var Parent = React.createClass({
+      render: function() {
+        return <Child><span /></Child>;
+      }
+    });
+
+    var Child = React.createClass({
+      render: function() {
+        return this.transferPropsTo(this.props.children);
+      }
+    });
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Parent />);
+    }).toThrow(
+      'Invariant Violation: ' +
+      'You can\'t call transferPropsTo() on a component that you don\'t own. ' +
+      'This usually means you are calling transferPropsTo() on a component ' +
+      'passed in as props or children.'
+    );
   });
 });

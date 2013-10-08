@@ -19,6 +19,7 @@
 "use strict";
 
 var emptyFunction = require('emptyFunction');
+var invariant = require('invariant');
 var joinClasses = require('joinClasses');
 var merge = require('merge');
 
@@ -90,6 +91,13 @@ var ReactPropTransferer = {
      * @protected
      */
     transferPropsTo: function(component) {
+      invariant(
+        component.props.__owner__ === this,
+        'You can\'t call transferPropsTo() on a component that you don\'t ' +
+        'own. This usually means you are calling transferPropsTo() on a ' +
+        'component passed in as props or children.'
+      );
+
       var props = {};
       for (var thatKey in component.props) {
         if (component.props.hasOwnProperty(thatKey)) {

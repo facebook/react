@@ -30,11 +30,14 @@ var ReactDoNotBindDeprecated;
 
 var cx;
 var reactComponentExpect;
+var mocks;
 
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
     cx = require('cx');
+    mocks = require('mocks');
+
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
@@ -394,17 +397,60 @@ describe('ReactCompositeComponent', function() {
   it('should detect invalid CompositeComponent classes', function() {
     var FnComponent = function() {
       return false;
-    }
+    };
 
     var NullComponent = null;
 
     var TrickFnComponent = function() {
       return true;
-    }
+    };
     TrickFnComponent.componentConstructor = true;
 
     expect(React.isValidClass(FnComponent)).toBe(false);
     expect(React.isValidClass(NullComponent)).toBe(false);
     expect(React.isValidClass(TrickFnComponent)).toBe(false);
+  });
+
+  it('should warn when mispelling shouldComponentUpdate', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    try {
+      React.createClass({
+        componentShouldUpdate: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        }
+      });
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'A component has a method called componentShouldUpdate(). Did you ' +
+        'mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.'
+      );
+
+      var NamedComponent = React.createClass({
+        componentShouldUpdate: function() {
+          return false;
+        },
+        render: function() {
+          return <div />;
+        }
+      });
+      expect(console.warn.mock.calls.length).toBe(2);
+      expect(console.warn.mock.calls[1][0]).toBe(
+        'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+        'mean shouldComponentUpdate()? The name is phrased as a question ' +
+        'because the function is expected to return a value.'
+      );
+
+      NamedComponent(); // Shut up lint
+    } catch (e) {
+      throw e;
+    } finally {
+      console.warn = warn;
+    }
   });
 });

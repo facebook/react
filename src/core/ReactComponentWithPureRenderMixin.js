@@ -18,6 +18,8 @@
 
 "use strict";
 
+var shallowEqual = require('shallowEqual');
+
 /**
  * If your React component's render function is "pure", e.g. it will render the
  * same result given the same props and state, provide this Mixin for a
@@ -48,31 +50,5 @@ var ReactComponentWithPureRenderMixin = {
            !shallowEqual(this.state, nextState);
   }
 };
-
-/**
- * Performs equality by iterating through keys on an object and returning
- * false when any key has values which are not strictly equal between
- * objA and objB. Returns true when the values of all keys are strictly equal.
- */
-function shallowEqual(objA, objB) {
-  if (objA === objB) {
-    return true;
-  }
-  var key;
-  // Test for A's keys different from B.
-  for (key in objA) {
-    if (objA.hasOwnProperty(key) &&
-        (!objB.hasOwnProperty(key) || objA[key] !== objB[key])) {
-      return false;
-    }
-  }
-  // Test for B'a keys missing from A.
-  for (key in objB) {
-    if (objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)) {
-      return false;
-    }
-  }
-  return true;
-}
 
 module.exports = ReactComponentWithPureRenderMixin;

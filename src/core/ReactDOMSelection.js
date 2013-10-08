@@ -33,8 +33,9 @@ var getTextContentAccessor = require('getTextContentAccessor');
  * differ between the two APIs.
  *
  * @param {DOMElement} node
+ * @return {object}
  */
-function getIESelection(node) {
+function getIEOffsets(node) {
   var selection = document.selection;
   var selectedRange = selection.createRange();
   var selectedLength = selectedRange.text.length;
@@ -55,8 +56,9 @@ function getIESelection(node) {
 
 /**
  * @param {DOMElement} node
+ * @return {object}
  */
-function getModernSelection(node) {
+function getModernOffsets(node) {
   var selection = window.getSelection();
   var anchorNode = selection.anchorNode;
   var anchorOffset = selection.anchorOffset;
@@ -90,7 +92,7 @@ function getModernSelection(node) {
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setIESelection(node, offsets) {
+function setIEOffsets(node, offsets) {
   var range = document.selection.createRange().duplicate();
   var start, end;
 
@@ -124,7 +126,7 @@ function setIESelection(node, offsets) {
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setModernSelection(node, offsets) {
+function setModernOffsets(node, offsets) {
   var selection = window.getSelection();
 
   var length = node[getTextContentAccessor()].length;
@@ -149,18 +151,18 @@ var ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */
-  get: function(node) {
-    var getSelection = document.selection ? getIESelection : getModernSelection;
-    return getSelection(node);
+  getOffsets: function(node) {
+    var getOffsets = document.selection ? getIEOffsets : getModernOffsets;
+    return getOffsets(node);
   },
 
   /**
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  set: function(node, offsets) {
-    var setSelection = document.selection ? setIESelection : setModernSelection;
-    setSelection(node, offsets);
+  setOffsets: function(node, offsets) {
+    var setOffsets = document.selection ? setIEOffsets : setModernOffsets;
+    setOffsets(node, offsets);
   }
 };
 
