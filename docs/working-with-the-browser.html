@@ -320,20 +320,22 @@ calling <code>this.getDOMNode()</code>.</p>
 
 <p>In addition to that philosophy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/kriskowal/es5-shim">es5-shim</a>.</p>
 <h3 id="polyfills-needed-to-support-older-browsers">Polyfills Needed to Support Older Browsers</h3>
+<p>These six functions can be polyfilled using <code>es5-shim.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>:</p>
+
 <ul>
 <li><code>Array.isArray</code></li>
 <li><code>Array.prototype.forEach</code></li>
 <li><code>Array.prototype.indexOf</code></li>
-<li><code>Function.prototype.bind</code></li>
+<li><code>Array.prototype.some</code></li>
 <li><code>Date.now</code></li>
-<li><code>Array.prototype.some</code> (also in <code>es5-shim.js</code>)</li>
+<li><code>Function.prototype.bind</code></li>
 </ul>
 
-<p>All of these can be polyfilled using <code>es5-shim.js</code> from <a href="https://github.com/kriskowal/es5-shim">https://github.com/kriskowal/es5-shim</a>.</p>
+<p>Other required polyfills:</p>
 
 <ul>
-<li><code>console.*</code> - Only needed when not using the minified build. If you need to polyfill this, try <a href="https://github.com/paulmillr/console-polyfill">https://github.com/paulmillr/console-polyfill</a>.</li>
-<li><code>Object.create</code> - Provided in <code>es5-sham.js</code> @ <a href="https://github.com/kriskowal/es5-shim">https://github.com/kriskowal/es5-shim</a>.</li>
+<li><code>Object.create</code> – Provided by <code>es5-sham.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>.</li>
+<li><code>console.*</code> – Only needed when using the unminified build. If you need to polyfill this, try <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</li>
 </ul>
 
 
