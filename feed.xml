@@ -15,7 +15,7 @@
 &lt;p&gt;&lt;a href=&quot;http://bold-it.com/&quot;&gt;Alex Swan&lt;/a&gt; implemented &lt;a href=&quot;http://qu.izti.me/&quot;&gt;Qu.izti.me&lt;/a&gt;, a multi-player quiz game. It is real-time via Web Socket and mobile friendly.&lt;/p&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;The game itself is pretty simple. People join the &amp;quot;room&amp;quot; by going to &lt;a href=&quot;(http://qu.izti.me/&quot;&gt;http://qu.izti.me&lt;/a&gt; on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.&lt;/p&gt;
+&lt;p&gt;The game itself is pretty simple. People join the &amp;quot;room&amp;quot; by going to &lt;a href=&quot;http://qu.izti.me/&quot;&gt;http://qu.izti.me&lt;/a&gt; on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.&lt;/p&gt;
 
 &lt;p&gt;In my opinion, Socket.io and React go together like chocolate and peanut butter. The page was always an accurate representation of the game object.
 &lt;figure&gt;&lt;a href=&quot;http://bold-it.com/javascript/facebook-react-example/&quot;&gt;&lt;img src=&quot;/react/img/blog/quiztime.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
