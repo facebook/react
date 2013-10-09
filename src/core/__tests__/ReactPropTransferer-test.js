@@ -148,7 +148,8 @@ describe('ReactPropTransferer', function() {
       ReactTestUtils.renderIntoDocument(<Parent />);
     }).toThrow(
       'Invariant Violation: ' +
-      'You can\'t call transferPropsTo() on a component that you don\'t own. ' +
+      'Child: You can\'t call transferPropsTo() on a component that you ' +
+      'don\'t own, span. ' +
       'This usually means you are calling transferPropsTo() on a component ' +
       'passed in as props or children.'
     );
