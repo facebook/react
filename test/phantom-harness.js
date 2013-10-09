@@ -50,16 +50,19 @@ server.listen(port, function(req, res) {
   var content;
 
   switch (file) {
+  case "jasmine.js":
+  case "react.js":
   case "react-test.js":
     file = "../build/" + file;
     break;
 
-  case "jasmine.css":
-    file = "../vendor/jasmine/" + file;
+  case "phantomjs-shims.js":
+  case "worker.js":
+    file = "../src/test/" + file;
     break;
 
-  case "jasmine.js":
-    file = "../build/" + file;
+  case "jasmine.css":
+    file = "../vendor/jasmine/" + file;
     break;
 
   case "":
