@@ -43,6 +43,7 @@ function createDOMComponentClass(tag, omitClose) {
   var Constructor = function() {};
   Constructor.prototype = new ReactDOMComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
+  Constructor.displayName = tag;
 
   var ConvenienceConstructor = function(props, children) {
     var instance = new Constructor();
