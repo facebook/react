@@ -42,14 +42,15 @@ var ReactPerf = {
    */
   measure: function(objName, fnName, func) {
     if (__DEV__) {
-      if (this.enableMeasure) {
-        var measuredFunc = null;
-        return function() {
+      var measuredFunc = null;
+      return function() {
+        if (ReactPerf.enableMeasure) {
           if (!measuredFunc) {
             measuredFunc = ReactPerf.storedMeasure(objName, fnName, func);
           }
           return measuredFunc.apply(this, arguments);
         };
+        return func.apply(this, arguments);
       }
     }
     return func;
