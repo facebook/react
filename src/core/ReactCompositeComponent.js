@@ -798,6 +798,7 @@ var ReactCompositeComponentMixin = {
         var thisID = this._rootNodeID;
         var currentComponentID = currentComponent._rootNodeID;
         currentComponent.unmountComponent();
+        this._renderedComponent = nextComponent;
         var nextMarkup = nextComponent.mountComponent(
           thisID,
           transaction,
@@ -807,7 +808,6 @@ var ReactCompositeComponentMixin = {
           currentComponentID,
           nextMarkup
         );
-        this._renderedComponent = nextComponent;
       }
     }
   ),
