@@ -1,8 +1,10 @@
 ---
 id: inline-styles-tip
 title: Inline Styles
-layout: docs
+layout: cookbook
 permalink: inline-styles-tip.html
+next: if-else-in-JSX.html
+prev: introduction.html
 ---
 
 In React, inline styles are not specified as a string, but as an object whose key is the camelCased version of the style name, and whose value is the style's value in string:

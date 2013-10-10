@@ -1,8 +1,10 @@
 ---
 id: componentWillReceiveProps-not-triggered-after-mounting
 title: componentWillReceiveProps not triggered after mounting
-layout: docs
+layout: cookbook
 permalink: componentWillReceiveProps-not-triggered-after-mounting.html
+prev: controlled-input-null-value.html
+next: props-in-getInitialSate-as-anti-pattern.html
 ---
 
 ### Problem

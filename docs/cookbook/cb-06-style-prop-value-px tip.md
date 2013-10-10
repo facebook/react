@@ -1,8 +1,10 @@
 ---
 id: style-prop-value-px-tip
 title: Shorthand for specifying pixel values in style prop
-layout: docs
+layout: cookbook
 permalink: style-prop-value-px-tip.html
+prev: jsx-root-node-count.html
+next: children-prop-type.html
 ---
 
 When specifying a pixel value for your inline `style` prop, React automatically appends the string "px" for you after your number value, so this works:

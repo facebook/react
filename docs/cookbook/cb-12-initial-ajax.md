@@ -1,8 +1,9 @@
 ---
 id: initial-ajax
 title: Load initial data via AJAX
-layout: docs
+layout: cookbook
 permalink: initial-ajax.html
+prev: dom-event-listeners.html
 ---
 
 ### Problem

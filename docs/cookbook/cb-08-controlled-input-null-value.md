@@ -1,8 +1,10 @@
 ---
 id: controlled-input-null-value
 title: Value of null for controlled input
-layout: docs
+layout: cookbook
 permalink: controlled-input-null-value.html
+prev: children-prop-type.html
+next: componentWillReceiveProps-not-triggered-after-mounting.html
 ---
 
 ### Problem

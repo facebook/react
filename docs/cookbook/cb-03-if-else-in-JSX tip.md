@@ -1,8 +1,10 @@
 ---
 id: if-else-in-JSX-tip
 title: If-Else in JSX
-layout: docs
+layout: cookbook
 permalink: if-else-in-JSX-tip.html
+prev: inline-styles.html
+next: self-closing-tag.html
 ---
 
 `if-else` statements don't work inside JSX, since JSX is really just sugar for functions:

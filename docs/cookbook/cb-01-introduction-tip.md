@@ -1,8 +1,9 @@
 ---
 id: introduction-tip
 title: Cookbook Introduction
-layout: docs
+layout: cookbook
 permalink: introduction-tip.html
+next: inline-styles.html
 ---
 
 The React.js cookbook provides common React tips, bite-sized information that can surprisingly answer lots of questions you might have had and warn you against common pitfalls.

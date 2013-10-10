@@ -84,6 +84,8 @@ nav_cookbook:
     title: JSX root node count
   - id: style-prop-value-px
     title: Style prop value px
+  - id: children-prop-type
+    title: Children prop type
   - id: controlled-input-null-value
     title: Controlled input null value
   - id: componentWillReceiveProps-not-triggered-after-mounting

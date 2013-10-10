@@ -1,8 +1,10 @@
 ---
 id: props-in-getInitialSate-as-anti-pattern
 title: props in getInitialState is an anti-pattern
-layout: docs
+layout: cookbook
 permalink: props-in-getInitialSate-as-anti-pattern.html
+prev: componentWillReceiveProps-not-triggered-after-mounting.html
+next: dom-event-listeners.html
 ---
 
 ### Problem

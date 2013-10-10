@@ -1,8 +1,10 @@
 ---
 id: children-prop-type-tip
 title: Type of the children prop
-layout: docs
+layout: cookbook
 permalink: children-prop-type-tip.html
+prev: style-prop-value-px.html
+next: controlled-input-null-value.html
 ---
 
 Usually, a component's `this.props.children` is an array of components. To save an extra array allocation, it returns the component itself when there's only one.

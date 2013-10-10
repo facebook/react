@@ -1,8 +1,10 @@
 ---
 id: self-closing-tag
 title: Self-Closing Tag
-layout: docs
+layout: cookbook
 permalink: self-closing-tag.html
+prev: if-else-in-JSX.html
+next: jsx-root-node-count.html
 ---
 
 ### Problem

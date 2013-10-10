@@ -1,8 +1,10 @@
 ---
 id: inline-styles
 title: Inline Styles
-layout: docs
+layout: cookbook
 permalink: inline-styles.html
+next: if-else-in-JSX.html
+prev: introduction.html
 ---
 
 ### Problem

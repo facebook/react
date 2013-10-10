@@ -1,8 +1,10 @@
 ---
 id: style-prop-value-px
 title: Shorthand for specifying pixel values in style prop
-layout: docs
+layout: cookbook
 permalink: style-prop-value-px.html
+prev: jsx-root-node-count.html
+next: children-prop-type.html
 ---
 
 ### Problem

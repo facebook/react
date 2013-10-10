@@ -1,8 +1,10 @@
 ---
 id: controlled-input-null-value-tip
 title: Value of null for controlled input
-layout: docs
+layout: cookbook
 permalink: controlled-input-null-value-tip.html
+prev: children-prop-type.html
+next: componentWillReceiveProps-not-triggered-after-mounting.html
 ---
 
 Specifying the `value` prop on a [controlled component](/react/docs/cookbook/forms.html) prevents the user from changing the input unless you desire so.

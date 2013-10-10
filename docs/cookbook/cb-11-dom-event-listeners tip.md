@@ -1,8 +1,10 @@
 ---
 id: dom-event-listeners-tip
 title: DOM event listeners in a component
-layout: docs
+layout: cookbook
 permalink: dom-event-listeners-tip.html
+prev: props-in-getInitialSate-as-anti-pattern.html
+next: initial-ajax.html
 ---
 
 > Note:

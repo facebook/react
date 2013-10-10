@@ -1,8 +1,10 @@
 ---
 id: jsx-root-node-count
 title: Maximum number of JSX root nodes
-layout: docs
+layout: cookbook
 permalink: jsx-root-node-count.html
+prev: self-closing-tag.html
+next: style-prop-value-px.html
 ---
 
 ### Problem

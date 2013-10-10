@@ -1,8 +1,9 @@
 ---
 id: initial-ajax-tip
 title: Load initial data via AJAX
-layout: docs
+layout: cookbook
 permalink: initial-ajax-tip.html
+prev: dom-event-listeners.html
 ---
 
 Fetch data in `componentDidMount`. When they arrive, put them inside your state then render them.
