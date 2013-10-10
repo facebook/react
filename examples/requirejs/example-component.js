@@ -7,7 +7,7 @@ define([], function () {
   var ExampleComponent = React.createClass({
 
     render:function(){
-      return <div>requirejs example</div>;
+      return <div>Simple RequireJS Example</div>;
     }
 
   });
