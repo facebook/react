@@ -75,4 +75,22 @@ nav_cookbook:
   - id: introduction
     title: Introduction
   - id: inline-styles
-    title: Inline Styles
+    title: Inline styles
+  - id: if-else-in-JSX
+    title: If else in JSX
+  - id: self-closing-tag
+    title: Self closing tag
+  - id: jsx-root-node-count
+    title: JSX root node count
+  - id: style-prop-value-px
+    title: Style prop value px
+  - id: controlled-input-null-value
+    title: Controlled input null value
+  - id: componentWillReceiveProps-not-triggered-after-mounting
+    title: componentWillReceiveProps not triggered after mounting
+  - id: props-in-getInitialSate-as-anti-pattern
+    title: Props in getInitialSate as anti-pattern
+  - id: dom-event-listeners
+    title: DOM event listeners
+  - id: initial-ajax
+    title: Initial AJAX
