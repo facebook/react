@@ -180,7 +180,7 @@ function visitReactTag(traverse, object, path, state) {
 visitReactTag.test = function(object, path, state) {
   // only run react when react @jsx namespace is specified in docblock
   var jsx = getDocblock(state).jsx;
-  return object.type === Syntax.XJSElement && jsx && jsx.length;
+  return object.type === Syntax.XJSElement && (jsx === undefined || (jsx && jsx.length && jsx === "React.DOM"));
 };
 
 exports.visitReactTag = visitReactTag;
