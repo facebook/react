@@ -56,7 +56,7 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
 };
 
 function visitReactTag(traverse, object, path, state) {
-  var jsxObjIdent = getDocblock(state).jsx;
+  var jsxObjIdent = getDocblock(state).jsx || "React.DOM";
 
   catchup(object.openingElement.range[0], state);
 
