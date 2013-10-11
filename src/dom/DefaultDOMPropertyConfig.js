@@ -112,6 +112,8 @@ var DefaultDOMPropertyConfig = {
      */
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
+    rx: MUST_USE_ATTRIBUTE,
+    ry: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
     fill: MUST_USE_ATTRIBUTE,
     fx: MUST_USE_ATTRIBUTE,
