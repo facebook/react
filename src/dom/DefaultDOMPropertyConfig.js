@@ -145,7 +145,11 @@ var DefaultDOMPropertyConfig = {
     strokeLinecap: 'stroke-linecap',
     strokeWidth: 'stroke-width',
     stopColor: 'stop-color',
-    stopOpacity: 'stop-opacity'
+    stopOpacity: 'stop-opacity',
+    viewBox: 'viewBox',
+    spreadMethod: 'spreadMethod',
+    gradientUnits: 'gradientUnits',
+    gradientTransform: 'gradientTransform'
   },
   DOMPropertyNames: {
     autoCapitalize: 'autocapitalize',
