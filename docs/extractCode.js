@@ -16,24 +16,21 @@ function main(dest, filenames) {
     if (!dest) {
 	throw new Error('no dest provided');
     }
-    console.log(filenames);
-    
     filenames.map(function (filename) {
-		var content = fs.readFileSync(filename).toString('utf8');
-		var codeSamples = content.match(CODE_SAMPLE);
+	var content = fs.readFileSync(filename).toString('utf8');
+	var codeSamples = content.match(CODE_SAMPLE);
 
-		
-		codeSamples.map(function (codeSample) {
-		    // Do a little jank preprocessing
-		    codeSample = codeSample.replace('<!--', '//').replace(' -->', '');
-		    var extracted = codeSample.match(PARTS);
-		    if (!extracted) {
-			throw new Error('Code sample did not match correct format in ' + filename + ': ' + truncate(codeSample));
-		    }
-		    var filename = extracted[1];
-		    var content = extracted[2].replace(/\*\*/g, '');
-		    fs.writeFileSync(argv.dest + '/' + filename, content);
-		});
+	codeSamples.map(function (codeSample) {
+	    // Do a little jank preprocessing
+	    codeSample = codeSample.replace('<!--', '//').replace(' -->', '');
+	    var extracted = codeSample.match(PARTS);
+	    if (!extracted) {
+		throw new Error('Code sample did not match correct format in ' + filename + ': ' + truncate(codeSample));
+	    }
+	    var filename = extracted[1];
+	    var content = extracted[2].replace(/\*\*/g, '');
+	    fs.writeFileSync(argv.dest + '/' + filename, content);
+	});
     });
 }
 
