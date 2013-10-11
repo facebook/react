@@ -308,6 +308,12 @@ var SimpleEventPlugin = {
         EventConstructor = SyntheticFocusEvent;
         break;
       case topLevelTypes.topClick:
+        // Firefox creates a click event on right mouse clicks. This removes the
+        // unwanted click events.
+        if (nativeEvent.button === 2) {
+          return null;
+        }
+        /* falls through */
       case topLevelTypes.topDoubleClick:
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:
