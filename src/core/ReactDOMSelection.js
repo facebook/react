@@ -56,10 +56,15 @@ function getIEOffsets(node) {
 
 /**
  * @param {DOMElement} node
- * @return {object}
+ * @return {?object}
  */
 function getModernOffsets(node) {
   var selection = window.getSelection();
+
+  if (selection.rangeCount === 0) {
+    return null;
+  }
+
   var anchorNode = selection.anchorNode;
   var anchorOffset = selection.anchorOffset;
   var focusNode = selection.focusNode;
