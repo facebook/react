@@ -257,11 +257,6 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       'selectionchange',
       mountAt
     );
-    trapBubbledEvent(
-      topLevelTypes.topDOMCharacterDataModified,
-      'DOMCharacterDataModified',
-      mountAt
-    );
 
     trapBubbledEvent(
       topLevelTypes.topCompositionEnd,

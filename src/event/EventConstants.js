@@ -34,7 +34,6 @@ var topLevelTypes = keyMirror({
   topCompositionUpdate: null,
   topCopy: null,
   topCut: null,
-  topDOMCharacterDataModified: null,
   topDoubleClick: null,
   topDrag: null,
   topDragEnd: null,

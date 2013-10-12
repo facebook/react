@@ -25,7 +25,6 @@ var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
 var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticMutationEvent = require('SyntheticMutationEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
@@ -112,12 +111,6 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onDrop: true}),
       captured: keyOf({onDropCapture: true})
-    }
-  },
-  DOMCharacterDataModified: {
-    phasedRegistrationNames: {
-      bubbled: keyOf({onDOMCharacterDataModified: true}),
-      captured: keyOf({onDOMCharacterDataModifiedCapture: true})
     }
   },
   focus: {
@@ -226,7 +219,6 @@ var topLevelEventsToDispatchConfig = {
   topCopy:        eventTypes.copy,
   topCut:         eventTypes.cut,
   topDoubleClick: eventTypes.doubleClick,
-  topDOMCharacterDataModified: eventTypes.DOMCharacterDataModified,
   topDrag:        eventTypes.drag,
   topDragEnd:     eventTypes.dragEnd,
   topDragEnter:   eventTypes.dragEnter,
@@ -327,9 +319,6 @@ var SimpleEventPlugin = {
       case topLevelTypes.topMouseMove:
       case topLevelTypes.topMouseUp:
         EventConstructor = SyntheticMouseEvent;
-        break;
-      case topLevelTypes.topDOMCharacterDataModified:
-        EventConstructor = SyntheticMutationEvent;
         break;
       case topLevelTypes.topTouchCancel:
       case topLevelTypes.topTouchEnd:
