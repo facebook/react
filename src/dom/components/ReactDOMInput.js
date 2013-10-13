@@ -55,7 +55,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var defaultValue = this.props.defaultValue;
     return {
       checked: this.props.defaultChecked || false,
-      value: defaultValue != null && defaultValue !== false ? defaultValue : ''
+      value: defaultValue != null ? defaultValue : ''
     };
   },
 
@@ -74,7 +74,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       this.props.checked != null ? this.props.checked : this.state.checked;
 
     var value = this.getValue();
-    props.value = value != null && value !== false ?
+    props.value = value != null ?
       '' + value :
       this.state.value;
 
@@ -110,7 +110,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'value',
-        value !== false ? '' + value : ''
+        value
       );
     }
   },
@@ -141,15 +141,15 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       for (var i = 0, groupLen = group.length; i < groupLen; i++) {
         var otherNode = group[i];
         if (otherNode === rootNode ||
-            otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
-            otherNode.form !== rootNode.form) {
+          otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
+          otherNode.form !== rootNode.form) {
           continue;
         }
         var otherID = ReactMount.getID(otherNode);
         invariant(
           otherID,
           'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.'
+            'same `name` is not supported.'
         );
         var otherInstance = instancesByReactID[otherID];
         invariant(
