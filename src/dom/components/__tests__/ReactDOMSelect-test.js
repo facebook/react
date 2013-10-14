@@ -138,7 +138,7 @@ describe('ReactDOMSelect', function() {
 
     // Changing the `value` prop should change the selected options.
     objectToString.animal = "monkey";
-    stub.setProps({value: [objectToString]});
+    stub.forceUpdate();
 
     expect(node.options[0].selected).toBe(true);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe

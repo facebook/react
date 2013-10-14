@@ -23,11 +23,8 @@ describe('escapeTextForBrowser', function() {
   var escapeTextForBrowser = require('escapeTextForBrowser');
 
   it('should escape boolean to string', function() {
-    var escaped = escapeTextForBrowser(true);
-    expect(escaped).toBe('true');
-
-    escaped = escapeTextForBrowser(false);
-    expect(escaped).toBe('false');
+    expect(escapeTextForBrowser(true)).toBe('true');
+    expect(escapeTextForBrowser(false)).toBe('false');
   });
 
   it('should escape object to string', function() {
@@ -41,8 +38,7 @@ describe('escapeTextForBrowser', function() {
   });
 
   it('should escape number to string', function() {
-    var escaped = escapeTextForBrowser(42);
-    expect(escaped).toBe('42');
+    expect(escapeTextForBrowser(42)).toBe('42');
   });
 
   it('should escape string', function() {

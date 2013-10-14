@@ -41,11 +41,6 @@ function escaper(match) {
  * @return {string} An escaped string.
  */
 function escapeTextForBrowser(text) {
-  // short circuit for optimization
-  if (text === '') {
-    return '';
-  }
-
   return ('' + text).replace(ESCAPE_REGEX, escaper);
 }
 
