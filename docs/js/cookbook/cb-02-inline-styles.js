@@ -2,7 +2,7 @@
  * @jsx React.DOM
  */
 
- var CB_02-INLINE-STYLES_COMPONENT = "
+ var INLINE_STYLES_COMPONENT = "
 /** @jsx React.DOM */
 
 var divStyle = {
@@ -14,6 +14,6 @@ var divStyle = {
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ";
  React.renderComponent(
- ReactPlayground( {codeText:CB_02-INLINE-STYLES_COMPONENT} ),
- document.getElementById("cb-02InlineStylesExample")
+ ReactPlayground( {codeText:INLINE_STYLES_COMPONENT} ),
+ document.getElementById("InlineStyles")
  );

@@ -52,17 +52,19 @@ module.exports = function(grunt) {
 
         componentNameCamelCase = componentName;
 
-        componentNameUpperCase = componentName.toUpperCase().replace(/[\. ,:-]+/g, "_");
+        componentNameUpperCase = componentName.toUpperCase().replace(/[\. ,:-]+/g, "_").slice(6);
 
-        componentNameCamelCase = componentNameCamelCase.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() });
+
+
+        componentNameCamelCase = componentNameCamelCase.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() }).slice(5);
 
         // Add code sample to live edit 
-        liveEditJS = '/**\n * @jsx React.DOM\n */\n\n var ' + componentNameUpperCase + '_COMPONENT = "' + matchedJS + '";\n React.renderComponent(\n ReactPlayground( {codeText:' + componentNameUpperCase + '_COMPONENT} ),\n document.getElementById("' + componentNameCamelCase + 'Example")\n );'
+        liveEditJS = '/**\n * @jsx React.DOM\n */\n\n var ' + componentNameUpperCase + '_COMPONENT = "' + matchedJS + '";\n React.renderComponent(\n ReactPlayground( {codeText:' + componentNameUpperCase + '_COMPONENT} ),\n document.getElementById("' + componentNameCamelCase + '")\n );'
         console.log(componentName);
         
         writeToLiveSampleJS(liveEditJS, componentName);
 
-        writeToHTML(markdown, componentName);
+        // writeToHTML(markdown, componentName);
   }
 
   grunt.registerTask('makeLiveSamples', 'Create live edit JS file for code samples in React Cookbook entries', function() {

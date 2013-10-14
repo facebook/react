@@ -2,7 +2,7 @@
  * @jsx React.DOM
  */
 
- var CB_03-IF-ELSE-IN-JSX TIP_COMPONENT = "
+ var IF_ELSE_IN_JSX_TIP_COMPONENT = "
 /** @jsx React.DOM */
 
 // this
@@ -11,6 +11,6 @@ React.renderComponent(<div id="msg">Hello World!</div>, mountNode);
 React.renderComponent(React.DOM.div({id:"msg"}, "Hello World!"), mountNode);
 ";
  React.renderComponent(
- ReactPlayground( {codeText:CB_03-IF-ELSE-IN-JSX TIP_COMPONENT} ),
- document.getElementById("cb-03IfElseIn-JSX tipExample")
+ ReactPlayground( {codeText:IF_ELSE_IN_JSX_TIP_COMPONENT} ),
+ document.getElementById("IfElseIn-JSX tip")
  );
