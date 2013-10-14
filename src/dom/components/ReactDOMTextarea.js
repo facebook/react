@@ -79,7 +79,6 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     return {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
-      //
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
       initialValue: '' + (value != null ? value : defaultValue),

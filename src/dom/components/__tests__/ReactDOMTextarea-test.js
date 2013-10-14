@@ -194,14 +194,14 @@ describe('ReactDOMTextarea', function() {
 
     expect(console.warn.argsForCall.length).toBe(1);
 
+    var stub;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <textarea><strong /></textarea>
-      );
+      stub = renderTextarea(<textarea><strong /></textarea>);
     }).not.toThrow();
 
-    expect(console.warn.argsForCall.length).toBe(2);
+    expect(stub.value).toBe('[object Object]');
 
+    expect(console.warn.argsForCall.length).toBe(2);
   });
 
   it('should support ReactLink', function() {
