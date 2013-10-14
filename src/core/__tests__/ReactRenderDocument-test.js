@@ -39,6 +39,66 @@ describe('rendering React components at document', function() {
     testDocument = getTestDocument();
   });
 
+  it('should be able to get root component id for document node', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
+    var Root = React.createClass({
+      render: function() {
+        return (
+          <html>
+            <head>
+              <title>Hello World</title>
+            </head>
+            <body>
+              Hello world
+            </body>
+          </html>
+        );
+      }
+    });
+
+    ReactMount.allowFullPageRender = true;
+    var component = React.renderComponent(<Root />, testDocument);
+    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+
+    var componentID = ReactMount.getReactRootID(testDocument);
+    expect(componentID).toBe(component._rootNodeID);
+  });
+
+  it('should be able to unmount component from document node', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
+    var Root = React.createClass({
+      render: function() {
+        return (
+          <html>
+            <head>
+              <title>Hello World</title>
+            </head>
+            <body>
+              Hello world
+            </body>
+          </html>
+        );
+      }
+    });
+
+    ReactMount.allowFullPageRender = true;
+    React.renderComponent(<Root />, testDocument);
+    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+
+    var unmounted = React.unmountComponentAtNode(testDocument);
+    expect(unmounted).toBe(true);
+    expect(testDocument.documentElement).not.toBe(null);
+    expect(testDocument.documentElement.innerHTML).toBe('');
+  });
+
   it('should be able to switch root constructors via state', function() {
     if (!testDocument) {
       // These tests are not applicable in jst, since jsdom is buggy.
