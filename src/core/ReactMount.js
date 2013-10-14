@@ -430,6 +430,10 @@ var ReactMount = {
   unmountComponentFromNode: function(instance, container) {
     instance.unmountComponent();
 
+    if (container.nodeType === DOC_NODE_TYPE) {
+      container = container.documentElement;
+    }
+
     // http://jsperf.com/emptying-a-node
     while (container.lastChild) {
       container.removeChild(container.lastChild);
@@ -591,6 +595,8 @@ var ReactMount = {
    */
 
   ATTR_NAME: ATTR_NAME,
+
+  getReactRootID: getReactRootID,
 
   getID: getID,
 
