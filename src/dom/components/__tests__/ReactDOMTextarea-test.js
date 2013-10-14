@@ -109,7 +109,7 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('true');
   });
 
-  it('should allow setting `value` to `false`', function () {
+  it('should allow setting `value` to `false`', function() {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
 
@@ -119,7 +119,7 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('false');
   });
 
-  it('should allow setting `value` to `objectToString`', function () {
+  it('should allow setting `value` to `objectToString`', function() {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
 
@@ -164,14 +164,14 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('17');
   });
 
-  it('should allow booleans as children', function () {
+  it('should allow booleans as children', function() {
     spyOn(console, 'warn');
     var node = renderTextarea(<textarea>{false}</textarea>);
     expect(console.warn.argsForCall.length).toBe(1);
     expect(node.value).toBe('false');
   });
 
-  it('should allow objects as children', function () {
+  it('should allow objects as children', function() {
     spyOn(console, 'warn');
     var obj = {
       toString: function() {

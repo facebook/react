@@ -141,7 +141,7 @@ describe('ReactDOMInput', function() {
               <input ref="c" type="radio" name="fruit" defaultChecked={true} />
             </form>
           </div>
-          );
+        );
       }
     });
 

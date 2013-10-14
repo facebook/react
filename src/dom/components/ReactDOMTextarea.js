@@ -55,7 +55,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       if (__DEV__) {
         console.warn(
           'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.'
+          'children on <textarea>.'
         );
       }
       invariant(

@@ -133,15 +133,15 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       for (var i = 0, groupLen = group.length; i < groupLen; i++) {
         var otherNode = group[i];
         if (otherNode === rootNode ||
-          otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
-          otherNode.form !== rootNode.form) {
+            otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
+            otherNode.form !== rootNode.form) {
           continue;
         }
         var otherID = ReactMount.getID(otherNode);
         invariant(
           otherID,
           'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-            'same `name` is not supported.'
+          'same `name` is not supported.'
         );
         var otherInstance = instancesByReactID[otherID];
         invariant(
