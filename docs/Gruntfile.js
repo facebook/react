@@ -18,8 +18,8 @@ module.exports = function(grunt) {
   /**
    * Update HTML file to include an ID and script src link
    */
-  function writeToHTML() {
-    grunt.file.write('_site/cookbook' + componentName + '.html', liveEditJS);
+  function writeToHTML(markdown, componentName) {
+    grunt.file.write('_site/cookbook' + componentName + '.html', markdown);
   }
 
   function readFromCookbookEntry(abspath, rootdir, subdir, filename) {
@@ -40,6 +40,7 @@ module.exports = function(grunt) {
           return;
         };
 
+        // Here we should iterate over matched code samples
         matchedJS = matchedJS[0];
 
         // Remove markdown syntax
@@ -51,7 +52,7 @@ module.exports = function(grunt) {
 
         componentNameCamelCase = componentName;
 
-        componentNameUpperCase = componentName.toUpperCase().replace("-","_");
+        componentNameUpperCase = componentName.toUpperCase().replace(/[\. ,:-]+/g, "_");
 
         componentNameCamelCase = componentNameCamelCase.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() });
 
@@ -60,6 +61,8 @@ module.exports = function(grunt) {
         console.log(componentName);
         
         writeToLiveSampleJS(liveEditJS, componentName);
+
+        writeToHTML(markdown, componentName);
   }
 
   grunt.registerTask('makeLiveSamples', 'Create live edit JS file for code samples in React Cookbook entries', function() {
