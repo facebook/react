@@ -38,9 +38,7 @@ if (typeof window === "undefined" || window === null) {
 headEl = document.getElementsByTagName('head')[0];
 
 var run = exports.run = function(code) {
-  var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
-
-  var functionBody = jsx ? transform(code).code : code;
+  var functionBody = transform(code).code;
   var scriptEl = document.createElement('script');
 
   scriptEl.innerHTML = functionBody;
