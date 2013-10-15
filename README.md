@@ -28,7 +28,7 @@ React.renderComponent(
 
 This example will render "Hello John" into a container on the page.
 
-You'll notice that we used an XML-like syntax; [we call it JSX](http://facebook.github.io/react/docs/syntax.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. A simple transform is included with React that allows converting JSX into native JavaScript for browsers to digest.
+You'll notice that we used an XML-like syntax; [we call it JSX](http://facebook.github.io/react/docs/jsx-in-depth.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. A simple transform is included with React that allows converting JSX into native JavaScript for browsers to digest.
 
 ## Installation
 
