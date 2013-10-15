@@ -103,7 +103,9 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
     var value = this.getValue();
     if (value != null) {
-      DOMPropertyOperations.setValueForProperty(rootNode, 'value', value);
+      // Cast `value` to a string to ensure the value is set correctly. While
+      // browsers typically do this as necessary, jsdom doesn't.
+      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
     }
   },
 
