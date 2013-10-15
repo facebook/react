@@ -109,7 +109,7 @@ var DOMPropertyOperations = {
         if (DOMProperty.hasBooleanValue[name] && !value) {
           node.removeAttribute(DOMProperty.getAttributeName[name]);
         } else {
-          node.setAttribute(DOMProperty.getAttributeName[name], value);
+          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
         }
       } else {
         var propName = DOMProperty.getPropertyName[name];
@@ -118,7 +118,7 @@ var DOMPropertyOperations = {
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
-      node.setAttribute(name, value);
+      node.setAttribute(name, '' + value);
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }

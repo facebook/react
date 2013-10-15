@@ -132,6 +132,14 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.role).toBeUndefined();
     });
 
+    it('should convert attribute values to string first', function() {
+      // Browsers default to this behavior, but some test environments do not.
+      // This ensures that we have consistent behavior.
+      var obj = {toString: function() { return '<html>'; }};
+      DOMPropertyOperations.setValueForProperty(stubNode, 'role', obj);
+      expect(stubNode.getAttribute('role')).toBe('<html>');
+    });
+
     it('should remove for falsey boolean properties', function() {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
