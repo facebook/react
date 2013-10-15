@@ -69,14 +69,14 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objectToString`', function() {
-    var objectToString = {
+  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+    var objToString = {
       toString: function() {
         return "foobar";
       }
     };
 
-    var stub = <textarea type="text" defaultValue={objectToString} />;
+    var stub = <textarea type="text" defaultValue={objToString} />;
     var node = renderTextarea(stub);
 
     expect(node.value).toBe('foobar');
@@ -119,18 +119,18 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('false');
   });
 
-  it('should allow setting `value` to `objectToString`', function() {
+  it('should allow setting `value` to `objToString`', function() {
     var stub = <textarea value="giraffe" />;
     var node = renderTextarea(stub);
 
     expect(node.value).toBe('giraffe');
 
-    var obj = {
+    var objToString = {
       toString: function() {
         return "foo";
       }
     };
-    stub.replaceProps({value: obj});
+    stub.replaceProps({value: objToString});
     expect(node.value).toEqual('foo');
   });
 
