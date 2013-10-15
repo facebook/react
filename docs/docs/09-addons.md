@@ -7,15 +7,21 @@ prev: tooling-integration.html
 next: examples.html
 ---
 
-`React.addons` is where we park some useful utilities for building React apps. **These should be considered experimental** but will eventually be rolled into core or a blessed utilities library.
+`React.addons` is where we park some useful utilities for building React apps.
+**These should be considered experimental** but will eventually be rolled into
+core or a blessed utilities library.
 
 ## CSS Animation and Transitions
 
-`ReactTransitions` is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. `ReactTransitions` is inspired by the excellent [ng-animate](http://www.nganimate.org/) library.
+`ReactTransitions` is an easy way to perform CSS transitions and animations
+when a React component enters or leaves the DOM. `ReactTransitions` is inspired
+by the excellent [ng-animate](http://www.nganimate.org/) library.
 
 ### Getting Started
 
-`ReactTransitionGroup` is the interface to `ReactTransitions`. This is a simple element that wraps all of the components you are interested in animating. Here's an example where we fade list items in and out.
+`ReactTransitionGroup` is the interface to `ReactTransitions`. This is a simple
+element that wraps all of the components you are interested in animating.
+Here's an example where we fade list items in and out.
 
 ```javascript{22-24}
 /** @jsx React.DOM */
@@ -56,9 +62,12 @@ var TodoList = React.createClass({
 });
 ```
 
-In this component, when a new item is added `ReactTransitionGroup` it will get the `example-enter` CSS class and the `example-enter-active` CSS class added in the next tick. This is a convention based on the `transitionName` prop.
+In this component, when a new item is added `ReactTransitionGroup` it will get
+the `example-enter` CSS class and the `example-enter-active` CSS class added in
+the next tick. This is a convention based on the `transitionName` prop.
 
-You can use these classes to trigger a CSS animation or transition. For example, try adding this CSS and adding a new list item:
+You can use these classes to trigger a CSS animation or transition. For
+example, try adding this CSS and adding a new list item:
 
 ```css
 .example-enter {

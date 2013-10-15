@@ -7,7 +7,8 @@ next: tutorial.html
 
 ## JSFiddle
 
-The easiest way to start hacking on React is using the following JSFiddle Hello Worlds
+The easiest way to start hacking on React is using the following JSFiddle Hello
+Worlds
 
  * **[React JSFiddle](http://jsfiddle.net/vjeux/kb3gN/)**
  * [React JSFiddle without JSX](http://jsfiddle.net/vjeux/VkebS/)
@@ -22,7 +23,8 @@ Download the starter kit to get started.
   </a>
 </div>
 
-In the root directory of the starter kit, create a `helloworld.html` with the following contents.
+In the root directory of the starter kit, create a `helloworld.html` with the
+following contents.
 
 ```html
 <!DOCTYPE html>
@@ -44,11 +46,15 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 </html>
 ```
 
-The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
+The XML syntax inside of JavaScript is called JSX; check out the [JSX
+syntax](jsx-in-depth.html) to learn more about it. In order to translate it to
+vanilla JavaScript we use `<script type="text/jsx">` and include
+`JSXTransformer.js` to actually perform the transformation in the browser.
 
 ### Separate File
 
-Your React JSX file can live in a separate file. Create the following `src/helloworld.js`.
+Your React JSX file can live in a separate file. Create the following
+`src/helloworld.js`.
 
 ```javascript
 /** @jsx React.DOM */
@@ -90,7 +96,11 @@ React.renderComponent(
 
 > Note:
 >
-> The comment parser is very strict right now, in order for it to pick up the `@jsx` modifier, two conditions are required. The `@jsx` comment block must be the first comment on the file. The comment must start with `/**` (`/*` and `//` will not work). If the parser can't find the `@jsx` comment, it will output the file without transforming it.
+> The comment parser is very strict right now, in order for it to pick up the
+> `@jsx` modifier, two conditions are required. The `@jsx` comment block must
+> be the first comment on the file. The comment must start with `/**` (`/*` and
+> `//` will not work). If the parser can't find the `@jsx` comment, it will
+> output the file without transforming it.
 
 Update your HTML file as below:
 
@@ -111,8 +121,12 @@ Update your HTML file as below:
 
 ## Want CommonJS?
 
-If you want to use React within a module system, [fork our repo](http://github.com/facebook/react), `npm install` and run `grunt`. A nice set of CommonJS modules will be generated. Our `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
+If you want to use React within a module system, [fork our
+repo](http://github.com/facebook/react), `npm install` and run `grunt`. A nice
+set of CommonJS modules will be generated. Our `jsx` build tool can be
+integrated into most packaging systems (not just CommonJS) quite easily.
 
 ## Next Steps
 
-Check out [the tutorial](tutorial.html) and the other examples in the `/examples` directory to learn more. Good luck, and welcome!
+Check out [the tutorial](tutorial.html) and the other examples in the
+`/examples` directory to learn more. Good luck, and welcome!
