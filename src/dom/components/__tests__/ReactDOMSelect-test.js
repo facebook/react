@@ -116,6 +116,35 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
+  it('should allow setting `value` with `objectToString`', function() {
+    var objectToString = {
+      animal: "giraffe",
+      toString: function() {
+        return this.animal;
+      }
+    };
+
+    var stub =
+      <select multiple={true} value={[objectToString]}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    var node = renderSelect(stub);
+
+    expect(node.options[0].selected).toBe(false);  // monkey
+    expect(node.options[1].selected).toBe(true);  // giraffe
+    expect(node.options[2].selected).toBe(false);  // gorilla
+
+    // Changing the `value` prop should change the selected options.
+    objectToString.animal = "monkey";
+    stub.forceUpdate();
+
+    expect(node.options[0].selected).toBe(true);  // monkey
+    expect(node.options[1].selected).toBe(false);  // giraffe
+    expect(node.options[2].selected).toBe(false);  // gorilla
+  });
+
   it('should allow switching to multiple', function() {
     var stub =
       <select defaultValue="giraffe">

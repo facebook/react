@@ -50,11 +50,31 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should display "" for `defaultValue` of `false`', function() {
+  it('should display "true" for `defaultValue` of `true`', function() {
+    var stub = <input type="text" defaultValue={true} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('true');
+  });
+
+  it('should display "false" for `defaultValue` of `false`', function() {
     var stub = <input type="text" defaultValue={false} />;
     var node = renderTextInput(stub);
 
-    expect(node.value).toBe('');
+    expect(node.value).toBe('false');
+  });
+
+  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+    var objToString = {
+      toString: function() {
+        return "foobar";
+      }
+    };
+
+    var stub = <input type="text" defaultValue={objToString} />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('foobar');
   });
 
   it('should display `value` of number 0', function() {
@@ -64,11 +84,40 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should display "" for `value` of `false`', function() {
-    var stub = <input type="text" value={false} />;
+  it('should allow setting `value` to `true`', function() {
+    var stub = <input type="text" value="yolo" />;
     var node = renderTextInput(stub);
 
-    expect(node.value).toBe('');
+    expect(node.value).toBe('yolo');
+
+    stub.replaceProps({value: true});
+    expect(node.value).toEqual('true');
+  });
+
+  it("should allow setting `value` to `false`", function() {
+    var stub = <input type="text" value="yolo" />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('yolo');
+
+    stub.replaceProps({value: false});
+    expect(node.value).toEqual('false');
+  });
+
+  it('should allow setting `value` to `objToString`', function() {
+    var stub = <input type="text" value="foo" />;
+    var node = renderTextInput(stub);
+
+    expect(node.value).toBe('foo');
+
+    var objToString = {
+      toString: function() {
+        return "foobar";
+      }
+    };
+
+    stub.replaceProps({value: objToString});
+    expect(node.value).toEqual('foobar');
   });
 
   it('should properly control a value of number `0`', function() {

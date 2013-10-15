@@ -55,7 +55,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var defaultValue = this.props.defaultValue;
     return {
       checked: this.props.defaultChecked || false,
-      value: defaultValue != null && defaultValue !== false ? defaultValue : ''
+      value: defaultValue != null ? defaultValue : ''
     };
   },
 
@@ -74,9 +74,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       this.props.checked != null ? this.props.checked : this.state.checked;
 
     var value = this.getValue();
-    props.value = value != null && value !== false ?
-      '' + value :
-      this.state.value;
+    props.value = value != null ? value : this.state.value;
 
     props.onChange = this._handleChange;
 
@@ -105,13 +103,9 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
     var value = this.getValue();
     if (value != null) {
-      // Cast `this.props.value` to a string so falsey values that cast to
-      // truthy strings are not ignored.
-      DOMPropertyOperations.setValueForProperty(
-        rootNode,
-        'value',
-        value !== false ? '' + value : ''
-      );
+      // Cast `value` to a string to ensure the value is set correctly. While
+      // browsers typically do this as necessary, jsdom doesn't.
+      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
     }
   },
 
