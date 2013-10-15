@@ -16,6 +16,8 @@
  * @providesModule DefaultDOMPropertyConfig
  */
 
+/*jslint bitwise: true*/
+
 "use strict";
 
 var DOMProperty = require('DOMProperty');
