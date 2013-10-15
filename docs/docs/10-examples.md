@@ -3,14 +3,14 @@ id: examples
 title: Examples
 layout: docs
 permalink: examples.html
-prev: tooling-integration.html
+prev: addons.html
 ---
 
 ### Production Apps
 
 * All of [Instagram.com](http://instagram.com/) is built on React.
 * Many components on [Facebook.com](http://www.facebook.com/), including the commenting interface, ads creation flows, and page insights.
-* [Khan Academy](http://khanacademy.org/) is using React for its question editor.
+* [Khan Academy](http://khanacademy.org/) is using React for most new JS development.
 
 
 ### Sample Code
