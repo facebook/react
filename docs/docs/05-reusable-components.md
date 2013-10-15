@@ -7,12 +7,20 @@ prev: multiple-components.html
 next: forms.html
 ---
 
-When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, less bugs, and less bytes down the wire.
+When designing interfaces, break down the common design elements (buttons, form
+fields, layout components, etc) into reusable components with well-defined
+interfaces. That way, the next time you need to build some UI you can write
+much less code, which means faster development time, less bugs, and less bytes
+down the wire.
 
 
 ## Prop Validation
 
-As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, an error will be thrown. Here is an example documenting the different validators provided:
+As your app grows it's helpful to ensure that your components are used
+correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes`
+exports a range of validators that can be used to make sure the data you
+receive is valid. When an invalid value is provided for a prop, an error will
+be thrown. Here is an example documenting the different validators provided:
 
 ```javascript
 React.createClass({
@@ -52,7 +60,8 @@ React.createClass({
 
 ## Default Prop Values
 
-React lets you define default values for your `props` in a very declarative way:
+React lets you define default values for your `props` in a very declarative
+way:
 
 ```javascript
 var ComponentWithDefaultProps = React.createClass({
@@ -65,12 +74,18 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+The result of `getDefaultProps()` will be cached and used to ensure that
+`this.props.value` will have a value if it was not specified by the parent
+component. This allows you to safely just use your props without having to
+write repetitive and fragile code to handle that yourself.
 
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
+A common type of React component is one that extends a basic HTML in a simple
+way. Often you'll want to copy any HTML attributes passed to your component to
+the underlying HTML element to save typing. React provides `transferPropsTo()`
+to do just this.
 
 ```javascript
 /** @jsx React.DOM */
@@ -94,9 +109,19 @@ React.renderComponent(
 
 ## Mixins
 
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+Components are the best way to reuse code in React, but sometimes very
+different components may share some common functionality. These are sometimes
+called [cross-cutting
+concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides
+`mixins` to solve this problem.
 
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](./working-with-the-browser.html) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
+One common use case is a component wanting to update itself on a time interval.
+It's easy to use `setInterval()`, but it's important to cancel your interval
+when you don't need it anymore to save memory. React provides [lifecycle
+methods](./working-with-the-browser.html) that let you know when a component is
+about to be created or destroyed. Let's create a simple mixin that uses these
+methods to provide an easy `setInterval()` function that will automatically get
+cleaned up when your component is destroyed.
 
 ```javascript
 /** @jsx React.DOM */
@@ -139,5 +164,8 @@ React.renderComponent(
 );
 ```
 
-A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
+A nice feature of mixins is that if a component is using multiple mixins and
+several mixins define the same lifecycle method (i.e. several mixins want to do
+some cleanup when the component is destroyed), all of the lifecycle methods are
+guaranteed to be called.
 

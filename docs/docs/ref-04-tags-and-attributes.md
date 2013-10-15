@@ -9,7 +9,8 @@ next: events.html
 
 ## Supported Tags
 
-React attempts to support all common elements. If you need an element that isn't listed here, please file an issue.
+React attempts to support all common elements. If you need an element that
+isn't listed here, please file an issue.
 
 The following elements are supported:
 
@@ -37,7 +38,9 @@ circle g line path polyline rect svg text
 ## Supported Attributes
 
 React supports all `data-*` and `aria-*` attributes as well as every attribute
-in the following lists. Note that all attributes are camel-cased and the attributes `class` and `for` are `className` and `htmlFor`, respectively, to match the DOM API specification.
+in the following lists. Note that all attributes are camel-cased and the
+attributes `class` and `for` are `className` and `htmlFor`, respectively, to
+match the DOM API specification.
 
 For a list of events, see [Supported Events](events.html).
 
@@ -54,7 +57,8 @@ rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
 target title type value width wmode
 ```
 
-In addition, the non-standard `autoCapitalize` attribute is supported for Mobile Safari.
+In addition, the non-standard `autoCapitalize` attribute is supported for
+Mobile Safari.
 
 ### SVG Attributes
 
