@@ -64,8 +64,8 @@ module.exports = function() {
           var pkgDir = path.join(nodePath, pkg.name);
           var doneCount = 2;
 
-          // Make sure that bin/jsx-internal is runnable by echoing main.js.
-          run("bin/jsx-internal", ["main.js"], {
+          // Make sure that bin/jsx is runnable by echoing main.js.
+          run("bin/jsx", ["main.js"], {
             cwd: pkgDir
           }, function(result) {
             assert.ok(result.stdout.indexOf("transform") >= 0, result.stdout);
