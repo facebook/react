@@ -1,3 +1,38 @@
+## 0.5.0 (October 16, 2013)
+
+### React
+
+* Memory usage improvements - reduced allocations in core which will help with GC pauses
+* Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.
+* Standardized prop -> DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.
+* Support for Selection events.
+* Support for [Composition events](https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent).
+* Support for additional DOM properties (`charSet`, `content`, `form`, `httpEquiv`, `rowSpan`, `autoCapitalize`).
+* Support for additional SVG properties (`rx`, `ry`).
+* Support for using `getInitialState` and `getDefaultProps` in mixins.
+* Support mounting into iframes.
+* Bug fixes for controlled form components.
+* Bug fixes for SVG element creation.
+* Added `React.version`.
+* Added `React.isValidClass` - Used to determine if a value is a valid component constructor.
+* Removed `React.autoBind` - This was deprecated in v0.4 and now properly removed.
+* Renamed  `React.unmountAndReleaseReactRootNode` to `React.unmountComponentAtNode`.
+* Began laying down work for refined performance analysis.
+* Better support for server-side rendering - [react-page](https://github.com/facebook/react-page) has helped improve the stability for server-side rendering.
+* Made it possible to use React in environments enforcing a strict [Content Security Policy](https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy). This also makes it possible to use React to build Chrome extensions.
+
+### React with Addons (New!)
+
+* Introduced a separate build with several "addons" which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. [Read more in the docs](http://facebook.github.io/react/docs/addons.html).
+
+### JSX
+
+* No longer transform `class` to `className` as part of the transform! This is a breaking change - if you were using `class`, you *must* change this to `className` or your components will be visually broken.
+* Added warnings to the in-browser transformer to make it clear it is not intended for production use.
+* Improved compatibility for Windows
+* Improved support for maintaining line numbers when transforming.
+
+
 ## 0.4.1 (July 26, 2013)
 
 ### React
