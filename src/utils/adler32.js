@@ -16,6 +16,8 @@
  * @providesModule adler32
  */
 
+/* jslint bitwise:true */
+
 "use strict";
 
 var MOD = 65521;

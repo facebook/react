@@ -49,9 +49,9 @@ var ReactPerf = {
             measuredFunc = ReactPerf.storedMeasure(objName, fnName, func);
           }
           return measuredFunc.apply(this, arguments);
-        };
+        }
         return func.apply(this, arguments);
-      }
+      };
     }
     return func;
   },
