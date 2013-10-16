@@ -44,7 +44,7 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
     }
 
     return (
-      React.DOM.div( {className:this.props.className}, 
+      React.DOM.div( {class:this.props.className}, 
         editor
       )
     );
@@ -76,22 +76,22 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       content =
         CodeMirrorEditor(
           {onChange:this.bindState('code'),
-          className:"playgroundStage",
+          class:"playgroundStage",
           codeText:this.state.code}
         );
     } else if (this.state.mode === this.MODES.JS) {
       content =
-        React.DOM.div( {className:"playgroundJS playgroundStage"}, 
+        React.DOM.div( {class:"playgroundJS playgroundStage"}, 
             this.getDesugaredCode()
         );
     }
 
     return (
-      React.DOM.div( {className:"playground"}, 
-        React.DOM.div( {className:"playgroundCode"}, 
+      React.DOM.div( {class:"playground"}, 
+        React.DOM.div( {class:"playgroundCode"}, 
           content
         ),
-        React.DOM.div( {className:"playgroundPreview"}, 
+        React.DOM.div( {class:"playgroundPreview"}, 
           React.DOM.div( {ref:"mount"} )
         )
       )
@@ -121,7 +121,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       }
     } catch (e) {
       React.renderComponent(
-        React.DOM.div( {content:e.toString(), className:"playgroundError"} ),
+        React.DOM.div( {content:e.toString(), class:"playgroundError"} ),
         mountNode
       );
     }

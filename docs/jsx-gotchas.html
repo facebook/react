@@ -163,6 +163,13 @@
           </li>
         
           <li>
+            <a href="/react/docs/addons.html">
+              Add-ons
+            </a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/examples.html">
               Examples
             </a>
@@ -228,6 +235,12 @@
     <h1>JSX Gotchas</h1>
     <div class="subHeader"></div>
     <p>JSX looks like HTML but there are some important differences you may run into.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>For DOM differences, such as the inline <code>style</code> attribute, check <a href="dom-differences.html">here</a>.</p>
+</blockquote>
 <h2 id="whitespace-removal">Whitespace Removal</h2>
 <p>JSX doesn&#39;t follow the same whitespace elimination rules as HTML. JSX removes all whitespace between two curly braces expressions. If you want to have whitespace, simply add <code>{&#39; &#39;}</code>.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="p">}</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">surname</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>

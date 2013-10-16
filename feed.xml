@@ -7,6 +7,55 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.5</title>
+				<description>&lt;p&gt;This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&amp;#39;ve worked hard to improve performance and memory usage. We&amp;#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.&lt;/p&gt;
+
+&lt;p&gt;The biggest change you&amp;#39;ll notice as a developer is that we no longer support &lt;code&gt;class&lt;/code&gt; in JSX as a way to provide CSS classes. Since this prop was being converted to &lt;code&gt;className&lt;/code&gt; at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are &lt;a href=&quot;https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156&quot;&gt;a few exceptions&lt;/a&gt; where we deviate slightly in an attempt to be consistent internally.&lt;/p&gt;
+
+&lt;p&gt;The other major change in v0.5 is that we&amp;#39;ve added an additional build - &lt;code&gt;react-with-addons&lt;/code&gt; - which adds support for some extras that we&amp;#39;ve been working on including animations and two-way binding. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more about these addons in the docs&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&quot;thanks-to-our-community&quot;&gt;Thanks to Our Community&lt;/h2&gt;
+&lt;p&gt;We added &lt;em&gt;22 new people&lt;/em&gt; to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our &lt;code&gt;AUTHORS&lt;/code&gt; file, that means we&amp;#39;ve nearly doubled the number of contributors in that time period. We&amp;#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&amp;#39;ve also had people tell us about talks they&amp;#39;ve given in their local community about React.&lt;/p&gt;
+
+&lt;p&gt;It&amp;#39;s been awesome to see the things that people are building with React, and we can&amp;#39;t wait to see what you come up with next!&lt;/p&gt;
+&lt;h2 id=&quot;changelog&quot;&gt;Changelog&lt;/h2&gt;&lt;h3 id=&quot;react&quot;&gt;React&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Memory usage improvements - reduced allocations in core which will help with GC pauses&lt;/li&gt;
+&lt;li&gt;Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.&lt;/li&gt;
+&lt;li&gt;Standardized prop -&amp;gt; DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.&lt;/li&gt;
+&lt;li&gt;Support for Selection events.&lt;/li&gt;
+&lt;li&gt;Support for &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent&quot;&gt;Composition events&lt;/a&gt;.&lt;/li&gt;
+&lt;li&gt;Support for additional DOM properties (&lt;code&gt;charSet&lt;/code&gt;, &lt;code&gt;content&lt;/code&gt;, &lt;code&gt;form&lt;/code&gt;, &lt;code&gt;httpEquiv&lt;/code&gt;, &lt;code&gt;rowSpan&lt;/code&gt;, &lt;code&gt;autoCapitalize&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Support for additional SVG properties (&lt;code&gt;rx&lt;/code&gt;, &lt;code&gt;ry&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Support for using &lt;code&gt;getInitialState&lt;/code&gt; and &lt;code&gt;getDefaultProps&lt;/code&gt; in mixins.&lt;/li&gt;
+&lt;li&gt;Support mounting into iframes.&lt;/li&gt;
+&lt;li&gt;Bug fixes for controlled form components.&lt;/li&gt;
+&lt;li&gt;Bug fixes for SVG element creation.&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;React.version&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;React.isValidClass&lt;/code&gt; - Used to determine if a value is a valid component constructor.&lt;/li&gt;
+&lt;li&gt;Removed &lt;code&gt;React.autoBind&lt;/code&gt; - This was deprecated in v0.4 and now properly removed.&lt;/li&gt;
+&lt;li&gt;Renamed  &lt;code&gt;React.unmountAndReleaseReactRootNode&lt;/code&gt; to &lt;code&gt;React.unmountComponentAtNode&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Began laying down work for refined performance analysis.&lt;/li&gt;
+&lt;li&gt;Better support for server-side rendering - &lt;a href=&quot;https://github.com/facebook/react-page&quot;&gt;react-page&lt;/a&gt; has helped improve the stability for server-side rendering.&lt;/li&gt;
+&lt;li&gt;Made it possible to use React in environments enforcing a strict &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy&quot;&gt;Content Security Policy&lt;/a&gt;. This also makes it possible to use React to build Chrome extensions.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&quot;react-with-addons-new&quot;&gt;React with Addons (New!)&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Introduced a separate build with several &amp;quot;addons&amp;quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more in the docs&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&quot;jsx&quot;&gt;JSX&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;No longer transform &lt;code&gt;class&lt;/code&gt; to &lt;code&gt;className&lt;/code&gt; as part of the transform! This is a breaking change - if you were using &lt;code&gt;class&lt;/code&gt;, you &lt;em&gt;must&lt;/em&gt; change this to &lt;code&gt;className&lt;/code&gt; or your components will be visually broken.&lt;/li&gt;
+&lt;li&gt;Added warnings to the in-browser transformer to make it clear it is not intended for production use.&lt;/li&gt;
+&lt;li&gt;Improved compatibility for Windows&lt;/li&gt;
+&lt;li&gt;Improved support for maintaining line numbers when transforming.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2013-10-16T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/10/16/react-v0.5.0.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/16/react-v0.5.0.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #9</title>
 				<description>&lt;p&gt;We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&amp;#39;ll probably organize more in the future.&lt;/p&gt;
 
@@ -540,56 +589,6 @@ If you were using React without JSX previously, your code should still work.&lt;
 				<pubDate>2013-07-17T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/17/react-v0-4-0.html</guid>
-			</item>
-		
-			<item>
-				<title>New in React v0.4: Prop Validation and Default Values</title>
-				<description>&lt;p&gt;Many of the questions we got following the public launch of React revolved around &lt;code&gt;props&lt;/code&gt;, specifically that people wanted to do validation and to make sure their components had sensible defaults.&lt;/p&gt;
-&lt;h2 id=&quot;validation&quot;&gt;Validation&lt;/h2&gt;
-&lt;p&gt;Oftentimes you want to validate your &lt;code&gt;props&lt;/code&gt; before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your &lt;code&gt;render&lt;/code&gt; or &lt;code&gt;componentWillReceiveProps&lt;/code&gt; functions, but that gets clunky fast.&lt;/p&gt;
-
-&lt;p&gt;React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;propTypes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// An optional string prop named &amp;quot;description&amp;quot;.&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;description&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// A required enum prop named &amp;quot;category&amp;quot;.&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;category&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;oneOf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;([&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;News&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;Photos&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isRequired&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// A prop named &amp;quot;dialog&amp;quot; that requires an instance of Dialog.&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;dialog&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;instanceOf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Dialog&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;isRequired&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;default-values&quot;&gt;Default Values&lt;/h2&gt;
-&lt;p&gt;One common pattern we&amp;#39;ve seen with our React code is to do something like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;default value&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Do this for a few &lt;code&gt;props&lt;/code&gt; across a few components and now you have a lot of redundant code. Starting with React v0.4, you can provide default values in a declarative way:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;getDefaultProps&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;default value&amp;#39;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We will use the cached result of this function before each &lt;code&gt;render&lt;/code&gt;. We also perform all validations before each &lt;code&gt;render&lt;/code&gt; to ensure that you have all of the data you need in the right form before you try to use it.&lt;/p&gt;
-
-&lt;hr&gt;
-
-&lt;p&gt;Both of these features are entirely optional. We&amp;#39;ve found them to be increasingly valuable at Facebook as our applications grow and evolve, and we hope others find them useful as well.&lt;/p&gt;
-</description>
-				<pubDate>2013-07-11T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html</guid>
 			</item>
 		
 	</channel>
