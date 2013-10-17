@@ -44,7 +44,7 @@ var CodeMirrorEditor = React.createClass({
     }
 
     return (
-      <div class={this.props.className}>
+      <div className={this.props.className}>
         {editor}
       </div>
     );
@@ -76,22 +76,22 @@ var ReactPlayground = React.createClass({
       content =
         <CodeMirrorEditor
           onChange={this.bindState('code')}
-          class="playgroundStage"
+          className="playgroundStage"
           codeText={this.state.code}
         />;
     } else if (this.state.mode === this.MODES.JS) {
       content =
-        <div class="playgroundJS playgroundStage">
+        <div className="playgroundJS playgroundStage">
             {this.getDesugaredCode()}
         </div>;
     }
 
     return (
-      <div class="playground">
-        <div class="playgroundCode">
+      <div className="playground">
+        <div className="playgroundCode">
           {content}
         </div>
-        <div class="playgroundPreview">
+        <div className="playgroundPreview">
           <div ref="mount" />
         </div>
       </div>
@@ -121,7 +121,7 @@ var ReactPlayground = React.createClass({
       }
     } catch (e) {
       React.renderComponent(
-        <div content={e.toString()} class="playgroundError" />,
+        <div content={e.toString()} className="playgroundError" />,
         mountNode
       );
     }
