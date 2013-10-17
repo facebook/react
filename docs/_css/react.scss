@@ -391,6 +391,16 @@ section.black content {
     font-size: 24px;
   }
 
+  h1, h2, h3, h4, h5, h6 {
+    a {
+      color: $darkTextColor;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
   // H2s form documentation topic dividers. Extra space helps.
   h2 {
     margin-top: 30px;
