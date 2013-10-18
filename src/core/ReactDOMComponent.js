@@ -105,7 +105,7 @@ ReactDOMComponent.Mixin = {
   ),
 
   _processDataAttribute: function(props) {
-    if (props.data && typeof props.data === "object") {
+    if (props.data && typeof props.data === 'object') {
       var objectProps = Object.keys(props.data),
         objectPropName,
         objectPropValue;
@@ -116,7 +116,7 @@ ReactDOMComponent.Mixin = {
         if (typeof objectPropValue === "function") {
           objectPropValue = objectPropValue.call(this);
         }
-        props["data-" + objectPropName] = objectPropValue;
+        props['data-' + objectPropName] = objectPropValue;
       }
 
       props.data = null;

@@ -49,6 +49,28 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().className).toEqual('');
     });
 
+    it("should handle data = {object}", function() {
+      var testObject = {
+        a: "a",
+        b: function() {
+          return "b";
+        }
+      };
+      var stub = ReactTestUtils.renderIntoDocument(<div data={testObject} />);
+      var domNode = stub.getDOMNode();
+      expect(domNode.dataset.a).toEqual('a');
+      expect(domNode.dataset.b).toEqual('b');
+      testObject = {
+        a: function() {
+          return 1;
+        },
+        b: "2"
+      };
+      stub.receiveProps({data: testObject});
+      expect(domNode.dataset.a).toEqual("1");
+      expect(domNode.dataset.b).toEqual("2");
+    });
+
     it("should gracefully handle various style value types", function() {
       var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
       var stubStyle = stub.getDOMNode().style;
