@@ -104,6 +104,25 @@ ReactDOMComponent.Mixin = {
     }
   ),
 
+  _processDataAttribute: function(props) {
+    if (props.data && typeof props.data === "object") {
+      var objectProps = Object.keys(props.data),
+        objectPropName,
+        objectPropValue;
+
+      for (var i = 0, l = objectProps.length; i < l; i++) {
+        objectPropName = objectProps[i];
+        objectPropValue = props.data[objectPropName];
+        if (typeof objectPropValue === "function") {
+          objectPropValue = objectPropValue.call(this);
+        }
+        props["data-" + objectPropName] = objectPropValue;
+      }
+
+      props.data = null;
+    }
+  },
+
   /**
    * Creates markup for the open tag and all attributes.
    *
@@ -118,21 +137,7 @@ ReactDOMComponent.Mixin = {
   _createOpenTagMarkup: function() {
     var props = this.props;
     var ret = this._tagOpen;
-
-    if(props.data && typeof props.data === "object") {
-      var objectProps = Object.keys(props.data),
-        objectPropName,
-        objectPropValue;
-
-      for(var i = 0, l = objectProps.length; i < l; i++) {
-        objectPropName = objectProps[i];
-        objectPropValue = props.data[objectPropName];
-        props["data-" + objectPropName] = objectPropValue;
-      }
-
-      props.data = null;
-    }
-
+    this._processDataAttribute(props);
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
@@ -236,6 +241,7 @@ ReactDOMComponent.Mixin = {
     var propKey;
     var styleName;
     var styleUpdates;
+    this._processDataAttribute(nextProps);
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey)) {
