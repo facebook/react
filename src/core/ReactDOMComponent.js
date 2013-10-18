@@ -119,6 +119,20 @@ ReactDOMComponent.Mixin = {
     var props = this.props;
     var ret = this._tagOpen;
 
+    if(props.data && typeof props.data === "object") {
+      var objectProps = Object.keys(props.data),
+        objectPropName,
+        objectPropValue;
+
+      for(var i = 0, l = objectProps.length; i < l; i++) {
+        objectPropName = objectProps[i];
+        objectPropValue = props.data[objectPropName];
+        props["data-" + objectPropName] = objectPropValue;
+      }
+
+      props.data = null;
+    }
+
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
