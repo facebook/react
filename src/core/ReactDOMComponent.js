@@ -104,22 +104,22 @@ ReactDOMComponent.Mixin = {
     }
   ),
 
-  _processDataAttribute: function(props) {
-    if (props.data && typeof props.data === 'object') {
-      var objectProps = Object.keys(props.data),
-        objectPropName,
-        objectPropValue;
+  _processDatasetAttribute: function(props) {
+    if (props.dataset && typeof props.dataset === 'object') {
+      var datasetProps = Object.keys(props.dataset),
+          datasetPropName,
+          datasetPropValue;
 
-      for (var i = 0, l = objectProps.length; i < l; i++) {
-        objectPropName = objectProps[i];
-        objectPropValue = props.data[objectPropName];
-        if (typeof objectPropValue === "function") {
-          objectPropValue = objectPropValue.call(this);
+      for (var i = 0, l = datasetProps.length; i < l; i++) {
+        datasetPropName = datasetProps[i];
+        datasetPropValue = props.dataset[datasetPropName];
+        if (typeof datasetPropValue === "function") {
+          datasetPropValue = datasetPropValue.call(this);
         }
-        props['data-' + objectPropName] = objectPropValue;
+        props['data-' + datasetPropName] = datasetPropValue;
       }
 
-      props.data = null;
+      props.dataset = null;
     }
   },
 
@@ -137,7 +137,7 @@ ReactDOMComponent.Mixin = {
   _createOpenTagMarkup: function() {
     var props = this.props;
     var ret = this._tagOpen;
-    this._processDataAttribute(props);
+    this._processDatasetAttribute(props);
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
@@ -241,7 +241,7 @@ ReactDOMComponent.Mixin = {
     var propKey;
     var styleName;
     var styleUpdates;
-    this._processDataAttribute(nextProps);
+    this._processDatasetAttribute(nextProps);
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey)) {

@@ -56,7 +56,7 @@ describe('ReactDOMComponent', function() {
           return "b";
         }
       };
-      var stub = ReactTestUtils.renderIntoDocument(<div data={testObject} />);
+      var stub = ReactTestUtils.renderIntoDocument(<div dataset={testObject} />);
       var domNode = stub.getDOMNode();
       expect(domNode.dataset.a).toEqual('a');
       expect(domNode.dataset.b).toEqual('b');
@@ -66,7 +66,7 @@ describe('ReactDOMComponent', function() {
         },
         b: "2"
       };
-      stub.receiveProps({data: testObject});
+      stub.receiveProps({dataset: testObject});
       expect(domNode.dataset.a).toEqual("1");
       expect(domNode.dataset.b).toEqual("2");
     });
