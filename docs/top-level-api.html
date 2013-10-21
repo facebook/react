@@ -234,19 +234,19 @@
   <div class="inner-content">
     <h1>Top-Level API</h1>
     <div class="subHeader"></div>
-    <h2 id="react">React</h2>
+    <h2 id="react"><a href="#react">React</a></h2>
 <p><code>React</code> is the entry point to the React framework. If you&#39;re using one of the prebuilt packages it&#39;s available as a global; if you&#39;re using CommonJS modules you can <code>require()</code> it.</p>
-<h3 id="react.dom">React.DOM</h3>
+<h3 id="react.dom"><a href="#react.dom">React.DOM</a></h3>
 <p><code>React.DOM</code> provides all of the standard HTML tags needed to build a React app. You generally don&#39;t use it directly; instead, just include it as part of the <code>/** @jsx React.DOM */</code> docblock.</p>
-<h3 id="react.initializetouchevents">React.initializeTouchEvents</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kr">boolean</span> <span class="nx">shouldUseTouch</span><span class="p">)</span>
+<h3 id="react.initializetouchevents"><a href="#react.initializetouchevents">React.initializeTouchEvents</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kr">boolean</span> <span class="nx">shouldUseTouch</span><span class="p">)</span>
 </code></pre></div>
 <p>Configure React&#39;s event system to handle touch events on mobile devices.</p>
-<h3 id="react.createclass">React.createClass</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
+<h3 id="react.createclass"><a href="#react.createclass">React.createClass</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
 </code></pre></div>
 <p>Creates a component given a specification. A component implements a <code>render</code> method which returns <strong>one single</strong> child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don&#39;t need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.</p>
 
 <p>For more information about the specification object, see <a href="component-specs.html">Component Specs and Lifecycle</a>.</p>
-<h3 id="react.rendercomponent">React.renderComponent</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderComponent</span><span class="p">(</span>
+<h3 id="react.rendercomponent"><a href="#react.rendercomponent">React.renderComponent</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">renderComponent</span><span class="p">(</span>
   <span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>
   <span class="p">[</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">]</span>
@@ -257,10 +257,10 @@
 <p>If the React component was previously rendered into <code>container</code>, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.</p>
 
 <p>If the optional callback is provided, it will be executed after the component is rendered or updated.</p>
-<h3 id="react.unmountandreleasereactrootnode">React.unmountAndReleaseReactRootNode</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">unmountAndReleaseReactRootNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
+<h3 id="react.unmountandreleasereactrootnode"><a href="#react.unmountandreleasereactrootnode">React.unmountAndReleaseReactRootNode</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">unmountAndReleaseReactRootNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>
 <p>Remove a mounted React component from the DOM and clean up its event handlers and state.</p>
-<h3 id="react.rendercomponenttostring">React.renderComponentToString</h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">renderComponentToString</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">)</span>
+<h3 id="react.rendercomponenttostring"><a href="#react.rendercomponenttostring">React.renderComponentToString</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">renderComponentToString</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">)</span>
 </code></pre></div>
 <p>Render a component to its initial HTML. This should only be used on the server. React will call <code>callback</code> with an HTML string when the markup is ready. You can use this method to can generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
 

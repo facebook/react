@@ -287,7 +287,7 @@
 <p>In this counterexample, the <code>&lt;input /&gt;</code> is merely a <em>description</em> of an <code>&lt;input /&gt;</code>. This description is used to create a <em>real</em> <strong>backing instance</strong> for the <code>&lt;input /&gt;</code>.</p>
 
 <p>So how do we talk to the <em>real</em> backing instance of the input?</p>
-<h2 id="the-ref-attribute">The ref Attribute</h2>
+<h2 id="the-ref-attribute"><a href="#the-ref-attribute">The ref Attribute</a></h2>
 <p>React supports a very special property that you can attach to any component that is output from <code>render()</code>. This special property allows you to refer to the corresponding <strong>backing instance</strong> of anything returned from <code>render()</code>. It is always guaranteed to be the proper instance, at any point in time.</p>
 
 <p>It&#39;s as simple as:</p>
@@ -297,7 +297,7 @@
 </code></pre></div>
 <p><strong>2.</strong> In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
-</code></pre></div><h2 id="completing-the-example">Completing the Example</h2><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+</code></pre></div><h2 id="completing-the-example"><a href="#completing-the-example">Completing the Example</a></h2><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
@@ -325,15 +325,15 @@
   <span class="p">});</span>
 </code></pre></div>
 <p>In this example, our render function returns a description of an <code>&lt;input /&gt;</code> instance. But the true instance is accessed via <code>this.refs.theInput</code>. As long as a child component with <code>ref=&quot;theInput&quot;</code> is returned from render, <code>this.refs.theInput</code> will access the proper instance. This even works on higher level (non-DOM) components such as <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code>.</p>
-<h2 id="summary">Summary</h2>
+<h2 id="summary"><a href="#summary">Summary</a></h2>
 <p>Refs are a great way to send a message to a particular child instance in a way that would be inconvenient to do via streaming Reactive <code>props</code> and <code>state</code>. They should, however, not be your go-to abstraction for flowing data through your application. By default, use the Reactive data flow and save <code>ref</code>s for use cases that are inherently non-reactive.</p>
-<h3 id="benefits">Benefits:</h3>
+<h3 id="benefits"><a href="#benefits">Benefits:</a></h3>
 <ul>
 <li>You can define any public method on your component classes (such as a reset method on a Typeahead) and call those public methods through refs (such as <code>this.refs.myTypeahead.reset()</code>).</li>
 <li>Performing DOM measurements almost always requires reaching out to a &quot;native&quot; component such as <code>&lt;input /&gt;</code> and accessing its underlying DOM node via <code>this.refs.myInput.getDOMNode()</code>. Refs are one of the only practical ways of doing this reliably.</li>
 <li>Refs are automatically book-kept for you! If that child is destroyed, its ref is also destroyed for you. No worrying about memory here (unless you do something crazy to retain a reference yourself).</li>
 </ul>
-<h3 id="cautions">Cautions:</h3>
+<h3 id="cautions"><a href="#cautions">Cautions:</a></h3>
 <ul>
 <li><em>Never</em> access refs inside of any component&#39;s render method - or while any component&#39;s render method is even running anywhere in the call stack.</li>
 <li>If you want to preserve Google Closure Compiler Crushing resilience, make sure to never access as a property what was specified as a string. This means you must access using <code>this.refs[&#39;myRefString&#39;]</code> if your ref was defined as <code>ref=&quot;myRefString&quot;</code>.</li>

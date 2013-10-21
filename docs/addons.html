@@ -235,9 +235,9 @@
     <h1>Add-ons</h1>
     <div class="subHeader"></div>
     <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library.</p>
-<h2 id="css-animation-and-transitions">CSS Animation and Transitions</h2>
+<h2 id="css-animation-and-transitions"><a href="#css-animation-and-transitions">CSS Animation and Transitions</a></h2>
 <p><code>ReactTransitions</code> is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. <code>ReactTransitions</code> is inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
-<h3 id="getting-started">Getting Started</h3>
+<h3 id="getting-started"><a href="#getting-started">Getting Started</a></h3>
 <p><code>ReactTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
@@ -297,9 +297,9 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3 id="disabling-animations">Disabling Animations</h3>
+</code></pre></div><h3 id="disabling-animations"><a href="#disabling-animations">Disabling Animations</a></h3>
 <p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactTransitionGroup</code> to disable these animations.</p>
-<h3 id="rendering-a-different-component">Rendering a Different Component</h3>
+<h3 id="rendering-a-different-component"><a href="#rendering-a-different-component">Rendering a Different Component</a></h3>
 <p>By default <code>ReactTransitionGroup</code> renders as a <code>span</code>. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span>
   <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
@@ -308,7 +308,7 @@
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
 <p><code>component</code> does not need to be a DOM component. It can be any component you want; even one you&#39;ve written yourself!</p>
-<h2 id="reactlink">ReactLink</h2>
+<h2 id="reactlink"><a href="#reactlink">ReactLink</a></h2>
 <p><code>ReactLink</code> is an easy way to express two-way binding with React.</p>
 
 <p>In React, data flows one way: from owner to child. This is because data only flows one direction in <a href="http://en.wikipedia.org/wiki/Von_Neumann_architecture">the Von Neumann model of computing</a>. You can think of it as &quot;one-way data binding.&quot;</p>
@@ -324,7 +324,7 @@
 
 <p>ReactLink is just a thin wrapper and convention around the <code>onChange</code>/<code>setState()</code> pattern. It doesn&#39;t fundamentally change how data flows in your React application.</p>
 </blockquote>
-<h3 id="reactlink-before-and-after">ReactLink: Before and After</h3>
+<h3 id="reactlink-before-and-after"><a href="#reactlink-before-and-after">ReactLink: Before and After</a></h3>
 <p>Here&#39;s a simple form example without using <code>ReactLink</code>:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
@@ -357,9 +357,9 @@
 <p><code>LinkedStateMixin</code> adds a method ot your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
 
 <p><code>ReactLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
-<h3 id="under-the-hood">Under the Hood</h3>
+<h3 id="under-the-hood"><a href="#under-the-hood">Under the Hood</a></h3>
 <p>There are two sides to <code>ReactLink</code>: the place where you create the <code>ReactLink</code> instance and the place where you use it. To prove how simple <code>ReactLink</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
-<h4 id="reactlink-without-linkedstatemixin">ReactLink Without LinkedStateMixin</h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<h4 id="reactlink-without-linkedstatemixin"><a href="#reactlink-without-linkedstatemixin">ReactLink Without LinkedStateMixin</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -378,7 +378,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>As you can see, <code>ReactLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
-<h4 id="reactlink-without-valuelink">ReactLink Without valueLink</h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<h4 id="reactlink-without-valuelink"><a href="#reactlink-without-valuelink">ReactLink Without valueLink</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
