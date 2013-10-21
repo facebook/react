@@ -22,6 +22,7 @@ var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('ExecutionEnvironment');
+var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 
 var getActiveElement = require('getActiveElement');
@@ -65,7 +66,8 @@ var mouseDown = false;
  * @param {object}
  */
 function getSelection(node) {
-  if ('selectionStart' in node) {
+  if ('selectionStart' in node &&
+      ReactInputSelection.hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd
