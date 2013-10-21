@@ -668,7 +668,7 @@ var ReactCompositeComponentMixin = {
     var propName;
     var defaultProps = this._defaultProps;
     for (propName in defaultProps) {
-      if (!(propName in props)) {
+      if (typeof props[propName] === 'undefined') {
         props[propName] = defaultProps[propName];
       }
     }

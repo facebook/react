@@ -190,6 +190,29 @@ describe('ReactCompositeComponent', function() {
 
   });
 
+  it('should use default values for undefined props', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {key: 'testKey'};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var instance1 = <Component />;
+    ReactTestUtils.renderIntoDocument(instance1);
+    reactComponentExpect(instance1).scalarPropsEqual({key: 'testKey'});
+
+    var instance2 = <Component key={undefined} />;
+    ReactTestUtils.renderIntoDocument(instance2);
+    reactComponentExpect(instance2).scalarPropsEqual({key: 'testKey'});
+
+    var instance3 = <Component key={null} />;
+    ReactTestUtils.renderIntoDocument(instance3);
+    reactComponentExpect(instance3).scalarPropsEqual({key: null});
+  });
+
   it('should normalize props with default values', function() {
     var Component = React.createClass({
       propTypes: {key: ReactPropTypes.string.isRequired},
