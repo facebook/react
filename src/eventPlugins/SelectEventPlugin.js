@@ -182,14 +182,12 @@ var SelectEventPlugin = {
           activeElement = topLevelTarget;
           activeElementID = topLevelTargetID;
           lastSelection = null;
-          mouseDown = false;
         }
         break;
       case topLevelTypes.topBlur:
         activeElement = null;
         activeElementID = null;
         lastSelection = null;
-        mouseDown = false;
         break;
 
       // Don't fire the event while the user is dragging. This matches the
