@@ -7,23 +7,24 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Declarative</h3>
+      <h3>Composable components</h3>
       <p>
-        React uses a declarative paradigm that makes it easier to reason about
-        your application.
+        React isn't the first JS library to let you build components. But it's the
+        only one that takes composition (building components out of other components) seriously.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Efficient</h3>
+      <h3>Virtual DOM</h3>
       <p>
-        React computes the minimal set of changes necessary to keep your DOM
-        up-to-date.
+        React uses a virtual DOM representation for ultra-high performance. It can also
+        run outside of the browser on Node.js.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Flexible</h3>
+      <h3>Data flow</h3>
       <p>
-        React works with the libraries and frameworks that you already know.
+        React implements one-way data binding which is simpler, faster and easier to
+        scale than alternatives.
       </p>
     </div>
   </div>
@@ -60,7 +61,7 @@ id: home
         This example uses `state` to track the current list of items as well as
         the text that the user has entered. Although event handlers appear to be
         rendered inline, they will be collected and implemented using event
-        delegation. 
+        delegation.
       </p>
       <div id="todoExample"></div>
     </div>
