@@ -941,6 +941,10 @@ mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
  */
 var ReactCompositeComponent = {
 
+  SpecPolicy: SpecPolicy,
+
+  Interface: ReactCompositeComponentInterface,
+
   LifeCycle: CompositeLifeCycle,
 
   Base: ReactCompositeComponentBase,
