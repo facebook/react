@@ -128,25 +128,6 @@ boolean shiftKey
 ```
 
 
-### Mutation Events
-
-Event names:
-
-```
-onDOMCharacterDataModified
-```
-
-Properties:
-
-```javascript
-Number attrChange
-String attrName
-String newValue
-String prevValue
-Node relatedNode
-```
-
-
 ### Touch events
 
 To enable touch events, call `React.initializeTouchEvents(true)` before
