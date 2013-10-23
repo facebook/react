@@ -36,7 +36,7 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
  */
 function addDefinition(spec, definition) {
   if (spec._definitions.indexOf(definition) === -1) {
-    definition.call(spec);
+    definition.call(spec, spec);
     spec._definitions.push(definition);
   }
 }
