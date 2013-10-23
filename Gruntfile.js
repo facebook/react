@@ -8,6 +8,7 @@ var populistTask = require('./grunt/tasks/populist');
 var phantomTask = require('./grunt/tasks/phantom');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
+var reactCoreTasks = require('./grunt/tasks/react-core');
 
 module.exports = function(grunt) {
 
@@ -52,17 +53,33 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('npm', npmTask);
 
+  grunt.registerTask('react-core:release', reactCoreTasks.buildRelease);
+
   // Check that the version we're exporting is the same one we expect in the
   // package. This is not an ideal way to do this, but makes sure that we keep
   // them in sync.
   var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
   grunt.registerTask('version-check', function() {
-    var version = reactVersionExp.exec(
+    var reactVersion = reactVersionExp.exec(
       grunt.file.read('./build/modules/React.js')
     )[1];
-    var expectedVersion = grunt.config.data.pkg.version;
-    if (version !== expectedVersion) {
-      grunt.log.error('Versions do not match. Expected %s, saw %s', expectedVersion, version);
+    var reactCoreVersion = grunt.file.readJSON('./npm-react-core/package.json').version;
+    var reactToolsVersion = grunt.config.data.pkg.version;
+
+    if (reactVersion !== reactToolsVersion) {
+      grunt.log.error(
+        'React version does not match react-tools version. Expected %s, saw %s',
+        reactToolsVersion,
+        reactVersion
+      );
+      return false;
+    }
+    if (reactCoreVersion !== reactToolsVersion) {
+      grunt.log.error(
+        'react-core version does not match react-tools veersion. Expected %s, saw %s',
+        reactToolsVersion,
+        reactCoreVersion
+      );
       return false;
     }
   });
@@ -79,6 +96,7 @@ module.exports = function(grunt) {
     'populist:jasmine',
     'populist:test'
   ]);
+  grunt.registerTask('build:react-core', ['version-check', 'jsx:release', 'react-core:release']);
 
   grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
