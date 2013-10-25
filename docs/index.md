@@ -16,15 +16,15 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a virtual DOM representation for ultra-high performance. It can also
-        run outside of the browser on Node.js.
+        React uses a <i>virtual DOM</li> representation for ultra-high performance. It can also
+        render on the server using Node.js &mdash; no heavy browser  DOM required.
       </p>
     </div>
     <div class="marketing-col">
       <h3>Data flow</h3>
       <p>
-        React implements one-way data binding which is simpler, faster and easier to
-        scale than alternatives.
+        React implements one-way reactive data flow which reduces boilerplate and is
+        easier to reason about than traditional data binding.
       </p>
     </div>
   </div>
