@@ -147,7 +147,7 @@ var Danger = {
 
     invariant(
       resultList.length === markupList.length,
-      'Danger: Expected markup to render %d nodes, but rendered %d.',
+      'Danger: Expected markup to render %s nodes, but rendered %s.',
       markupList.length,
       resultList.length
     );
