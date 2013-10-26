@@ -33,14 +33,14 @@ var TodoList = React.createClass({
   },
   handleRemove: function(i) {
     var newItems = this.state.items;
-    newItems.splice(i, 0)
+    newItems.splice(i, 1)
     this.setState({items: newItems});
   },
   render: function() {
     var items = this.state.items.map(function(item, i) {
       return (
         <div key={i} onClick={this.handleRemove.bind(this, i)}>
-          {item}}
+          {item}
         </div>
       );
     }.bind(this));
