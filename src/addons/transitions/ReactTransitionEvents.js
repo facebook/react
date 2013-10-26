@@ -44,9 +44,10 @@ function detectEvents() {
   var testEl = document.createElement('div');
   var style = testEl.style;
   for (var baseEventName in EVENT_NAME_MAP) {
-    for (var styleName in baseEventName) {
+    var baseEvents = EVENT_NAME_MAP[baseEventName];
+    for (var styleName in baseEvents) {
       if (styleName in style) {
-        endEvents.push(EVENT_NAME_MAP[styleName]);
+        endEvents.push(baseEvents[styleName]);
         break;
       }
     }
