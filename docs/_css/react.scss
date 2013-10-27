@@ -15,6 +15,7 @@ $contentPadding: 20px;
 $columnWidth: 280px;
 $columnGutter: 40px;
 $twoColumnWidth: 2 * $columnWidth + $columnGutter;
+$navHeight: 50px;
 
 
 
@@ -42,7 +43,7 @@ html {
 
 
 .container {
-  padding-top: 50px;
+  padding-top: $navHeight;
   min-width: $contentWidth + (2 * $contentPadding);
 }
 
@@ -81,7 +82,7 @@ li {
   color: $lightTextColor;
   position: fixed;
   top: 0;
-  height: 50px;
+  height: $navHeight;
   box-shadow: 0 0 5px rgba(0, 0, 0, .5);
   width: 100%;
   z-index: 100;
@@ -103,9 +104,9 @@ li {
       padding: 0 8px;
       text-transform: uppercase;
       letter-spacing: 1px;
-      line-height: 50px;
+      line-height: $navHeight;
       display: inline-block;
-      height: 50px;
+      height: $navHeight;
       color: $mediumTextColor;
 
       &:hover {
@@ -123,7 +124,7 @@ li {
   .nav-home {
     color: #00d8ff;
     font-size: 24px;
-    line-height: 50px;
+    line-height: $navHeight;
   }
 
   .nav-logo {
@@ -392,8 +393,15 @@ section.black content {
   }
 
   h1, h2, h3, h4, h5, h6 {
-    a {
+    &.anchor {
+      position: relative;
+      top: -$navHeight;
+    }
+
+    > a {
       color: $darkTextColor;
+      position: relative;
+      top: $navHeight;
 
       &:hover {
         text-decoration: underline;
