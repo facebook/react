@@ -7,7 +7,7 @@ prev: initial-ajax.html
 ---
 
 ### Problem
-How does `undefined` and `false` behave as attribute value and as child component?
+How does `undefined` and `false` behave as an attribute value and as a child component?
 
 ### Solution
 Renders as `id="false"`:
