@@ -53,13 +53,17 @@ If the React component was previously rendered into `container`, this will perfo
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
 
-### React.unmountAndReleaseReactRootNode
+### React.unmountComponentAtNode
 
 ```javascript
-unmountAndReleaseReactRootNode(DOMElement container)
+unmountComponentAtNode(DOMElement container)
 ```
 
 Remove a mounted React component from the DOM and clean up its event handlers and state.
+
+> Note:
+>
+> This method was called `React.unmountAndReleaseReactRootNode` until v0.5. It still works in v0.5 but will be removed in future versions.
 
 
 ### React.renderComponentToString
