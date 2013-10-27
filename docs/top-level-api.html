@@ -257,9 +257,15 @@
 <p>If the React component was previously rendered into <code>container</code>, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.</p>
 
 <p>If the optional callback is provided, it will be executed after the component is rendered or updated.</p>
-<h3 id="react.unmountandreleasereactrootnode"><a href="#react.unmountandreleasereactrootnode">React.unmountAndReleaseReactRootNode</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">unmountAndReleaseReactRootNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
+<h3 id="react.unmountcomponentatnode"><a href="#react.unmountcomponentatnode">React.unmountComponentAtNode</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">)</span>
 </code></pre></div>
 <p>Remove a mounted React component from the DOM and clean up its event handlers and state.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>This method was called <code>React.unmountAndReleaseReactRootNode</code> until v0.5. It still works in v0.5 but will be removed in future versions.</p>
+</blockquote>
 <h3 id="react.rendercomponenttostring"><a href="#react.rendercomponenttostring">React.renderComponentToString</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">renderComponentToString</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">)</span>
 </code></pre></div>
 <p>Render a component to its initial HTML. This should only be used on the server. React will call <code>callback</code> with an HTML string when the markup is ready. You can use this method to can generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
