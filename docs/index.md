@@ -16,7 +16,7 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a <i>virtual DOM</li> representation for ultra-high performance. It can also
+        React uses a <i>virtual DOM</i> representation for ultra-high performance. It can also
         render on the server using Node.js &mdash; no heavy browser  DOM required.
       </p>
     </div>
