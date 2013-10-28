@@ -35,6 +35,30 @@
   "scripts": {
     "test": "grunt build && grunt test"
   },
+  "testling": {
+    "scripts": [
+      "test/browser-runner.js"
+    ],
+    "browsers": [
+      "iexplore/10.0",
+      "iexplore/8.0",
+      "iexplore/9.0",
+      "chrome/21.0",
+      "chrome/29.0",
+      "chrome/canary",
+      "firefox/24.0",
+      "firefox/3.6",
+      "firefox/nightly",
+      "opera/15.0",
+      "opera/next",
+      "safari/5.0.5",
+      "safari/5.1",
+      "safari/6.0",
+      "ipad/6.0",
+      "iphone/6.0",
+      "android-browser/4.2"
+    ]
+  },
   "dependencies": {
     "commoner": "~0.8.4",
     "esprima-fb": "~1001.1001.2000-dev-harmony-fb",
