@@ -23,3 +23,4 @@ docs/js/examples
 docs/downloads
 examples/shared/*.js
 
+test/the files to test.generated.js
