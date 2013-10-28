@@ -6,7 +6,7 @@ var global = {};
 importScripts("phantomjs-shims.js");
 
 try {
-  importScripts("react.js");
+  importScripts("../../build/react.js");
 } catch (e) {
   postMessage(JSON.stringify({
     type: 'error',

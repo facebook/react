@@ -56,6 +56,8 @@ server.listen(port, function(req, res) {
     file = "../build/" + file;
     break;
 
+  case "src/test/worker.js":
+    file = file.replace('src/test/', '');
   case "phantomjs-shims.js":
   case "worker.js":
     file = "../src/test/" + file;

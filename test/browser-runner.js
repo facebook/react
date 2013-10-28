@@ -18,6 +18,8 @@
 
   var cacheBust = '?_=' + Date.now().toString(36);
 
+  window.ReactWebWorker_URL = __dirname + '/../src/test/worker.js' + cacheBust;
+
   document.write('<script src="' + __dirname + '/../build/jasmine.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../build/react.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../build/react-test.js' + cacheBust + '"><\/script>');
