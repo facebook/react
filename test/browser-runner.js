@@ -23,6 +23,7 @@
   document.write('<script src="' + __dirname + '/../build/jasmine.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../build/react.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../build/react-test.js' + cacheBust + '"><\/script>');
+  document.write('<script src="' + __dirname + '/../node_modules/jasmine-tapreporter/src/tapreporter.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../test/the files to test.generated.js' + cacheBust + '"><\/script>');
   document.write('<script src="' + __dirname + '/../test/jasmine-execute.js' + cacheBust + '"><\/script>');
 

@@ -56,7 +56,8 @@
     "grunt-compare-size": "~0.4.0",
     "gzip-js": "~0.3.2",
     "tmp": "~0.0.18",
-    "grunt-contrib-compress": "~0.5.1"
+    "grunt-contrib-compress": "~0.5.1",
+    "jasmine-tapreporter": "~0.2.2"
   },
   "engines": {
     "node": ">=0.10.0"
