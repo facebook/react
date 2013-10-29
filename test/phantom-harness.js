@@ -47,6 +47,10 @@ var indexHtml = fs.read("index.html").replace(
 var server = require("webserver").create();
 server.listen(port, function(req, res) {
   var file = req.url.replace(/^\/+/, "");
+  file = file.split('?')[0];
+  file = file.replace('build/', '');
+  file = file.replace('src/test/', '');
+  
   var content;
 
   switch (file) {
@@ -56,8 +60,6 @@ server.listen(port, function(req, res) {
     file = "../build/" + file;
     break;
 
-  case "src/test/worker.js":
-    file = file.replace('src/test/', '');
   case "phantomjs-shims.js":
   case "worker.js":
     file = "../src/test/" + file;
