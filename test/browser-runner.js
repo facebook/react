@@ -1,4 +1,5 @@
 ;(function(){
+  console.log('# ' + location);
 
   var __filename = (function(){
     var scripts = document.getElementsByTagName('script');
