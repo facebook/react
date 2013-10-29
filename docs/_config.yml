@@ -96,3 +96,5 @@ nav_cookbook:
     title: DOM event listeners
   - id: initial-ajax
     title: Initial AJAX
+  - id: false-in-jsx
+    title: False In JSX

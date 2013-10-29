@@ -7,11 +7,6 @@ prev: if-else-in-JSX.html
 next: jsx-root-node-count.html
 ---
 
-### Problem
-You're getting a parsing error (unexpected token) from JSX.
+In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't.
 
-### Solution
-One of the reasons might be that you didn't put a `/` for your self-closing tags. `<MyComponent />` is valid while `<MyComponent>` isn't.
-
-### Discussion
-In fact, every React component can be self-closing: `<div/>`.
+Related: every React component can be self-closing: `<div/>`.

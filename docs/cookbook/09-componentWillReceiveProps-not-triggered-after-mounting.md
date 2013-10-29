@@ -7,11 +7,6 @@ prev: controlled-input-null-value.html
 next: props-in-getInitialSate-as-anti-pattern.html
 ---
 
-### Problem
-`componentWillReceiveProps` isn't triggered after the node is put on scene.
+`componentWillReceiveProps` isn't triggered after the node is put on scene. This is by design. Check out [other lifecycle methods](/react/docs/cookbook/component-specs.html) for the one that suits your needs.
 
-### Solution
-This is by design. Check out [other lifecycle methods](/react/docs/cookbook/component-specs.html) for the one that suits your needs.
-
-### Discussion
-`componentWillReceiveProps` often handles the logic of comparing with the old props and acting upon changes; not triggering it at mounting (where there are no old props) helps in defining what the method does.
+The reason for that is because `componentWillReceiveProps` often handles the logic of comparing with the old props and acting upon changes; not triggering it at mounting (where there are no old props) helps in defining what the method does.

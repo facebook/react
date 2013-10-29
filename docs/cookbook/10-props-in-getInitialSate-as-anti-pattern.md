@@ -7,8 +7,13 @@ prev: componentWillReceiveProps-not-triggered-after-mounting.html
 next: dom-event-listeners.html
 ---
 
-### Problem
-You're using `this.props` in a component `getInitialSate`, like so:
+> Note:
+>
+> This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
+
+Using props, passed down from parent, to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
+
+Bad example:
 
 ```js
 /** @jsx React.DOM */
@@ -25,8 +30,7 @@ var MessageBox = React.createClass({
 React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
 ```
 
-### Solution
-Avoid this (see below for explanation). Compute it directly inside `render`:
+Better:
 
 ```js
 /** @jsx React.DOM */
@@ -56,8 +60,3 @@ var MessageBox = React.createClass({
 
 React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
 ```
-
-### Discussion
-This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
-
-Using props, passed down from parent, to generate state often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.

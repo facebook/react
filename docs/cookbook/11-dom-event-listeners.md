@@ -7,10 +7,6 @@ prev: props-in-getInitialSate-as-anti-pattern.html
 next: initial-ajax.html
 ---
 
-### Problem
-You want to listen to an event inside a component.
-
-### Solution
 > Note:
 >
 > This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/cookbook/events.html)). This is good for integrations with other libraries such as jQuery.
@@ -41,5 +37,4 @@ var Box = React.createClass({
 React.renderComponent(<Box />, mountNode);
 ```
 
-### Discussion
 `componentDidMount` is called after the component's mounted and has a DOM representation. This is often a place where you'd attach generic DOM events.

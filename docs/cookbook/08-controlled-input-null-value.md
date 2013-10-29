@@ -7,11 +7,11 @@ prev: children-prop-type.html
 next: componentWillReceiveProps-not-triggered-after-mounting.html
 ---
 
-### Problem
-You specified a `value` parameter for your form input, but the input value can still be modified, contrary to [what you'd expect](/react/docs/cookbook/forms.html).
+Specifying the `value` prop on a [controlled component](/react/docs/cookbook/forms.html) prevents the user from changing the input unless you desire so.
 
-### Solution
-You might have accidentally set `value` to `undefined` or `null`. The snippet below shows this phenomenon; after a second, the text becomes editable.
+You might have run into a problem where `value` is specified, but the input can still be changed without consent. In this case, you might have accidentally set `value` to `undefined` or `null`.
+
+The snippet below shows this phenomenon; after a second, the text becomes editable.
 
 ```js
 /** @jsx React.DOM */

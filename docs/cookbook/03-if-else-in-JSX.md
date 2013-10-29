@@ -7,11 +7,7 @@ prev: inline-styles.html
 next: self-closing-tag.html
 ---
 
-### Problem
-You want to use conditionals in JSX.
-
-### Solution
-Don't forget that JSX is really just sugar for functions:
+`if-else` statements don't work inside JSX, since JSX is really just sugar for functions:
 
 ```js
 /** @jsx React.DOM */
@@ -32,5 +28,4 @@ What you're searching for is ternary expression:
 React.renderComponent(<div id={true ? 'msg' : ''}>Hello World!</div>, mountNode);
 ```
 
-### Discussion
-Try the [JSX compiler](react/jsx-compiler.html).
+Try the [JSX compiler](/react/jsx-compiler.html).

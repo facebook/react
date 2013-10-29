@@ -1,15 +1,13 @@
 ---
-id: false-in-jsx
+id: false-in-jsx-tip
 title: False in JSX
 layout: cookbook
-permalink: initial-ajax.html
+permalink: false-in-jsx.html
 prev: initial-ajax.html
 ---
 
-### Problem
-How does `undefined` and `false` behave as an attribute value and as a child component?
+Here's how `false` renders in different contexts:
 
-### Solution
 Renders as `id="false"`:
 ```js
 /** @jsx React.DOM */
@@ -28,5 +26,4 @@ No child:
 React.renderComponent(<div>{false}</div>, mountNode);
 ```
 
-### Discussion
-The reason why the last one doesn't render as the string `"false"` as a `div` child is to allow the more common use-case: `<div>{x > 1 && You have more than one item}</div>`.
+The reason why this one doesn't render as the string `"false"` as a `div` child is to allow the more common use-case: `<div>{x > 1 && You have more than one item}</div>`.

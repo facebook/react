@@ -4,12 +4,9 @@ title: Load initial data via AJAX
 layout: cookbook
 permalink: initial-ajax.html
 prev: dom-event-listeners.html
+next: false-in-jsx.html
 ---
 
-### Problem
-You want to load initial ajax data.
-
-### Solution
 Fetch data in `componentDidMount`. When they arrive, put them inside your state then render them.
 
 This example fetches the desired Github user's lastest gist:
