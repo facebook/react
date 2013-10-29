@@ -58,6 +58,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></li>
+      
         <li><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></li>
       
         <li><a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a></li>
@@ -76,14 +78,36 @@
       
         <li><a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a></li>
       
-        <li><a href="/react/blog/2013/07/17/react-v0-4-0.html">React v0.4.0</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        <h1><a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a></h1>
+        <p class="meta">June 21, 2013 by Paul O'Shannessy</p>
+        <hr />
+        <div class="post">
+         <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
+<h2 id="react-tools"><a href="#react-tools">react-tools</a></h2>
+<ul>
+<li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
+<li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
+<li>Freeze our esprima dependency.</li>
+</ul>
+<h2 id="react"><a href="#react">React</a></h2>
+<ul>
+<li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
+</ul>
+<h2 id="jsxtransformer"><a href="#jsxtransformer">JSXTransformer</a></h2>
+<ul>
+<li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
+</ul>
+
+        </div>
+      </div>
     
       <div class="post-list-item">
         <h1><a href="/react/blog/2013/06/19/community-roundup-2.html">Community Round-up #2</a></h1>
