@@ -7,17 +7,17 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Composable components</h3>
+      <h3>Composition</h3>
       <p>
-        React isn't the first JS library to let you build components. But it's the
-        only one that takes composition (building components out of other components) seriously.
+        React isn&apos;t the first JS library to let you build components. But it&apos;s
+        the only one that emphasizes building components out of other components above all else.
       </p>
     </div>
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a <i>virtual DOM</i> representation for ultra-high performance. It can also
-        render on the server using Node.js &mdash; no heavy browser  DOM required.
+        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. It can also
+        render on the server using Node.js &mdash; no heavy browser DOM required.
       </p>
     </div>
     <div class="marketing-col">
