@@ -41,6 +41,7 @@ var UserGist = React.createClass({
 });
 
 React.renderComponent(
-  <UserGist source="https://api.github.com/users/octocat/gists" />, mountNode
+  <UserGist source="https://api.github.com/users/octocat/gists" />,
+  mountNode
 );
 ```
