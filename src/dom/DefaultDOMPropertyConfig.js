@@ -57,7 +57,7 @@ var DefaultDOMPropertyConfig = {
     data: null, // For `<object />` acts as `src`.
     dateTime: MUST_USE_ATTRIBUTE,
     dir: null,
-    disabled: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    disabled: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     draggable: null,
     encType: null,
     form: MUST_USE_ATTRIBUTE,
