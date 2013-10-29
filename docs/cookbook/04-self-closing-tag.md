@@ -9,4 +9,6 @@ next: jsx-root-node-count.html
 
 In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't.
 
-Related: every React component can be self-closing: `<div/>`.
+> Note:
+>
+> Every React component can be self-closing: `<div />`. `<div></div>` is also an equivalent.
