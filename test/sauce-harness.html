@@ -1,0 +1,21 @@
+<!doctype html>
+<meta charset=utf-8>
+
+<link rel="stylesheet" href="../vendor/jasmine/jasmine.css">
+<script>
+
+var __filename = location.protocol + '//' + location.hostname + ':' + location.port + location.pathname.replace(/^\/?/,'/');
+var __dirname = __filename.split('/').reverse().slice(1).reverse().join('/');
+
+var cacheBust = '?_=' + Date.now().toString(36);
+
+window.ReactWebWorker_URL = __dirname + '/../src/test/worker.js' + cacheBust;
+
+</script>
+<script src='../build/jasmine.js'></script>
+<script src='../build/react.js'></script>
+<script src='../build/react-test.js'></script>
+<script src='../node_modules/jasmine-tapreporter/src/tapreporter.js'></script>
+<script src='../test/the-files-to-test.generated.js'></script>
+<script src="../vendor/jasmine-jsreporter/jasmine-jsreporter.js"></script>
+<script src='../test/jasmine-execute.js'></script>

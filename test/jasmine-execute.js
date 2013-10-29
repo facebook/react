@@ -1,5 +1,6 @@
 ;(function(env){
   env.addReporter(new TAPReporter(console.log.bind(console)));
+  env.addReporter(new jasmine.JSReporter());
   
   // Clean up any nodes the previous test might have added.
   env.afterEach(function() {

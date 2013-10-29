@@ -17,6 +17,8 @@ module.exports = function(grunt) {
     browserify: require('./grunt/config/browserify'),
     populist: require('./grunt/config/populist'),
     phantom: require('./grunt/config/phantom'),
+    connect: require('./grunt/config/server'),
+    "saucelabs-jasmine": require('./grunt/config/saucelabs-jasmine'),
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
     jshint: require('./grunt/config/jshint'),
@@ -25,11 +27,9 @@ module.exports = function(grunt) {
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-compare-size');
-  grunt.loadNpmTasks('grunt-contrib-compress');
+  for (var key in grunt.file.readJSON("package.json").devDependencies) {
+      if (key !== "grunt" && key.indexOf("grunt") === 0) grunt.loadNpmTasks(key);
+  }
 
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
@@ -74,7 +74,13 @@ module.exports = function(grunt) {
     'populist:test'
   ]);
 
-  grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
+  grunt.registerTask('test', [
+    'build:test',
+    'build:basic',
+    'phantom:run',
+    'connect',
+    'saucelabs-jasmine'
+  ]);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
