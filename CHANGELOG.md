@@ -1,3 +1,17 @@
+## 0.5.1 (October 29, 2013)
+
+### React
+
+* Fixed bug with `<input type="range">` and selection events.
+* Fixed bug with selection and focus.
+* Made it possible to unmount components from the document root.
+* Fixed bug for `disabled` attribute handling on non-`<input>` elements.
+
+### React with Addons
+
+* Fixed bug with transition and animation event detection.
+
+
 ## 0.5.0 (October 16, 2013)
 
 ### React
