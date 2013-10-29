@@ -33,7 +33,7 @@ module.exports = function(grunt) {
         componentName,
         componentNameCamelCase,
         componentNameUpperCase,
-        liveEditJS;
+        liveEditJS = '';
 
         // File has no code sample
         if (matchedJS === null) {
@@ -41,29 +41,31 @@ module.exports = function(grunt) {
         };
 
         // Here we should iterate over matched code samples
-        matchedJS = matchedJS[0];
 
-        // Remove markdown syntax
-        matchedJS = matchedJS.slice(5, -3);
-
-        // remove file extension
-        componentName = filename.slice(0, -3);
+        for( var i = 0; i < matchedJS.length; i++) {
 
 
-        componentNameCamelCase = componentName;
+            // Remove markdown syntax
+            matchedJS = matchedJS[i].slice(5, -3);
 
-        componentNameUpperCase = componentName.toUpperCase().replace(/[\. ,:-]+/g, "_").slice(6);
+            // remove file extension
+            componentName = filename.slice(0, -3) + i;
+            
+            // Uppercase with underscores (FOO_COMPONENT)
+            componentNameUpperCase = componentName.toUpperCase().replace(/[\. ,:-]+/g, "_").slice(6);
 
+            // Camelcase (fooExample)
+            componentNameCamelCase = componentName.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() }).slice(5);
 
+            // Add code sample to live edit 
+            liveEditJS += '/**\n * @jsx React.DOM\n */\n\n var ' + componentNameUpperCase + '_COMPONENT = "' + matchedJS + '";\n React.renderComponent(\n ReactPlayground( {codeText:' + componentNameUpperCase + '_COMPONENT} ),\n document.getElementById("' + componentNameCamelCase + '")\n );'
+            
+            writeToLiveSampleJS(liveEditJS, componentName);
 
-        componentNameCamelCase = componentNameCamelCase.replace(/-([a-z])/g, function (g) { return g[1].toUpperCase() }).slice(5);
-
-        // Add code sample to live edit 
-        liveEditJS = '/**\n * @jsx React.DOM\n */\n\n var ' + componentNameUpperCase + '_COMPONENT = "' + matchedJS + '";\n React.renderComponent(\n ReactPlayground( {codeText:' + componentNameUpperCase + '_COMPONENT} ),\n document.getElementById("' + componentNameCamelCase + '")\n );'
-        console.log(componentName);
+        }
         
-        writeToLiveSampleJS(liveEditJS, componentName);
 
+        
         // writeToHTML(markdown, componentName);
   }
 
