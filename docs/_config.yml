@@ -82,10 +82,10 @@ nav_cookbook:
     title: Self closing tag
   - id: jsx-root-node-count
     title: JSX root node count
-  - id: style-prop-value-px
-    title: Style prop value px
-  - id: children-prop-type
-    title: Children prop type
+  - id: style-props-value-px
+    title: Style props value px
+  - id: children-props-type
+    title: Children props type
   - id: controlled-input-null-value
     title: Controlled input null value
   - id: componentWillReceiveProps-not-triggered-after-mounting
