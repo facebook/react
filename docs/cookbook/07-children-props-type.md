@@ -1,9 +1,9 @@
 ---
-id: children-prop-type
-title: Type of the children prop
+id: children-props-type
+title: Type of the Children props
 layout: cookbook
-permalink: children-prop-type.html
-prev: style-prop-value-px.html
+permalink: children-props-type.html
+prev: style-props-value-px.html
 next: controlled-input-null-value.html
 ---
 

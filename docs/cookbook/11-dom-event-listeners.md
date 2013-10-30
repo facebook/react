@@ -1,6 +1,6 @@
 ---
 id: dom-event-listeners
-title: DOM event listeners in a component
+title: DOM Event Listeners in a Component
 layout: cookbook
 permalink: dom-event-listeners.html
 prev: props-in-getInitialSate-as-anti-pattern.html
