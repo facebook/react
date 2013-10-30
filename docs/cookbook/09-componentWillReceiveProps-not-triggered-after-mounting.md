@@ -1,6 +1,6 @@
 ---
 id: componentWillReceiveProps-not-triggered-after-mounting
-title: componentWillReceiveProps not triggered after mounting
+title: componentWillReceiveProps Not Triggered After Mounting
 layout: cookbook
 permalink: componentWillReceiveProps-not-triggered-after-mounting.html
 prev: controlled-input-null-value.html

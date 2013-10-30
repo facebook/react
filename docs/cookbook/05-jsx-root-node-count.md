@@ -1,10 +1,10 @@
 ---
 id: jsx-root-node-count
-title: Maximum number of JSX root nodes
+title: Maximum Number of JSX Root Nodes
 layout: cookbook
 permalink: jsx-root-node-count.html
 prev: self-closing-tag.html
-next: style-prop-value-px.html
+next: style-props-value-px.html
 ---
 
 Currently, in a component's `render`, you can only return one node; if you have, say, a list of `div`s to return, you must wrap your components within a `div`, `span` or any other component.
