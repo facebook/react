@@ -18,6 +18,8 @@
 
 "use strict";
 
+var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+
 var ViewportMetrics = {
 
   currentScrollLeft: 0,
@@ -25,10 +27,9 @@ var ViewportMetrics = {
   currentScrollTop: 0,
 
   refreshScrollValues: function() {
-    ViewportMetrics.currentScrollLeft =
-      document.body.scrollLeft + document.documentElement.scrollLeft;
-    ViewportMetrics.currentScrollTop =
-      document.body.scrollTop + document.documentElement.scrollTop;
+    var scrollPosition = getUnboundedScrollPosition(window);
+    ViewportMetrics.currentScrollLeft = scrollPosition.x;
+    ViewportMetrics.currentScrollTop = scrollPosition.y;
   }
 
 };
