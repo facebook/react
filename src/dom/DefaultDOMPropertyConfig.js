@@ -42,7 +42,6 @@ var DefaultDOMPropertyConfig = {
     allowTransparency: MUST_USE_ATTRIBUTE,
     alt: null,
     autoComplete: null,
-    autoCorrect: null,
     autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
     cellPadding: null,
@@ -109,6 +108,7 @@ var DefaultDOMPropertyConfig = {
      * Non-standard Properties
      */
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
+    autoCorrect: null, // Supported in Mobile Safari for keyboard hints
 
     /**
      * SVG Properties
