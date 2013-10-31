@@ -58,10 +58,8 @@
     "tmp": "~0.0.18",
     "grunt-contrib-compress": "~0.5.1",
     "jasmine-tapreporter": "~0.2.2",
-    "grunt-saucelabs": "~4.1.2",
     "grunt-contrib-connect": "~0.5.0",
     "es5-shim": "~2.1.0",
-    "sauce-tunnel": "~1.0.2",
     "wd": "~0.2.2"
   },
   "engines": {
