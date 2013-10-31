@@ -120,8 +120,8 @@ if (typeof WeakMap !== "undefined") {
       mismatchValues.push("arrays were not the same length");
     }
 
-    _comparedObjects.delete(a);
-    _comparedObjects.delete(b);
+    _comparedObjects["delete"](a);
+    _comparedObjects["delete"](b);
     return (mismatchKeys.length == 0 && mismatchValues.length == 0);
   };
 }
