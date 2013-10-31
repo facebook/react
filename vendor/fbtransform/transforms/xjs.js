@@ -158,11 +158,11 @@ var knownTags = {
  *    is collapsed to a single space
  */
 
+function removeWhitespace(str) {
+  return str.replace(/[ \t]+/g, '');
+};
+ 
 function renderXJSLiteral(object, isLast, state, start, end) {
-  var removeWhitespace = function(str) {
-    return str.replace(/[ \t]+/g, '');
-  };
-
   var trimmedChildValue =
     object.value.replace(/^[ \t]*[\r\n][ \t\r\n]*/, removeWhitespace). // #1
       replace(/[ \t]*[\r\n][ \t\r\n]*$/, removeWhitespace). // #1
