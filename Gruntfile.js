@@ -70,17 +70,15 @@ module.exports = function(grunt) {
     'jsx:jasmine',
     'jsx:test',
     'version-check',
-    'populist:jasmine',
     'populist:test'
   ]);
 
-  grunt.registerTask('test', [
+  grunt.registerTask('test:browser', [
     'build:test',
-    'build:basic',
-    'phantom:run',
     'connect',
     'saucelabs-jasmine'
   ]);
+  grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
