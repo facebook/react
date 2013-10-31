@@ -15,10 +15,8 @@
  */
 /*global exports:true*/
 "use strict";
-var append = require('jstransform/src/utils').append;
-var catchup = require('jstransform/src/utils').catchup;
-var move = require('jstransform/src/utils').move;
 var Syntax = require('esprima-fb').Syntax;
+var utils = require('jstransform/src/utils');
 
 var knownTags = {
   a: true,
@@ -176,9 +174,9 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
   if (trimmedChildValue) {
     // head whitespace
-    append(object.value.match(/^[\t ]*/)[0], state);
+    utils.append(object.value.match(/^[\t ]*/)[0], state);
     if (start) {
-      append(start, state);
+      utils.append(start, state);
     }
 
     var trimmedChildValueWithSpace = trimWithSingleSpace(object.value);
@@ -200,7 +198,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
       var lastLine = ii === numLines - 1;
       var trimmedLine = safeTrim(line);
       if (trimmedLine === '' && !lastLine) {
-        append(line, state);
+        utils.append(line, state);
       } else {
         var preString = '';
         var postString = '';
@@ -226,7 +224,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
           postString = ' ';
         }
 
-        append(
+        utils.append(
           leading +
           JSON.stringify(
             preString + trimmedLine + postString
@@ -236,45 +234,45 @@ function renderXJSLiteral(object, isLast, state, start, end) {
           state);
       }
       if (!lastLine) {
-        append('\n', state);
+        utils.append('\n', state);
       }
     });
   } else {
     if (start) {
-      append(start, state);
+      utils.append(start, state);
     }
-    append('""', state);
+    utils.append('""', state);
   }
   if (end) {
-    append(end, state);
+    utils.append(end, state);
   }
 
   // add comma before trailing whitespace
   if (!isLast) {
-    append(',', state);
+    utils.append(',', state);
   }
 
   // tail whitespace
   if (hasFinalNewLine) {
-    append('\n', state);
+    utils.append('\n', state);
   }
-  append(object.value.match(/[ \t]*$/)[0], state);
-  move(object.range[1], state);
+  utils.append(object.value.match(/[ \t]*$/)[0], state);
+  utils.move(object.range[1], state);
 }
 
 function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   // Plus 1 to skip `{`.
-  move(object.range[0] + 1, state);
+  utils.move(object.range[0] + 1, state);
   traverse(object.expression, path, state);
   if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
-    catchup(object.expression.range[1], state);
-    append(',', state);
+    utils.catchup(object.expression.range[1], state);
+    utils.append(',', state);
   }
 
   // Minus 1 to skip `}`.
-  catchup(object.range[1] - 1, state);
-  move(object.range[1], state);
+  utils.catchup(object.range[1] - 1, state);
+  utils.move(object.range[1], state);
   return false;
 }
 
