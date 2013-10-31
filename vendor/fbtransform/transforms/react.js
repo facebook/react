@@ -74,7 +74,8 @@ function visitReactTag(traverse, object, path, state) {
   move(object.name.range[1], state);
 
   var childrenToRender = object.children.filter(function(child) {
-    return !(child.type === Syntax.Literal && child.value.match(/^[ \t\xA0]*[\r\n][ \t\xA0\r\n]*$/));
+    return !(child.type === Syntax.Literal &&
+             child.value.match(/^[ \t\xA0]*[\r\n][ \t\xA0\r\n]*$/));
   });
 
   // if we don't have any attributes, pass in null

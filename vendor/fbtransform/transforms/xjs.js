@@ -150,17 +150,22 @@ var knownTags = {
 function renderXJSLiteral(object, isLast, state, start, end) {
   var trimmedChildValue =
     object.value.replace(/^[ \t\xA0]*[\r\n][ \t\xA0\r\n]*/, function(match) {
-      // trim all whitespace except newlines from the start of the string, only if it also contains a newline
+      // trim all whitespace except newlines from the start of the string
+      // but only if it also contains a newline
       return match.replace(/[ \t\xA0]+/g, '');
     }).
     replace(/[ \t\xA0]*[\r\n][ \t\xA0\r\n]*$/, function(match) {
-      // trim all whitespace except newlines from the end of the string, only if it also contains a newline
+      // trim all whitespace except newlines from the end of the string
+      // but only if it also contains a newline
       return match.replace(/[ \t\xA0]+/g, '');
     }).
-    replace(/([^ \t\xA0\r\n])([ \t\xA0]*[\r\n][ \t\xA0\r\n]*)(?=[^ \t\xA0\r\n])/g, function(_, start, whitespace) {
-      // collapse all whitespace, that doesn't touch either the start or end of the string, into a single space
-      return start + ' ' + whitespace.replace(/[ \t\xA0]+/g, '');
-    }).
+    replace(/([^ \t\xA0\r\n])([ \t\xA0]*[\r\n][ \t\xA0\r\n]*)(?=[^ \t\xA0\r\n])/g,
+      function(_, start, whitespace) {
+        // collapse all whitespace, that doesn't touch either the start or
+        // the end of the string, into a single space
+        return start + ' ' + whitespace.replace(/[ \t\xA0]+/g, '');
+      }
+    ).
     // collapse all whitespace to a single space
     replace(/[ \t\xA0]+/g, ' ');
   
