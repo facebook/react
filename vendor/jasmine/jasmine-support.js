@@ -1,4 +1,4 @@
-var jasmine = require("./jasmine");
+if (typeof jasmine == 'undefined') jasmine = require("./jasmine");
 var spec = false; // TODO
 
 // Add some matcher for mock functions
