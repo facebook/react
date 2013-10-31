@@ -68,7 +68,9 @@ console.warn = function(message){
       done(null, event);
     }
     document.body.appendChild(postReportingForm);
-    postReportingForm.submit();
+    setTimeout(function(){
+      postReportingForm.submit();
+    },0);
   }
 
 }(window.jasmine.getEnv()));
