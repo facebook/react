@@ -42,7 +42,6 @@
   },
   "devDependencies": {
     "browserify": "~2.34.1",
-    "wrapup": "~0.12.0",
     "populist": "~0.1.4",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
