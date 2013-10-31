@@ -18,7 +18,7 @@ module.exports = function(){
     .get(this.data.url)
     .then(function(){return browser;})
     .then(getJSReport)
-    .then(this.data.onComplete.bind(browser), this.data.onError.bind(browser))
+    .then(this.data.onComplete && this.data.onComplete.bind(browser), this.data.onError && this.data.onError.bind(browser))
     .fin(browser.quit.bind(browser))
     .done(taskSucceeded.bind(null,true), taskSucceeded.bind(null,false))
   ;
