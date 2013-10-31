@@ -21,13 +21,12 @@ module.exports = function(grunt){
         port: 9999,
         middleware: function(connect, options) {
           return [
-            connect.logger(':method :url - :referrer'),
-            
             connect.query(),
             printMiddleware,
             connect.bodyParser(),
             testResultLoggerMiddleware,
             
+            connect.logger(':method :url - :referrer'),
             connect.static(options.base)
           ];
         },
