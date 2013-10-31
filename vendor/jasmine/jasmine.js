@@ -1,10 +1,12 @@
+var isCommonJS = typeof window == "undefined" && typeof exports == "object";
+
 /**
  * Top level namespace for Jasmine, a lightweight JavaScript BDD/spec/testing framework.
  *
  * @namespace
  */
 var jasmine = {};
-exports = module.exports = jasmine;
+if (isCommonJS) exports.jasmine = jasmine;
 /**
  * @private
  */
@@ -478,7 +480,7 @@ jasmine.log = function() {
 var spyOn = function(obj, methodName) {
   return jasmine.getEnv().currentSpec.spyOn(obj, methodName);
 };
-exports.spyOn = spyOn;
+if (isCommonJS) exports.spyOn = spyOn;
 
 /**
  * Creates a Jasmine spec that will be added to the current suite.
@@ -496,7 +498,7 @@ exports.spyOn = spyOn;
 var it = function(desc, func) {
   return jasmine.getEnv().it(desc, func);
 };
-exports.it = it;
+if (isCommonJS) exports.it = it;
 
 /**
  * Creates a <em>disabled</em> Jasmine spec.
@@ -509,7 +511,7 @@ exports.it = it;
 var xit = function(desc, func) {
   return jasmine.getEnv().xit(desc, func);
 };
-exports.xit = xit;
+if (isCommonJS) exports.xit = xit;
 
 /**
  * Starts a chain for a Jasmine expectation.
@@ -523,7 +525,7 @@ exports.xit = xit;
 var expect = function(actual) {
   return jasmine.getEnv().currentSpec.expect(actual);
 };
-exports.expect = expect;
+if (isCommonJS) exports.expect = expect;
 
 /**
  * Defines part of a jasmine spec.  Used in cominbination with waits or waitsFor in asynchrnous specs.
@@ -533,7 +535,7 @@ exports.expect = expect;
 var runs = function(func) {
   jasmine.getEnv().currentSpec.runs(func);
 };
-exports.runs = runs;
+if (isCommonJS) exports.runs = runs;
 
 /**
  * Waits a fixed time period before moving to the next block.
@@ -544,7 +546,7 @@ exports.runs = runs;
 var waits = function(timeout) {
   jasmine.getEnv().currentSpec.waits(timeout);
 };
-exports.waits = waits;
+if (isCommonJS) exports.waits = waits;
 
 /**
  * Waits for the latchFunction to return true before proceeding to the next block.
@@ -556,7 +558,7 @@ exports.waits = waits;
 var waitsFor = function(latchFunction, optional_timeoutMessage, optional_timeout) {
   jasmine.getEnv().currentSpec.waitsFor.apply(jasmine.getEnv().currentSpec, arguments);
 };
-exports.waitsFor = waitsFor;
+if (isCommonJS) exports.waitsFor = waitsFor;
 
 /**
  * A function that is called before each spec in a suite.
@@ -568,7 +570,7 @@ exports.waitsFor = waitsFor;
 var beforeEach = function(beforeEachFunction) {
   jasmine.getEnv().beforeEach(beforeEachFunction);
 };
-exports.beforeEach = beforeEach;
+if (isCommonJS) exports.beforeEach = beforeEach;
 
 /**
  * A function that is called after each spec in a suite.
@@ -580,7 +582,7 @@ exports.beforeEach = beforeEach;
 var afterEach = function(afterEachFunction) {
   jasmine.getEnv().afterEach(afterEachFunction);
 };
-exports.afterEach = afterEach;
+if (isCommonJS) exports.afterEach = afterEach;
 
 /**
  * Defines a suite of specifications.
@@ -600,7 +602,7 @@ exports.afterEach = afterEach;
 var describe = function(description, specDefinitions) {
   return jasmine.getEnv().describe(description, specDefinitions);
 };
-exports.describe = describe;
+if (isCommonJS) exports.describe = describe;
 
 /**
  * Disables a suite of specifications.  Used to disable some suites in a file, or files, temporarily during development.
@@ -611,7 +613,7 @@ exports.describe = describe;
 var xdescribe = function(description, specDefinitions) {
   return jasmine.getEnv().xdescribe(description, specDefinitions);
 };
-exports.xdescribe = xdescribe;
+if (isCommonJS) exports.xdescribe = xdescribe;
 
 
 // Provide the XMLHttpRequest class for IE 5.x-6.x:
@@ -871,10 +873,11 @@ jasmine.Env.prototype.it = function(description, func) {
 };
 
 jasmine.Env.prototype.xit = function(desc, func) {
-  var spec = this.it(desc, func);
-  spec.results_.skipped = true;
-  spec.runs = function() {};
-  return spec;
+  return {
+    id: this.nextSpecId(),
+    runs: function() {
+    }
+  };
 };
 
 jasmine.Env.prototype.compareRegExps_ = function(a, b, mismatchKeys, mismatchValues) {
@@ -2592,6 +2595,6 @@ jasmine.WaitsForBlock.prototype.execute = function(onComplete) {
 jasmine.version_= {
   "major": 1,
   "minor": 3,
-  "build": 1,
-  "revision": 1354556913
+  "build": 0,
+  "revision": 1354052693
 };
