@@ -5,8 +5,6 @@
 
 "use strict";
 
-var getDocumentScrollElement = require('getDocumentScrollElement');
-
 /**
  * Gets the scroll position of the supplied element or window.
  *
@@ -19,7 +17,10 @@ var getDocumentScrollElement = require('getDocumentScrollElement');
  */
 function getUnboundedScrollPosition(scrollable) {
   if (scrollable === window) {
-    return getUnboundedScrollPosition(getDocumentScrollElement());
+    return {
+      x: document.documentElement.scrollLeft || document.body.scrollLeft,
+      y: document.documentElement.scrollTop  || document.body.scrollTop
+    };
   }
   return {
     x: scrollable.scrollLeft,
