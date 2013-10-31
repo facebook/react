@@ -67,7 +67,7 @@ You can use these classes to trigger a CSS animation or transition. For example,
 }
 
 .example-enter.example-enter-active {
-  opacity: 0.99;
+  opacity: 1;
 }
 ```
 
@@ -75,7 +75,7 @@ You'll notice that when you try to remove an item `ReactTransitionGroup` keeps i
 
 ```css
 .example-leave {
-  opacity: 0.99;
+  opacity: 1;
   transition: opacity .5s ease-in;
 }
 
