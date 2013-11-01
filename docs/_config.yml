@@ -52,12 +52,12 @@ nav_docs_sections:
   - id: tooling-integration
     title: Tooling Integration
   - id: addons
-    title: Add-ons
+    title: Add-Ons
     subitems:
     - id: animation
       title: Animation
-    - id: form-input-binding-sugar
-      title: Form Input Binding Sugar
+    - id: two-way-binding-helpers
+      title: Two-Way Binding Helpers
     - id: class-name-manipulation
       title: Class Name Manipulation
   - id: examples
