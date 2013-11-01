@@ -66,7 +66,15 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchTap: null}),
       captured: keyOf({onTouchTapCapture: null})
-    }
+    },
+    dependencies: [
+      "onTouchStart",
+      "onTouchMove",
+      "onTouchEnd",
+      "onTouchCancel",
+      "onMouseDown",
+      "onMouseMove",
+      "onMouseUp"]
   }
 };
 

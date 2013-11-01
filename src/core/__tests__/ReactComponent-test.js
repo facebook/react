@@ -37,14 +37,14 @@ describe('ReactComponent', function() {
     expect(function() {
       React.renderComponent(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'
     );
 
     expect(function() {
       React.renderComponent(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'
     );
   });
@@ -208,4 +208,9 @@ describe('ReactComponent', function() {
     expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
     expect(root.refs.child.refs.span._mountDepth).toBe(6);
   });
+
+  it("should listen to events on demand", function() {
+    // TODO + change component version
+  });
+
 });

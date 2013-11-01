@@ -35,7 +35,9 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onChange: null}),
       captured: keyOf({onChangeCapture: null})
-    }
+    },
+
+    dependencies: ["onInput", "onKeyUp", "onKeyDown", "onFocus", "onBlur"]
   }
 };
 

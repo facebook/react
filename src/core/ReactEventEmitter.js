@@ -75,6 +75,8 @@ var merge = require('merge');
  *    React Core     .  General Purpose Event Plugin System
  */
 
+var alreadyListeningTo = {};
+
 /**
  * Traps top-level events by using event bubbling.
  *
@@ -144,39 +146,6 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   TopLevelCallbackCreator: null,
 
   /**
-   * Ensures that top-level event delegation listeners are installed.
-   *
-   * There are issues with listening to both touch events and mouse events on
-   * the top-level, so we make the caller choose which one to listen to. (If
-   * there's a touch top-level listeners, anchors don't receive clicks for some
-   * reason, and only in some cases).
-   *
-   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
-   * @param {DOMDocument} contentDocument DOM document to listen on
-   */
-  ensureListening: function(touchNotMouse, contentDocument) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'ensureListening(...): Cannot toggle event listening in a Worker ' +
-      'thread. This is likely a bug in the framework. Please report ' +
-      'immediately.'
-    );
-    invariant(
-      ReactEventEmitter.TopLevelCallbackCreator,
-      'ensureListening(...): Cannot be called without a top level callback ' +
-      'creator being injected.'
-    );
-    // Call out to base implementation.
-    ReactEventEmitterMixin.ensureListening.call(
-      ReactEventEmitter,
-      {
-        touchNotMouse: touchNotMouse,
-        contentDocument: contentDocument
-      }
-    );
-  },
-
-  /**
    * Sets whether or not any created callbacks should be enabled.
    *
    * @param {boolean} enabled True if callbacks should be enabled.
@@ -200,6 +169,81 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       ReactEventEmitter.TopLevelCallbackCreator &&
       ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
     );
+  },
+
+  /**
+   *
+   * @param {string} event
+   * @param {DOMDocument} contentDocument Document which owns the container
+   */
+  listenTo: function(event, contentDocument) {
+    var mountAt = contentDocument,
+        camelCasedEventName = event.substr(2),
+        camelCasedEventNameAlt = camelCasedEventName.charAt(0).toLowerCase() +
+                                 camelCasedEventName.slice(1),
+        dependencies,
+        dependency,
+        i,
+        l,
+        topLevelType,
+        topLevelTypes = EventConstants.topLevelTypes;
+
+    if (!alreadyListeningTo[event]) {
+      dependencies = ReactEventEmitter.registrationNames[event].
+                     eventTypes[camelCasedEventNameAlt].dependencies;
+
+      if (dependencies) {
+        for (i = 0, l = dependencies.length; i < l; i++) {
+          dependency = dependencies[i];
+          ReactEventEmitter.listenTo(dependency, contentDocument);
+        }
+      }
+      else {
+        topLevelType = topLevelTypes['top' + camelCasedEventName];
+
+        if (topLevelType === topLevelTypes.topWheel) {
+          if (isEventSupported('wheel')) {
+            trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
+          } else if (isEventSupported('mousewheel')) {
+            trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
+          } else {
+            // Firefox needs to capture a different mouse scroll event.
+            // @see http://www.quirksmode.org/dom/events/tests/scroll.html
+            trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
+          }
+        }
+        else if(topLevelType === topLevelTypes.topScroll) {
+
+          if (isEventSupported('scroll', true)) {
+            trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
+          } else {
+            trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
+          }
+        }
+        else if (topLevelType === topLevelTypes.topFocus ||
+                topLevelType === topLevelTypes.topBlur) {
+
+          if (isEventSupported('focus', true)) {
+            trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
+            trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
+          } else if (isEventSupported('focusin')) {
+            // IE has `focusin` and `focusout` events which bubble.
+            // @see
+            // http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
+            trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
+          }
+        }
+        else {
+          trapBubbledEvent(topLevelType, camelCasedEventName.toLowerCase(), mountAt);
+        }
+
+        // TODO: add support for exceptions: wheel, scroll, focus, window resize events
+        // TODO: rename: doubleclick to DblClick
+
+        alreadyListeningTo[event] = true;
+      }
+    }
   },
 
   /**

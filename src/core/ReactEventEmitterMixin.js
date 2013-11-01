@@ -27,38 +27,6 @@ function runEventQueueInBatch(events) {
 }
 
 var ReactEventEmitterMixin = {
-  /**
-   * Whether or not `ensureListening` has been invoked.
-   * @type {boolean}
-   * @private
-   */
-  _isListening: false,
-
-  /**
-   * Function, must be implemented. Listens to events on the top level of the
-   * application.
-   *
-   * @abstract
-   *
-   * listenAtTopLevel: null,
-   */
-
-  /**
-   * Ensures that top-level event delegation listeners are installed.
-   *
-   * There are issues with listening to both touch events and mouse events on
-   * the top-level, so we make the caller choose which one to listen to. (If
-   * there's a touch top-level listeners, anchors don't receive clicks for some
-   * reason, and only in some cases).
-   *
-   * @param {*} config Configuration passed through to `listenAtTopLevel`.
-   */
-  ensureListening: function(config) {
-    if (!config.contentDocument._reactIsListening) {
-      this.listenAtTopLevel(config.touchNotMouse, config.contentDocument);
-      config.contentDocument._reactIsListening = true;
-    }
-  },
 
   /**
    * Streams a fired top-level event to `EventPluginHub` where plugins have the

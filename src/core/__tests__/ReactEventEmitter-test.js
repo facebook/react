@@ -95,7 +95,6 @@ describe('ReactEventEmitter', function() {
     ReactTestUtils = require('ReactTestUtils');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEventEmitter.ensureListening(false, document);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
@@ -314,6 +313,17 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder.length).toBe(0);
   });
 
+  it('should listen to events only once', function() {
+    // TODO: no need to do it multiple times
+  });
+
+  it('should work with event plugins without dependencies', function() {
+    // TODO: defaults are chosen
+  });
+
+  it('should listen to event plugin dependencies', function() {
+    // TODO: dependencies are chosen (so no defaults)
+  });
 
   it('should bubble onTouchTap', function() {
     ReactEventEmitter.putListener(
