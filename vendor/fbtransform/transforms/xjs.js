@@ -152,10 +152,10 @@ var knownTags = {
  *    the start or end of the string is removed completely
  *
  * #2 Any whitespace sequence which CONTAIN A NEWLINE but DOES NOT TOUCH
- *    the start or end of the string is collapsed to a single space
+ *    the start or end of the string is replaced with a single newline
  *
  * #3 Any whitespace sequence which DOES NOT CONTAIN A NEWLINE 
- *    is collapsed to a single space
+ *    is replace with a single space
  */
 
 function removeWhitespace(str) {
@@ -194,6 +194,10 @@ function renderXJSLiteral(object, isLast, state, start, end) {
     if (line) {
       if (!isEmptyLine) {
         append(lines[ii].match(/^[ \t\xA0]*/)[0], state);
+      }
+      if (!isLastLine) {
+        // we temporarily appended a space for #2, replace with a newline
+        line = line.replace(/[ \t]$/g, '\n');
       }
 
       append(
