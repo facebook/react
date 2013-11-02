@@ -30,6 +30,8 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 var objMap = require('objMap');
+var createChainedFunction = require('createChainedFunction');
+var createMergedResultFunction = require('createMergedResultFunction');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -386,63 +388,6 @@ function mixSpecIntoComponent(Constructor, spec) {
       }
     }
   }
-}
-
-/**
- * Merge two objects, but throw if both contain the same key.
- *
- * @param {object} one The first object, which is mutated.
- * @param {object} two The second object
- * @return {object} one after it has been mutated to contain everything in two.
- */
-function mergeObjectsWithNoDuplicateKeys(one, two) {
-  invariant(
-    one && two && typeof one === 'object' && typeof two === 'object',
-    'mergeObjectsWithNoDuplicateKeys(): Cannot merge non-objects'
-  );
-
-  objMap(two, function(value, key) {
-    invariant(
-      one[key] === undefined,
-      'mergeObjectsWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: %s',
-      key
-    );
-    one[key] = value;
-  });
-  return one;
-}
-
-/**
- * Creates a function that invokes two functions and merges their return values.
- *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
- * @private
- */
-function createMergedResultFunction(one, two) {
-  return function mergedResult() {
-    return mergeObjectsWithNoDuplicateKeys(
-      one.apply(this, arguments),
-      two.apply(this, arguments)
-    );
-  };
-}
-
-/**
- * Creates a function that invokes two functions and ignores their return vales.
- *
- * @param {function} one Function to invoke first.
- * @param {function} two Function to invoke second.
- * @return {function} Function that invokes the two argument functions.
- * @private
- */
-function createChainedFunction(one, two) {
-  return function chainedFunction() {
-    one.apply(this, arguments);
-    two.apply(this, arguments);
-  };
 }
 
 /**
@@ -941,6 +886,10 @@ mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
  * @extends ReactPropTransferer
  */
 var ReactCompositeComponent = {
+
+  SpecPolicy: SpecPolicy,
+
+  Interface: ReactCompositeComponentInterface,
 
   LifeCycle: CompositeLifeCycle,
 
