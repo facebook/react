@@ -860,7 +860,12 @@ var ReactCompositeComponentMixin = {
     }
     invariant(
       ReactComponent.isValidComponent(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned.',
+<<<<<<< HEAD
+      '%s.render(): A valid ReactComponent must be returned. You may have ' +
+      'returned null, undefined, an array or some other invalid object.',
+=======
+      '%s.render(): A valid ReactComponent must be returned. You may have returned null, undefined, an array or some other invalid object.',
+>>>>>>> d742f624e9901860bd9646ae9ab00296612c4635
       this.constructor.displayName || 'ReactCompositeComponent'
     );
     return renderedComponent;
