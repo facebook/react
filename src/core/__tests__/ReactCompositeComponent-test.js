@@ -289,6 +289,33 @@ describe('ReactCompositeComponent', function() {
     }).not.toThrow();
   });
 
+  it('should warn about invalid prop types', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    try {
+      var Component = React.createClass({
+        propTypes: {
+          // Should be `isRequired`, not `required`
+          key: ReactPropTypes.string.required
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Component.propTypes: You gave an invalid prop type for "key"; check ' +
+        'for typos in your specification.'
+      );
+    } catch (e) {
+      throw e;
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it('should not allow `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
