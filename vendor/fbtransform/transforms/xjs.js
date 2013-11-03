@@ -201,7 +201,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
     }
     
     // insert just after the last literal
-    if (!isLast && ii == lastNonEmptyLine) {
+    if (!isLast && ii === lastNonEmptyLine) {
       if (end) {
         utils.append(end, state);
       }
