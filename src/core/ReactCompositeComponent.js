@@ -861,7 +861,7 @@ var ReactCompositeComponentMixin = {
     invariant(
       ReactComponent.isValidComponent(renderedComponent),
       '%s.render(): A valid ReactComponent must be returned. You may have ' +
-      'returned null, undefined, an array or some other invalid object.',
+      'returned null, undefined, an array, or some other invalid object.',
       this.constructor.displayName || 'ReactCompositeComponent'
     );
     return renderedComponent;
