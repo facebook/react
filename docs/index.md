@@ -7,10 +7,11 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Composition</h3>
+      <h3>Just the UI</h3>
       <p>
-        React isn&apos;t the first JS library to let you build components. But it&apos;s
-        the only one that emphasizes building components out of other components above all else.
+        Lots of people use React as the V in MVC.
+        Since React makes no assumptions about the rest of your technology stack,
+        it&apos;s easy to try it out on a small feature in an existing project.
       </p>
     </div>
     <div class="marketing-col">
