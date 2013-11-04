@@ -3,7 +3,6 @@
 var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
-var wrapupTask = require('./grunt/tasks/wrapup');
 var populistTask = require('./grunt/tasks/populist');
 var phantomTask = require('./grunt/tasks/phantom');
 var npmTask = require('./grunt/tasks/npm');
@@ -16,7 +15,6 @@ module.exports = function(grunt) {
     copy: require('./grunt/config/copy'),
     jsx: require('./grunt/config/jsx/jsx'),
     browserify: require('./grunt/config/browserify'),
-    wrapup: require('./grunt/config/wrapup'),
     populist: require('./grunt/config/populist'),
     phantom: require('./grunt/config/phantom'),
     npm: require('./grunt/config/npm'),
@@ -41,10 +39,6 @@ module.exports = function(grunt) {
 
   // Our own browserify-based tasks to build a single JS file build
   grunt.registerMultiTask('browserify', browserifyTask);
-
-  // Similar to Browserify, use WrapUp to generate single JS file that
-  // defines global variables instead of using require.
-  grunt.registerMultiTask('wrapup', wrapupTask);
 
   grunt.registerMultiTask('populist', populistTask);
 
