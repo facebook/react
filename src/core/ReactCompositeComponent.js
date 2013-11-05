@@ -762,7 +762,7 @@ var ReactCompositeComponentMixin = {
     this.props = nextProps;
     this.state = nextState;
 
-    this.updateComponent(transaction, prevProps, prevState);
+    this.updateComponent(transaction, prevProps);
 
     if (this.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -787,7 +787,7 @@ var ReactCompositeComponentMixin = {
   updateComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'updateComponent',
-    function(transaction, prevProps, prevState) {
+    function(transaction, prevProps) {
       ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
       var currentComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
