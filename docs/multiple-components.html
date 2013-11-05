@@ -235,9 +235,9 @@
     <h1>Multiple Components</h1>
     <div class="subHeader"></div>
     <p>So far, we&#39;ve looked at how to write a single component to display data and handle user input. Next let&#39;s examine one of React&#39;s finest features: composability.</p>
-<h2 id="motivation-separation-of-concerns"><a href="#motivation-separation-of-concerns">Motivation: Separation of Concerns</a></h2>
+<h2 id="motivation-separation-of-concerns" class="anchor"><a href="#motivation-separation-of-concerns">Motivation: Separation of Concerns</a></h2>
 <p>By building modular components that reuse other components with well-defined interfaces, you get much of the same benefits that you get by using functions or classes. Specifically you can <em>separate the different concerns</em> of your app however you please simply by building new components. By building a custom component library for your application, you are expressing your UI in a way that best fits your domain.</p>
-<h2 id="composition-example"><a href="#composition-example">Composition Example</a></h2>
+<h2 id="composition-example" class="anchor"><a href="#composition-example">Composition Example</a></h2>
 <p>Let&#39;s create a simple Avatar component which shows a profile picture and username using the Facebook Graph API.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
@@ -274,16 +274,16 @@
   <span class="o">&lt;</span><span class="nx">Avatar</span> <span class="nx">username</span><span class="o">=</span><span class="s2">&quot;pwh&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2 id="ownership"><a href="#ownership">Ownership</a></h2>
+</code></pre></div><h2 id="ownership" class="anchor"><a href="#ownership">Ownership</a></h2>
 <p>In the above example, instances of <code>Avatar</code> <em>own</em> instances of <code>ProfilePic</code> and <code>ProfileLink</code>. In React, <strong>an owner is the component that sets the <code>props</code> of other components</strong>. More formally, if a component <code>X</code> is created in component <code>Y</code>&#39;s <code>render()</code> method, it is said that <code>X</code> is <em>owned by</em> <code>Y</code>. As discussed earlier, a component cannot mutate its <code>props</code> — they are always consistent with what its owner sets them to. This key property leads to UIs that are guaranteed to be consistent.</p>
 
 <p>It&#39;s important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, <code>Avatar</code> owns the <code>div</code>, <code>ProfilePic</code> and <code>ProfileLink</code> instances, and <code>div</code> is the <strong>parent</strong> (but not owner) of the <code>ProfilePic</code> and <code>ProfileLink</code> instances.</p>
-<h2 id="children"><a href="#children">Children</a></h2>
+<h2 id="children" class="anchor"><a href="#children">Children</a></h2>
 <p>When you create a React component instance, you can include additional React components or JavaScript expressions between the opening and closing tags like this:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
 <p><code>Parent</code> can read its children by accessing the special <code>this.props.children</code> prop.</p>
-<h3 id="child-reconciliation"><a href="#child-reconciliation">Child Reconciliation</a></h3>
+<h3 id="child-reconciliation" class="anchor"><a href="#child-reconciliation">Child Reconciliation</a></h3>
 <p><strong>Reconciliation is the process by which React updates the DOM with each new render pass.</strong> In general, children are reconciled according to the order in which they are rendered. For example, suppose two render passes generate the following respective markup:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html">// Render Pass 1
 <span class="nt">&lt;Card&gt;</span>
@@ -296,7 +296,7 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div>
 <p>Intuitively, <code>&lt;p&gt;Paragraph 1&lt;/p&gt;</code> was removed. Instead, React will reconcile the DOM by changing the text content of the first child and destroying the last child. React reconciles according to the <em>order</em> of the children.</p>
-<h3 id="stateful-children"><a href="#stateful-children">Stateful Children</a></h3>
+<h3 id="stateful-children" class="anchor"><a href="#stateful-children">Stateful Children</a></h3>
 <p>For most components, this is not a big deal. However, for stateful components that maintain data in <code>this.state</code> across render passes, this can be very problematic.</p>
 
 <p>In most cases, this can be sidestepped by hiding elements instead of destroying them:</p>
@@ -310,7 +310,7 @@
   <span class="nt">&lt;p</span> <span class="na">style=</span><span class="s">{{display:</span> <span class="err">&#39;</span><span class="na">none</span><span class="err">&#39;}}</span><span class="nt">&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
 <span class="nt">&lt;/Card&gt;</span>
-</code></pre></div><h3 id="dynamic-children"><a href="#dynamic-children">Dynamic Children</a></h3>
+</code></pre></div><h3 id="dynamic-children" class="anchor"><a href="#dynamic-children">Dynamic Children</a></h3>
 <p>The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a <code>key</code>:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
@@ -324,9 +324,9 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>When React reconciles the keyed children, it will ensure that any child with <code>key</code> will be reordered (instead of clobbered) or destroyed (instead of reused).</p>
-<h2 id="data-flow"><a href="#data-flow">Data Flow</a></h2>
+<h2 id="data-flow" class="anchor"><a href="#data-flow">Data Flow</a></h2>
 <p>In React, data flows from owner to owned component through <code>props</code> as discussed above. This is effectively one-way data binding: owners bind their owned component&#39;s props to some value the owner has computed based on its <code>props</code> or <code>state</code>. Since this process happens recursively, data changes are automatically reflected everywhere they are used.</p>
-<h2 id="a-note-on-performance"><a href="#a-note-on-performance">A Note on Performance</a></h2>
+<h2 id="a-note-on-performance" class="anchor"><a href="#a-note-on-performance">A Note on Performance</a></h2>
 <p>You may be thinking that it&#39;s expensive to react to changing data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and <code>render()</code> methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution and React will optimize this for you using batching and change detection.</p>
 
 <p>However, sometimes you really want to have fine-grained control over your performance. In that case, simply override <code>shouldComponentUpdate()</code> to return false when you want React to skip processing of a subtree. See <a href="component-specs.html">the React reference docs</a> for more information.</p>

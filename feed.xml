@@ -9,14 +9,14 @@
 			<item>
 				<title>React v0.5.1</title>
 				<description>&lt;p&gt;This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to &lt;a href=&quot;https://github.com/spicyj&quot;&gt;Ben Alpert&lt;/a&gt;, &lt;a href=&quot;https://github.com/andreypopp&quot;&gt;Andrey Popp&lt;/a&gt;, and &lt;a href=&quot;https://github.com/lrowe&quot;&gt;Laurence Rowe&lt;/a&gt; for their contributions!&lt;/p&gt;
-&lt;h2 id=&quot;changelog&quot;&gt;&lt;a href=&quot;#changelog&quot;&gt;Changelog&lt;/a&gt;&lt;/h2&gt;&lt;h3 id=&quot;react&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h3&gt;
+&lt;h2 id=&quot;changelog&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#changelog&quot;&gt;Changelog&lt;/a&gt;&lt;/h2&gt;&lt;h3 id=&quot;react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Fixed bug with &lt;code&gt;&amp;lt;input type=&amp;quot;range&amp;quot;&amp;gt;&lt;/code&gt; and selection events.&lt;/li&gt;
 &lt;li&gt;Fixed bug with selection and focus.&lt;/li&gt;
 &lt;li&gt;Made it possible to unmount components from the document root.&lt;/li&gt;
 &lt;li&gt;Fixed bug for &lt;code&gt;disabled&lt;/code&gt; attribute handling on non-&lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; elements.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&quot;react-with-addons&quot;&gt;&lt;a href=&quot;#react-with-addons&quot;&gt;React with Addons&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&quot;react-with-addons&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-with-addons&quot;&gt;React with Addons&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Fixed bug with transition and animation event detection.&lt;/li&gt;
 &lt;/ul&gt;
@@ -33,11 +33,11 @@
 &lt;p&gt;The biggest change you&amp;#39;ll notice as a developer is that we no longer support &lt;code&gt;class&lt;/code&gt; in JSX as a way to provide CSS classes. Since this prop was being converted to &lt;code&gt;className&lt;/code&gt; at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are &lt;a href=&quot;https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156&quot;&gt;a few exceptions&lt;/a&gt; where we deviate slightly in an attempt to be consistent internally.&lt;/p&gt;
 
 &lt;p&gt;The other major change in v0.5 is that we&amp;#39;ve added an additional build - &lt;code&gt;react-with-addons&lt;/code&gt; - which adds support for some extras that we&amp;#39;ve been working on including animations and two-way binding. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more about these addons in the docs&lt;/a&gt;.&lt;/p&gt;
-&lt;h2 id=&quot;thanks-to-our-community&quot;&gt;&lt;a href=&quot;#thanks-to-our-community&quot;&gt;Thanks to Our Community&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;thanks-to-our-community&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#thanks-to-our-community&quot;&gt;Thanks to Our Community&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;We added &lt;em&gt;22 new people&lt;/em&gt; to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our &lt;code&gt;AUTHORS&lt;/code&gt; file, that means we&amp;#39;ve nearly doubled the number of contributors in that time period. We&amp;#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&amp;#39;ve also had people tell us about talks they&amp;#39;ve given in their local community about React.&lt;/p&gt;
 
 &lt;p&gt;It&amp;#39;s been awesome to see the things that people are building with React, and we can&amp;#39;t wait to see what you come up with next!&lt;/p&gt;
-&lt;h2 id=&quot;changelog&quot;&gt;&lt;a href=&quot;#changelog&quot;&gt;Changelog&lt;/a&gt;&lt;/h2&gt;&lt;h3 id=&quot;react&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h3&gt;
+&lt;h2 id=&quot;changelog&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#changelog&quot;&gt;Changelog&lt;/a&gt;&lt;/h2&gt;&lt;h3 id=&quot;react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Memory usage improvements - reduced allocations in core which will help with GC pauses&lt;/li&gt;
 &lt;li&gt;Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.&lt;/li&gt;
@@ -58,11 +58,11 @@
 &lt;li&gt;Better support for server-side rendering - &lt;a href=&quot;https://github.com/facebook/react-page&quot;&gt;react-page&lt;/a&gt; has helped improve the stability for server-side rendering.&lt;/li&gt;
 &lt;li&gt;Made it possible to use React in environments enforcing a strict &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy&quot;&gt;Content Security Policy&lt;/a&gt;. This also makes it possible to use React to build Chrome extensions.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&quot;react-with-addons-new&quot;&gt;&lt;a href=&quot;#react-with-addons-new&quot;&gt;React with Addons (New!)&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&quot;react-with-addons-new&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-with-addons-new&quot;&gt;React with Addons (New!)&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;Introduced a separate build with several &amp;quot;addons&amp;quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more in the docs&lt;/a&gt;.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id=&quot;jsx&quot;&gt;&lt;a href=&quot;#jsx&quot;&gt;JSX&lt;/a&gt;&lt;/h3&gt;
+&lt;h3 id=&quot;jsx&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsx&quot;&gt;JSX&lt;/a&gt;&lt;/h3&gt;
 &lt;ul&gt;
 &lt;li&gt;No longer transform &lt;code&gt;class&lt;/code&gt; to &lt;code&gt;className&lt;/code&gt; as part of the transform! This is a breaking change - if you were using &lt;code&gt;class&lt;/code&gt;, you &lt;em&gt;must&lt;/em&gt; change this to &lt;code&gt;className&lt;/code&gt; or your components will be visually broken.&lt;/li&gt;
 &lt;li&gt;Added warnings to the in-browser transformer to make it clear it is not intended for production use.&lt;/li&gt;
@@ -80,7 +80,7 @@
 				<description>&lt;p&gt;We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&amp;#39;ll probably organize more in the future.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/react-hackathon.jpg&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
-&lt;h2 id=&quot;react-hackathon-winner&quot;&gt;&lt;a href=&quot;#react-hackathon-winner&quot;&gt;React Hackathon Winner&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-hackathon-winner&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-hackathon-winner&quot;&gt;React Hackathon Winner&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://bold-it.com/&quot;&gt;Alex Swan&lt;/a&gt; implemented &lt;a href=&quot;http://qu.izti.me/&quot;&gt;Qu.izti.me&lt;/a&gt;, a multi-player quiz game. It is real-time via Web Socket and mobile friendly.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -91,7 +91,7 @@
 
 &lt;p&gt;&lt;a href=&quot;http://bold-it.com/javascript/facebook-react-example/&quot;&gt;Read More...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;jsconf-eu-talk-rethinking-best-practices&quot;&gt;&lt;a href=&quot;#jsconf-eu-talk-rethinking-best-practices&quot;&gt;JSConf EU Talk: Rethinking Best Practices&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;jsconf-eu-talk-rethinking-best-practices&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsconf-eu-talk-rethinking-best-practices&quot;&gt;JSConf EU Talk: Rethinking Best Practices&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; presented React at JSConf EU. He covers three controversial design decisions of React:&lt;/p&gt;
 
 &lt;ol&gt;
@@ -103,7 +103,7 @@
 &lt;p&gt;The video will be available soon on the &lt;a href=&quot;http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html&quot;&gt;JSConf EU website&lt;/a&gt;, but in the meantime, here are Pete&amp;#39;s slides:&lt;/p&gt;
 
 &lt;figure&gt;&lt;iframe src=&quot;http://www.slideshare.net/slideshow/embed_code/26589373&quot; width=&quot;550&quot; height=&quot;450&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;pump---clojure-bindings-for-react&quot;&gt;&lt;a href=&quot;#pump---clojure-bindings-for-react&quot;&gt;Pump - Clojure bindings for React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;pump---clojure-bindings-for-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#pump---clojure-bindings-for-react&quot;&gt;Pump - Clojure bindings for React&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://solovyov.net/&quot;&gt;Alexander Solovyov&lt;/a&gt; has been working on React bindings for ClojureScript. This is really exciting as it is using &amp;quot;native&amp;quot; ClojureScript data structures.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;ruby language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ns&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;your&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;app&lt;/span&gt;
   &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:require&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macros&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;pump&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;def&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;macros&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:refer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;defr&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -117,7 +117,7 @@
   &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;test&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;hello&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/piranha/pump&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;jsxhint&quot;&gt;&lt;a href=&quot;#jsxhint&quot;&gt;JSXHint&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;jsxhint&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsxhint&quot;&gt;JSXHint&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://blog.selfassembled.org/&quot;&gt;Todd Kennedy&lt;/a&gt; working at &lt;a href=&quot;http://www.condenast.com/&quot;&gt;Cond&amp;eacute; Nast&lt;/a&gt; implemented a wrapper on-top of &lt;a href=&quot;http://www.jshint.com/&quot;&gt;JSHint&lt;/a&gt; that first converts JSX files to JS.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -126,7 +126,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/CondeNast/JSXHint&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;turbo-react&quot;&gt;&lt;a href=&quot;#turbo-react&quot;&gt;Turbo React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;turbo-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#turbo-react&quot;&gt;Turbo React&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/ssorallen&quot;&gt;Ross Allen&lt;/a&gt; working at &lt;a href=&quot;http://mesosphere.io/&quot;&gt;Mesosphere&lt;/a&gt; combined &lt;a href=&quot;https://github.com/rails/turbolinks/&quot;&gt;Turbolinks&lt;/a&gt;, a library used by Ruby on Rails to speed up page transition, and React.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -139,7 +139,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://turbo-react.herokuapp.com/&quot;&gt;Check out the demo...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;reactive-table&quot;&gt;&lt;a href=&quot;#reactive-table&quot;&gt;Reactive Table&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;reactive-table&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#reactive-table&quot;&gt;Reactive Table&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt; continues his series of blog posts about React. This one is an introduction tutorial on rendering a simple table with React.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -167,7 +167,7 @@
 &lt;p&gt;First, we are organizing a &lt;a href=&quot;http://reactjshack-a-thon.splashthat.com/&quot;&gt;React Hackathon&lt;/a&gt; in Facebook&amp;#39;s Seattle office on Saturday September 28. If you want to hack on React, meet some of the team or win some prizes, feel free to join us!&lt;/p&gt;
 
 &lt;p&gt;We&amp;#39;ve also reached a point where there are too many questions for us to handle directly. We&amp;#39;re encouraging people to ask questions on &lt;a href=&quot;http://stackoverflow.com/questions/tagged/reactjs&quot;&gt;StackOverflow&lt;/a&gt; using the tag &lt;a href=&quot;http://stackoverflow.com/questions/tagged/reactjs&quot;&gt;[reactjs]&lt;/a&gt;. Many members of the team and community have subscribed to the tag, so feel free to ask questions there. We think these will be more discoverable than Google Groups archives or IRC logs.&lt;/p&gt;
-&lt;h2 id=&quot;javascript-jabber&quot;&gt;&lt;a href=&quot;#javascript-jabber&quot;&gt;Javascript Jabber&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;javascript-jabber&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#javascript-jabber&quot;&gt;Javascript Jabber&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; and &lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt; were interviewed on &lt;a href=&quot;http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/&quot;&gt;Javascript Jabber&lt;/a&gt; for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -181,13 +181,13 @@
 
 &lt;p&gt;&lt;a href=&quot;http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/&quot;&gt;Read the full conversation ...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;jsxtransformer-trick&quot;&gt;&lt;a href=&quot;#jsxtransformer-trick&quot;&gt;JSXTransformer Trick&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;jsxtransformer-trick&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsxtransformer-trick&quot;&gt;JSXTransformer Trick&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;While this is not going to work for all the attributes since they are camelCased in React, this is a pretty cool trick.&lt;/p&gt;
 
 &lt;div style=&quot;margin-left: 74px;&quot;&gt;&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p&gt;Turn any DOM element into a React.js function: JSXTransformer.transform(&amp;quot;/** &lt;a href=&quot;https://twitter.com/jsx&quot;&gt;@jsx&lt;/a&gt; React.DOM */&amp;quot; + element.innerHTML).code&lt;/p&gt;&amp;mdash; Ross Allen (@ssorallen) &lt;a href=&quot;https://twitter.com/ssorallen/statuses/377105575441489920&quot;&gt;September 9, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
 &lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
-&lt;h2 id=&quot;remarkable-react&quot;&gt;&lt;a href=&quot;#remarkable-react&quot;&gt;Remarkable React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;remarkable-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#remarkable-react&quot;&gt;Remarkable React&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt; gave a talk at &lt;a href=&quot;http://braziljs.com.br/&quot;&gt;BrazilJS&lt;/a&gt; about React and wrote an article with the content of the presentation. He goes through the difficulties of writting &lt;em&gt;active apps&lt;/em&gt; using the DOM API and shows how React handles it.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -205,13 +205,13 @@
 
 &lt;p&gt;&lt;a href=&quot;http://www.phpied.com/remarkable-react/&quot;&gt;Read More ...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;markdown-in-react&quot;&gt;&lt;a href=&quot;#markdown-in-react&quot;&gt;Markdown in React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;markdown-in-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#markdown-in-react&quot;&gt;Markdown in React&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; converted &lt;a href=&quot;https://github.com/chjj/marked&quot;&gt;marked&lt;/a&gt;, a Markdown Javascript implementation, in React: &lt;a href=&quot;https://github.com/spicyj/marked-react&quot;&gt;marked-react&lt;/a&gt;. Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to &lt;code&gt;escape&lt;/code&gt; will not introduce an XSS vulnerability.
 &lt;figure&gt;&lt;a href=&quot;https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457&quot;&gt;&lt;img src=&quot;/react/img/blog/markdown_refactor.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2 id=&quot;unite-from-bugbusters&quot;&gt;&lt;a href=&quot;#unite-from-bugbusters&quot;&gt;Unite from BugBusters&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;unite-from-bugbusters&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#unite-from-bugbusters&quot;&gt;Unite from BugBusters&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/renajohn&quot;&gt;Renault John Lecoultre&lt;/a&gt; wrote &lt;a href=&quot;https://www.bugbuster.com/&quot;&gt;Unite&lt;/a&gt;, an interactive tool for analyzing code dynamically using React. It integrates with CodeMirror.
 &lt;figure&gt;&lt;a href=&quot;https://unite.bugbuster.com/&quot;&gt;&lt;img src=&quot;/react/img/blog/unite.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2 id=&quot;reactjs-irc-logs&quot;&gt;&lt;a href=&quot;#reactjs-irc-logs&quot;&gt;#reactjs IRC Logs&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;reactjs-irc-logs&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#reactjs-irc-logs&quot;&gt;#reactjs IRC Logs&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://blog.vjeux.com/&quot;&gt;Vjeux&lt;/a&gt; re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.&lt;/p&gt;
 
 &lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/vjeux/QL9tz/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
@@ -234,10 +234,10 @@
 &lt;li&gt;&lt;a href=&quot;http://facebook.github.io/react/blog/&quot;&gt;15 blog posts&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;2 early adopters: &lt;a href=&quot;http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html&quot;&gt;Khan Academy&lt;/a&gt; and &lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;Propeller&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&quot;wolfenstein-rendering-engine-ported-to-react&quot;&gt;&lt;a href=&quot;#wolfenstein-rendering-engine-ported-to-react&quot;&gt;Wolfenstein Rendering Engine Ported to React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;wolfenstein-rendering-engine-ported-to-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#wolfenstein-rendering-engine-ported-to-react&quot;&gt;Wolfenstein Rendering Engine Ported to React&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; ported the render code of the web version of Wolfenstein 3D to React. Check out &lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;the demo&lt;/a&gt; and &lt;a href=&quot;https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183&quot;&gt;render.js&lt;/a&gt; file for the implementation.
 &lt;figure&gt;&lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;&lt;img src=&quot;/react/img/blog/wolfenstein_react.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2 id=&quot;react-amp-meteor&quot;&gt;&lt;a href=&quot;#react-amp-meteor&quot;&gt;React &amp;amp; Meteor&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-amp-meteor&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-amp-meteor&quot;&gt;React &amp;amp; Meteor&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/benjamn&quot;&gt;Ben Newman&lt;/a&gt; made a &lt;a href=&quot;https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js&quot;&gt;13-lines wrapper&lt;/a&gt; to use React and Meteor together. &lt;a href=&quot;http://www.meteor.com/&quot;&gt;Meteor&lt;/a&gt; handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -260,7 +260,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/benjamn/meteor-react&quot;&gt;Read more ...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;react-page&quot;&gt;&lt;a href=&quot;#react-page&quot;&gt;React Page&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-page&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-page&quot;&gt;React Page&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt; implemented a complete React project creator called &lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;react-page&lt;/a&gt;. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -305,7 +305,7 @@
 			<item>
 				<title>Use React and JSX in Python Applications</title>
 				<description>&lt;p&gt;Today we&amp;#39;re happy to announce the initial release of &lt;a href=&quot;https://github.com/facebook/react-python&quot;&gt;PyReact&lt;/a&gt;, which makes it easier to use React and JSX in your Python applications. It&amp;#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.&lt;/p&gt;
-&lt;h2 id=&quot;usage&quot;&gt;&lt;a href=&quot;#usage&quot;&gt;Usage&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;usage&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#usage&quot;&gt;Usage&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Transform your JSX files via the provided &lt;code&gt;jsx&lt;/code&gt; module:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;react&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;
 
@@ -322,12 +322,12 @@
 
 &lt;span class=&quot;c&quot;&gt;# path_for raises IOError if the file doesn&amp;#39;t exist.&lt;/span&gt;
 &lt;span class=&quot;n&quot;&gt;react_js&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path_for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;react.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;django&quot;&gt;&lt;a href=&quot;#django&quot;&gt;Django&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;django&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#django&quot;&gt;Django&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;PyReact includes a JSX compiler for &lt;a href=&quot;https://github.com/cyberdelia/django-pipeline&quot;&gt;django-pipeline&lt;/a&gt;. Add it to your project&amp;#39;s pipeline settings like this:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;PIPELINE_COMPILERS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
   &lt;span class=&quot;s&quot;&gt;&amp;#39;react.utils.pipeline.JSXCompiler&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;installation&quot;&gt;&lt;a href=&quot;#installation&quot;&gt;Installation&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;installation&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#installation&quot;&gt;Installation&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;PyReact is hosted on PyPI, and can be installed with &lt;code&gt;pip&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;$ pip install PyReact
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
@@ -346,10 +346,10 @@
 			<item>
 				<title>Community Round-up #6</title>
 				<description>&lt;p&gt;This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&amp;#39;s great to see the adoption of React growing.&lt;/p&gt;
-&lt;h2 id=&quot;react-game-tutorial&quot;&gt;&lt;a href=&quot;#react-game-tutorial&quot;&gt;React Game Tutorial&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-game-tutorial&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-game-tutorial&quot;&gt;React Game Tutorial&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://twitter.com/CalebCassel&quot;&gt;Caleb Cassel&lt;/a&gt; wrote a &lt;a href=&quot;https://rawgithub.com/calebcassel/react-demo/master/part1.html&quot;&gt;step-by-step tutorial&lt;/a&gt; about making a small game. It covers JSX, State and Events, Embedded Components and Integration with Backbone.
 &lt;figure&gt;&lt;a href=&quot;https://rawgithub.com/calebcassel/react-demo/master/part1.html&quot;&gt;&lt;img src=&quot;/react/img/blog/dog-tutorial.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2 id=&quot;reactify&quot;&gt;&lt;a href=&quot;#reactify&quot;&gt;Reactify&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;reactify&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#reactify&quot;&gt;Reactify&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://andreypopp.com/&quot;&gt;Andrey Popp&lt;/a&gt; created a &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; helper to compile JSX files.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -360,7 +360,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/andreypopp/reactify&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;react-integration-with-este&quot;&gt;&lt;a href=&quot;#react-integration-with-este&quot;&gt;React Integration with Este&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-integration-with-este&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-integration-with-este&quot;&gt;React Integration with Este&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://daniel.steigerwald.cz/&quot;&gt;Daniel Steigerwald&lt;/a&gt; is now using React within &lt;a href=&quot;https://github.com/steida/este&quot;&gt;Este&lt;/a&gt;, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;coffeescript language-coffeescript&quot; data-lang=&quot;coffeescript&quot;&gt;&lt;span class=&quot;nv&quot;&gt;este.demos.react.todoApp = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;este&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;react&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/** @lends {React.ReactComponent.prototype} */&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
   &lt;span class=&quot;nv&quot;&gt;render: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&lt;/span&gt;
@@ -379,7 +379,7 @@
     &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/steida/este-library/blob/master/este/demos/thirdparty/react/start.coffee&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
-&lt;h2 id=&quot;react-stylus-boilerplate&quot;&gt;&lt;a href=&quot;#react-stylus-boilerplate&quot;&gt;React Stylus Boilerplate&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-stylus-boilerplate&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-stylus-boilerplate&quot;&gt;React Stylus Boilerplate&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://zaim.github.io/&quot;&gt;Zaim Bakar&lt;/a&gt; shared his boilerplate to get started with Stylus CSS processor.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -398,7 +398,7 @@
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/zaim/react-stylus-boilerplate&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;webfui&quot;&gt;&lt;a href=&quot;#webfui&quot;&gt;WebFUI&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;webfui&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#webfui&quot;&gt;WebFUI&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://lisperati.com/&quot;&gt;Conrad Barski&lt;/a&gt;, author of the popular book &lt;a href=&quot;http://landoflisp.com/&quot;&gt;Land of Lisp&lt;/a&gt;, wants to use React for his ClojureScript library called &lt;a href=&quot;https://github.com/drcode/webfui&quot;&gt;WebFUI&lt;/a&gt;.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -425,7 +425,7 @@
 &lt;li&gt;To package &lt;code&gt;react.js&lt;/code&gt; in a way that&amp;#39;s easy to use and easy to update.&lt;/li&gt;
 &lt;li&gt;To allow you to write JSX without an external build step to transform that into JS.&lt;/li&gt;
 &lt;/ol&gt;
-&lt;h2 id=&quot;packaging-react.js&quot;&gt;&lt;a href=&quot;#packaging-react.js&quot;&gt;Packaging react.js&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;packaging-react.js&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#packaging-react.js&quot;&gt;Packaging react.js&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;To make &lt;code&gt;react.js&lt;/code&gt; available for use client-side, simply add &lt;code&gt;react&lt;/code&gt; to your manifest, and declare the variant you&amp;#39;d like to use in your environment. When you use &lt;code&gt;:production&lt;/code&gt;, the minified and optimized &lt;code&gt;react.min.js&lt;/code&gt; will be used instead of the development version. For example:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;ruby language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;c1&quot;&gt;# config/environments/development.rb&lt;/span&gt;
 
@@ -436,13 +436,13 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// app/assets/javascript/application.js&lt;/span&gt;
 
 &lt;span class=&quot;c1&quot;&gt;//= require react&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;writing-jsx&quot;&gt;&lt;a href=&quot;#writing-jsx&quot;&gt;Writing JSX&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;writing-jsx&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#writing-jsx&quot;&gt;Writing JSX&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;When you name your file with &lt;code&gt;myfile.js.jsx&lt;/code&gt;, &lt;code&gt;react-rails&lt;/code&gt; will automatically try to transform that file. For the time being, we still require that you include the docblock at the beginning of the file. For example, this file will get transformed on request.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/** @jsx React.DOM */&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;asset-pipeline&quot;&gt;&lt;a href=&quot;#asset-pipeline&quot;&gt;Asset Pipeline&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;asset-pipeline&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#asset-pipeline&quot;&gt;Asset Pipeline&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;code&gt;react-rails&lt;/code&gt; takes advantage of the &lt;a href=&quot;http://guides.rubyonrails.org/asset_pipeline.html&quot;&gt;asset pipeline&lt;/a&gt; that was introduced in Rails 3.1. A very important part of that pipeline is the &lt;code&gt;assets:precompile&lt;/code&gt; Rake task. &lt;code&gt;react-rails&lt;/code&gt; will ensure that your JSX files will be transformed into regular JS before all of your assets are minified and packaged.&lt;/p&gt;
-&lt;h2 id=&quot;installation&quot;&gt;&lt;a href=&quot;#installation&quot;&gt;Installation&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;installation&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#installation&quot;&gt;Installation&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Installation follows the same process you&amp;#39;re familiar with. You can install it globally with &lt;code&gt;gem install react-rails&lt;/code&gt;, though we suggest you add the dependency to your &lt;code&gt;Gemfile&lt;/code&gt; directly.&lt;/p&gt;
 </description>
 				<pubDate>2013-07-30T00:00:00-07:00</pubDate>
@@ -453,7 +453,7 @@
 			<item>
 				<title>React v0.4.1</title>
 				<description>&lt;p&gt;React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.&lt;/p&gt;
-&lt;h2 id=&quot;react&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;setState&lt;/code&gt; callbacks are now executed in the scope of your component.&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;click&lt;/code&gt; events now work on Mobile Safari.&lt;/li&gt;
@@ -462,7 +462,7 @@
 &lt;li&gt;Improved support for &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt; attributes.&lt;/li&gt;
 &lt;li&gt;Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h2 id=&quot;jsxtransformer&quot;&gt;&lt;a href=&quot;#jsxtransformer&quot;&gt;JSXTransformer&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;jsxtransformer&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsxtransformer&quot;&gt;JSXTransformer&lt;/a&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Improved environment detection so it can be run in a non-browser environment.&lt;/li&gt;
 &lt;/ul&gt;
@@ -477,7 +477,7 @@
 			<item>
 				<title>Community Round-up #5</title>
 				<description>&lt;p&gt;We launched the &lt;a href=&quot;https://www.facebook.com/react&quot;&gt;React Facebook Page&lt;/a&gt; along with the React v0.4 launch. 700 people already liked it to get updated on the project :)&lt;/p&gt;
-&lt;h2 id=&quot;cross-browser-onchange&quot;&gt;&lt;a href=&quot;#cross-browser-onchange&quot;&gt;Cross-browser onChange&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;cross-browser-onchange&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#cross-browser-onchange&quot;&gt;Cross-browser onChange&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; from &lt;a href=&quot;https://www.khanacademy.org/&quot;&gt;Khan Academy&lt;/a&gt; worked on a cross-browser implementation of &lt;code&gt;onChange&lt;/code&gt; event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -487,7 +487,7 @@
 
 &lt;p&gt;&lt;a href=&quot;http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;react-samples&quot;&gt;&lt;a href=&quot;#react-samples&quot;&gt;React Samples&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-samples&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-samples&quot;&gt;React Samples&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Learning a new library is always easier when you have working examples you can play with. &lt;a href=&quot;https://github.com/jhw&quot;&gt;jwh&lt;/a&gt; put many of them on his &lt;a href=&quot;https://github.com/jhw/react-samples&quot;&gt;react-samples Github repo&lt;/a&gt;.&lt;/p&gt;
 
 &lt;blockquote&gt;
@@ -522,7 +522,7 @@
 &lt;li&gt;Toggle &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/toggle.html&quot;&gt;#1&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;/blockquote&gt;
-&lt;h2 id=&quot;react-chosen-wrapper&quot;&gt;&lt;a href=&quot;#react-chosen-wrapper&quot;&gt;React Chosen Wrapper&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-chosen-wrapper&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-chosen-wrapper&quot;&gt;React Chosen Wrapper&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/chenglou&quot;&gt;Cheng Lou&lt;/a&gt; wrote a wrapper for the &lt;a href=&quot;http://harvesthq.github.io/chosen/&quot;&gt;Chosen&lt;/a&gt; input library called &lt;a href=&quot;https://github.com/chenglou/react-chosen&quot;&gt;react-chosen&lt;/a&gt;. It took just 25 lines to be able to use jQuery component as a React one.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Chosen&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;noResultsText&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;No result&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Harvest&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onChange&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;doSomething&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
@@ -530,15 +530,15 @@
     &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;option&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Harvest&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Harvest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/option&amp;gt;&lt;/span&gt;
   &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Chosen&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;jsx-and-es6-template-strings&quot;&gt;&lt;a href=&quot;#jsx-and-es6-template-strings&quot;&gt;JSX and ES6 Template Strings&lt;/a&gt;&lt;/h2&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;jsx-and-es6-template-strings&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsx-and-es6-template-strings&quot;&gt;JSX and ES6 Template Strings&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://domenicdenicola.com/&quot;&gt;Domenic Denicola&lt;/a&gt; wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.&lt;/p&gt;
 
 &lt;figure&gt;&lt;iframe src=&quot;http://www.slideshare.net/slideshow/embed_code/24187146?rel=0&amp;startSlide=36&quot; width=&quot;600&quot; height=&quot;356&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; style=&quot;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px&quot; allowfullscreen webkitallowfullscreen mozallowfullscreen&gt; &lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;react-presentation&quot;&gt;&lt;a href=&quot;#react-presentation&quot;&gt;React Presentation&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;react-presentation&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-presentation&quot;&gt;React Presentation&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://tomocchino.com/&quot;&gt;Tom Occhino&lt;/a&gt; and &lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt;, React developers, did a presentation of React at Facebook Seattle&amp;#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;amp;A. I highly recommend you watching this video.&lt;/p&gt;
 
 &lt;figure&gt;&lt;iframe width=&quot;650&quot; height=&quot;400&quot; src=&quot;//www.youtube.com/embed/XxVg_s8xAms&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;docs&quot;&gt;&lt;a href=&quot;#docs&quot;&gt;Docs&lt;/a&gt;&lt;/h2&gt;
+&lt;h2 id=&quot;docs&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#docs&quot;&gt;Docs&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.&lt;/p&gt;
 
 &lt;blockquote&gt;

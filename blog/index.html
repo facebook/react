@@ -91,14 +91,14 @@
         <hr />
         <div class="post">
          <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
-<h2 id="changelog"><a href="#changelog">Changelog</a></h2><h3 id="react"><a href="#react">React</a></h3>
+<h2 id="changelog" class="anchor"><a href="#changelog">Changelog</a></h2><h3 id="react" class="anchor"><a href="#react">React</a></h3>
 <ul>
 <li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
 <li>Fixed bug with selection and focus.</li>
 <li>Made it possible to unmount components from the document root.</li>
 <li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
 </ul>
-<h3 id="react-with-addons"><a href="#react-with-addons">React with Addons</a></h3>
+<h3 id="react-with-addons" class="anchor"><a href="#react-with-addons">React with Addons</a></h3>
 <ul>
 <li>Fixed bug with transition and animation event detection.</li>
 </ul>
@@ -116,11 +116,11 @@
 <p>The biggest change you&#39;ll notice as a developer is that we no longer support <code>class</code> in JSX as a way to provide CSS classes. Since this prop was being converted to <code>className</code> at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are <a href="https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156">a few exceptions</a> where we deviate slightly in an attempt to be consistent internally.</p>
 
 <p>The other major change in v0.5 is that we&#39;ve added an additional build - <code>react-with-addons</code> - which adds support for some extras that we&#39;ve been working on including animations and two-way binding. <a href="/react/docs/addons.html">Read more about these addons in the docs</a>.</p>
-<h2 id="thanks-to-our-community"><a href="#thanks-to-our-community">Thanks to Our Community</a></h2>
+<h2 id="thanks-to-our-community" class="anchor"><a href="#thanks-to-our-community">Thanks to Our Community</a></h2>
 <p>We added <em>22 new people</em> to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our <code>AUTHORS</code> file, that means we&#39;ve nearly doubled the number of contributors in that time period. We&#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&#39;ve also had people tell us about talks they&#39;ve given in their local community about React.</p>
 
 <p>It&#39;s been awesome to see the things that people are building with React, and we can&#39;t wait to see what you come up with next!</p>
-<h2 id="changelog"><a href="#changelog">Changelog</a></h2><h3 id="react"><a href="#react">React</a></h3>
+<h2 id="changelog" class="anchor"><a href="#changelog">Changelog</a></h2><h3 id="react" class="anchor"><a href="#react">React</a></h3>
 <ul>
 <li>Memory usage improvements - reduced allocations in core which will help with GC pauses</li>
 <li>Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.</li>
@@ -141,11 +141,11 @@
 <li>Better support for server-side rendering - <a href="https://github.com/facebook/react-page">react-page</a> has helped improve the stability for server-side rendering.</li>
 <li>Made it possible to use React in environments enforcing a strict <a href="https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy">Content Security Policy</a>. This also makes it possible to use React to build Chrome extensions.</li>
 </ul>
-<h3 id="react-with-addons-new"><a href="#react-with-addons-new">React with Addons (New!)</a></h3>
+<h3 id="react-with-addons-new" class="anchor"><a href="#react-with-addons-new">React with Addons (New!)</a></h3>
 <ul>
 <li>Introduced a separate build with several &quot;addons&quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. <a href="/react/docs/addons.html">Read more in the docs</a>.</li>
 </ul>
-<h3 id="jsx"><a href="#jsx">JSX</a></h3>
+<h3 id="jsx" class="anchor"><a href="#jsx">JSX</a></h3>
 <ul>
 <li>No longer transform <code>class</code> to <code>className</code> as part of the transform! This is a breaking change - if you were using <code>class</code>, you <em>must</em> change this to <code>className</code> or your components will be visually broken.</li>
 <li>Added warnings to the in-browser transformer to make it clear it is not intended for production use.</li>
@@ -164,7 +164,7 @@
          <p>We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&#39;ll probably organize more in the future.</p>
 
 <p><img src="/react/img/blog/react-hackathon.jpg" alt=""></p>
-<h2 id="react-hackathon-winner"><a href="#react-hackathon-winner">React Hackathon Winner</a></h2>
+<h2 id="react-hackathon-winner" class="anchor"><a href="#react-hackathon-winner">React Hackathon Winner</a></h2>
 <p><a href="http://bold-it.com/">Alex Swan</a> implemented <a href="http://qu.izti.me/">Qu.izti.me</a>, a multi-player quiz game. It is real-time via Web Socket and mobile friendly.</p>
 
 <blockquote>
@@ -175,7 +175,7 @@
 
 <p><a href="http://bold-it.com/javascript/facebook-react-example/">Read More...</a></p>
 </blockquote>
-<h2 id="jsconf-eu-talk-rethinking-best-practices"><a href="#jsconf-eu-talk-rethinking-best-practices">JSConf EU Talk: Rethinking Best Practices</a></h2>
+<h2 id="jsconf-eu-talk-rethinking-best-practices" class="anchor"><a href="#jsconf-eu-talk-rethinking-best-practices">JSConf EU Talk: Rethinking Best Practices</a></h2>
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> presented React at JSConf EU. He covers three controversial design decisions of React:</p>
 
 <ol>
@@ -187,7 +187,7 @@
 <p>The video will be available soon on the <a href="http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html">JSConf EU website</a>, but in the meantime, here are Pete&#39;s slides:</p>
 
 <figure><iframe src="http://www.slideshare.net/slideshow/embed_code/26589373" width="550" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
-<h2 id="pump---clojure-bindings-for-react"><a href="#pump---clojure-bindings-for-react">Pump - Clojure bindings for React</a></h2>
+<h2 id="pump---clojure-bindings-for-react" class="anchor"><a href="#pump---clojure-bindings-for-react">Pump - Clojure bindings for React</a></h2>
 <p><a href="http://solovyov.net/">Alexander Solovyov</a> has been working on React bindings for ClojureScript. This is really exciting as it is using &quot;native&quot; ClojureScript data structures.</p>
 <div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="p">(</span><span class="n">ns</span> <span class="n">your</span><span class="o">.</span><span class="n">app</span>
   <span class="p">(</span><span class="ss">:require</span><span class="o">-</span><span class="n">macros</span> <span class="o">[</span><span class="n">pump</span><span class="o">.</span><span class="n">def</span><span class="o">-</span><span class="n">macros</span> <span class="ss">:refer</span> <span class="o">[</span><span class="n">defr</span><span class="o">]]</span><span class="p">)</span>
@@ -201,7 +201,7 @@
   <span class="o">[</span><span class="ss">:div</span> <span class="p">{</span><span class="ss">:class</span><span class="o">-</span><span class="nb">name</span> <span class="s2">&quot;test&quot;</span><span class="p">}</span> <span class="s2">&quot;hello&quot;</span><span class="o">]</span><span class="p">)</span>
 </code></pre></div>
 <p><a href="https://github.com/piranha/pump">Check it out on GitHub...</a></p>
-<h2 id="jsxhint"><a href="#jsxhint">JSXHint</a></h2>
+<h2 id="jsxhint" class="anchor"><a href="#jsxhint">JSXHint</a></h2>
 <p><a href="http://blog.selfassembled.org/">Todd Kennedy</a> working at <a href="http://www.condenast.com/">Cond&eacute; Nast</a> implemented a wrapper on-top of <a href="http://www.jshint.com/">JSHint</a> that first converts JSX files to JS.</p>
 
 <blockquote>
@@ -210,7 +210,7 @@
 </code></pre></div>
 <p><a href="https://github.com/CondeNast/JSXHint">Check it out on GitHub...</a></p>
 </blockquote>
-<h2 id="turbo-react"><a href="#turbo-react">Turbo React</a></h2>
+<h2 id="turbo-react" class="anchor"><a href="#turbo-react">Turbo React</a></h2>
 <p><a href="https://twitter.com/ssorallen">Ross Allen</a> working at <a href="http://mesosphere.io/">Mesosphere</a> combined <a href="https://github.com/rails/turbolinks/">Turbolinks</a>, a library used by Ruby on Rails to speed up page transition, and React.</p>
 
 <blockquote>
@@ -223,7 +223,7 @@
 
 <p><a href="https://turbo-react.herokuapp.com/">Check out the demo...</a></p>
 </blockquote>
-<h2 id="reactive-table"><a href="#reactive-table">Reactive Table</a></h2>
+<h2 id="reactive-table" class="anchor"><a href="#reactive-table">Reactive Table</a></h2>
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> continues his series of blog posts about React. This one is an introduction tutorial on rendering a simple table with React.</p>
 
 <blockquote>
@@ -252,7 +252,7 @@
 <p>First, we are organizing a <a href="http://reactjshack-a-thon.splashthat.com/">React Hackathon</a> in Facebook&#39;s Seattle office on Saturday September 28. If you want to hack on React, meet some of the team or win some prizes, feel free to join us!</p>
 
 <p>We&#39;ve also reached a point where there are too many questions for us to handle directly. We&#39;re encouraging people to ask questions on <a href="http://stackoverflow.com/questions/tagged/reactjs">StackOverflow</a> using the tag <a href="http://stackoverflow.com/questions/tagged/reactjs">[reactjs]</a>. Many members of the team and community have subscribed to the tag, so feel free to ask questions there. We think these will be more discoverable than Google Groups archives or IRC logs.</p>
-<h2 id="javascript-jabber"><a href="#javascript-jabber">Javascript Jabber</a></h2>
+<h2 id="javascript-jabber" class="anchor"><a href="#javascript-jabber">Javascript Jabber</a></h2>
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="https://github.com/jordwalke">Jordan Walke</a> were interviewed on <a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Javascript Jabber</a> for an hour.  They go over many aspects of React such as 60 FPS, Data binding, Performance, Diffing Algorithm, DOM Manipulation, Node.js support, server-side rendering, JSX, requestAnimationFrame and the community. This is a gold mine of information about React.</p>
 
 <blockquote>
@@ -266,13 +266,13 @@
 
 <p><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/">Read the full conversation ...</a></p>
 </blockquote>
-<h2 id="jsxtransformer-trick"><a href="#jsxtransformer-trick">JSXTransformer Trick</a></h2>
+<h2 id="jsxtransformer-trick" class="anchor"><a href="#jsxtransformer-trick">JSXTransformer Trick</a></h2>
 <p>While this is not going to work for all the attributes since they are camelCased in React, this is a pretty cool trick.</p>
 
 <div style="margin-left: 74px;"><blockquote class="twitter-tweet"><p>Turn any DOM element into a React.js function: JSXTransformer.transform(&quot;/** <a href="https://twitter.com/jsx">@jsx</a> React.DOM */&quot; + element.innerHTML).code</p>&mdash; Ross Allen (@ssorallen) <a href="https://twitter.com/ssorallen/statuses/377105575441489920">September 9, 2013</a></blockquote></div>
 
 <script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
-<h2 id="remarkable-react"><a href="#remarkable-react">Remarkable React</a></h2>
+<h2 id="remarkable-react" class="anchor"><a href="#remarkable-react">Remarkable React</a></h2>
 <p><a href="http://www.phpied.com/">Stoyan Stefanov</a> gave a talk at <a href="http://braziljs.com.br/">BrazilJS</a> about React and wrote an article with the content of the presentation. He goes through the difficulties of writting <em>active apps</em> using the DOM API and shows how React handles it.</p>
 
 <blockquote>
@@ -290,13 +290,13 @@
 
 <p><a href="http://www.phpied.com/remarkable-react/">Read More ...</a></p>
 </blockquote>
-<h2 id="markdown-in-react"><a href="#markdown-in-react">Markdown in React</a></h2>
+<h2 id="markdown-in-react" class="anchor"><a href="#markdown-in-react">Markdown in React</a></h2>
 <p><a href="http://benalpert.com/">Ben Alpert</a> converted <a href="https://github.com/chjj/marked">marked</a>, a Markdown Javascript implementation, in React: <a href="https://github.com/spicyj/marked-react">marked-react</a>. Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to <code>escape</code> will not introduce an XSS vulnerability.
 <figure><a href="https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457"><img src="/react/img/blog/markdown_refactor.png" alt=""></a></figure></p>
-<h2 id="unite-from-bugbusters"><a href="#unite-from-bugbusters">Unite from BugBusters</a></h2>
+<h2 id="unite-from-bugbusters" class="anchor"><a href="#unite-from-bugbusters">Unite from BugBusters</a></h2>
 <p><a href="https://twitter.com/renajohn">Renault John Lecoultre</a> wrote <a href="https://www.bugbuster.com/">Unite</a>, an interactive tool for analyzing code dynamically using React. It integrates with CodeMirror.
 <figure><a href="https://unite.bugbuster.com/"><img src="/react/img/blog/unite.png" alt=""></a></figure></p>
-<h2 id="reactjs-irc-logs"><a href="#reactjs-irc-logs">#reactjs IRC Logs</a></h2>
+<h2 id="reactjs-irc-logs" class="anchor"><a href="#reactjs-irc-logs">#reactjs IRC Logs</a></h2>
 <p><a href="http://blog.vjeux.com/">Vjeux</a> re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.</p>
 
 <iframe width="100%" height="300" src="http://jsfiddle.net/vjeux/QL9tz/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
@@ -320,10 +320,10 @@
 <li><a href="http://facebook.github.io/react/blog/">15 blog posts</a></li>
 <li>2 early adopters: <a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html">Khan Academy</a> and <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a></li>
 </ul>
-<h2 id="wolfenstein-rendering-engine-ported-to-react"><a href="#wolfenstein-rendering-engine-ported-to-react">Wolfenstein Rendering Engine Ported to React</a></h2>
+<h2 id="wolfenstein-rendering-engine-ported-to-react" class="anchor"><a href="#wolfenstein-rendering-engine-ported-to-react">Wolfenstein Rendering Engine Ported to React</a></h2>
 <p><a href="http://www.petehunt.net/">Pete Hunt</a> ported the render code of the web version of Wolfenstein 3D to React. Check out <a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html">the demo</a> and <a href="https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183">render.js</a> file for the implementation.
 <figure><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></figure></p>
-<h2 id="react-amp-meteor"><a href="#react-amp-meteor">React &amp; Meteor</a></h2>
+<h2 id="react-amp-meteor" class="anchor"><a href="#react-amp-meteor">React &amp; Meteor</a></h2>
 <p><a href="https://twitter.com/benjamn">Ben Newman</a> made a <a href="https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js">13-lines wrapper</a> to use React and Meteor together. <a href="http://www.meteor.com/">Meteor</a> handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.</p>
 
 <blockquote>
@@ -346,7 +346,7 @@
 
 <p><a href="https://github.com/benjamn/meteor-react">Read more ...</a></p>
 </blockquote>
-<h2 id="react-page"><a href="#react-page">React Page</a></h2>
+<h2 id="react-page" class="anchor"><a href="#react-page">React Page</a></h2>
 <p><a href="https://github.com/jordwalke">Jordan Walke</a> implemented a complete React project creator called <a href="https://github.com/facebook/react-page/">react-page</a>. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
 
 <blockquote>
