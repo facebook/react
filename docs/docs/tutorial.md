@@ -369,7 +369,7 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We will use jQuery 1.5 to help make an asynchronous request to the server.
+We will use jQuery to help make an asynchronous request to the server.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
