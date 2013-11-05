@@ -379,8 +379,6 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     $.ajax({
       url: 'comments.json',
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -407,8 +405,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -419,10 +415,7 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
@@ -436,13 +429,13 @@ var CommentBox = React.createClass({
 });
 
 React.renderComponent(
-  <CommentBox url="comments.json" pollInterval={5000} />,
+  <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
 
 ```
 
-All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
+All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the `comments.json` file; within 2 seconds, the changes will show!
 
 ### Adding new comments
 
@@ -456,7 +449,7 @@ var CommentForm = React.createClass({
       <form className="commentForm">
         <input type="text" placeholder="Your name" />
         <input type="text" placeholder="Say something..." />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -488,7 +481,7 @@ var CommentForm = React.createClass({
           placeholder="Say something..."
           ref="text"
         />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -517,8 +510,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -532,10 +523,7 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
@@ -573,7 +561,7 @@ var CommentForm = React.createClass({
           placeholder="Say something..."
           ref="text"
         />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -588,8 +576,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -598,9 +584,8 @@ var CommentBox = React.createClass({
   handleCommentSubmit: function(comment) {
     $.ajax({
       url: this.props.url,
+      type: 'POST',
       data: comment,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -611,10 +596,7 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
@@ -640,8 +622,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -653,9 +633,8 @@ var CommentBox = React.createClass({
     this.setState({data: comments});
     $.ajax({
       url: this.props.url,
+      type: 'POST',
       data: comment,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -666,10 +645,7 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
