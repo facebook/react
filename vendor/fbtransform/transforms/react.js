@@ -74,7 +74,8 @@ function visitReactTag(traverse, object, path, state) {
   move(object.name.range[1], state);
 
   var childrenToRender = object.children.filter(function(child) {
-    return !(child.type === Syntax.Literal && !child.value.match(/\S/));
+    return !(child.type === Syntax.Literal &&
+             child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
   });
 
   // if we don't have any attributes, pass in null
@@ -140,9 +141,6 @@ function visitReactTag(traverse, object, path, state) {
     append(', ', state);
 
     object.children.forEach(function(child) {
-      if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
-        return;
-      }
       catchup(child.range[0], state);
 
       var isLast = child === childrenToRender[childrenToRender.length - 1];

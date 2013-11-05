@@ -62,7 +62,7 @@ describe('rendering React components at document', function() {
 
     ReactMount.allowFullPageRender = true;
     var component = React.renderComponent(<Root />, testDocument);
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
     var componentID = ReactMount.getReactRootID(testDocument);
     expect(componentID).toBe(component._rootNodeID);
@@ -91,7 +91,7 @@ describe('rendering React components at document', function() {
 
     ReactMount.allowFullPageRender = true;
     React.renderComponent(<Root />, testDocument);
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
     var unmounted = React.unmountComponentAtNode(testDocument);
     expect(unmounted).toBe(true);
@@ -152,12 +152,12 @@ describe('rendering React components at document', function() {
 
     ReactMount.allowFullPageRender = true;
     var component = React.renderComponent(<Root />, testDocument);
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update via state transition
     component.toggle();
 
-    expect(testDocument.body.innerHTML).toBe(' Goodbye world ');
+    expect(testDocument.body.innerHTML).toBe('Goodbye world');
 
   });
 
@@ -200,12 +200,12 @@ describe('rendering React components at document', function() {
     ReactMount.allowFullPageRender = true;
     React.renderComponent(<Component />, testDocument);
 
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update
     React.renderComponent(<Component2 />, testDocument);
 
-    expect(testDocument.body.innerHTML).toBe(' Goodbye world ');
+    expect(testDocument.body.innerHTML).toBe('Goodbye world');
 
   });
 

@@ -145,118 +145,78 @@ var knownTags = {
   wbr: true
 };
 
-function safeTrim(string) {
-  return string.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '');
-}
-
-// Replace all trailing whitespace characters with a single space character
-function trimWithSingleSpace(string) {
-  return string.replace(/^[ \t\xA0]{2,}/, ' ').
-    replace(/[ \t\xA0]{2,}$/, ' ').replace(/^\s+$/, '');
-}
-
 /**
- * Special handling for multiline string literals
- * print lines:
+ * #1 Any whitespace sequence which CONTAIN A NEWLINE and TOUCHES
+ *    the start or end of the string is removed completely
  *
- *   line
- *   line
- *
- * as:
- *
- *   "line "+
- *   "line"
+ * #2 Any whitespace sequence which CONTAIN A NEWLINE but DOES NOT TOUCH
+ *    the start or end of the string is replaced with a single newline
  */
+
+function removeWhitespace(str) {
+  return str.replace(/[ \t]+/g, '');
+};
+ 
 function renderXJSLiteral(object, isLast, state, start, end) {
-  /** Added blank check filtering and triming*/
-  var trimmedChildValue = safeTrim(object.value);
-  var hasFinalNewLine = false;
+  var trimmedChildValue =
+    object.value.replace(/^[ \t]*[\r\n][ \t\r\n]*/, removeWhitespace). // #1
+      replace(/[ \t]*[\r\n][ \t\r\n]*$/, removeWhitespace). // #1
+      replace(/([^ \t\r\n])([ \t]*[\r\n][ \t\r\n]*)(?=[^ \t\r\n])/g, // #2
+        function(_, leading, match) {
+          return leading + ' ' + removeWhitespace(match);
+        });
+  
+  //utils.append(object.value.match(/^[ \t]*/)[0], state);
+  if (start) {
+    utils.append(start, state);
+  }
 
-  if (trimmedChildValue) {
-    // head whitespace
-    utils.append(object.value.match(/^[\t ]*/)[0], state);
-    if (start) {
-      utils.append(start, state);
-    }
+  var trimmedLines = trimmedChildValue.split(/\r\n|\n|\r/);
+  var lines = object.value.split(/\r\n|\n|\r/);
 
-    var trimmedChildValueWithSpace = trimWithSingleSpace(object.value);
+  var lastNonEmptyLine = -1;
+  trimmedLines.forEach(function (line, ii) {
+    if (line) lastNonEmptyLine = ii;
+  });
 
-    /**
-     */
-    var initialLines = trimmedChildValue.split(/\r\n|\n|\r/);
+  var numLines = trimmedLines.length;
+  trimmedLines.forEach(function (line, ii) {
+    var isLastLine = (ii === numLines - 1);
 
-    var lines = initialLines.filter(function(line) {
-      return safeTrim(line).length > 0;
-    });
+    var isEmptyLine = !!lines[ii].match(/^[ \t\xA0]*$/);
 
-    var hasInitialNewLine = initialLines[0] !== lines[0];
-    hasFinalNewLine =
-      initialLines[initialLines.length - 1] !== lines[lines.length - 1];
-
-    var numLines = lines.length;
-    lines.forEach(function (line, ii) {
-      var lastLine = ii === numLines - 1;
-      var trimmedLine = safeTrim(line);
-      if (trimmedLine === '' && !lastLine) {
-        utils.append(line, state);
-      } else {
-        var preString = '';
-        var postString = '';
-        var leading = line.match(/^[ \t]*/)[0];
-
-        if (ii === 0) {
-          if (hasInitialNewLine) {
-            preString = ' ';
-            leading = '\n' + leading;
-          }
-          if (trimmedChildValueWithSpace.substring(0, 1) === ' ') {
-            // If this is the first line, and the original content starts with
-            // whitespace, place a single space at the beginning.
-            preString = ' ';
-          }
-        }
-        if (!lastLine || trimmedChildValueWithSpace.substr(
-             trimmedChildValueWithSpace.length - 1, 1) === ' ' ||
-             hasFinalNewLine
-             ) {
-          // If either not on the last line, or the original content ends with
-          // whitespace, place a single character at the end.
-          postString = ' ';
-        }
-
-        utils.append(
-          leading +
-          JSON.stringify(
-            preString + trimmedLine + postString
-          ) +
-          (lastLine ? '' : '+') +
-          line.match(/[ \t]*$/)[0],
-          state);
+    if (line) {
+      if (!isEmptyLine) {
+        utils.append(lines[ii].match(/^[ \t\xA0]*/)[0], state);
       }
-      if (!lastLine) {
-        utils.append('\n', state);
+      if (!isLastLine) {
+        // we temporarily appended a space for #2, replace with a newline
+        line = line.replace(/[ \t]$/g, '\n');
       }
-    });
-  } else {
-    if (start) {
-      utils.append(start, state);
+
+      utils.append(
+        JSON.stringify(line) +
+        (ii >= lastNonEmptyLine ? '' : '+'),
+        state);
     }
-    utils.append('""', state);
-  }
-  if (end) {
-    utils.append(end, state);
-  }
-
-  // add comma before trailing whitespace
-  if (!isLast) {
-    utils.append(',', state);
-  }
-
-  // tail whitespace
-  if (hasFinalNewLine) {
-    utils.append('\n', state);
-  }
-  utils.append(object.value.match(/[ \t]*$/)[0], state);
+    
+    // insert just after the last literal
+    if (!isLast && ii === lastNonEmptyLine) {
+      if (end) {
+        utils.append(end, state);
+      }
+      utils.append(',', state);
+    }
+    
+    //if (!isEmptyLine || ii > 0) {
+      utils.append(lines[ii].match(/[ \t\xA0]*$/)[0], state);
+    //}
+    
+    if (!isLastLine) {
+      utils.append('\n', state);
+    }
+  });
+  
   utils.move(object.range[1], state);
 }
 
