@@ -1,6 +1,6 @@
 ---
 id: introduction
-title: Cookbook Introduction
+title: Introduction
 layout: cookbook
 permalink: introduction.html
 next: inline-styles.html

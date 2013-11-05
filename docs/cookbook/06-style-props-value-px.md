@@ -3,7 +3,7 @@ id: style-prop-value-px
 title: Shorthand for Specifying Pixel Values in style props
 layout: cookbook
 permalink: style-props-value-px.html
-prev: jsx-root-node-count.html
+prev: maximum-number-of-jsx-root-nodes.html
 next: children-props-type.html
 ---
 

@@ -1,8 +1,8 @@
 ---
-id: props-in-getInitialSate-as-anti-pattern
-title: Props in getInitialState Is an Anti-pattern
+id: props-in-getInitialState-as-anti-pattern
+title: Props in getInitialState Is an Anti-Pattern
 layout: cookbook
-permalink: props-in-getInitialSate-as-anti-pattern.html
+permalink: props-in-getInitialState-as-anti-pattern.html
 prev: componentWillReceiveProps-not-triggered-after-mounting.html
 next: dom-event-listeners.html
 ---
