@@ -43,11 +43,9 @@ var eventTypes = {
 };
 
 var useSelectionChange = false;
-var useSelect = false;
 
 if (ExecutionEnvironment.canUseDOM) {
   useSelectionChange = 'onselectionchange' in document;
-  useSelect = isEventSupported('select');
 }
 
 var activeElement = null;
