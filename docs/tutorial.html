@@ -528,7 +528,7 @@
   <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
 <span class="p">]</span>
 </code></pre></div>
-<p>We will use jQuery 1.5 to help make an asynchronous request to the server.</p>
+<p>We will use jQuery to help make an asynchronous request to the server.</p>
 
 <p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run <code>python -m SimpleHTTPServer</code> in your application&#39;s directory.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
@@ -536,15 +536,13 @@
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
 </span><span class="hll">      <span class="nx">url</span><span class="o">:</span> <span class="s1">&#39;comments.json&#39;</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
 </span><span class="hll">      <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="hll">        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
 </span><span class="hll">      <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
 </span><span class="hll">    <span class="p">});</span>
-</span>    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
+</span><span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentBox&quot;</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
@@ -561,8 +559,6 @@
 <span class="hll">  <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span>    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
       <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
-      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
       <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
@@ -572,17 +568,14 @@
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
-</span><span class="hll">    <span class="nx">setInterval</span><span class="p">(</span>
-</span><span class="hll">      <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">),</span>
-</span><span class="hll">      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span>
-</span><span class="hll">    <span class="p">);</span>
-</span>  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentBox&quot;</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
-        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
+    <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
+<span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">(</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentBox&quot;</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
+</span>        <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">CommentForm</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
@@ -590,11 +583,11 @@
 <span class="p">});</span>
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-<span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="nx">pollInterval</span><span class="o">=</span><span class="p">{</span><span class="mi">5000</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
-</span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
+  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="nx">pollInterval</span><span class="o">=</span><span class="p">{</span><span class="mi">2000</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 5 seconds, the changes will show!</p>
+<p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 2 seconds, the changes will show!</p>
 <h3 id="adding-new-comments" class="anchor"><a href="#adding-new-comments">Adding new comments</a></h3>
 <p>Now it&#39;s time to build the form. Our <code>CommentForm</code> component should ask the user for their name and comment text and send a request to the server to save the comment.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>
@@ -604,7 +597,7 @@
 <span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span><span class="o">&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="o">/&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">      <span class="o">&lt;</span><span class="err">/form&gt;</span>
 </span>    <span class="p">);</span>
   <span class="p">}</span>
@@ -633,7 +626,7 @@
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
 <span class="hll">          <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
 </span>        <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
@@ -653,25 +646,20 @@
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
       <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
-      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
       <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
     <span class="p">});</span>
   <span class="p">},</span>
-<span class="hll">  <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="c1">// TODO: submit to the server and refresh the list</span>
-</span><span class="hll">  <span class="p">},</span>
-</span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
-  <span class="p">},</span>
+  <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// TODO: submit to the server and refresh the list</span>
+<span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
+</span>  <span class="p">},</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
-    <span class="nx">setInterval</span><span class="p">(</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">),</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span>
-    <span class="p">);</span>
+    <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -679,13 +667,13 @@
         <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Comments</span><span class="o">&lt;</span><span class="err">/h1&gt;</span>
         <span class="o">&lt;</span><span class="nx">CommentList</span> <span class="nx">data</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span> <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="nx">CommentForm</span>
-<span class="hll">          <span class="nx">onCommentSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCommentSubmit</span><span class="p">}</span>
-</span>        <span class="o">/&gt;</span>
+          <span class="nx">onCommentSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleCommentSubmit</span><span class="p">}</span>
+        <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
+<span class="hll"><span class="p">});</span>
+</span></code></pre></div>
 <p>Let&#39;s call the callback from the <code>CommentForm</code> when the user submits the form:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -706,7 +694,7 @@
           <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span>
           <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span>
         <span class="o">/&gt;</span>
-        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
       <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
@@ -718,33 +706,27 @@
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
       <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
-      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
       <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
     <span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-</span><span class="hll">      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+<span class="hll">      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
 </span><span class="hll">      <span class="nx">data</span><span class="o">:</span> <span class="nx">comment</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
 </span><span class="hll">      <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
 </span><span class="hll">        <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
 </span><span class="hll">      <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
 </span><span class="hll">    <span class="p">});</span>
+</span><span class="hll">  <span class="p">},</span>
+</span><span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+</span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
 </span>  <span class="p">},</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
-  <span class="p">},</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
-    <span class="nx">setInterval</span><span class="p">(</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">),</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span>
-    <span class="p">);</span>
+    <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -765,22 +747,19 @@
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
       <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
-      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
       <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
     <span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">;</span>
-</span><span class="hll">    <span class="nx">comments</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">comment</span><span class="p">);</span>
-</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">comments</span><span class="p">});</span>
-</span>    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
-      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+    <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">;</span>
+    <span class="nx">comments</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">comment</span><span class="p">);</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">comments</span><span class="p">});</span>
+</span><span class="hll">    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
+</span><span class="hll">      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
+</span>      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
       <span class="nx">data</span><span class="o">:</span> <span class="nx">comment</span><span class="p">,</span>
-      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
-      <span class="nx">mimeType</span><span class="o">:</span> <span class="s1">&#39;textPlain&#39;</span><span class="p">,</span>
       <span class="nx">success</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">data</span><span class="p">});</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
@@ -791,10 +770,7 @@
   <span class="p">},</span>
   <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
-    <span class="nx">setInterval</span><span class="p">(</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">),</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span>
-    <span class="p">);</span>
+    <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>

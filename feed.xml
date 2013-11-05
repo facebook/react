@@ -7,6 +7,146 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Thinking in React</title>
+				<description>&lt;p&gt;React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It&amp;#39;s scaled very well for us at Facebook and Instagram.&lt;/p&gt;
+
+&lt;p&gt;One of the many great parts of React is how it makes you think about apps as you build them. In this post I&amp;#39;ll walk you through the thought process of building a searchable product data table using React.&lt;/p&gt;
+&lt;h2 id=&quot;start-with-a-mock&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#start-with-a-mock&quot;&gt;Start with a mock&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&amp;#39;t very good because the mock looks like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/7zEwOHN.png&quot; alt=&quot;Mockup&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;Our JSON API returns some data that looks like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;[
+  {category: &amp;quot;Sporting Goods&amp;quot;, price: &amp;quot;$49.99&amp;quot;, stocked: true, name: &amp;quot;Football&amp;quot;},
+  {category: &amp;quot;Sporting Goods&amp;quot;, price: &amp;quot;$9.99&amp;quot;, stocked: true, name: &amp;quot;Baseball&amp;quot;},
+  {category: &amp;quot;Sporting Goods&amp;quot;, price: &amp;quot;$29.99&amp;quot;, stocked: false, name: &amp;quot;Basketball&amp;quot;},
+  {category: &amp;quot;Electronics&amp;quot;, price: &amp;quot;$99.99&amp;quot;, stocked: true, name: &amp;quot;iPod Touch&amp;quot;},
+  {category: &amp;quot;Electronics&amp;quot;, price: &amp;quot;$399.99&amp;quot;, stocked: false, name: &amp;quot;iPhone 5&amp;quot;},
+  {category: &amp;quot;Electronics&amp;quot;, price: &amp;quot;$199.99&amp;quot;, stocked: true, name: &amp;quot;Nexus 7&amp;quot;}
+];
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;step-1-break-the-ui-into-a-component-hierarchy&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#step-1-break-the-ui-into-a-component-hierarchy&quot;&gt;Step 1: break the UI into a component hierarchy&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The first thing you&amp;#39;ll want to do is to draw boxes around every component (and subcomponent) in the mock and give them all names. If you&amp;#39;re working with a designer they may have already done this, so go talk to them! Their Photoshop layer names may end up being the names of your React components!&lt;/p&gt;
+
+&lt;p&gt;But how do you know what should be its own component? Just use the same techniques for deciding if you should create a new function or object. One such technique is the &lt;a href=&quot;http://en.wikipedia.org/wiki/Single_responsibility_principle&quot;&gt;single responsibility principle&lt;/a&gt;, that is, a component should ideally only do one thing. If it ends up growing it should be decomposed into smaller subcomponents.&lt;/p&gt;
+
+&lt;p&gt;Since you&amp;#39;re often displaying a JSON data model to a user, you&amp;#39;ll find that if your model was built correctly your UI (and therefore your component structure) will map nicely onto it. That&amp;#39;s because user interfaces and data models tend to adhere to the same &lt;em&gt;information architecture&lt;/em&gt; which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/YkCWwYv.png&quot; alt=&quot;Component diagram&quot;&gt;&lt;/p&gt;
+
+&lt;p&gt;You&amp;#39;ll see here that we have five components in our simple app. I&amp;#39;ve italicized the data each component represents.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;FilterableProductTable&lt;/code&gt; (orange):&lt;/strong&gt; contains the entirety of the example&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;SearchBar&lt;/code&gt; (blue):&lt;/strong&gt; receives all &lt;em&gt;user input&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;ProductTable&lt;/code&gt; (green):&lt;/strong&gt; displays and filters the &lt;em&gt;data collection&lt;/em&gt; based on &lt;em&gt;user input&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;ProductCategoryRow&lt;/code&gt; (turquoise):&lt;/strong&gt; displays a heading for each &lt;em&gt;category&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;ProductRow&lt;/code&gt; (red):&lt;/strong&gt; displays a row for each &lt;em&gt;product&lt;/em&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;If you look at &lt;code&gt;ProductTable&lt;/code&gt; you&amp;#39;ll see that the table header (containing the &amp;quot;Name&amp;quot; and &amp;quot;Price&amp;quot; labels) isn&amp;#39;t its own component. This is a matter of preference and there&amp;#39;s an argument to be made either way. For this example I left it as part of &lt;code&gt;ProductTable&lt;/code&gt; because it is part of rendering the &lt;em&gt;data collection&lt;/em&gt; which is &lt;code&gt;ProductTable&lt;/code&gt;&amp;#39;s responsibility. However if this header grows to be complex (i.e. if we were to add affordances for sorting) it would certainly make sense to make this its own &lt;code&gt;ProductTableHeader&lt;/code&gt; component.&lt;/p&gt;
+
+&lt;p&gt;Now that we&amp;#39;ve identified the components in our mock, let&amp;#39;s arrange them into a hierarchy. This is easy. Components that appear within another component in the mock should appear as a child in the hierarchy:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;FilterableProductTable&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;SearchBar&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ProductTable&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ProductCategoryRow&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ProductRow&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;step-2-build-a-static-version-in-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#step-2-build-a-static-version-in-react&quot;&gt;Step 2: Build a static version in React&lt;/a&gt;&lt;/h2&gt;
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/6wQMG/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;Now that you have your component hierarchy it&amp;#39;s time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&amp;#39;s easiest to decouple these processes because building building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&amp;#39;ll see why.&lt;/p&gt;
+
+&lt;p&gt;To build a static version of your app that renders your data model you&amp;#39;ll want to build components that reuse other components and pass data using &lt;em&gt;props&lt;/em&gt;. &lt;em&gt;props&lt;/em&gt; are a way of passing data from parent to child. If you&amp;#39;re familiar with the concept of &lt;em&gt;state&lt;/em&gt;, &lt;strong&gt;don&amp;#39;t use state at all&lt;/strong&gt; to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app you don&amp;#39;t need it.&lt;/p&gt;
+
+&lt;p&gt;You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with &lt;code&gt;FilterableProductTable&lt;/code&gt;) or with the ones lower in it (&lt;code&gt;ProductRow&lt;/code&gt;). In simpler examples it&amp;#39;s usually easier to go top-down and on larger projects it&amp;#39;s easier to go bottom-up and write tests as you build.&lt;/p&gt;
+
+&lt;p&gt;At the end of this step you&amp;#39;ll have a library of reusable components that render your data model. The components will only have &lt;code&gt;render()&lt;/code&gt; methods since this is a static version of your app. The component at the top of the hierarchy (&lt;code&gt;FilterableProductTable&lt;/code&gt;) will take your data model as a prop. If you make a change to your underlying data model and call &lt;code&gt;renderComponent()&lt;/code&gt; again the UI will be updated. It&amp;#39;s easy to see how your UI is updated and where to make changes since there&amp;#39;s nothing complicated going on since React&amp;#39;s &lt;strong&gt;one-way data flow&lt;/strong&gt; (also called &lt;em&gt;one-way binding&lt;/em&gt;) keeps everything modular, easy to reason about, and fast.&lt;/p&gt;
+
+&lt;p&gt;Simply refer to the &lt;a href=&quot;http://facebook.github.io/react/docs/&quot;&gt;React docs&lt;/a&gt; if you need help executing this step.&lt;/p&gt;
+&lt;h3 id=&quot;a-brief-interlude-props-vs-state&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#a-brief-interlude-props-vs-state&quot;&gt;A brief interlude: props vs state&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;There are two types of &amp;quot;model&amp;quot; data in React: props and state. It&amp;#39;s important to understand the distinction between the two; skim &lt;a href=&quot;http://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html&quot;&gt;the official React docs&lt;/a&gt; if you aren&amp;#39;t sure what the difference is.&lt;/p&gt;
+&lt;h2 id=&quot;step-3-identify-the-minimal-but-complete-representation-of-ui-state&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#step-3-identify-the-minimal-but-complete-representation-of-ui-state&quot;&gt;Step 3: Identify the minimal (but complete) representation of UI state&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;To make your UI interactive you need to be able to trigger changes to your underlying data model. React makes this easy with &lt;strong&gt;state&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;To build your app correctly you first need to think of the minimal set of mutable state that your app needs. The key here is DRY: &lt;em&gt;Don&amp;#39;t Repeat Yourself&lt;/em&gt;. Figure out what the absolute minimal representation of the state of your application needs to be and compute everything else you need on-demand. For example, if you&amp;#39;re building a TODO list, just keep an array of the TODO items around; don&amp;#39;t keep a separate state variable for the count. Instead, when you want to render the TODO count simply take the length of the TODO items array.&lt;/p&gt;
+
+&lt;p&gt;Think of all of the pieces of data in our example application. We have:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The original list of products&lt;/li&gt;
+&lt;li&gt;The search text the user has entered&lt;/li&gt;
+&lt;li&gt;The value of the checkbox&lt;/li&gt;
+&lt;li&gt;The filtered list of products&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s go through each one and figure out which one is state. Simply ask three questions about each piece of data:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Is it passed in from a parent via props? If so, it probably isn&amp;#39;t state.&lt;/li&gt;
+&lt;li&gt;Does it change over time? If not, it probably isn&amp;#39;t state.&lt;/li&gt;
+&lt;li&gt;Can you compute it based on any other state or props in your component? If so, it&amp;#39;s not state.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The original list of products is passed in as props, so that&amp;#39;s not state. The search text and the checkbox seem to be state since they change over time and can&amp;#39;t be computed from anything. And finally, the filtered list of products isn&amp;#39;t state because it can be computed by combining the original list of products with the search text and value of the checkbox.&lt;/p&gt;
+
+&lt;p&gt;So finally, our state is:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The search text the user has entered&lt;/li&gt;
+&lt;li&gt;The value of the checkbox&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&quot;step-4-identify-where-your-state-should-live&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#step-4-identify-where-your-state-should-live&quot;&gt;Step 4: Identify where your state should live&lt;/a&gt;&lt;/h2&gt;
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/QvHnx/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;OK, so we&amp;#39;ve identified what the minimal set of app state is. Next we need to identify which component mutates, or &lt;em&gt;owns&lt;/em&gt;, this state.&lt;/p&gt;
+
+&lt;p&gt;Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. &lt;strong&gt;This is often the most challenging part for newcomers to understand,&lt;/strong&gt; so follow these steps to figure it out:&lt;/p&gt;
+
+&lt;p&gt;For each piece of state in your application:
+  * Identify every component that renders something based on that state.
+  * Find a common owner component (a single component above all the components that need the state in the hierarchy).
+  * Either the common owner or another component higher up in the hierarchy should own the state.
+  * If you can&amp;#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s run through this strategy for our application:
+  * &lt;code&gt;ProductTable&lt;/code&gt; needs to filter the product list based on state and &lt;code&gt;SearchBar&lt;/code&gt; needs to display the search text and checked state.
+  * The common owner component is &lt;code&gt;FilterableProductTable&lt;/code&gt;.
+  * It conceptually makes sense for the filter text and checked value to live in &lt;code&gt;FilterableProductTable&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Cool, so we&amp;#39;ve decided that our state lives in &lt;code&gt;FilterableProductTable&lt;/code&gt;. First, add a &lt;code&gt;getInitialState()&lt;/code&gt; method to &lt;code&gt;FilterableProductTable&lt;/code&gt; that returns &lt;code&gt;{filterText: &amp;#39;&amp;#39;, inStockOnly: false}&lt;/code&gt; to reflect the initial state of your application. Then pass &lt;code&gt;filterText&lt;/code&gt; and &lt;code&gt;inStockOnly&lt;/code&gt; to &lt;code&gt;ProductTable&lt;/code&gt; and &lt;code&gt;SearchBar&lt;/code&gt; as a prop. Finally, use these props to filter the rows in &lt;code&gt;ProductTable&lt;/code&gt; and set the values of the form fields in &lt;code&gt;SearchBar&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can start seeing how your application will behave: set &lt;code&gt;filterText&lt;/code&gt; to &lt;code&gt;&amp;quot;ball&amp;quot;&lt;/code&gt; and refresh your app. You&amp;#39;ll see the data table is updated correctly.&lt;/p&gt;
+&lt;h2 id=&quot;step-5-add-inverse-data-flow&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#step-5-add-inverse-data-flow&quot;&gt;Step 5: Add inverse data flow&lt;/a&gt;&lt;/h2&gt;
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/3Vs3Q/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;So far we&amp;#39;ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it&amp;#39;s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in &lt;code&gt;FilterableProductTable&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;React makes this data flow explicit to make it easy to understand how your program works, but it does require a little more typing than traditional two-way data binding. React provides an add-on called &lt;code&gt;ReactLink&lt;/code&gt; to make this pattern as convenient as two-way binding, but for the purpose of this post we&amp;#39;ll keep everything explicit.&lt;/p&gt;
+
+&lt;p&gt;If you try to type or check the box in the current version of the example you&amp;#39;ll see that React ignores your input. This is intentional, as we&amp;#39;ve set the &lt;code&gt;value&lt;/code&gt; prop of the &lt;code&gt;input&lt;/code&gt; to always be equal to the &lt;code&gt;state&lt;/code&gt; passed in from &lt;code&gt;FilterableProductTable&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s think about what we want to happen. We want to make sure that whenever the user changes the form we update the state to reflect the user input. Since components should only update their own state, &lt;code&gt;FilterableProductTable&lt;/code&gt; will pass a callback to &lt;code&gt;SearchBar&lt;/code&gt; that will fire whenever the state should be updated. We can use the &lt;code&gt;onChange&lt;/code&gt; event on the inputs to be notified of it. And the callback passed by &lt;code&gt;FilterableProductTable&lt;/code&gt; will call &lt;code&gt;setState()&lt;/code&gt; and the app will be updated.&lt;/p&gt;
+
+&lt;p&gt;Though this sounds like a lot it&amp;#39;s really just a few lines of code. And it&amp;#39;s really explicit how your data is flowing throughout the app.&lt;/p&gt;
+&lt;h2 id=&quot;and-thats-it&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#and-thats-it&quot;&gt;And that&amp;#39;s it&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Hopefully this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&amp;#39;re used to, remember that code is read far more than it&amp;#39;s written, and it&amp;#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components you&amp;#39;ll appreciate this explicitness and modularity, and with code reuse your lines of code will start to shrink :)&lt;/p&gt;
+</description>
+				<pubDate>2013-11-05T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.5.1</title>
 				<description>&lt;p&gt;This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to &lt;a href=&quot;https://github.com/spicyj&quot;&gt;Ben Alpert&lt;/a&gt;, &lt;a href=&quot;https://github.com/andreypopp&quot;&gt;Andrey Popp&lt;/a&gt;, and &lt;a href=&quot;https://github.com/lrowe&quot;&gt;Laurence Rowe&lt;/a&gt; for their contributions!&lt;/p&gt;
 &lt;h2 id=&quot;changelog&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#changelog&quot;&gt;Changelog&lt;/a&gt;&lt;/h2&gt;&lt;h3 id=&quot;react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h3&gt;
@@ -472,103 +612,6 @@
 				<pubDate>2013-07-26T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #5</title>
-				<description>&lt;p&gt;We launched the &lt;a href=&quot;https://www.facebook.com/react&quot;&gt;React Facebook Page&lt;/a&gt; along with the React v0.4 launch. 700 people already liked it to get updated on the project :)&lt;/p&gt;
-&lt;h2 id=&quot;cross-browser-onchange&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#cross-browser-onchange&quot;&gt;Cross-browser onChange&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://benalpert.com/&quot;&gt;Ben Alpert&lt;/a&gt; from &lt;a href=&quot;https://www.khanacademy.org/&quot;&gt;Khan Academy&lt;/a&gt; worked on a cross-browser implementation of &lt;code&gt;onChange&lt;/code&gt; event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;First off, what is the input event? If you have an &lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn&amp;#39;t catch input that doesn&amp;#39;t involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.&lt;/p&gt;
-
-&lt;p&gt;Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using &lt;code&gt;setTimeout(fn, 0)&lt;/code&gt; or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn&amp;#39;t change at all (such as when pressing the arrow keys).&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;react-samples&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-samples&quot;&gt;React Samples&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Learning a new library is always easier when you have working examples you can play with. &lt;a href=&quot;https://github.com/jhw&quot;&gt;jwh&lt;/a&gt; put many of them on his &lt;a href=&quot;https://github.com/jhw/react-samples&quot;&gt;react-samples Github repo&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Some simple examples with Facebook&amp;#39;s React framework&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Bootstrap action bar, modal and table &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/actionbar.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/bootstrap_actionbar.html&quot;&gt;#2&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/bootstrap_modal.html&quot;&gt;#3&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/bootstrap_striped_table.html&quot;&gt;#4&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Comments &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/comments1.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/comments2.html&quot;&gt;#2&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Data Table &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/datatable.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/datatable2.html&quot;&gt;#2&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/datatable3.html&quot;&gt;#3&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/datatable4.html&quot;&gt;#4&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/datatable5.html&quot;&gt;#5&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Filter Bar &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/filterbar.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/filterbar2.html&quot;&gt;#2&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/filterbar3.html&quot;&gt;#3&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/filterbar4.html&quot;&gt;#4&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/filterbar5.html&quot;&gt;#5&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Fundoo Rating &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/fundoo.html&quot;&gt;#1&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Line Char: &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/linechart.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/linechart2.html&quot;&gt;#2&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Multi tabs &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/multitabs.html&quot;&gt;#1&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Select &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/select.html&quot;&gt;#1&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Simple Tabs &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/simpletabs.html&quot;&gt;#1&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/simpletabs2.html&quot;&gt;#2&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/simpletabs3.html&quot;&gt;#3&lt;/a&gt;,
-&lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/simpletabs4.html&quot;&gt;#4&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Toggle &lt;a href=&quot;https://rawgithub.com/jhw/react-samples/master/html/toggle.html&quot;&gt;#1&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;h2 id=&quot;react-chosen-wrapper&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-chosen-wrapper&quot;&gt;React Chosen Wrapper&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/chenglou&quot;&gt;Cheng Lou&lt;/a&gt; wrote a wrapper for the &lt;a href=&quot;http://harvesthq.github.io/chosen/&quot;&gt;Chosen&lt;/a&gt; input library called &lt;a href=&quot;https://github.com/chenglou/react-chosen&quot;&gt;react-chosen&lt;/a&gt;. It took just 25 lines to be able to use jQuery component as a React one.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Chosen&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;noResultsText&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;No result&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Harvest&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onChange&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;doSomething&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;option&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Facebook&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Facebook&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/option&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;option&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;value&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Harvest&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Harvest&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/option&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Chosen&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&quot;jsx-and-es6-template-strings&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsx-and-es6-template-strings&quot;&gt;JSX and ES6 Template Strings&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://domenicdenicola.com/&quot;&gt;Domenic Denicola&lt;/a&gt; wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.&lt;/p&gt;
-
-&lt;figure&gt;&lt;iframe src=&quot;http://www.slideshare.net/slideshow/embed_code/24187146?rel=0&amp;startSlide=36&quot; width=&quot;600&quot; height=&quot;356&quot; frameborder=&quot;0&quot; marginwidth=&quot;0&quot; marginheight=&quot;0&quot; scrolling=&quot;no&quot; style=&quot;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px&quot; allowfullscreen webkitallowfullscreen mozallowfullscreen&gt; &lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;react-presentation&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-presentation&quot;&gt;React Presentation&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://tomocchino.com/&quot;&gt;Tom Occhino&lt;/a&gt; and &lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt;, React developers, did a presentation of React at Facebook Seattle&amp;#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;amp;A. I highly recommend you watching this video.&lt;/p&gt;
-
-&lt;figure&gt;&lt;iframe width=&quot;650&quot; height=&quot;400&quot; src=&quot;//www.youtube.com/embed/XxVg_s8xAms&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2 id=&quot;docs&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#docs&quot;&gt;Docs&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Guides&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/why-react.html&quot;&gt;Why React?&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/displaying-data.html&quot;&gt;Displaying Data&lt;/a&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/jsx-in-depth.html&quot;&gt;JSX in Depth&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/jsx-gotchas.html&quot;&gt;JSX Gotchas&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/interactivity-and-dynamic-uis.html&quot;&gt;Interactivity and Dynamic UIs&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/multiple-components.html&quot;&gt;Multiple Components&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/reusable-components.html&quot;&gt;Reusable Components&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/forms.html&quot;&gt;Forms&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/working-with-the-browser.html&quot;&gt;Working With the Browser&lt;/a&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/more-about-refs.html&quot;&gt;More About Refs&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/tooling-integration.html&quot;&gt;Tooling integration&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;/react/docs/top-level-api.html&quot;&gt;Reference&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-07-23T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/07/23/community-roundup-5.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/23/community-roundup-5.html</guid>
 			</item>
 		
 	</channel>
