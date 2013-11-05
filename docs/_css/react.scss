@@ -74,6 +74,24 @@ li {
   margin-left: 20px;
 }
 
+// Make header navigation linkable and on the screen. Used in documentation and
+// blog posts.
+h1, h2, h3, h4, h5, h6 {
+  &.anchor {
+    position: relative;
+    top: -$navHeight;
+    > a {
+      color: $darkTextColor;
+      position: relative;
+      top: $navHeight;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
 // Main Nav
 
 .nav-main {
@@ -392,22 +410,6 @@ section.black content {
     font-size: 24px;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    &.anchor {
-      position: relative;
-      top: -$navHeight;
-    }
-
-    > a {
-      color: $darkTextColor;
-      position: relative;
-      top: $navHeight;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
 
   // H2s form documentation topic dividers. Extra space helps.
   h2 {
