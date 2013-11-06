@@ -27,9 +27,12 @@ module.exports = function(grunt) {
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
-  for (var key in grunt.file.readJSON("package.json").devDependencies) {
-      if (key !== "grunt" && key.indexOf("grunt") === 0) grunt.loadNpmTasks(key);
-  }
+  Object.keys(grunt.file.readJSON('package.json').devDependencies)
+    .filter(function(npmTaskName){ return npmTaskName.indexOf('grunt-') === 0;})
+    .forEach(function(npmTaskName){
+      grunt.loadNpmTasks(npmTaskName);
+    })
+  ;
 
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
