@@ -28,6 +28,7 @@ function testImageURL(url, timeout, callback){
   testImageURL.getImage(function(img, done){
     function callbackWrapper(error, event){
       callbackWrapper = testImageURL.noop;
+      testImageURL.running = (testImageURL.running || 0) - 1;
       clearTimeout(timer);
       done(img);
       img = url = timeout = null;
@@ -41,6 +42,7 @@ function testImageURL(url, timeout, callback){
       img.onload = function(event){ callbackWrapper(null, event || window.event); };
       img.onerror = function(error){ callbackWrapper(error); };
       img.src = url;
+      testImageURL.running = (testImageURL.running || 0) + 1;
       
       if (img.complete === true
         || img.readyState == 4
