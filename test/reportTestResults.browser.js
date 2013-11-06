@@ -26,7 +26,6 @@ console.warn = function(message){
     if (typeof jasmine.getJSReport != 'function') return setTimeout(report, 100);
     postDataToURL(JSON.stringify(jasmine.getJSReport()), '/reportTestResults', function(error, event){
       if (error) return console.error(error);
-      console.log(event);
     });
   }
 
