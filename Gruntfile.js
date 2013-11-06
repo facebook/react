@@ -5,6 +5,7 @@ var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var populistTask = require('./grunt/tasks/populist');
 var phantomTask = require('./grunt/tasks/phantom');
+var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
 var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
@@ -75,6 +76,8 @@ module.exports = function(grunt) {
     'version-check',
     'populist:test'
   ]);
+
+  grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
 
   grunt.registerTask('test:webdriver', [
     'connect',
