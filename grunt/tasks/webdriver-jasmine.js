@@ -28,6 +28,7 @@ function getJSReport(browser){
   return browser
     .waitForCondition("typeof window.jasmine != 'undefined'", 500)
     .waitForCondition("typeof window.jasmine.getJSReport != 'undefined'", 10e3)
+    .waitForCondition("window.testImageURL.running <= 0", 5e3)
     .eval("jasmine.getJSReport()")
   ;
 }
