@@ -194,16 +194,22 @@
 
 <p>Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. <strong>This is often the most challenging part for newcomers to understand,</strong> so follow these steps to figure it out:</p>
 
-<p>For each piece of state in your application:
-  * Identify every component that renders something based on that state.
-  * Find a common owner component (a single component above all the components that need the state in the hierarchy).
-  * Either the common owner or another component higher up in the hierarchy should own the state.
-  * If you can&#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.</p>
+<p>For each piece of state in your application:</p>
 
-<p>Let&#39;s run through this strategy for our application:
-  * <code>ProductTable</code> needs to filter the product list based on state and <code>SearchBar</code> needs to display the search text and checked state.
-  * The common owner component is <code>FilterableProductTable</code>.
-  * It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></p>
+<ul>
+<li>Identify every component that renders something based on that state.</li>
+<li>Find a common owner component (a single component above all the components that need the state in the hierarchy).</li>
+<li>Either the common owner or another component higher up in the hierarchy should own the state.</li>
+<li>If you can&#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.</li>
+</ul>
+
+<p>Let&#39;s run through this strategy for our application:</p>
+
+<ul>
+<li><code>ProductTable</code> needs to filter the product list based on state and <code>SearchBar</code> needs to display the search text and checked state.</li>
+<li>The common owner component is <code>FilterableProductTable</code>.</li>
+<li>It conceptually makes sense for the filter text and checked value to live in <code>FilterableProductTable</code></li>
+</ul>
 
 <p>Cool, so we&#39;ve decided that our state lives in <code>FilterableProductTable</code>. First, add a <code>getInitialState()</code> method to <code>FilterableProductTable</code> that returns <code>{filterText: &#39;&#39;, inStockOnly: false}</code> to reflect the initial state of your application. Then pass <code>filterText</code> and <code>inStockOnly</code> to <code>ProductTable</code> and <code>SearchBar</code> as a prop. Finally, use these props to filter the rows in <code>ProductTable</code> and set the values of the form fields in <code>SearchBar</code>.</p>
 

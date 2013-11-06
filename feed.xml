@@ -112,16 +112,22 @@
 
 &lt;p&gt;Remember: React is all about one-way data flow down the component hierarchy. It may not be immediately clear which component should own what state. &lt;strong&gt;This is often the most challenging part for newcomers to understand,&lt;/strong&gt; so follow these steps to figure it out:&lt;/p&gt;
 
-&lt;p&gt;For each piece of state in your application:
-  * Identify every component that renders something based on that state.
-  * Find a common owner component (a single component above all the components that need the state in the hierarchy).
-  * Either the common owner or another component higher up in the hierarchy should own the state.
-  * If you can&amp;#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.&lt;/p&gt;
+&lt;p&gt;For each piece of state in your application:&lt;/p&gt;
 
-&lt;p&gt;Let&amp;#39;s run through this strategy for our application:
-  * &lt;code&gt;ProductTable&lt;/code&gt; needs to filter the product list based on state and &lt;code&gt;SearchBar&lt;/code&gt; needs to display the search text and checked state.
-  * The common owner component is &lt;code&gt;FilterableProductTable&lt;/code&gt;.
-  * It conceptually makes sense for the filter text and checked value to live in &lt;code&gt;FilterableProductTable&lt;/code&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Identify every component that renders something based on that state.&lt;/li&gt;
+&lt;li&gt;Find a common owner component (a single component above all the components that need the state in the hierarchy).&lt;/li&gt;
+&lt;li&gt;Either the common owner or another component higher up in the hierarchy should own the state.&lt;/li&gt;
+&lt;li&gt;If you can&amp;#39;t find a component where it makes sense to own the state, create a new component simply for holding the state and add it somewhere in the hierarchy above the common owner component.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s run through this strategy for our application:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ProductTable&lt;/code&gt; needs to filter the product list based on state and &lt;code&gt;SearchBar&lt;/code&gt; needs to display the search text and checked state.&lt;/li&gt;
+&lt;li&gt;The common owner component is &lt;code&gt;FilterableProductTable&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;It conceptually makes sense for the filter text and checked value to live in &lt;code&gt;FilterableProductTable&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;p&gt;Cool, so we&amp;#39;ve decided that our state lives in &lt;code&gt;FilterableProductTable&lt;/code&gt;. First, add a &lt;code&gt;getInitialState()&lt;/code&gt; method to &lt;code&gt;FilterableProductTable&lt;/code&gt; that returns &lt;code&gt;{filterText: &amp;#39;&amp;#39;, inStockOnly: false}&lt;/code&gt; to reflect the initial state of your application. Then pass &lt;code&gt;filterText&lt;/code&gt; and &lt;code&gt;inStockOnly&lt;/code&gt; to &lt;code&gt;ProductTable&lt;/code&gt; and &lt;code&gt;SearchBar&lt;/code&gt; as a prop. Finally, use these props to filter the rows in &lt;code&gt;ProductTable&lt;/code&gt; and set the values of the form fields in &lt;code&gt;SearchBar&lt;/code&gt;.&lt;/p&gt;
 
