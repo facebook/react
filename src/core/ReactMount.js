@@ -25,6 +25,7 @@ var $ = require('$');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
 var nodeContains = require('nodeContains');
+var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
@@ -289,12 +290,12 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   renderComponent: function(nextComponent, container, callback) {
-    var registeredComponent = instancesByReactRootID[getReactRootID(container)];
+    var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
-    if (registeredComponent) {
-      if (registeredComponent.constructor === nextComponent.constructor) {
+    if (prevComponent) {
+      if (shouldUpdateReactComponent(prevComponent, nextComponent)) {
         return ReactMount._updateRootComponent(
-          registeredComponent,
+          prevComponent,
           nextComponent,
           container,
           callback
@@ -308,7 +309,7 @@ var ReactMount = {
     var containerHasReactMarkup =
       reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
 
-    var shouldReuseMarkup = containerHasReactMarkup && !registeredComponent;
+    var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
 
     var component = ReactMount._renderNewRootComponent(
       nextComponent,
@@ -414,6 +415,10 @@ var ReactMount = {
    */
   unmountComponentFromNode: function(instance, container) {
     instance.unmountComponent();
+
+    if (container.nodeType === DOC_NODE_TYPE) {
+      container = container.documentElement;
+    }
 
     // http://jsperf.com/emptying-a-node
     while (container.lastChild) {
@@ -576,6 +581,8 @@ var ReactMount = {
    */
 
   ATTR_NAME: ATTR_NAME,
+
+  getReactRootID: getReactRootID,
 
   getID: getID,
 

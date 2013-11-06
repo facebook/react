@@ -31,7 +31,7 @@ The `render()` function should be *pure*, meaning that it does not modify compon
 object getInitialState()
 ```
 
-Invoked once when the component is mounted. The return value will be used as the initial value of `this.state`.
+Invoked once before the component is mounted. The return value will be used as the initial value of `this.state`.
 
 
 ### getDefaultProps

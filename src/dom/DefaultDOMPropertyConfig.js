@@ -41,6 +41,7 @@ var DefaultDOMPropertyConfig = {
     allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     allowTransparency: MUST_USE_ATTRIBUTE,
     alt: null,
+    async: HAS_BOOLEAN_VALUE,
     autoComplete: null,
     autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
@@ -56,8 +57,9 @@ var DefaultDOMPropertyConfig = {
     controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     data: null, // For `<object />` acts as `src`.
     dateTime: MUST_USE_ATTRIBUTE,
+    defer: HAS_BOOLEAN_VALUE,
     dir: null,
-    disabled: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    disabled: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     draggable: null,
     encType: null,
     form: MUST_USE_ATTRIBUTE,
@@ -108,6 +110,7 @@ var DefaultDOMPropertyConfig = {
      * Non-standard Properties
      */
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
+    autoCorrect: null, // Supported in Mobile Safari for keyboard hints
 
     /**
      * SVG Properties
@@ -156,6 +159,7 @@ var DefaultDOMPropertyConfig = {
   DOMPropertyNames: {
     autoCapitalize: 'autocapitalize',
     autoComplete: 'autocomplete',
+    autoCorrect: 'autocorrect',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
     encType: 'enctype',

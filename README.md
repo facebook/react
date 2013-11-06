@@ -28,7 +28,7 @@ React.renderComponent(
 
 This example will render "Hello John" into a container on the page.
 
-You'll notice that we used an XML-like syntax; [we call it JSX](http://facebook.github.io/react/docs/jsx-in-depth.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. A simple transform is included with React that allows converting JSX into native JavaScript for browsers to digest.
+You'll notice that we used an HTML-like syntax; [we call it JSX](http://facebook.github.io/react/docs/jsx-in-depth.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. A simple transform is included with React that allows converting JSX into native JavaScript for browsers to digest.
 
 ## Installation
 
@@ -36,12 +36,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.5.0.js"></script>
+<script src="http://fb.me/react-0.5.1.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.5.0.js"></script>
+<script src="http://fb.me/JSXTransformer-0.5.1.js"></script>
 ```
 
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.5.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.5.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 

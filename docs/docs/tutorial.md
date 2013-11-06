@@ -65,7 +65,7 @@ Let's build the `CommentBox` component, which is just a simple `<div>`:
 var CommentBox = React.createClass({
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         Hello, world! I am a CommentBox.
       </div>
     );
@@ -120,7 +120,7 @@ Let's build skeletons for `CommentList` and `CommentForm` which will, again, be 
 var CommentList = React.createClass({
   render: function() {
     return (
-      <div class="commentList">
+      <div className="commentList">
         Hello, world! I am a CommentList.
       </div>
     );
@@ -130,7 +130,7 @@ var CommentList = React.createClass({
 var CommentForm = React.createClass({
   render: function() {
     return (
-      <div class="commentForm">
+      <div className="commentForm">
         Hello, world! I am a CommentForm.
       </div>
     );
@@ -145,7 +145,7 @@ Next, update the `CommentBox` component to use its new friends:
 var CommentBox = React.createClass({
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList />
         <CommentForm />
@@ -166,7 +166,7 @@ Let's create our third component, `Comment`. We will want to pass it the author 
 var CommentList = React.createClass({
   render: function() {
     return (
-      <div class="commentList">
+      <div className="commentList">
         <Comment author="Pete Hunt">This is one comment</Comment>
         <Comment author="Jordan Walke">This is *another* comment</Comment>
       </div>
@@ -186,8 +186,8 @@ Let's create the Comment component. It will read the data passed to it from the 
 var Comment = React.createClass({
   render: function() {
     return (
-      <div class="comment">
-        <h2 class="commentAuthor">
+      <div className="comment">
+        <h2 className="commentAuthor">
           {this.props.author}
         </h2>
         {this.props.children}
@@ -223,8 +223,8 @@ var converter = new Showdown.converter();
 var Comment = React.createClass({
   render: function() {
     return (
-      <div class="comment">
-        <h2 class="commentAuthor">
+      <div className="comment">
+        <h2 className="commentAuthor">
           {this.props.author}
         </h2>
         {converter.makeHtml(this.props.children.toString())}
@@ -247,8 +247,8 @@ var Comment = React.createClass({
   render: function() {
     var rawMarkup = converter.makeHtml(this.props.children.toString());
     return (
-      <div class="comment">
-        <h2 class="commentAuthor">
+      <div className="comment">
+        <h2 className="commentAuthor">
           {this.props.author}
         </h2>
         <span dangerouslySetInnerHTML={{"{{"}}__html: rawMarkup}} />
@@ -281,7 +281,7 @@ We need to get this data into `CommentList` in a modular way. Modify `CommentBox
 var CommentBox = React.createClass({
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.props.data} />
         <CommentForm />
@@ -306,7 +306,7 @@ var CommentList = React.createClass({
       return <Comment author={comment.author}>{comment.text}</Comment>;
     });
     return (
-      <div class="commentList">
+      <div className="commentList">
         {commentNodes}
       </div>
     );
@@ -346,7 +346,7 @@ var CommentBox = React.createClass({
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm />
@@ -369,7 +369,7 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We will use jQuery 1.5 to help make an asynchronous request to the server.
+We will use jQuery to help make an asynchronous request to the server.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
@@ -379,8 +379,6 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     $.ajax({
       url: 'comments.json',
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -389,7 +387,7 @@ var CommentBox = React.createClass({
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm />
@@ -407,8 +405,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -419,14 +415,11 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm />
@@ -436,13 +429,13 @@ var CommentBox = React.createClass({
 });
 
 React.renderComponent(
-  <CommentBox url="comments.json" pollInterval={5000} />,
+  <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
 
 ```
 
-All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 5 seconds after that. Try running this in your browser and changing the `comments.json` file; within 5 seconds, the changes will show!
+All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the `comments.json` file; within 2 seconds, the changes will show!
 
 ### Adding new comments
 
@@ -453,10 +446,10 @@ Now it's time to build the form. Our `CommentForm` component should ask the user
 var CommentForm = React.createClass({
   render: function() {
     return (
-      <form class="commentForm">
+      <form className="commentForm">
         <input type="text" placeholder="Your name" />
         <input type="text" placeholder="Say something..." />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -481,14 +474,14 @@ var CommentForm = React.createClass({
   },
   render: function() {
     return (
-      <form class="commentForm" onSubmit={this.handleSubmit}>
+      <form className="commentForm" onSubmit={this.handleSubmit}>
         <input type="text" placeholder="Your name" ref="author" />
         <input
           type="text"
           placeholder="Say something..."
           ref="text"
         />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -517,8 +510,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -532,14 +523,11 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm
@@ -566,14 +554,14 @@ var CommentForm = React.createClass({
   },
   render: function() {
     return (
-      <form class="commentForm" onSubmit={this.handleSubmit}>
+      <form className="commentForm" onSubmit={this.handleSubmit}>
         <input type="text" placeholder="Your name" ref="author" />
         <input
           type="text"
           placeholder="Say something..."
           ref="text"
         />
-        <input type="submit" />
+        <input type="submit" value="Post" />
       </form>
     );
   }
@@ -588,8 +576,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -598,9 +584,8 @@ var CommentBox = React.createClass({
   handleCommentSubmit: function(comment) {
     $.ajax({
       url: this.props.url,
+      type: 'POST',
       data: comment,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -611,14 +596,11 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm
@@ -640,8 +622,6 @@ var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -653,9 +633,8 @@ var CommentBox = React.createClass({
     this.setState({data: comments});
     $.ajax({
       url: this.props.url,
+      type: 'POST',
       data: comment,
-      dataType: 'json',
-      mimeType: 'textPlain',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -666,14 +645,11 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(
-      this.loadCommentsFromServer.bind(this),
-      this.props.pollInterval
-    );
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
-      <div class="commentBox">
+      <div className="commentBox">
         <h1>Comments</h1>
         <CommentList data={this.state.data} />
         <CommentForm
