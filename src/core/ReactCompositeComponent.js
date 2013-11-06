@@ -30,6 +30,7 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 var objMap = require('objMap');
+var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -789,15 +790,15 @@ var ReactCompositeComponentMixin = {
     'updateComponent',
     function(transaction, prevProps, prevState) {
       ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
-      var currentComponent = this._renderedComponent;
+      var prevComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
-      if (currentComponent.constructor === nextComponent.constructor) {
-        currentComponent.receiveProps(nextComponent.props, transaction);
+      if (shouldUpdateReactComponent(prevComponent, nextComponent)) {
+        prevComponent.receiveProps(nextComponent.props, transaction);
       } else {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
-        var currentComponentID = currentComponent._rootNodeID;
-        currentComponent.unmountComponent();
+        var prevComponentID = prevComponent._rootNodeID;
+        prevComponent.unmountComponent();
         this._renderedComponent = nextComponent;
         var nextMarkup = nextComponent.mountComponent(
           thisID,
@@ -805,7 +806,7 @@ var ReactCompositeComponentMixin = {
           this._mountDepth + 1
         );
         ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-          currentComponentID,
+          prevComponentID,
           nextMarkup
         );
       }
