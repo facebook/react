@@ -36,7 +36,7 @@
     "test": "grunt build && grunt test"
   },
   "dependencies": {
-    "commoner": "~0.8.4",
+    "commoner": "~0.8.7",
     "esprima-fb": "~1001.1001.2000-dev-harmony-fb",
     "jstransform": "~1.0.1"
   },
