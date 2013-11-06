@@ -81,6 +81,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test:webdriver', [
     'connect',
+    'webdriver-phantomjs',
     'webdriver-jasmine:local'
   ]);
   grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
