@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #10</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #10" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+  <meta property="fb:app_id" content="623268441017527" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2013/11/06/community-roundup-10.html" class="active">Community Round-up #10</a></li>
+      
+        <li><a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a></li>
+      
+        <li><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></li>
+      
+        <li><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></li>
+      
+        <li><a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a></li>
+      
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
+        <li><a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a></li>
+      
+        <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
+      
+        <li><a href="/react/blog/2013/08/05/community-roundup-6.html">Community Round-up #6</a></li>
+      
+        <li><a href="/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html">Use React and JSX in Ruby on Rails</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #10</h1>
+    <p class="meta">November  6, 2013 by Vjeux</p>
+
+    <hr>
+
+    <div class="post">
+      <p>This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.</p>
+
+<p>The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.</p>
+<h2 id="khan-academy---officially-moving-to-react" class="anchor"><a href="#khan-academy---officially-moving-to-react">Khan Academy - Officially moving to React</a></h2>
+<p><a href="http://joelburget.com/">Joel Burget</a> announced at Hack Reactor that new front-end code at Khan Academy should be written in React!</p>
+
+<blockquote>
+<p>How did we get the rest of the team to adopt React? Using interns as an attack vector! Most full-time devs had already been working on their existing projects for a while and weren&#39;t looking to try something new at the time, but our class of summer interns was just arriving. For whatever reason, a lot of them decided to try React for their projects. Then mentors became exposed through code reviews or otherwise touching the new code. In this way React knowledge diffused to almost the whole team over the summer.</p>
+
+<p>Since the first React checkin on June 5, we&#39;ve somehow managed to accumulate 23500 lines of jsx (React-flavored js) code. Which is terrifying in a way - that&#39;s a lot of code - but also really exciting that it was picked up so quickly.</p>
+
+<p>We held three meetings about how we should proceed with React. At the first two we decided to continue experimenting with React and deferred a final decision on whether to adopt it. At the third we adopted the policy that new code should be written in React.</p>
+
+<p>I&#39;m excited that we were able to start nudging code quality forward. However, we still have a lot of work to do! One of the selling points of this transition is adopting a uniform frontend style. We&#39;re trying to upgrade all the code from (really old) pure jQuery and (regular old) Backbone views / Handlebars to shiny React. At the moment all we&#39;ve done is introduce more fragmentation. We won&#39;t be gratuitously updating working code (if it ain&#39;t broke, don&#39;t fix it), but are seeking out parts of the codebase where we can shoot two birds with one stone by rewriting in React while fixing bugs or adding functionality.</p>
+
+<p><a href="http://joelburget.com/backbone-to-react/">Read the full article</a></p>
+</blockquote>
+<h2 id="react-rethinking-best-practices" class="anchor"><a href="#react-rethinking-best-practices">React: Rethinking best practices</a></h2>
+<p><a href="http://www.petehunt.net/">Pete Hunt</a>&#39;s talk at JSConf EU 2013 is now available in video.</p>
+
+<figure><iframe width="600" height="370" src="//www.youtube.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe></figure>
+<h2 id="server-side-react-with-php" class="anchor"><a href="#server-side-react-with-php">Server-side React with PHP</a></h2>
+<p><a href="http://www.phpied.com/">Stoyan Stefanov</a>&#39;s series of articles on React has two new entries on how to execute React on the server to generate the initial page load.</p>
+
+<blockquote>
+<p>This post is an initial hack to have React components render server-side in PHP.</p>
+
+<ul>
+<li>Problem: Build web UIs</li>
+<li>Solution: React</li>
+<li>Problem: UI built in JS is anti-SEO (assuming search engines are still noscript) and bad for perceived performance (blank page till JS arrives)</li>
+<li>Solution: <a href="https://github.com/facebook/react-page">React page</a> to render the first view</li>
+<li>Problem: Can&#39;t host node.js apps / I have tons of PHP code</li>
+<li>Solution: Use PHP then!</li>
+</ul>
+
+<p><a href="http://www.phpied.com/server-side-react-with-php/"><strong>Read part 1 ...</strong></a></p>
+
+<p><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><strong>Read part 2 ...</strong></a></p>
+
+<p>Rendered markup on the server:
+<figure><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><img src="/react/img/blog/react-php.png" alt=""></a></figure></p>
+</blockquote>
+<h2 id="todomvc-benchmarks" class="anchor"><a href="#todomvc-benchmarks">TodoMVC Benchmarks</a></h2>
+<p>Webkit has a <a href="https://github.com/WebKit/webkit/tree/master/PerformanceTests/DoYouEvenBench">TodoMVC Benchmark</a> that compares different frameworks. They recently included React and here are the results (average of 10 runs in Chrome 30):</p>
+
+<ul>
+<li><strong>AngularJS:</strong> 4043ms</li>
+<li><strong>AngularJSPerf:</strong> 3227ms</li>
+<li><strong>BackboneJS:</strong> 1874ms</li>
+<li><strong>EmberJS:</strong> 6822ms</li>
+<li><strong>jQuery:</strong> 14628ms</li>
+<li><strong>React:</strong> 2864ms</li>
+<li><strong>VanillaJS:</strong> 5567ms</li>
+</ul>
+
+<p><a href="http://www.petehunt.net/react/tastejs/benchmark.html">Try it yourself!</a></p>
+
+<p>Please don&#39;t take those numbers too seriously, they only reflect one very specific use case and are testing code that wasn&#39;t written with performance in mind.</p>
+
+<p>Even though React scores as one of the fastest frameworks in the benchmark, the React code is simple and idiomatic. The only performance tweak used is the following function:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/**</span>
+<span class="cm"> * This is a completely optional performance enhancement that you can implement</span>
+<span class="cm"> * on any React component. If you were to delete this method the app would still</span>
+<span class="cm"> * work correctly (and still be very performant!), we just use it as an example</span>
+<span class="cm"> * of how little code it takes to get an order of magnitude performance improvement.</span>
+<span class="cm"> */</span>
+<span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">||</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span> <span class="o">||</span>
+    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">editing</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">editing</span> <span class="o">||</span>
+    <span class="nx">nextState</span><span class="p">.</span><span class="nx">editText</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">editText</span>
+  <span class="p">);</span>
+<span class="p">},</span>
+</code></pre></div>
+<p>By default, React &quot;re-renders&quot; all the components when anything changes. This is usually fast enough that you don&#39;t need to care. However, you can provide a function that can tell whether there will be any change based on the previous and next states and props. If it is faster than re-rendering the component, then you get a performance improvement.</p>
+
+<p>The fact that you can control when components are rendered is a very important characteristic of React as it gives you control over its performance. We are going to talk more about performance in the future, stay tuned.</p>
+<h2 id="guess-the-filter" class="anchor"><a href="#guess-the-filter">Guess the filter</a></h2>
+<p><a href="http://conr.me">Connor McSheffrey</a> implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
+<figure><a href="http://guessthefilter.com/"><img src="/react/img/blog/guess_filter.jpg" alt=""></a></figure></p>
+<h2 id="react-vs-fruitmachine" class="anchor"><a href="#react-vs-fruitmachine">React vs FruitMachine</a></h2>
+<p><a href="http://trib.tv/">Andrew Betts</a>, director of the <a href="http://labs.ft.com/">Financial Times Labs</a>, posted an article comparing <a href="https://github.com/ftlabs/fruitmachine">FruitMachine</a> and React.</p>
+
+<blockquote>
+<p>Eerily similar, no? Maybe Facebook was inspired by Fruit Machine (after all, we got there first), but more likely, it just shows that this is a pretty decent way to solve the problem, and great minds think alike. We&#39;re graduating to a third phase in the evolution of web best practice - from intermingling of markup, style and behaviour, through a phase in which those concerns became ever more separated and encapsulated, and finally to a model where we can do that separation at a component level. Developments like Web Components show the direction the web community is moving, and frameworks like React and Fruit Machine are in fact not a lot more than polyfills for that promised behaviour to come.</p>
+
+<p><a href="http://labs.ft.com/2013/10/client-side-layout-engines-react-vs-fruitmachine/">Read the full article...</a></p>
+</blockquote>
+
+<p>Even though we weren&#39;t inspired by FruitMachine (React has been used in production since before FruitMachine was open sourced), it&#39;s great to see similar technologies emerging and becoming popular.</p>
+<h2 id="react-brunch" class="anchor"><a href="#react-brunch">React Brunch</a></h2>
+<p><a href="http://elucidata.net/">Matthew McCray</a> implemented <a href="https://npmjs.org/package/react-brunch">react-brunch</a>, a JSX compilation step for <a href="http://brunch.io/">Brunch</a>.</p>
+
+<blockquote>
+<p>Adds React support to brunch by automatically compiling <code>*.jsx</code> files.</p>
+
+<p>You can configure react-brunch to automatically insert a react header (<code>/** @jsx React.DOM */</code>) into all <code>*.jsx</code> files. Disabled by default.</p>
+
+<p>Install the plugin via npm with <code>npm install --save react-brunch</code>.</p>
+
+<p><a href="https://npmjs.org/package/react-brunch">Read more...</a></p>
+</blockquote>
+<h2 id="random-tweet" class="anchor"><a href="#random-tweet">Random Tweet</a></h2>
+<p>I&#39;m going to start adding a tweet at the end of each round-up. We&#39;ll start with this one:</p>
+
+<blockquote class="twitter-tweet"><p>This weekend <a href="https://twitter.com/search?q=%23angular&amp;src=hash">#angular</a> died for me. Meet new king <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; Eldar Djafarov &#x30C3; (@edjafarov) <a href="https://twitter.com/edjafarov/statuses/397033796710961152">November 3, 2013</a></blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

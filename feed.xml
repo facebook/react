@@ -7,6 +7,122 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #10</title>
+				<description>&lt;p&gt;This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.&lt;/p&gt;
+
+&lt;p&gt;The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.&lt;/p&gt;
+&lt;h2 id=&quot;khan-academy---officially-moving-to-react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#khan-academy---officially-moving-to-react&quot;&gt;Khan Academy - Officially moving to React&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://joelburget.com/&quot;&gt;Joel Burget&lt;/a&gt; announced at Hack Reactor that new front-end code at Khan Academy should be written in React!&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;How did we get the rest of the team to adopt React? Using interns as an attack vector! Most full-time devs had already been working on their existing projects for a while and weren&amp;#39;t looking to try something new at the time, but our class of summer interns was just arriving. For whatever reason, a lot of them decided to try React for their projects. Then mentors became exposed through code reviews or otherwise touching the new code. In this way React knowledge diffused to almost the whole team over the summer.&lt;/p&gt;
+
+&lt;p&gt;Since the first React checkin on June 5, we&amp;#39;ve somehow managed to accumulate 23500 lines of jsx (React-flavored js) code. Which is terrifying in a way - that&amp;#39;s a lot of code - but also really exciting that it was picked up so quickly.&lt;/p&gt;
+
+&lt;p&gt;We held three meetings about how we should proceed with React. At the first two we decided to continue experimenting with React and deferred a final decision on whether to adopt it. At the third we adopted the policy that new code should be written in React.&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;m excited that we were able to start nudging code quality forward. However, we still have a lot of work to do! One of the selling points of this transition is adopting a uniform frontend style. We&amp;#39;re trying to upgrade all the code from (really old) pure jQuery and (regular old) Backbone views / Handlebars to shiny React. At the moment all we&amp;#39;ve done is introduce more fragmentation. We won&amp;#39;t be gratuitously updating working code (if it ain&amp;#39;t broke, don&amp;#39;t fix it), but are seeking out parts of the codebase where we can shoot two birds with one stone by rewriting in React while fixing bugs or adding functionality.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://joelburget.com/backbone-to-react/&quot;&gt;Read the full article&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;react-rethinking-best-practices&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-rethinking-best-practices&quot;&gt;React: Rethinking best practices&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt;&amp;#39;s talk at JSConf EU 2013 is now available in video.&lt;/p&gt;
+
+&lt;figure&gt;&lt;iframe width=&quot;600&quot; height=&quot;370&quot; src=&quot;//www.youtube.com/embed/x7cQ3mrcKaY&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
+&lt;h2 id=&quot;server-side-react-with-php&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#server-side-react-with-php&quot;&gt;Server-side React with PHP&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt;&amp;#39;s series of articles on React has two new entries on how to execute React on the server to generate the initial page load.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This post is an initial hack to have React components render server-side in PHP.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Problem: Build web UIs&lt;/li&gt;
+&lt;li&gt;Solution: React&lt;/li&gt;
+&lt;li&gt;Problem: UI built in JS is anti-SEO (assuming search engines are still noscript) and bad for perceived performance (blank page till JS arrives)&lt;/li&gt;
+&lt;li&gt;Solution: &lt;a href=&quot;https://github.com/facebook/react-page&quot;&gt;React page&lt;/a&gt; to render the first view&lt;/li&gt;
+&lt;li&gt;Problem: Can&amp;#39;t host node.js apps / I have tons of PHP code&lt;/li&gt;
+&lt;li&gt;Solution: Use PHP then!&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php/&quot;&gt;&lt;strong&gt;Read part 1 ...&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php-part-2/&quot;&gt;&lt;strong&gt;Read part 2 ...&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Rendered markup on the server:
+&lt;figure&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php-part-2/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-php.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;todomvc-benchmarks&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#todomvc-benchmarks&quot;&gt;TodoMVC Benchmarks&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Webkit has a &lt;a href=&quot;https://github.com/WebKit/webkit/tree/master/PerformanceTests/DoYouEvenBench&quot;&gt;TodoMVC Benchmark&lt;/a&gt; that compares different frameworks. They recently included React and here are the results (average of 10 runs in Chrome 30):&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;AngularJS:&lt;/strong&gt; 4043ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AngularJSPerf:&lt;/strong&gt; 3227ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;BackboneJS:&lt;/strong&gt; 1874ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;EmberJS:&lt;/strong&gt; 6822ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;jQuery:&lt;/strong&gt; 14628ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React:&lt;/strong&gt; 2864ms&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;VanillaJS:&lt;/strong&gt; 5567ms&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/react/tastejs/benchmark.html&quot;&gt;Try it yourself!&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Please don&amp;#39;t take those numbers too seriously, they only reflect one very specific use case and are testing code that wasn&amp;#39;t written with performance in mind.&lt;/p&gt;
+
+&lt;p&gt;Even though React scores as one of the fastest frameworks in the benchmark, the React code is simple and idiomatic. The only performance tweak used is the following function:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/**&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt; * This is a completely optional performance enhancement that you can implement&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt; * on any React component. If you were to delete this method the app would still&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt; * work correctly (and still be very performant!), we just use it as an example&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt; * of how little code it takes to get an order of magnitude performance improvement.&lt;/span&gt;
+&lt;span class=&quot;cm&quot;&gt; */&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;shouldComponentUpdate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;nextState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editing&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editing&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;nextState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editText&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editText&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;By default, React &amp;quot;re-renders&amp;quot; all the components when anything changes. This is usually fast enough that you don&amp;#39;t need to care. However, you can provide a function that can tell whether there will be any change based on the previous and next states and props. If it is faster than re-rendering the component, then you get a performance improvement.&lt;/p&gt;
+
+&lt;p&gt;The fact that you can control when components are rendered is a very important characteristic of React as it gives you control over its performance. We are going to talk more about performance in the future, stay tuned.&lt;/p&gt;
+&lt;h2 id=&quot;guess-the-filter&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#guess-the-filter&quot;&gt;Guess the filter&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://conr.me&quot;&gt;Connor McSheffrey&lt;/a&gt; implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
+&lt;figure&gt;&lt;a href=&quot;http://guessthefilter.com/&quot;&gt;&lt;img src=&quot;/react/img/blog/guess_filter.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h2 id=&quot;react-vs-fruitmachine&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-vs-fruitmachine&quot;&gt;React vs FruitMachine&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://trib.tv/&quot;&gt;Andrew Betts&lt;/a&gt;, director of the &lt;a href=&quot;http://labs.ft.com/&quot;&gt;Financial Times Labs&lt;/a&gt;, posted an article comparing &lt;a href=&quot;https://github.com/ftlabs/fruitmachine&quot;&gt;FruitMachine&lt;/a&gt; and React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Eerily similar, no? Maybe Facebook was inspired by Fruit Machine (after all, we got there first), but more likely, it just shows that this is a pretty decent way to solve the problem, and great minds think alike. We&amp;#39;re graduating to a third phase in the evolution of web best practice - from intermingling of markup, style and behaviour, through a phase in which those concerns became ever more separated and encapsulated, and finally to a model where we can do that separation at a component level. Developments like Web Components show the direction the web community is moving, and frameworks like React and Fruit Machine are in fact not a lot more than polyfills for that promised behaviour to come.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://labs.ft.com/2013/10/client-side-layout-engines-react-vs-fruitmachine/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Even though we weren&amp;#39;t inspired by FruitMachine (React has been used in production since before FruitMachine was open sourced), it&amp;#39;s great to see similar technologies emerging and becoming popular.&lt;/p&gt;
+&lt;h2 id=&quot;react-brunch&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react-brunch&quot;&gt;React Brunch&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://elucidata.net/&quot;&gt;Matthew McCray&lt;/a&gt; implemented &lt;a href=&quot;https://npmjs.org/package/react-brunch&quot;&gt;react-brunch&lt;/a&gt;, a JSX compilation step for &lt;a href=&quot;http://brunch.io/&quot;&gt;Brunch&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Adds React support to brunch by automatically compiling &lt;code&gt;*.jsx&lt;/code&gt; files.&lt;/p&gt;
+
+&lt;p&gt;You can configure react-brunch to automatically insert a react header (&lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;) into all &lt;code&gt;*.jsx&lt;/code&gt; files. Disabled by default.&lt;/p&gt;
+
+&lt;p&gt;Install the plugin via npm with &lt;code&gt;npm install --save react-brunch&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://npmjs.org/package/react-brunch&quot;&gt;Read more...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&quot;random-tweet&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#random-tweet&quot;&gt;Random Tweet&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;I&amp;#39;m going to start adding a tweet at the end of each round-up. We&amp;#39;ll start with this one:&lt;/p&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p&gt;This weekend &lt;a href=&quot;https://twitter.com/search?q=%23angular&amp;amp;src=hash&quot;&gt;#angular&lt;/a&gt; died for me. Meet new king &lt;a href=&quot;https://twitter.com/search?q=%23reactjs&amp;amp;src=hash&quot;&gt;#reactjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; Eldar Djafarov &amp;#x30C3; (@edjafarov) &lt;a href=&quot;https://twitter.com/edjafarov/statuses/397033796710961152&quot;&gt;November 3, 2013&lt;/a&gt;&lt;/blockquote&gt;
+</description>
+				<pubDate>2013-11-06T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</guid>
+			</item>
+		
+			<item>
 				<title>Thinking in React</title>
 				<description>&lt;p&gt;React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It&amp;#39;s scaled very well for us at Facebook and Instagram.&lt;/p&gt;
 
@@ -14,7 +130,7 @@
 &lt;h2 id=&quot;start-with-a-mock&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#start-with-a-mock&quot;&gt;Start with a mock&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&amp;#39;t very good because the mock looks like this:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/7zEwOHN.png&quot; alt=&quot;Mockup&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/thinking-in-react-mock.png&quot; alt=&quot;Mockup&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;Our JSON API returns some data that looks like this:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;[
@@ -32,7 +148,7 @@
 
 &lt;p&gt;Since you&amp;#39;re often displaying a JSON data model to a user, you&amp;#39;ll find that if your model was built correctly your UI (and therefore your component structure) will map nicely onto it. That&amp;#39;s because user interfaces and data models tend to adhere to the same &lt;em&gt;information architecture&lt;/em&gt; which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;http://i.imgur.com/YkCWwYv.png&quot; alt=&quot;Component diagram&quot;&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/thinking-in-react-components.png&quot; alt=&quot;Component diagram&quot;&gt;&lt;/p&gt;
 
 &lt;p&gt;You&amp;#39;ll see here that we have five components in our simple app. I&amp;#39;ve italicized the data each component represents.&lt;/p&gt;
 
@@ -594,30 +710,6 @@
 				<pubDate>2013-07-30T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.4.1</title>
-				<description>&lt;p&gt;React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.&lt;/p&gt;
-&lt;h2 id=&quot;react&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#react&quot;&gt;React&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; callbacks are now executed in the scope of your component.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;click&lt;/code&gt; events now work on Mobile Safari.&lt;/li&gt;
-&lt;li&gt;Prevent a potential error in event handling if &lt;code&gt;Object.prototype&lt;/code&gt; is extended.&lt;/li&gt;
-&lt;li&gt;Don&amp;#39;t set DOM attributes to the string &lt;code&gt;&amp;quot;undefined&amp;quot;&lt;/code&gt; on update when previously defined.&lt;/li&gt;
-&lt;li&gt;Improved support for &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt; attributes.&lt;/li&gt;
-&lt;li&gt;Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2 id=&quot;jsxtransformer&quot; class=&quot;anchor&quot;&gt;&lt;a href=&quot;#jsxtransformer&quot;&gt;JSXTransformer&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;Improved environment detection so it can be run in a non-browser environment.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;/react/downloads.html&quot;&gt;Download it now!&lt;/a&gt;&lt;/p&gt;
-</description>
-				<pubDate>2013-07-26T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html</guid>
 			</item>
 		
 	</channel>
