@@ -5,7 +5,7 @@ var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var populistTask = require('./grunt/tasks/populist');
 var phantomTask = require('./grunt/tasks/phantom');
-var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine.js');
+var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 
