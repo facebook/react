@@ -4,6 +4,7 @@
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
 var transform = require('jstransform').transform;
 
+module.exports = // Allow this file to be required and extended.
 require("commoner").resolve(function(id) {
   return this.readModuleP(id);
 }).process(function(id, source) {

@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+"use strict";
+
+require("./jsx").process(function(id, source) {
+  // Wrap the module with AMD define.
+  return "define(function(require,exports,module){" +
+    source +
+  "});";
+});
