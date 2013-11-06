@@ -12,7 +12,7 @@ One of the many great parts of React is how it makes you think about apps as you
 
 Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn't very good because the mock looks like this:
 
-![Mockup](http://i.imgur.com/7zEwOHN.png)
+![Mockup](/react/img/blog/thinking-in-react-mock.png)
 
 Our JSON API returns some data that looks like this:
 
@@ -35,7 +35,7 @@ But how do you know what should be its own component? Just use the same techniqu
 
 Since you're often displaying a JSON data model to a user, you'll find that if your model was built correctly your UI (and therefore your component structure) will map nicely onto it. That's because user interfaces and data models tend to adhere to the same *information architecture* which means the work of separating your UI into components is often trivial. Just break it up into components that represent exactly one piece of your data model.
 
-![Component diagram](http://i.imgur.com/YkCWwYv.png)
+![Component diagram](/react/img/blog/thinking-in-react-components.png)
 
 You'll see here that we have five components in our simple app. I've italicized the data each component represents.
 
