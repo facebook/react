@@ -29,6 +29,7 @@ module.exports = function(grunt) {
 
   Object.keys(grunt.file.readJSON('package.json').devDependencies)
     .filter(function(npmTaskName){ return npmTaskName.indexOf('grunt-') === 0;})
+    .filter(function(npmTaskName){ return npmTaskName != 'grunt-cli' })
     .forEach(function(npmTaskName){
       grunt.loadNpmTasks(npmTaskName);
     })
