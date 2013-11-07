@@ -42,19 +42,43 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionEnd: null}),
       captured: keyOf({onCompositionEndCapture: null})
-    }
+    },
+    dependencies: [
+      keyOf({onCompositionEnd: null}),
+      keyOf({onKeyDown: null}),
+      keyOf({onKeyUp: null}),
+      keyOf({onKeyPress: null}),
+      keyOf({onMouseDown: null}),
+      keyOf({onBlur: null})
+    ]
   },
   compositionStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionStart: null}),
       captured: keyOf({onCompositionStartCapture: null})
-    }
+    },
+    dependencies: [
+      keyOf({onCompositionStart: null}),
+      keyOf({onKeyDown: null}),
+      keyOf({onKeyUp: null}),
+      keyOf({onKeyPress: null}),
+      keyOf({onMouseDown: null}),
+      keyOf({onBlur: null})
+    ]
   },
   compositionUpdate: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionUpdate: null}),
       captured: keyOf({onCompositionUpdateCapture: null})
-    }
+    },
+    dependencies: [
+      keyOf({onCompositionUpdate: null}),
+      keyOf({onKeyDown: null}),
+      keyOf({onKeyUp: null}),
+      keyOf({onKeyPress: null}),
+      keyOf({onMouseDown: null}),
+      keyOf({onBlur: null})
+    ]
   }
 };
 

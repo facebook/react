@@ -76,6 +76,7 @@ var merge = require('merge');
  */
 
 var alreadyListeningTo = {};
+var isMonitoringScrollValue = false;
 
 /**
  * Traps top-level events by using event bubbling.
@@ -111,21 +112,6 @@ function trapCapturedEvent(topLevelType, handlerBaseName, element) {
       topLevelType
     )
   );
-}
-
-/**
- * Listens to window scroll and resize events. We cache scroll values so that
- * application code can access them without triggering reflows.
- *
- * NOTE: Scroll events do not bubble.
- *
- * @private
- * @see http://www.quirksmode.org/dom/events/scroll.html
- */
-function registerScrollValueMonitoring() {
-  var refresh = ViewportMetrics.refreshScrollValues;
-  EventListener.listen(window, 'scroll', refresh);
-  EventListener.listen(window, 'resize', refresh);
 }
 
 /**
@@ -172,21 +158,37 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   },
 
   /**
+   * We listen for bubbled touch events on the document object.
+   *
+   * Firefox v8.01 (and possibly others) exhibited strange behavior when
+   * mounting `onmousemove` events at some node that was not the document
+   * element. The symptoms were that if your mouse is not moving over something
+   * contained within that mount point (for example on the background) the
+   * top-level listeners for `onmousemove` won't be called. However, if you
+   * register the `mousemove` on the document object, then it will of course
+   * catch all `mousemove`s. This along with iOS quirks, justifies restricting
+   * top-level listeners to the document object only, at least for these
+   * movement types of events and possibly all events.
+   *
+   * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+   *
+   * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
+   * they bubble to document.
    *
    * @param {string} event
    * @param {DOMDocument} contentDocument Document which owns the container
    */
   listenTo: function(event, contentDocument) {
-    var mountAt = contentDocument,
-        camelCasedEventName = event.substr(2),
-        camelCasedEventNameAlt = camelCasedEventName.charAt(0).toLowerCase() +
-                                 camelCasedEventName.slice(1),
-        dependencies,
-        dependency,
-        i,
-        l,
-        topLevelType,
-        topLevelTypes = EventConstants.topLevelTypes;
+    var mountAt = contentDocument;
+    var camelCasedEventName = event.substr(2);
+    var camelCasedEventNameAlt =
+        camelCasedEventName.charAt(0).toLowerCase() + camelCasedEventName.slice(1);
+    var dependencies;
+    var dependency;
+    var i;
+    var l;
+    var topLevelType;
+    var topLevelTypes = EventConstants.topLevelTypes;
 
     if (!alreadyListeningTo[event]) {
       dependencies = ReactEventEmitter.registrationNames[event].
@@ -235,11 +237,11 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           }
         }
         else {
+          if(camelCasedEventName === 'DoubleClick') {
+            camelCasedEventName = 'DblClick';
+          }
           trapBubbledEvent(topLevelType, camelCasedEventName.toLowerCase(), mountAt);
         }
-
-        // TODO: add support for exceptions: wheel, scroll, focus, window resize events
-        // TODO: rename: doubleclick to DblClick
 
         alreadyListeningTo[event] = true;
       }
@@ -247,120 +249,19 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   },
 
   /**
-   * We listen for bubbled touch events on the document object.
+   * Listens to window scroll and resize events. We cache scroll values so that
+   * application code can access them without triggering reflows.
    *
-   * Firefox v8.01 (and possibly others) exhibited strange behavior when
-   * mounting `onmousemove` events at some node that was not the document
-   * element. The symptoms were that if your mouse is not moving over something
-   * contained within that mount point (for example on the background) the
-   * top-level listeners for `onmousemove` won't be called. However, if you
-   * register the `mousemove` on the document object, then it will of course
-   * catch all `mousemove`s. This along with iOS quirks, justifies restricting
-   * top-level listeners to the document object only, at least for these
-   * movement types of events and possibly all events.
+   * NOTE: Scroll events do not bubble.
    *
-   * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-   *
-   * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
-   * they bubble to document.
-   *
-   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
-   * @param {DOMDocument} contentDocument Document which owns the container
-   * @private
-   * @see http://www.quirksmode.org/dom/events/keys.html.
+   * @see http://www.quirksmode.org/dom/events/scroll.html
    */
-  listenAtTopLevel: function(touchNotMouse, contentDocument) {
-    invariant(
-      !contentDocument._isListening,
-      'listenAtTopLevel(...): Cannot setup top-level listener more than once.'
-    );
-    var topLevelTypes = EventConstants.topLevelTypes;
-    var mountAt = contentDocument;
-
-    registerScrollValueMonitoring();
-    trapBubbledEvent(topLevelTypes.topMouseOver, 'mouseover', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseDown, 'mousedown', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseUp, 'mouseup', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseMove, 'mousemove', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseOut, 'mouseout', mountAt);
-    trapBubbledEvent(topLevelTypes.topClick, 'click', mountAt);
-    trapBubbledEvent(topLevelTypes.topDoubleClick, 'dblclick', mountAt);
-    if (touchNotMouse) {
-      trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchMove, 'touchmove', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchCancel, 'touchcancel', mountAt);
-    }
-    trapBubbledEvent(topLevelTypes.topKeyUp, 'keyup', mountAt);
-    trapBubbledEvent(topLevelTypes.topKeyPress, 'keypress', mountAt);
-    trapBubbledEvent(topLevelTypes.topKeyDown, 'keydown', mountAt);
-    trapBubbledEvent(topLevelTypes.topInput, 'input', mountAt);
-    trapBubbledEvent(topLevelTypes.topChange, 'change', mountAt);
-    trapBubbledEvent(
-      topLevelTypes.topSelectionChange,
-      'selectionchange',
-      mountAt
-    );
-
-    trapBubbledEvent(
-      topLevelTypes.topCompositionEnd,
-      'compositionend',
-      mountAt
-    );
-    trapBubbledEvent(
-      topLevelTypes.topCompositionStart,
-      'compositionstart',
-      mountAt
-    );
-    trapBubbledEvent(
-      topLevelTypes.topCompositionUpdate,
-      'compositionupdate',
-      mountAt
-    );
-
-    if (isEventSupported('drag')) {
-      trapBubbledEvent(topLevelTypes.topDrag, 'drag', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragEnd, 'dragend', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragEnter, 'dragenter', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragExit, 'dragexit', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragLeave, 'dragleave', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragOver, 'dragover', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragStart, 'dragstart', mountAt);
-      trapBubbledEvent(topLevelTypes.topDrop, 'drop', mountAt);
-    }
-
-    if (isEventSupported('wheel')) {
-      trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
-    } else if (isEventSupported('mousewheel')) {
-      trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
-    } else {
-      // Firefox needs to capture a different mouse scroll event.
-      // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-      trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
-    }
-
-    // IE<9 does not support capturing so just trap the bubbled event there.
-    if (isEventSupported('scroll', true)) {
-      trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
-    } else {
-      trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
-    }
-
-    if (isEventSupported('focus', true)) {
-      trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
-      trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
-    } else if (isEventSupported('focusin')) {
-      // IE has `focusin` and `focusout` events which bubble.
-      // @see
-      // http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-      trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
-      trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
-    }
-
-    if (isEventSupported('copy')) {
-      trapBubbledEvent(topLevelTypes.topCopy, 'copy', mountAt);
-      trapBubbledEvent(topLevelTypes.topCut, 'cut', mountAt);
-      trapBubbledEvent(topLevelTypes.topPaste, 'paste', mountAt);
+  ensureScrollValueMonitoring: function(){
+    if (!isMonitoringScrollValue) {
+      var refresh = ViewportMetrics.refreshScrollValues;
+      EventListener.listen(window, 'scroll', refresh);
+      EventListener.listen(window, 'resize', refresh);
+      isMonitoringScrollValue = true;
     }
   },
 

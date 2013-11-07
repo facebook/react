@@ -231,7 +231,7 @@ var ReactMount = {
   },
 
   /**
-   * Register a component into the instance map and start the events system.
+   * Register a component into the instance map and starts scroll value monitoring
    * @param {ReactComponent} nextComponent component instance to render
    * @param {DOMElement} container container to render into
    * @return {string} reactRoot ID prefix
@@ -244,6 +244,9 @@ var ReactMount = {
         ),
       '_registerComponent(...): Target container is not a DOM element.'
     );
+
+    // TODO: add unit tests
+    ReactEventEmitter.ensureScrollValueMonitoring();
 
     var reactRootID = ReactMount.registerContainer(container);
     instancesByReactRootID[reactRootID] = nextComponent;

@@ -68,13 +68,13 @@ var eventTypes = {
       captured: keyOf({onTouchTapCapture: null})
     },
     dependencies: [
-      "onTouchStart",
-      "onTouchMove",
-      "onTouchEnd",
-      "onTouchCancel",
-      "onMouseDown",
-      "onMouseMove",
-      "onMouseUp"]
+      keyOf({onTouchStart: null}),
+      keyOf({onTouchMove: null}),
+      keyOf({onTouchEnd: null}),
+      keyOf({onTouchCancel: null}),
+      keyOf({onMouseDown: null}),
+      keyOf({onMouseMove: null}),
+      keyOf({onMouseUp: null})]
   }
 };
 

@@ -36,8 +36,12 @@ var eventTypes = {
       bubbled: keyOf({onChange: null}),
       captured: keyOf({onChangeCapture: null})
     },
-
-    dependencies: ["onInput", "onKeyUp", "onKeyDown", "onFocus", "onBlur"]
+    dependencies: [
+      keyOf({onInput: null}),
+      keyOf({onKeyUp: null}),
+      keyOf({onKeyDown: null}),
+      keyOf({onFocus: null}),
+      keyOf({onBlur: null})]
   }
 };
 
