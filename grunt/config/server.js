@@ -37,7 +37,8 @@ module.exports = function(grunt){
             connect.bodyParser(),
             testResultLoggerMiddleware,
             
-            connect.static(options.base)
+            connect.static(options.base),
+            connect.directory(options.base)
           ];
         },
       }
