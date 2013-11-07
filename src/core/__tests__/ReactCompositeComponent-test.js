@@ -289,6 +289,30 @@ describe('ReactCompositeComponent', function() {
     }).not.toThrow();
   });
 
+  it('should allow custom propTypes to use mixins', function(){
+    var Mixin = {
+      keyValidation: function(){
+        throw new Error('Validation failed!');
+      }
+    }
+
+    var Component = React.createClass({
+      mixins: [Mixin],
+      propTypes: {
+        key: function(){
+          this.keyValidation();
+        }
+      },
+      render: function() {
+        return <span></span>;
+      }
+    });
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrow('Validation failed!');
+  });
+
   it('should not allow `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);

@@ -679,7 +679,7 @@ var ReactCompositeComponentMixin = {
       for (propName in propTypes) {
         var checkProp = propTypes[propName];
         if (checkProp) {
-          checkProp(props, propName, componentName);
+          checkProp.call(this, props, propName, componentName);
         }
       }
     }
