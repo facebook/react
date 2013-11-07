@@ -95,7 +95,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  propTypes: SpecPolicy.DEFINE_ONCE,
+  propTypes: SpecPolicy.DEFINE_MANY_MERGED,
 
 
 
