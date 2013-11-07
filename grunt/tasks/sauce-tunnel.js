@@ -27,10 +27,10 @@ module.exports = function(){
 
   stunnel.openTunnel(function(isOpen){
     if (shouldStayAliveForever && isOpen){
-      grunt.verbose.writeln('Keeping the sauce-tunnel open forever because you used the keepalive flag `' + task.name + '`');
+      grunt.verbose.writeln('Keeping the sauce-tunnel open forever because you used the keepalive flag `' + task.nameArgs + '`');
       return;
     }
-    grunt.verbose.writeln('To keep the sauce-tunnel open forever, use the grunt task `' + task.name + ':keepalive`');
+    grunt.verbose.writeln('To keep the sauce-tunnel open forever, use the grunt task `' + task.nameArgs + ':keepalive`');
     taskCompletedSuccessfully(isOpen);
   });
 };
