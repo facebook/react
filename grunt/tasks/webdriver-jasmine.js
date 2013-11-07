@@ -4,6 +4,12 @@ var wd = require('wd');
 module.exports = function(){
   var config = this.data;
   var taskSucceeded = this.async();
+
+  var desiredCapabilities = {};
+  if (config.desiredCapabilities) Object.keys(config.desiredCapabilities).forEach(function(key){
+    desiredCapabilities[key] = config.desiredCapabilities[key];
+  });
+
   grunt.verbose.write('webdriver remote', JSON.stringify(config.webdriver.remote));
   var browser = wd.promiseChainRemote(config.webdriver.remote);
 
@@ -16,7 +22,7 @@ module.exports = function(){
   });
 
   browser
-    .init(config.browser || {})
+    .init(desiredCapabilities)
     .get(config.url)
     .then(function(){return browser;})
     .then(getJSReport)
