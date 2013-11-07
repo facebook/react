@@ -6,6 +6,7 @@ var browserifyTask = require('./grunt/tasks/browserify');
 var populistTask = require('./grunt/tasks/populist');
 var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
 var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
+var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 
@@ -45,6 +46,8 @@ module.exports = function(grunt) {
   grunt.registerMultiTask('browserify', browserifyTask);
 
   grunt.registerMultiTask('populist', populistTask);
+
+  grunt.registerTask('sauce-tunnel', sauceTunnelTask);
 
   grunt.registerMultiTask('webdriver-jasmine', webdriverJasmineTasks);
 
