@@ -1,23 +1,38 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <link rel="stylesheet" type="text/css" href="jasmine.css" />
-    <script src="jasmine.js"></script>
-    <script src="react-test.js"></script>
-  </head>
-  <body>
-    <script>
-      ENABLE_TESTS_HERE
+<!doctype html>
+<meta charset=utf-8>
+<body>
+<script>
+;(function(){
 
-      (function(env) {
-        // Clean up any nodes the previous test might have added.
-        env.afterEach(function() {
-          harness.removeNextSiblings(document.body);
-          harness.removeNextSiblings(document.getElementById("HTMLReporter"));
-        });
+  var urls = [
+    '../vendor/jasmine/jasmine.js',
+    '../vendor/jasmine/jasmine-support.js',
+    '../vendor/jasmine/jasmine-html.js',
+    '../node_modules/jasmine-tapreporter/src/tapreporter.js',
+    '../vendor/jasmine-jsreporter/jasmine-jsreporter.js',
 
-        env.execute();
-      })(jasmine.getEnv());
-    </script>
-  </body>
-</html>
+    'lib/testImageURL.browser.js',
+    'lib/reportTestResults.browser.js',
+
+    '../build/react.js',
+    '../build/react-test.js',
+    'the-files-to-test.generated.js',
+    'lib/jasmine-execute.js'
+  ];
+  
+  if (typeof Function.prototype.bind == 'undefined') {
+    urls.unshift('../node_modules/es5-shim/es5-sham.js');
+    urls.unshift('../node_modules/es5-shim/es5-shim.js');
+  }
+
+  var cacheBust = '?_=' + Date.now().toString(36);
+
+  for (var urls_index = -1, urls_length = urls.length; ++urls_index < urls_length;) {
+    document.write('<script src="' + urls[urls_index] + cacheBust + '"><\/script>');
+  }
+
+  var base = location.protocol + '//' + location.hostname + ':' + location.port + location.pathname.replace(/^\/?/,'/').split('/').reverse().slice(1).reverse().join('/');
+  window.ReactWebWorker_URL = base + '/../src/test/worker.js' + cacheBust;
+
+}());
+</script>

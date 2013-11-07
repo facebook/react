@@ -1,11 +1,14 @@
 #!/usr/bin/env node
+// -*- mode: js -*-
 "use strict";
 
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
 var transform = require('jstransform').transform;
 var propagate = require("../vendor/constants").propagate;
 
-require("commoner").resolve(function(id) {
+require("commoner").version(
+  require("../package.json").version
+).resolve(function(id) {
   var context = this;
 
   // Note that the result of context.getProvidedP() is cached for the

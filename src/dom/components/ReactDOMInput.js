@@ -55,7 +55,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var defaultValue = this.props.defaultValue;
     return {
       checked: this.props.defaultChecked || false,
-      value: defaultValue != null ? defaultValue : ''
+      value: defaultValue != null ? defaultValue : null
     };
   },
 

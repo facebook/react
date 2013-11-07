@@ -1,5 +1,3 @@
-var jasmine = require("./jasmine");
-
 jasmine.HtmlReporterHelpers = {};
 
 jasmine.HtmlReporterHelpers.createDom = function(type, attrs, childrenVarArgs) {

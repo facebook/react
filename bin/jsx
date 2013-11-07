@@ -1,10 +1,13 @@
 #!/usr/bin/env node
+// -*- mode: js -*-
 "use strict";
 
 var visitors = require('../vendor/fbtransform/visitors').transformVisitors;
 var transform = require('jstransform').transform;
 
-require("commoner").resolve(function(id) {
+require("commoner").version(
+  require("../package.json").version
+).resolve(function(id) {
   return this.readModuleP(id);
 }).process(function(id, source) {
   // This is where JSX, ES6, etc. desugaring happens.
