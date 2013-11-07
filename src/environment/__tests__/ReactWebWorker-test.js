@@ -22,11 +22,11 @@
 "use strict";
 
 describe('ReactWebWorker', function() {
-  it('can run React in a web worker', function() {
+  ;(typeof Worker == 'undefined' ? xit : it)('can run React in a web worker', function() {
     var done = false;
     var error;
 
-    var worker = new Worker('/worker.js');
+    var worker = new Worker(window.ReactWebWorker_URL || '/src/test/worker.js?_=' + Date.now().toString(36));
     worker.addEventListener('message', function(e) {
       var data = JSON.parse(e.data);
       if (data.type == 'error') {

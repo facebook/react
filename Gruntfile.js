@@ -4,7 +4,8 @@ var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var populistTask = require('./grunt/tasks/populist');
-var phantomTask = require('./grunt/tasks/phantom');
+var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
+var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 
@@ -16,7 +17,8 @@ module.exports = function(grunt) {
     jsx: require('./grunt/config/jsx/jsx'),
     browserify: require('./grunt/config/browserify'),
     populist: require('./grunt/config/populist'),
-    phantom: require('./grunt/config/phantom'),
+    connect: require('./grunt/config/server')(grunt),
+    "webdriver-jasmine": require('./grunt/config/webdriver-jasmine.js'),
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
     jshint: require('./grunt/config/jshint'),
@@ -25,11 +27,12 @@ module.exports = function(grunt) {
 
   grunt.config.set('compress', require('./grunt/config/compress'));
 
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-compare-size');
-  grunt.loadNpmTasks('grunt-contrib-compress');
+  Object.keys(grunt.file.readJSON('package.json').devDependencies)
+    .filter(function(npmTaskName){ return npmTaskName.indexOf('grunt-') === 0;})
+    .forEach(function(npmTaskName){
+      grunt.loadNpmTasks(npmTaskName);
+    })
+  ;
 
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
@@ -42,7 +45,7 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('populist', populistTask);
 
-  grunt.registerMultiTask('phantom', phantomTask);
+  grunt.registerMultiTask('webdriver-jasmine', webdriverJasmineTasks);
 
   grunt.registerMultiTask('npm', npmTask);
 
@@ -70,11 +73,17 @@ module.exports = function(grunt) {
     'jsx:jasmine',
     'jsx:test',
     'version-check',
-    'populist:jasmine',
     'populist:test'
   ]);
 
-  grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
+  grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
+
+  grunt.registerTask('test:webdriver:phantomjs', [
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-jasmine:local'
+  ]);
+  grunt.registerTask('test', ['build:test', 'build:basic', 'test:webdriver:phantomjs']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run

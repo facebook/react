@@ -48,7 +48,7 @@
     "grunt-contrib-copy": "~0.4.1",
     "grunt-contrib-jshint": "~0.6.0",
     "optimist": "~0.6.0",
-    "phantomjs": "~1.9.1-4",
+    "phantomjs": "~1.9",
     "recast": "~0.4.16",
     "semver": "~2.1.0",
     "uglify-js": "~2.4.0",
@@ -56,7 +56,11 @@
     "grunt-compare-size": "~0.4.0",
     "gzip-js": "~0.3.2",
     "tmp": "~0.0.18",
-    "grunt-contrib-compress": "~0.5.1"
+    "grunt-contrib-compress": "~0.5.1",
+    "jasmine-tapreporter": "~0.2.2",
+    "grunt-contrib-connect": "~0.5.0",
+    "es5-shim": "~2.1.0",
+    "wd": "~0.2.2"
   },
   "engines": {
     "node": ">=0.10.0"
