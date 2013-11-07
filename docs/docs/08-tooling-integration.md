@@ -47,6 +47,14 @@ The open-source community has built tools that integrate JSX with several build 
 * [react-rails](https://github.com/facebook/react-rails) - use JSX with [Ruby on Rails](http://rubyonrails.org/)
 
 
+### Syntax Highlighting & Linting
+
+* Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
+  * [JSX syntax highlighting](https://github.com/yungsters/sublime/blob/master/tmLanguage/JavaScript%20(JSX\).tmLanguage) is available for Sublime Text and other editors
+    that support `*.tmLanguage`.
+* Linting provides accurate line numbers after compiling without sourcemaps.
+* Elements use standard scoping so linters can find usage of out-of-scope components.
+
 ## React Page
 
 To get started on a new project, you can use [react-page](https://github.com/facebook/react-page/), a complete React project creator. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.
