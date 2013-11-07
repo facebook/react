@@ -129,6 +129,15 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
+  it('should not set a value for submit buttons unnecessarily', function() {
+    var stub = <input type="submit" />;
+    var node = renderTextInput(stub);
+
+    // The value shouldn't be '', or else the button will have no text; it
+    // should have the default "Submit" or "Submit Query" label
+    expect(node.hasAttribute('value')).toBe(false);
+  });
+
   it('should control radio buttons', function() {
     var RadioGroup = React.createClass({
       render: function() {
