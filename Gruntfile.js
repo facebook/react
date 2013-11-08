@@ -74,7 +74,6 @@ module.exports = function(grunt) {
   grunt.registerTask('build:min', ['jsx:release', 'version-check', 'browserify:min']);
   grunt.registerTask('build:addons-min', ['jsx:debug', 'browserify:addonsMin']);
   grunt.registerTask('build:test', [
-    'jsx:jasmine',
     'jsx:test',
     'version-check',
     'populist:test'
