@@ -66,7 +66,7 @@ function getJSReport(browser){
       throw Error("The test page didn't load properly. " + error);
     })
     .waitForCondition("typeof window.jasmine.getJSReport != 'undefined'", 10e3)
-    .waitForCondition("window.testImageURL.running <= 0", 5e3)
+    .waitForCondition("window.postDataToURL.running <= 0", 30e3)
     .eval("jasmine.getJSReport()")
   ;
 }
