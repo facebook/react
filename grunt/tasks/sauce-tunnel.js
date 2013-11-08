@@ -12,9 +12,11 @@ module.exports = function(){
   var SAUCE_USERNAME = process.env.SAUCE_USERNAME;
   if (!SAUCE_USERNAME) grunt.fatal('Requires the environment variable SAUCE_USERNAME to be set');
 
+  var IDENTIFIER = process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel';
+
   var taskCompletedSuccessfully = task.async();
 
-  var stunnel = new SauceTunnel(SAUCE_USERNAME, SAUCE_ACCESS_KEY, /*identifier*/null, /*tunneled*/true, /*tunnelTimeout*/10e3);
+  var stunnel = new SauceTunnel(SAUCE_USERNAME, SAUCE_ACCESS_KEY, IDENTIFIER, /*tunneled*/true, /*tunnelTimeout*/5);
   process.on('exit', stunnel.stop.bind(stunnel, function(){}));
 
   stunnel.on('log:error', grunt.log.error.bind(grunt.log));
