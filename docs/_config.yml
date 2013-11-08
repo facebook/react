@@ -52,7 +52,14 @@ nav_docs_sections:
   - id: tooling-integration
     title: Tooling Integration
   - id: addons
-    title: Add-ons
+    title: Add-Ons
+    subitems:
+    - id: animation
+      title: Animation
+    - id: two-way-binding-helpers
+      title: Two-Way Binding Helpers
+    - id: class-name-manipulation
+      title: Class Name Manipulation
   - id: examples
     title: Examples
 - title: Reference
