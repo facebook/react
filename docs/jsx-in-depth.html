@@ -343,22 +343,7 @@ pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</co
 </code></pre></div><h3 id="comments" class="anchor"><a href="#comments">Comments</a></h3>
 <p>It&#39;s easy to add comments within your JSX; they&#39;re just JS expressions:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* this is a comment */</span><span class="p">}</span><span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;&lt;</span><span class="err">/Container&gt;;</span>
-</code></pre></div><h2 id="tooling" class="anchor"><a href="#tooling">Tooling</a></h2>
-<p>Beyond the compilation step, JSX does not require any special tools.</p>
-
-<ul>
-<li>Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
-
-<ul>
-<li>JSX syntax highlighting is available for Sublime Text and other editors
-that support <code>*.tmLanguage</code> using the third-party
-<a href="https://github.com/yungsters/sublime/blob/master/tmLanguage/JavaScript%20(JSX).tmLanguage"><code>JavaScript (JSX).tmLanguage</code></a>.</li>
-</ul></li>
-<li>Linting provides accurate line numbers after compiling without sourcemaps.</li>
-<li>Elements use standard scoping so linters can find usage of out-of-scope
-components.</li>
-</ul>
-<h2 id="prior-work" class="anchor"><a href="#prior-work">Prior Work</a></h2>
+</code></pre></div><h2 id="prior-work" class="anchor"><a href="#prior-work">Prior Work</a></h2>
 <p>JSX is similar to several other JavaScript embedded XML language
 proposals/projects. Some of the features of JSX that distinguish it from similar
 efforts include:</p>

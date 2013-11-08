@@ -754,8 +754,8 @@
   <span class="p">},</span>
   <span class="nx">handleCommentSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">comments</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">data</span><span class="p">;</span>
-    <span class="nx">comments</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">comment</span><span class="p">);</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">comments</span><span class="p">});</span>
+    <span class="kd">var</span> <span class="nx">newComments</span> <span class="o">=</span> <span class="nx">comments</span><span class="p">.</span><span class="nx">concat</span><span class="p">([</span><span class="nx">comment</span><span class="p">]);</span>
+<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">data</span><span class="o">:</span> <span class="nx">newComments</span><span class="p">});</span>
 </span><span class="hll">    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
 </span><span class="hll">      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
 </span>      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;POST&#39;</span><span class="p">,</span>
