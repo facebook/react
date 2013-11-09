@@ -67,8 +67,8 @@ function enqueueMarkup(parentID, markup, toIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
-    fromIndex: null,
     textContent: null,
+    fromIndex: null,
     toIndex: toIndex
   });
 }
