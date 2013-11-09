@@ -17,9 +17,7 @@
 "use strict";
 
 var Syntax = require('esprima-fb').Syntax;
-var catchup = require('jstransform/src/utils').catchup;
-var append = require('jstransform/src/utils').append;
-var getDocblock = require('jstransform/src/utils').getDocblock;
+var utils = require('jstransform/src/utils');
 
 /**
  * Transforms the following:
@@ -48,8 +46,8 @@ function visitReactDisplayName(traverse, object, path, state) {
       object.init['arguments'][0].type === Syntax.ObjectExpression) {
 
     var displayName = object.id.name;
-    catchup(object.init['arguments'][0].range[0] + 1, state);
-    append("displayName: '" + displayName + "',", state);
+    utils.catchup(object.init['arguments'][0].range[0] + 1, state);
+    utils.append("displayName: '" + displayName + "',", state);
   }
 }
 
@@ -57,7 +55,7 @@ function visitReactDisplayName(traverse, object, path, state) {
  * Will only run on @jsx files for now.
  */
 visitReactDisplayName.test = function(object, path, state) {
-  return object.type === Syntax.VariableDeclarator && !!getDocblock(state).jsx;
+  return object.type === Syntax.VariableDeclarator && !!utils.getDocblock(state).jsx;
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;

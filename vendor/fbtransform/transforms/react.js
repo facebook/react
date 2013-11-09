@@ -17,12 +17,7 @@
 "use strict";
 
 var Syntax = require('esprima-fb').Syntax;
-
-var catchup = require('jstransform/src/utils').catchup;
-var catchupWhiteSpace = require('jstransform/src/utils').catchupWhiteSpace;
-var append = require('jstransform/src/utils').append;
-var move = require('jstransform/src/utils').move;
-var getDocblock = require('jstransform/src/utils').getDocblock;
+var utils = require('jstransform/src/utils');
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
 var renderXJSExpressionContainer =
@@ -56,9 +51,9 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
 };
 
 function visitReactTag(traverse, object, path, state) {
-  var jsxObjIdent = getDocblock(state).jsx;
+  var jsxObjIdent = utils.getDocblock(state).jsx;
 
-  catchup(object.openingElement.range[0], state);
+  utils.catchup(object.openingElement.range[0], state);
 
   if (object.name.namespace) {
     throw new Error(
@@ -66,12 +61,12 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   var isFallbackTag = FALLBACK_TAGS[object.name.name];
-  append(
+  utils.append(
     (isFallbackTag ? jsxObjIdent + '.' : '') + (object.name.name) + '(',
     state
   );
 
-  move(object.name.range[1], state);
+  utils.move(object.name.range[1], state);
 
   var childrenToRender = object.children.filter(function(child) {
     return !(child.type === Syntax.Literal && !child.value.match(/\S/));
@@ -79,12 +74,12 @@ function visitReactTag(traverse, object, path, state) {
 
   // if we don't have any attributes, pass in null
   if (object.attributes.length === 0) {
-    append('null', state);
+    utils.append('null', state);
   }
 
   // write attributes
   object.attributes.forEach(function(attr, index) {
-    catchup(attr.range[0], state);
+    utils.catchup(attr.range[0], state);
     if (attr.name.namespace) {
       throw new Error(
          'Namespace attributes are not supported. ReactJSX is not XML.');
@@ -94,27 +89,27 @@ function visitReactTag(traverse, object, path, state) {
     var isLast = index === object.attributes.length - 1;
 
     if (isFirst) {
-      append('{', state);
+      utils.append('{', state);
     }
 
-    append(quoteAttrName(name), state);
-    append(':', state);
+    utils.append(quoteAttrName(name), state);
+    utils.append(':', state);
 
     if (!attr.value) {
       state.g.buffer += 'true';
       state.g.position = attr.name.range[1];
       if (!isLast) {
-        append(',', state);
+        utils.append(',', state);
       }
     } else {
-      move(attr.name.range[1], state);
+      utils.move(attr.name.range[1], state);
       // Use catchupWhiteSpace to skip over the '=' in the attribute
-      catchupWhiteSpace(attr.value.range[0], state);
+      utils.catchupWhiteSpace(attr.value.range[0], state);
       if (JSX_ATTRIBUTE_TRANSFORMS[attr.name.name]) {
-        append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
-        move(attr.value.range[1], state);
+        utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
+        utils.move(attr.value.range[1], state);
         if (!isLast) {
-          append(',', state);
+          utils.append(',', state);
         }
       } else if (attr.value.type === Syntax.Literal) {
         renderXJSLiteral(attr.value, isLast, state);
@@ -124,26 +119,26 @@ function visitReactTag(traverse, object, path, state) {
     }
 
     if (isLast) {
-      append('}', state);
+      utils.append('}', state);
     }
 
-    catchup(attr.range[1], state);
+    utils.catchup(attr.range[1], state);
   });
 
   if (!object.selfClosing) {
-    catchup(object.openingElement.range[1] - 1, state);
-    move(object.openingElement.range[1], state);
+    utils.catchup(object.openingElement.range[1] - 1, state);
+    utils.move(object.openingElement.range[1], state);
   }
 
   // filter out whitespace
   if (childrenToRender.length > 0) {
-    append(', ', state);
+    utils.append(', ', state);
 
     object.children.forEach(function(child) {
       if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
         return;
       }
-      catchup(child.range[0], state);
+      utils.catchup(child.range[0], state);
 
       var isLast = child === childrenToRender[childrenToRender.length - 1];
 
@@ -152,34 +147,34 @@ function visitReactTag(traverse, object, path, state) {
       } else if (child.type === Syntax.XJSExpressionContainer) {
         renderXJSExpressionContainer(traverse, child, isLast, path, state);
       } else {
-        traverse(child, path, state);
+        utils.traverse(child, path, state);
         if (!isLast) {
-          append(',', state);
+          utils.append(',', state);
           state.g.buffer = state.g.buffer.replace(/(\s*),$/, ',$1');
         }
       }
 
-      catchup(child.range[1], state);
+      utils.catchup(child.range[1], state);
     });
   }
 
   if (object.selfClosing) {
     // everything up to />
-    catchup(object.openingElement.range[1] - 2, state);
-    move(object.openingElement.range[1], state);
+    utils.catchup(object.openingElement.range[1] - 2, state);
+    utils.move(object.openingElement.range[1], state);
   } else {
     // everything up to </ sdflksjfd>
-    catchup(object.closingElement.range[0], state);
-    move(object.closingElement.range[1], state);
+    utils.catchup(object.closingElement.range[0], state);
+    utils.move(object.closingElement.range[1], state);
   }
 
-  append(')', state);
+  utils.append(')', state);
   return false;
 }
 
 visitReactTag.test = function(object, path, state) {
   // only run react when react @jsx namespace is specified in docblock
-  var jsx = getDocblock(state).jsx;
+  var jsx = utils.getDocblock(state).jsx;
   return object.type === Syntax.XJSElement && jsx && jsx.length;
 };
 
