@@ -20,6 +20,7 @@
 
 var ReactComponent = require('ReactComponent');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactErrorUtils = require('ReactErrorUtils');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
@@ -877,7 +878,10 @@ var ReactCompositeComponentMixin = {
         continue;
       }
       var method = this.__reactAutoBindMap[autoBindKey];
-      this[autoBindKey] = this._bindAutoBindMethod(method);
+      this[autoBindKey] = ReactErrorUtils.guard(
+        this._bindAutoBindMethod(method),
+        this.constructor.displayName + '.' + autoBindKey
+      );
     }
   },
 
