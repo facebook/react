@@ -758,7 +758,7 @@ var ReactCompositeComponentMixin = {
     var prevState = this.state;
 
     if (this.componentWillUpdate) {
-      this.componentWillUpdate(nextProps, nextState, transaction);
+      this.componentWillUpdate(nextProps, nextState);
     }
 
     this.props = nextProps;
