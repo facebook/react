@@ -41,7 +41,7 @@ var WheelEventInterface = {
       // Fallback to `wheelDeltaY` for Webkit.
       'wheelDeltaY' in event ? event.wheelDeltaY :
       // Fallback to `wheelDelta` for IE<9.
-      'wheelDelta' in event ? event.wheelData : 0
+      'wheelDelta' in event ? event.wheelDelta : 0
     );
   },
   deltaZ: null,
