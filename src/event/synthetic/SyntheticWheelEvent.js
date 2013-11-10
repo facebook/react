@@ -29,15 +29,18 @@ var WheelEventInterface = {
   deltaX: function(event) {
     // NOTE: IE<9 does not support x-axis delta.
     return (
-      'deltaX' in event ? event.deltaX :
+      // deltaMode 1 is DOM_DELTA_LINE, observed in FireFox.
+      'deltaX' in event ? event.deltaX *
+        ('deltaMode' in event && event.deltaMode === 1 ? 40 : 1) :
       // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
       'wheelDeltaX' in event ? -event.wheelDeltaX : 0
     );
   },
   deltaY: function(event) {
     return (
-      // Normalize (up is positive).
-      'deltaY' in event ? -event.deltaY :
+      // Normalize (up is positive)
+      'deltaY' in event ? -event.deltaY *
+        ('deltaMode' in event && event.deltaMode === 1 ? 40 : 1) :
       // Fallback to `wheelDeltaY` for Webkit.
       'wheelDeltaY' in event ? event.wheelDeltaY :
       // Fallback to `wheelDelta` for IE<9.
@@ -47,6 +50,7 @@ var WheelEventInterface = {
   deltaZ: null,
   deltaMode: null
 };
+
 
 /**
  * @param {object} dispatchConfig Configuration used to dispatch this event.
