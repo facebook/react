@@ -38,7 +38,12 @@ var KeyboardEventInterface = {
   // Legacy Interface
   charCode: null,
   keyCode: null,
-  which: null
+  which: function(event) {
+    return (
+      'which' in event ? event.which :
+      'charCode' in event ? event.charCode : event.keyCode
+    );
+  }
 };
 
 /**
