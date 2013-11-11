@@ -12,7 +12,6 @@ module.exports = function(){
   });
   grunt.verbose.writeln("desiredCapabilities", JSON.stringify(desiredCapabilities));
 
-  grunt.verbose.writeln('webdriver remote', JSON.stringify(config.webdriver.remote));
   var browser = wd.promiseChainRemote(config.webdriver.remote);
 
   browser.on('status', function(info) {
