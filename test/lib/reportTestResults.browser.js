@@ -2,15 +2,12 @@
   env.addReporter(new jasmine.JSReporter());
 
   function report(){
-    console.log('report');
     if (typeof jasmine.getJSReport != 'function') {
       console.log("typeof jasmine.getJSReport != 'function'");
       return setTimeout(report, 100);
     }
-    postDataToURL(jasmine.getJSReport(), '/reportTestResults', function(error, event){
-      console.log(error, event);
+    postDataToURL(jasmine.getJSReport(), '/reportTestResults', function(error, results){
       if (error) return console.error(error);
-      console.log(event);
     });
   }
 
