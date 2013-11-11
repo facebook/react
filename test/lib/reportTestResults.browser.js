@@ -1,5 +1,19 @@
+console._log = console.log;
+console.log = function(message){
+  console._log(message);
+  postDataToURL({type:'log', message:message}, '/reportTestResults');
+}
+console._error = console.error;
+console.error = function(message){
+  console._error(message);
+  postDataToURL({type:'error', message:message}, '/reportTestResults');
+}
+
 ;(function(env){
   env.addReporter(new jasmine.JSReporter());
+  if (location.search.substring(1).indexOf('debug') != -1){
+    env.addReporter(new TAPReporter(console.log.bind(console)));
+  }
 
   function report(){
     if (typeof jasmine.getJSReport != 'function') {

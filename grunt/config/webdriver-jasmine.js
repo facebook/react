@@ -16,6 +16,8 @@ exports.local = {
   }
 }
 
+if (grunt.option('debug')) exports.local.url += '?debug=' + grunt.option('debug');
+
 
 exports.saucelabs = {
   webdriver: {
