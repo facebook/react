@@ -23,7 +23,7 @@ module.exports = function(){
     grunt.verbose.writeln(' > ' + meth, path, data || '');
   });
 
-  var report = null;
+  var results = null;
 
   // browser._debugPromise();
   browser
@@ -32,7 +32,7 @@ module.exports = function(){
     .get(config.url)
     .then(function(){return browser;})
     .then(getJSReport)
-    .then(function(data){ report = data; })
+    .then(function(data){ results = data; })
     .fail(function(error){
       grunt.log.error(error);
       return browser
@@ -48,7 +48,7 @@ module.exports = function(){
     })
     .done(
       function(){
-        if (config.onComplete) config.onComplete(report);
+        if (config.onComplete) config.onComplete(results);
         taskSucceeded(true);
       },
       function(error){
@@ -67,6 +67,6 @@ function getJSReport(browser){
     })
     .waitForCondition("typeof window.jasmine.getJSReport != 'undefined'", 10e3)
     .waitForCondition("window.postDataToURL.running <= 0", 30e3)
-    .eval("jasmine.getJSReport()")
+    .eval("jasmine.getJSReport().passed")
   ;
 }

@@ -6,8 +6,8 @@ exports.local = {
     remote: { protocol: 'http:', hostname: '127.0.0.1', port: 9515, path: '/' }
   },
   url: "http://127.0.0.1:9999/test/index.html",
-  onComplete: function(report){
-    if (!report.passed){
+  onComplete: function(passed){
+    if (!passed){
       grunt.fatal("tests failed");
     }
   },
