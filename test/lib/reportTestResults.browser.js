@@ -1,3 +1,9 @@
+if (typeof console == 'undefined') console = {
+  log: function(){},
+  warn: function(){},
+  error: function(){}
+};
+
 console._log = console.log;
 console.log = function(message){
   console._log(message);
