@@ -134,7 +134,7 @@ var ReactTransitionableChild = React.createClass({
 
   componentDidMount: function(node) {
     if (this.props.enter) {
-      this.transition('enter');
+      this.transition('enter', false, this.props.onDoneEntering);
     }
   },
 
