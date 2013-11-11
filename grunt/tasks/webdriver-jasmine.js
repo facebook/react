@@ -60,7 +60,7 @@ module.exports = function(){
 
 function getJSReport(browser){
   return browser
-    .waitForCondition("typeof window.jasmine != 'undefined'", 500)
+    .waitForCondition("typeof window.jasmine != 'undefined'", 5e3)
     .fail(function(error){
       throw Error("The test page didn't load properly. " + error);
     })
