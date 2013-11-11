@@ -44,7 +44,6 @@ var ReactTransitionGroupMixin = {
       'getTransitionConfig() method.'
     );
 
-    var child;
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
     var transitionConfig = this.getTransitionConfig();
@@ -54,7 +53,18 @@ var ReactTransitionGroupMixin = {
     );
 
     for (var key in currentKeys) {
-      child = childMapping[key];
+      var child = childMapping[key];
+
+      var onBeforeLeaving;
+      var onDoneEntering;
+
+      if (child && child.componentDidEnter) {
+        onDoneEntering = child.componentDidEnter.bind(child);
+      }
+
+      if (child && child.componentWillLeave) {
+        onBeforeLeaving = child.componentWillLeave.bind(child);
+      }
 
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild
       // knows how to hold onto its child if it changes to undefined. Here, we
@@ -66,9 +76,8 @@ var ReactTransitionGroupMixin = {
           name: transitionConfig.name,
           enter: transitionConfig.enter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key),
-          onDoneEntering: child.componentDidEnter &&
-                          child.componentDidEnter.bind(child)
-
+          onDoneEntering: onDoneEntering,
+          onBeforeLeaving: onBeforeLeaving
         }, child);
       }
     }

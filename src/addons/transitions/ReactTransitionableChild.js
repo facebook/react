@@ -138,6 +138,13 @@ var ReactTransitionableChild = React.createClass({
     }
   },
 
+  componentWillUpdate: function (nextProps, nextState) {
+    if (this.props.onBeforeLeaving &&
+      this.props.children && !nextProps.children) {
+      this.props.onBeforeLeaving();
+    }
+  },
+
   componentDidUpdate: function(prevProps, prevState, node) {
     if (prevProps.children && !this.props.children) {
       this.transition('leave', true, this.props.onDoneLeaving);
