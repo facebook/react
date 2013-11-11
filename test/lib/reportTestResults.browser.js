@@ -42,8 +42,8 @@ function postDataToURL(data, url, callback) {
     callback(request.status == 200 ? null : request.status, request.responseText);
   };
   request.open('POST', url);
-  request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  request.send('data=' + encodeURIComponent(JSON.stringify(data)));
+  request.setRequestHeader('Content-Type', 'application/json');
+  request.send(JSON.stringify(data));
 }
 postDataToURL.defaultCallback = function(error){
   // console.log('postDataToURL.defaultCallback', arguments)
