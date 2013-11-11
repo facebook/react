@@ -31,7 +31,7 @@ exports.saucelabs = {
     }
   },
   desiredCapabilities: {
-    "build": process.env.TRAVIS_BUILD_NUMBER,
+    "build": process.env.TRAVIS_BUILD_NUMBER || 'dev' + Date.now(),
     "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel',
     "browserName": "chrome"
   },
