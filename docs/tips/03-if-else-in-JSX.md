@@ -7,25 +7,36 @@ prev: inline-styles.html
 next: self-closing-tag.html
 ---
 
-`if-else` statements don't work inside JSX, since JSX is really just sugar for functions:
+`if-else` statements don't work inside JSX. This is because JSX is just syntactic sugar for function calls and object construction. Take this basic example:
 
 ```js
 /** @jsx React.DOM */
 
-// this
+// This JSX:
 React.renderComponent(<div id="msg">Hello World!</div>, mountNode);
-// is the same as this
+
+// Is transformed to this JS:
 React.renderComponent(React.DOM.div({id:"msg"}, "Hello World!"), mountNode);
 ```
 
-Which means `<div id={if (true){ 'msg' }}>Hello World!</div>` doesn't make sense, as (if it worked) it would be compiled down to something like this `React.DOM.div({id: if (true){ 'msg' }}, "Hello World!")`, which isn't valid JS.
-
-What you're searching for is ternary expression:
+This means that `if` statements don't fit in. Take this example:
 
 ```js
 /** @jsx React.DOM */
 
-React.renderComponent(<div id={true ? 'msg' : ''}>Hello World!</div>, mountNode);
+// This JSX:
+<div id={if (condition) { 'msg' }}>Hello World!</div>
+
+// Is transformed to this JS:
+React.DOM.div({id: if (condition) { 'msg' }}, "Hello World!");
 ```
 
-Try the [JSX compiler](/react/jsx-compiler.html).
+That's not valid JS. You probably want to make use of a ternary expression:
+
+```js
+/** @jsx React.DOM */
+
+React.renderComponent(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
+```
+
+Try using it today with the [JSX compiler](/react/jsx-compiler.html).
