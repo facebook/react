@@ -26,14 +26,14 @@
     </div>
   {% endfor %}
 
-  <!-- Cookbook Nav -->
-  {% for section in site.nav_cookbook %}
+  <!-- Tips Nav -->
+  {% for section in site.nav_tips %}
     <div class="nav-docs-section">
       <h3>{{ section.title }}</h3>
       <ul>
         {% for item in section.items %}
           <li>
-            <a href="/react/cookbook/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
+            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
           </li>
         {% endfor %}
       </ul>

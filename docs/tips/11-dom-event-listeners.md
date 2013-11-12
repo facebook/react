@@ -1,7 +1,7 @@
 ---
 id: dom-event-listeners
 title: DOM Event Listeners in a Component
-layout: cookbook
+layout: tips
 permalink: dom-event-listeners.html
 prev: props-in-getInitialState-as-anti-pattern.html
 next: initial-ajax.html
@@ -9,7 +9,7 @@ next: initial-ajax.html
 
 > Note:
 >
-> This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/cookbook/events.html)). This is good for integrations with other libraries such as jQuery.
+> This entry shows how to attach DOM events not provided by React ([check here for more info](/react/docs/tips/events.html)). This is good for integrations with other libraries such as jQuery.
 
 Try to resize the window:
 

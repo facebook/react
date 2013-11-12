@@ -1,7 +1,7 @@
 ---
 id: initial-ajax
 title: Load Initial Data via AJAX
-layout: cookbook
+layout: tips
 permalink: initial-ajax.html
 prev: dom-event-listeners.html
 next: false-in-jsx.html

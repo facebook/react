@@ -1,7 +1,7 @@
 ---
-id: style-prop-value-px
+id: style-props-value-px
 title: Shorthand for Specifying Pixel Values in style props
-layout: cookbook
+layout: tips
 permalink: style-props-value-px.html
 prev: maximum-number-of-jsx-root-nodes.html
 next: children-props-type.html
@@ -16,7 +16,7 @@ var divStyle = {height: 10}; // rendered as "height:10px"
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
-See [Inline Styles](/react/docs/cookbook/inline-styles-tip.html) for more info.
+See [Inline Styles](/react/docs/tips/inline-styles-tip.html) for more info.
 
 Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of properties that won't get the automatic "px" suffix:
 

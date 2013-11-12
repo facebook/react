@@ -1,7 +1,7 @@
 ---
 id: self-closing-tag
 title: Self-Closing Tag
-layout: cookbook
+layout: tips
 permalink: self-closing-tag.html
 prev: if-else-in-JSX.html
 next: maximum-number-of-jsx-root-nodes.html

@@ -1,7 +1,7 @@
 ---
-id: false-in-jsx-tip
+id: false-in-jsx
 title: False in JSX
-layout: cookbook
+layout: tips
 permalink: false-in-jsx.html
 prev: initial-ajax.html
 ---

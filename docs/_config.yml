@@ -69,8 +69,8 @@ nav_docs_sections:
     title: Event System
   - id: dom-differences
     title: DOM Differences
-nav_cookbook:
-- title: Cookbook
+nav_tips:
+- title: Tips
   items:
   - id: introduction
     title: Introduction
@@ -80,7 +80,7 @@ nav_cookbook:
     title: If-Else in JSX
   - id: self-closing-tag
     title: Self-Closing Tag
-  - id: jsx-root-node-count
+  - id: maximum-number-of-jsx-root-nodes
     title: Maximum Number of JSX Root Nodes
   - id: style-props-value-px
     title: Shorthand for Specifying Pixel Values in style props
@@ -90,7 +90,7 @@ nav_cookbook:
     title: Value of null for Controlled Input
   - id: componentWillReceiveProps-not-triggered-after-mounting
     title: componentWillReceiveProps Not Triggered After Mounting
-  - id: props-in-getInitialSate-as-anti-pattern
+  - id: props-in-getInitialState-as-anti-pattern
     title: Props in getInitialState Is an Anti-Pattern
   - id: dom-event-listeners
     title: DOM Event Listeners in a Component
