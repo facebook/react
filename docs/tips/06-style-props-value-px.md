@@ -16,14 +16,14 @@ var divStyle = {height: 10}; // rendered as "height:10px"
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
-See [Inline Styles](/react/docs/tips/inline-styles-tip.html) for more info.
+See [Inline Styles](/react/tips/inline-styles.html) for more info.
 
 Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of properties that won't get the automatic "px" suffix:
 
-- fillOpacity
-- fontWeight
-- lineHeight
-- opacity
-- orphans
-- zIndex
-- zoom
+- `fillOpacity`
+- `fontWeight`
+- `lineHeight`
+- `opacity`
+- `orphans`
+- `zIndex`
+- `zoom`
