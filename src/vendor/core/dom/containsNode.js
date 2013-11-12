@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule nodeContains
+ * @providesModule containsNode
  * @typechecks
  */
 
@@ -28,7 +28,7 @@ var isTextNode = require('isTextNode');
  * @param {?DOMNode} innerNode Inner DOM node.
  * @return {boolean} True if `outerNode` contains or is `innerNode`.
  */
-function nodeContains(outerNode, innerNode) {
+function containsNode(outerNode, innerNode) {
   if (!outerNode || !innerNode) {
     return false;
   } else if (outerNode === innerNode) {
@@ -36,7 +36,7 @@ function nodeContains(outerNode, innerNode) {
   } else if (isTextNode(outerNode)) {
     return false;
   } else if (isTextNode(innerNode)) {
-    return nodeContains(outerNode, innerNode.parentNode);
+    return containsNode(outerNode, innerNode.parentNode);
   } else if (outerNode.contains) {
     return outerNode.contains(innerNode);
   } else if (outerNode.compareDocumentPosition) {
@@ -46,4 +46,4 @@ function nodeContains(outerNode, innerNode) {
   }
 }
 
-module.exports = nodeContains;
+module.exports = containsNode;
