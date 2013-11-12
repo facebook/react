@@ -9,7 +9,8 @@ module.exports = function(grunt){
     } else if (req.query.message.indexOf('not ok') === 0){
       grunt.log.error(req.query.message);
     } else {
-      grunt[req.query.type || 'log'].writeln('[%s][%s]', req.headers['user-agent'], Date.now(), req.query.message);
+      var logFn = req.query.type !== 'log' ? grunt.log[req.query.type] : grunt.log.writeln;
+      logFn('[%s][%s]', req.headers['user-agent'], Date.now(), req.query.message);
     }
     res.end(pxlgif);
   }
