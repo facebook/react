@@ -3,7 +3,7 @@ id: dom-event-listeners
 title: DOM Event Listeners in a Component
 layout: cookbook
 permalink: dom-event-listeners.html
-prev: props-in-getInitialSate-as-anti-pattern.html
+prev: props-in-getInitialState-as-anti-pattern.html
 next: initial-ajax.html
 ---
 
