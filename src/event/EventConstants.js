@@ -32,6 +32,7 @@ var topLevelTypes = keyMirror({
   topCompositionEnd: null,
   topCompositionStart: null,
   topCompositionUpdate: null,
+  topContextMenu: null,
   topCopy: null,
   topCut: null,
   topDoubleClick: null,

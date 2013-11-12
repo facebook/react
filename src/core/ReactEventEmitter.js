@@ -241,6 +241,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     trapBubbledEvent(topLevelTypes.topMouseOut, 'mouseout', mountAt);
     trapBubbledEvent(topLevelTypes.topClick, 'click', mountAt);
     trapBubbledEvent(topLevelTypes.topDoubleClick, 'dblclick', mountAt);
+    trapBubbledEvent(topLevelTypes.topContextMenu, 'contextmenu', mountAt);
     if (touchNotMouse) {
       trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
       trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
