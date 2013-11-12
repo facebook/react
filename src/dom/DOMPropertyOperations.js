@@ -74,7 +74,10 @@ var DOMPropertyOperations = {
    */
   createMarkupForProperty: function(name, value) {
     if (DOMProperty.isStandardName[name]) {
-      if (value == null || DOMProperty.hasBooleanValue[name] && !value) {
+      if (value == null ||
+          DOMProperty.hasBooleanValue[name] && !value ||
+          DOMProperty.hasPositiveNumericValue[name] &&
+            (isNaN(+value) || +value < 1)) {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName[name];
@@ -104,20 +107,40 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod[name];
       if (mutationMethod) {
         mutationMethod(node, value);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        if (DOMProperty.hasBooleanValue[name] && !value) {
-          node.removeAttribute(DOMProperty.getAttributeName[name]);
-        } else {
-          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
-        }
       } else {
-        var propName = DOMProperty.getPropertyName[name];
-        if (!DOMProperty.hasSideEffects[name] || node[propName] !== value) {
-          node[propName] = value;
+        if (value == null ||
+            DOMProperty.hasBooleanValue[name] && !value ||
+            DOMProperty.hasPositiveNumericValue[name] &&
+              (isNaN(+value) || +value < 1)) {
+          if (DOMProperty.mustUseAttribute[name]) {
+            node.removeAttribute(DOMProperty.getAttributeName[name]);
+          } else {
+            var propName = DOMProperty.getPropertyName[name];
+            value = DOMProperty.getDefaultValueForProperty(
+              node.nodeName,
+              name
+            );
+            if (!DOMProperty.hasSideEffects[name] ||
+                node[propName] !== value) {
+              node[propName] = value;
+            }
+          }
+        } else if (DOMProperty.mustUseAttribute[name]) {
+          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
+        } else {
+          var propName = DOMProperty.getPropertyName[name];
+          if (!DOMProperty.hasSideEffects[name] ||
+              node[propName] !== value) {
+            node[propName] = value;
+          }
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
-      node.setAttribute(name, '' + value);
+      if (value == null) {
+        node.removeAttribute(DOMProperty.getAttributeName[name]);
+      } else {
+        node.setAttribute(name, '' + value);
+      }
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }
