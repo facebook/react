@@ -29,9 +29,10 @@ var DOMPropertyInjection = {
    * specifies how the associated DOM property should be accessed or rendered.
    */
   MUST_USE_ATTRIBUTE: 0x1,
-  MUST_USE_PROPERTY:  0x2,
-  HAS_BOOLEAN_VALUE:  0x4,
-  HAS_SIDE_EFFECTS:   0x8,
+  MUST_USE_PROPERTY: 0x2,
+  HAS_SIDE_EFFECTS: 0x4,
+  HAS_BOOLEAN_VALUE: 0x8,
+  HAS_POSITIVE_NUMERIC_VALUE: 0x10,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -105,21 +106,29 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.MUST_USE_ATTRIBUTE;
       DOMProperty.mustUseProperty[propName] =
         propConfig & DOMPropertyInjection.MUST_USE_PROPERTY;
-      DOMProperty.hasBooleanValue[propName] =
-        propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
       DOMProperty.hasSideEffects[propName] =
         propConfig & DOMPropertyInjection.HAS_SIDE_EFFECTS;
-
+      DOMProperty.hasBooleanValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
+      DOMProperty.hasPositiveNumericValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
+      
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
           !DOMProperty.mustUseProperty[propName],
-        'DOMProperty: Cannot use require using both attribute and property: %s',
+        'DOMProperty: Cannot require using both attribute and property: %s',
         propName
       );
       invariant(
         DOMProperty.mustUseProperty[propName] ||
           !DOMProperty.hasSideEffects[propName],
         'DOMProperty: Properties that have side effects must use property: %s',
+        propName
+      );
+      invariant(
+        !DOMProperty.hasBooleanValue[propName] ||
+          !DOMProperty.hasPositiveNumericValue[propName],
+        'DOMProperty: Cannot have both boolean and positive numeric value: %s',
         propName
       );
     }
@@ -190,19 +199,26 @@ var DOMProperty = {
   mustUseProperty: {},
 
   /**
-   * Whether the property should be removed when set to a falsey value.
-   * @type {Object}
-   */
-  hasBooleanValue: {},
-
-  /**
    * Whether or not setting a value causes side effects such as triggering
    * resources to be loaded or text selection changes. We must ensure that
    * the value is only set if it has changed.
    * @type {Object}
    */
   hasSideEffects: {},
+  
+  /**
+   * Whether the property should be removed when set to a falsey value.
+   * @type {Object}
+   */
+  hasBooleanValue: {},
 
+  /**
+   * Whether the property must be positive numeric or parse as a positive
+   * numeric and should be removed when set to a falsey value.
+   * @type {Object}
+   */
+  hasPositiveNumericValue: {},
+  
   /**
    * All of the isCustomAttribute() functions that have been injected.
    */
