@@ -10,6 +10,7 @@ var rootIDs = [
 var getDebugConfig = function() {
   return {
     "debug": true,
+    "jsxConfig": grunt.config.data.pkg.jsxConfig,
     "constants": {
       "__VERSION__": grunt.config.data.pkg.version,
       "__DEV__": true
@@ -33,6 +34,7 @@ var test = {
     return {
       "debug": true,
       "mocking": true,
+      "jsxConfig": grunt.config.data.pkg.jsxConfig,
       "constants": {
         "__VERSION__": grunt.config.data.pkg.version,
         "__DEV__": true
@@ -49,6 +51,7 @@ var release = {
   getConfig: function() {
     return {
       "debug": false,
+      "jsxConfig": grunt.config.data.pkg.jsxConfig,
       "constants": {
         "__VERSION__": grunt.config.data.pkg.version,
         "__DEV__": false
