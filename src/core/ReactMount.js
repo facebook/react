@@ -22,9 +22,9 @@ var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var $ = require('$');
+var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
-var nodeContains = require('nodeContains');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
@@ -142,7 +142,7 @@ function isValid(node, id) {
     );
 
     var container = ReactMount.findReactContainerForID(id);
-    if (container && nodeContains(container, node)) {
+    if (container && containsNode(container, node)) {
       return true;
     }
   }

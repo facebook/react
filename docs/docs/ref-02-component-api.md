@@ -60,7 +60,7 @@ var Avatar = React.createClass({
   }
 });
 
-// <AvatarImage userId={17} width={200} height={200} />
+// <Avatar userId={17} width={200} height={200} />
 ```
 
 Properties that are specified directly on the target component instance (such as `src` and `userId` in the above example) will not be overwritten by `transferPropsTo`.

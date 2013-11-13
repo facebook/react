@@ -37,8 +37,8 @@
   },
   "dependencies": {
     "commoner": "~0.8.7",
-    "esprima-fb": "~1001.1001.2000-dev-harmony-fb",
-    "jstransform": "~1.0.1"
+    "esprima-fb": "~2001.1001.0-dev-harmony-fb",
+    "jstransform": "~2.0.1"
   },
   "devDependencies": {
     "browserify": "~2.34.1",
@@ -49,7 +49,7 @@
     "grunt-contrib-jshint": "~0.6.0",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
-    "recast": "~0.4.16",
+    "recast": "~0.4.24",
     "semver": "~2.1.0",
     "uglify-js": "~2.4.0",
     "grunt-contrib-clean": "~0.5.0",
