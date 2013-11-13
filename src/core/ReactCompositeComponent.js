@@ -794,7 +794,7 @@ var ReactCompositeComponentMixin = {
       var prevComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
       if (shouldUpdateReactComponent(prevComponent, nextComponent)) {
-        prevComponent.receiveProps(nextComponent.props, transaction);
+        prevComponent.receiveComponent(nextComponent, transaction);
       } else {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
