@@ -30,12 +30,17 @@ function transform(ast, constants) {
 
   return types.traverse(ast, function(node, traverse) {
     if (namedTypes.Identifier.check(node)) {
+      // If the identifier is the property of a member expression
+      // (e.g. object.property), then it definitely is not a constant
+      // expression that we want to replace.
       if (namedTypes.MemberExpression.check(this.parent.node) &&
           this.name === 'property' &&
           !this.parent.node.computed) {
         return false;
       }
 
+      // There could in principle be a constant called "hasOwnProperty",
+      // so be careful always to use Object.prototype.hasOwnProperty.
       if (hasOwn.call(constants, node.name)) {
         this.replace(builders.literal(constants[node.name]));
         return false;
@@ -45,6 +50,8 @@ function transform(ast, constants) {
       if (!constants.__DEV__) {
         if (namedTypes.Identifier.check(node.callee) &&
             node.callee.name === 'invariant') {
+          // Truncate the arguments of invariant(condition, ...)
+          // statements to just the condition.
           node.arguments.length = 1;
         }
       }
@@ -52,12 +59,21 @@ function transform(ast, constants) {
     } else if (namedTypes.IfStatement.check(node) &&
                namedTypes.Literal.check(node.test)) {
       if (node.test.value) {
-        node.alternate = null;
+        // If the alternate (then) branch is dead code, remove it.
+        this.get("alternate").replace();
+
+        // This is what happens when you replace a node with nothing and
+        // it can't be removed from a list of statements.
+        assert.strictEqual(node.alternate, null);
+
       } else if (node.alternate) {
+        // Replace the whole if-statement with just the alternate clause.
         this.replace(node.alternate);
         return false;
+
       } else {
-        this.replace(); // Remove the if-statement.
+        // Remove the entire if-statement.
+        this.replace();
         return false;
       }
     }
