@@ -22,6 +22,18 @@ next: examples.html
 
 var ReactTransitionGroup = React.addons.TransitionGroup;
 
+var TodoItem = React.createClass({
+  render: function () {
+   return this.transferPropsTo(<div>{this.props.item}</div>));
+  },
+  componentDidEnter: function() {
+    console.log('I did enter');
+  }
+  componentWillLeave: function() {
+    console.log('I will leave');
+  }
+})
+
 var TodoList = React.createClass({
   getInitialState: function() {
     return {items: ['hello', 'world', 'click', 'me']};
@@ -38,15 +50,11 @@ var TodoList = React.createClass({
   },
   render: function() {
     var items = this.state.items.map(function(item, i) {
-      return (
-        <div key={i} onClick={this.handleRemove.bind(this, i)}>
-          {item}
-        </div>
-      );
+      return <TodoItem item={item} key={i} onClick={this.handleRemove.bind(this, i)} />
     }.bind(this));
     return (
       <div>
-        <div><button onClick={this.handleAdd} /></div>
+        <div><button onClick={this.handleAdd}>Add</button></div>
         <ReactTransitionGroup transitionName="example">
           {items}
         </ReactTransitionGroup>
@@ -101,6 +109,10 @@ By default `ReactTransitionGroup` renders as a `span`. You can change this behav
 ```
 
 `component` does not need to be a DOM component. It can be any component you want; even one you've written yourself!
+
+### LifeCycle hooks
+
+Components inserted into a `ReactTransitionGroup` receive two new lifecycle hooks: `componentDidEnter` and  `componentWillLeave` called respectively just after the entrance animation ends and just before the leave animation starts.
 
 ## ReactLink
 
