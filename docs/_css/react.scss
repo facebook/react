@@ -388,6 +388,8 @@ section.black content {
  */
 
 .blogContent {
+  @include clearfix;
+
   padding-top: 20px;
 
   blockquote {
