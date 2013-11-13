@@ -179,9 +179,13 @@ ReactDOMComponent.Mixin = {
     return '';
   },
 
-  receiveProps: function(nextProps, transaction) {
-    assertValidProps(nextProps);
-    ReactComponent.Mixin.receiveProps.call(this, nextProps, transaction);
+  receiveComponent: function(nextComponent, transaction) {
+    assertValidProps(nextComponent.props);
+    ReactComponent.Mixin.receiveComponent.call(
+      this,
+      nextComponent,
+      transaction
+    );
   },
 
   /**

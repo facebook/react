@@ -41,11 +41,11 @@ describe('ReactDOMComponent', function() {
     it("should handle className", function() {
       var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
 
-      stub.receiveProps({ className: 'foo' }, transaction);
+      stub.receiveComponent({props: { className: 'foo' }}, transaction);
       expect(stub.getDOMNode().className).toEqual('foo');
-      stub.receiveProps({ className: 'bar' }, transaction);
+      stub.receiveComponent({props: { className: 'bar' }}, transaction);
       expect(stub.getDOMNode().className).toEqual('bar');
-      stub.receiveProps({ className: null }, transaction);
+      stub.receiveComponent({props: { className: null }}, transaction);
       expect(stub.getDOMNode().className).toEqual('');
     });
 
@@ -55,14 +55,14 @@ describe('ReactDOMComponent', function() {
 
       // set initial style
       var setup = { display: 'block', left: '1', top: 2, fontFamily: 'Arial' };
-      stub.receiveProps({ style: setup }, transaction);
+      stub.receiveComponent({props: { style: setup }}, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
       var reset = { display: '', left: null, top: false, fontFamily: true };
-      stub.receiveProps({ style: reset }, transaction);
+      stub.receiveComponent({props: { style: reset }}, transaction);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
       expect(stubStyle.top).toEqual('');
@@ -79,21 +79,21 @@ describe('ReactDOMComponent', function() {
 
       styles.display = 'block';
 
-      stub.receiveProps({ style: styles }, transaction);
+      stub.receiveComponent({props: { style: styles }}, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.opacity).toEqual('0');
 
       styles.fontFamily = 'Helvetica';
 
-      stub.receiveProps({ style: styles }, transaction);
+      stub.receiveComponent({props: { style: styles }}, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.opacity).toEqual('0');
 
       styles.opacity = 0.5;
 
-      stub.receiveProps({ style: styles }, transaction);
+      stub.receiveComponent({props: { style: styles }}, transaction);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.opacity).toEqual('0.5');
@@ -107,7 +107,7 @@ describe('ReactDOMComponent', function() {
 
       styles = {display: 'block'};
 
-      stub.receiveProps({ style: styles }, transaction);
+      stub.receiveComponent({props: { style: styles }}, transaction);
       expect(stubStyle.display).toEqual('block');
     });
 
@@ -115,7 +115,7 @@ describe('ReactDOMComponent', function() {
       var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
 
       expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
-      stub.receiveProps({}, transaction);
+      stub.receiveComponent({props: {}}, transaction);
       expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
     });
 
@@ -123,7 +123,7 @@ describe('ReactDOMComponent', function() {
       var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
 
       expect(stub.getDOMNode().className).toEqual('monkey');
-      stub.receiveProps({}, transaction);
+      stub.receiveComponent({props: {}}, transaction);
       expect(stub.getDOMNode().className).toEqual('');
     });
 
@@ -134,7 +134,7 @@ describe('ReactDOMComponent', function() {
       var stubStyle = stub.getDOMNode().style;
 
       styles = {color: 'green'};
-      stub.receiveProps({ style: styles }, transaction);
+      stub.receiveComponent({props: { style: styles }}, transaction);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('green');
     });
@@ -145,7 +145,7 @@ describe('ReactDOMComponent', function() {
 
       var stubStyle = stub.getDOMNode().style;
 
-      stub.receiveProps({}, transaction);
+      stub.receiveComponent({props: {}}, transaction);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('');
     });
@@ -156,7 +156,7 @@ describe('ReactDOMComponent', function() {
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual(':)');
-      stub.receiveProps({}, transaction);
+      stub.receiveComponent({props: {}}, transaction);
       expect(stub.getDOMNode().innerHTML).toEqual('');
     });
 
@@ -166,8 +166,8 @@ describe('ReactDOMComponent', function() {
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual('hello');
-      stub.receiveProps(
-        {dangerouslySetInnerHTML: {__html: 'goodbye'}},
+      stub.receiveComponent(
+        {props: {dangerouslySetInnerHTML: {__html: 'goodbye'}}},
         transaction
       );
       expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
@@ -179,7 +179,7 @@ describe('ReactDOMComponent', function() {
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
-      stub.receiveProps({children: 'adieu'}, transaction);
+      stub.receiveComponent({props: {children: 'adieu'}}, transaction);
       expect(stub.getDOMNode().innerHTML).toEqual('adieu');
     });
 
@@ -198,10 +198,10 @@ describe('ReactDOMComponent', function() {
         })
       });
 
-      stub.receiveProps({value: ''}, transaction);
+      stub.receiveComponent({props: {value: ''}}, transaction);
       expect(nodeValueSetter.mock.calls.length).toBe(0);
 
-      stub.receiveProps({}, transaction);
+      stub.receiveComponent({props: {}}, transaction);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
   });
