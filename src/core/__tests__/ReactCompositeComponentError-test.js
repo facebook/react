@@ -21,15 +21,12 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var ReactErrorUtils;
+var ReactErrorUtils = require('ReactErrorUtils');
 
 describe('ReactCompositeComponent-error', function() {
 
-  beforeEach(function() {
-    ReactErrorUtils = require('ReactErrorUtils');
-  });
-
   it('should be passed the component and method name', function() {
+    spyOn(ReactErrorUtils, 'guard');
     var Component = React.createClass({
       someHandler: function() {},
       render: function() {
@@ -37,10 +34,10 @@ describe('ReactCompositeComponent-error', function() {
       }
     });
 
-   var instance = <Component />;
-   ReactTestUtils.renderIntoDocument(instance);
-   expect(ReactErrorUtils.guard.mock.calls[0][1])
-     .toEqual('Component.someHandler');
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(ReactErrorUtils.guard.mostRecentCall.args[1])
+      .toEqual('Component.someHandler');
   });
 
 });

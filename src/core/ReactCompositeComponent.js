@@ -877,10 +877,10 @@ var ReactCompositeComponentMixin = {
         continue;
       }
       var method = this.__reactAutoBindMap[autoBindKey];
-      this[autoBindKey] = ReactErrorUtils.guard(
-        this._bindAutoBindMethod(method),
+      this[autoBindKey] = this._bindAutoBindMethod(ReactErrorUtils.guard(
+        method,
         this.constructor.displayName + '.' + autoBindKey
-      );
+      ));
     }
   },
 
