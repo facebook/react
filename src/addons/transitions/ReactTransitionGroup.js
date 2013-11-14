@@ -28,6 +28,7 @@ var ReactTransitionGroup = React.createClass({
     transitionName: React.PropTypes.string.isRequired,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
+    transitionOnMount: React.PropTypes.bool,
     onTransition: React.PropTypes.func,
     component: React.PropTypes.func
   },
@@ -36,6 +37,7 @@ var ReactTransitionGroup = React.createClass({
     return {
       transitionEnter: true,
       transitionLeave: true,
+      transitionOnMount: false,
       component: React.DOM.span
     };
   },
@@ -62,6 +64,7 @@ var ReactTransitionGroup = React.createClass({
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
 
+    var allowEnterTransitions = this.props.transitionOnMount || this.isMounted();
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
       this._transitionGroupCurrentKeys,
       ReactTransitionKeySet.getKeySet(sourceChildren)
@@ -76,7 +79,7 @@ var ReactTransitionGroup = React.createClass({
       if (childMapping[key] || this.props.transitionLeave) {
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
-          enter: this.props.transitionEnter && this.isMounted(),
+          enter: allowEnterTransitions && this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
       }
@@ -101,6 +104,7 @@ var ReactTransitionGroup = React.createClass({
           transitionName: null,
           transitionEnter: null,
           transitionLeave: null,
+          transitionOnMount: null,
           component: null
         },
         this.renderTransitionableChildren(this.props.children)

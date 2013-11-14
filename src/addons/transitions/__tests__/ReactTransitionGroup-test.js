@@ -36,7 +36,7 @@ describe('ReactTransitionGroup', function() {
     container = document.createElement('div');
   });
 
-  it('should not run the entry transition for initial children', function() {
+  it('should not transition in initial children by default', function() {
     var container;
     var a;
 
@@ -51,16 +51,28 @@ describe('ReactTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[0].className).toBe('');
   });
 
-  it('should warn after time with no transitionend', function() {
-    var a = React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        {[]}
+  it('should transition in initial children when specified', function() {
+    var container;
+    var a;
+
+    container = document.createElement('div');
+    a = React.renderComponent(
+      <ReactTransitionGroup transitionName="yolo" transitionOnMount={true}>
+        <span key="one" id="one" />
       </ReactTransitionGroup>,
       container
     );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    expect(a.getDOMNode().childNodes[0].className.trim()).toBe('yolo-enter');
+  });
 
+  it('should warn after time with no transitionend', function() {
+    var container;
+    var a;
+
+    container = document.createElement('div');
     a = React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
+      <ReactTransitionGroup transitionName="yolo" transitionOnMount={true}>
         <span key="one" id="one" />
       </ReactTransitionGroup>,
       container
