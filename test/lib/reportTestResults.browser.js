@@ -1,30 +1,32 @@
-console._error = console.error;
-console._warn = console.warn;
-console._log = console.log;
-
-console.log = window.print = function(message){
-  console._log(message);
-  testImageURL('/print?type=log&message=' + encodeURIComponent(message) + '&_=' + Date.now().toString(36));
+if (typeof console == 'undefined') console = {
+  log: function(){},
+  warn: function(){},
+  error: function(){}
 };
 
+console._log = console.log;
+console.log = function(message){
+  console._log(message);
+  postDataToURL({type:'log', message:message}, '/reportTestResults');
+}
+console._error = console.error;
 console.error = function(message){
   console._error(message);
-  testImageURL('/print?type=error&message=' + encodeURIComponent(message) + '&_=' + Date.now().toString(36));
-};
-
-console.warn = function(message){
-  console._warn(message);
-  testImageURL('/print?type=warn&message=' + encodeURIComponent(message) + '&_=' + Date.now().toString(36));
-};
+  postDataToURL({type:'error', message:message}, '/reportTestResults');
+}
 
 ;(function(env){
-
   env.addReporter(new jasmine.JSReporter());
-  env.addReporter(new TAPReporter(window.print));
+  if (location.search.substring(1).indexOf('debug') != -1){
+    env.addReporter(new TAPReporter(console.log.bind(console)));
+  }
 
   function report(){
-    if (typeof jasmine.getJSReport != 'function') return setTimeout(report, 100);
-    postDataToURL(JSON.stringify(jasmine.getJSReport()), '/reportTestResults', function(error, event){
+    if (typeof jasmine.getJSReport != 'function') {
+      console.log("typeof jasmine.getJSReport != 'function'");
+      return setTimeout(report, 100);
+    }
+    postDataToURL(jasmine.getJSReport(), '/reportTestResults', function(error, results){
       if (error) return console.error(error);
     });
   }
@@ -35,42 +37,31 @@ console.warn = function(message){
     report();
   };
 
-  function postDataToURL(data, url, callback){
-    var id = '$' + (+new Date()).toString(36);
-    
-    var postReportingTarget = document.createElement('iframe');
-    postReportingTarget.id = postReportingTarget.name = 'postReportingTarget' + id;
-
-    var postReportingForm = document.createElement('form');
-    postReportingForm.method = 'POST';
-    postReportingForm.action = url;
-    postReportingForm.target = postReportingTarget.name;
-  
-    var postReportingData = document.createElement('input');
-    postReportingData.type = 'hidden';
-    postReportingData.name = 'data';
-    postReportingData.value = data || '{"error":"unknown error in postReportingData"}';
-  
-    postReportingForm.appendChild(postReportingData);
-    postReportingForm.appendChild(postReportingTarget);
-    postReportingForm.style.cssText = "visibility:hidden; position:absolute; bottom:100%; right:100%";
-    
-    function done(error, event){
-      postReportingForm.parentNode.removeChild(postReportingForm);
-      callback(error, event);
-    }
-    
-    postReportingTarget.onerror = function(error){
-      done(error);
-    }
-    postReportingTarget.onload = function(event){
-      done(null, event);
-    }
-    document.body.appendChild(postReportingForm);
-    setTimeout(function(){
-      postReportingForm.submit();
-    },0);
-  }
-
 }(window.jasmine.getEnv()));
 
+function createXMLHttpRequest(){
+  try{return new XMLHttpRequest();}
+  catch(e){}
+  try {return new ActiveXObject("Msxml2.XMLHTTP");}
+  catch (e) {}
+  try {return new ActiveXObject("Microsoft.XMLHTTP");}
+  catch (e) {}
+}
+function postDataToURL(data, url, callback) {
+  if (!callback) callback = postDataToURL.defaultCallback;
+  var request = createXMLHttpRequest();
+  if (!request) return callback(Error('XMLHttpRequest is unsupported'));
+  postDataToURL.running = (postDataToURL.running||0) + 1;
+  request.onreadystatechange = function(){
+    if (request.readyState != 4) return;
+    request.onreadystatechange = null;
+    postDataToURL.running = (postDataToURL.running||0) - 1;
+    callback(request.status == 200 ? null : request.status, request.responseText);
+  };
+  request.open('POST', url);
+  request.setRequestHeader('Content-Type', 'application/json');
+  request.send(JSON.stringify(data));
+}
+postDataToURL.defaultCallback = function(error){
+  // console.log('postDataToURL.defaultCallback', arguments)
+}
