@@ -83,4 +83,48 @@ describe('ReactTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[0].id).toBe('two');
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
   });
+
+  it('should call componentDidEnter/componentWillLeave', function() {
+     var count = 0;
+     var runNextTick = mocks.getMockFunction();
+     var container = document.createElement('div');
+     var Item = React.createClass({
+        render: function () {
+          return (<div />);
+        },
+        componentDidEnter: function() {
+          count++;
+        },
+        componentWillLeave: function() {
+          count++;
+        }
+      });
+
+    var ReactTransitionEvents = require('ReactTransitionEvents');
+    var toRestore = ReactTransitionEvents.addEndEventListener;
+
+    ReactTransitionEvents.addEndEventListener = function(node, eventListener) {
+      eventListener();
+      return;
+    };
+
+    React.renderComponent(
+      <ReactTransitionGroup transitionName="myanim">
+        <Item  />
+      </ReactTransitionGroup>,
+      container
+    );
+
+    expect(count).toBe(1);
+
+    React.renderComponent(
+      <ReactTransitionGroup transitionName="myanim">
+      {[]}
+      </ReactTransitionGroup>,
+      container
+    );
+
+    expect(count).toBe(2);
+    ReactTransitionEvents.addEndEventListener = toRestore;
+  });
 });

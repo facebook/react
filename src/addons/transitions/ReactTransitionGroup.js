@@ -53,17 +53,32 @@ var ReactTransitionGroupMixin = {
     );
 
     for (var key in currentKeys) {
+      var child = childMapping[key];
+
+      var onBeforeLeaving;
+      var onDoneEntering;
+
+      if (child && child.componentDidEnter) {
+        onDoneEntering = child.componentDidEnter.bind(child);
+      }
+
+      if (child && child.componentWillLeave) {
+        onBeforeLeaving = child.componentWillLeave.bind(child);
+      }
+
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild
       // knows how to hold onto its child if it changes to undefined. Here, we
       // may look up an old key in the new children, and it may switch to
       // undefined. React's reconciler will keep the ReactTransitionableChild
       // instance alive such that we can animate it.
-      if (childMapping[key] || transitionConfig.leave) {
+      if (child || transitionConfig.leave) {
         children[key] = ReactTransitionableChild({
           name: transitionConfig.name,
           enter: transitionConfig.enter,
-          onDoneLeaving: this._handleDoneLeaving.bind(this, key)
-        }, childMapping[key]);
+          onDoneLeaving: this._handleDoneLeaving.bind(this, key),
+          onDoneEntering: onDoneEntering,
+          onBeforeLeaving: onBeforeLeaving
+        }, child);
       }
     }
 
