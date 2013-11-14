@@ -11,7 +11,7 @@ class Redcarpet::Render::HTML
       .gsub(/\s+/, "-")
       .gsub(/[^A-Za-z0-9\-_.]/, "")
 
-    return "<h#{level} id=\"#{clean_title}\" class=\"anchor\"><a href=\"##{clean_title}\">#{title}</a></h#{level}>"
+    return "<h#{level}><a class=\"anchor\" name=\"#{clean_title}\"></a>#{title} <a class=\"hash-link\" href=\"##{clean_title}\">#</a></h#{level}>"
   end
 end
 

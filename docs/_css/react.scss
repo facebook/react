@@ -77,20 +77,18 @@ li {
 // Make header navigation linkable and on the screen. Used in documentation and
 // blog posts.
 h1, h2, h3, h4, h5, h6 {
-  &.anchor {
-    position: relative;
-    top: -$navHeight;
-    z-index: -1;
-    > a {
-      color: $darkTextColor;
-      position: relative;
-      top: $navHeight;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
+  .anchor {
+    margin-top: -$navHeight;
+    position: absolute;
   }
+
+  &:hover .hash-link {
+    display: inline;
+  }
+}
+.hash-link {
+  color: $mediumTextColor;
+  display: none;
 }
 
 // Main Nav
