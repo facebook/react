@@ -285,12 +285,12 @@
 <span class="p">}</span>
 
 <span class="nc">.example-enter.example-enter-active</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">99</span><span class="p">;</span>
+  <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>You&#39;ll notice that when you try to remove an item <code>ReactTransitionGroup</code> keeps it in the DOM. If you&#39;re using an unminified build of React you&#39;ll see a warning that React was expecting an animation or transition to occur. That&#39;s because <code>ReactTransitionGroup</code> keeps your DOM elements on the page until the animation completes. Try adding this CSS:</p>
 <div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">99</span><span class="p">;</span>
+  <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
   <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
 <span class="p">}</span>
 
