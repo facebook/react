@@ -36,8 +36,30 @@ describe('ReactTransitionGroup', function() {
     container = document.createElement('div');
   });
 
+  it('should not run the entry transition for initial children', function() {
+    var container;
+    var a;
+
+    container = document.createElement('div');
+    a = React.renderComponent(
+      <ReactTransitionGroup transitionName="yolo">
+        <span key="one" id="one" />
+      </ReactTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    expect(a.getDOMNode().childNodes[0].className).toBe('');
+  });
+
   it('should warn after time with no transitionend', function() {
     var a = React.renderComponent(
+      <ReactTransitionGroup transitionName="yolo">
+        {[]}
+      </ReactTransitionGroup>,
+      container
+    );
+
+    a = React.renderComponent(
       <ReactTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactTransitionGroup>,

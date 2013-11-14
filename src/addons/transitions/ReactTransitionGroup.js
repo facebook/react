@@ -76,7 +76,7 @@ var ReactTransitionGroup = React.createClass({
       if (childMapping[key] || this.props.transitionLeave) {
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
-          enter: this.props.transitionEnter,
+          enter: this.props.transitionEnter && this.isMounted(),
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
       }
