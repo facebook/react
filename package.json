@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "browserify": "~2.34.1",
-    "populist": "~0.1.4",
+    "populist": "~0.1.5",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
@@ -60,7 +60,8 @@
     "jasmine-tapreporter": "~0.2.2",
     "grunt-contrib-connect": "~0.5.0",
     "es5-shim": "~2.1.0",
-    "wd": "~0.2.2"
+    "wd": "~0.2.2",
+    "sauce-tunnel": "~1.1.0"
   },
   "engines": {
     "node": ">=0.10.0"

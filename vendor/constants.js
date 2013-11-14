@@ -15,6 +15,7 @@
  */
 'use strict';
 
+var assert = require('assert');
 var recast = require('recast');
 var types = recast.types;
 var namedTypes = types.namedTypes;

@@ -17,6 +17,8 @@
  * @typechecks static-only
  */
 
+"use strict";
+
 /**
  * Given a `prevComponent` and `nextComponent`, determines if `prevComponent`
  * should be updated as opposed to being destroyed or replaced.

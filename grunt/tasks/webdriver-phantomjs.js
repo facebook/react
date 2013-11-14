@@ -1,3 +1,5 @@
+'use strict';
+
 var grunt = require('grunt');
 
 module.exports = function(){
@@ -21,7 +23,9 @@ module.exports = function(){
   });
   child.on('exit', function(code) {
     grunt.verbose.writeln('phantomjs END');
-    if (code) grunt.fatal('phantomjs FAIL');
+    if (code) {
+      grunt.fatal('phantomjs FAIL');
+    }
   });
 
   function verboseWrite(chunk) {
@@ -34,4 +38,4 @@ module.exports = function(){
   }
   child.stdout.on('data', verboseWrite);
   child.stderr.on('data', verboseWrite);
-}
+};
