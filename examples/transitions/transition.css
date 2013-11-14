@@ -20,7 +20,7 @@
 .example-enter.example-enter-active,
 .example-leave {
   margin-left: 0;
-  opacity: 0.99;
+  opacity: 1;
 }
 
 .animateExample {
