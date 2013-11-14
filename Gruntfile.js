@@ -21,7 +21,7 @@ module.exports = function(grunt) {
     connect: require('./grunt/config/server')(grunt),
     "webdriver-jasmine": require('./grunt/config/webdriver-jasmine.js'),
     npm: require('./grunt/config/npm'),
-    clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js'],
+    clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js', '.module-cache'],
     jshint: require('./grunt/config/jshint'),
     compare_size: require('./grunt/config/compare_size')
   });
