@@ -1,16 +1,21 @@
+'use strict';
+
 var grunt = require('grunt');
 var SauceTunnel = require('sauce-tunnel');
 
-module.exports = function(){
+module.exports = function() {
   var task = this;
-  var config = task.data;
   var shouldStayAliveForever = task.flags.keepalive;
 
   var SAUCE_ACCESS_KEY = process.env.SAUCE_ACCESS_KEY;
-  if (!SAUCE_ACCESS_KEY) grunt.fatal('Requires the environment variable SAUCE_ACCESS_KEY to be set');
+  if (!SAUCE_ACCESS_KEY) {
+    grunt.fatal('Requires the environment variable SAUCE_ACCESS_KEY to be set');
+  }
 
   var SAUCE_USERNAME = process.env.SAUCE_USERNAME;
-  if (!SAUCE_USERNAME) grunt.fatal('Requires the environment variable SAUCE_USERNAME to be set');
+  if (!SAUCE_USERNAME) {
+    grunt.fatal('Requires the environment variable SAUCE_USERNAME to be set');
+  }
 
   var IDENTIFIER = process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel';
 
@@ -28,7 +33,7 @@ module.exports = function(){
   stunnel.on('verbose:writeln', grunt.verbose.writeln.bind(grunt.verbose));
 
   stunnel.openTunnel(function(isOpen){
-    if (shouldStayAliveForever && isOpen){
+    if (shouldStayAliveForever && isOpen) {
       grunt.verbose.writeln('Keeping the sauce-tunnel open forever because you used the keepalive flag `' + task.nameArgs + '`');
       return;
     }

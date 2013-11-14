@@ -1,3 +1,7 @@
+/* jshint evil: true */
+
+'use strict';
+
 var grunt = require("grunt");
 var wd = require('wd');
 
@@ -6,10 +10,14 @@ module.exports = function(){
   var taskSucceeded = this.async();
 
   var desiredCapabilities = {};
-  if (config.desiredCapabilities) Object.keys(config.desiredCapabilities).forEach(function(key){
-    if (config.desiredCapabilities[key] === undefined) return;
-    desiredCapabilities[key] = config.desiredCapabilities[key];
-  });
+  if (config.desiredCapabilities) {
+    Object.keys(config.desiredCapabilities).forEach(function(key) {
+      if (config.desiredCapabilities[key] === undefined) {
+        return;
+      }
+      desiredCapabilities[key] = config.desiredCapabilities[key];
+    });
+  }
   grunt.verbose.writeln("desiredCapabilities", JSON.stringify(desiredCapabilities));
 
   var browser = wd.promiseChainRemote(config.webdriver.remote);
@@ -37,26 +45,31 @@ module.exports = function(){
       return browser
         .eval('document.documentElement.innerText || document.documentElement.textContent')
         .then(grunt.verbose.writeln.bind(grunt.verbose))
-        .then(function(){throw error})
+        .then(function(){ throw error; })
       ;
     })
     .finally(function(){
-      if (grunt.option('webdriver-keep-open')) return;
+      if (grunt.option('webdriver-keep-open')) {
+        return;
+      }
       grunt.verbose.writeln('Closing the browser window. To keep it open, pass the --webdriver-keep-open flag to grunt.');
       return browser.quit();
     })
     .done(
-      function(){
-        if (config.onComplete) config.onComplete(results);
+      function() {
+        if (config.onComplete) {
+          config.onComplete(results);
+        }
         taskSucceeded(true);
       },
-      function(error){
-        if (config.onError) config.onError(error);
+      function(error) {
+        if (config.onError) {
+          config.onError(error);
+        }
         taskSucceeded(false);
       }
-    )
-  ;
-}
+    );
+};
 
 function getJSReport(browser){
   return browser
@@ -66,6 +79,5 @@ function getJSReport(browser){
     })
     .waitForCondition("typeof window.jasmine.getJSReport != 'undefined'", 10e3)
     .waitForCondition("window.postDataToURL.running <= 0", 30e3)
-    .eval("jasmine.getJSReport().passed")
-  ;
+    .eval("jasmine.getJSReport().passed");
 }

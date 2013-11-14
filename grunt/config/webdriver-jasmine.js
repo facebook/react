@@ -1,3 +1,5 @@
+'use strict';
+
 var grunt = require('grunt');
 
 
@@ -14,9 +16,11 @@ exports.local = {
   onError: function(error){
     grunt.fatal(error);
   }
-}
+};
 
-if (grunt.option('debug')) exports.local.url += '?debug=' + grunt.option('debug');
+if (grunt.option('debug')) {
+  exports.local.url += '?debug=' + grunt.option('debug');
+}
 
 
 exports.saucelabs = {
@@ -43,7 +47,7 @@ exports.saucelabs = {
   },
   onComplete: exports.local.onComplete,
   onError: exports.local.onError
-}
+};
 
 /* https://saucelabs.com/docs/platforms */
 exports.saucelabs_ios =
@@ -74,7 +78,7 @@ exports.saucelabs_ie10 = sauceItUp({ browserName: 'internet explorer', version: 
 exports.saucelabs_ie11 = sauceItUp({ browserName: 'internet explorer', version: 11, platform:'Windows 8.1' });
 
 
-function sauceItUp(desiredCapabilities){
+function sauceItUp(desiredCapabilities) {
   desiredCapabilities["build"] = exports.saucelabs.desiredCapabilities["build"];
   desiredCapabilities["tunnel-identifier"] = exports.saucelabs.desiredCapabilities["tunnel-identifier"];
   return {
