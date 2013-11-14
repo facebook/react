@@ -44,13 +44,9 @@ var ReactTransitionGroupMixin = {
       'getTransitionConfig() method.'
     );
 
-    // don't animate undefined children
-    if (typeof sourceChildren === 'undefined') {
-      return;
-    }
-
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
+
     var transitionConfig = this.getTransitionConfig();
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
       this._transitionGroupCurrentKeys,
