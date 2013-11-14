@@ -57,7 +57,8 @@ function visitReactDisplayName(traverse, object, path, state) {
  * Will only run on @jsx files for now.
  */
 visitReactDisplayName.test = function(object, path, state) {
-  return object.type === Syntax.VariableDeclarator && !!getDocblock(state).jsx;
+  var jsx = getDocblock(state).jsx;
+  return object.type === Syntax.VariableDeclarator && (jsx === undefined || (jsx && jsx.length && jsx === "React.DOM"));
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;
