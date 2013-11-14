@@ -7,7 +7,7 @@ prev: dom-event-listeners.html
 next: false-in-jsx.html
 ---
 
-Fetch data in `componentDidMount`. When they arrive, put them inside your state then render them.
+Fetch data in `componentDidMount`. When the response arrives, store the data in state, triggering a render to update your UI.
 
 This example fetches the desired Github user's lastest gist:
 

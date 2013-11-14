@@ -27,7 +27,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
+React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 Better:
@@ -41,7 +41,7 @@ var MessageBox = React.createClass({
   }
 });
 
-React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
+React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
 ```
 
 For more complex logic:
@@ -58,5 +58,5 @@ var MessageBox = React.createClass({
   }
 });
 
-React.renderComponent(<MessageBox name="Zuck"/>, mountNode);
+React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
 ```

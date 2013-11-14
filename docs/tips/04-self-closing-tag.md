@@ -7,7 +7,7 @@ prev: if-else-in-JSX.html
 next: maximum-number-of-jsx-root-nodes.html
 ---
 
-In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't.
+In JSX, `<MyComponent />` alone is valid while `<MyComponent>` isn't. All tags must be closed, either with the self-closing format or with a corresponding closing tag (`</MyComponent>`).
 
 > Note:
 >
