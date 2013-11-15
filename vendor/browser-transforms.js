@@ -43,7 +43,7 @@ var run = exports.run = function(code) {
   var functionBody = jsx ? transform(code).code : code;
   var scriptEl = document.createElement('script');
 
-  scriptEl.innerHTML = functionBody;
+  scriptEl.text = functionBody;
   headEl.appendChild(scriptEl);
 };
 
@@ -75,11 +75,15 @@ var load = exports.load = function(url, callback) {
 
 runScripts = function() {
   var scripts = document.getElementsByTagName('script');
-  scripts = Array.prototype.slice.call(scripts);
-  var jsxScripts = scripts.filter(function(script) {
-    return script.type === 'text/jsx';
-  });
-
+  
+  // Array.prototype.slice cannot be used on NodeList on IE8
+  var jsxScripts = [];
+  for (var i = 0; i < scripts.length; i++) {
+    if (scripts.item(i).type === 'text/jsx') {
+      jsxScripts.push(scripts.item(i));
+    }
+  }
+  
   console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
   jsxScripts.forEach(function(script) {

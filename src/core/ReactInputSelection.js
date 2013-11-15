@@ -20,11 +20,11 @@
 
 var ReactDOMSelection = require('ReactDOMSelection');
 
+var containsNode = require('containsNode');
 var getActiveElement = require('getActiveElement');
-var nodeContains = require('nodeContains');
 
 function isInDocument(node) {
-  return nodeContains(document.documentElement, node);
+  return containsNode(document.documentElement, node);
 }
 
 /**

@@ -15,6 +15,7 @@
   "nonstandard": true,
   "onecase": true,
   "regexdash": true,
+  "sub": false,
   "trailing": true,
   "undef": true,
   "unused": "vars",

@@ -1,7 +1,7 @@
 'use strict';
 
 var grunt = require('grunt');
-var fs = require('fs')
+var fs = require('fs');
 
 module.exports = function() {
   var config = this.data;

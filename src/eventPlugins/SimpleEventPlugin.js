@@ -47,6 +47,12 @@ var eventTypes = {
       captured: keyOf({onClickCapture: true})
     }
   },
+  contextMenu: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onContextMenu: true}),
+      captured: keyOf({onContextMenuCapture: true})
+    }
+  },
   copy: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCopy: true}),
@@ -216,6 +222,7 @@ var eventTypes = {
 var topLevelEventsToDispatchConfig = {
   topBlur:        eventTypes.blur,
   topClick:       eventTypes.click,
+  topContextMenu: eventTypes.contextMenu,
   topCopy:        eventTypes.copy,
   topCut:         eventTypes.cut,
   topDoubleClick: eventTypes.doubleClick,
@@ -306,6 +313,7 @@ var SimpleEventPlugin = {
           return null;
         }
         /* falls through */
+      case topLevelTypes.topContextMenu:
       case topLevelTypes.topDoubleClick:
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:
