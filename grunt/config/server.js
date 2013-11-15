@@ -4,6 +4,7 @@ module.exports = function(grunt){
   var coverageWriteStream;
 
   grunt.task.registerTask('finalize-coverage-stream', function(){
+    if (!coverageWriteStream) return;
     var done = this.async();
     coverageWriteStream.once('close', done);
     coverageWriteStream.end();
