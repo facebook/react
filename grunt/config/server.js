@@ -4,7 +4,9 @@ module.exports = function(grunt){
   var coverageWriteStream;
 
   grunt.task.registerTask('finalize-coverage-stream', function(){
-    if (!coverageWriteStream) return;
+    if (!coverageWriteStream) {
+      return;
+    }
     var done = this.async();
     coverageWriteStream.once('close', done);
     coverageWriteStream.end();
@@ -12,30 +14,39 @@ module.exports = function(grunt){
   });
 
   function consoleLoggerMiddleware(req, res, next) {
-    if (!(req.method == 'POST'
-      && req._parsedUrl.pathname.replace(/\//g,'') == 'console'
-      && Array.isArray(req.body))
-    ) {
+    if (!(req.method == 'POST' && req._parsedUrl.pathname.replace(/\//g,'') == 'console' && Array.isArray(req.body))) {
       return next();
     }
     res.write('<!doctype html><meta charset=utf-8>');
     res.end('Got it, thanks!');
 
     req.body.forEach(function(log){
-      if (log.message.indexOf('not ok ') === 0) log.type = 'error';
-      else if (log.message.indexOf('ok ') === 0) log.type = 'ok';
-      else if (log.message.indexOf('COVER') === 0) log.type = 'coverage';
-      else if (log.message.indexOf('DONE\t') === 0) log.type = 'coverage done';
-
-      if (log.type == 'error') grunt.log.error(log.message);
-      else if (log.type == 'ok') grunt.log.ok(log.message);
-      else if (log.type == 'log') grunt.log.writeln(log.message);
-      else if (log.type == 'coverage') {
-        if (!coverageWriteStream) coverageWriteStream = require('fs').createWriteStream(__dirname + '/../../coverage.log');
-        coverageWriteStream.write(log.message + '\n');
+      if (log.message.indexOf('not ok ') === 0) {
+        log.type = 'error';
+      } else if (log.message.indexOf('ok ') === 0) {
+        log.type = 'ok';
+      } else if (log.message.indexOf('COVER') === 0) {
+        log.type = 'coverage';
+      } else if (log.message.indexOf('DONE\t') === 0) {
+        log.type = 'coverage done';
       }
-      else if (log.type == 'coverage done') grunt.task.run('finalize-coverage-stream');
-      else grunt.verbose.writeln(log);
+
+      if (log.type == 'error') {
+        grunt.log.error(log.message);
+      } else if (log.type == 'ok') {
+        grunt.log.ok(log.message);
+      } else if (log.type == 'log') {
+        grunt.log.writeln(log.message);
+      } else if (log.type == 'coverage') {
+        if (!coverageWriteStream) {
+          coverageWriteStream = require('fs').createWriteStream(__dirname + '/../../coverage.log');
+        }
+        coverageWriteStream.write(log.message + '\n');
+      } else if (log.type == 'coverage done') {
+        grunt.task.run('finalize-coverage-stream');
+      } else {
+        grunt.verbose.writeln(log);
+      }
     });
   }
 
@@ -85,7 +96,7 @@ module.exports = function(grunt){
             connect.static(options.base),
             connect.directory(options.base)
           ];
-        },
+        }
       }
     }
   };
