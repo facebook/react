@@ -95,10 +95,23 @@ var addonsMin = grunt.util._.merge({}, addons, {
   after: [minify, bannerify]
 });
 
+var withCodeCoverageLogging = {
+  entries: [
+    './build/modules/React.js'
+  ],
+  outfile: './build/react.js',
+  debug: true,
+  standalone: 'React',
+  transforms: [
+    require('coverify')
+  ]
+};
+
 module.exports = {
   basic: basic,
   min: min,
   transformer: transformer,
   addons: addons,
-  addonsMin: addonsMin
+  addonsMin: addonsMin,
+  withCodeCoverageLogging: withCodeCoverageLogging
 };
