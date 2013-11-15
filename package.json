@@ -61,7 +61,8 @@
     "grunt-contrib-connect": "~0.5.0",
     "es5-shim": "~2.1.0",
     "wd": "~0.2.2",
-    "sauce-tunnel": "~1.1.0"
+    "sauce-tunnel": "~1.1.0",
+    "coverify": "~0.1.1"
   },
   "engines": {
     "node": ">=0.10.0"
