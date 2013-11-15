@@ -6,6 +6,9 @@ module.exports = function(grunt) {
     if (!(req.method == 'POST' && req._parsedUrl.pathname.indexOf('/reportTestResults') === 0)) {
       return next();
     }
+    res.write('<!doctype html><meta charset=utf-8>');
+    res.end('Got it, thanks!');
+
     var logType = 'writeln';
     var message = req.body;
 
@@ -23,8 +26,6 @@ module.exports = function(grunt) {
       message = JSON.stringify(message, null, 2);
     }
     grunt.log[logType]('[%s][%s]', req.headers['user-agent'], Date.now(), message);
-    res.write('<!doctype html><meta charset=utf-8>');
-    res.end('Got it, thanks!');
   }
 
   return {
