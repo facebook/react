@@ -80,11 +80,13 @@ h1, h2, h3, h4, h5, h6 {
   &.anchor {
     position: relative;
     top: -$navHeight;
-    z-index: -1;
+    pointer-events: none;
+
     > a {
       color: $darkTextColor;
       position: relative;
       top: $navHeight;
+      pointer-events: auto;
 
       &:hover {
         text-decoration: underline;
