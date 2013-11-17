@@ -260,16 +260,16 @@ var ReactComponent = {
      */
     replaceProps: function(props, callback) {
       invariant(
-        !this._owner,
+        this.isMounted(),
+        'replaceProps(...): Can only update a mounted component.'
+      );
+      invariant(
+        this._mountDepth === 0,
         'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
-        'component with an owner. This is an anti-pattern since props will ' +
+        'component with a parent. This is an anti-pattern since props will ' +
         'get reactively updated when rendered. Instead, change the owner\'s ' +
         '`render` method to pass the correct value as props to the component ' +
         'where it is created.'
-      );
-      invariant(
-        this.isMounted(),
-        'replaceProps(...): Can only update a mounted component.'
       );
       this._pendingProps = props;
       ReactUpdates.enqueueUpdate(this, callback);
