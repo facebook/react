@@ -289,6 +289,18 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   propTypes: function(Constructor, propTypes) {
+    if (__DEV__) {
+      for (var propName in propTypes) {
+        if (propTypes.hasOwnProperty(propName) &&
+            typeof propTypes[propName] !== 'function') {
+          console.warn(
+            (Constructor.displayName || 'ReactCompositeComponent') +
+            '.propTypes: You gave an invalid prop type for "' + propName +
+            '"; check for typos in your specification.'
+          );
+        }
+      }
+    }
     Constructor.propTypes = propTypes;
   }
 };
@@ -678,9 +690,11 @@ var ReactCompositeComponentMixin = {
     if (propTypes) {
       var componentName = this.constructor.displayName;
       for (propName in propTypes) {
-        var checkProp = propTypes[propName];
-        if (checkProp) {
-          checkProp(props, propName, componentName);
+        if (propTypes.hasOwnProperty(propName)) {
+          var checkProp = propTypes[propName];
+          if (checkProp) {
+            checkProp(props, propName, componentName);
+          }
         }
       }
     }
