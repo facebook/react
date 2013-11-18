@@ -20,13 +20,20 @@
 "use strict";
 
 var Props = require('ReactPropTypes');
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 function typeCheck(declaration, value) {
   var props = {};
   if (arguments.length > 1) {
     props.testProp = value;
   }
-  return declaration.bind(null, props, 'testProp', 'testComponent');
+  return declaration.bind(
+    null,
+    props,
+    'testProp',
+    'testComponent',
+    ReactPropTypeLocations.prop
+  );
 }
 
 describe('Primitive Types', function() {

@@ -20,6 +20,7 @@
 
 var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
@@ -53,6 +54,7 @@ var React = {
   unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
   isValidClass: ReactCompositeComponent.isValidClass,
   isValidComponent: ReactComponent.isValidComponent,
+  withContext: ReactContext.withContext,
   __internals: {
     Component: ReactComponent,
     CurrentOwner: ReactCurrentOwner,

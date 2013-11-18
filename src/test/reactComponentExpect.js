@@ -196,6 +196,22 @@ mergeInto(reactComponentExpect.prototype, {
         .toEqual(propNameToExpectedValue[propName]);
     }
     return this;
+  },
+
+  /**
+   * Check a set of props are equal to a set of expected values - only works
+   * with scalars.
+   */
+  scalarContextEqual: function(contextNameToExpectedValue) {
+    expect(this.instance()).toBeTruthy();
+    for (var contextName in contextNameToExpectedValue) {
+      if (!contextNameToExpectedValue.hasOwnProperty(contextName)) {
+        continue;
+      }
+      expect(this.instance().context[contextName])
+        .toEqual(contextNameToExpectedValue[contextName]);
+    }
+    return this;
   }
 });
 

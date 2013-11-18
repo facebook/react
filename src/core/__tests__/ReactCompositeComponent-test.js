@@ -476,4 +476,147 @@ describe('ReactCompositeComponent', function() {
       console.warn = warn;
     }
   });
+
+  it('should pass context', function() {
+    var childInstance = null;
+    var grandchildInstance = null;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'bar',
+          depth: 0
+        };
+      },
+
+      render: function() {
+        childInstance = <Child />;
+        return childInstance;
+      }
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
+
+      childContextTypes: {
+        depth: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return {
+          depth: this.context.depth + 1
+        };
+      },
+
+      render: function() {
+        grandchildInstance = <Grandchild />;
+        return grandchildInstance;
+      }
+    });
+
+    var Grandchild = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Parent />;
+    ReactTestUtils.renderIntoDocument(instance);
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
+    reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
+  });
+
+  it('should check context types', function() {
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrow(
+      'Invariant Violation: Required context `foo` was not specified in ' +
+      '`Component`.'
+    );
+
+    expect(function() {
+      React.withContext({foo: 'bar'}, function() {
+        ReactTestUtils.renderIntoDocument(<Component />);
+      });
+    }).not.toThrow();
+
+    expect(function() {
+      React.withContext({foo: 123}, function() {
+        ReactTestUtils.renderIntoDocument(<Component />);
+      });
+    }).toThrow(
+      'Invariant Violation: Invalid context `foo` of type `number` supplied ' +
+      'to `Component`, expected `string`.'
+    );
+  });
+
+  it('should check child context types', function() {
+    var Component = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string.isRequired,
+        bar: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return this.props.testContext;
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(
+        <Component testContext={{bar: 123}} />
+      );
+    }).toThrow(
+      'Invariant Violation: Required child context `foo` was not specified ' +
+      'in `Component`.'
+    );
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(
+        <Component testContext={{foo: 123}} />
+      );
+    }).toThrow(
+      'Invariant Violation: Invalid child context `foo` of type `number` ' +
+      'supplied to `Component`, expected `string`.'
+    );
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(
+        <Component testContext={{foo: 'foo', bar: 123}} />
+      );
+    }).not.toThrow();
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(
+        <Component testContext={{foo: 'foo'}} />
+      );
+    }).not.toThrow();
+  });
 });

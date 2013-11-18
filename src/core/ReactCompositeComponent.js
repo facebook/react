@@ -19,11 +19,13 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -98,6 +100,21 @@ var ReactCompositeComponentInterface = {
    */
   propTypes: SpecPolicy.DEFINE_MANY_MERGED,
 
+  /**
+   * Definition of context types for this component.
+   *
+   * @type {object}
+   * @optional
+   */
+  contextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+
+  /**
+   * Definition of context types this component sets for its children.
+   *
+   * @type {object}
+   * @optional
+   */
+  childContextTypes: SpecPolicy.DEFINE_MANY_MERGED,
 
 
   // ==== Definition methods ====
@@ -129,6 +146,12 @@ var ReactCompositeComponentInterface = {
    * @optional
    */
   getInitialState: SpecPolicy.DEFINE_MANY_MERGED,
+
+  /**
+   * @return {object}
+   * @optional
+   */
+  getChildContext: SpecPolicy.DEFINE_MANY_MERGED,
 
   /**
    * Uses props from `this.props` and state from `this.state` to render the
@@ -214,7 +237,8 @@ var ReactCompositeComponentInterface = {
 
   /**
    * Invoked when the component is about to update due to a transition from
-   * `this.props` and `this.state` to `nextProps` and `nextState`.
+   * `this.props`, `this.state` and `this.context` to `nextProps`, `nextState`
+   * and `nextContext`.
    *
    * Use this as an opportunity to perform preparation before an update occurs.
    *
@@ -222,6 +246,7 @@ var ReactCompositeComponentInterface = {
    *
    * @param {object} nextProps
    * @param {?object} nextState
+   * @param {?object} nextContext
    * @param {ReactReconcileTransaction} transaction
    * @optional
    */
@@ -235,6 +260,7 @@ var ReactCompositeComponentInterface = {
    *
    * @param {object} prevProps
    * @param {?object} prevState
+   * @param {?object} prevContext
    * @param {DOMElement} rootNode DOM element representing the component.
    * @optional
    */
@@ -287,6 +313,12 @@ var RESERVED_SPEC_KEYS = {
         mixSpecIntoComponent(Constructor, mixins[i]);
       }
     }
+  },
+  childContextTypes: function(Constructor, childContextTypes) {
+    Constructor.childContextTypes = childContextTypes;
+  },
+  contextTypes: function(Constructor, contextTypes) {
+    Constructor.contextTypes = contextTypes;
   },
   propTypes: function(Constructor, propTypes) {
     Constructor.propTypes = propTypes;
@@ -512,8 +544,14 @@ var ReactCompositeComponentMixin = {
   construct: function(initialProps, children) {
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+
     this.state = null;
     this._pendingState = null;
+
+    this.context = this._processContext(ReactContext.current);
+    this._currentContext = ReactContext.current;
+    this._pendingContext = null;
+
     this._compositeLifeCycleState = null;
   },
 
@@ -660,6 +698,64 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
+   * Filters the context object to only contain keys specified in
+   * `contextTypes`, and asserts that they are valid.
+   *
+   * @param {object} context
+   * @return {?object}
+   * @private
+   */
+  _processContext: function(context) {
+    var maskedContext = null;
+    var contextTypes = this.constructor.contextTypes;
+    if (contextTypes) {
+      maskedContext = {};
+      for (var contextName in contextTypes) {
+        maskedContext[contextName] = context[contextName];
+      }
+      this._checkPropTypes(
+        contextTypes,
+        maskedContext,
+        ReactPropTypeLocations.context
+      );
+    }
+    return maskedContext;
+  },
+
+  /**
+   * @param {object} currentContext
+   * @return {object}
+   * @private
+   */
+  _processChildContext: function(currentContext) {
+    var childContext = this.getChildContext && this.getChildContext();
+    var displayName = this.constructor.displayName || 'ReactCompositeComponent';
+    if (childContext) {
+      invariant(
+        typeof this.constructor.childContextTypes === 'object',
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+        'use getChildContext().',
+        displayName
+      );
+      this._checkPropTypes(
+        this.constructor.childContextTypes,
+        childContext,
+        ReactPropTypeLocations.childContext
+      );
+      for (var name in childContext) {
+        invariant(
+          name in this.constructor.childContextTypes,
+          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+          displayName,
+          name
+        );
+      }
+      return merge(currentContext, childContext);
+    }
+    return currentContext;
+  },
+
+  /**
    * Processes props by setting default values for unspecified props and
    * asserting that the props are valid.
    *
@@ -667,21 +763,32 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processProps: function(props) {
-    var propName;
     var defaultProps = this._defaultProps;
-    for (propName in defaultProps) {
+    for (var propName in defaultProps) {
       if (typeof props[propName] === 'undefined') {
         props[propName] = defaultProps[propName];
       }
     }
     var propTypes = this.constructor.propTypes;
     if (propTypes) {
-      var componentName = this.constructor.displayName;
-      for (propName in propTypes) {
-        var checkProp = propTypes[propName];
-        if (checkProp) {
-          checkProp(props, propName, componentName);
-        }
+      this._checkPropTypes(propTypes, props, ReactPropTypeLocations.prop);
+    }
+  },
+
+  /**
+   * Assert that the props are valid
+   *
+   * @param {object} propTypes Map of prop name to a ReactPropType
+   * @param {object} props
+   * @param {string} location e.g. "prop", "context", "child context"
+   * @private
+   */
+  _checkPropTypes: function(propTypes, props, location) {
+    var componentName = this.constructor.displayName;
+    for (var propName in propTypes) {
+      var checkProp = propTypes[propName];
+      if (checkProp) {
+        checkProp(props, propName, componentName, location);
       }
     }
   },
@@ -707,6 +814,7 @@ var ReactCompositeComponentMixin = {
   _performUpdateIfNecessary: function(transaction) {
     if (this._pendingProps == null &&
         this._pendingState == null &&
+        this._pendingContext == null &&
         !this._pendingForceUpdate) {
       return;
     }
@@ -728,17 +836,26 @@ var ReactCompositeComponentMixin = {
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
 
+    var nextContext = this._pendingContext || this._currentContext;
+    this._pendingContext = null;
+
     if (this._pendingForceUpdate ||
         !this.shouldComponentUpdate ||
-        this.shouldComponentUpdate(nextProps, nextState)) {
+        this.shouldComponentUpdate(nextProps, nextState, nextContext)) {
       this._pendingForceUpdate = false;
-      // Will set `this.props` and `this.state`.
-      this._performComponentUpdate(nextProps, nextState, transaction);
+      // Will set `this.props`, `this.state` and `this.context`.
+      this._performComponentUpdate(
+        nextProps,
+        nextState,
+        nextContext,
+        transaction
+      );
     } else {
       // If it's determined that a component should not update, we still want
       // to set props and state.
       this.props = nextProps;
       this.state = nextState;
+      this.context = nextContext;
     }
 
     this._compositeLifeCycleState = null;
@@ -750,28 +867,47 @@ var ReactCompositeComponentMixin = {
    *
    * @param {object} nextProps Next object to set as properties.
    * @param {?object} nextState Next object to set as state.
+   * @param {?object} nextContext Next object to set as context.
    * @param {ReactReconcileTransaction} transaction
    * @private
    */
-  _performComponentUpdate: function(nextProps, nextState, transaction) {
+  _performComponentUpdate: function(
+    nextProps,
+    nextState,
+    nextContext,
+    transaction
+  ) {
     var prevProps = this.props;
     var prevState = this.state;
+    var prevContext = this.context;
 
     if (this.componentWillUpdate) {
-      this.componentWillUpdate(nextProps, nextState);
+      this.componentWillUpdate(nextProps, nextState, nextContext);
     }
 
     this.props = nextProps;
     this.state = nextState;
 
-    this.updateComponent(transaction, prevProps, prevState);
+    this._currentContext = nextContext;
+    this.context = this._processContext(nextContext);
+
+    this.updateComponent(transaction, prevProps, prevState, prevContext);
 
     if (this.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
         this,
-        this.componentDidUpdate.bind(this, prevProps, prevState)
+        this.componentDidUpdate.bind(this, prevProps, prevState, prevContext)
       );
     }
+  },
+
+  receiveComponent: function(nextComponent, transaction) {
+    this._pendingContext = nextComponent._currentContext;
+    ReactComponent.Mixin.receiveComponent.call(
+      this,
+      nextComponent,
+      transaction
+    );
   },
 
   /**
@@ -783,13 +919,14 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @param {object} prevProps
    * @param {?object} prevState
+   * @param {?object} prevContext
    * @internal
    * @overridable
    */
   updateComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'updateComponent',
-    function(transaction, prevProps, prevState) {
+    function(transaction, prevProps, prevState, prevContext) {
       ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
       var prevComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
@@ -851,6 +988,8 @@ var ReactCompositeComponentMixin = {
    */
   _renderValidatedComponent: function() {
     var renderedComponent;
+    var previousContext = ReactContext.current;
+    ReactContext.current = this._processChildContext(this._currentContext);
     ReactCurrentOwner.current = this;
     try {
       renderedComponent = this.render();
@@ -858,6 +997,7 @@ var ReactCompositeComponentMixin = {
       // IE8 requires `catch` in order to use `finally`.
       throw error;
     } finally {
+      ReactContext.current = previousContext;
       ReactCurrentOwner.current = null;
     }
     invariant(
