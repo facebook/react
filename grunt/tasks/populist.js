@@ -34,6 +34,6 @@ module.exports = function() {
   }).then(function(output) {
     grunt.file.write(config.outfile, output);
     theFilesToTestScript.end();
-    done();
+    theFilesToTestScript.once('close', done);
   });
 };
