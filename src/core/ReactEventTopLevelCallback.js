@@ -20,6 +20,7 @@
 "use strict";
 
 var ReactEventEmitter = require('ReactEventEmitter');
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 
 var getEventTarget = require('getEventTarget');
@@ -29,6 +30,24 @@ var getEventTarget = require('getEventTarget');
  * @private
  */
 var _topLevelListenersEnabled = true;
+
+/**
+ * Finds the parent React component of `node`.
+ *
+ * @param {*} node
+ * @return {?DOMEventTarget} Parent container, or `null` if the specified node
+ *                           is not nested.
+ */
+function findParent(node) {
+  // TODO: It may be a good idea to cache this to prevent unnecessary DOM
+  // traversal, but caching is difficult to do correctly without using a
+  // mutation observer to listen for all DOM changes.
+  var nodeID = ReactMount.getID(node);
+  var rootID = ReactInstanceHandles.getReactRootIDFromNodeID(nodeID);
+  var container = ReactMount.findReactContainerForID(rootID);
+  var parent = ReactMount.getFirstReactDOM(container);
+  return parent;
+}
 
 /**
  * Top-level callback creator used to implement event handling using delegation.
@@ -69,13 +88,19 @@ var ReactEventTopLevelCallback = {
       var topLevelTarget = ReactMount.getFirstReactDOM(
         getEventTarget(nativeEvent)
       ) || window;
-      var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
-      ReactEventEmitter.handleTopLevel(
-        topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
-        nativeEvent
-      );
+
+      // Loop through the hierarchy, in case there's any nested components.
+      while (topLevelTarget) {
+        var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
+        ReactEventEmitter.handleTopLevel(
+          topLevelType,
+          topLevelTarget,
+          topLevelTargetID,
+          nativeEvent
+        );
+
+        topLevelTarget = findParent(topLevelTarget);
+      }
     };
   }
 

@@ -363,7 +363,7 @@ var ReactMount = {
 
   /**
    * Registers a container node into which React components will be rendered.
-   * This also creates the "reatRoot" ID that will be assigned to the element
+   * This also creates the "reactRoot" ID that will be assigned to the element
    * rendered within.
    *
    * @param {DOMElement} container DOM element to register as a container.
