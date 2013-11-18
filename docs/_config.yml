@@ -98,3 +98,5 @@ nav_tips:
     title: Load Initial Data via AJAX
   - id: false-in-jsx
     title: False in JSX
+  - id: break-render-into-chunks
+    title: Break Render into Chunks

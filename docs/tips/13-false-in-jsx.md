@@ -4,6 +4,7 @@ title: False in JSX
 layout: tips
 permalink: false-in-jsx.html
 prev: initial-ajax.html
+next: break-render-into-chunks.html
 ---
 
 Here's how `false` renders in different contexts:
