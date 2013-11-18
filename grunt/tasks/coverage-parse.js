@@ -15,14 +15,9 @@ module.exports = function(){
 
     Object.keys(results)
       .sort(function(a, b){
-        if (results[a].length > results[b].length) {
-          return -1;
-        }
-        if (results[a].length < results[b].length) {
-          return 1;
-        }
-        return 0;
+        return results[a].length - results[b].length;
       })
+      .reverse()
       .forEach(function(path){
         if (results[path].length === 0) {
           return;
