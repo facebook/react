@@ -70,7 +70,11 @@ module.exports = function(grunt) {
   grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
   grunt.registerTask('build:min', ['jsx:release', 'version-check', 'browserify:min']);
   grunt.registerTask('build:addons-min', ['jsx:debug', 'browserify:addonsMin']);
-  grunt.registerTask('build:withCodeCoverageLogging', ['jsx:debug', 'version-check', 'browserify:withCodeCoverageLogging']);
+  grunt.registerTask('build:withCodeCoverageLogging', [
+    'jsx:debug',
+    'version-check',
+    'browserify:withCodeCoverageLogging'
+  ]);
   grunt.registerTask('build:test', [
     'jsx:test',
     'version-check',
@@ -86,7 +90,12 @@ module.exports = function(grunt) {
     'webdriver-phantomjs',
     'webdriver-jasmine:local'
   ]);
-  grunt.registerTask('test:coverage', ['build:test', 'build:withCodeCoverageLogging', 'test:webdriver:phantomjs', 'coverage:parse']);
+  grunt.registerTask('test:coverage', [
+    'build:test',
+    'build:withCodeCoverageLogging',
+    'test:webdriver:phantomjs',
+    'coverage:parse'
+  ]);
   grunt.registerTask('test', ['build:test', 'build:basic', 'test:webdriver:phantomjs']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
