@@ -228,4 +228,28 @@ describe('ReactServerRendering', function() {
     ReactTestUtils.Simulate.click(instance.refs.span.getDOMNode());
     expect(numClicks).toEqual(1);
   });
+
+  it('should throw with silly args', function() {
+    expect(
+      ReactServerRendering.renderComponentToString.bind(
+        ReactServerRendering,
+        'not a component',
+        function() {}
+      )
+    ).toThrow(
+      'Invariant Violation: renderComponentToString(): You must pass ' +
+      'a valid ReactComponent.'
+    );
+
+    expect(
+      ReactServerRendering.renderComponentToString.bind(
+        ReactServerRendering,
+        React.DOM.div(),
+        'not a function'
+      )
+    ).toThrow(
+      'Invariant Violation: renderComponentToString(): You must pass ' +
+      'a function as a callback.'
+    );
+  });
 });
