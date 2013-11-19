@@ -20,12 +20,12 @@ sectionid: blog
 
     <div class="pagination">
       {% if paginator.previous_page %}
-        <a href="/react/blog/{{ paginator.previous_page_path }}" class="previous">
+        <a href="/react/{{ paginator.previous_page }}" class="previous">
           &laquo; Previous Page
         </a>
       {% endif %}
       {% if paginator.next_page %}
-        <a href="/react/blog/{{ paginator.next_page_path }}" class="next">
+        <a href="/react{{ paginator.next_page_path }}" class="next">
           Next Page &raquo;
         </a>
       {% endif %}
