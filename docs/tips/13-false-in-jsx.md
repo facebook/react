@@ -4,6 +4,7 @@ title: False in JSX
 layout: tips
 permalink: false-in-jsx.html
 prev: initial-ajax.html
+next: difference-between-setState-and-forceUpdate.html
 ---
 
 Here's how `false` renders in different contexts:
