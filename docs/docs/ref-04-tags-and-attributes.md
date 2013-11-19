@@ -36,8 +36,11 @@ circle g line path polyline rect svg text
 
 ## Supported Attributes
 
-React supports all `data-*` and `aria-*` attributes as well as every attribute
-in the following lists. Note that all attributes are camel-cased and the attributes `class` and `for` are `className` and `htmlFor`, respectively, to match the DOM API specification.
+React supports all `data-*` and `aria-*` attributes as well as every attribute in the following lists.
+
+> Note:
+>
+> All attributes are camel-cased and the attributes `class` and `for` are `className` and `htmlFor`, respectively, to match the DOM API specification.
 
 For a list of events, see [Supported Events](events.html).
 
