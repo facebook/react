@@ -58,6 +58,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2013/11/18/community-roundup-11.html">Community Round-up #11</a></li>
+      
         <li><a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a></li>
       
         <li><a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a></li>
@@ -75,8 +77,6 @@
         <li><a href="/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html">Use React and JSX in Python Applications</a></li>
       
         <li><a href="/react/blog/2013/08/05/community-roundup-6.html">Community Round-up #6</a></li>
-      
-        <li><a href="/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html" class="active">Use React and JSX in Ruby on Rails</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -102,7 +102,7 @@
 <p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
 <div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
 
-<span class="ss">MyApp</span><span class="p">:</span><span class="ss">:Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
+<span class="no">MyApp</span><span class="o">::</span><span class="no">Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
   <span class="n">config</span><span class="o">.</span><span class="n">react</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="ss">:development</span>
   <span class="c1"># use :production in production.rb</span>
 <span class="k">end</span>
