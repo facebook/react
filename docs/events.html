@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -297,7 +319,7 @@
   <div class="inner-content">
     <h1>Event System</h1>
     <div class="subHeader"></div>
-    <h2 id="syntheticevent" class="anchor"><a href="#syntheticevent">SyntheticEvent</a></h2>
+    <h2><a class="anchor" name="syntheticevent"></a>SyntheticEvent <a class="hash-link" href="#syntheticevent">#</a></h2>
 <p>Your event handlers will be passed instances of <code>SyntheticEvent</code>, a cross-browser wrapper around the browser&#39;s native event. It has the same interface as the browser&#39;s native event, including <code>stopPropagation()</code> and <code>preventDefault()</code>, except the events work identically across all browsers.</p>
 
 <p>If you find that you need the underlying browser event for some reason, simply use the <code>nativeEvent</code> attribute to get it. Every <code>SyntheticEvent</code> object has the following attributes:</p>
@@ -313,16 +335,16 @@
 <span class="nx">DOMEventTarget</span> <span class="nx">target</span>
 <span class="nb">Date</span> <span class="nx">timeStamp</span>
 <span class="nb">String</span> <span class="nx">type</span>
-</code></pre></div><h2 id="supported-events" class="anchor"><a href="#supported-events">Supported Events</a></h2>
+</code></pre></div><h2><a class="anchor" name="supported-events"></a>Supported Events <a class="hash-link" href="#supported-events">#</a></h2>
 <p>React normalizes events so that they have consistent properties across
 different browsers.</p>
-<h3 id="clipboard-events" class="anchor"><a href="#clipboard-events">Clipboard Events</a></h3>
+<h3><a class="anchor" name="clipboard-events"></a>Clipboard Events <a class="hash-link" href="#clipboard-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onCopy onCut onPaste
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
-</code></pre></div><h3 id="keyboard-events" class="anchor"><a href="#keyboard-events">Keyboard Events</a></h3>
+</code></pre></div><h3><a class="anchor" name="keyboard-events"></a>Keyboard Events <a class="hash-link" href="#keyboard-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
 </code></pre></div>
@@ -336,18 +358,18 @@ different browsers.</p>
 <span class="kr">boolean</span> <span class="nx">metaKey</span>
 <span class="kr">boolean</span> <span class="nx">repeat</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
-</code></pre></div><h3 id="focus-events" class="anchor"><a href="#focus-events">Focus Events</a></h3>
+</code></pre></div><h3><a class="anchor" name="focus-events"></a>Focus Events <a class="hash-link" href="#focus-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onFocus onBlur
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
-</code></pre></div><h3 id="form-events" class="anchor"><a href="#form-events">Form Events</a></h3>
+</code></pre></div><h3><a class="anchor" name="form-events"></a>Form Events <a class="hash-link" href="#form-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onChange onInput onSubmit
 </code></pre></div>
 <p>For more information about the onChange event, see <a href="forms.html">Forms</a>.</p>
-<h3 id="mouse-events" class="anchor"><a href="#mouse-events">Mouse Events</a></h3>
+<h3><a class="anchor" name="mouse-events"></a>Mouse Events <a class="hash-link" href="#mouse-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onClick onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave
 onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
@@ -367,7 +389,7 @@ onMouseMove onMouseUp
 <span class="nb">Number</span> <span class="nx">screenX</span>
 <span class="nb">Number</span> <span class="nx">screenY</span>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
-</code></pre></div><h3 id="touch-events" class="anchor"><a href="#touch-events">Touch events</a></h3>
+</code></pre></div><h3><a class="anchor" name="touch-events"></a>Touch events <a class="hash-link" href="#touch-events">#</a></h3>
 <p>To enable touch events, call <code>React.initializeTouchEvents(true)</code> before
 rendering any component.</p>
 
@@ -382,14 +404,14 @@ rendering any component.</p>
 <span class="kr">boolean</span> <span class="nx">shiftKey</span>
 <span class="nx">DOMTouchList</span> <span class="nx">targetTouches</span>
 <span class="nx">DOMTouchList</span> <span class="nx">touches</span>
-</code></pre></div><h3 id="ui-events" class="anchor"><a href="#ui-events">UI Events</a></h3>
+</code></pre></div><h3><a class="anchor" name="ui-events"></a>UI Events <a class="hash-link" href="#ui-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onScroll
 </code></pre></div>
 <p>Properties:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nb">Number</span> <span class="nx">detail</span>
 <span class="nx">DOMAbstractView</span> <span class="nx">view</span>
-</code></pre></div><h3 id="wheel-events" class="anchor"><a href="#wheel-events">Wheel Events</a></h3>
+</code></pre></div><h3><a class="anchor" name="wheel-events"></a>Wheel Events <a class="hash-link" href="#wheel-events">#</a></h3>
 <p>Event names:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">onWheel
 </code></pre></div>

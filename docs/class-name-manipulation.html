@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | If-Else in JSX</title>
+  <title>React | Class Name Manipulation</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | If-Else in JSX" />
+  <meta property="og:title" content="React | Class Name Manipulation" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/if-else-in-JSX.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/class-name-manipulation.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -40,7 +40,7 @@
           React
         </a>
         <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
@@ -183,7 +183,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/class-name-manipulation.html">
+                    <a href="/react/docs/class-name-manipulation.html" class="active">
                       Class Name Manipulation
                     </a>
                   </li>
@@ -267,7 +267,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/if-else-in-JSX.html" class="active">If-Else in JSX</a>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
           </li>
         
           <li>
@@ -317,44 +317,51 @@
 
 
   <div class="inner-content">
-    <h1>If-Else in JSX</h1>
+    <h1>Class Name Manipulation</h1>
     <div class="subHeader"></div>
-    <p><code>if-else</code> statements don&#39;t work inside JSX. This is because JSX is just syntactic sugar for function calls and object construction. Take this basic example:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+    <p><code>classSet()</code> is a neat utility for easily manipulating the DOM <code>class</code> string.</p>
 
-<span class="c1">// This JSX:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;msg&quot;</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
-
-<span class="c1">// Is transformed to this JS:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span><span class="s2">&quot;msg&quot;</span><span class="p">},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">),</span> <span class="nx">mountNode</span><span class="p">);</span>
+<p>Here&#39;s a common scenario and its solution without <code>classSet()</code>:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// inside some `&lt;Message /&gt;` React component</span>
+<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">classString</span> <span class="o">=</span> <span class="s1">&#39;message&#39;</span><span class="p">;</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isImportant</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">classString</span> <span class="o">+=</span> <span class="s1">&#39; message-important&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isRead</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">classString</span> <span class="o">+=</span> <span class="s1">&#39; message-read&#39;</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="c1">// &#39;message message-important message-read&#39;</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classString</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>This means that <code>if</code> statements don&#39;t fit in. Take this example:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="c1">// This JSX:</span>
-<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;</span>
-
-<span class="c1">// Is transformed to this JS:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">);</span>
+<p>This can quickly get tedious, as assigning class name strings can be hard to read and error-prone. <code>classSet()</code> solves this problem:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">cx</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">classSet</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">classes</span> <span class="o">=</span> <span class="nx">cx</span><span class="p">({</span>
+    <span class="s1">&#39;message&#39;</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
+    <span class="s1">&#39;message-important&#39;</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isImportant</span><span class="p">,</span>
+    <span class="s1">&#39;message-read&#39;</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">isRead</span>
+  <span class="p">});</span>
+  <span class="c1">// same final string, but much cleaner</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classes</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>That&#39;s not valid JS. You probably want to make use of a ternary expression:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<p>When using <code>classSet()</code>, pass an object with keys of the CSS class names you might or might not need. Truthy values will result in the key being a part of the resulting string.</p>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="nx">condition</span> <span class="o">?</span> <span class="s1">&#39;msg&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
-</code></pre></div>
-<p>Try using it today with the <a href="/react/jsx-compiler.html">JSX compiler</a>.</p>
+<p>No more hacky string concatenations!</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/inline-styles.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/two-way-binding-helpers.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/tips/self-closing-tag.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/examples.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/if-else-in-JSX.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/class-name-manipulation.html"></div>
   </div>
 </section>
 

@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -314,9 +336,9 @@
 <li><strong>Live updates:</strong> as other users comment we&#39;ll pop them into the comment view in real time</li>
 <li><strong>Markdown formatting:</strong> users can use Markdown to format their text</li>
 </ul>
-<h3 id="want-to-skip-all-this-and-just-see-the-source" class="anchor"><a href="#want-to-skip-all-this-and-just-see-the-source">Want to skip all this and just see the source?</a></h3>
+<h3><a class="anchor" name="want-to-skip-all-this-and-just-see-the-source"></a>Want to skip all this and just see the source? <a class="hash-link" href="#want-to-skip-all-this-and-just-see-the-source">#</a></h3>
 <p><a href="https://github.com/petehunt/react-tutorial">It&#39;s all on GitHub.</a></p>
-<h3 id="getting-started" class="anchor"><a href="#getting-started">Getting started</a></h3>
+<h3><a class="anchor" name="getting-started"></a>Getting started <a class="hash-link" href="#getting-started">#</a></h3>
 <p>For this tutorial we&#39;ll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
 <span class="nt">&lt;html&gt;</span>
@@ -337,7 +359,7 @@
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
 <p>For the remainder of this tutorial, we&#39;ll be writing our JavaScript code in this script tag.</p>
-<h3 id="your-first-component" class="anchor"><a href="#your-first-component">Your first component</a></h3>
+<h3><a class="anchor" name="your-first-component"></a>Your first component <a class="hash-link" href="#your-first-component">#</a></h3>
 <p>React is all about modular, composable components. For our comment box example, we&#39;ll have the following component structure:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">- CommentBox
   - CommentList
@@ -359,7 +381,7 @@
   <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h4 id="jsx-syntax" class="anchor"><a href="#jsx-syntax">JSX Syntax</a></h4>
+</code></pre></div><h4><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h4>
 <p>The first thing you&#39;ll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -378,7 +400,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>Its use is optional but we&#39;ve found JSX syntax easier to use than plain JavaScript. Read more on the <a href="jsx-in-depth.html">JSX Syntax article</a>.</p>
-<h4 id="whats-going-on" class="anchor"><a href="#whats-going-on">What&#39;s going on</a></h4>
+<h4><a class="anchor" name="whats-going-on"></a>What&#39;s going on <a class="hash-link" href="#whats-going-on">#</a></h4>
 <p>We pass some methods in a JavaScript object to <code>React.createClass()</code> to create a new React component. The most important of these methods is called <code>render</code> which returns a tree of React components that will eventually render to HTML.</p>
 
 <p>The <code>&lt;div&gt;</code> tags are not actual DOM nodes; they are instantiations of React <code>div</code> components. You can think of these as markers or pieces of data that React knows how to handle. React is <strong>safe</strong>. We are not generating HTML strings so XSS protection is the default.</p>
@@ -386,7 +408,7 @@
 <p>You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React <strong>composable</strong>: a key tenet of maintainable frontends.</p>
 
 <p><code>React.renderComponent()</code> instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.</p>
-<h2 id="composing-components" class="anchor"><a href="#composing-components">Composing components</a></h2>
+<h2><a class="anchor" name="composing-components"></a>Composing components <a class="hash-link" href="#composing-components">#</a></h2>
 <p>Let&#39;s build skeletons for <code>CommentList</code> and <code>CommentForm</code> which will, again, be simple <code>&lt;div&gt;</code>s:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -424,7 +446,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Notice how we&#39;re mixing HTML tags and components we&#39;ve built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to &quot;React.DOM.tagName&quot; expressions and leave everything else alone. This is to prevent the pollution of the global namespace.</p>
-<h3 id="component-properties" class="anchor"><a href="#component-properties">Component Properties</a></h3>
+<h3><a class="anchor" name="component-properties"></a>Component Properties <a class="hash-link" href="#component-properties">#</a></h3>
 <p>Let&#39;s create our third component, <code>Comment</code>. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let&#39;s add some comments to the <code>CommentList</code>:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -439,7 +461,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> component as both XML-like children and attributes. Data passed from parent to child is called <strong>props</strong>, short for properties.</p>
-<h3 id="using-props" class="anchor"><a href="#using-props">Using props</a></h3>
+<h3><a class="anchor" name="using-props"></a>Using props <a class="hash-link" href="#using-props">#</a></h3>
 <p>Let&#39;s create the Comment component. It will read the data passed to it from the CommentList and render some markup:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial5.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -456,7 +478,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as keys on <code>this.props</code> and any nested elements as <code>this.props.children</code>.</p>
-<h3 id="adding-markdown" class="anchor"><a href="#adding-markdown">Adding Markdown</a></h3>
+<h3><a class="anchor" name="adding-markdown"></a>Adding Markdown <a class="hash-link" href="#adding-markdown">#</a></h3>
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
 <p>First, add the third-party <strong>Showdown</strong> library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
@@ -508,7 +530,7 @@
 <p>This is a special API that intentionally makes it difficult to insert raw HTML, but for Showdown we&#39;ll take advantage of this backdoor.</p>
 
 <p><strong>Remember:</strong> by using this feature you&#39;re relying on Showdown to be secure.</p>
-<h3 id="hook-up-the-data-model" class="anchor"><a href="#hook-up-the-data-model">Hook up the data model</a></h3>
+<h3><a class="anchor" name="hook-up-the-data-model"></a>Hook up the data model <a class="hash-link" href="#hook-up-the-data-model">#</a></h3>
 <p>So far we&#39;ve been inserting the comments directly in the source code. Instead, let&#39;s render a blob of JSON data into the comment list. Eventually this will come from the server, but for now, write it in your source:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
 <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">[</span>
@@ -551,7 +573,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>That&#39;s it!</p>
-<h3 id="fetching-from-the-server" class="anchor"><a href="#fetching-from-the-server">Fetching from the server</a></h3>
+<h3><a class="anchor" name="fetching-from-the-server"></a>Fetching from the server <a class="hash-link" href="#fetching-from-the-server">#</a></h3>
 <p>Let&#39;s replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
 <span class="hll"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
@@ -560,7 +582,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>This component is different from the prior components because it will have to re-render itself. The component won&#39;t have any data until the request from the server comes back, at which point the component may need to render some new comments.</p>
-<h3 id="reactive-state" class="anchor"><a href="#reactive-state">Reactive state</a></h3>
+<h3><a class="anchor" name="reactive-state"></a>Reactive state <a class="hash-link" href="#reactive-state">#</a></h3>
 <p>So far, each component has rendered itself once based on its props. <code>props</code> are immutable: they are passed from the parent and are &quot;owned&quot; by the parent. To implement interactions, we introduce mutable <strong>state</strong> to the component. <code>this.state</code> is private to the component and can be changed by calling <code>this.setState()</code>. When the state is updated, the component re-renders itself.</p>
 
 <p><code>render()</code> methods are written declaratively as functions of <code>this.props</code> and <code>this.state</code>. The framework guarantees the UI is always consistent with the inputs.</p>
@@ -583,7 +605,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p><code>getInitialState()</code> executes exactly once during the lifecycle of the component and sets up the initial state of the component.</p>
-<h4 id="updating-state" class="anchor"><a href="#updating-state">Updating state</a></h4>
+<h4><a class="anchor" name="updating-state"></a>Updating state <a class="hash-link" href="#updating-state">#</a></h4>
 <p>When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial13.json</span>
 <span class="p">[</span>
@@ -651,7 +673,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 2 seconds, the changes will show!</p>
-<h3 id="adding-new-comments" class="anchor"><a href="#adding-new-comments">Adding new comments</a></h3>
+<h3><a class="anchor" name="adding-new-comments"></a>Adding new comments <a class="hash-link" href="#adding-new-comments">#</a></h3>
 <p>Now it&#39;s time to build the form. Our <code>CommentForm</code> component should ask the user for their name and comment text and send a request to the server to save the comment.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -694,13 +716,13 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h5 id="events" class="anchor"><a href="#events">Events</a></h5>
+</code></pre></div><h5><a class="anchor" name="events"></a>Events <a class="hash-link" href="#events">#</a></h5>
 <p>React attaches event handlers to components using a camelCase naming convention. We attach an <code>onSubmit</code> handler to the form that clears the form fields when the form is submitted with valid input.</p>
 
 <p>We always return <code>false</code> from the event handler to prevent the browser&#39;s default action of submitting the form. (If you prefer, you can instead take the event as an argument and call <code>preventDefault()</code> on it.)</p>
-<h5 id="refs" class="anchor"><a href="#refs">Refs</a></h5>
+<h5><a class="anchor" name="refs"></a>Refs <a class="hash-link" href="#refs">#</a></h5>
 <p>We use the <code>ref</code> attribute to assign a name to a child component and <code>this.refs</code> to reference the component. We can call <code>getDOMNode()</code> on a component to get the native browser DOM element.</p>
-<h5 id="callbacks-as-props" class="anchor"><a href="#callbacks-as-props">Callbacks as props</a></h5>
+<h5><a class="anchor" name="callbacks-as-props"></a>Callbacks as props <a class="hash-link" href="#callbacks-as-props">#</a></h5>
 <p>When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in <code>CommentBox</code> since <code>CommentBox</code> owns the state that represents the list of comments.</p>
 
 <p>We need to pass data from the child component to its parent. We do this by passing a <code>callback</code> in props from parent to child:</p>
@@ -803,7 +825,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3 id="optimization-optimistic-updates" class="anchor"><a href="#optimization-optimistic-updates">Optimization: optimistic updates</a></h3>
+</code></pre></div><h3><a class="anchor" name="optimization-optimistic-updates"></a>Optimization: optimistic updates <a class="hash-link" href="#optimization-optimistic-updates">#</a></h3>
 <p>Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -847,7 +869,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div><h3 id="congrats" class="anchor"><a href="#congrats">Congrats!</a></h3>
+</code></pre></div><h3><a class="anchor" name="congrats"></a>Congrats! <a class="hash-link" href="#congrats">#</a></h3>
 <p>You have just built a comment box in a few simple steps. Learn more about <a href="why-react.html">why to use React</a>, or dive into the <a href="top-level-api.html">API reference</a> and start hacking! Good luck!</p>
 
 

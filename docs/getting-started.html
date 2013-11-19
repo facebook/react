@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -297,14 +319,14 @@
   <div class="inner-content">
     <h1>Getting Started</h1>
     <div class="subHeader"></div>
-    <h2 id="jsfiddle" class="anchor"><a href="#jsfiddle">JSFiddle</a></h2>
+    <h2><a class="anchor" name="jsfiddle"></a>JSFiddle <a class="hash-link" href="#jsfiddle">#</a></h2>
 <p>The easiest way to start hacking on React is using the following JSFiddle Hello Worlds</p>
 
 <ul>
 <li><strong><a href="http://jsfiddle.net/vjeux/kb3gN/">React JSFiddle</a></strong></li>
 <li><a href="http://jsfiddle.net/vjeux/VkebS/">React JSFiddle without JSX</a></li>
 </ul>
-<h2 id="starter-kit" class="anchor"><a href="#starter-kit">Starter Kit</a></h2>
+<h2><a class="anchor" name="starter-kit"></a>Starter Kit <a class="hash-link" href="#starter-kit">#</a></h2>
 <p>Download the starter kit to get started.</p>
 
 <div class="buttons-unit downloads">
@@ -333,7 +355,7 @@
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
 <p>The XML syntax inside of JavaScript is called JSX; check out the <a href="jsx-in-depth.html">JSX syntax</a> to learn more about it. In order to translate it to vanilla JavaScript we use <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> and include <code>JSXTransformer.js</code> to actually perform the transformation in the browser.</p>
-<h3 id="separate-file" class="anchor"><a href="#separate-file">Separate File</a></h3>
+<h3><a class="anchor" name="separate-file"></a>Separate File <a class="hash-link" href="#separate-file">#</a></h3>
 <p>Your React JSX file can live in a separate file. Create the following <code>src/helloworld.js</code>.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
@@ -343,7 +365,7 @@
 </code></pre></div>
 <p>Then reference it from <code>helloworld.html</code>:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span> <span class="na">src=</span><span class="s">&quot;src/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div><h3 id="offline-transform" class="anchor"><a href="#offline-transform">Offline Transform</a></h3>
+</code></pre></div><h3><a class="anchor" name="offline-transform"></a>Offline Transform <a class="hash-link" href="#offline-transform">#</a></h3>
 <p>First install the command-line tools (requires <a href="http://npmjs.org/">npm</a>):</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">npm install -g react-tools
 </code></pre></div>
@@ -376,9 +398,9 @@
 <span class="hll">    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;build/helloworld.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span>  <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><h2 id="want-commonjs" class="anchor"><a href="#want-commonjs">Want CommonJS?</a></h2>
+</code></pre></div><h2><a class="anchor" name="want-commonjs"></a>Want CommonJS? <a class="hash-link" href="#want-commonjs">#</a></h2>
 <p>If you want to use React within a module system, <a href="http://github.com/facebook/react">fork our repo</a>, <code>npm install</code> and run <code>grunt</code>. A nice set of CommonJS modules will be generated. Our <code>jsx</code> build tool can be integrated into most packaging systems (not just CommonJS) quite easily.</p>
-<h2 id="next-steps" class="anchor"><a href="#next-steps">Next Steps</a></h2>
+<h2><a class="anchor" name="next-steps"></a>Next Steps <a class="hash-link" href="#next-steps">#</a></h2>
 <p>Check out <a href="tutorial.html">the tutorial</a> and the other examples in the <code>/examples</code> directory to learn more. Good luck, and welcome!</p>
 
 

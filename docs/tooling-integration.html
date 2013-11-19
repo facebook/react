@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -298,11 +320,11 @@
     <h1>Tooling Integration</h1>
     <div class="subHeader"></div>
     <p>Every project uses a different system for building and deploying JavaScript. We&#39;ve tried to make React as environment-agnostic as possible.</p>
-<h2 id="react" class="anchor"><a href="#react">React</a></h2><h3 id="cdn-hosted-react" class="anchor"><a href="#cdn-hosted-react">CDN-hosted React</a></h3>
+<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdn-hosted-react"></a>CDN-hosted React <a class="hash-link" href="#cdn-hosted-react">#</a></h3>
 <p>We provide CDN-hosted versions of React <a href="/react/downloads.html">on our download page</a>. These prebuilt files use the UMD module format. Dropping them in with a simple <code>&lt;script&gt;</code> tag will inject a <code>React</code> global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.</p>
-<h3 id="using-master" class="anchor"><a href="#using-master">Using master</a></h3>
+<h3><a class="anchor" name="using-master"></a>Using master <a class="hash-link" href="#using-master">#</a></h3>
 <p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
-<h2 id="jsx" class="anchor"><a href="#jsx">JSX</a></h2><h3 id="in-browser-jsx-transform" class="anchor"><a href="#in-browser-jsx-transform">In-browser JSX Transform</a></h3>
+<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
 <p>If you like using JSX, we provide an in-browser JSX transformer for development <a href="/react/downloads.html">on our download page</a>. Simply include a <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> tag to engage the JSX transformer. Be sure to include the <code>/** @jsx React.DOM */</code> comment as well, otherwise the transformer will not run the transforms.</p>
 
 <blockquote>
@@ -310,9 +332,9 @@
 
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
-<h3 id="productionizing-precompiled-jsx" class="anchor"><a href="#productionizing-precompiled-jsx">Productionizing: Precompiled JSX</a></h3>
+<h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
 <p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>. Run <code>jsx --help</code> for more information on how to use this tool.</p>
-<h3 id="helpful-open-source-projects" class="anchor"><a href="#helpful-open-source-projects">Helpful Open-Source Projects</a></h3>
+<h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
 <p>The open-source community has built tools that integrate JSX with several build systems.</p>
 
 <ul>
@@ -322,7 +344,7 @@
 <li><a href="https://github.com/facebook/react-python">pyReact</a> - use JSX with <a href="http://www.python.org/">Python</a></li>
 <li><a href="https://github.com/facebook/react-rails">react-rails</a> - use JSX with <a href="http://rubyonrails.org/">Ruby on Rails</a></li>
 </ul>
-<h3 id="syntax-highlighting-amp-linting" class="anchor"><a href="#syntax-highlighting-amp-linting">Syntax Highlighting &amp; Linting</a></h3>
+<h3><a class="anchor" name="syntax-highlighting-amp-linting"></a>Syntax Highlighting &amp; Linting <a class="hash-link" href="#syntax-highlighting-amp-linting">#</a></h3>
 <ul>
 <li>Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
 
@@ -333,7 +355,7 @@ that support <code>*.tmLanguage</code>.</li>
 <li>Linting provides accurate line numbers after compiling without sourcemaps.</li>
 <li>Elements use standard scoping so linters can find usage of out-of-scope components.</li>
 </ul>
-<h2 id="react-page" class="anchor"><a href="#react-page">React Page</a></h2>
+<h2><a class="anchor" name="react-page"></a>React Page <a class="hash-link" href="#react-page">#</a></h2>
 <p>To get started on a new project, you can use <a href="https://github.com/facebook/react-page/">react-page</a>, a complete React project creator. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
 
 

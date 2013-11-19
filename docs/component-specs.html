@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -297,44 +319,44 @@
   <div class="inner-content">
     <h1>Component Specs and Lifecycle</h1>
     <div class="subHeader"></div>
-    <h2 id="component-specifications" class="anchor"><a href="#component-specifications">Component Specifications</a></h2>
+    <h2><a class="anchor" name="component-specifications"></a>Component Specifications <a class="hash-link" href="#component-specifications">#</a></h2>
 <p>When creating a component class by invoking <code>React.createClass()</code>, you should provide a specification object that contains a <code>render</code> method and can optionally contain other lifecycle methods described here.</p>
-<h3 id="render" class="anchor"><a href="#render">render</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">()</span>
+<h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
 
 <p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child component. This child component can be either a native DOM component (such as <code>&lt;div&gt;</code>) or another composite component that you&#39;ve defined yourself.</p>
 
 <p>The <code>render()</code> function should be <em>pure</em>, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using <code>setTimeout</code>). If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes server rendering more practical and makes components easier to think about.</p>
-<h3 id="getinitialstate" class="anchor"><a href="#getinitialstate">getInitialState</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
+<h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once before the component is mounted. The return value will be used as the initial value of <code>this.state</code>.</p>
-<h3 id="getdefaultprops" class="anchor"><a href="#getdefaultprops">getDefaultProps</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
+<h3><a class="anchor" name="getdefaultprops"></a>getDefaultProps <a class="hash-link" href="#getdefaultprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getDefaultProps</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once when the component is mounted. Values in the mapping will be set on <code>this.props</code> if that prop is not specified by the parent component (i.e. using an <code>in</code> check).</p>
 
 <p>This method is invoked before <code>getInitialState</code> and therefore cannot rely on <code>this.state</code> or use <code>this.setState</code>.</p>
-<h3 id="proptypes" class="anchor"><a href="#proptypes">propTypes</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">propTypes</span>
+<h3><a class="anchor" name="proptypes"></a>propTypes <a class="hash-link" href="#proptypes">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">propTypes</span>
 </code></pre></div>
 <p>The <code>propTypes</code> object allows you to validate props being passed to your components. For more information about <code>propTypes</code>, see <a href="reusable-components.html">Reusable Components</a>.</p>
 
 <!-- TODO: Document propTypes here directly. -->
-<h3 id="mixins" class="anchor"><a href="#mixins">mixins</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">mixins</span>
+<h3><a class="anchor" name="mixins"></a>mixins <a class="hash-link" href="#mixins">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">array</span> <span class="nx">mixins</span>
 </code></pre></div>
 <p>The <code>mixins</code> array allows you to use mixins to share behavior among multiple components. For more information about mixins, see <a href="reusable-components.html">Reusable Components</a>.</p>
 
 <!-- TODO: Document mixins here directly. -->
-<h2 id="lifecycle-methods" class="anchor"><a href="#lifecycle-methods">Lifecycle Methods</a></h2>
+<h2><a class="anchor" name="lifecycle-methods"></a>Lifecycle Methods <a class="hash-link" href="#lifecycle-methods">#</a></h2>
 <p>Various methods are executed at specific points in a component&#39;s lifecycle.</p>
-<h3 id="mounting-componentwillmount" class="anchor"><a href="#mounting-componentwillmount">Mounting: componentWillMount</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
+<h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked immediately before rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
-<h3 id="mounting-componentdidmount" class="anchor"><a href="#mounting-componentdidmount">Mounting: componentDidMount</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
+<h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via the <code>rootNode</code> argument or by calling <code>this.getDOMNode()</code>.</p>
 
 <p>If you want to integrate with other JavaScript frameworks, set timers using <code>setTimeout</code> or <code>setInterval</code>, or send AJAX requests, perform those operations in this method.</p>
-<h3 id="updating-componentwillreceiveprops" class="anchor"><a href="#updating-componentwillreceiveprops">Updating: componentWillReceiveProps</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked when a component is receiving new props. This method is not called for the initial render.</p>
 
@@ -350,7 +372,7 @@
 
 <p>There is no analogous method <code>componentWillReceiveState</code>. An incoming prop transition may cause a state change, but the opposite is not true. If you need to perform operations in response to a state change, use <code>componentWillUpdate</code>.</p>
 </blockquote>
-<h3 id="updating-shouldcomponentupdate" class="anchor"><a href="#updating-shouldcomponentupdate">Updating: shouldComponentUpdate</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-shouldcomponentupdate"></a>Updating: shouldComponentUpdate <a class="hash-link" href="#updating-shouldcomponentupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">shouldComponentUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked before rendering when new props or state are being received. This method is not called for the initial render or when <code>forceUpdate</code> is used.</p>
 
@@ -365,7 +387,7 @@ transition to the new props and state will not require a component update.</p>
 <p>By default, <code>shouldComponentUpdate</code> always returns true to prevent subtle bugs when <code>state</code> is mutated in place, but if you are careful to always treat <code>state</code> as immutable and to read only from <code>props</code> and <code>state</code> in <code>render()</code> then you can override <code>shouldComponentUpdate</code> with an implementation that compares the old props and state to their replacements.</p>
 
 <p>If performance is a bottleneck, especially with dozens or hundreds of components, use <code>shouldComponentUpdate</code> to speed up your app.</p>
-<h3 id="updating-componentwillupdate" class="anchor"><a href="#updating-componentwillupdate">Updating: componentWillUpdate</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentwillupdate"></a>Updating: componentWillUpdate <a class="hash-link" href="#updating-componentwillupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">nextState</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately before rendering when new props or state are being received. This method is not called for the initial render.</p>
 
@@ -376,12 +398,12 @@ transition to the new props and state will not require a component update.</p>
 
 <p>You <em>cannot</em> use <code>this.setState()</code> in this method. If you need to update state in response to a prop change, use <code>componentWillReceiveProps</code> instead.</p>
 </blockquote>
-<h3 id="updating-componentdidupdate" class="anchor"><a href="#updating-componentdidupdate">Updating: componentDidUpdate</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after updating occurs. This method is not called for the initial render.</p>
 
 <p>Use this as an opportunity to operate on the DOM when the component has been updated.</p>
-<h3 id="unmounting-componentwillunmount" class="anchor"><a href="#unmounting-componentwillunmount">Unmounting: componentWillUnmount</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
+<h3><a class="anchor" name="unmounting-componentwillunmount"></a>Unmounting: componentWillUnmount <a class="hash-link" href="#unmounting-componentwillunmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked immediately before a component is unmounted from the DOM.</p>
 

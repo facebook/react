@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html" class="active">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -297,167 +319,15 @@
   <div class="inner-content">
     <h1>Add-ons</h1>
     <div class="subHeader"></div>
-    <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library.</p>
-<h2 id="css-animation-and-transitions" class="anchor"><a href="#css-animation-and-transitions">CSS Animation and Transitions</a></h2>
-<p><code>ReactTransitions</code> is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. <code>ReactTransitions</code> is inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
-<h3 id="getting-started" class="anchor"><a href="#getting-started">Getting Started</a></h3>
-<p><code>ReactTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+    <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library:</p>
 
-<span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TransitionGroup</span><span class="p">;</span>
+<ul>
+<li><code>ReactTransitions</code>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
+<li><code>ReactLink</code>, to simplify the coordination between user&#39;s form input data and and the component&#39;s state.</li>
+<li><code>classSet</code>, for manipulating the DOM <code>class</code> string a bit more cleanly.</li>
+</ul>
 
-<span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">items</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="s1">&#39;world&#39;</span><span class="p">,</span> <span class="s1">&#39;click&#39;</span><span class="p">,</span> <span class="s1">&#39;me&#39;</span><span class="p">]};</span>
-  <span class="p">},</span>
-  <span class="nx">handleAdd</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">concat</span><span class="p">([</span><span class="nx">prompt</span><span class="p">(</span><span class="s1">&#39;Enter some text&#39;</span><span class="p">)]);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">handleRemove</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">newItems</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">;</span>
-    <span class="nx">newItems</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">newItems</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">(</span>
-<span class="hll">        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
-</span><span class="hll">          <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="err">/div&gt;</span>
-</span>      <span class="p">);</span>
-    <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span> <span class="o">/&gt;&lt;</span><span class="err">/div&gt;</span>
-        <span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
-          <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-        <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>In this component, when a new item is added <code>ReactTransitionGroup</code> it will get the <code>example-enter</code> CSS class and the <code>example-enter-active</code> CSS class added in the next tick. This is a convention based on the <code>transitionName</code> prop.</p>
-
-<p>You can use these classes to trigger a CSS animation or transition. For example, try adding this CSS and adding a new list item:</p>
-<div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.example-enter</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="nc">.example-enter.example-enter-active</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>You&#39;ll notice that when you try to remove an item <code>ReactTransitionGroup</code> keeps it in the DOM. If you&#39;re using an unminified build of React you&#39;ll see a warning that React was expecting an animation or transition to occur. That&#39;s because <code>ReactTransitionGroup</code> keeps your DOM elements on the page until the animation completes. Try adding this CSS:</p>
-<div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
-  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
-<span class="p">}</span>
-
-<span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
-  <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div><h3 id="disabling-animations" class="anchor"><a href="#disabling-animations">Disabling Animations</a></h3>
-<p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactTransitionGroup</code> to disable these animations.</p>
-<h3 id="rendering-a-different-component" class="anchor"><a href="#rendering-a-different-component">Rendering a Different Component</a></h3>
-<p>By default <code>ReactTransitionGroup</code> renders as a <code>span</code>. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span>
-  <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
-<span class="hll">  <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span><span class="o">&gt;</span>
-</span>  <span class="p">...</span>
-<span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
-</code></pre></div>
-<p><code>component</code> does not need to be a DOM component. It can be any component you want; even one you&#39;ve written yourself!</p>
-<h2 id="reactlink" class="anchor"><a href="#reactlink">ReactLink</a></h2>
-<p><code>ReactLink</code> is an easy way to express two-way binding with React.</p>
-
-<p>In React, data flows one way: from owner to child. This is because data only flows one direction in <a href="http://en.wikipedia.org/wiki/Von_Neumann_architecture">the Von Neumann model of computing</a>. You can think of it as &quot;one-way data binding.&quot;</p>
-
-<p>However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you&#39;ll often want to update some React <code>state</code> when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.</p>
-
-<p>In React, you would implement this by listening to a &quot;change&quot; event, read from your data source (usually the DOM) and call <code>setState()</code> on one of your components. &quot;Closing the data flow loop&quot; explicitly leads to more understandable and easier-to-maintain programs. See <a href="./forms.html">our forms documentation</a> for more information.</p>
-
-<p>Two-way binding -- implicitly enforcing that some value in the DOM is always consistent with some React <code>state</code> -- is concise and supports a wide variety of applications. We&#39;ve provided <code>ReactLink</code>: syntactic sugar for setting up the common data flow loop pattern described above, or &quot;linking&quot; some data source to React <code>state</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>ReactLink is just a thin wrapper and convention around the <code>onChange</code>/<code>setState()</code> pattern. It doesn&#39;t fundamentally change how data flows in your React application.</p>
-</blockquote>
-<h3 id="reactlink-before-and-after" class="anchor"><a href="#reactlink-before-and-after">ReactLink: Before and After</a></h3>
-<p>Here&#39;s a simple form example without using <code>ReactLink</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">NoLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>This works really well and it&#39;s very clear how data is flowing, however with a lot of form fields it could get a bit verbose. Let&#39;s use <code>ReactLink</code> to save us some typing:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">WithLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="hll">  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
-</span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
-</span>  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p><code>LinkedStateMixin</code> adds a method ot your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
-
-<p><code>ReactLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
-<h3 id="under-the-hood" class="anchor"><a href="#under-the-hood">Under the Hood</a></h3>
-<p>There are two sides to <code>ReactLink</code>: the place where you create the <code>ReactLink</code> instance and the place where you use it. To prove how simple <code>ReactLink</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
-<h4 id="reactlink-without-linkedstatemixin" class="anchor"><a href="#reactlink-without-linkedstatemixin">ReactLink Without LinkedStateMixin</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">WithoutMixin</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-<span class="hll">  <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">newValue</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">value</span><span class="o">:</span> <span class="nx">newValue</span><span class="p">});</span>
-</span><span class="hll">  <span class="p">},</span>
-</span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="p">{</span>
-</span><span class="hll">      <span class="nx">value</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">,</span>
-</span><span class="hll">      <span class="nx">requestChange</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span>
-</span><span class="hll">    <span class="p">};</span>
-</span>    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">valueLink</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>As you can see, <code>ReactLink</code> objects are very simple objects that just have a <code>value</code> and <code>requestChange</code> prop. And <code>LinkedStateMixin</code> is similarly simple: it just populates those fields with a value from <code>this.state</code> and a callback that calls <code>this.setState()</code>.</p>
-<h4 id="reactlink-without-valuelink" class="anchor"><a href="#reactlink-without-valuelink">ReactLink Without valueLink</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">WithoutLink</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">LinkedStateMixin</span><span class="p">],</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span><span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;Hello!&#39;</span><span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">valueLink</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">linkState</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">handleChange</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">valueLink</span><span class="p">.</span><span class="nx">requestChange</span><span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-    <span class="p">};</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="nx">valueLink</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">handleChange</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>The <code>valueLink</code> prop is also quite simple. It simply handles the <code>onChange</code> event and calls <code>this.props.valueLink.requestChange()</code> and also uses <code>this.props.valueLink.value</code> instead of <code>this.props.value</code>. That&#39;s it!</p>
+<p>To get the add-ons, use <code>react-with-addons.js</code> (and its minified counterpart) rather than the common <code>react.js</code>.</p>
 
 
     <div class="docs-prevnext">
@@ -465,7 +335,7 @@
         <a class="docs-prev" href="/react/docs/tooling-integration.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/examples.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/animation.html">Next &rarr;</a>
       
     </div>
 

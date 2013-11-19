@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -304,12 +326,12 @@
 
 <p>For DOM differences, such as the inline <code>style</code> attribute, check <a href="dom-differences.html">here</a>.</p>
 </blockquote>
-<h2 id="whitespace-removal" class="anchor"><a href="#whitespace-removal">Whitespace Removal</a></h2>
+<h2><a class="anchor" name="whitespace-removal"></a>Whitespace Removal <a class="hash-link" href="#whitespace-removal">#</a></h2>
 <p>JSX doesn&#39;t follow the same whitespace elimination rules as HTML. JSX removes all whitespace between two curly braces expressions. If you want to have whitespace, simply add <code>{&#39; &#39;}</code>.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span> <span class="p">{</span><span class="s1">&#39; &#39;</span><span class="p">}</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">surname</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
 <p>Follow <a href="https://github.com/facebook/react/issues/65">Issue #65</a> for discussion on this behavior.</p>
-<h2 id="html-entities" class="anchor"><a href="#html-entities">HTML Entities</a></h2>
+<h2><a class="anchor" name="html-entities"></a>HTML Entities <a class="hash-link" href="#html-entities">#</a></h2>
 <p>You can insert HTML entities within literal text in JSX:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div>
@@ -329,7 +351,7 @@
 </code></pre></div>
 <p>As a last resort, you always have the ability to insert raw HTML.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
-</code></pre></div><h2 id="custom-html-attributes" class="anchor"><a href="#custom-html-attributes">Custom HTML Attributes</a></h2>
+</code></pre></div><h2><a class="anchor" name="custom-html-attributes"></a>Custom HTML Attributes <a class="hash-link" href="#custom-html-attributes">#</a></h2>
 <p>If you pass properties to native HTML elements that do not exist in the HTML specification, React will not render them. If you want to use a custom attribute, you should prefix it with <code>data-</code>.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>

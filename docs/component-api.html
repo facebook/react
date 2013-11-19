@@ -165,8 +165,30 @@
         
           <li>
             <a href="/react/docs/addons.html">
-              Add-ons
+              Add-Ons
             </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
             
           </li>
         
@@ -297,12 +319,12 @@
   <div class="inner-content">
     <h1>Component API</h1>
     <div class="subHeader"></div>
-    <h2 id="reactcomponent" class="anchor"><a href="#reactcomponent">ReactComponent</a></h2>
+    <h2><a class="anchor" name="reactcomponent"></a>ReactComponent <a class="hash-link" href="#reactcomponent">#</a></h2>
 <p>Component classses created by <code>createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
-<h3 id="getdomnode" class="anchor"><a href="#getdomnode">getDOMNode</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
+<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
 </code></pre></div>
 <p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.</p>
-<h3 id="setprops" class="anchor"><a href="#setprops">setProps</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>renderComponent()</code>. Simply call <code>setProps()</code> to change its properties and trigger a re-render.</p>
 
@@ -311,10 +333,10 @@
 
 <p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
 </blockquote>
-<h3 id="replaceprops" class="anchor"><a href="#replaceprops">replaceProps</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
+<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
-<h3 id="transferpropsto" class="anchor"><a href="#transferpropsto">transferPropsTo</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
+<h3><a class="anchor" name="transferpropsto"></a>transferPropsTo <a class="hash-link" href="#transferpropsto">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
 </code></pre></div>
 <p>Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, <code>targetComponent</code> is returned as a convenience. This function is useful when creating simple HTML-like components:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
@@ -334,7 +356,7 @@
 
 <p>Use <code>transferPropsTo</code> with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it&#39;s safer to explicitly copy the properties that you need onto the child component.</p>
 </blockquote>
-<h3 id="setstate" class="anchor"><a href="#setstate">setState</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once <code>setState</code> is completed.</p>
 
@@ -347,10 +369,10 @@
 
 <p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
 </blockquote>
-<h3 id="replacestate" class="anchor"><a href="#replacestate">replaceState</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Like <code>setState()</code> but deletes any pre-existing state keys that are not in nextState.</p>
-<h3 id="forceupdate" class="anchor"><a href="#forceupdate">forceUpdate()</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="forceupdate"></a>forceUpdate() <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>If your <code>render()</code> method reads from something other than <code>this.props</code> or <code>this.state</code>, you&#39;ll need to tell React when it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>. You&#39;ll also need to call <code>forceUpdate()</code> if you mutate <code>this.state</code> directly.</p>
 
