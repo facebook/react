@@ -200,8 +200,13 @@ ReactDOMComponent.Mixin = {
   updateComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'updateComponent',
-    function(transaction, prevProps) {
-      ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+    function(transaction, prevProps, prevOwner) {
+      ReactComponent.Mixin.updateComponent.call(
+        this,
+        transaction,
+        prevProps,
+        prevOwner
+      );
       this._updateDOMProperties(prevProps);
       this._updateDOMChildren(prevProps, transaction);
     }
