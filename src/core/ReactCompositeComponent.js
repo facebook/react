@@ -219,17 +219,21 @@ var ReactCompositeComponentInterface = {
 
   /**
    * Invoked while deciding if the component should be updated as a result of
-   * receiving new props and state.
+   * receiving new props, state and/or context.
    *
    * Use this as an opportunity to `return false` when you're certain that the
-   * transition to the new props and state will not require a component update.
+   * transition to the new props/state/context will not require a component
+   * update.
    *
-   *   shouldComponentUpdate: function(nextProps, nextState) {
-   *     return !equal(nextProps, this.props) || !equal(nextState, this.state);
+   *   shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+   *     return !equal(nextProps, this.props) ||
+   *       !equal(nextState, this.state) ||
+   *       !equal(nextContext, this.context);
    *   }
    *
    * @param {object} nextProps
    * @param {?object} nextState
+   * @param {?object} nextContext
    * @return {boolean} True if the component should update.
    * @optional
    */
@@ -836,7 +840,8 @@ var ReactCompositeComponentMixin = {
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
 
-    var nextContext = this._pendingContext || this._currentContext;
+    var nextFullContext = this._pendingContext || this._currentContext;
+    var nextContext = this._processContext(nextFullContext);
     this._pendingContext = null;
 
     if (this._pendingForceUpdate ||
@@ -847,6 +852,7 @@ var ReactCompositeComponentMixin = {
       this._performComponentUpdate(
         nextProps,
         nextState,
+        nextFullContext,
         nextContext,
         transaction
       );
@@ -855,6 +861,7 @@ var ReactCompositeComponentMixin = {
       // to set props and state.
       this.props = nextProps;
       this.state = nextState;
+      this._currentContext = nextFullContext;
       this.context = nextContext;
     }
 
@@ -867,6 +874,7 @@ var ReactCompositeComponentMixin = {
    *
    * @param {object} nextProps Next object to set as properties.
    * @param {?object} nextState Next object to set as state.
+   * @param {?object} nextFullContext Next object to set as _currentContext.
    * @param {?object} nextContext Next object to set as context.
    * @param {ReactReconcileTransaction} transaction
    * @private
@@ -874,6 +882,7 @@ var ReactCompositeComponentMixin = {
   _performComponentUpdate: function(
     nextProps,
     nextState,
+    nextFullContext,
     nextContext,
     transaction
   ) {
@@ -887,9 +896,8 @@ var ReactCompositeComponentMixin = {
 
     this.props = nextProps;
     this.state = nextState;
-
-    this._currentContext = nextContext;
-    this.context = this._processContext(nextContext);
+    this._currentContext = nextFullContext;
+    this.context = nextContext;
 
     this.updateComponent(transaction, prevProps, prevState, prevContext);
 
