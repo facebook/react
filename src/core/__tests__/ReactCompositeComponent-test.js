@@ -639,6 +639,7 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should filter context properly in callbacks', function() {
+    var actualComponentWillReceiveProps;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
     var actualComponentDidUpdate;
@@ -666,6 +667,11 @@ describe('ReactCompositeComponent', function() {
         foo: ReactPropTypes.string
       },
 
+      componentWillReceiveProps: function(nextProps, nextContext) {
+        actualComponentWillReceiveProps = nextContext;
+        return true;
+      },
+
       shouldComponentUpdate: function(nextProps, nextState, nextContext) {
         actualShouldComponentUpdate = nextContext;
         return true;
@@ -687,6 +693,7 @@ describe('ReactCompositeComponent', function() {
     var instance = <Parent foo="abc" />;
     ReactTestUtils.renderIntoDocument(instance);
     instance.replaceProps({foo: "def"});
+    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});

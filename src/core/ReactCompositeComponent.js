@@ -202,7 +202,7 @@ var ReactCompositeComponentInterface = {
    * Use this as an opportunity to react to a prop transition by updating the
    * state using `this.setState`. Current props are accessed via `this.props`.
    *
-   *   componentWillReceiveProps: function(nextProps) {
+   *   componentWillReceiveProps: function(nextProps, nextContext) {
    *     this.setState({
    *       likesIncreasing: nextProps.likeCount > this.props.likeCount
    *     });
@@ -823,6 +823,10 @@ var ReactCompositeComponentMixin = {
       return;
     }
 
+    var nextFullContext = this._pendingContext || this._currentContext;
+    var nextContext = this._processContext(nextFullContext);
+    this._pendingContext = null;
+
     var nextProps = this.props;
     if (this._pendingProps != null) {
       nextProps = this._pendingProps;
@@ -831,7 +835,7 @@ var ReactCompositeComponentMixin = {
 
       this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
       if (this.componentWillReceiveProps) {
-        this.componentWillReceiveProps(nextProps);
+        this.componentWillReceiveProps(nextProps, nextContext);
       }
     }
 
@@ -839,10 +843,6 @@ var ReactCompositeComponentMixin = {
 
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
-
-    var nextFullContext = this._pendingContext || this._currentContext;
-    var nextContext = this._processContext(nextFullContext);
-    this._pendingContext = null;
 
     if (this._pendingForceUpdate ||
         !this.shouldComponentUpdate ||
