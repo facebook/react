@@ -42,3 +42,5 @@ React.renderComponent(<Box />, mountNode);
 ```
 
 `componentDidMount` is called after the component is mounted and has a DOM representation. This is often a place where you would attach generic DOM events.
+
+Notice that the event callback is bound to the react component and not the original element. React automatically binds methods to the current component instance for you through a process of [autobinding](../docs/interactivity-and-dynamic-uis.html#under-the-hood-autobind-and-event-delegation).
