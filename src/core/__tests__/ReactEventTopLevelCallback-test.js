@@ -22,23 +22,28 @@ require('mock-modules')
   .dontMock('ReactEventTopLevelCallback')
   .dontMock('ReactMount')
   .dontMock('ReactInstanceHandles')
-  .dontMock('ReactDOM')
-  .mock('ReactEventEmitter');
+  .dontMock('ReactDOM');
 
 var EVENT_TARGET_PARAM = 1;
 
 describe('ReactEventTopLevelCallback', function() {
+  var mocks;
+
+  var React;
   var ReactEventTopLevelCallback;
-  var ReactMount;
   var ReactDOM;
-  var ReactEventEmitter; // mocked
+  var ReactEventEmitter;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    mocks = require('mocks');
+
+    React = require('React');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
-    ReactMount = require('ReactMount');
     ReactDOM = require('ReactDOM');
-    ReactEventEmitter = require('ReactEventEmitter'); // mocked
+    ReactEventEmitter = require('ReactEventEmitter');
+
+    ReactEventEmitter.handleTopLevel = mocks.getMockFunction();
   });
 
   describe('Propagation', function() {
@@ -47,8 +52,8 @@ describe('ReactEventTopLevelCallback', function() {
       var childControl = ReactDOM.div({}, 'Child');
       var parentContainer = document.createElement('div');
       var parentControl = ReactDOM.div({}, 'Parent');
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
+      React.renderComponent(childControl, childContainer);
+      React.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
@@ -69,9 +74,9 @@ describe('ReactEventTopLevelCallback', function() {
       var parentControl = ReactDOM.div({}, 'Parent');
       var grandParentContainer = document.createElement('div');
       var grandParentControl = ReactDOM.div({}, 'Parent');
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
-      ReactMount.renderComponent(grandParentControl, grandParentContainer);
+      React.renderComponent(childControl, childContainer);
+      React.renderComponent(parentControl, parentContainer);
+      React.renderComponent(grandParentControl, grandParentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
       grandParentControl.getDOMNode().appendChild(parentContainer);
 
@@ -95,7 +100,7 @@ describe('ReactEventTopLevelCallback', function() {
     var control = ReactDOM.div({}, [
       ReactDOM.div({id: 'outer'}, inner)
     ]);
-    ReactMount.renderComponent(control, container);
+    React.renderComponent(control, container);
 
     var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
     callback({
