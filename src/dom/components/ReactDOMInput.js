@@ -92,7 +92,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     delete instancesByReactID[id];
   },
 
-  componentDidUpdate: function(prevProps, prevState, prevContext, rootNode) {
+  componentDidUpdate: function(prevProps, prevState, prevContext) {
+    var rootNode = this.getDOMNode();
     if (this.props.checked != null) {
       DOMPropertyOperations.setValueForProperty(
         rootNode,
