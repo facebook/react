@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ReactPropTypeLocations = require('ReactPropTypeLocations');
+
 var createObjectFrom = require('createObjectFrom');
 var invariant = require('invariant');
 
@@ -87,14 +89,18 @@ var Props = {
 var ANONYMOUS = '<<anonymous>>';
 
 function createPrimitiveTypeChecker(expectedType) {
-  function validatePrimitiveType(propValue, propName, componentName) {
+  function validatePrimitiveType(propValue, propName, componentName, location) {
     var propType = typeof propValue;
     if (propType === 'object' && Array.isArray(propValue)) {
       propType = 'array';
     }
     invariant(
       propType === expectedType,
-      'Invalid prop `%s` of type `%s` supplied to `%s`, expected `%s`.',
+      'Invalid %s `%s` of type `%s` supplied to `%s`, expected `%s`.',
+      (location === ReactPropTypeLocations.prop ? 'prop' :
+        (location === ReactPropTypeLocations.context ? 'context' :
+          (location === ReactPropTypeLocations.childContext ? 'child context' :
+            '<unknown location>'))),
       propName,
       propType,
       componentName,
@@ -106,10 +112,14 @@ function createPrimitiveTypeChecker(expectedType) {
 
 function createEnumTypeChecker(expectedValues) {
   var expectedEnum = createObjectFrom(expectedValues);
-  function validateEnumType(propValue, propName, componentName) {
+  function validateEnumType(propValue, propName, componentName, location) {
     invariant(
       expectedEnum[propValue],
-      'Invalid prop `%s` supplied to `%s`, expected one of %s.',
+      'Invalid %s `%s` supplied to `%s`, expected one of %s.',
+      (location === ReactPropTypeLocations.prop ? 'prop' :
+        (location === ReactPropTypeLocations.context ? 'context' :
+          (location === ReactPropTypeLocations.childContext ? 'child context' :
+            '<unknown location>'))),
       propName,
       componentName,
       JSON.stringify(Object.keys(expectedEnum))
@@ -119,10 +129,14 @@ function createEnumTypeChecker(expectedValues) {
 }
 
 function createInstanceTypeChecker(expectedClass) {
-  function validateInstanceType(propValue, propName, componentName) {
+  function validateInstanceType(propValue, propName, componentName, location) {
     invariant(
       propValue instanceof expectedClass,
-      'Invalid prop `%s` supplied to `%s`, expected instance of `%s`.',
+      'Invalid %s `%s` supplied to `%s`, expected instance of `%s`.',
+      (location === ReactPropTypeLocations.prop ? 'prop' :
+        (location === ReactPropTypeLocations.context ? 'context' :
+          (location === ReactPropTypeLocations.childContext ? 'child context' :
+            '<unknown location>'))),
       propName,
       componentName,
       expectedClass.name || ANONYMOUS
@@ -133,15 +147,19 @@ function createInstanceTypeChecker(expectedClass) {
 
 function createChainableTypeChecker(validate) {
   function createTypeChecker(isRequired) {
-    function checkType(props, propName, componentName) {
+    function checkType(props, propName, componentName, location) {
       var propValue = props[propName];
       if (propValue != null) {
         // Only validate if there is a value to check.
-        validate(propValue, propName, componentName || ANONYMOUS);
+        validate(propValue, propName, componentName || ANONYMOUS, location);
       } else {
         invariant(
           !isRequired,
-          'Required prop `%s` was not specified in `%s`.',
+          'Required %s `%s` was not specified in `%s`.',
+          (location === ReactPropTypeLocations.prop ?
+            'prop' : (location === ReactPropTypeLocations.context ?
+              'context' : (location === ReactPropTypeLocations.childContext ?
+                'child context' : '<unknown location>'))),
           propName,
           componentName || ANONYMOUS
         );

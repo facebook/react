@@ -1,6 +1,6 @@
 <div class="nav-docs">
   <!-- Docs Nav -->
-  {% for section in site.nav_docs_sections %}
+  {% for section in site.data.nav_docs %}
     <div class="nav-docs-section">
       <h3>{{ section.title }}</h3>
       <ul>
@@ -27,7 +27,7 @@
   {% endfor %}
 
   <!-- Tips Nav -->
-  {% for section in site.nav_tips %}
+  {% for section in site.data.nav_tips %}
     <div class="nav-docs-section">
       <h3>{{ section.title }}</h3>
       <ul>

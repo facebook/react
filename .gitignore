@@ -23,4 +23,5 @@ docs/js/examples
 docs/downloads
 examples/shared/*.js
 test/the-files-to-test.generated.js
-sauce_connect.log*
+*.log*
+chrome-user-data

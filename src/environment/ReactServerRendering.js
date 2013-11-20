@@ -18,17 +18,31 @@
  */
 "use strict";
 
+var ReactComponent = require('ReactComponent');
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var ReactInstanceHandles = require('ReactInstanceHandles');
+
+var invariant = require('invariant');
 
 /**
- * @param {object} component
+ * @param {ReactComponent} component
  * @param {function} callback
  */
 function renderComponentToString(component, callback) {
   // We use a callback API to keep the API async in case in the future we ever
   // need it, but in reality this is a synchronous operation.
+
+  invariant(
+    ReactComponent.isValidComponent(component),
+    'renderComponentToString(): You must pass a valid ReactComponent.'
+  );
+
+  invariant(
+    typeof callback === 'function',
+    'renderComponentToString(): You must pass a function as a callback.'
+  );
+
   var id = ReactInstanceHandles.createReactRootID();
   var transaction = ReactReconcileTransaction.getPooled();
   transaction.reinitializeTransaction();

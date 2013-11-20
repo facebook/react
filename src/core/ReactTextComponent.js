@@ -74,11 +74,12 @@ mixInto(ReactTextComponent, {
   /**
    * Updates this component by updating the text content.
    *
-   * @param {object} nextProps Contains the next text content.
+   * @param {object} nextComponent Contains the next text content.
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  receiveProps: function(nextProps, transaction) {
+  receiveComponent: function(nextComponent, transaction) {
+    var nextProps = nextComponent.props;
     if (nextProps.text !== this.props.text) {
       this.props.text = nextProps.text;
       ReactComponent.DOMIDOperations.updateTextContentByID(

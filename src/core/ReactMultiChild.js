@@ -285,7 +285,7 @@ var ReactMultiChild = {
         if (shouldUpdateReactComponent(prevChild, nextChild)) {
           this.moveChild(prevChild, nextIndex, lastIndex);
           lastIndex = Math.max(prevChild._mountIndex, lastIndex);
-          prevChild.receiveProps(nextChild.props, transaction);
+          prevChild.receiveComponent(nextChild, transaction);
           prevChild._mountIndex = nextIndex;
         } else {
           if (prevChild) {

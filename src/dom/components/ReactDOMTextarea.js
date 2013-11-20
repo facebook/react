@@ -110,7 +110,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     return textarea(props, this.state.initialValue);
   },
 
-  componentDidUpdate: function(prevProps, prevState, rootNode) {
+  componentDidUpdate: function(prevProps, prevState, prevContext, rootNode) {
     var value = this.getValue();
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While

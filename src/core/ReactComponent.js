@@ -127,8 +127,8 @@ function validateChildKeys(component) {
  *   `mountComponent`
  *     Initializes the component, renders markup, and registers event listeners.
  *
- *   `receiveProps`
- *     Updates the rendered DOM nodes given a new set of props.
+ *   `receiveComponent`
+ *     Updates the rendered DOM nodes to match the given component.
  *
  *   `unmountComponent`
  *     Releases any resources allocated by this component.
@@ -151,7 +151,7 @@ var ReactComponent = {
     return !!(
       object &&
       typeof object.mountComponentIntoNode === 'function' &&
-      typeof object.receiveProps === 'function'
+      typeof object.receiveComponent === 'function'
     );
   },
 
@@ -369,21 +369,22 @@ var ReactComponent = {
     },
 
     /**
-     * Updates the rendered DOM nodes given a new set of props.
+     * Given a new instance of this component, updates the rendered DOM nodes
+     * as if that instance was rendered instead.
      *
      * Subclasses that override this method should make sure to invoke
-     * `ReactComponent.Mixin.receiveProps.call(this, ...)`.
+     * `ReactComponent.Mixin.receiveComponent.call(this, ...)`.
      *
-     * @param {object} nextProps Next set of properties.
+     * @param {object} nextComponent Next set of properties.
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    receiveProps: function(nextProps, transaction) {
+    receiveComponent: function(nextComponent, transaction) {
       invariant(
         this.isMounted(),
-        'receiveProps(...): Can only update a mounted component.'
+        'receiveComponent(...): Can only update a mounted component.'
       );
-      this._pendingProps = nextProps;
+      this._pendingProps = nextComponent.props;
       this._performUpdateIfNecessary(transaction);
     },
 

@@ -31,6 +31,8 @@ describe('ReactWebWorker', function() {
       var data = JSON.parse(e.data);
       if (data.type == 'error') {
         error = data.message + "\n" + data.stack;
+      } else if (data.type == 'log') {
+        console.log(data.message);
       } else {
         expect(data.type).toBe('done');
         done = true;
@@ -42,7 +44,7 @@ describe('ReactWebWorker', function() {
     });
     runs(function() {
       if (error) {
-        console.log(error);
+        console.error(error);
         throw new Error(error);
       }
     });
