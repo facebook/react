@@ -66,7 +66,7 @@ mixInto(ReactMountReady, {
       for (var i = 0, l = queue.length; i < l; i++) {
         var component = queue[i].component;
         var callback = queue[i].callback;
-        callback.call(component, component.getDOMNode());
+        callback.call(component);
       }
       queue.length = 0;
     }
