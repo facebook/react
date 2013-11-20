@@ -41,7 +41,8 @@ var eventTypes = {
       keyOf({onKeyUp: null}),
       keyOf({onKeyDown: null}),
       keyOf({onFocus: null}),
-      keyOf({onBlur: null})]
+      keyOf({onBlur: null})
+    ]
   }
 };
 

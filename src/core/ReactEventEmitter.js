@@ -29,6 +29,7 @@ var ViewportMetrics = require('ViewportMetrics');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var merge = require('merge');
+var keyOf = require('keyOf');
 
 /**
  * Summary of `ReactEventEmitter` event handling:
@@ -179,21 +180,27 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {DOMDocument} contentDocument Document which owns the container
    */
   listenTo: function(event, contentDocument) {
-    var mountAt = contentDocument;
-    var camelCasedEventName = event.substr(2);
-    var camelCasedEventNameAlt =
-        camelCasedEventName.charAt(0).toLowerCase() + camelCasedEventName.slice(1);
+    var mountAt;
+    var camelCasedEventName;
+    var camelCasedEventNameAlt;
     var dependencies;
     var dependency;
     var i;
     var l;
     var topLevelType;
-    var topLevelTypes = EventConstants.topLevelTypes;
+    var topLevelTypes;
+    var registration;
 
     if (!alreadyListeningTo[event]) {
-      dependencies = ReactEventEmitter.registrationNames[event].
+      mountAt = contentDocument;
+      camelCasedEventName = event.substr(2);
+      camelCasedEventNameAlt =
+        camelCasedEventName.charAt(0).toLowerCase() + camelCasedEventName.slice(1);
+      registration = ReactEventEmitter.registrationNames[event];
+      if (registration && registration.eventTypes[camelCasedEventNameAlt]) {
+        dependencies = registration.
                      eventTypes[camelCasedEventNameAlt].dependencies;
-
+      }
       if (dependencies) {
         for (i = 0, l = dependencies.length; i < l; i++) {
           dependency = dependencies[i];
@@ -201,6 +208,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
         }
       }
       else {
+        topLevelTypes = EventConstants.topLevelTypes;
         topLevelType = topLevelTypes['top' + camelCasedEventName];
 
         if (topLevelType === topLevelTypes.topWheel) {
@@ -235,6 +243,10 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
             trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
             trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
           }
+
+          // to make sure event listeners are only attached once
+          alreadyListeningTo[keyOf({onBlur: null})] = true;
+          alreadyListeningTo[keyOf({onFocus: null})] = true;
         }
         else {
           if(camelCasedEventName === 'DoubleClick') {

@@ -32,6 +32,7 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
+var EventPluginUtils = require('EventPluginUtils');
 
 ReactDefaultInjection.inject();
 
@@ -39,7 +40,7 @@ var React = {
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
-    ReactMount.useTouchEvents = shouldUseTouch;
+    EventPluginUtils.supportTouch = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
