@@ -827,7 +827,7 @@ var ReactCompositeComponentMixin = {
 
       this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
       if (this.componentWillReceiveProps) {
-        this.componentWillReceiveProps(nextProps, transaction);
+        this.componentWillReceiveProps(nextProps);
       }
     }
 
