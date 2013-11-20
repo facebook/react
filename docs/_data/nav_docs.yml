@@ -1,0 +1,57 @@
+- title: Quick Start
+  items:
+  - id: getting-started
+    title: Getting Started
+  - id: tutorial
+    title: Tutorial
+- title: Guides
+  items:
+  - id: why-react
+    title: Why React?
+  - id: displaying-data
+    title: Displaying Data
+    subitems:
+    - id: jsx-in-depth
+      title: JSX in Depth
+    - id: jsx-gotchas
+      title: JSX Gotchas
+  - id: interactivity-and-dynamic-uis
+    title: Interactivity and Dynamic UIs
+  - id: multiple-components
+    title: Multiple Components
+  - id: reusable-components
+    title: Reusable Components
+  - id: forms
+    title: Forms
+  - id: working-with-the-browser
+    title: Working With the Browser
+    subitems:
+    - id: more-about-refs
+      title: More About Refs
+  - id: tooling-integration
+    title: Tooling Integration
+  - id: addons
+    title: Add-Ons
+    subitems:
+    - id: animation
+      title: Animation
+    - id: two-way-binding-helpers
+      title: Two-Way Binding Helpers
+    - id: class-name-manipulation
+      title: Class Name Manipulation
+  - id: examples
+    title: Examples
+- title: Reference
+  items:
+  - id: top-level-api
+    title: Top-Level API
+  - id: component-api
+    title: Component API
+  - id: component-specs
+    title: Component Specs and Lifecycle
+  - id: tags-and-attributes
+    title: Supported Tags and Attributes
+  - id: events
+    title: Event System
+  - id: dom-differences
+    title: DOM Differences
