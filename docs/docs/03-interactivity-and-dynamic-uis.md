@@ -46,7 +46,7 @@ With React you simply pass your event handler as a camelCased prop similar to ho
 If you'd like to use React on a touch device (i.e. a phone or tablet), simply call `React.initializeTouchEvents(true);` to turn them on.
 
 
-## Under the Hood: autoBind and Event Delegation
+## Under the Hood: Autobinding and Event Delegation
 
 Under the hood React does a few things to keep your code performant and easy to understand.
 
