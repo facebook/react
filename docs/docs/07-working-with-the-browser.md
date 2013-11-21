@@ -80,7 +80,7 @@ React provides lifecycle methods that you can specify to hook into this process.
 
 * `getInitialState(): object` is invoked before a component is mounted. Stateful components should implement this and return the initial state data.
 * `componentWillMount()` is invoked immediately before mounting occurs.
-* `componentDidMount(DOMElement rootNode)` is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.
+* `componentDidMount()` is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.
 
 
 ### Updating
@@ -88,7 +88,7 @@ React provides lifecycle methods that you can specify to hook into this process.
 * `componentWillReceiveProps(object nextProps)` is invoked when a mounted component receives new props. This method should be used to compare `this.props` and `nextProps` to perform state transitions using `this.setState()`.
 * `shouldComponentUpdate(object nextProps, object nextState): boolean` is invoked when a component decides whether any changes warrant an update to the DOM. Implement this as an optimization to compare `this.props` with `nextProps` and `this.state` with `nextState` and return false if React should skip updating.
 * `componentWillUpdate(object nextProps, object nextState)` is invoked immediately before updating occurs. You cannot call `this.setState()` here.
-* `componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)` is invoked immediately after updating occurs.
+* `componentDidUpdate(object prevProps, object prevState)` is invoked immediately after updating occurs.
 
 
 ### Unmounting
@@ -102,12 +102,6 @@ _Mounted_ composite components also support the following methods:
 
 * `getDOMNode(): DOMElement` can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.
 * `forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
-
-> Note:
->
-> The `DOMElement rootNode` argument of `componentDidMount()` and
-> `componentDidUpdate()` is a convenience. The same node can be obtained by
-> calling `this.getDOMNode()`.
 
 
 ## Browser Support and Polyfills
