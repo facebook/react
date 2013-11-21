@@ -10,7 +10,16 @@ require("mock-modules");
 require("./mock-timers");
 
 exports.enableTest = function(testID) {
-  require("../" + testID);
+  describe(testID, function() {
+    var mockMap;
+    beforeEach(function() {
+      require("mock-modules").setMockMap(mockMap);
+    });
+
+    require("mock-modules").clearMockMap();
+    require("../" + testID);
+    mockMap = require("mock-modules").getMockMap();
+  });
 };
 
 exports.removeNextSiblings = function(node) {
