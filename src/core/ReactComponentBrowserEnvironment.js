@@ -27,11 +27,9 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
-var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
 
 var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
 
 
 /**
@@ -82,10 +80,7 @@ var ReactComponentBrowserEnvironment = {
    */
   mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE && ReactMount.allowFullPageRender
-      ),
+      container && container.nodeType === ELEMENT_NODE_TYPE,
       'mountComponentIntoNode(...): Target container is not valid.'
     );
     if (shouldReuseMarkup) {
@@ -106,14 +101,6 @@ var ReactComponentBrowserEnvironment = {
           );
         }
       }
-    }
-
-    // You can't naively set the innerHTML of the entire document. You need
-    // to mutate documentElement which requires doing some crazy tricks. See
-    // mutateHTMLNodeWithMarkup()
-    if (container.nodeType === DOC_NODE_TYPE) {
-      mutateHTMLNodeWithMarkup(container.documentElement, markup);
-      return;
     }
 
     // Asynchronously inject markup by ensuring that the container is not in
