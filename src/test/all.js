@@ -11,14 +11,13 @@ require("./mock-timers");
 
 exports.enableTest = function(testID) {
   describe(testID, function() {
-    var mockMap;
     beforeEach(function() {
       require("mock-modules").setMockMap(mockMap);
     });
 
     require("mock-modules").clearMockMap();
     require("../" + testID);
-    mockMap = require("mock-modules").getMockMap();
+    var mockMap = require("mock-modules").getMockMap();
   });
 };
 
