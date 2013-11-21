@@ -65,9 +65,14 @@ var topLevelTypes = keyMirror({
   topWheel: null
 });
 
+// Object representing a null or undefined event listener context. Used instead
+// of null and undefined in calls to accumulate().
+var nullContext = {};
+
 var EventConstants = {
   topLevelTypes: topLevelTypes,
-  PropagationPhases: PropagationPhases
+  PropagationPhases: PropagationPhases,
+  nullContext: nullContext
 };
 
 module.exports = EventConstants;

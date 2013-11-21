@@ -115,7 +115,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var onChange = this.getOnChange();
     if (onChange) {
       this._isChanging = true;
-      returnValue = onChange(event);
+      returnValue = onChange.call(this, event);
       this._isChanging = false;
     }
     this.setState({
