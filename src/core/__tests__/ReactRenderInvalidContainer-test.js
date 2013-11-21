@@ -53,4 +53,18 @@ describe('rendering React components into invalid containers', function() {
     );
   });
 
+  it('should throw on render into head element', function() {
+    if (!testDocument) {
+      // These tests are not applicable in jst, since jsdom is buggy.
+      return;
+    }
+
+    var container = testDocument.head;
+    expect(function() {
+      React.renderComponent(<script />, container);
+    }).toThrow(
+      'Invariant Violation: prepareEnvironmentForDOM(...): Target container is not a DOM element.'
+    );
+  });
+
 });

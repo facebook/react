@@ -207,7 +207,9 @@ var ReactMount = {
    */
   prepareEnvironmentForDOM: function(container) {
     invariant(
-      container && container.nodeType === ELEMENT_NODE_TYPE
+      container &&
+      container.nodeType === ELEMENT_NODE_TYPE &&
+      container.tagName !== 'HEAD',
       'prepareEnvironmentForDOM(...): Target container is not a DOM element.'
     );
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
