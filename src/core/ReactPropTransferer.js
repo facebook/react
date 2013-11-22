@@ -92,7 +92,7 @@ var ReactPropTransferer = {
      */
     transferPropsTo: function(component) {
       invariant(
-        component.props.__owner__ === this,
+        component._owner === this,
         '%s: You can\'t call transferPropsTo() on a component that you ' +
         'don\'t own, %s. This usually means you are calling ' +
         'transferPropsTo() on a component passed in as props or children.',

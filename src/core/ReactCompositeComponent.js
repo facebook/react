@@ -841,6 +841,12 @@ var ReactCompositeComponentMixin = {
 
     this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
 
+    // Unlike props, state, and context, we specifically don't want to set
+    // _pendingOwner to null here because it's possible for a component to have
+    // a null owner, so we instead make `this._owner === this._pendingOwner`
+    // mean that there's no owner change pending.
+    var nextOwner = this._pendingOwner;
+
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
 
@@ -851,6 +857,7 @@ var ReactCompositeComponentMixin = {
       // Will set `this.props`, `this.state` and `this.context`.
       this._performComponentUpdate(
         nextProps,
+        nextOwner,
         nextState,
         nextFullContext,
         nextContext,
@@ -860,6 +867,7 @@ var ReactCompositeComponentMixin = {
       // If it's determined that a component should not update, we still want
       // to set props and state.
       this.props = nextProps;
+      this._owner = nextOwner;
       this.state = nextState;
       this._currentContext = nextFullContext;
       this.context = nextContext;
@@ -873,6 +881,7 @@ var ReactCompositeComponentMixin = {
    * performs update.
    *
    * @param {object} nextProps Next object to set as properties.
+   * @param {?ReactComponent} nextOwner Next component to set as owner
    * @param {?object} nextState Next object to set as state.
    * @param {?object} nextFullContext Next object to set as _currentContext.
    * @param {?object} nextContext Next object to set as context.
@@ -881,12 +890,14 @@ var ReactCompositeComponentMixin = {
    */
   _performComponentUpdate: function(
     nextProps,
+    nextOwner,
     nextState,
     nextFullContext,
     nextContext,
     transaction
   ) {
     var prevProps = this.props;
+    var prevOwner = this._owner;
     var prevState = this.state;
     var prevContext = this.context;
 
@@ -895,11 +906,18 @@ var ReactCompositeComponentMixin = {
     }
 
     this.props = nextProps;
+    this._owner = nextOwner;
     this.state = nextState;
     this._currentContext = nextFullContext;
     this.context = nextContext;
 
-    this.updateComponent(transaction, prevProps, prevState, prevContext);
+    this.updateComponent(
+      transaction,
+      prevProps,
+      prevOwner,
+      prevState,
+      prevContext
+    );
 
     if (this.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -926,6 +944,7 @@ var ReactCompositeComponentMixin = {
    *
    * @param {ReactReconcileTransaction} transaction
    * @param {object} prevProps
+   * @param {?ReactComponent} prevOwner
    * @param {?object} prevState
    * @param {?object} prevContext
    * @internal
@@ -934,8 +953,13 @@ var ReactCompositeComponentMixin = {
   updateComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'updateComponent',
-    function(transaction, prevProps, prevState, prevContext) {
-      ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+    function(transaction, prevProps, prevOwner, prevState, prevContext) {
+      ReactComponent.Mixin.updateComponent.call(
+        this,
+        transaction,
+        prevProps,
+        prevOwner
+      );
       var prevComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
       if (shouldUpdateReactComponent(prevComponent, nextComponent)) {
