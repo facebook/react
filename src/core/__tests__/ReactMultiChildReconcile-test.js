@@ -42,11 +42,11 @@ var stripEmptyValues = function(obj) {
 };
 
 /**
- * Child names is are wrapped in an prefix and suffix character. We strip those
- * out. This relies on a tiny implementation detail of the rendering system.
+ * Child key names are wrapped like '{key}[0]'. We strip the extra chars out
+ * here. This relies on an implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {
-  return childName.substr(1, childName.length - 2);
+  return childName.slice('{'.length, childName.length - '}[0]'.length);
 };
 
 /**

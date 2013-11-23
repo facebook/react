@@ -124,7 +124,7 @@ describe('ReactChildren', function() {
     var three = null;
     var four = <div key="keyFour" />;
 
-    var zeroMapped = <div key="giraffe" />;  // Key should be overridden
+    var zeroMapped = <div key="giraffe" />;  // Key should be joined to obj key
     var oneMapped = null;  // Key should be added even if we don't supply it!
     var twoMapped = <div />;  // Key should be added even if not supplied!
     var threeMapped = <span />; // Map from null to something.
@@ -188,13 +188,12 @@ describe('ReactChildren', function() {
     var two = <div key="keyTwo" />;
     var three = null;
     var four = <div key="keyFour" />;
-    var five = <div key="keyFiveCompletelyIgnored" />;
-    // five is placed into a JS object with a key that takes precedence over the
+    var five = <div key="keyFiveInner" />;
+    // five is placed into a JS object with a key that is joined to the
     // component key attribute.
     // Precedence is as follows:
-    // 1. JavaScript Object key if in a JavaScript object:
-    // 2. If grouped in an Array, the `key` attribute.
-    // 3. The array index if in a JavaScript Array.
+    // 1. If grouped in an Object, the object key combined with `key` prop
+    // 2. If grouped in an Array, the `key` prop, falling back to array index
 
     var zeroMapped = <div key="giraffe" />;  // Key should be overridden
     var oneMapped = null;  // Key should be added even if we don't supply it!
@@ -236,12 +235,12 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(6);
     // Keys default to indices.
     expect(mappedKeys).toEqual([
-      '[0]{firstHalfKey}{keyZero}',
-      '[0]{firstHalfKey}[1]',
-      '[0]{firstHalfKey}{keyTwo}',
-      '[0]{secondHalfKey}[0]',
-      '[0]{secondHalfKey}{keyFour}',
-      '[0]{keyFive}'
+      '[0]{firstHalfKey}[0]{keyZero}',
+      '[0]{firstHalfKey}[0][1]',
+      '[0]{firstHalfKey}[0]{keyTwo}',
+      '[0]{secondHalfKey}[0][0]',
+      '[0]{secondHalfKey}[0]{keyFour}',
+      '[0]{keyFive}{keyFiveInner}'
     ]);
 
     expect(callback).toHaveBeenCalledWith(zero, 0);
@@ -267,7 +266,7 @@ describe('ReactChildren', function() {
     var zeroForceKey = <div key="keyZero" />;
     var oneForceKey = <div key="keyOne" />;
 
-    // Key should be overridden
+    // Key should be joined to object key
     var zeroForceKeyMapped = <div key="giraffe" />;
     // Key should be added even if we don't supply it!
     var oneForceKeyMapped = <div />;
@@ -289,7 +288,7 @@ describe('ReactChildren', function() {
     var mappedForcedKeys = Object.keys(mappedChildrenForcedKeys);
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
-    var expectedRemappedForcedKeys = ['{{keyZero}}', '{{keyOne}}'];
+    var expectedRemappedForcedKeys = ['{{keyZero}}{giraffe}', '{{keyOne}}[0]'];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);
     expect(

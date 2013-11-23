@@ -125,6 +125,34 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
+
+    it('should replace children with different keys', function() {
+      var container = document.createElement('div');
+
+      var mockMount = mocks.getMockFunction();
+      var mockUnmount = mocks.getMockFunction();
+
+      var MockComponent = React.createClass({
+        componentDidMount: mockMount,
+        componentWillUnmount: mockUnmount,
+        render: function() {
+          return <span />;
+        }
+      });
+
+      expect(mockMount.mock.calls.length).toBe(0);
+      expect(mockUnmount.mock.calls.length).toBe(0);
+
+      React.renderComponent(<div><MockComponent key="A" /></div>, container);
+
+      expect(mockMount.mock.calls.length).toBe(1);
+      expect(mockUnmount.mock.calls.length).toBe(0);
+
+      React.renderComponent(<div><MockComponent key="B" /></div>, container);
+
+      expect(mockMount.mock.calls.length).toBe(2);
+      expect(mockUnmount.mock.calls.length).toBe(1);
+    });
   });
 
   describe('innerHTML', function() {
