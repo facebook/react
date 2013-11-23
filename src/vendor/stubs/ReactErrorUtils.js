@@ -28,16 +28,18 @@ var ReactErrorUtils = {
    * @return {function}
    */
   guard: function(func, name) {
-    return function guarded() {
-      try {
-        return func.apply(this, arguments);
-      } catch(ex) {
-        if (__DEV__) {
+    if (__DEV__) {
+      return function guarded() {
+        try {
+          return func.apply(this, arguments);
+        } catch(ex) {
           console.error(name + ': ' + ex.message);
+          throw ex;
         }
-        throw ex;
-      }
-    };
+      };
+    } else {
+      return func;
+    }
   }
 };
 
