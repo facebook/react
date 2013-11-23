@@ -32,9 +32,6 @@
     "type": "git",
     "url": "https://github.com/facebook/react"
   },
-  "scripts": {
-    "test": "grunt build && grunt test"
-  },
   "dependencies": {
     "commoner": "~0.8.7",
     "esprima-fb": "~2001.1001.0-dev-harmony-fb",
