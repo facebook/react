@@ -113,7 +113,8 @@
         reportSpecResults: function (spec) {
             // Finish timing this spec and calculate duration/delta (in sec)
             spec.finishedAt = new Date();
-            spec.durationSec = elapsedSec(spec.startedAt.getTime(), spec.finishedAt.getTime());
+            // If the spec was skipped, reportSpecStarting is never called and spec.startedAt is undefined
+            spec.durationSec = spec.startedAt ? elapsedSec(spec.startedAt.getTime(), spec.finishedAt.getTime()) : 0;
         },
 
         reportSuiteResults: function (suite) {
