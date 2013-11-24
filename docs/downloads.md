@@ -28,6 +28,20 @@ The uncompressed, development version of React core with inline documentation.
 <script src="http://fb.me/react-{{site.react_version}}.js"></script>
 ```
 
+#### <a href="http://fb.me/react-{{site.react_version}}.min.js">React With Add-Ons {{site.react_version}} (production)</a>
+The compressed, production version of React with [add-ons](/react/docs/addons.html).
+
+```html
+<script src="http://fb.me/react-with-addons-{{site.react_version}}.min.js"></script>
+```
+
+#### <a href="http://fb.me/react-{{site.react_version}}.js">React With Add-Ons {{site.react_version}} (development)</a>
+The uncompressed, development version of React with [add-ons](/react/docs/addons.html).
+
+```html
+<script src="http://fb.me/react-with-addons-{{site.react_version}}.js"></script>
+```
+
 #### <a href="http://fb.me/JSXTransformer-{{site.react_version}}.js">JSX Transform</a>
 The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) in JavaScript.
 
