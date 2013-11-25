@@ -43,17 +43,13 @@ describe('ReactMount', function() {
     React.renderComponent(instanceTwo, secondRootDiv);
 
     // Test that two react roots are rendered in isolation
-    expect(firstRootDiv.getElementsByClassName('firstReactDiv').length)
-      .toBe(1);
-    expect(secondRootDiv.getElementsByClassName('secondReactDiv').length)
-      .toBe(1);
+    expect(firstRootDiv.firstChild.className).toBe('firstReactDiv');
+    expect(secondRootDiv.firstChild.className).toBe('secondReactDiv');
 
     // Test that after unmounting each, they are no longer in the document.
     React.unmountComponentAtNode(firstRootDiv);
-    expect(firstRootDiv.getElementsByClassName('firstReactDiv').length)
-      .toBe(0);
+    expect(firstRootDiv.firstChild).toBeNull();
     React.unmountComponentAtNode(secondRootDiv);
-    expect(secondRootDiv.getElementsByClassName('secondReactDiv').length)
-      .toBe(0);
+    expect(secondRootDiv.firstChild).toBeNull();
   });
 });
