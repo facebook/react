@@ -18,10 +18,14 @@
 
 function getTestDocument() {
   var iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:absolute; visibility:hidden; bottom:100%; right:100%';
-  iframe.src = 'data:text/html,<!doctype html><meta charset=utf-8><title>test doc</title>';
+  iframe.style.display = 'none';
   document.body.appendChild(iframe);
-  var testDocument = iframe.contentDocument;
+
+  var testDocument = iframe.contentDocument || iframe.contentWindow.document;
+  testDocument.open();
+  testDocument.write('<!doctype html><meta charset=utf-8><title>test doc</title>');
+  testDocument.close();
+
   iframe.parentNode.removeChild(iframe);
   return testDocument;
 }
