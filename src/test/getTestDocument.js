@@ -16,12 +16,6 @@
  * @providesModule getTestDocument
  */
 
-/**
- * We need to work around the fact that we have two different
- * test implementations: once that breaks if we clobber document
- * (open-source) and one that doesn't support createHTMLDocument()
- * (jst).
- */
 function getTestDocument() {
   var iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute; visibility:hidden; bottom:100%; right:100%';
