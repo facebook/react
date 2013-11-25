@@ -23,11 +23,13 @@
  * (jst).
  */
 function getTestDocument() {
-  if (document.implementation &&
-      document.implementation.createHTMLDocument) {
-    return document.implementation.createHTMLDocument('test doc');
-  }
-  return null;
+  var iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute; visibility:hidden; bottom:100%; right:100%';
+  iframe.src = 'data:text/html,<!doctype html><meta charset=utf-8><title>test doc</title>';
+  document.body.appendChild(iframe);
+  var testDocument = iframe.contentDocument;
+  iframe.parentNode.removeChild(iframe);
+  return testDocument;
 }
 
 module.exports = getTestDocument;
