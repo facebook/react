@@ -22,7 +22,8 @@ var CodeMirrorEditor = React.createClass({
       mode: 'javascript',
       lineNumbers: false,
       matchBrackets: true,
-      theme: 'solarized-light'
+      theme: 'solarized-light',
+      readOnly: this.props.readOnly
     });
     this.editor.on('change', this.onChange);
     this.onChange();
@@ -82,7 +83,7 @@ var ReactPlayground = React.createClass({
     } else if (this.state.mode === this.MODES.JS) {
       content =
         <div className="playgroundJS playgroundStage">
-            {this.getDesugaredCode()}
+          {this.getDesugaredCode()}
         </div>;
     }
 
@@ -111,13 +112,14 @@ var ReactPlayground = React.createClass({
     } catch (e) { }
 
     try {
+      var desugaredCode = this.getDesugaredCode();
       if (this.props.renderCode) {
         React.renderComponent(
-          <pre>{this.getDesugaredCode()}</pre>,
+          <CodeMirrorEditor codeText={desugaredCode} readOnly={true} />,
           mountNode
         );
       } else {
-        eval(this.getDesugaredCode());
+        eval(desugaredCode);
       }
     } catch (e) {
       React.renderComponent(
