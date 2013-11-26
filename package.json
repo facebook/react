@@ -59,7 +59,8 @@
     "es5-shim": "~2.1.0",
     "wd": "~0.2.2",
     "sauce-tunnel": "~1.1.0",
-    "coverify": "~0.1.1"
+    "coverify": "~0.1.1",
+    "grunt-complexity": "~0.1.3"
   },
   "engines": {
     "node": ">=0.10.0"
