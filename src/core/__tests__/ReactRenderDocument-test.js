@@ -40,10 +40,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to get root component id for document node', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
       render: function() {
@@ -69,10 +66,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to unmount component from document node', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
       render: function() {
@@ -100,10 +94,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to switch root constructors via state', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
       render: function() {
@@ -162,10 +153,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to switch root constructors', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
       render: function() {
@@ -210,10 +198,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should be able to mount into document', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
       render: function() {
@@ -236,10 +221,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should throw on full document render', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var container = testDocument;
     expect(function() {
@@ -255,10 +237,7 @@ describe('rendering React components at document', function() {
   });
 
   it('should throw on full document render of non-html', function() {
-    if (!testDocument) {
-      // These tests are not applicable in jst, since jsdom is buggy.
-      return;
-    }
+    expect(testDocument).not.toBeUndefined();
 
     var container = testDocument;
     ReactMount.allowFullPageRender = true;
