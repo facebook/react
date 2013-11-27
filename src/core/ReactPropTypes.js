@@ -18,10 +18,18 @@
 
 "use strict";
 
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
-
 var createObjectFrom = require('createObjectFrom');
 var invariant = require('invariant');
+
+var ReactPropTypeLocationNames = {};
+
+if (__DEV__) {
+  ReactPropTypeLocationNames = {
+    prop: 'prop',
+    context: 'context',
+    childContext: 'child context'
+  };
+}
 
 /**
  * Collection of methods that allow declaration and validation of props that are
@@ -97,10 +105,7 @@ function createPrimitiveTypeChecker(expectedType) {
     invariant(
       propType === expectedType,
       'Invalid %s `%s` of type `%s` supplied to `%s`, expected `%s`.',
-      (location === ReactPropTypeLocations.prop ? 'prop' :
-        (location === ReactPropTypeLocations.context ? 'context' :
-          (location === ReactPropTypeLocations.childContext ? 'child context' :
-            '<unknown location>'))),
+      ReactPropTypeLocationNames[location],
       propName,
       propType,
       componentName,
@@ -116,10 +121,7 @@ function createEnumTypeChecker(expectedValues) {
     invariant(
       expectedEnum[propValue],
       'Invalid %s `%s` supplied to `%s`, expected one of %s.',
-      (location === ReactPropTypeLocations.prop ? 'prop' :
-        (location === ReactPropTypeLocations.context ? 'context' :
-          (location === ReactPropTypeLocations.childContext ? 'child context' :
-            '<unknown location>'))),
+      ReactPropTypeLocationNames[location],
       propName,
       componentName,
       JSON.stringify(Object.keys(expectedEnum))
@@ -133,10 +135,7 @@ function createInstanceTypeChecker(expectedClass) {
     invariant(
       propValue instanceof expectedClass,
       'Invalid %s `%s` supplied to `%s`, expected instance of `%s`.',
-      (location === ReactPropTypeLocations.prop ? 'prop' :
-        (location === ReactPropTypeLocations.context ? 'context' :
-          (location === ReactPropTypeLocations.childContext ? 'child context' :
-            '<unknown location>'))),
+      ReactPropTypeLocationNames[location],
       propName,
       componentName,
       expectedClass.name || ANONYMOUS
@@ -156,10 +155,7 @@ function createChainableTypeChecker(validate) {
         invariant(
           !isRequired,
           'Required %s `%s` was not specified in `%s`.',
-          (location === ReactPropTypeLocations.prop ?
-            'prop' : (location === ReactPropTypeLocations.context ?
-              'context' : (location === ReactPropTypeLocations.childContext ?
-                'child context' : '<unknown location>'))),
+          ReactPropTypeLocationNames[location],
           propName,
           componentName || ANONYMOUS
         );

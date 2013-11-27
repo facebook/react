@@ -21,7 +21,7 @@
 var keyMirror = require('keyMirror');
 
 var ReactPropTypeLocations = keyMirror({
-  props: null,
+  prop: null,
   context: null,
   childContext: null
 });
