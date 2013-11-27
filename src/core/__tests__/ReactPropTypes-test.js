@@ -137,18 +137,19 @@ describe('Instance Types', function() {
 
   it("should throw for invalid instances", function() {
     function Person() {}
+    var name = Person.name || '<<anonymous>>';
 
     expect(typeCheck(Props.instanceOf(Person), false)).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
     expect(typeCheck(Props.instanceOf(Person), {})).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
     expect(typeCheck(Props.instanceOf(Person), '')).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
   });
 
