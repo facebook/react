@@ -26,6 +26,7 @@ var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -319,15 +320,45 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   childContextTypes: function(Constructor, childContextTypes) {
+    validateTypeDef(
+      Constructor,
+      childContextTypes,
+      ReactPropTypeLocations.childContext
+    );
     Constructor.childContextTypes = childContextTypes;
   },
   contextTypes: function(Constructor, contextTypes) {
+    validateTypeDef(
+      Constructor,
+      contextTypes,
+      ReactPropTypeLocations.context
+    );
     Constructor.contextTypes = contextTypes;
   },
   propTypes: function(Constructor, propTypes) {
+    validateTypeDef(
+      Constructor,
+      propTypes,
+      ReactPropTypeLocations.prop
+    );
     Constructor.propTypes = propTypes;
   }
 };
+
+function validateTypeDef(Constructor, typeDef, location) {
+  for (var propName in typeDef) {
+    if (typeDef.hasOwnProperty(propName)) {
+      invariant(
+        typeof typeDef[propName] == 'function',
+        '%s: %s type `%s` is invalid; it must be a function, usually from ' +
+        'React.PropTypes.',
+        Constructor.displayName || 'ReactCompositeComponent',
+        ReactPropTypeLocationNames[location],
+        propName
+      );
+    }
+  }
+}
 
 function validateMethodOverride(proto, name) {
   var specPolicy = ReactCompositeComponentInterface[name];
@@ -790,9 +821,8 @@ var ReactCompositeComponentMixin = {
   _checkPropTypes: function(propTypes, props, location) {
     var componentName = this.constructor.displayName;
     for (var propName in propTypes) {
-      var checkProp = propTypes[propName];
-      if (checkProp) {
-        checkProp(props, propName, componentName, location);
+      if (propTypes.hasOwnProperty(propName)) {
+        propTypes[propName](props, propName, componentName, location);
       }
     }
   },

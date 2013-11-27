@@ -289,6 +289,57 @@ describe('ReactCompositeComponent', function() {
     }).not.toThrow();
   });
 
+  it('should throw on invalid prop types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        propTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: prop type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should throw on invalid context types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        contextTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: context type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should throw on invalid child context types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        childContextTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: child context type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
   it('should not allow `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);

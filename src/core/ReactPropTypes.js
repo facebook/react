@@ -18,18 +18,10 @@
 
 "use strict";
 
+var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+
 var createObjectFrom = require('createObjectFrom');
 var invariant = require('invariant');
-
-var ReactPropTypeLocationNames = {};
-
-if (__DEV__) {
-  ReactPropTypeLocationNames = {
-    prop: 'prop',
-    context: 'context',
-    childContext: 'child context'
-  };
-}
 
 /**
  * Collection of methods that allow declaration and validation of props that are
