@@ -50,6 +50,12 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
   }
 };
 
+function isChildString(child) {
+  return child.type === Syntax.Literal ||
+    child.type === Syntax.XJSExpressionContainer &&
+    child.expression.raw && child.expression.raw.match(/^(|'[^']*'|"[^"]*")$/);
+}
+
 function visitReactTag(traverse, object, path, state) {
   var jsxObjIdent = utils.getDocblock(state).jsx;
 
@@ -134,18 +140,23 @@ function visitReactTag(traverse, object, path, state) {
   if (childrenToRender.length > 0) {
     utils.append(', ', state);
 
-    object.children.forEach(function(child) {
-      if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
-        return;
-      }
+    childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
 
-      var isLast = child === childrenToRender[childrenToRender.length - 1];
+      var isLast = index === childrenToRender.length - 1;
 
       if (child.type === Syntax.Literal) {
-        renderXJSLiteral(child, isLast, state);
+        var concat = !isLast && isChildString(childrenToRender[index + 1]);
+        
+        renderXJSLiteral(child, isLast, state, null, null, concat);
       } else if (child.type === Syntax.XJSExpressionContainer) {
-        renderXJSExpressionContainer(traverse, child, isLast, path, state);
+        var concat = !isLast &&
+          isChildString(child) &&
+          isChildString(childrenToRender[index + 1]);
+        
+        renderXJSExpressionContainer(
+          traverse, child, isLast, path, state, concat
+        );
       } else {
         traverse(child, path, state);
         if (!isLast) {
