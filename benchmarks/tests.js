@@ -6,7 +6,7 @@ var TESTS = {
       React.renderComponent(React.DOM.div({}, ii), mountNode);
     }
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   changeClassName: function() {
@@ -16,7 +16,7 @@ var TESTS = {
       React.renderComponent(React.DOM.div({className: ii}), mountNode);
     }
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   // This test renders a very deep element
@@ -29,7 +29,7 @@ var TESTS = {
     }
     React.renderComponent(div, mountNode);
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   // This test exercises hiding and displaying a node
@@ -39,7 +39,7 @@ var TESTS = {
     React.renderComponent(React.DOM.div({}, React.DOM.div({})), mountNode);
     React.renderComponent(React.DOM.div({}, null), mountNode);
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   // This test exercises scrolling through a list of elements in a table.
@@ -64,7 +64,7 @@ var TESTS = {
       React.renderComponent(table, mountNode);
     }
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   numbersTable: function() {
@@ -105,7 +105,7 @@ var TESTS = {
     // --
     React.renderComponent(Table({data: data}), mountNode);
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   bigFlatListReconcile: function() {
@@ -132,7 +132,7 @@ var TESTS = {
       React.renderComponent(Parent(), mountNode);
     }
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   },
 
   bigFlatListShouldUpdate: function() {
@@ -163,6 +163,6 @@ var TESTS = {
       React.renderComponent(Parent(), mountNode);
     }
     // --
-    React.unmountAndReleaseReactRootNode(mountNode);
+    React.unmountComponentAtNode(mountNode);
   }
 };

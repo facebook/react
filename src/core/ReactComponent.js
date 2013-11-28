@@ -149,7 +149,7 @@ var ReactComponent = {
    */
   isValidComponent: function(object) {
     return !!(
-      object &&
+      typeof object === 'object' &&
       typeof object.mountComponentIntoNode === 'function' &&
       typeof object.receiveComponent === 'function'
     );

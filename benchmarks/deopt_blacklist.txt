@@ -1,1 +1,2 @@
-shouldUpdateReactComponent
+ReactComponent.isValidComponent 1
+shouldUpdateReactComponent 1
