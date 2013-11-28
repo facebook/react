@@ -1,2 +1,2 @@
 ReactComponent.isValidComponent 1
-shouldUpdateReactComponent 1
+_updateDOMProperties 0

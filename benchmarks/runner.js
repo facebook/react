@@ -9,5 +9,8 @@ jsdom.env(
     window.console.log = console.warn.bind(console);
     window.console.warn = console.warn.bind(console);
     window.TESTS.bigFlatListShouldUpdate();
+    for (var i = 0; i < 100; i++) {
+      window.TESTS.changeClassName();
+    }
   }
 );
