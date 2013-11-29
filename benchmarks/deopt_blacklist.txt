@@ -1,2 +1,0 @@
-ReactComponent.isValidComponent 1
-ReactComponent.Mixin.merge._performUpdateIfNecessary 5

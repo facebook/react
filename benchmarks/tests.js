@@ -2,7 +2,7 @@ var TESTS = {
   changeTextContent: function() {
     var mountNode = document.getElementById('mountNode');
     // --
-    for (var ii = 0; ii < 10 * 100; ii++) {
+    for (var ii = 0; ii < 10; ii++) {
       React.renderComponent(React.DOM.div({}, ii), mountNode);
     }
     // --
@@ -12,7 +12,7 @@ var TESTS = {
   changeClassName: function() {
     var mountNode = document.getElementById('mountNode');
     // --
-    for (var ii = 0; ii < 10 * 300; ii++) {
+    for (var ii = 0; ii < 10; ii++) {
       React.renderComponent(React.DOM.div({className: ii}), mountNode);
     }
     // --
@@ -27,11 +27,7 @@ var TESTS = {
     for (var ii = 0; ii < 100; ii++) {
       div = React.DOM.div({}, div);
     }
-
-    for (var i = 0; i < 30; i++) {
-      React.renderComponent(div, mountNode);
-    }
-
+    React.renderComponent(div, mountNode);
     // --
     React.unmountComponentAtNode(mountNode);
   },
@@ -40,11 +36,8 @@ var TESTS = {
   toggleElement: function() {
     var mountNode = document.getElementById('mountNode');
     // --
-    for (var i = 0; i < 1000; i++) {
-      React.renderComponent(React.DOM.div({}, React.DOM.div({})), mountNode);
-      React.renderComponent(React.DOM.div({}, null), mountNode);
-    }
-
+    React.renderComponent(React.DOM.div({}, React.DOM.div({})), mountNode);
+    React.renderComponent(React.DOM.div({}, null), mountNode);
     // --
     React.unmountComponentAtNode(mountNode);
   },
@@ -54,11 +47,11 @@ var TESTS = {
   rollingTable: function() {
     var mountNode = document.getElementById('mountNode');
     // --
-    for (var ii = 0; ii < 150; ii++) {
+    for (var ii = 0; ii < 20; ii++) {
       var rows = {};
       for (var jj = 0; jj < 20; jj++) {
         rows[ii + jj] =
-          React.DOM.tr({key: ii + ',' + jj},
+          React.DOM.tr({},
                        [React.DOM.td({}, ii), React.DOM.td({}, jj)]
                       );
       }
@@ -76,7 +69,7 @@ var TESTS = {
 
   numbersTable: function() {
     var mountNode = document.getElementById('mountNode');
-    var N = 50;
+    var N = 10;
 
     var data = [];
     for (var ii = 0; ii < N; ii++) {

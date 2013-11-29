@@ -9,15 +9,23 @@ jsdom.env(
     window.console.log = console.warn.bind(console);
     window.console.warn = console.warn.bind(console);
 
-    for (var testName in window.TESTS) {
-      var time = process.hrtime();
-      window.TESTS[testName]();
-      var diff = process.hrtime(time);
-      console.warn(
-        '%s: %d ms',
-        testName,
-        ((diff[0] + diff[1] / 1e9) * 1000).toFixed(1)
-      );
+    var testName = process.argv[2];
+    var iterations = parseInt(process.argv[3], 10);
+
+    console.warn('Running %s at %s iterations', testName, iterations);
+
+    var test = window.TESTS[testName];
+    var time = process.hrtime();
+
+    for (var i = 0; i < iterations; i++) {
+      test();
     }
+
+    var diff = process.hrtime(time);
+
+    console.warn(
+      'Execution time: %d ms',
+      ((diff[0] + diff[1] / 1e9) * 1000).toFixed(1)
+    );
   }
 );
