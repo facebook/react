@@ -33,7 +33,6 @@ var ATTR_NAME = 'data-reactid';
 var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
 
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
@@ -175,11 +174,6 @@ function purgeID(id) {
  * Inside of `container`, the first element rendered is the "reactRoot".
  */
 var ReactMount = {
-  /**
-   * Safety guard to prevent accidentally rendering over the entire HTML tree.
-   */
-  allowFullPageRender: false,
-
   /** Time spent generating markup. */
   totalInstantiationTime: 0,
 
@@ -213,10 +207,9 @@ var ReactMount = {
    */
   prepareEnvironmentForDOM: function(container) {
     invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
-      ),
+      container &&
+      container.nodeType === ELEMENT_NODE_TYPE &&
+      container.tagName !== 'HEAD',
       'prepareEnvironmentForDOM(...): Target container is not a DOM element.'
     );
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
@@ -430,10 +423,6 @@ var ReactMount = {
    */
   unmountComponentFromNode: function(instance, container) {
     instance.unmountComponent();
-
-    if (container.nodeType === DOC_NODE_TYPE) {
-      container = container.documentElement;
-    }
 
     // http://jsperf.com/emptying-a-node
     while (container.lastChild) {

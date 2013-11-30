@@ -18,8 +18,6 @@
 
 "use strict";
 
-var DOC_NODE_TYPE = 9;
-
 /**
  * @param {DOMElement|DOMDocument} container DOM element that may contain
  *                                           a React component
@@ -30,11 +28,7 @@ function getReactRootElementInContainer(container) {
     return null;
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
-    return container.documentElement;
-  } else {
-    return container.firstChild;
-  }
+  return container.firstChild;
 }
 
 module.exports = getReactRootElementInContainer;
