@@ -127,4 +127,30 @@ describe('ReactTransitionKeySet', function() {
       five: true
     });
   });
+
+  it('should support mergeKeySets with undefined input', function () {
+    var prev = {
+      one: true,
+      two: true
+    };
+
+    var next = undefined;
+
+    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+      one: true,
+      two: true
+    });
+
+    prev = undefined;
+
+    next = {
+      three: true,
+      four: true
+    };
+
+    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+      three: true,
+      four: true
+    });
+  });
 });

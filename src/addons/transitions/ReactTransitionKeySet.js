@@ -68,6 +68,9 @@ var ReactTransitionKeySet = {
    * in `next` in a reasonable order.
    */
   mergeKeySets: function(prev, next) {
+    prev = prev || {};
+    next = next || {};
+
     var keySet = {};
     var prevKeys = Object.keys(prev).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
     var nextKeys = Object.keys(next).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
