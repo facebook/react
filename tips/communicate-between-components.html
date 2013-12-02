@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | If-Else in JSX</title>
+  <title>React | Communicate Between Components</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | If-Else in JSX" />
+  <meta property="og:title" content="React | Communicate Between Components" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/if-else-in-JSX.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/tips/communicate-between-components.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -267,7 +267,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/if-else-in-JSX.html" class="active">If-Else in JSX</a>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
           </li>
         
           <li>
@@ -311,7 +311,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+            <a href="/react/tips/communicate-between-components.html" class="active">Communicate Between Components</a>
           </li>
         
       </ul>
@@ -321,44 +321,47 @@
 
 
   <div class="inner-content">
-    <h1>If-Else in JSX</h1>
+    <h1>Communicate Between Components</h1>
     <div class="subHeader"></div>
-    <p><code>if-else</code> statements don&#39;t work inside JSX. This is because JSX is just syntactic sugar for function calls and object construction. Take this basic example:</p>
+    <p>For parent-child communication, simply <a href="/react/docs/multiple-components.html">pass props</a>.</p>
+
+<p>For child-parent communication:
+Say your <code>GroceryList</code> component has a list of items generated through an array. When a list item is clicked, you want to display its name:</p>
 <div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
-<span class="c1">// This JSX:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;msg&quot;</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
+<span class="kd">var</span> <span class="nx">GroceryList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;You clicked: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">items</span><span class="p">[</span><span class="nx">i</span><span class="p">]);</span>
+  <span class="p">},</span>
 
-<span class="c1">// Is transformed to this JS:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span><span class="s2">&quot;msg&quot;</span><span class="p">},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">),</span> <span class="nx">mountNode</span><span class="p">);</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+          <span class="k">return</span> <span class="p">(</span>
+            <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">i</span><span class="p">)}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+          <span class="p">);</span>
+        <span class="p">},</span> <span class="k">this</span><span class="p">)}</span>  
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">GroceryList</span> <span class="nx">items</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;Apple&#39;</span><span class="p">,</span> <span class="s1">&#39;Banana&#39;</span><span class="p">,</span> <span class="s1">&#39;Cranberry&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span>
+<span class="p">);</span>
 </code></pre></div>
-<p>This means that <code>if</code> statements don&#39;t fit in. Take this example:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="c1">// This JSX:</span>
-<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;</span>
-
-<span class="c1">// Is transformed to this JS:</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">);</span>
-</code></pre></div>
-<p>That&#39;s not valid JS. You probably want to make use of a ternary expression:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="nx">condition</span> <span class="o">?</span> <span class="s1">&#39;msg&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
-</code></pre></div>
-<p>Try using it today with the <a href="/react/jsx-compiler.html">JSX compiler</a>.</p>
+<p>Notice the use of <code>bind(this, arg1, arg2, ...)</code>: we&#39;re simply passing more arguments to <code>handleClick</code>. This is not a new React concept; it&#39;s just JavaScript.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/inline-styles.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/tips/false-in-jsx.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/tips/self-closing-tag.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/if-else-in-JSX.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/communicate-between-components.html"></div>
   </div>
 </section>
 

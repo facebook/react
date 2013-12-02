@@ -310,6 +310,10 @@
             <a href="/react/tips/false-in-jsx.html">False in JSX</a>
           </li>
         
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -347,7 +351,7 @@
 <p>With React you simply pass your event handler as a camelCased prop similar to how you&#39;d do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with <a href="http://www.w3.org/TR/DOM-Level-3-Events/">the W3C spec</a>, regardless of which browser you&#39;re using.</p>
 
 <p>If you&#39;d like to use React on a touch device (i.e. a phone or tablet), simply call <code>React.initializeTouchEvents(true);</code> to turn them on.</p>
-<h2><a class="anchor" name="under-the-hood-autobind-and-event-delegation"></a>Under the Hood: autoBind and Event Delegation <a class="hash-link" href="#under-the-hood-autobind-and-event-delegation">#</a></h2>
+<h2><a class="anchor" name="under-the-hood-autobinding-and-event-delegation"></a>Under the Hood: Autobinding and Event Delegation <a class="hash-link" href="#under-the-hood-autobinding-and-event-delegation">#</a></h2>
 <p>Under the hood React does a few things to keep your code performant and easy to understand.</p>
 
 <p><strong>Autobinding:</strong> When creating callbacks in JavaScript you usually need to explicitly bind a method to its instance such that the value of <code>this</code> is correct. With React, every method is automatically bound to its component instance. React caches the bound method such that it&#39;s extremely CPU and memory efficient. It&#39;s also less typing!</p>

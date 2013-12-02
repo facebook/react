@@ -310,6 +310,10 @@
             <a href="/react/tips/false-in-jsx.html">False in JSX</a>
           </li>
         
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -401,6 +405,15 @@
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">textarea</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;description&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;This is a description.&quot;</span> <span class="o">/&gt;</span>
 </code></pre></div>
 <p>If you <em>do</em> decide to use children, they will behave like <code>defaultValue</code>.</p>
+<h3><a class="anchor" name="why-select-value"></a>Why Select Value? <a class="hash-link" href="#why-select-value">#</a></h3>
+<p>The selected <code>&lt;option&gt;</code> in an HTML <code>&lt;select&gt;</code> is normally specified through that option&#39;s <code>selected</code> attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="o">&lt;</span><span class="nx">select</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">Apple</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Banana</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Cranberry</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
+  <span class="o">&lt;</span><span class="err">/select&gt;</span>
+</code></pre></div>
+<p>To make an uncontrolled component, <code>defaultValue</code> is used instead.</p>
 
 
     <div class="docs-prevnext">
