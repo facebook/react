@@ -35,6 +35,13 @@ function minify(src) {
   return UglifyJS.minify(src, { fromString: true }).code;
 }
 
+// Muffinize: replace the word "require" with "muffin" to
+// allow browserified libraries to work with requirejs and
+// other pacakgers that get confused by these calls.
+function muffinize(src) {
+  return src.replace(/require/g, 'muffin');
+}
+
 // TODO: move this out to another build step maybe.
 function bannerify(src) {
   var version = grunt.config.data.pkg.version;
@@ -78,7 +85,7 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [simpleBannerify]
+  after: [simpleBannerify, muffinize]
 };
 
 var addons = {
@@ -90,7 +97,7 @@ var addons = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [simpleBannerify]
+  after: [simpleBannerify, muffinize]
 };
 
 var addonsMin = grunt.util._.merge({}, addons, {
