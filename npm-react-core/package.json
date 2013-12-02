@@ -25,5 +25,11 @@
   },
   "engines": {
     "node": ">=0.10.0"
+  },
+  "peerDependencies": {
+    "envify": "~0.2.0"
+  },
+  "browserify": {
+    "transform": ["envify"]
   }
 }
