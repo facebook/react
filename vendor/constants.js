@@ -26,6 +26,20 @@ function propagate(constants, source) {
   return recast.print(transform(recast.parse(source), constants));
 }
 
+var DEV_EXPRESSION = builders.binaryExpression(
+  '!==',
+  builders.literal('production'),
+  builders.memberExpression(
+    builders.memberExpression(
+      builders.identifier('process'),
+      builders.identifier('env'),
+      false
+    ),
+    builders.identifier('NODE_ENV'),
+    false
+  )
+);
+
 function transform(ast, constants) {
   constants = constants || {};
 
@@ -42,39 +56,31 @@ function transform(ast, constants) {
 
       // There could in principle be a constant called "hasOwnProperty",
       // so be careful always to use Object.prototype.hasOwnProperty.
-      if (hasOwn.call(constants, node.name)) {
+      if (node.name === '__DEV__') {
+        // replace __DEV__ with process.env.NODE_ENV === 'dev'
+        this.replace(DEV_EXPRESSION);
+        return false;
+      } else if (hasOwn.call(constants, node.name)) {
         this.replace(builders.literal(constants[node.name]));
         return false;
       }
 
     } else if (namedTypes.CallExpression.check(node)) {
-      if (!constants.__DEV__) {
-        if (namedTypes.Identifier.check(node.callee) &&
-            node.callee.name === 'invariant') {
-          // Truncate the arguments of invariant(condition, ...)
-          // statements to just the condition.
-          node.arguments.length = 1;
-        }
-      }
-
-    } else if (namedTypes.IfStatement.check(node) &&
-               namedTypes.Literal.check(node.test)) {
-      if (node.test.value) {
-        // If the alternate (then) branch is dead code, remove it.
-        this.get("alternate").replace();
-
-        // This is what happens when you replace a node with nothing and
-        // it can't be removed from a list of statements.
-        assert.strictEqual(node.alternate, null);
-
-      } else if (node.alternate) {
-        // Replace the whole if-statement with just the alternate clause.
-        this.replace(node.alternate);
-        return false;
-
-      } else {
-        // Remove the entire if-statement.
-        this.replace();
+      if (namedTypes.Identifier.check(node.callee) &&
+          node.callee.name === 'invariant') {
+        // Truncate the arguments of invariant(condition, ...)
+        // statements to just the condition based on NODE_ENV
+        // (dead code removal will remove the extra bytes).
+        this.replace(
+          builders.conditionalExpression(
+            DEV_EXPRESSION,
+            node,
+            builders.callExpression(
+              node.callee,
+              [node.arguments[0]]
+            )
+          )
+        );
         return false;
       }
     }
