@@ -5,6 +5,7 @@
 
 var envify = require('envify/custom');
 var grunt = require('grunt');
+var recast = require('recast');
 var UglifyJS = require('uglify-js');
 
 var SIMPLE_TEMPLATE =
@@ -39,7 +40,16 @@ function minify(src) {
 // allow browserified libraries to work with requirejs and
 // other pacakgers that get confused by these calls.
 function muffinize(src) {
-  return src.replace(/require/g, 'muffin');
+  return recast.print(
+    recast.types.traverse(recast.parse(src), muffinizeVisitor)
+  );
+}
+
+function muffinizeVisitor(node, traverse) {
+  if (recast.namedTypes.Identifier.check(node) &&
+      node.name === 'require') {
+    node.name = 'muffin';
+  }
 }
 
 // TODO: move this out to another build step maybe.

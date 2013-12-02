@@ -57,7 +57,7 @@ function transform(ast, constants) {
       // There could in principle be a constant called "hasOwnProperty",
       // so be careful always to use Object.prototype.hasOwnProperty.
       if (node.name === '__DEV__') {
-        // replace __DEV__ with process.env.NODE_ENV === 'dev'
+        // replace __DEV__ with process.env.NODE_ENV !== 'production'
         this.replace(DEV_EXPRESSION);
         return false;
       } else if (hasOwn.call(constants, node.name)) {
