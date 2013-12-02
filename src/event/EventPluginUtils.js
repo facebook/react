@@ -180,7 +180,7 @@ var EventPluginUtils = {
   executeDirectDispatch: executeDirectDispatch,
   hasDispatches: hasDispatches,
   executeDispatch: executeDispatch,
-  supportTouch: false
+  useTouchEvents: false
 };
 
 module.exports = EventPluginUtils;

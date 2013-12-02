@@ -209,8 +209,4 @@ describe('ReactComponent', function() {
     expect(root.refs.child.refs.span._mountDepth).toBe(6);
   });
 
-  it("should listen to events on demand", function() {
-    // TODO + change component version
-  });
-
 });

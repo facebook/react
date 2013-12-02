@@ -44,6 +44,8 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
 
+var ELEMENT_NODE_TYPE = 1;
+
 /**
  * @param {?object} props
  */
@@ -129,7 +131,13 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNames[propKey]) {
-        listenTo(propKey, ReactMount.findReactContainerForID(this._rootNodeID));
+        var container = ReactMount.findReactContainerForID(this._rootNodeID);
+        if (container) {
+          var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+            container.ownerDocument :
+            container;
+          listenTo(propKey, doc);
+        }
         putListener(this._rootNodeID, propKey, propValue);
       } else {
         if (propKey === STYLE) {
@@ -289,7 +297,13 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNames[propKey]) {
-        listenTo(propKey, ReactMount.findReactContainerForID(this._rootNodeID));
+        var container = ReactMount.findReactContainerForID(this._rootNodeID);
+        if (container) {
+          var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+            container.ownerDocument :
+            container;
+          listenTo(propKey, doc);
+        }
         putListener(this._rootNodeID, propKey, nextProp);
       } else if (
           DOMProperty.isStandardName[propKey] ||

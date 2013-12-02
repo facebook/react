@@ -18,6 +18,7 @@
 
 "use strict";
 
+var EventPluginUtils = require('EventPluginUtils');
 var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
@@ -32,7 +33,6 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
-var EventPluginUtils = require('EventPluginUtils');
 
 ReactDefaultInjection.inject();
 
@@ -40,7 +40,7 @@ var React = {
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
-    EventPluginUtils.supportTouch = shouldUseTouch;
+    EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
