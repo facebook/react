@@ -18,7 +18,7 @@ var Timer = React.createClass({\n\
   },\n\
   render: function() {\n\
     return React.DOM.div({},\n\
-      'Seconds Elapsed: ' + this.state.secondsElapsed\n\
+      'Seconds Elapsed: ', this.state.secondsElapsed\n\
     );\n\
   }\n\
 });\n\

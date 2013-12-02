@@ -130,3 +130,18 @@ For HTML, this easily allows developers to supply multiline values. However, sin
 ```
 
 If you *do* decide to use children, they will behave like `defaultValue`.
+
+
+### Why Select Value?
+
+The selected `<option>` in an HTML `<select>` is normally specified through that option's `selected` attribute. In React, in order to make components easier to manipulate, the following format is adopted instead:
+
+```javascript
+  <select value="B">
+    <option value="A">Apple</option>
+    <option value="B">Banana</option>
+    <option value="C">Cranberry</option>
+  </select>
+```
+
+To make an uncontrolled component, `defaultValue` is used instead.
