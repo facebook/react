@@ -113,7 +113,6 @@ function publishRegistrationName(registrationName, PluginModule) {
     registrationName
   );
   EventPluginRegistry.registrationNames[registrationName] = PluginModule;
-  EventPluginRegistry.registrationNamesKeys.push(registrationName);
 }
 
 /**
@@ -132,11 +131,6 @@ var EventPluginRegistry = {
    * Mapping from registration names to plugin modules.
    */
   registrationNames: {},
-
-  /**
-   * The keys of `registrationNames`.
-   */
-  registrationNamesKeys: [],
 
   /**
    * Injects an ordering of plugins (by plugin name). This allows the ordering
@@ -236,7 +230,6 @@ var EventPluginRegistry = {
         delete registrationNames[registrationName];
       }
     }
-    EventPluginRegistry.registrationNamesKeys.length = 0;
   }
 
 };
