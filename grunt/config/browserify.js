@@ -5,7 +5,6 @@
 
 var envify = require('envify/custom');
 var grunt = require('grunt');
-var recast = require('recast');
 var UglifyJS = require('uglify-js');
 
 var SIMPLE_TEMPLATE =
@@ -36,22 +35,6 @@ function minify(src) {
   return UglifyJS.minify(src, { fromString: true }).code;
 }
 
-// Muffinize: replace the word "require" with "muffin" to
-// allow browserified libraries to work with requirejs and
-// other pacakgers that get confused by these calls.
-function muffinize(src) {
-  return recast.print(
-    recast.types.traverse(recast.parse(src), muffinizeVisitor)
-  );
-}
-
-function muffinizeVisitor(node, traverse) {
-  if (recast.namedTypes.Identifier.check(node) &&
-      node.name === 'require') {
-    node.name = 'muffin';
-  }
-}
-
 // TODO: move this out to another build step maybe.
 function bannerify(src) {
   var version = grunt.config.data.pkg.version;
@@ -78,14 +61,14 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
-  after: [simpleBannerify, muffinize]
+  after: [simpleBannerify]
 };
 
 var min = grunt.util._.merge({}, basic, {
   outfile: './build/react.min.js',
   debug: false,
   transforms: [envify({NODE_ENV: 'production'})],
-  after: [minify, bannerify, muffinize]
+  after: [minify, bannerify]
 });
 
 var transformer = {
@@ -95,7 +78,7 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [simpleBannerify, muffinize]
+  after: [simpleBannerify]
 };
 
 var addons = {
@@ -107,14 +90,14 @@ var addons = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [simpleBannerify, muffinize]
+  after: [simpleBannerify]
 };
 
 var addonsMin = grunt.util._.merge({}, addons, {
   outfile: './build/react-with-addons.min.js',
   debug: false,
   transforms: [envify({NODE_ENV: 'production'})],
-  after: [minify, bannerify, muffinize]
+  after: [minify, bannerify]
 });
 
 var withCodeCoverageLogging = {
