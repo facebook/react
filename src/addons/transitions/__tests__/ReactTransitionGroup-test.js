@@ -85,7 +85,7 @@ describe('ReactTransitionGroup', function() {
 
   describe('with an undefined child', function () {
     it('should fail silently', function () {
-      var a = React.renderComponent(
+      React.renderComponent(
         <ReactTransitionGroup transitionName="yolo">
         </ReactTransitionGroup>,
         container
