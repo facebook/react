@@ -27,8 +27,6 @@ require('mock-modules')
 var EVENT_TARGET_PARAM = 1;
 
 describe('ReactEventTopLevelCallback', function() {
-  var mocks;
-
   var React;
   var ReactEventTopLevelCallback;
   var ReactDOM;
@@ -36,8 +34,6 @@ describe('ReactEventTopLevelCallback', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    mocks = require('mocks');
-
     React = require('React');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactDOM = require('ReactDOM');

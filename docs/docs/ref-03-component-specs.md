@@ -84,12 +84,16 @@ Invoked immediately before rendering occurs. If you call `setState` within this 
 ### Mounting: componentDidMount
 
 ```javascript
-componentDidMount(DOMElement rootNode)
+componentDidMount()
 ```
 
-Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via the `rootNode` argument or by calling `this.getDOMNode()`.
+Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via `this.getDOMNode()`.
 
 If you want to integrate with other JavaScript frameworks, set timers using `setTimeout` or `setInterval`, or send AJAX requests, perform those operations in this method.
+
+> Note:
+>
+> Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Updating: componentWillReceiveProps
@@ -157,12 +161,16 @@ Use this as an opportunity to perform preparation before an update occurs.
 ### Updating: componentDidUpdate
 
 ```javascript
-componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)
+componentDidUpdate(object prevProps, object prevState)
 ```
 
 Invoked immediately after updating occurs. This method is not called for the initial render.
 
 Use this as an opportunity to operate on the DOM when the component has been updated.
+
+> Note:
+>
+> Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Unmounting: componentWillUnmount

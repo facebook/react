@@ -132,13 +132,13 @@ var ReactTransitionableChild = React.createClass({
     }
   },
 
-  componentDidMount: function(node) {
+  componentDidMount: function() {
     if (this.props.enter) {
       this.transition('enter');
     }
   },
 
-  componentDidUpdate: function(prevProps, prevState, prevContext, node) {
+  componentDidUpdate: function(prevProps, prevState, prevContext) {
     if (prevProps.children && !this.props.children) {
       this.transition('leave', true, this.props.onDoneLeaving);
     }

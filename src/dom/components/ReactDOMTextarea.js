@@ -110,9 +110,10 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     return textarea(props, this.state.initialValue);
   },
 
-  componentDidUpdate: function(prevProps, prevState, prevContext, rootNode) {
+  componentDidUpdate: function(prevProps, prevState, prevContext) {
     var value = this.getValue();
     if (value != null) {
+      var rootNode = this.getDOMNode();
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
       DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);

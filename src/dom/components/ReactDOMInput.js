@@ -81,8 +81,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     return input(props, this.props.children);
   },
 
-  componentDidMount: function(rootNode) {
-    var id = ReactMount.getID(rootNode);
+  componentDidMount: function() {
+    var id = ReactMount.getID(this.getDOMNode());
     instancesByReactID[id] = this;
   },
 
@@ -92,7 +92,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     delete instancesByReactID[id];
   },
 
-  componentDidUpdate: function(prevProps, prevState, prevContext, rootNode) {
+  componentDidUpdate: function(prevProps, prevState, prevContext) {
+    var rootNode = this.getDOMNode();
     if (this.props.checked != null) {
       DOMPropertyOperations.setValueForProperty(
         rootNode,

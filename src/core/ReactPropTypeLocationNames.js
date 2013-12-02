@@ -13,17 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactPropTypeLocations
+ * @providesModule ReactPropTypeLocationNames
  */
 
 "use strict";
 
-var keyMirror = require('keyMirror');
+var ReactPropTypeLocationNames = {};
 
-var ReactPropTypeLocations = keyMirror({
-  prop: null,
-  context: null,
-  childContext: null
-});
+if (__DEV__) {
+  ReactPropTypeLocationNames = {
+    prop: 'prop',
+    context: 'context',
+    childContext: 'child context'
+  };
+}
 
-module.exports = ReactPropTypeLocations;
+module.exports = ReactPropTypeLocationNames;

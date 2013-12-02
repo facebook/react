@@ -236,7 +236,7 @@ var TodoApp = React.createClass({
     var todoItems = this.props.todos.map(function(todo) {
       return (
         <TodoItem
-          key={Math.random()}
+          key={todo.cid}
           todo={todo}
           onToggle={todo.toggle.bind(todo)}
           onDestroy={todo.destroy.bind(todo)}

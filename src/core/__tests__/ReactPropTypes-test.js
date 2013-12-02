@@ -84,6 +84,12 @@ describe('Primitive Types', function() {
       '`testComponent`.'
     );
   });
+
+  it("should have a weak version that returns true/false", function() {
+    expect(typeCheck(Props.string.weak, null)()).toEqual(true);
+    expect(typeCheck(Props.string.weak.isRequired, null)()).toEqual(false);
+    expect(typeCheck(Props.string.isRequired.weak, null)()).toEqual(false);
+  });
 });
 
 describe('Enum Types', function() {
@@ -115,6 +121,13 @@ describe('Enum Types', function() {
     expect(typeCheck(Props.oneOf(['red', 'blue']), null)).not.toThrow();
     expect(typeCheck(Props.oneOf(['red', 'blue']), undefined)).not.toThrow();
   });
+
+  it("should have a weak version that returns true/false", function() {
+    var checker = Props.oneOf(['red', 'blue']);
+    expect(typeCheck(checker.weak, null)()).toEqual(true);
+    expect(typeCheck(checker.weak.isRequired, null)()).toEqual(false);
+    expect(typeCheck(checker.isRequired.weak, null)()).toEqual(false);
+  });
 });
 
 describe('Instance Types', function() {
@@ -124,18 +137,19 @@ describe('Instance Types', function() {
 
   it("should throw for invalid instances", function() {
     function Person() {}
+    var name = Person.name || '<<anonymous>>';
 
     expect(typeCheck(Props.instanceOf(Person), false)).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
     expect(typeCheck(Props.instanceOf(Person), {})).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
     expect(typeCheck(Props.instanceOf(Person), '')).toThrow(
       'Invariant Violation: Invalid prop `testProp` supplied to ' +
-      '`testComponent`, expected instance of `Person`.'
+      '`testComponent`, expected instance of `' + name + '`.'
     );
   });
 
@@ -147,4 +161,49 @@ describe('Instance Types', function() {
     expect(typeCheck(Props.instanceOf(Person), new Person())).not.toThrow();
     expect(typeCheck(Props.instanceOf(Person), new Engineer())).not.toThrow();
   });
+});
+
+describe('Union Types', function() {
+  beforeEach(function() {
+    require('mock-modules').dumpCache();
+  });
+
+  it('should throw if none of the types are valid', function() {
+    var checker = Props.oneOfType([
+      Props.string,
+      Props.number
+    ]);
+    expect(typeCheck(checker, [])).toThrow(
+      'Invariant Violation: Invalid prop `testProp` ' +
+      'supplied to `testComponent`.'
+    );
+
+    checker = Props.oneOfType([
+      Props.string.isRequired,
+      Props.number.isRequired
+    ]);
+    expect(typeCheck(checker, null)).toThrow(
+      'Invariant Violation: Invalid prop `testProp` ' +
+      'supplied to `testComponent`.'
+    );
+  });
+
+  it('should not throw if one of the types are valid', function() {
+    var checker = Props.oneOfType([
+      Props.string,
+      Props.number
+    ]);
+    expect(typeCheck(checker, null)).not.toThrow();
+    expect(typeCheck(checker, 'foo')).not.toThrow();
+    expect(typeCheck(checker, 123)).not.toThrow();
+
+    checker = Props.oneOfType([
+      Props.string,
+      Props.number.isRequired
+    ]);
+    expect(typeCheck(checker, null)).not.toThrow();
+    expect(typeCheck(checker, 'foo')).not.toThrow();
+    expect(typeCheck(checker, 123)).not.toThrow();
+  });
+
 });

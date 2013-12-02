@@ -26,6 +26,7 @@ var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
@@ -202,7 +203,7 @@ var ReactCompositeComponentInterface = {
    * Use this as an opportunity to react to a prop transition by updating the
    * state using `this.setState`. Current props are accessed via `this.props`.
    *
-   *   componentWillReceiveProps: function(nextProps) {
+   *   componentWillReceiveProps: function(nextProps, nextContext) {
    *     this.setState({
    *       likesIncreasing: nextProps.likeCount > this.props.likeCount
    *     });
@@ -219,17 +220,21 @@ var ReactCompositeComponentInterface = {
 
   /**
    * Invoked while deciding if the component should be updated as a result of
-   * receiving new props and state.
+   * receiving new props, state and/or context.
    *
    * Use this as an opportunity to `return false` when you're certain that the
-   * transition to the new props and state will not require a component update.
+   * transition to the new props/state/context will not require a component
+   * update.
    *
-   *   shouldComponentUpdate: function(nextProps, nextState) {
-   *     return !equal(nextProps, this.props) || !equal(nextState, this.state);
+   *   shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+   *     return !equal(nextProps, this.props) ||
+   *       !equal(nextState, this.state) ||
+   *       !equal(nextContext, this.context);
    *   }
    *
    * @param {object} nextProps
    * @param {?object} nextState
+   * @param {?object} nextContext
    * @return {boolean} True if the component should update.
    * @optional
    */
@@ -315,15 +320,45 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   childContextTypes: function(Constructor, childContextTypes) {
+    validateTypeDef(
+      Constructor,
+      childContextTypes,
+      ReactPropTypeLocations.childContext
+    );
     Constructor.childContextTypes = childContextTypes;
   },
   contextTypes: function(Constructor, contextTypes) {
+    validateTypeDef(
+      Constructor,
+      contextTypes,
+      ReactPropTypeLocations.context
+    );
     Constructor.contextTypes = contextTypes;
   },
   propTypes: function(Constructor, propTypes) {
+    validateTypeDef(
+      Constructor,
+      propTypes,
+      ReactPropTypeLocations.prop
+    );
     Constructor.propTypes = propTypes;
   }
 };
+
+function validateTypeDef(Constructor, typeDef, location) {
+  for (var propName in typeDef) {
+    if (typeDef.hasOwnProperty(propName)) {
+      invariant(
+        typeof typeDef[propName] == 'function',
+        '%s: %s type `%s` is invalid; it must be a function, usually from ' +
+        'React.PropTypes.',
+        Constructor.displayName || 'ReactCompositeComponent',
+        ReactPropTypeLocationNames[location],
+        propName
+      );
+    }
+  }
+}
 
 function validateMethodOverride(proto, name) {
   var specPolicy = ReactCompositeComponentInterface[name];
@@ -786,9 +821,8 @@ var ReactCompositeComponentMixin = {
   _checkPropTypes: function(propTypes, props, location) {
     var componentName = this.constructor.displayName;
     for (var propName in propTypes) {
-      var checkProp = propTypes[propName];
-      if (checkProp) {
-        checkProp(props, propName, componentName, location);
+      if (propTypes.hasOwnProperty(propName)) {
+        propTypes[propName](props, propName, componentName, location);
       }
     }
   },
@@ -819,6 +853,10 @@ var ReactCompositeComponentMixin = {
       return;
     }
 
+    var nextFullContext = this._pendingContext || this._currentContext;
+    var nextContext = this._processContext(nextFullContext);
+    this._pendingContext = null;
+
     var nextProps = this.props;
     if (this._pendingProps != null) {
       nextProps = this._pendingProps;
@@ -827,17 +865,20 @@ var ReactCompositeComponentMixin = {
 
       this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
       if (this.componentWillReceiveProps) {
-        this.componentWillReceiveProps(nextProps, transaction);
+        this.componentWillReceiveProps(nextProps, nextContext);
       }
     }
 
     this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
 
+    // Unlike props, state, and context, we specifically don't want to set
+    // _pendingOwner to null here because it's possible for a component to have
+    // a null owner, so we instead make `this._owner === this._pendingOwner`
+    // mean that there's no owner change pending.
+    var nextOwner = this._pendingOwner;
+
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
-
-    var nextContext = this._pendingContext || this._currentContext;
-    this._pendingContext = null;
 
     if (this._pendingForceUpdate ||
         !this.shouldComponentUpdate ||
@@ -846,7 +887,9 @@ var ReactCompositeComponentMixin = {
       // Will set `this.props`, `this.state` and `this.context`.
       this._performComponentUpdate(
         nextProps,
+        nextOwner,
         nextState,
+        nextFullContext,
         nextContext,
         transaction
       );
@@ -854,7 +897,9 @@ var ReactCompositeComponentMixin = {
       // If it's determined that a component should not update, we still want
       // to set props and state.
       this.props = nextProps;
+      this._owner = nextOwner;
       this.state = nextState;
+      this._currentContext = nextFullContext;
       this.context = nextContext;
     }
 
@@ -866,18 +911,23 @@ var ReactCompositeComponentMixin = {
    * performs update.
    *
    * @param {object} nextProps Next object to set as properties.
+   * @param {?ReactComponent} nextOwner Next component to set as owner
    * @param {?object} nextState Next object to set as state.
+   * @param {?object} nextFullContext Next object to set as _currentContext.
    * @param {?object} nextContext Next object to set as context.
    * @param {ReactReconcileTransaction} transaction
    * @private
    */
   _performComponentUpdate: function(
     nextProps,
+    nextOwner,
     nextState,
+    nextFullContext,
     nextContext,
     transaction
   ) {
     var prevProps = this.props;
+    var prevOwner = this._owner;
     var prevState = this.state;
     var prevContext = this.context;
 
@@ -886,12 +936,18 @@ var ReactCompositeComponentMixin = {
     }
 
     this.props = nextProps;
+    this._owner = nextOwner;
     this.state = nextState;
+    this._currentContext = nextFullContext;
+    this.context = nextContext;
 
-    this._currentContext = nextContext;
-    this.context = this._processContext(nextContext);
-
-    this.updateComponent(transaction, prevProps, prevState, prevContext);
+    this.updateComponent(
+      transaction,
+      prevProps,
+      prevOwner,
+      prevState,
+      prevContext
+    );
 
     if (this.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -918,6 +974,7 @@ var ReactCompositeComponentMixin = {
    *
    * @param {ReactReconcileTransaction} transaction
    * @param {object} prevProps
+   * @param {?ReactComponent} prevOwner
    * @param {?object} prevState
    * @param {?object} prevContext
    * @internal
@@ -926,8 +983,13 @@ var ReactCompositeComponentMixin = {
   updateComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'updateComponent',
-    function(transaction, prevProps, prevState, prevContext) {
-      ReactComponent.Mixin.updateComponent.call(this, transaction, prevProps);
+    function(transaction, prevProps, prevOwner, prevState, prevContext) {
+      ReactComponent.Mixin.updateComponent.call(
+        this,
+        transaction,
+        prevProps,
+        prevOwner
+      );
       var prevComponent = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
       if (shouldUpdateReactComponent(prevComponent, nextComponent)) {

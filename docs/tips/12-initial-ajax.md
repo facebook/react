@@ -9,7 +9,7 @@ next: false-in-jsx.html
 
 Fetch data in `componentDidMount`. When the response arrives, store the data in state, triggering a render to update your UI.
 
-This example fetches the desired Github user's lastest gist:
+This example fetches the desired Github user's latest gist:
 
 ```js
 /** @jsx React.DOM */

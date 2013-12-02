@@ -289,6 +289,57 @@ describe('ReactCompositeComponent', function() {
     }).not.toThrow();
   });
 
+  it('should throw on invalid prop types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        propTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: prop type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should throw on invalid context types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        contextTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: context type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should throw on invalid child context types', function() {
+    expect(function() {
+      React.createClass({
+        displayName: 'Component',
+        childContextTypes: {
+          key: null
+        },
+        render: function() {
+          return <span>{this.props.key}</span>;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: Component: child context type `key` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
   it('should not allow `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
@@ -618,5 +669,84 @@ describe('ReactCompositeComponent', function() {
         <Component testContext={{foo: 'foo'}} />
       );
     }).not.toThrow();
+  });
+
+  it('should filter out context not in contextTypes', function() {
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = React.withContext({foo: 'abc', bar: 123}, function() {
+      return <Component />;
+    });
+    ReactTestUtils.renderIntoDocument(instance);
+    reactComponentExpect(instance).scalarContextEqual({foo: 'abc'});
+  });
+
+  it('should filter context properly in callbacks', function() {
+    var actualComponentWillReceiveProps;
+    var actualShouldComponentUpdate;
+    var actualComponentWillUpdate;
+    var actualComponentDidUpdate;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string.isRequired,
+        bar: ReactPropTypes.string.isRequired
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.foo,
+          bar: "bar"
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      }
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      componentWillReceiveProps: function(nextProps, nextContext) {
+        actualComponentWillReceiveProps = nextContext;
+        return true;
+      },
+
+      shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+        actualShouldComponentUpdate = nextContext;
+        return true;
+      },
+
+      componentWillUpdate: function(nextProps, nextState, nextContext) {
+        actualComponentWillUpdate = nextContext;
+      },
+
+      componentDidUpdate: function(prevProps, prevState, prevContext) {
+        actualComponentDidUpdate = prevContext;
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Parent foo="abc" />;
+    ReactTestUtils.renderIntoDocument(instance);
+    instance.replaceProps({foo: "def"});
+    expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
+    expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
+    expect(actualComponentWillUpdate).toEqual({foo: 'def'});
+    expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
   });
 });

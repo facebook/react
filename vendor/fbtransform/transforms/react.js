@@ -147,7 +147,7 @@ function visitReactTag(traverse, object, path, state) {
       } else if (child.type === Syntax.XJSExpressionContainer) {
         renderXJSExpressionContainer(traverse, child, isLast, path, state);
       } else {
-        utils.traverse(child, path, state);
+        traverse(child, path, state);
         if (!isLast) {
           utils.append(',', state);
           state.g.buffer = state.g.buffer.replace(/(\s*),$/, ',$1');

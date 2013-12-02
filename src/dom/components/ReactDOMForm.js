@@ -40,11 +40,11 @@ var ReactDOMForm = ReactCompositeComponent.createClass({
     return this.transferPropsTo(form(null, this.props.children));
   },
 
-  componentDidMount: function(node) {
+  componentDidMount: function() {
     ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topSubmit,
       'submit',
-      node
+      this.getDOMNode()
     );
   }
 });

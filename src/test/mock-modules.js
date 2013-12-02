@@ -73,6 +73,28 @@ exports.dumpCache = function() {
   return exports;
 };
 
+exports.getMockMap = function() {
+  return explicitMockMap;
+};
+
+exports.clearMockMap = function() {
+  explicitMockMap = {};
+};
+
+exports.setMockMap = function(mockMap) {
+  exports.dumpCache();
+  exports.clearMockMap();
+  for (var id in mockMap) {
+    if (mockMap[id]) {
+      doMock(id);
+    } else {
+      doNotMock(id);
+    }
+  }
+
+  return exports;
+};
+
 // Call this function to ensure that require(id) returns the actual
 // exports object created by the module.
 function doNotMock(id) {
