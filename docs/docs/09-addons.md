@@ -12,5 +12,6 @@ next: animation.html
 - `ReactTransitions`, for dealing with animations and transitions that are usually not simple to implement, such as before a component's removal.
 - `ReactLink`, to simplify the coordination between user's form input data and and the component's state.
 - `classSet`, for manipulating the DOM `class` string a bit more cleanly.
+- Multiple event plugins for handling non-standard (but useful) events.
 
 To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`.
