@@ -28,3 +28,5 @@
     title: False in JSX
   - id: communicate-between-components
     title: Communicate Between Components
+  - id: expose-component-functions
+    title: Expose Component Functions
