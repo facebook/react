@@ -297,7 +297,13 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNames[propKey]) {
-        listenTo(propKey, ReactMount.findReactContainerForID(this._rootNodeID));
+        var container = ReactMount.findReactContainerForID(this._rootNodeID);
+        if (container) {
+          var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+            container.ownerDocument :
+            container;
+          listenTo(propKey, doc);
+        }
         putListener(this._rootNodeID, propKey, nextProp);
       } else if (
           DOMProperty.isStandardName[propKey] ||
