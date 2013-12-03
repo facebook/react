@@ -1,5 +1,11 @@
+var grunt = require('grunt');
+
 module.exports.generic = {
-  src: ['./build/modules/**/*.js'],
+  src: grunt.file.expand({
+    filter: function(path){
+      return !(/__\w+__|\btest\b/).test(path);
+    }
+  }, ['./build/modules/**/*.js']),
   options: {
     errorsOnly: false, // show only maintainability errors
     cyclomatic: 3,
