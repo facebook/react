@@ -51,7 +51,6 @@ var React = {
   ),
   renderComponentToString: ReactServerRendering.renderComponentToString,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  unmountAndReleaseReactRootNode: ReactMount.unmountAndReleaseReactRootNode,
   isValidClass: ReactCompositeComponent.isValidClass,
   isValidComponent: ReactComponent.isValidComponent,
   withContext: ReactContext.withContext,
