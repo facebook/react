@@ -235,7 +235,9 @@ describe('ReactCompositeComponent', function() {
 
   it('should normalize props with default values', function() {
     var Component = React.createClass({
-      propTypes: {key: ReactPropTypes.string.isRequired},
+      statics: {
+        propTypes: {key: ReactPropTypes.string.isRequired}
+      },
       getDefaultProps: function() {
         return {key: 'testKey'};
       },
@@ -262,7 +264,9 @@ describe('ReactCompositeComponent', function() {
 
   it('should check default prop values', function() {
     var Component = React.createClass({
-      propTypes: {key: ReactPropTypes.string.isRequired},
+      statics: {
+        propTypes: {key: ReactPropTypes.string.isRequired}
+      },
       getDefaultProps: function() {
         return {key: null};
       },
@@ -282,8 +286,10 @@ describe('ReactCompositeComponent', function() {
 
   it('should check declared prop types', function() {
     var Component = React.createClass({
-      propTypes: {
-        key: ReactPropTypes.string.isRequired
+      statics: {
+        propTypes: {
+          key: ReactPropTypes.string.isRequired
+        }
       },
       render: function() {
         return <span>{this.props.key}</span>;
@@ -313,8 +319,10 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        propTypes: {
-          key: null
+        statics: {
+          propTypes: {
+            key: null
+          }
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -330,8 +338,10 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        contextTypes: {
-          key: null
+        statics: {
+          contextTypes: {
+            key: null
+          }
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -347,8 +357,10 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        childContextTypes: {
-          key: null
+        statics: {
+          childContextTypes: {
+            key: null
+          }
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -416,7 +428,9 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      mixins: [Mixin],
+      statics: {
+        mixins: [Mixin]
+      },
       getInitialState: function() {
         return {component: true};
       },
@@ -437,7 +451,9 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      mixins: [Mixin],
+      statics: {
+        mixins: [Mixin]
+      },
       getInitialState: function() {
         return {x: true};
       },
@@ -461,7 +477,9 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      mixins: [Mixin],
+      statics: {
+        mixins: [Mixin]
+      },
       getInitialState: function() {
         return {x: true};
       },
@@ -548,14 +566,59 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
+  it('should warn when using deprecated non-static spec keys', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+    try {
+      React.createClass({
+        mixins: [{}],
+        propTypes: {
+          foo: ReactPropTypes.string
+        },
+        contextTypes: {
+          foo: ReactPropTypes.string
+        },
+        childContextTypes: {
+          foo: ReactPropTypes.string
+        },
+        render: function() {
+          return <div />;
+        }
+      });
+      expect(console.warn.mock.calls.length).toBe(4);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'createClass(...): `mixins` is now a static property and should ' +
+        'be defined inside "statics".'
+      );
+      expect(console.warn.mock.calls[1][0]).toBe(
+        'createClass(...): `propTypes` is now a static property and should ' +
+        'be defined inside "statics".'
+      );
+      expect(console.warn.mock.calls[2][0]).toBe(
+        'createClass(...): `contextTypes` is now a static property and ' +
+        'should be defined inside "statics".'
+      );
+      expect(console.warn.mock.calls[3][0]).toBe(
+        'createClass(...): `childContextTypes` is now a static property and ' +
+        'should be defined inside "statics".'
+      );
+    } catch (e) {
+      throw e;
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it('should pass context', function() {
     var childInstance = null;
     var grandchildInstance = null;
 
     var Parent = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+      statics: {
+        childContextTypes: {
+          foo: ReactPropTypes.string,
+          depth: ReactPropTypes.number
+        }
       },
 
       getChildContext: function() {
@@ -572,13 +635,15 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Child = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
-      },
+      statics: {
+        contextTypes: {
+          foo: ReactPropTypes.string,
+          depth: ReactPropTypes.number
+        },
 
-      childContextTypes: {
-        depth: ReactPropTypes.number
+        childContextTypes: {
+          depth: ReactPropTypes.number
+        }
       },
 
       getChildContext: function() {
@@ -594,9 +659,11 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Grandchild = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string,
-        depth: ReactPropTypes.number
+      statics: {
+        contextTypes: {
+          foo: ReactPropTypes.string,
+          depth: ReactPropTypes.number
+        }
       },
 
       render: function() {
@@ -612,8 +679,10 @@ describe('ReactCompositeComponent', function() {
 
   it('should check context types', function() {
     var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string.isRequired
+      statics: {
+        contextTypes: {
+          foo: ReactPropTypes.string.isRequired
+        }
       },
 
       render: function() {
@@ -646,9 +715,11 @@ describe('ReactCompositeComponent', function() {
 
   it('should check child context types', function() {
     var Component = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string.isRequired,
-        bar: ReactPropTypes.number
+      statics: {
+        childContextTypes: {
+          foo: ReactPropTypes.string.isRequired,
+          bar: ReactPropTypes.number
+        }
       },
 
       getChildContext: function() {
@@ -693,8 +764,10 @@ describe('ReactCompositeComponent', function() {
 
   it('should filter out context not in contextTypes', function() {
     var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string
+      statics: {
+        contextTypes: {
+          foo: ReactPropTypes.string
+        }
       },
 
       render: function() {
@@ -716,9 +789,11 @@ describe('ReactCompositeComponent', function() {
     var actualComponentDidUpdate;
 
     var Parent = React.createClass({
-      childContextTypes: {
-        foo: ReactPropTypes.string.isRequired,
-        bar: ReactPropTypes.string.isRequired
+      statics: {
+        childContextTypes: {
+          foo: ReactPropTypes.string.isRequired,
+          bar: ReactPropTypes.string.isRequired
+        }
       },
 
       getChildContext: function() {
@@ -734,8 +809,10 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Component = React.createClass({
-      contextTypes: {
-        foo: ReactPropTypes.string
+      statics: {
+        contextTypes: {
+          foo: ReactPropTypes.string
+        }
       },
 
       componentWillReceiveProps: function(nextProps, nextContext) {
@@ -768,5 +845,70 @@ describe('ReactCompositeComponent', function() {
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
     expect(actualComponentWillUpdate).toEqual({foo: 'def'});
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
+  });
+
+  it('should support statics', function() {
+    var Component = React.createClass({
+      statics: {
+        abc: 'def'
+      },
+
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.constructor.abc).toBe('def');
+    expect(Component.abc).toBe('def');
+  });
+
+  it('should support statics in mixins', function() {
+    var Mixin = {
+      statics: {
+        foo: 'bar'
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+
+      statics: {
+        abc: 'def'
+      },
+
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.constructor.foo).toBe('bar');
+    expect(Component.foo).toBe('bar');
+    expect(instance.constructor.abc).toBe('def');
+    expect(Component.abc).toBe('def');
+  });
+
+  it("should throw if mixins override each others' statics", function() {
+    expect(function() {
+      var Mixin = {
+        statics: {
+          abc: 'foo'
+        }
+      };
+      React.createClass({
+        statics: {
+          mixins: [Mixin],
+          abc: 'bar'
+        },
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponentInterface: You are ' +
+      'attempting to define `abc` on your component more than once. This ' +
+      'conflict may be due to a mixin.'
+    );
   });
 });

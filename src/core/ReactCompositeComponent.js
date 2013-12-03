@@ -85,38 +85,39 @@ var SpecPolicy = keyMirror({
  */
 var ReactCompositeComponentInterface = {
 
-  /**
-   * An array of Mixin objects to include when defining your component.
-   *
-   * @type {array}
-   * @optional
-   */
-  mixins: SpecPolicy.DEFINE_MANY,
+  statics: {
+    /**
+     * An array of Mixin objects to include when defining your component.
+     *
+     * @type {array}
+     * @optional
+     */
+    mixins: SpecPolicy.DEFINE_MANY,
 
-  /**
-   * Definition of prop types for this component.
-   *
-   * @type {object}
-   * @optional
-   */
-  propTypes: SpecPolicy.DEFINE_MANY_MERGED,
+    /**
+     * Definition of prop types for this component.
+     *
+     * @type {object}
+     * @optional
+     */
+    propTypes: SpecPolicy.DEFINE_MANY_MERGED,
 
-  /**
-   * Definition of context types for this component.
-   *
-   * @type {object}
-   * @optional
-   */
-  contextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+    /**
+     * Definition of context types for this component.
+     *
+     * @type {object}
+     * @optional
+     */
+    contextTypes: SpecPolicy.DEFINE_MANY_MERGED,
 
-  /**
-   * Definition of context types this component sets for its children.
-   *
-   * @type {object}
-   * @optional
-   */
-  childContextTypes: SpecPolicy.DEFINE_MANY_MERGED,
-
+    /**
+     * Definition of context types this component sets for its children.
+     *
+     * @type {object}
+     * @optional
+     */
+    childContextTypes: SpecPolicy.DEFINE_MANY_MERGED
+  },
 
   // ==== Definition methods ====
 
@@ -303,23 +304,30 @@ var ReactCompositeComponentInterface = {
 };
 
 /**
- * Mapping from class specification keys to special processing functions.
+ * Mapping from class specification static keys to special processing functions.
+ *
+ * These are all defined inside the "statics" key in the class spec:
+ *
+ *   React.createClass({
+ *     statics: {
+ *       mixins: [FooMixin]
+ *     },
+ *     render: function() {...}
+ *   })
  *
  * Although these are declared in the specification when defining classes
  * using `React.createClass`, they will not be on the component's prototype.
  */
-var RESERVED_SPEC_KEYS = {
-  displayName: function(Constructor, displayName) {
-    Constructor.displayName = displayName;
-  },
-  mixins: function(Constructor, mixins) {
+var RESERVED_STATIC_SPEC_KEYS = {
+  mixins: function(ConvenienceConstructor, mixins) {
     if (mixins) {
       for (var i = 0; i < mixins.length; i++) {
-        mixSpecIntoComponent(Constructor, mixins[i]);
+        mixSpecIntoComponent(ConvenienceConstructor, mixins[i]);
       }
     }
   },
-  childContextTypes: function(Constructor, childContextTypes) {
+  childContextTypes: function(ConvenienceConstructor, childContextTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       childContextTypes,
@@ -327,7 +335,8 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.childContextTypes = childContextTypes;
   },
-  contextTypes: function(Constructor, contextTypes) {
+  contextTypes: function(ConvenienceConstructor, contextTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       contextTypes,
@@ -335,13 +344,32 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.contextTypes = contextTypes;
   },
-  propTypes: function(Constructor, propTypes) {
+  propTypes: function(ConvenienceConstructor, propTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       propTypes,
       ReactPropTypeLocations.prop
     );
     Constructor.propTypes = propTypes;
+  }
+};
+
+/**
+ * Mapping from class specification keys to special processing functions.
+ *
+ * Although these are declared in the specification when defining classes
+ * using `React.createClass`, they will not be on the component's prototype.
+ */
+var RESERVED_SPEC_KEYS = {
+  // TODO: move this to RESERVED_STATIC_SPEC_KEYS, but this requires also
+  // changing the JSX transform.
+  displayName: function(ConvenienceConstructor, displayName) {
+    ConvenienceConstructor.componentConstructor.displayName = displayName;
+  },
+
+  statics: function(ConvenienceConstructor, statics) {
+    mixStaticSpecIntoComponent(ConvenienceConstructor, statics);
   }
 };
 
@@ -360,11 +388,13 @@ function validateTypeDef(Constructor, typeDef, location) {
   }
 }
 
-function validateMethodOverride(proto, name) {
-  var specPolicy = ReactCompositeComponentInterface[name];
+function validateMethodOverride(proto, name, isStatic) {
+  var specPolicy = isStatic ?
+    ReactCompositeComponentInterface.statics[name] :
+    ReactCompositeComponentInterface[name];
 
   // Disallow overriding of base class methods unless explicitly allowed.
-  if (ReactCompositeComponentMixin.hasOwnProperty(name)) {
+  if (!isStatic && ReactCompositeComponentMixin.hasOwnProperty(name)) {
     invariant(
       specPolicy === SpecPolicy.OVERRIDE_BASE,
       'ReactCompositeComponentInterface: You are attempting to override ' +
@@ -387,7 +417,6 @@ function validateMethodOverride(proto, name) {
   }
 }
 
-
 function validateLifeCycleOnReplaceState(instance) {
   var compositeLifeCycleState = instance._compositeLifeCycleState;
   invariant(
@@ -407,17 +436,27 @@ function validateLifeCycleOnReplaceState(instance) {
  * Custom version of `mixInto` which handles policy validation and reserved
  * specification keys when building `ReactCompositeComponent` classses.
  */
-function mixSpecIntoComponent(Constructor, spec) {
+function mixSpecIntoComponent(ConvenienceConstructor, spec) {
+  var Constructor = ConvenienceConstructor.componentConstructor;
   var proto = Constructor.prototype;
   for (var name in spec) {
     var property = spec[name];
     if (!spec.hasOwnProperty(name) || !property) {
       continue;
     }
-    validateMethodOverride(proto, name);
+
+    validateMethodOverride(proto, name, false);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
-      RESERVED_SPEC_KEYS[name](Constructor, property);
+      RESERVED_SPEC_KEYS[name](ConvenienceConstructor, property);
+    } else if (RESERVED_STATIC_SPEC_KEYS.hasOwnProperty(name)) {
+      if (__DEV__) {
+        console.warn(
+          'createClass(...): `' + name + '` is now a static property and ' +
+          'should be defined inside "statics".'
+        );
+      }
+      RESERVED_STATIC_SPEC_KEYS[name](ConvenienceConstructor, property);
     } else {
       // Setup methods on prototype:
       // The following member methods should not be automatically bound:
@@ -453,6 +492,38 @@ function mixSpecIntoComponent(Constructor, spec) {
           proto[name] = property;
         }
       }
+    }
+  }
+}
+
+function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
+  if (!statics) {
+    return;
+  }
+  for (var name in statics) {
+    var property = statics[name];
+    if (!statics.hasOwnProperty(name) || !property) {
+      return;
+    }
+
+    validateMethodOverride(ConvenienceConstructor, name, true);
+
+    if (RESERVED_STATIC_SPEC_KEYS.hasOwnProperty(name)) {
+      RESERVED_STATIC_SPEC_KEYS[name](ConvenienceConstructor, property);
+    } else {
+      var isInherited = name in ConvenienceConstructor;
+      var result = property;
+      if (isInherited) {
+        var existingProperty = ConvenienceConstructor[name];
+        if (ReactCompositeComponentInterface.statics[name] ===
+            SpecPolicy.DEFINE_MANY_MERGED) {
+          result = createMergedResultFunction(existingProperty, property);
+        } else {
+          result = createChainedFunction(existingProperty, property);
+        }
+      }
+      ConvenienceConstructor[name] = result;
+      ConvenienceConstructor.componentConstructor[name] = result;
     }
   }
 }
@@ -1172,7 +1243,16 @@ var ReactCompositeComponent = {
     var Constructor = function() {};
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
-    mixSpecIntoComponent(Constructor, spec);
+
+    var ConvenienceConstructor = function(props, children) {
+      var instance = new Constructor();
+      instance.construct.apply(instance, arguments);
+      return instance;
+    };
+    ConvenienceConstructor.componentConstructor = Constructor;
+    ConvenienceConstructor.originalSpec = spec;
+
+    mixSpecIntoComponent(ConvenienceConstructor, spec);
 
     invariant(
       Constructor.prototype.render,
@@ -1197,13 +1277,6 @@ var ReactCompositeComponent = {
       }
     }
 
-    var ConvenienceConstructor = function(props, children) {
-      var instance = new Constructor();
-      instance.construct.apply(instance, arguments);
-      return instance;
-    };
-    ConvenienceConstructor.componentConstructor = Constructor;
-    ConvenienceConstructor.originalSpec = spec;
     return ConvenienceConstructor;
   },
 
