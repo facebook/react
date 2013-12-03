@@ -26,5 +26,3 @@
     title: Load Initial Data via AJAX
   - id: false-in-jsx
     title: False in JSX
-  - id: communicate-between-components
-    title: Communicate Between Components

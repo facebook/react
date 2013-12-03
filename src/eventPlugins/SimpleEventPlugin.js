@@ -39,115 +39,172 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onBlur: true}),
       captured: keyOf({onBlurCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topBlur: null})
+    ]
   },
   click: {
     phasedRegistrationNames: {
       bubbled: keyOf({onClick: true}),
       captured: keyOf({onClickCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topClick: null})
+    ]
   },
   contextMenu: {
     phasedRegistrationNames: {
       bubbled: keyOf({onContextMenu: true}),
       captured: keyOf({onContextMenuCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topContextMenu: null})
+    ]
   },
   copy: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCopy: true}),
       captured: keyOf({onCopyCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topCopy: null})
+    ]
   },
   cut: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCut: true}),
       captured: keyOf({onCutCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topCut: null})
+    ]
   },
   doubleClick: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDoubleClick: true}),
       captured: keyOf({onDoubleClickCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDoubleClick: null})
+    ]
   },
   drag: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDrag: true}),
       captured: keyOf({onDragCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDrag: null})
+    ]
   },
   dragEnd: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragEnd: true}),
       captured: keyOf({onDragEndCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragEnd: null})
+    ]
   },
   dragEnter: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragEnter: true}),
       captured: keyOf({onDragEnterCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragEnter: null})
+    ]
   },
   dragExit: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragExit: true}),
       captured: keyOf({onDragExitCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragExit: null})
+    ]
   },
   dragLeave: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragLeave: true}),
       captured: keyOf({onDragLeaveCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragLeave: null})
+    ]
   },
   dragOver: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragOver: true}),
       captured: keyOf({onDragOverCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragOver: null})
+    ]
   },
   dragStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDragStart: true}),
       captured: keyOf({onDragStartCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDragStart: null})
+    ]
   },
   drop: {
     phasedRegistrationNames: {
       bubbled: keyOf({onDrop: true}),
       captured: keyOf({onDropCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topDrop: null})
+    ]
   },
   focus: {
     phasedRegistrationNames: {
       bubbled: keyOf({onFocus: true}),
       captured: keyOf({onFocusCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topFocus: null})
+    ]
   },
   input: {
     phasedRegistrationNames: {
       bubbled: keyOf({onInput: true}),
       captured: keyOf({onInputCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topInput: null})
+    ]
   },
   keyDown: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyDown: true}),
       captured: keyOf({onKeyDownCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topKeyDown: null})
+    ]
   },
   keyPress: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyPress: true}),
       captured: keyOf({onKeyPressCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topKeyPress: null})
+    ]
   },
   keyUp: {
     phasedRegistrationNames: {
       bubbled: keyOf({onKeyUp: true}),
       captured: keyOf({onKeyUpCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topKeyUp: null})
+    ]
   },
   // Note: We do not allow listening to mouseOver events. Instead, use the
   // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
@@ -155,67 +212,100 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseDown: true}),
       captured: keyOf({onMouseDownCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topMouseDown: null})
+    ]
   },
   mouseMove: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseMove: true}),
       captured: keyOf({onMouseMoveCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topMouseMove: null})
+    ]
   },
   mouseUp: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseUp: true}),
       captured: keyOf({onMouseUpCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topMouseUp: null})
+    ]
   },
   paste: {
     phasedRegistrationNames: {
       bubbled: keyOf({onPaste: true}),
       captured: keyOf({onPasteCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topPaste: null})
+    ]
   },
   scroll: {
     phasedRegistrationNames: {
       bubbled: keyOf({onScroll: true}),
       captured: keyOf({onScrollCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topScroll: null})
+    ]
   },
   submit: {
     phasedRegistrationNames: {
       bubbled: keyOf({onSubmit: true}),
       captured: keyOf({onSubmitCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topSubmit: null})
+    ]
   },
   touchCancel: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchCancel: true}),
       captured: keyOf({onTouchCancelCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topTouchCancel: null})
+    ]
   },
   touchEnd: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchEnd: true}),
       captured: keyOf({onTouchEndCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topTouchEnd: null})
+    ]
   },
   touchMove: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchMove: true}),
       captured: keyOf({onTouchMoveCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topTouchMove: null})
+    ]
   },
   touchStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onTouchStart: true}),
       captured: keyOf({onTouchStartCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topTouchStart: null})
+    ]
   },
   wheel: {
     phasedRegistrationNames: {
       bubbled: keyOf({onWheel: true}),
       captured: keyOf({onWheelCapture: true})
-    }
+    },
+    dependencies: [
+      keyOf({topWheel: null})
+    ]
   }
 };
 

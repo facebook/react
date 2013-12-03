@@ -26,18 +26,18 @@ var mocks;
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactTransitionGroup', function() {
-  var container;
-
   beforeEach(function() {
     React = require('React');
     ReactTransitionGroup = require('ReactTransitionGroup');
     mocks = require('mocks');
-
-    container = document.createElement('div');
   });
 
   it('should warn after time with no transitionend', function() {
-    var a = React.renderComponent(
+    var container;
+    var a;
+
+    container = document.createElement('div');
+    a = React.renderComponent(
       <ReactTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactTransitionGroup>,
@@ -65,6 +65,7 @@ describe('ReactTransitionGroup', function() {
   });
 
   it('should keep both sets of DOM nodes around', function() {
+    var container = document.createElement('div');
     var a = React.renderComponent(
       <ReactTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
@@ -81,15 +82,5 @@ describe('ReactTransitionGroup', function() {
     expect(a.getDOMNode().childNodes.length).toBe(2);
     expect(a.getDOMNode().childNodes[0].id).toBe('two');
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
-  });
-
-  describe('with an undefined child', function () {
-    it('should fail silently', function () {
-      React.renderComponent(
-        <ReactTransitionGroup transitionName="yolo">
-        </ReactTransitionGroup>,
-        container
-      );
-    });
   });
 });
