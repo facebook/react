@@ -78,6 +78,8 @@ describe('ReactCompositeComponent', function() {
           <b></b>;
       }
     });
+
+    delete document['_reactTopListenersID'];
   });
 
   it('should support rendering to different child types over time', function() {
