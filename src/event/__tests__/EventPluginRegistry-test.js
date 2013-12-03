@@ -174,13 +174,13 @@ describe('EventPluginRegistry', function() {
     EventPluginRegistry.injectEventPluginsByName({one: OnePlugin});
     EventPluginRegistry.injectEventPluginOrder(['one', 'two']);
 
-    expect(EventPluginRegistry.registrationNamesKeys.length).toBe(2);
+    expect(Object.keys(EventPluginRegistry.registrationNames).length).toBe(2);
     expect(EventPluginRegistry.registrationNames.onClick).toBe(OnePlugin);
     expect(EventPluginRegistry.registrationNames.onFocus).toBe(OnePlugin);
 
     EventPluginRegistry.injectEventPluginsByName({two: TwoPlugin});
 
-    expect(EventPluginRegistry.registrationNamesKeys.length).toBe(4);
+    expect(Object.keys(EventPluginRegistry.registrationNames).length).toBe(4);
     expect(EventPluginRegistry.registrationNames.onMagicBubble).toBe(TwoPlugin);
     expect(
       EventPluginRegistry.registrationNames.onMagicCapture
