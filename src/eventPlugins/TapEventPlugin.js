@@ -62,18 +62,18 @@ function getDistance(coords, nativeEvent) {
 }
 
 var dependencies = [
-  keyOf({topMouseDown: null}),
-  keyOf({topMouseMove: null}),
-  keyOf({topMouseUp: null})
+  keyOf({onMouseDown: null}),
+  keyOf({onMouseMove: null}),
+  keyOf({onMouseUp: null})
 ];
 
 if (EventPluginUtils.supportTouch) {
-  dependencies.push(
-    keyOf({topTouchStart: null}),
-    keyOf({topTouchMove: null}),
-    keyOf({topTouchEnd: null}),
-    keyOf({topTouchCancel: null})
-  );
+  dependencies = dependencies.concat([
+    keyOf({onTouchStart: null}),
+    keyOf({onTouchMove: null}),
+    keyOf({onTouchEnd: null}),
+    keyOf({onTouchCancel: null})
+  ]);
 }
 
 var eventTypes = {

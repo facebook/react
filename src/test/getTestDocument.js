@@ -16,18 +16,18 @@
  * @providesModule getTestDocument
  */
 
-/**
- * We need to work around the fact that we have two different
- * test implementations: once that breaks if we clobber document
- * (open-source) and one that doesn't support createHTMLDocument()
- * (jst).
- */
 function getTestDocument() {
-  if (document.implementation &&
-      document.implementation.createHTMLDocument) {
-    return document.implementation.createHTMLDocument('test doc');
-  }
-  return null;
+  var iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  var testDocument = iframe.contentDocument || iframe.contentWindow.document;
+  testDocument.open();
+  testDocument.write('<!doctype html><html><meta charset=utf-8><title>test doc</title>');
+  testDocument.close();
+
+  iframe.parentNode.removeChild(iframe);
+  return testDocument;
 }
 
 module.exports = getTestDocument;

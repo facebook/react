@@ -39,12 +39,12 @@ var eventTypes = {
       captured: keyOf({onSelectCapture: null})
     },
     dependencies: [
-      keyOf({topBlur: null}),
-      keyOf({topFocus: null}),
-      keyOf({topKeyDown: null}),
-      keyOf({topMouseDown: null}),
-      keyOf({topMouseUp: null}),
-      keyOf({topSelectionChange: null})
+      keyOf({onBlur: null}),
+      keyOf({onFocus: null}),
+      keyOf({onMouseUp: null}),
+      keyOf({onMouseDown: null}),
+      keyOf({onSelectionChange: null}),
+      keyOf({onKeyDown: null})
     ]
   }
 };

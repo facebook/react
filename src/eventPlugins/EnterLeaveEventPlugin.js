@@ -33,15 +33,15 @@ var eventTypes = {
   mouseEnter: {
     registrationName: keyOf({onMouseEnter: null}),
     dependencies: [
-      keyOf({topMouseOut: null}),
-      keyOf({topMouseOver: null})
+      keyOf({onMouseOut: null}),
+      keyOf({onMouseOver: null})
     ]
   },
   mouseLeave: {
     registrationName: keyOf({onMouseLeave: null}),
     dependencies: [
-      keyOf({topMouseOut: null}),
-      keyOf({topMouseOver: null})
+      keyOf({onMouseOut: null}),
+      keyOf({onMouseOver: null})
     ]
   }
 };

@@ -2,21 +2,21 @@
 
 React is a JavaScript library for building user interfaces.
 
-* **Declarative:** React uses a declarative paradigm that makes it easier to reason about your application.
-* **Efficient:** React computes the minimal set of changes necessary to keep your DOM up-to-date.
-* **Flexible:** React works with the libraries and frameworks that you already know.
+* **Just the UI:** Lots of people use React as the V in MVC. Since React makes no assumptions about the rest of your technology stack, it's easy to try it out on a small feature in an existing project.
+* **Virtual DOM:** React uses a *virtual DOM* diff implementation for ultra-high performance. It can also render on the server using Node.js — no heavy browser DOM required.
+* **Data flow:** React implements one-way reactive data flow which reduces boilerplate and is easier to reason about than traditional data binding.
 
 [Learn how to use React in your own project.](http://facebook.github.io/react/docs/getting-started.html)
 
 ## Examples
 
-We have several examples [on the website](http://facebook.github.io/react). Here is the first one to get you started:
+We have several examples [on the website](http://facebook.github.io/react/). Here is the first one to get you started:
 
 ```js
 /** @jsx React.DOM */
 var HelloMessage = React.createClass({
   render: function() {
-    return <div>{'Hello ' + this.props.name}</div>;
+    return <div>Hello {this.props.name}</div>;
   }
 });
 
@@ -51,7 +51,7 @@ bower install --save react
 
 ## Contribute
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, then keep reading. If you're not interested in helping right now that's ok too :) Any feedback you have about using React would be greatly appreciated.
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. If you're interested in helping with that, then keep reading. If you're not interested in helping right now that's ok too. :) Any feedback you have about using React would be greatly appreciated.
 
 ### Building Your Copy of React
 
@@ -81,12 +81,10 @@ At this point, you should now have a `build/` directory populated with everythin
 We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete listing. The important ones to know:
 
 ```sh
-# Create test build & run tests with PhantomJS
+# Build and run tests with PhantomJS
 grunt test
-# Lint the core library code with JSHint
+# Lint the code with JSHint
 grunt lint
-# Lint package code
-grunt lint:package
 # Wipe out build directory
 grunt clean
 ```

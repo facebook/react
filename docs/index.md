@@ -7,23 +7,25 @@ id: home
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
-      <h3>Declarative</h3>
+      <h3>Just the UI</h3>
       <p>
-        React uses a declarative paradigm that makes it easier to reason about
-        your application.
+        Lots of people use React as the V in MVC.
+        Since React makes no assumptions about the rest of your technology stack,
+        it&apos;s easy to try it out on a small feature in an existing project.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Efficient</h3>
+      <h3>Virtual DOM</h3>
       <p>
-        React computes the minimal set of changes necessary to keep your DOM
-        up-to-date.
+        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. It can also
+        render on the server using Node.js &mdash; no heavy browser DOM required.
       </p>
     </div>
     <div class="marketing-col">
-      <h3>Flexible</h3>
+      <h3>Data flow</h3>
       <p>
-        React works with the libraries and frameworks that you already know.
+        React implements one-way reactive data flow which reduces boilerplate and is
+        easier to reason about than traditional data binding.
       </p>
     </div>
   </div>
@@ -60,7 +62,7 @@ id: home
         This example uses `state` to track the current list of items as well as
         the text that the user has entered. Although event handlers appear to be
         rendered inline, they will be collected and implemented using event
-        delegation. 
+        delegation.
       </p>
       <div id="todoExample"></div>
     </div>
