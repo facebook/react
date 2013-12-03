@@ -22,8 +22,7 @@ require('mock-modules')
   .dontMock('ReactEventTopLevelCallback')
   .dontMock('ReactMount')
   .dontMock('ReactInstanceHandles')
-  .dontMock('ReactDOM')
-  .mock('ReactEventEmitter');
+  .dontMock('ReactDOM');
 
 var EVENT_TARGET_PARAM = 1;
 
@@ -31,14 +30,16 @@ describe('ReactEventTopLevelCallback', function() {
   var React;
   var ReactEventTopLevelCallback;
   var ReactDOM;
-  var ReactEventEmitter; // mocked
+  var ReactEventEmitter;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactDOM = require('ReactDOM');
-    ReactEventEmitter = require('ReactEventEmitter'); // mocked
+    ReactEventEmitter = require('ReactEventEmitter');
+
+    ReactEventEmitter.handleTopLevel = mocks.getMockFunction();
   });
 
   describe('Propagation', function() {

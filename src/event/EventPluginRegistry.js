@@ -41,7 +41,6 @@ function recomputePluginOrdering() {
     // Wait until an `EventPluginOrder` is injected.
     return;
   }
-
   for (var pluginName in namesToPlugins) {
     var PluginModule = namesToPlugins[pluginName];
     var pluginIndex = EventPluginOrder.indexOf(pluginName);
@@ -63,15 +62,6 @@ function recomputePluginOrdering() {
     EventPluginRegistry.plugins[pluginIndex] = PluginModule;
     var publishedEvents = PluginModule.eventTypes;
     for (var eventName in publishedEvents) {
-      var phasedRegistrationNames = publishedEvents[eventName].phasedRegistrationNames;
-      var domEventName;
-      if (phasedRegistrationNames) {
-        domEventName = phasedRegistrationNames.bubbled;
-      } else {
-        domEventName = publishedEvents[eventName].registrationName;
-      }
-      EventPluginRegistry.eventMapping[domEventName] = eventName;
-
       invariant(
         publishEventForPlugin(publishedEvents[eventName], PluginModule),
         'EventPluginRegistry: Failed to publish event `%s` for plugin `%s`.',
@@ -147,11 +137,6 @@ var EventPluginRegistry = {
    * The keys of `registrationNames`.
    */
   registrationNamesKeys: [],
-
-  /**
-   * Mapping from on{EventName} to
-   */
-  eventMapping: {},
 
   /**
    * Injects an ordering of plugins (by plugin name). This allows the ordering

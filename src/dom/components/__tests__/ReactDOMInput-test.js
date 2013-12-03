@@ -35,7 +35,7 @@ describe('ReactDOMInput', function() {
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
-    delete document['_reactTopListenersID'];
+
     renderTextInput = function(component) {
       var stub = ReactTestUtils.renderIntoDocument(component);
       var node = stub.getDOMNode();

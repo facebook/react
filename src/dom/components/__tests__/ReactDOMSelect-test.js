@@ -40,8 +40,6 @@ describe('ReactDOMSelect', function() {
       var node = stub.getDOMNode();
       return node;
     };
-
-    delete document['_reactTopListenersID'];
   });
 
   it('should allow setting `defaultValue`', function() {

@@ -49,7 +49,6 @@ describe('ReactDOMButton', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    delete document['_reactTopListenersID'];
   });
 
   it('should forward clicks when it starts out not disabled', function() {

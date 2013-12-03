@@ -240,8 +240,8 @@ var ReactMount = {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
-      ),
+          container.nodeType === DOC_NODE_TYPE
+        ),
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
