@@ -263,9 +263,10 @@ var SimpleEventPlugin = {
    * @param {object} Event to be dispatched.
    * @param {function} Application-level callback.
    * @param {string} domID DOM ID to pass to the callback.
+   * @param {?object} context Context under which to execute the listener
    */
-  executeDispatch: function(event, listener, domID) {
-    var returnValue = listener(event, domID);
+  executeDispatch: function(event, listener, domID, context) {
+    var returnValue = listener.call(context, event, domID);
     if (returnValue === false) {
       event.stopPropagation();
       event.preventDefault();

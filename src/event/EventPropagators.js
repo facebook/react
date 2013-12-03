@@ -24,7 +24,9 @@ var EventConstants = require('EventConstants');
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
 var getListener = CallbackRegistry.getListener;
+var getListenerContext = CallbackRegistry.getListenerContext;
 var PropagationPhases = EventConstants.PropagationPhases;
+var nullContext = EventConstants.nullContext;
 
 /**
  * Injected dependencies:
@@ -63,6 +65,16 @@ function listenerAtPhase(id, event, propagationPhase) {
 }
 
 /**
+ * Some event types have a notion of different registration names for different
+ * "phases" of propagation. This finds listeners by a given phase.
+ */
+function listenerContextAtPhase(id, event, propagationPhase) {
+  var registrationName =
+    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  return getListenerContext(id, registrationName);
+}
+
+/**
  * Tags a `SyntheticEvent` with dispatched listeners. Creating this function
  * here, allows us to not have to bind or create functions for each event.
  * Mutating the event's members allows us to not have to create a wrapping
@@ -78,8 +90,13 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
   var listener = listenerAtPhase(domID, event, phase);
   if (listener) {
+    var context = listenerContextAtPhase(domID, event, phase);
+    if (context == null) {
+      context = nullContext;
+    }
     event._dispatchListeners = accumulate(event._dispatchListeners, listener);
     event._dispatchIDs = accumulate(event._dispatchIDs, domID);
+    event._dispatchContexts = accumulate(event._dispatchContexts, context);
   }
 }
 
@@ -111,8 +128,13 @@ function accumulateDispatches(id, ignoredDirection, event) {
     var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(id, registrationName);
     if (listener) {
+      var context = getListenerContext(id, registrationName);
+      if (context == null) {
+        context = nullContext;
+      }
       event._dispatchListeners = accumulate(event._dispatchListeners, listener);
       event._dispatchIDs = accumulate(event._dispatchIDs, id);
+      event._dispatchContexts = accumulate(event._dispatchContexts, context);
     }
   }
 }
@@ -173,7 +195,8 @@ var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateDirectDispatches: accumulateDirectDispatches,
   accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
-  injection: injection
+  injection: injection,
+  nullContext: nullContext
 };
 
 module.exports = EventPropagators;

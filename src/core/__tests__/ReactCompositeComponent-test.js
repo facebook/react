@@ -26,7 +26,6 @@ var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactTestUtils;
 var ReactMount;
-var ReactDoNotBindDeprecated;
 
 var cx;
 var reactComponentExpect;
@@ -41,7 +40,6 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
     ReactCurrentOwner = require('ReactCurrentOwner');
-    ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
@@ -134,60 +132,6 @@ describe('ReactCompositeComponent', function() {
     var anchorID = instance.getAnchorID();
     var actualDOMAnchorNode = ReactMount.getNode(anchorID);
     expect(actualDOMAnchorNode.className).toBe('');
-  });
-
-  it('should auto bind methods and values correctly', function() {
-    spyOn(console, 'warn');
-
-    var ComponentClass = React.createClass({
-      getInitialState: function() {
-        return {valueToReturn: 'hi'};
-      },
-      methodToBeExplicitlyBound: function() {
-        return this;
-      },
-      methodAutoBound: function() {
-        return this;
-      },
-      methodExplicitlyNotBound: ReactDoNotBindDeprecated.doNotBind(function() {
-        return this;
-      }),
-      render: function() {
-        return <div> </div>;
-      }
-    });
-    var instance = <ComponentClass />;
-
-    // These are controversial assertions for now, they just exist
-    // because existing code depends on these assumptions.
-    expect(function() {
-      instance.methodToBeExplicitlyBound.bind(instance)();
-    }).not.toThrow();
-    expect(function() {
-      instance.methodAutoBound();
-    }).not.toThrow();
-    expect(function() {
-      instance.methodExplicitlyNotBound();
-    }).not.toThrow();
-
-    // Next, prove that once mounted, the scope is bound correctly to the actual
-    // component.
-    ReactTestUtils.renderIntoDocument(instance);
-    expect(console.warn.argsForCall.length).toBe(0);
-    var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
-    expect(console.warn.argsForCall.length).toBe(1);
-    var autoBound = instance.methodAutoBound;
-    var explicitlyNotBound = instance.methodExplicitlyNotBound;
-
-    var context = {};
-    expect(explicitlyBound.call(context)).toBe(instance);
-    expect(autoBound.call(context)).toBe(instance);
-    expect(explicitlyNotBound.call(context)).toBe(context);
-
-    expect(explicitlyBound.call(instance)).toBe(instance);
-    expect(autoBound.call(instance)).toBe(instance);
-    expect(explicitlyNotBound.call(instance)).toBe(instance);
-
   });
 
   it('should use default values for undefined props', function() {

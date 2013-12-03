@@ -20,6 +20,7 @@
 "use strict";
 
 var listenerBank = {};
+var contextBank = {};
 
 /**
  * Stores "listeners" by `registrationName`/`id`. There should be at most one
@@ -38,11 +39,16 @@ var CallbackRegistry = {
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {?function} listener The callback to store.
+   * @param {?object} context The context with which the listener should be
+   * executed.
    */
-  putListener: function(id, registrationName, listener) {
-    var bankForRegistrationName =
+  putListener: function(id, registrationName, listener, context) {
+    var listenerBankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[id] = listener;
+    var contextBankForRegistrationName =
+      contextBank[registrationName] || (contextBank[registrationName] = {});
+    listenerBankForRegistrationName[id] = listener;
+    contextBankForRegistrationName[id] = context;
   },
 
   /**
@@ -56,15 +62,27 @@ var CallbackRegistry = {
   },
 
   /**
+   * @param {string} id ID of the DOM element.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @return {?function} The stored callback context.
+   */
+  getListenerContext: function(id, registrationName) {
+    var bankForRegistrationName = contextBank[registrationName];
+    return bankForRegistrationName && bankForRegistrationName[id];
+  },
+
+  /**
    * Deletes a listener from the registration bank.
    *
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(id, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
-    if (bankForRegistrationName) {
-      delete bankForRegistrationName[id];
+    var listenerBankForRegistrationName = listenerBank[registrationName];
+    if (listenerBankForRegistrationName) {
+      delete listenerBankForRegistrationName[id];
+      var contextBankForRegistrationName = contextBank[registrationName];
+      delete contextBankForRegistrationName[id];
     }
   },
 
@@ -76,6 +94,7 @@ var CallbackRegistry = {
   deleteAllListeners: function(id) {
     for (var registrationName in listenerBank) {
       delete listenerBank[registrationName][id];
+      delete contextBank[registrationName][id];
     }
   },
 
@@ -84,6 +103,7 @@ var CallbackRegistry = {
    */
   __purge: function() {
     listenerBank = {};
+    contextBank = {};
   }
 
 };

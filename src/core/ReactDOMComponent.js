@@ -23,6 +23,7 @@ var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
+var ReactErrorUtils = require('ReactErrorUtils');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactMount = require('ReactMount');
@@ -128,7 +129,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNames[propKey]) {
-        putListener(this._rootNodeID, propKey, propValue);
+        putListener(this._rootNodeID, propKey, propValue, this.props.__owner__);
       } else {
         if (propKey === STYLE) {
           if (propValue) {
@@ -287,7 +288,7 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNames[propKey]) {
-        putListener(this._rootNodeID, propKey, nextProp);
+        putListener(this._rootNodeID, propKey, nextProp, this.props.__owner__);
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {

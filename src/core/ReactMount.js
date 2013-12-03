@@ -35,7 +35,7 @@ var nodeCache = {};
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 
-/** Mapping from reactRootID to React component instance. */
+/** Mapping from reactRootID to root-level React component instances. */
 var instancesByReactRootID = {};
 
 /** Mapping from reactRootID to `container` nodes. */

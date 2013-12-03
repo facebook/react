@@ -419,39 +419,25 @@ function mixSpecIntoComponent(Constructor, spec) {
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
       RESERVED_SPEC_KEYS[name](Constructor, property);
     } else {
-      // Setup methods on prototype:
-      // The following member methods should not be automatically bound:
-      // 1. Expected ReactCompositeComponent methods (in the "interface").
-      // 2. Overridden methods (that were mixed in).
-      var isCompositeComponentMethod = name in ReactCompositeComponentInterface;
       var isInherited = name in proto;
-      var markedDontBind = property.__reactDontBind;
       var isFunction = typeof property === 'function';
-      var shouldAutoBind =
-        isFunction &&
-        !isCompositeComponentMethod &&
-        !isInherited &&
-        !markedDontBind;
-
-      if (shouldAutoBind) {
-        if (!proto.__reactAutoBindMap) {
-          proto.__reactAutoBindMap = {};
-        }
-        proto.__reactAutoBindMap[name] = property;
-        proto[name] = property;
-      } else {
-        if (isInherited) {
-          // For methods which are defined more than once, call the existing
-          // methods before calling the new property.
-          if (ReactCompositeComponentInterface[name] ===
-              SpecPolicy.DEFINE_MANY_MERGED) {
-            proto[name] = createMergedResultFunction(proto[name], property);
-          } else {
-            proto[name] = createChainedFunction(proto[name], property);
-          }
+      if (isFunction) {
+        property = ReactErrorUtils.guard(
+          property,
+          (Constructor.displayName || '<<anonymous>>') + '.' + name
+        );
+      }
+      if (isInherited) {
+        // For methods which are defined more than once, call the existing
+        // methods before calling the new property.
+        if (ReactCompositeComponentInterface[name] ===
+            SpecPolicy.DEFINE_MANY_MERGED) {
+          proto[name] = createMergedResultFunction(proto[name], property);
         } else {
-          proto[name] = property;
+          proto[name] = createChainedFunction(proto[name], property);
         }
+      } else {
+        proto[name] = property;
       }
     }
   }
@@ -625,10 +611,6 @@ var ReactCompositeComponentMixin = {
 
       this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
       this.props = this._processProps(this.props);
-
-      if (this.__reactAutoBindMap) {
-        this._bindAutoBindMethods();
-      }
 
       this.state = this.getInitialState ? this.getInitialState() : null;
       this._pendingState = null;
@@ -1077,67 +1059,6 @@ var ReactCompositeComponentMixin = {
       this.constructor.displayName || 'ReactCompositeComponent'
     );
     return renderedComponent;
-  },
-
-  /**
-   * @private
-   */
-  _bindAutoBindMethods: function() {
-    for (var autoBindKey in this.__reactAutoBindMap) {
-      if (!this.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
-        continue;
-      }
-      var method = this.__reactAutoBindMap[autoBindKey];
-      this[autoBindKey] = this._bindAutoBindMethod(ReactErrorUtils.guard(
-        method,
-        this.constructor.displayName + '.' + autoBindKey
-      ));
-    }
-  },
-
-  /**
-   * Binds a method to the component.
-   *
-   * @param {function} method Method to be bound.
-   * @private
-   */
-  _bindAutoBindMethod: function(method) {
-    var component = this;
-    var boundMethod = function() {
-      return method.apply(component, arguments);
-    };
-    if (__DEV__) {
-      boundMethod.__reactBoundContext = component;
-      boundMethod.__reactBoundMethod = method;
-      boundMethod.__reactBoundArguments = null;
-      var componentName = component.constructor.displayName;
-      var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis) {
-        // User is trying to bind() an autobound method; we effectively will
-        // ignore the value of "this" that the user is trying to use, so
-        // let's warn.
-        if (newThis !== component && newThis !== null) {
-          console.warn(
-            'bind(): React component methods may only be bound to the ' +
-            'component instance. See ' + componentName
-          );
-        } else if (arguments.length === 1) {
-          console.warn(
-            'bind(): You are binding a component method to the component. ' +
-            'React does this for you automatically in a high-performance ' +
-            'way, so you can safely remove this call. See ' + componentName
-          );
-          return boundMethod;
-        }
-        var reboundMethod = _bind.apply(boundMethod, arguments);
-        reboundMethod.__reactBoundContext = component;
-        reboundMethod.__reactBoundMethod = method;
-        reboundMethod.__reactBoundArguments =
-          Array.prototype.slice.call(arguments, 1);
-        return reboundMethod;
-      };
-    }
-    return boundMethod;
   }
 };
 

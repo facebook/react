@@ -22,6 +22,7 @@ var EventConstants = require('EventConstants');
 
 var invariant = require('invariant');
 
+var nullContext = EventConstants.nullContext;
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
@@ -44,29 +45,37 @@ if (__DEV__) {
   validateEventDispatches = function(event) {
     var dispatchListeners = event._dispatchListeners;
     var dispatchIDs = event._dispatchIDs;
+    var dispatchContexts = event._dispatchContexts;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
-    var idsIsArr = Array.isArray(dispatchIDs);
-    var IDsLen = idsIsArr ? dispatchIDs.length : dispatchIDs ? 1 : 0;
+    var IDsIsArr = Array.isArray(dispatchIDs);
+    var contextsIsArr = Array.isArray(dispatchContexts);
+    var IDsLen = IDsIsArr ? dispatchIDs.length : dispatchIDs ? 1 : 0;
     var listenersLen = listenersIsArr ?
       dispatchListeners.length :
       dispatchListeners ? 1 : 0;
+    var contextsLen = contextsIsArr ?
+      dispatchContexts.length :
+      dispatchContexts ? 1 : 0;
 
     invariant(
-      idsIsArr === listenersIsArr && IDsLen === listenersLen,
+      IDsIsArr === listenersIsArr && IDsLen === listenersLen &&
+      contextsIsArr === listenersIsArr && contextsLen === listenersLen,
       'EventPluginUtils: Invalid `event`.'
     );
   };
 }
 
 /**
- * Invokes `cb(event, listener, id)`. Avoids using call if no scope is
- * provided. The `(listener,id)` pair effectively forms the "dispatch" but are
- * kept separate to conserve memory.
+ * Invokes `cb(event, listener, id, context)`. The `(listener, id, context)`
+ * tuple effectively forms the "dispatch" but are kept separate to conserve
+ * memory.
  */
 function forEachEventDispatch(event, cb) {
   var dispatchListeners = event._dispatchListeners;
   var dispatchIDs = event._dispatchIDs;
+  var dispatchContexts = event._dispatchContexts;
+  var context;
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -75,11 +84,19 @@ function forEachEventDispatch(event, cb) {
       if (event.isPropagationStopped()) {
         break;
       }
-      // Listeners and IDs are two parallel arrays that are always in sync.
-      cb(event, dispatchListeners[i], dispatchIDs[i]);
+      // Listeners, IDs, contexts are parallel arrays that are always in sync.
+      context = dispatchContexts[i];
+      if (context === nullContext) {
+        context = null;
+      }
+      cb(event, dispatchListeners[i], dispatchIDs[i], context);
     }
   } else if (dispatchListeners) {
-    cb(event, dispatchListeners, dispatchIDs);
+    context = dispatchContexts;
+    if (context === nullContext) {
+      context = null;
+    }
+    cb(event, dispatchListeners, dispatchIDs, context);
   }
 }
 
@@ -87,10 +104,11 @@ function forEachEventDispatch(event, cb) {
  * Default implementation of PluginModule.executeDispatch().
  * @param {SyntheticEvent} SyntheticEvent to handle
  * @param {function} Application-level callback
- * @param {string} domID DOM id to pass to the callback.
+ * @param {string} domID DOM id to pass to the callback
+ * @param {?object} context Context under which to execute the listener
  */
-function executeDispatch(event, listener, domID) {
-  listener(event, domID);
+function executeDispatch(event, listener, domID, context) {
+  listener.call(context, event, domID);
 }
 
 /**
@@ -100,6 +118,7 @@ function executeDispatchesInOrder(event, executeDispatch) {
   forEachEventDispatch(event, executeDispatch);
   event._dispatchListeners = null;
   event._dispatchIDs = null;
+  event._dispatchContexts = null;
 }
 
 /**
@@ -112,6 +131,8 @@ function executeDispatchesInOrder(event, executeDispatch) {
 function executeDispatchesInOrderStopAtTrue(event) {
   var dispatchListeners = event._dispatchListeners;
   var dispatchIDs = event._dispatchIDs;
+  var dispatchContexts = event._dispatchContexts;
+  var context;
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -120,13 +141,25 @@ function executeDispatchesInOrderStopAtTrue(event) {
       if (event.isPropagationStopped()) {
         break;
       }
-      // Listeners and IDs are two parallel arrays that are always in sync.
-      if (dispatchListeners[i](event, dispatchIDs[i])) {
+      // Listeners, IDs, contexts are parallel arrays that are always in sync.
+      context = dispatchContexts[i];
+      if (context === nullContext) {
+        context = null;
+      }
+      if (dispatchListeners[i].call(
+            dispatchContexts[i],
+            event,
+            dispatchIDs[i]
+          )) {
         return dispatchIDs[i];
       }
     }
   } else if (dispatchListeners) {
-    if (dispatchListeners(event, dispatchIDs)) {
+    context = dispatchContexts;
+    if (context === nullContext) {
+      context = null;
+    }
+    if (dispatchListeners.call(context, event, dispatchIDs)) {
       return dispatchIDs;
     }
   }
@@ -148,15 +181,20 @@ function executeDirectDispatch(event) {
   }
   var dispatchListener = event._dispatchListeners;
   var dispatchID = event._dispatchIDs;
+  var dispatchContext = event._dispatchContext;
+  if (dispatchContext === nullContext) {
+    dispatchContext = null;
+  }
   invariant(
     !Array.isArray(dispatchListener),
     'executeDirectDispatch(...): Invalid `event`.'
   );
   var res = dispatchListener ?
-    dispatchListener(event, dispatchID) :
+    dispatchListener.call(dispatchContext, event, dispatchID) :
     null;
   event._dispatchListeners = null;
   event._dispatchIDs = null;
+  event._dispatchContext = null;
   return res;
 }
 
