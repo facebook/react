@@ -48,6 +48,7 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
+    delete document['_reactTopListenersID'];
   });
 
   it('should generate simple markup', function() {

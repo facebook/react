@@ -42,6 +42,8 @@ describe('ReactDOMTextarea', function() {
       node.value = node.innerHTML;
       return node;
     };
+
+    delete document['_reactTopListenersID'];
   });
 
   it('should allow setting `defaultValue`', function() {

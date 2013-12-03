@@ -44,6 +44,8 @@ describe('ReactPropTransferer', function() {
         );
       }
     });
+
+    delete document['_reactTopListenersID'];
   });
 
   it('should leave explicitly specified properties intact', function() {

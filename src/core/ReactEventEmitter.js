@@ -25,6 +25,7 @@ var EventPluginHub = require('EventPluginHub');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
+var EventPluginRegistry = require('EventPluginRegistry');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -78,6 +79,7 @@ var keyOf = require('keyOf');
 
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
+var reactTopListenersCounter = 0;
 
 /**
  * Traps top-level events by using event bubbling.
@@ -180,36 +182,20 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {DOMDocument} contentDocument Document which owns the container
    */
   listenTo: function(event, contentDocument) {
-    var mountAt;
-    var camelCasedEventName;
-    var camelCasedEventNameAlt;
-    var dependencies;
-    var dependency;
-    var i;
-    var l;
-    var topLevelType;
-    var topLevelTypes;
-    var registration;
+    var mountAt = contentDocument;
+    if (!mountAt._reactTopListenersID) {
+      mountAt._reactTopListenersID = '' + reactTopListenersCounter++;
+      alreadyListeningTo[mountAt._reactTopListenersID] = [];
+    }
+    var topListenersID = mountAt._reactTopListenersID;
+    if (!alreadyListeningTo[topListenersID][event]) {
+      var registrationName = ReactEventEmitter.registrationNames[event];
+      var dependencies = registrationName.eventTypes[EventPluginRegistry.eventMapping[event]].dependencies;
 
-    if (!alreadyListeningTo[event]) {
-      mountAt = contentDocument;
-      camelCasedEventName = event.substr(2);
-      camelCasedEventNameAlt =
-        camelCasedEventName.charAt(0).toLowerCase() + camelCasedEventName.slice(1);
-      registration = ReactEventEmitter.registrationNames[event];
-      if (registration && registration.eventTypes[camelCasedEventNameAlt]) {
-        dependencies = registration.
-                     eventTypes[camelCasedEventNameAlt].dependencies;
-      }
-      if (dependencies) {
-        for (i = 0, l = dependencies.length; i < l; i++) {
-          dependency = dependencies[i];
-          ReactEventEmitter.listenTo(dependency, contentDocument);
-        }
-      }
-      else {
-        topLevelTypes = EventConstants.topLevelTypes;
-        topLevelType = topLevelTypes['top' + camelCasedEventName];
+      var topLevelTypes = EventConstants.topLevelTypes;
+      for (var i = 0, l = dependencies.length; i < l; i++) {
+        var dependency = dependencies[i];
+        var topLevelType = topLevelTypes[dependency];
 
         if (topLevelType === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
@@ -221,25 +207,22 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
             trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
           }
-        }
-        else if(topLevelType === topLevelTypes.topScroll) {
+        } else if (topLevelType === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
             trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
           } else {
             trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
           }
-        }
-        else if (topLevelType === topLevelTypes.topFocus ||
-                topLevelType === topLevelTypes.topBlur) {
+        } else if (topLevelType === topLevelTypes.topFocus ||
+            topLevelType === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
             trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
             trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
-            // @see
-            // http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
             trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
             trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
           }
@@ -247,15 +230,11 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           // to make sure event listeners are only attached once
           alreadyListeningTo[keyOf({onBlur: null})] = true;
           alreadyListeningTo[keyOf({onFocus: null})] = true;
-        }
-        else {
-          if(camelCasedEventName === 'DoubleClick') {
-            camelCasedEventName = 'DblClick';
-          }
-          trapBubbledEvent(topLevelType, camelCasedEventName.toLowerCase(), mountAt);
+        } else {
+          trapBubbledEvent(topLevelType, EventPluginRegistry.eventMapping[event], mountAt);
         }
 
-        alreadyListeningTo[event] = true;
+        alreadyListeningTo[topListenersID][event] = true;
       }
     }
   },
