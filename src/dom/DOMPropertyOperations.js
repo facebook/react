@@ -24,6 +24,12 @@ var DOMProperty = require('DOMProperty');
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var memoizeStringOnly = require('memoizeStringOnly');
 
+function shouldIgnoreValue(name, value) {
+  return value == null ||
+    DOMProperty.hasBooleanValue[name] && !value ||
+    DOMProperty.hasPositiveNumericValue[name] && (isNaN(value) || value < 1);
+};
+
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
   return escapeTextForBrowser(name) + '="';
 });
@@ -74,10 +80,7 @@ var DOMPropertyOperations = {
    */
   createMarkupForProperty: function(name, value) {
     if (DOMProperty.isStandardName[name]) {
-      if (value == null ||
-          DOMProperty.hasBooleanValue[name] && !value ||
-          DOMProperty.hasPositiveNumericValue[name] &&
-            (isNaN(+value) || +value < 1)) {
+      if (shouldIgnoreValue(name, value)) {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName[name];
@@ -107,32 +110,14 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod[name];
       if (mutationMethod) {
         mutationMethod(node, value);
+      } else if (shouldIgnoreValue(name, value)) {
+        this.deleteValueForProperty(node, name);
+      } else if (DOMProperty.mustUseAttribute[name]) {
+        node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
       } else {
-        if (value == null ||
-            DOMProperty.hasBooleanValue[name] && !value ||
-            DOMProperty.hasPositiveNumericValue[name] &&
-              (isNaN(+value) || +value < 1)) {
-          if (DOMProperty.mustUseAttribute[name]) {
-            node.removeAttribute(DOMProperty.getAttributeName[name]);
-          } else {
-            var propName = DOMProperty.getPropertyName[name];
-            value = DOMProperty.getDefaultValueForProperty(
-              node.nodeName,
-              name
-            );
-            if (!DOMProperty.hasSideEffects[name] ||
-                node[propName] !== value) {
-              node[propName] = value;
-            }
-          }
-        } else if (DOMProperty.mustUseAttribute[name]) {
-          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
-        } else {
-          var propName = DOMProperty.getPropertyName[name];
-          if (!DOMProperty.hasSideEffects[name] ||
-              node[propName] !== value) {
-            node[propName] = value;
-          }
+        var propName = DOMProperty.getPropertyName[name];
+        if (!DOMProperty.hasSideEffects[name] || node[propName] !== value) {
+          node[propName] = value;
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
@@ -161,10 +146,14 @@ var DOMPropertyOperations = {
         node.removeAttribute(DOMProperty.getAttributeName[name]);
       } else {
         var propName = DOMProperty.getPropertyName[name];
-        node[propName] = DOMProperty.getDefaultValueForProperty(
+        var defaultValue = DOMProperty.getDefaultValueForProperty(
           node.nodeName,
           name
         );
+        if (!DOMProperty.hasSideEffects[name] ||
+            node[propName] !== defaultValue) {
+          node[propName] = defaultValue;
+        }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
