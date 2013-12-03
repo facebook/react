@@ -190,7 +190,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     var topListenersID = mountAt._reactTopListenersID;
     if (!alreadyListeningTo[topListenersID][event]) {
       var registrationName = ReactEventEmitter.registrationNames[event];
-      var dependencies = registrationName.eventTypes[EventPluginRegistry.eventMapping[event]].dependencies;
+      var dependencies = registrationName.eventTypes[EventPluginRegistry.domEventMapping[event]].dependencies;
 
       var topLevelTypes = EventConstants.topLevelTypes;
       for (var i = 0, l = dependencies.length; i < l; i++) {
@@ -231,7 +231,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           alreadyListeningTo[keyOf({onBlur: null})] = true;
           alreadyListeningTo[keyOf({onFocus: null})] = true;
         } else {
-          trapBubbledEvent(topLevelType, EventPluginRegistry.eventMapping[event], mountAt);
+          trapBubbledEvent(topLevelType, EventPluginRegistry.domEventMapping[event], mountAt);
         }
 
         alreadyListeningTo[topListenersID][event] = true;

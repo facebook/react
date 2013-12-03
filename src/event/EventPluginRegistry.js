@@ -69,7 +69,7 @@ function recomputePluginOrdering() {
       } else {
         domEventName = publishedEvents[eventName].registrationName;
       }
-      EventPluginRegistry.eventMapping[domEventName] = eventName;
+      EventPluginRegistry.domEventMapping[domEventName] = eventName;
 
       invariant(
         publishEventForPlugin(publishedEvents[eventName], PluginModule),
@@ -142,9 +142,9 @@ var EventPluginRegistry = {
   registrationNames: {},
 
   /**
-   * Mapping from on{EventName} to
+   * Mapping from DOM event name to registrationName
    */
-  eventMapping: {},
+  domEventMapping: {},
 
   /**
    * Injects an ordering of plugins (by plugin name). This allows the ordering
