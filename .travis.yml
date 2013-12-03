@@ -4,11 +4,7 @@ node_js:
 - '0.10'
 script:
 - |
-    if [ "$TEST_TYPE" = unit ]; then
-      grunt build && grunt test
-    else
-      grunt lint
-    fi
+    grunt $TEST_TYPE
 after_script:
 - |
     if [ "$TEST_TYPE" = unit ] && [ "$SERVER" ]; then

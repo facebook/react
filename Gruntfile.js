@@ -35,6 +35,8 @@ module.exports = function(grunt) {
     .filter(function(npmTaskName) { return npmTaskName != 'grunt-cli'; })
     .forEach(function(npmTaskName) { grunt.loadNpmTasks(npmTaskName); });
 
+  grunt.registerTask('unit', ['build', 'test']);
+
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
 
