@@ -25,6 +25,10 @@ env:
   matrix:
   - TEST_TYPE=unit
   - TEST_TYPE=lint
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
@@ -33,8 +37,13 @@ env:
   - secure: eHMg4yQWJ+5zFxNcjVwpdpcbZCQMaSByqJy0wwQ2XOOMItdCvSfO/fa+mYoVND/9Orsi5kvXC9tx4sYHyth5hLrvO+bghYjiayrbxYYrxso6G/aU8Pttc7s/qk3I4zadLlua1kGy2TauByxS6nt9nUDe0FDaJKA9k1QXVlpq5Ac=
   - secure: v65jUPPNBvJg1xhj4cY7wMKinCESUseHsW1d2gp68SluFHHyjWZOvXYXZdABqB/1uNmQxjbUkwkdSNAOn5k7ppjRcRnlAH2uu1xDqXrGp6cW4MfNPchrAe+FcUMtse/3THGJj8SZ9IQWIl+BHv4XASQ7FwqCR8cwlOfhsqdfch8=
 matrix:
+  fast_finish: true
   allow_failures:
     - env: TEST_TYPE=lint
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
 notifications:
   irc:
     use_notice: true

@@ -111,6 +111,16 @@ module.exports = function(grunt) {
     'webdriver-phantomjs',
     'webdriver-jasmine:local'
   ]);
+
+  grunt.registerTask('test:webdriver:saucelabs', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8'),
+  ]);
+
   grunt.registerTask('test:coverage', [
     'build:test',
     'build:withCodeCoverageLogging',
