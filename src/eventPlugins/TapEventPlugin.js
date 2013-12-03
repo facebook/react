@@ -67,7 +67,7 @@ var dependencies = [
   keyOf({topMouseUp: null})
 ];
 
-if (EventPluginUtils.supportTouch) {
+if (EventPluginUtils.useTouchEvents) {
   dependencies.push(
     keyOf({topTouchStart: null}),
     keyOf({topTouchMove: null}),
