@@ -33,7 +33,6 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
-var EventPluginUtils = require('EventPluginUtils');
 
 ReactDefaultInjection.inject();
 
