@@ -27,8 +27,8 @@ exports.saucelabs = {
   webdriver: {
     remote: {
       /* https://github.com/admc/wd/blob/master/README.md#named-parameters */
-      user: process.env.SAUCE_USERNAME || 'React',
-      pwd: process.env.SAUCE_ACCESS_KEY || '339d32ca-d594-4570-a3c2-94c50a91919b',
+      user: process.env.SAUCE_USERNAME,
+      pwd: process.env.SAUCE_ACCESS_KEY,
       protocol: 'http:',
       hostname: 'ondemand.saucelabs.com',
       port: '80',

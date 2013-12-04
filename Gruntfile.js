@@ -13,6 +13,13 @@ var npmReactTasks = require('./grunt/tasks/npm-react');
 
 module.exports = function(grunt) {
 
+  if (!process.env.SAUCE_USERNAME) {
+    process.env.SAUCE_USERNAME = 'React';
+  }
+  if (!process.env.SAUCE_ACCESS_KEY) {
+    process.env.SAUCE_ACCESS_KEY = '339d32ca-d594-4570-a3c2-94c50a91919b';
+  }
+
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     copy: require('./grunt/config/copy'),
