@@ -117,7 +117,7 @@ var ReactDOMIDOperations = {
       if (!properties.hasOwnProperty(name)) {
         continue;
       }
-      ReactDOMIDOperations.updatePropertiesByID(id, name, properties[name]);
+      ReactDOMIDOperations.updatePropertyByID(id, name, properties[name]);
     }
   },
 
