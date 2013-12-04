@@ -31,6 +31,7 @@ env:
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ios6
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
@@ -44,9 +45,8 @@ matrix:
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ios4
-    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ios5
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ios6
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
 notifications:
   irc:
     use_notice: true

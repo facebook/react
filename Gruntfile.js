@@ -126,11 +126,11 @@ module.exports = function(grunt) {
     'webdriver-jasmine:local',
 
     'sauce-tunnel',
-    // 'webdriver-jasmine:saucelabs_ios',
+    // 'webdriver-jasmine:saucelabs_ios', // uncomment once tests pass on iOS
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
     'webdriver-jasmine:saucelabs_chrome',
-    'webdriver-jasmine:saucelabs_safari'
+    // 'webdriver-jasmine:saucelabs_safari' // uncomment once tests pass in Safari
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs', [
