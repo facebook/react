@@ -65,7 +65,7 @@
     "node": ">=0.10.0"
   },
   "preferGlobal": true,
-  "jsxConfig": {
+  "commonerConfig": {
     "version": 1
   }
 }
