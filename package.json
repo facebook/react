@@ -64,5 +64,8 @@
   "engines": {
     "node": ">=0.10.0"
   },
-  "preferGlobal": true
+  "preferGlobal": true,
+  "commonerConfig": {
+    "version": 1
+  }
 }
