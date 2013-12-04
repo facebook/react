@@ -35,8 +35,6 @@ module.exports = function(grunt) {
     .filter(function(npmTaskName) { return npmTaskName != 'grunt-cli'; })
     .forEach(function(npmTaskName) { grunt.loadNpmTasks(npmTaskName); });
 
-  grunt.registerTask('unit', ['build', 'test']);
-
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
 
@@ -110,6 +108,22 @@ module.exports = function(grunt) {
     'connect',
     'webdriver-phantomjs',
     'webdriver-jasmine:local'
+  ]);
+
+  grunt.registerTask('test:full', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-jasmine:local',
+
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ios',
+    'webdriver-jasmine:saucelabs_android',
+    'webdriver-jasmine:saucelabs_firefox',
+    'webdriver-jasmine:saucelabs_chrome',
+    'webdriver-jasmine:saucelabs_safari'
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs', [

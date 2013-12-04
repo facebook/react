@@ -7,7 +7,8 @@ script:
     grunt $TEST_TYPE
 after_script:
 - |
-    if [ "$TEST_TYPE" = unit ] && [ "$SERVER" ]; then
+    if [ "$TEST_TYPE" = test:full ] && [ "$SERVER" ]; then
+      grunt build
       curl \
         -F "react=@build/react.js" \
         -F "react.min=@build/react.min.js" \
@@ -23,7 +24,7 @@ after_script:
     fi
 env:
   matrix:
-  - TEST_TYPE=unit
+  - TEST_TYPE=test:full
   - TEST_TYPE=lint
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
