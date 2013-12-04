@@ -36,8 +36,8 @@ var mixInto = require('mixInto');
 
 var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
-var registrationNames = ReactEventEmitter.registrationNames;
 var listenTo = ReactEventEmitter.listenTo;
+var registrationNames = ReactEventEmitter.registrationNames;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};

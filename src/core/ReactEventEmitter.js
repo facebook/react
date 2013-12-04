@@ -29,8 +29,8 @@ var ViewportMetrics = require('ViewportMetrics');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var merge = require('merge');
 var keyOf = require('keyOf');
+var merge = require('merge');
 
 /**
  * Summary of `ReactEventEmitter` event handling:
