@@ -126,7 +126,7 @@ module.exports = function(grunt) {
     'webdriver-jasmine:local',
 
     'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_ios',
+    // 'webdriver-jasmine:saucelabs_ios',
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
     'webdriver-jasmine:saucelabs_chrome',
