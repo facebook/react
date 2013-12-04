@@ -67,7 +67,7 @@ describe('rendering React components at document', function() {
     React.renderComponentToString(<Root />, function(markup) {
       testDocument = getTestDocument(markup);
       var component = React.renderComponent(<Root />, testDocument);
-      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       var componentID = ReactMount.getReactRootID(testDocument);
       expect(componentID).toBe(component._rootNodeID);
@@ -95,13 +95,13 @@ describe('rendering React components at document', function() {
     React.renderComponentToString(<Root />, function(markup) {
       testDocument = getTestDocument(markup);
       React.renderComponent(<Root />, testDocument);
-      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       expect(function() {
         React.unmountComponentAtNode(testDocument);
       }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
-      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
     });
   });
 
@@ -143,14 +143,14 @@ describe('rendering React components at document', function() {
 
       React.renderComponent(<Component />, testDocument);
 
-      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
 
       // Reactive update
       expect(function() {
         React.renderComponent(<Component2 />, testDocument);
       }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
-      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(testDocument.body.innerHTML).toBe('Hello world');
     });
   });
 
