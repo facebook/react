@@ -22,10 +22,10 @@
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
-var EventPluginRegistry = require('EventPluginRegistry');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -80,7 +80,45 @@ var keyOf = require('keyOf');
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
-
+var topEventMapping = {
+  topBlur: keyOf({onBlur: null}),
+  topChange: keyOf({onChange: null}),
+  topClick: keyOf({onClick: null}),
+  topCompositionEnd: keyOf({onCompositionEnd: null}),
+  topCompositionStart: keyOf({onCompositionStart: null}),
+  topCompositionUpdate: keyOf({onCompositionUpdate: null}),
+  topContextMenu: keyOf({onContextMenu: null}),
+  topCopy: keyOf({onCopy: null}),
+  topCut: keyOf({onCut: null}),
+  topDoubleClick: keyOf({onDoubleClick: null}),
+  topDrag: keyOf({onDrag: null}),
+  topDragEnd: keyOf({onDragEnd: null}),
+  topDragEnter: keyOf({onDragEnter: null}),
+  topDragExit: keyOf({onDragExit: null}),
+  topDragLeave: keyOf({onDragLeave: null}),
+  topDragOver: keyOf({onDragOver: null}),
+  topDragStart: keyOf({onDragStart: null}),
+  topDrop: keyOf({onDrop: null}),
+  topFocus: keyOf({onFocus: null}),
+  topInput: keyOf({onInput: null}),
+  topKeyDown: keyOf({onKeyDown: null}),
+  topKeyPress: keyOf({onKeyPress: null}),
+  topKeyUp: keyOf({onKeyUp: null}),
+  topMouseDown: keyOf({onMouseDown: null}),
+  topMouseMove: keyOf({onMouseMove: null}),
+  topMouseOut: keyOf({onMouseOut: null}),
+  topMouseOver: keyOf({onMouseOver: null}),
+  topMouseUp: keyOf({onMouseUp: null}),
+  topPaste: keyOf({onPaste: null}),
+  topScroll: keyOf({onScroll: null}),
+  topSelectionChange: keyOf({onSelectionChange: null}),
+  topSubmit: keyOf({onSubmit: null}),
+  topTouchCancel: keyOf({onTouchCancel: null}),
+  topTouchEnd: keyOf({onTouchEnd: null}),
+  topTouchMove: keyOf({onTouchMove: null}),
+  topTouchStart: keyOf({onTouchStart: null}),
+  topWheel: keyOf({onWheel: null})
+};
 /**
  * Traps top-level events by using event bubbling.
  *
@@ -188,13 +226,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
       alreadyListeningTo[mountAt._reactTopListenersID] = [];
     }
     var topListenersID = mountAt._reactTopListenersID;
-    if (!alreadyListeningTo[topListenersID][event]) {
-      var registrationName = ReactEventEmitter.registrationNames[event];
-      var dependencies = registrationName.eventTypes[EventPluginRegistry.domEventMapping[event]].dependencies;
+    var registrationName = ReactEventEmitter.registrationNames[event];
+    var dependencies = registrationName.eventTypes[EventPluginRegistry.domEventMapping[event]].dependencies;
 
-      var topLevelTypes = EventConstants.topLevelTypes;
-      for (var i = 0, l = dependencies.length; i < l; i++) {
-        var dependency = dependencies[i];
+    var topLevelTypes = EventConstants.topLevelTypes;
+    for (var i = 0, l = dependencies.length; i < l; i++) {
+      var dependency = dependencies[i];
+      if (!alreadyListeningTo[topListenersID][dependency]) {
         var topLevelType = topLevelTypes[dependency];
 
         if (topLevelType === topLevelTypes.topWheel) {
@@ -228,13 +266,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           }
 
           // to make sure event listeners are only attached once
-          alreadyListeningTo[keyOf({onBlur: null})] = true;
-          alreadyListeningTo[keyOf({onFocus: null})] = true;
+          alreadyListeningTo[topListenersID][keyOf({topBlur: null})] = true;
+          alreadyListeningTo[topListenersID][keyOf({topFocus: null})] = true;
         } else {
-          trapBubbledEvent(topLevelType, EventPluginRegistry.domEventMapping[event], mountAt);
+          trapBubbledEvent(topLevelType, EventPluginRegistry.domEventMapping[topEventMapping[dependency]], mountAt);
         }
 
-        alreadyListeningTo[topListenersID][event] = true;
+        alreadyListeningTo[topListenersID][dependency] = true;
       }
     }
   },

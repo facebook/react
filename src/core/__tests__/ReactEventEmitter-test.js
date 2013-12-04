@@ -338,7 +338,6 @@ describe('ReactEventEmitter', function() {
 
     ReactEventEmitter.listenTo(ON_CHANGE_KEY, document);
 
-    var SCROLL_MONITORING_EVENTS_NO = 2;
     var setEventListeners = [];
     var listenCalls = EventListener.listen.argsForCall;
     var captureCalls = EventListener.capture.argsForCall;
@@ -351,7 +350,7 @@ describe('ReactEventEmitter', function() {
 
     var dependencies =
       ReactEventEmitter.registrationNames[ON_CHANGE_KEY].eventTypes.change.dependencies;
-    expect(setEventListeners.length).toEqual(dependencies.length + SCROLL_MONITORING_EVENTS_NO);
+    expect(setEventListeners.length).toEqual(dependencies.length);
 
     for(i = 0, l = setEventListeners.length; i < l; i++) {
       expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
