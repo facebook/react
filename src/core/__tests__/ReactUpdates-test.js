@@ -46,15 +46,18 @@ describe('ReactUpdates', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
+    expect(instance.currentState.x).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1});
       instance.setState({x: 2});
-      expect(instance.state.x).toBe(0);
+      expect(instance.state.x).toBe(2);
+      expect(instance.currentState.x).toBe(0);
       expect(updateCount).toBe(0);
     });
 
     expect(instance.state.x).toBe(2);
+    expect(instance.currentState.x).toBe(2);
     expect(updateCount).toBe(1);
   });
 
@@ -75,17 +78,23 @@ describe('ReactUpdates', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
     expect(instance.state.y).toBe(0);
+    expect(instance.currentState.x).toBe(0);
+    expect(instance.currentState.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1});
       instance.setState({y: 2});
-      expect(instance.state.x).toBe(0);
-      expect(instance.state.y).toBe(0);
+      expect(instance.state.x).toBe(1);
+      expect(instance.state.y).toBe(2);
+      expect(instance.currentState.x).toBe(0);
+      expect(instance.currentState.y).toBe(0);
       expect(updateCount).toBe(0);
     });
 
     expect(instance.state.x).toBe(1);
     expect(instance.state.y).toBe(2);
+    expect(instance.currentState.x).toBe(1);
+    expect(instance.currentState.y).toBe(2);
     expect(updateCount).toBe(1);
   });
 
@@ -106,12 +115,14 @@ describe('ReactUpdates', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Component x={0} />);
     expect(instance.props.x).toBe(0);
     expect(instance.state.y).toBe(0);
+    expect(instance.currentState.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
       instance.setProps({x: 1});
       instance.setState({y: 2});
       expect(instance.props.x).toBe(0);
-      expect(instance.state.y).toBe(0);
+      expect(instance.state.y).toBe(2);
+      expect(instance.currentState.y).toBe(0);
       expect(updateCount).toBe(0);
     });
 
@@ -149,19 +160,25 @@ describe('ReactUpdates', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
     var child = instance.refs.child;
     expect(instance.state.x).toBe(0);
+    expect(instance.currentState.x).toBe(0);
     expect(child.state.y).toBe(0);
+    expect(child.currentState.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
       instance.setState({x: 1});
       child.setState({y: 2});
-      expect(instance.state.x).toBe(0);
-      expect(child.state.y).toBe(0);
+      expect(instance.state.x).toBe(1);
+      expect(instance.currentState.x).toBe(0);
+      expect(child.state.y).toBe(2);
+      expect(child.currentState.y).toBe(0);
       expect(parentUpdateCount).toBe(0);
       expect(childUpdateCount).toBe(0);
     });
 
     expect(instance.state.x).toBe(1);
+    expect(instance.currentState.x).toBe(1);
     expect(child.state.y).toBe(2);
+    expect(child.currentState.y).toBe(2);
     expect(parentUpdateCount).toBe(1);
     expect(childUpdateCount).toBe(1);
   });
@@ -195,19 +212,25 @@ describe('ReactUpdates', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
     var child = instance.refs.child;
     expect(instance.state.x).toBe(0);
+    expect(instance.currentState.x).toBe(0);
     expect(child.state.y).toBe(0);
+    expect(child.currentState.y).toBe(0);
 
     ReactUpdates.batchedUpdates(function() {
       child.setState({y: 2});
       instance.setState({x: 1});
-      expect(instance.state.x).toBe(0);
-      expect(child.state.y).toBe(0);
+      expect(instance.state.x).toBe(1);
+      expect(instance.currentState.x).toBe(0);
+      expect(child.state.y).toBe(2);
+      expect(child.currentState.y).toBe(0);
       expect(parentUpdateCount).toBe(0);
       expect(childUpdateCount).toBe(0);
     });
 
     expect(instance.state.x).toBe(1);
+    expect(instance.currentState.x).toBe(1);
     expect(child.state.y).toBe(2);
+    expect(child.currentState.y).toBe(2);
     expect(parentUpdateCount).toBe(1);
 
     // Batching reduces the number of updates here to 1.
@@ -230,6 +253,7 @@ describe('ReactUpdates', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
+    expect(instance.currentState.x).toBe(0);
 
     var innerCallbackRun = false;
     ReactUpdates.batchedUpdates(function() {
@@ -238,17 +262,21 @@ describe('ReactUpdates', function() {
           expect(this).toBe(instance);
           innerCallbackRun = true;
           expect(instance.state.x).toBe(2);
+          expect(instance.currentState.x).toBe(2);
           expect(updateCount).toBe(2);
         });
-        expect(instance.state.x).toBe(1);
+        expect(instance.state.x).toBe(2);
+        expect(instance.currentState.x).toBe(1);
         expect(updateCount).toBe(1);
       });
-      expect(instance.state.x).toBe(0);
+      expect(instance.state.x).toBe(1);
+      expect(instance.currentState.x).toBe(0);
       expect(updateCount).toBe(0);
     });
 
     expect(innerCallbackRun).toBeTruthy();
     expect(instance.state.x).toBe(2);
+    expect(instance.currentState.x).toBe(2);
     expect(updateCount).toBe(2);
   });
 
@@ -272,6 +300,7 @@ describe('ReactUpdates', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.state.x).toBe(0);
+    expect(instance.currentState.x).toBe(0);
 
     var callbacksRun = 0;
     ReactUpdates.batchedUpdates(function() {
@@ -281,7 +310,9 @@ describe('ReactUpdates', function() {
       instance.forceUpdate(function() {
         callbacksRun++;
       });
-      expect(instance.state.x).toBe(0);
+      expect(instance.state.x).toBe(1);
+      expect(instance.currentState.x).toBe(0);
+      expect(callbacksRun).toBe(0);
       expect(updateCount).toBe(0);
     });
 
@@ -289,6 +320,7 @@ describe('ReactUpdates', function() {
     // shouldComponentUpdate shouldn't be called since we're forcing
     expect(shouldUpdateCount).toBe(0);
     expect(instance.state.x).toBe(1);
+    expect(instance.currentState.x).toBe(1);
     expect(updateCount).toBe(1);
   });
 

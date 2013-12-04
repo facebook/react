@@ -41,8 +41,8 @@ describe('ReactCompositeComponent-state', function() {
         } else {
           this.props.stateListener(
             from,
-            this.state && this.state.color,
-            this._pendingState && this._pendingState.color
+            this.currentState && this.currentState.color,
+            this.state && this.state.color
           );
         }
       },
@@ -118,52 +118,52 @@ describe('ReactCompositeComponent-state', function() {
     expect(stateListener.mock.calls).toEqual([
       // there is no state when getInitialState() is called
       [ 'getInitialState', null, null ],
-      [ 'componentWillMount-start', 'red', null ],
+      [ 'componentWillMount-start', 'red', 'red' ],
       // setState() only enqueues a pending state.
       [ 'componentWillMount-after-sunrise', 'red', 'sunrise' ],
       [ 'componentWillMount-end', 'red', 'orange' ],
       // pending state has been applied
-      [ 'render', 'orange', null ],
-      [ 'componentDidMount-start', 'orange', null ],
+      [ 'render', 'orange', 'orange' ],
+      [ 'componentDidMount-start', 'orange', 'orange' ],
       // componentDidMount() called setState({color:'yellow'}), currently this
       // occurs inline.
       // In a future where setState() is async, this test result will change.
-      [ 'shouldComponentUpdate-currentState', 'orange', null ],
+      [ 'shouldComponentUpdate-currentState', 'orange', 'yellow' ],
       [ 'shouldComponentUpdate-nextState', 'yellow' ],
-      [ 'componentWillUpdate-currentState', 'orange', null ],
+      [ 'componentWillUpdate-currentState', 'orange', 'yellow' ],
       [ 'componentWillUpdate-nextState', 'yellow' ],
-      [ 'render', 'yellow', null ],
-      [ 'componentDidUpdate-currentState', 'yellow', null ],
+      [ 'render', 'yellow', 'yellow' ],
+      [ 'componentDidUpdate-currentState', 'yellow', 'yellow' ],
       [ 'componentDidUpdate-prevState', 'orange' ],
       // componentDidMount() finally closes.
-      [ 'componentDidMount-end', 'yellow', null ],
-      [ 'componentWillReceiveProps-start', 'yellow', null ],
+      [ 'componentDidMount-end', 'yellow', 'yellow' ],
+      [ 'componentWillReceiveProps-start', 'yellow', 'yellow' ],
       // setState({color:'green'}) only enqueues a pending state.
       [ 'componentWillReceiveProps-end', 'yellow', 'green' ],
-      [ 'shouldComponentUpdate-currentState', 'yellow', null ],
+      [ 'shouldComponentUpdate-currentState', 'yellow', 'green' ],
       [ 'shouldComponentUpdate-nextState', 'green' ],
-      [ 'componentWillUpdate-currentState', 'yellow', null ],
+      [ 'componentWillUpdate-currentState', 'yellow', 'green' ],
       [ 'componentWillUpdate-nextState', 'green' ],
-      [ 'render', 'green', null ],
-      [ 'componentDidUpdate-currentState', 'green', null ],
+      [ 'render', 'green', 'green' ],
+      [ 'componentDidUpdate-currentState', 'green', 'green' ],
       [ 'componentDidUpdate-prevState', 'yellow' ],
       // setFavoriteColor('blue')
-      [ 'shouldComponentUpdate-currentState', 'green', null ],
+      [ 'shouldComponentUpdate-currentState', 'green', 'blue' ],
       [ 'shouldComponentUpdate-nextState', 'blue' ],
-      [ 'componentWillUpdate-currentState', 'green', null ],
+      [ 'componentWillUpdate-currentState', 'green', 'blue' ],
       [ 'componentWillUpdate-nextState', 'blue' ],
-      [ 'render', 'blue', null ],
-      [ 'componentDidUpdate-currentState', 'blue', null ],
+      [ 'render', 'blue', 'blue' ],
+      [ 'componentDidUpdate-currentState', 'blue', 'blue' ],
       [ 'componentDidUpdate-prevState', 'green' ],
       // forceUpdate()
-      [ 'componentWillUpdate-currentState', 'blue', null ],
+      [ 'componentWillUpdate-currentState', 'blue', 'blue' ],
       [ 'componentWillUpdate-nextState', 'blue' ],
-      [ 'render', 'blue', null ],
-      [ 'componentDidUpdate-currentState', 'blue', null ],
+      [ 'render', 'blue', 'blue' ],
+      [ 'componentDidUpdate-currentState', 'blue', 'blue' ],
       [ 'componentDidUpdate-prevState', 'blue' ],
       // unmountComponent()
       // state is available within `componentWillUnmount()`
-      [ 'componentWillUnmount', 'blue', null ]
+      [ 'componentWillUnmount', 'blue', 'blue' ]
     ]);
   });
 });

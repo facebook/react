@@ -580,8 +580,8 @@ var ReactCompositeComponentMixin = {
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
 
+    this.currentState = null;
     this.state = null;
-    this._pendingState = null;
 
     this.context = this._processContext(ReactContext.current);
     this._currentContext = ReactContext.current;
@@ -630,18 +630,15 @@ var ReactCompositeComponentMixin = {
         this._bindAutoBindMethods();
       }
 
-      this.state = this.getInitialState ? this.getInitialState() : null;
-      this._pendingState = null;
+      this.currentState = this.getInitialState ? this.getInitialState() : null;
+      this.state = this.currentState;
       this._pendingForceUpdate = false;
 
       if (this.componentWillMount) {
         this.componentWillMount();
         // When mounting, calls to `setState` by `componentWillMount` will set
-        // `this._pendingState` without triggering a re-render.
-        if (this._pendingState) {
-          this.state = this._pendingState;
-          this._pendingState = null;
-        }
+        // `this.state` without triggering a re-render.
+        this.currentState = this.state;
       }
 
       this._renderedComponent = this._renderValidatedComponent();
@@ -707,9 +704,8 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   setState: function(partialState, callback) {
-    // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
-      merge(this._pendingState || this.state, partialState),
+      merge(this.state, partialState),
       callback
     );
   },
@@ -728,7 +724,7 @@ var ReactCompositeComponentMixin = {
    */
   replaceState: function(completeState, callback) {
     validateLifeCycleOnReplaceState(this);
-    this._pendingState = completeState;
+    this.state = completeState;
     ReactUpdates.enqueueUpdate(this, callback);
   },
 
@@ -848,7 +844,7 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * If any of `_pendingProps`, `_pendingState`, or `_pendingForceUpdate` is
+   * If any of `_pendingProps`, pending `state`, or `_pendingForceUpdate` is
    * set, update the component.
    *
    * @param {ReactReconcileTransaction} transaction
@@ -856,7 +852,7 @@ var ReactCompositeComponentMixin = {
    */
   _performUpdateIfNecessary: function(transaction) {
     if (this._pendingProps == null &&
-        this._pendingState == null &&
+        this.state === this.currentState &&
         this._pendingContext == null &&
         !this._pendingForceUpdate) {
       return;
@@ -885,14 +881,13 @@ var ReactCompositeComponentMixin = {
     // mean that there's no owner change pending.
     var nextOwner = this._pendingOwner;
 
-    var nextState = this._pendingState || this.state;
-    this._pendingState = null;
+    var nextState = this.state;
 
     if (this._pendingForceUpdate ||
         !this.shouldComponentUpdate ||
         this.shouldComponentUpdate(nextProps, nextState, nextContext)) {
       this._pendingForceUpdate = false;
-      // Will set `this.props`, `this.state` and `this.context`.
+      // Will set `this.props`, `this.currentState` and `this.context`.
       this._performComponentUpdate(
         nextProps,
         nextOwner,
@@ -906,7 +901,7 @@ var ReactCompositeComponentMixin = {
       // to set props and state.
       this.props = nextProps;
       this._owner = nextOwner;
-      this.state = nextState;
+      this.currentState = nextState;
       this._currentContext = nextFullContext;
       this.context = nextContext;
     }
@@ -936,7 +931,7 @@ var ReactCompositeComponentMixin = {
   ) {
     var prevProps = this.props;
     var prevOwner = this._owner;
-    var prevState = this.state;
+    var prevState = this.currentState;
     var prevContext = this.context;
 
     if (this.componentWillUpdate) {
@@ -945,7 +940,7 @@ var ReactCompositeComponentMixin = {
 
     this.props = nextProps;
     this._owner = nextOwner;
-    this.state = nextState;
+    this.currentState = nextState;
     this._currentContext = nextFullContext;
     this.context = nextContext;
 
