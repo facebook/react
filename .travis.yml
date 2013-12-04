@@ -26,7 +26,10 @@ env:
   matrix:
   - TEST_TYPE=test:full
   - TEST_TYPE=lint
-  - TEST_TYPE=test:webdriver:saucelabs:ie
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
+  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
   - TEST_TYPE=test:webdriver:saucelabs:ios
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
   global:
@@ -38,7 +41,10 @@ matrix:
   fast_finish: true
   allow_failures:
     - env: TEST_TYPE=lint
-    - env: TEST_TYPE=test:webdriver:saucelabs:ie
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
+    - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
     - env: TEST_TYPE=test:webdriver:saucelabs:ios
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
 notifications:
