@@ -142,6 +142,29 @@ module.exports = function(grunt) {
     'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8'),
   ]);
 
+  grunt.registerTask('test:webdriver:saucelabs:ie', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ie8',
+    'webdriver-jasmine:saucelabs_ie9',
+    'webdriver-jasmine:saucelabs_ie10',
+    'webdriver-jasmine:saucelabs_ie11'
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs:ios', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ios6_1',
+    'webdriver-jasmine:saucelabs_ios5_1',
+    'webdriver-jasmine:saucelabs_ios4'
+  ]);
+
   grunt.registerTask('test:coverage', [
     'build:test',
     'build:withCodeCoverageLogging',
