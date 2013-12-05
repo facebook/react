@@ -404,8 +404,56 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
       />;
-    expect(ReactTestUtils.renderIntoDocument.bind(ReactTestUtils, instance))
-      .toThrow();
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance)
+    }).toThrow(
+      'Invariant Violation: replaceProps(...): You called `setProps` or ' +
+      '`replaceProps` on a component with a parent. This is an anti-pattern ' +
+      'since props will get reactively updated when rendered. Instead, ' +
+      'change the owner\'s `render` method to pass the correct value as ' +
+      'props to the component where it is created.'
+    );
+  });
+
+  it('should not throw when updating an auxiliary component', function() {
+    var Tooltip = React.createClass({
+      render: function() {
+        return <div>{this.props.children}</div>;
+      },
+      componentDidMount: function() {
+        this.container = document.createElement('div');
+        this.updateTooltip();
+      },
+      componentDidUpdate: function() {
+        this.updateTooltip();
+      },
+      updateTooltip: function() {
+        // Even though this.props.tooltip has an owner, updating it shouldn't
+        // throw here because it's mounted as a root component
+        React.renderComponent(this.props.tooltip, this.container);
+      }
+    });
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <Tooltip
+              ref="tooltip"
+              tooltip={<div>{this.props.tooltipText}</div>}>
+            {this.props.text}
+          </Tooltip>
+        );
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.renderComponent(
+      <Component text="uno" tooltipText="one" />,
+      container
+    );
+
+    // Since `instance` is a root component, we can set its props. This also
+    // makes Tooltip rerender the tooltip component, which shouldn't throw.
+    instance.setProps({text: "dos", tooltipText: "two"});
   });
 
   it('should throw when calling setProps() on an unmounted component',
