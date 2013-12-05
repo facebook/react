@@ -73,11 +73,11 @@ module.exports = function(){
 
 function getJSReport(browser){
   return browser
-    .waitForCondition("typeof window.jasmine != 'undefined'", 5e3)
+    .waitFor(wd.asserters.jsCondition("typeof window.jasmine != 'undefined'"), 5e3, 50)
     .fail(function(error){
       throw Error("The test page didn't load properly. " + error);
     })
-    .waitForCondition("typeof window.jasmine.getJSReport != 'undefined'", 10e3)
-    .waitForCondition("window.postDataToURL.running <= 0", 30e3)
+    .waitFor(wd.asserters.jsCondition("typeof window.jasmine.getJSReport != 'undefined'"), 60e3, 100)
+    .waitFor(wd.asserters.jsCondition("window.postDataToURL.running <= 0"), 30e3, 500)
     .eval("jasmine.getJSReport().passed");
 }
