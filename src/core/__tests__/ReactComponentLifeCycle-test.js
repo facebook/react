@@ -405,7 +405,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInOnDOMReady="goodbye"
       />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance)
+      ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: replaceProps(...): You called `setProps` or ' +
       '`replaceProps` on a component with a parent. This is an anti-pattern ' +
