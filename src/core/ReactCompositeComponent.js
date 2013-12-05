@@ -1156,7 +1156,7 @@ var ReactCompositeComponentMixin = {
       boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis) {
+      boundMethod.bind = function(newThis, ...args) {
         // User is trying to bind() an autobound method; we effectively will
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
@@ -1165,7 +1165,7 @@ var ReactCompositeComponentMixin = {
             'bind(): React component methods may only be bound to the ' +
             'component instance. See ' + componentName
           );
-        } else if (arguments.length === 1) {
+        } else if (!args.length) {
           console.warn(
             'bind(): You are binding a component method to the component. ' +
             'React does this for you automatically in a high-performance ' +
@@ -1176,8 +1176,7 @@ var ReactCompositeComponentMixin = {
         var reboundMethod = _bind.apply(boundMethod, arguments);
         reboundMethod.__reactBoundContext = component;
         reboundMethod.__reactBoundMethod = method;
-        reboundMethod.__reactBoundArguments =
-          Array.prototype.slice.call(arguments, 1);
+        reboundMethod.__reactBoundArguments = args;
         return reboundMethod;
       };
     }

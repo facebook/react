@@ -187,9 +187,9 @@ if (__DEV__) {
 
       var fnArgs = _getFnArguments(func);
 
-      return function() {
+      return function(...args) {
         var timeBeforeFn = performanceNow();
-        var fnReturn = func.apply(this, arguments);
+        var fnReturn = func.apply(this, args);
         var timeAfterFn = performanceNow();
 
         /**
@@ -197,9 +197,9 @@ if (__DEV__) {
          * args is also passed to the callback, so if you want to save an
          * argument in the log, do so in the callback.
          */
-        var args = {};
-        for (var i = 0; i < arguments.length; i++) {
-          args[fnArgs[i]] = arguments[i];
+        var argsObject = {};
+        for (var i = 0; i < args.length; i++) {
+          argsObject[fnArgs[i]] = args[i];
         }
 
         var log = {
@@ -224,7 +224,7 @@ if (__DEV__) {
          * - the wrapped method's info object.
          */
         var callback = _getCallback(objName, fnName);
-        callback && callback(this, args, fnReturn, log, info);
+        callback && callback(this, argsObject, fnReturn, log, info);
 
         log.timing.timeToLog = performanceNow() - timeAfterFn;
 

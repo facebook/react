@@ -276,7 +276,7 @@ var ReactComponent = {
     },
 
     /**
-     * Base constructor for all React component.
+     * Base constructor for all React components.
      *
      * Subclasses that override this method should make sure to invoke
      * `ReactComponent.Mixin.construct.call(this, ...)`.
