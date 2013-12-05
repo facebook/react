@@ -450,12 +450,7 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
       RESERVED_SPEC_KEYS[name](ConvenienceConstructor, property);
     } else if (RESERVED_STATIC_SPEC_KEYS.hasOwnProperty(name)) {
-      if (__DEV__) {
-        console.warn(
-          'createClass(...): `' + name + '` is now a static property and ' +
-          'should be defined inside "statics".'
-        );
-      }
+      // TODO: deprecate this with a warning
       RESERVED_STATIC_SPEC_KEYS[name](ConvenienceConstructor, property);
     } else {
       // Setup methods on prototype:

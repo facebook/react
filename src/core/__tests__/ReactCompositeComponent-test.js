@@ -566,7 +566,7 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
-  it('should warn when using deprecated non-static spec keys', function() {
+  xit('should warn when using deprecated non-static spec keys', function() {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
     try {
