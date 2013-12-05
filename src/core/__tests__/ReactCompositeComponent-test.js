@@ -235,9 +235,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should normalize props with default values', function() {
     var Component = React.createClass({
-      statics: {
-        propTypes: {key: ReactPropTypes.string.isRequired}
-      },
+      propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
         return {key: 'testKey'};
       },
@@ -264,9 +262,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should check default prop values', function() {
     var Component = React.createClass({
-      statics: {
-        propTypes: {key: ReactPropTypes.string.isRequired}
-      },
+      propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
         return {key: null};
       },
@@ -286,10 +282,8 @@ describe('ReactCompositeComponent', function() {
 
   it('should check declared prop types', function() {
     var Component = React.createClass({
-      statics: {
-        propTypes: {
-          key: ReactPropTypes.string.isRequired
-        }
+      propTypes: {
+        key: ReactPropTypes.string.isRequired
       },
       render: function() {
         return <span>{this.props.key}</span>;
@@ -319,10 +313,8 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        statics: {
-          propTypes: {
-            key: null
-          }
+        propTypes: {
+          key: null
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -338,10 +330,8 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        statics: {
-          contextTypes: {
-            key: null
-          }
+        contextTypes: {
+          key: null
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -357,10 +347,8 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       React.createClass({
         displayName: 'Component',
-        statics: {
-          childContextTypes: {
-            key: null
-          }
+        childContextTypes: {
+          key: null
         },
         render: function() {
           return <span>{this.props.key}</span>;
@@ -428,9 +416,7 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      statics: {
-        mixins: [Mixin]
-      },
+      mixins: [Mixin],
       getInitialState: function() {
         return {component: true};
       },
@@ -451,9 +437,7 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      statics: {
-        mixins: [Mixin]
-      },
+      mixins: [Mixin],
       getInitialState: function() {
         return {x: true};
       },
@@ -477,9 +461,7 @@ describe('ReactCompositeComponent', function() {
       }
     };
     var Component = React.createClass({
-      statics: {
-        mixins: [Mixin]
-      },
+      mixins: [Mixin],
       getInitialState: function() {
         return {x: true};
       },
@@ -614,11 +596,9 @@ describe('ReactCompositeComponent', function() {
     var grandchildInstance = null;
 
     var Parent = React.createClass({
-      statics: {
-        childContextTypes: {
-          foo: ReactPropTypes.string,
-          depth: ReactPropTypes.number
-        }
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
       },
 
       getChildContext: function() {
@@ -635,15 +615,13 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Child = React.createClass({
-      statics: {
-        contextTypes: {
-          foo: ReactPropTypes.string,
-          depth: ReactPropTypes.number
-        },
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
 
-        childContextTypes: {
-          depth: ReactPropTypes.number
-        }
+      childContextTypes: {
+        depth: ReactPropTypes.number
       },
 
       getChildContext: function() {
@@ -659,11 +637,9 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Grandchild = React.createClass({
-      statics: {
-        contextTypes: {
-          foo: ReactPropTypes.string,
-          depth: ReactPropTypes.number
-        }
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
       },
 
       render: function() {
@@ -679,10 +655,8 @@ describe('ReactCompositeComponent', function() {
 
   it('should check context types', function() {
     var Component = React.createClass({
-      statics: {
-        contextTypes: {
-          foo: ReactPropTypes.string.isRequired
-        }
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
       },
 
       render: function() {
@@ -715,11 +689,9 @@ describe('ReactCompositeComponent', function() {
 
   it('should check child context types', function() {
     var Component = React.createClass({
-      statics: {
-        childContextTypes: {
-          foo: ReactPropTypes.string.isRequired,
-          bar: ReactPropTypes.number
-        }
+      childContextTypes: {
+        foo: ReactPropTypes.string.isRequired,
+        bar: ReactPropTypes.number
       },
 
       getChildContext: function() {
@@ -764,10 +736,8 @@ describe('ReactCompositeComponent', function() {
 
   it('should filter out context not in contextTypes', function() {
     var Component = React.createClass({
-      statics: {
-        contextTypes: {
-          foo: ReactPropTypes.string
-        }
+      contextTypes: {
+        foo: ReactPropTypes.string
       },
 
       render: function() {
@@ -789,11 +759,9 @@ describe('ReactCompositeComponent', function() {
     var actualComponentDidUpdate;
 
     var Parent = React.createClass({
-      statics: {
-        childContextTypes: {
-          foo: ReactPropTypes.string.isRequired,
-          bar: ReactPropTypes.string.isRequired
-        }
+      childContextTypes: {
+        foo: ReactPropTypes.string.isRequired,
+        bar: ReactPropTypes.string.isRequired
       },
 
       getChildContext: function() {
@@ -809,10 +777,8 @@ describe('ReactCompositeComponent', function() {
     });
 
     var Component = React.createClass({
-      statics: {
-        contextTypes: {
-          foo: ReactPropTypes.string
-        }
+      contextTypes: {
+        foo: ReactPropTypes.string
       },
 
       componentWillReceiveProps: function(nextProps, nextContext) {
@@ -896,8 +862,9 @@ describe('ReactCompositeComponent', function() {
         }
       };
       React.createClass({
+        mixins: [Mixin],
+
         statics: {
-          mixins: [Mixin],
           abc: 'bar'
         },
 
@@ -906,9 +873,10 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponentInterface: You are ' +
-      'attempting to define `abc` on your component more than once. This ' +
-      'conflict may be due to a mixin.'
+      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'define `abc` on your component more than once, but that is only ' +
+      'supported for functions, which are chained together. This conflict ' +
+      'may be due to a mixin.'
     );
   });
 });
