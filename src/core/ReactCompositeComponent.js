@@ -94,6 +94,15 @@ var ReactCompositeComponentInterface = {
   mixins: SpecPolicy.DEFINE_MANY,
 
   /**
+   * An object containing properties and methods that should be defined on
+   * the component's constructor instead of its prototype (static methods).
+   *
+   * @type {object}
+   * @optional
+   */
+  statics: SpecPolicy.DEFINE_MANY_MERGED,
+
+  /**
    * Definition of prop types for this component.
    *
    * @type {object}
@@ -116,7 +125,6 @@ var ReactCompositeComponentInterface = {
    * @optional
    */
   childContextTypes: SpecPolicy.DEFINE_MANY_MERGED,
-
 
   // ==== Definition methods ====
 
@@ -305,21 +313,25 @@ var ReactCompositeComponentInterface = {
 /**
  * Mapping from class specification keys to special processing functions.
  *
- * Although these are declared in the specification when defining classes
- * using `React.createClass`, they will not be on the component's prototype.
+ * Although these are declared like instance properties in the specification
+ * when defining classes using `React.createClass`, they are actually static
+ * and are accessible on the constructor instead of the prototype. Despite
+ * being static, they must be defined outside of the "statics" key under
+ * which all other static methods are defined.
  */
 var RESERVED_SPEC_KEYS = {
-  displayName: function(Constructor, displayName) {
-    Constructor.displayName = displayName;
+  displayName: function(ConvenienceConstructor, displayName) {
+    ConvenienceConstructor.componentConstructor.displayName = displayName;
   },
-  mixins: function(Constructor, mixins) {
+  mixins: function(ConvenienceConstructor, mixins) {
     if (mixins) {
       for (var i = 0; i < mixins.length; i++) {
-        mixSpecIntoComponent(Constructor, mixins[i]);
+        mixSpecIntoComponent(ConvenienceConstructor, mixins[i]);
       }
     }
   },
-  childContextTypes: function(Constructor, childContextTypes) {
+  childContextTypes: function(ConvenienceConstructor, childContextTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       childContextTypes,
@@ -327,7 +339,8 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.childContextTypes = childContextTypes;
   },
-  contextTypes: function(Constructor, contextTypes) {
+  contextTypes: function(ConvenienceConstructor, contextTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       contextTypes,
@@ -335,13 +348,17 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.contextTypes = contextTypes;
   },
-  propTypes: function(Constructor, propTypes) {
+  propTypes: function(ConvenienceConstructor, propTypes) {
+    var Constructor = ConvenienceConstructor.componentConstructor;
     validateTypeDef(
       Constructor,
       propTypes,
       ReactPropTypeLocations.prop
     );
     Constructor.propTypes = propTypes;
+  },
+  statics: function(ConvenienceConstructor, statics) {
+    mixStaticSpecIntoComponent(ConvenienceConstructor, statics);
   }
 };
 
@@ -387,7 +404,6 @@ function validateMethodOverride(proto, name) {
   }
 }
 
-
 function validateLifeCycleOnReplaceState(instance) {
   var compositeLifeCycleState = instance._compositeLifeCycleState;
   invariant(
@@ -395,11 +411,14 @@ function validateLifeCycleOnReplaceState(instance) {
       compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
     'replaceState(...): Can only update a mounted or mounting component.'
   );
-  invariant(
-    compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-    compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-    'replaceState(...): Cannot update while unmounting component or during ' +
-    'an existing state transition (such as within `render`).'
+  invariant(compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE,
+    'replaceState(...): Cannot update during an existing state transition ' +
+    '(such as within `render`). This could potentially cause an infinite ' +
+    'loop so it is forbidden.'
+  );
+  invariant(compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+    'replaceState(...): Cannot update while unmounting component. This ' +
+    'usually means you called setState() on an unmounted component.'
   );
 }
 
@@ -407,17 +426,19 @@ function validateLifeCycleOnReplaceState(instance) {
  * Custom version of `mixInto` which handles policy validation and reserved
  * specification keys when building `ReactCompositeComponent` classses.
  */
-function mixSpecIntoComponent(Constructor, spec) {
+function mixSpecIntoComponent(ConvenienceConstructor, spec) {
+  var Constructor = ConvenienceConstructor.componentConstructor;
   var proto = Constructor.prototype;
   for (var name in spec) {
     var property = spec[name];
     if (!spec.hasOwnProperty(name) || !property) {
       continue;
     }
+
     validateMethodOverride(proto, name);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
-      RESERVED_SPEC_KEYS[name](Constructor, property);
+      RESERVED_SPEC_KEYS[name](ConvenienceConstructor, property);
     } else {
       // Setup methods on prototype:
       // The following member methods should not be automatically bound:
@@ -454,6 +475,37 @@ function mixSpecIntoComponent(Constructor, spec) {
         }
       }
     }
+  }
+}
+
+function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
+  if (!statics) {
+    return;
+  }
+  for (var name in statics) {
+    var property = statics[name];
+    if (!statics.hasOwnProperty(name) || !property) {
+      return;
+    }
+
+    var isInherited = name in ConvenienceConstructor;
+    var result = property;
+    if (isInherited) {
+      var existingProperty = ConvenienceConstructor[name];
+      var existingType = typeof existingProperty;
+      var propertyType = typeof property;
+      invariant(
+        existingType === 'function' && propertyType === 'function',
+        'ReactCompositeComponent: You are attempting to define ' +
+        '`%s` on your component more than once, but that is only supported ' +
+        'for functions, which are chained together. This conflict may be ' +
+        'due to a mixin.',
+        name
+      );
+      result = createChainedFunction(existingProperty, property);
+    }
+    ConvenienceConstructor[name] = result;
+    ConvenienceConstructor.componentConstructor[name] = result;
   }
 }
 
@@ -1172,7 +1224,16 @@ var ReactCompositeComponent = {
     var Constructor = function() {};
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
-    mixSpecIntoComponent(Constructor, spec);
+
+    var ConvenienceConstructor = function(props, children) {
+      var instance = new Constructor();
+      instance.construct.apply(instance, arguments);
+      return instance;
+    };
+    ConvenienceConstructor.componentConstructor = Constructor;
+    ConvenienceConstructor.originalSpec = spec;
+
+    mixSpecIntoComponent(ConvenienceConstructor, spec);
 
     invariant(
       Constructor.prototype.render,
@@ -1197,13 +1258,6 @@ var ReactCompositeComponent = {
       }
     }
 
-    var ConvenienceConstructor = function(props, children) {
-      var instance = new Constructor();
-      instance.construct.apply(instance, arguments);
-      return instance;
-    };
-    ConvenienceConstructor.componentConstructor = Constructor;
-    ConvenienceConstructor.originalSpec = spec;
     return ConvenienceConstructor;
   },
 

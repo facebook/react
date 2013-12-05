@@ -82,6 +82,12 @@ id: home
   <script type="text/javascript" src="js/examples/markdown.js"></script>
 </section>
 <hr class="home-divider" />
+<section class="home-section home-presentation">
+  <h3>Presentation</h3>
+  <p>Watch this 30-minute presentation followed by a Q&A to learn more about React.</p>
+  <figure><iframe width="650" height="400" src="//www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+</section>
+<hr class="home-divider" />
 <section class="home-bottom-section">
   <div class="buttons-unit">
     <a href="docs/getting-started.html" class="button">Get Started</a>

@@ -35,25 +35,4 @@ describe('ReactMount', function() {
     ReactMount.renderComponent(<span></span>, container);
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
-
-  it('should warn on unmountAndReleaseReactRootNode', function() {
-    var _warn = console.warn;
-    console.warn = mocks.getMockFunction();
-
-    var container = document.createElement('container');
-    ReactMount.renderComponent(<span />, container);
-    expect(console.warn.mock.calls.length).toBe(0);
-
-    // This method should warn, nothing else should.
-    ReactMount.unmountAndReleaseReactRootNode(container);
-    expect(console.warn.mock.calls.length).toBe(1);
-
-    ReactMount.renderComponent(<span />, container);
-    expect(console.warn.mock.calls.length).toBe(1);
-
-    ReactMount.unmountComponentAtNode(container);
-    expect(console.warn.mock.calls.length).toBe(1);
-
-    console.warn = _warn;
-  });
 });

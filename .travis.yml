@@ -39,3 +39,9 @@ env:
 matrix:
   allow_failures:
     - env: TEST_TYPE=lint
+notifications:
+  irc:
+    use_notice: true
+    skip_join: true
+    channels:
+    - chat.freenode.net#reactjs

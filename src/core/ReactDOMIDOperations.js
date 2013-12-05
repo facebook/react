@@ -103,25 +103,6 @@ var ReactDOMIDOperations = {
   },
 
   /**
-   * This should almost never be used instead of `updatePropertyByID()` due to
-   * the extra object allocation required by the API. That said, this is useful
-   * for batching up several operations across worker thread boundaries.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {object} properties A mapping of valid property names.
-   * @internal
-   * @see {ReactDOMIDOperations.updatePropertyByID}
-   */
-  updatePropertiesByID: function(id, properties) {
-    for (var name in properties) {
-      if (!properties.hasOwnProperty(name)) {
-        continue;
-      }
-      ReactDOMIDOperations.updatePropertiesByID(id, name, properties[name]);
-    }
-  },
-
-  /**
    * Updates a DOM node with new style values. If a value is specified as '',
    * the corresponding style property will be unset.
    *
