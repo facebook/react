@@ -22,9 +22,24 @@ var React = require('React');
 var ReactTransitionableChild = require('ReactTransitionableChild');
 var ReactTransitionKeySet = require('ReactTransitionKeySet');
 
-var invariant = require('invariant');
+var ReactTransitionGroup = React.createClass({
 
-var ReactTransitionGroupMixin = {
+  propTypes: {
+    transitionName: React.PropTypes.string.isRequired,
+    transitionEnter: React.PropTypes.bool,
+    transitionLeave: React.PropTypes.bool,
+    onTransition: React.PropTypes.func,
+    component: React.PropTypes.func
+  },
+
+  getDefaultProps: function() {
+    return {
+      transitionEnter: true,
+      transitionLeave: true,
+      component: React.DOM.span
+    };
+  },
+
   componentWillMount: function() {
     // _transitionGroupCurrentKeys stores the union of previous *and* next keys.
     // If this were a component we'd store it as state, however, since this must
@@ -34,20 +49,19 @@ var ReactTransitionGroupMixin = {
     this._transitionGroupCurrentKeys = {};
   },
 
+  componentDidUpdate: function() {
+    if (this.props.onTransition) {
+      this.props.onTransition();
+    }
+  },
+
   /**
    * Render some children in a transitionable way.
    */
   renderTransitionableChildren: function(sourceChildren) {
-    invariant(
-      this.getTransitionConfig,
-      'renderTransitionableChildren(): You must provide a ' +
-      'getTransitionConfig() method.'
-    );
-
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
 
-    var transitionConfig = this.getTransitionConfig();
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
       this._transitionGroupCurrentKeys,
       ReactTransitionKeySet.getKeySet(sourceChildren)
@@ -59,10 +73,10 @@ var ReactTransitionGroupMixin = {
       // may look up an old key in the new children, and it may switch to
       // undefined. React's reconciler will keep the ReactTransitionableChild
       // instance alive such that we can animate it.
-      if (childMapping[key] || transitionConfig.leave) {
+      if (childMapping[key] || this.props.transitionLeave) {
         children[key] = ReactTransitionableChild({
-          name: transitionConfig.name,
-          enter: transitionConfig.enter,
+          name: this.props.transitionName,
+          enter: this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
       }
@@ -78,26 +92,6 @@ var ReactTransitionGroupMixin = {
     // node.
     delete this._transitionGroupCurrentKeys[key];
     this.forceUpdate();
-  }
-};
-
-var ReactTransitionGroup = React.createClass({
-  mixins: [ReactTransitionGroupMixin],
-
-  getDefaultProps: function() {
-    return {
-      transitionEnter: true,
-      transitionLeave: true,
-      component: React.DOM.span
-    };
-  },
-
-  getTransitionConfig: function() {
-    return {
-      name: this.props.transitionName,
-      enter: this.props.transitionEnter,
-      leave: this.props.transitionLeave
-    };
   },
 
   render: function() {
