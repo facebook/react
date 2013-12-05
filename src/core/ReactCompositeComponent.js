@@ -424,11 +424,14 @@ function validateLifeCycleOnReplaceState(instance) {
       compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
     'replaceState(...): Can only update a mounted or mounting component.'
   );
-  invariant(
-    compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-    compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-    'replaceState(...): Cannot update while unmounting component or during ' +
-    'an existing state transition (such as within `render`).'
+  invariant(compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE,
+    'replaceState(...): Cannot update during an existing state transition ' +
+    '(such as within `render`). This could potentially cause an infinite ' +
+    'loop so it is forbidden.'
+  );
+  invariant(compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+    'replaceState(...): Cannot update while unmounting component. This ' +
+    'usually means you called setState() on an unmounted component.'
   );
 }
 
