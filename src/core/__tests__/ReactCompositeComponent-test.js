@@ -213,6 +213,47 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance3).scalarPropsEqual({key: null});
   });
 
+  it('should not mutate passed-in props object', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {key: 'testKey'};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var inputProps = {};
+    var instance1 = Component(inputProps);
+    ReactTestUtils.renderIntoDocument(instance1);
+    expect(instance1.props.key).toBe('testKey');
+
+    // We don't mutate the input, just in case the caller wants to do something
+    // with it after using it to instantiate a component
+    expect(inputProps.key).not.toBeDefined();
+  });
+
+  it('should use default prop value when removing a key', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {fruit: 'persimmon'};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.renderComponent(
+      <Component fruit="mango" />,
+      container
+    );
+    expect(instance.props.fruit).toBe('mango');
+
+    React.renderComponent(<Component />, container);
+    expect(instance.props.fruit).toBe('persimmon');
+  });
+
   it('should normalize props with default values', function() {
     var Component = React.createClass({
       propTypes: {key: ReactPropTypes.string.isRequired},
