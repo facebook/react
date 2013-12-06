@@ -7,12 +7,12 @@ module.exports = function() {
   var task = this;
   var shouldStayAliveForever = task.flags.keepalive;
 
-  var SAUCE_ACCESS_KEY = process.env.SAUCE_ACCESS_KEY;
+  var SAUCE_ACCESS_KEY = process.env.SAUCE_ACCESS_KEY || '339d32ca-d594-4570-a3c2-94c50a91919b';
   if (!SAUCE_ACCESS_KEY) {
     grunt.fatal('Requires the environment variable SAUCE_ACCESS_KEY to be set');
   }
 
-  var SAUCE_USERNAME = process.env.SAUCE_USERNAME;
+  var SAUCE_USERNAME = process.env.SAUCE_USERNAME || 'React';
   if (!SAUCE_USERNAME) {
     grunt.fatal('Requires the environment variable SAUCE_USERNAME to be set');
   }
