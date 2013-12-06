@@ -39,7 +39,6 @@
   },
   "devDependencies": {
     "browserify": "~2.36.1",
-    "browserify": "~2.34.1",
     "envify": "~0.2.0",
     "populist": "~0.1.5",
     "grunt-cli": "~0.1.9",
