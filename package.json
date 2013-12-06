@@ -1,6 +1,6 @@
 {
   "name": "react-tools",
-  "version": "0.6.0-alpha",
+  "version": "0.8.0-alpha",
   "keywords": [
     "react",
     "jsx",
@@ -39,6 +39,8 @@
   },
   "devDependencies": {
     "browserify": "~2.36.1",
+    "browserify": "~2.34.1",
+    "envify": "~0.2.0",
     "populist": "~0.1.5",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
@@ -67,6 +69,6 @@
   },
   "preferGlobal": true,
   "commonerConfig": {
-    "version": 1
+    "version": 2
   }
 }
