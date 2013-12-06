@@ -2,8 +2,8 @@
 
 var grunt = require('grunt');
 
-var src = 'npm-react-core/';
-var dest = 'build/react-core/';
+var src = 'npm-react/';
+var dest = 'build/npm-react/';
 var modSrc = 'build/modules/';
 var lib = dest + 'lib/';
 

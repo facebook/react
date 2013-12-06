@@ -4,7 +4,7 @@
   "keywords": [
     "react"
   ],
-  "homepage": "https://github.com/facebook/react/tree/master/npm-react-core",
+  "homepage": "https://github.com/facebook/react/tree/master/npm-react",
   "bugs": "https://github.com/facebook/react/issues?labels=react-core",
   "licenses": [
     {
