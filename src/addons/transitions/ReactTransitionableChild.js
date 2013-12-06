@@ -130,15 +130,16 @@ var ReactTransitionableChild = React.createClass({
     if (!nextProps.children && this.props.children) {
       this.savedChildren = this.props.children;
     } else if (nextProps.children && !this.props.children) {
-      // We're being told to keep this node!  Better set it to enter again.
-      if (this.props.enter && this.isMounted())
-      {
+      // We're being told to re-add the child.  Let's stop leaving!
+      if (this.isMounted()) {
         var node = this.getDOMNode();
         var className = this.props.name;
         CSSCore.removeClass(node, className + '-leave');
         CSSCore.removeClass(node, className + '-leave-active');
-        CSSCore.addClass(node, className + '-enter');
-        CSSCore.addClass(node, className + '-enter-active');
+        if (this.props.enter) {
+          CSSCore.addClass(node, className + '-enter');
+          CSSCore.addClass(node, className + '-enter-active');
+        }
       }
     }
   },
