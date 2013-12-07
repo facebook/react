@@ -32,8 +32,8 @@
 function getUnboundedScrollPosition(scrollable) {
   if (scrollable === window) {
     return {
-      x: document.documentElement.scrollLeft || document.body.scrollLeft,
-      y: document.documentElement.scrollTop  || document.body.scrollTop
+      x: window.pageXOffset || document.documentElement.scrollLeft,
+      y: window.pageYOffset || document.documentElement.scrollTop
     };
   }
   return {
