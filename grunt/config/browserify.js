@@ -3,6 +3,7 @@
 
 'use strict';
 
+var envify = require('envify/custom');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 
@@ -59,12 +60,14 @@ var basic = {
   outfile: './build/react.js',
   debug: false,
   standalone: 'React',
+  transforms: [envify({NODE_ENV: 'development'})],
   after: [simpleBannerify]
 };
 
 var min = grunt.util._.merge({}, basic, {
   outfile: './build/react.min.js',
   debug: false,
+  transforms: [envify({NODE_ENV: 'production'})],
   after: [minify, bannerify]
 });
 
@@ -85,6 +88,7 @@ var addons = {
   outfile: './build/react-with-addons.js',
   debug: false,
   standalone: 'React',
+  transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
   after: [simpleBannerify]
 };
@@ -92,6 +96,7 @@ var addons = {
 var addonsMin = grunt.util._.merge({}, addons, {
   outfile: './build/react-with-addons.min.js',
   debug: false,
+  transforms: [envify({NODE_ENV: 'production'})],
   after: [minify, bannerify]
 });
 
@@ -103,6 +108,7 @@ var withCodeCoverageLogging = {
   debug: true,
   standalone: 'React',
   transforms: [
+    envify({NODE_ENV: 'development'}),
     require('coverify')
   ]
 };

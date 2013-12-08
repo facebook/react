@@ -32,7 +32,7 @@ module.exports = function() {
     rootDirectory: config.rootDirectory,
     args: args
   }).then(function(output) {
-    grunt.file.write(config.outfile, output);
+    grunt.file.write(config.outfile, 'process = {env: {}};' + output);
     theFilesToTestScript.end();
     theFilesToTestScript.once('close', done);
   });

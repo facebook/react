@@ -9,6 +9,7 @@ var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
 var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
+var npmReactTasks = require('./grunt/tasks/npm-react');
 
 module.exports = function(grunt) {
 
@@ -23,7 +24,8 @@ module.exports = function(grunt) {
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js', '.module-cache'],
     jshint: require('./grunt/config/jshint'),
-    compare_size: require('./grunt/config/compare_size')
+    compare_size: require('./grunt/config/compare_size'),
+    complexity: require('./grunt/config/complexity')
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
@@ -50,17 +52,33 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('npm', npmTask);
 
+  grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
+
   // Check that the version we're exporting is the same one we expect in the
   // package. This is not an ideal way to do this, but makes sure that we keep
   // them in sync.
   var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
   grunt.registerTask('version-check', function() {
-    var version = reactVersionExp.exec(
+    var reactVersion = reactVersionExp.exec(
       grunt.file.read('./build/modules/React.js')
     )[1];
-    var expectedVersion = grunt.config.data.pkg.version;
-    if (version !== expectedVersion) {
-      grunt.log.error('Versions do not match. Expected %s, saw %s', expectedVersion, version);
+    var npmReactVersion = grunt.file.readJSON('./npm-react/package.json').version;
+    var reactToolsVersion = grunt.config.data.pkg.version;
+
+    if (reactVersion !== reactToolsVersion) {
+      grunt.log.error(
+        'React version does not match react-tools version. Expected %s, saw %s',
+        reactToolsVersion,
+        reactVersion
+      );
+      return false;
+    }
+    if (npmReactVersion !== reactToolsVersion) {
+      grunt.log.error(
+        'npm-react version does not match react-tools veersion. Expected %s, saw %s',
+        reactToolsVersion,
+        npmReactVersion
+      );
       return false;
     }
   });
@@ -80,6 +98,7 @@ module.exports = function(grunt) {
     'version-check',
     'populist:test'
   ]);
+  grunt.registerTask('build:npm-react', ['version-check', 'jsx:release', 'react-core:release']);
 
   grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
 
