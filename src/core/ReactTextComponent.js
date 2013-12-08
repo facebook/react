@@ -20,6 +20,7 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -54,7 +55,7 @@ mixInto(ReactTextComponent, {
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
-   * @return {string} Markup for this text node.
+   * @return {ReactDOMMountImage} Mount image for this text node.
    * @internal
    */
   mountComponent: function(rootID, transaction, mountDepth) {
@@ -64,7 +65,8 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
-    return (
+    return ReactDOMMountImage.getPooled(
+      'SPAN',
       '<span ' + ReactMount.ATTR_NAME + '="' + rootID + '">' +
         escapeTextForBrowser(this.props.text) +
       '</span>'

@@ -21,6 +21,7 @@
 "use strict";
 
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -28,6 +29,10 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
 var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
+
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
 
 
 var ELEMENT_NODE_TYPE = 1;
@@ -75,12 +80,12 @@ var ReactComponentBrowserEnvironment = {
   },
 
   /**
-   * @param {string} markup Markup string to place into the DOM Element.
+   * @param {ReactDOMMountImage} mountImage Markup to put into the DOM Element.
    * @param {DOMElement} container DOM Element to insert markup into.
    * @param {boolean} shouldReuseMarkup Should reuse the existing markup in the
    * container if possible.
    */
-  mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
+  mountImageIntoNode: function(mountImage, container, shouldReuseMarkup) {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
@@ -90,7 +95,7 @@ var ReactComponentBrowserEnvironment = {
     );
     if (shouldReuseMarkup) {
       if (ReactMarkupChecksum.canReuseMarkup(
-            markup,
+            mountImage.markup,
             getReactRootElementInContainer(container))) {
         return;
       } else {
@@ -112,8 +117,12 @@ var ReactComponentBrowserEnvironment = {
     // to mutate documentElement which requires doing some crazy tricks. See
     // mutateHTMLNodeWithMarkup()
     if (container.nodeType === DOC_NODE_TYPE) {
-      mutateHTMLNodeWithMarkup(container.documentElement, markup);
+      mutateHTMLNodeWithMarkup(container.documentElement, mountImage.markup);
       return;
+    }
+
+    if (__DEV__) {
+      validateNodeNesting(container.nodeName, mountImage.nodeName);
     }
 
     // Asynchronously inject markup by ensuring that the container is not in
@@ -122,15 +131,17 @@ var ReactComponentBrowserEnvironment = {
     if (parent) {
       var next = container.nextSibling;
       parent.removeChild(container);
-      container.innerHTML = markup;
+      container.innerHTML = mountImage.markup;
       if (next) {
         parent.insertBefore(container, next);
       } else {
         parent.appendChild(container);
       }
     } else {
-      container.innerHTML = markup;
+      container.innerHTML = mountImage.markup;
     }
+
+    ReactDOMMountImage.release(mountImage);
   }
 };
 

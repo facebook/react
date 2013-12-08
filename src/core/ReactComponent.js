@@ -331,7 +331,7 @@ var ReactComponent = {
      * @param {string} rootID DOM ID of the root node.
      * @param {ReactReconcileTransaction} transaction
      * @param {number} mountDepth number of components in the owner hierarchy.
-     * @return {?string} Rendered markup to be inserted into the DOM.
+     * @return {?ReactDOMMountImage} Mount image to be inserted into the DOM.
      * @internal
      */
     mountComponent: function(rootID, transaction, mountDepth) {
@@ -486,8 +486,12 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
-      var markup = this.mountComponent(rootID, transaction, 0);
-      ReactComponent.mountImageIntoNode(markup, container, shouldReuseMarkup);
+      var mountImage = this.mountComponent(rootID, transaction, 0);
+      ReactComponent.mountImageIntoNode(
+        mountImage,
+        container,
+        shouldReuseMarkup
+      );
     },
 
     /**

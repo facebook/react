@@ -36,7 +36,7 @@ describe('Danger', function() {
     });
 
     it('should render markup', function() {
-      var markup = (<div />).mountComponent('.rX', transaction, 0);
+      var markup = (<div />).mountComponent('.rX', transaction, 0).markup;
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
@@ -47,7 +47,7 @@ describe('Danger', function() {
         '.rX',
         transaction,
         0
-      );
+      ).markup;
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
@@ -55,7 +55,7 @@ describe('Danger', function() {
     });
 
     it('should render wrapped markup', function() {
-      var markup = (<th />).mountComponent('.rX', transaction, 0);
+      var markup = (<th />).mountComponent('.rX', transaction, 0).markup;
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');

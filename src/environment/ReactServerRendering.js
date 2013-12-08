@@ -19,6 +19,7 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -48,7 +49,9 @@ function renderComponentToString(component, callback) {
   transaction.reinitializeTransaction();
   try {
     transaction.perform(function() {
-      var markup = component.mountComponent(id, transaction, 0);
+      var mountImage = component.mountComponent(id, transaction, 0);
+      var markup = mountImage.markup;
+      ReactDOMMountImage.release(mountImage);
       markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       callback(markup);
     }, null);

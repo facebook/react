@@ -20,6 +20,7 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var flattenChildren = require('flattenChildren');
@@ -199,7 +200,6 @@ var ReactMultiChild = {
             transaction,
             this._mountDepth + 1
           );
-          child._mountImage = mountImage;
           child._mountIndex = index;
           mountImages.push(mountImage);
           index++;
@@ -350,11 +350,12 @@ var ReactMultiChild = {
     /**
      * Creates a child component.
      *
-     * @param {ReactComponent} child Component to create.
+     * @param {ReactDOMMountImage} mountImage Markup to insert.
+     * @param {number} mountIndex Destination index of markup.
      * @protected
      */
-    createChild: function(child) {
-      enqueueMarkup(this._rootNodeID, child._mountImage, child._mountIndex);
+    createChild: function(mountImage, mountIndex) {
+      enqueueMarkup(this._rootNodeID, mountImage.markup, mountIndex);
     },
 
     /**
@@ -396,9 +397,10 @@ var ReactMultiChild = {
         transaction,
         this._mountDepth + 1
       );
-      child._mountImage = mountImage;
       child._mountIndex = index;
-      this.createChild(child);
+      // TODO: Use validateNodeNesting to check DOM structure
+      this.createChild(mountImage, index);
+      ReactDOMMountImage.release(mountImage);
       this._renderedChildren = this._renderedChildren || {};
       this._renderedChildren[name] = child;
     },
@@ -415,7 +417,6 @@ var ReactMultiChild = {
     _unmountChildByName: function(child, name) {
       if (ReactComponent.isValidComponent(child)) {
         this.removeChild(child);
-        child._mountImage = null;
         child._mountIndex = null;
         child.unmountComponent();
         delete this._renderedChildren[name];
