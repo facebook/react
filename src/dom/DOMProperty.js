@@ -112,7 +112,7 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
-      
+
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
           !DOMProperty.mustUseProperty[propName],
@@ -205,7 +205,7 @@ var DOMProperty = {
    * @type {Object}
    */
   hasSideEffects: {},
-  
+
   /**
    * Whether the property should be removed when set to a falsey value.
    * @type {Object}
@@ -218,7 +218,7 @@ var DOMProperty = {
    * @type {Object}
    */
   hasPositiveNumericValue: {},
-  
+
   /**
    * All of the isCustomAttribute() functions that have been injected.
    */
