@@ -26,7 +26,6 @@ env:
   matrix:
   - TEST_TYPE=test:full
   - TEST_TYPE=lint
-  - TEST_TYPE="build complexity"
   - TEST_TYPE=test:coverage
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
@@ -43,7 +42,6 @@ matrix:
   fast_finish: true
   allow_failures:
     - env: TEST_TYPE=lint
-    - env: TEST_TYPE="build complexity"
     - env: TEST_TYPE=test:coverage
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
