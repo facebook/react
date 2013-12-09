@@ -81,44 +81,50 @@ var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
 var topEventMapping = {
-  topBlur: keyOf({onBlur: null}),
-  topChange: keyOf({onChange: null}),
-  topClick: keyOf({onClick: null}),
-  topCompositionEnd: keyOf({onCompositionEnd: null}),
-  topCompositionStart: keyOf({onCompositionStart: null}),
-  topCompositionUpdate: keyOf({onCompositionUpdate: null}),
-  topContextMenu: keyOf({onContextMenu: null}),
-  topCopy: keyOf({onCopy: null}),
-  topCut: keyOf({onCut: null}),
-  topDoubleClick: keyOf({onDoubleClick: null}),
-  topDrag: keyOf({onDrag: null}),
-  topDragEnd: keyOf({onDragEnd: null}),
-  topDragEnter: keyOf({onDragEnter: null}),
-  topDragExit: keyOf({onDragExit: null}),
-  topDragLeave: keyOf({onDragLeave: null}),
-  topDragOver: keyOf({onDragOver: null}),
-  topDragStart: keyOf({onDragStart: null}),
-  topDrop: keyOf({onDrop: null}),
-  topFocus: keyOf({onFocus: null}),
-  topInput: keyOf({onInput: null}),
-  topKeyDown: keyOf({onKeyDown: null}),
-  topKeyPress: keyOf({onKeyPress: null}),
-  topKeyUp: keyOf({onKeyUp: null}),
-  topMouseDown: keyOf({onMouseDown: null}),
-  topMouseMove: keyOf({onMouseMove: null}),
-  topMouseOut: keyOf({onMouseOut: null}),
-  topMouseOver: keyOf({onMouseOver: null}),
-  topMouseUp: keyOf({onMouseUp: null}),
-  topPaste: keyOf({onPaste: null}),
-  topScroll: keyOf({onScroll: null}),
-  topSelectionChange: keyOf({onSelectionChange: null}),
-  topSubmit: keyOf({onSubmit: null}),
-  topTouchCancel: keyOf({onTouchCancel: null}),
-  topTouchEnd: keyOf({onTouchEnd: null}),
-  topTouchMove: keyOf({onTouchMove: null}),
-  topTouchStart: keyOf({onTouchStart: null}),
-  topWheel: keyOf({onWheel: null})
+  topBlur: 'blur',
+  topChange: 'change',
+  topClick: 'click',
+  topCompositionEnd: 'compositionend',
+  topCompositionStart: 'compositionstart',
+  topCompositionUpdate: 'compositionupdate',
+  topContextMenu: 'contextmenu',
+  topCopy: 'copy',
+  topCut: 'cut',
+  topDoubleClick: 'dblclick',
+  topDrag: 'drag',
+  topDragEnd: 'dragend',
+  topDragEnter: 'dragenter',
+  topDragExit: 'dragexit',
+  topDragLeave: 'dragleave',
+  topDragOver: 'dragover',
+  topDragStart: 'dragstart',
+  topDrop: 'drop',
+  topFocus: 'focus',
+  topInput: 'input',
+  topKeyDown: 'keydown',
+  topKeyPress: 'keypress',
+  topKeyUp: 'keyup',
+  topMouseDown: 'mousedown',
+  topMouseMove: 'mousemove',
+  topMouseOut: 'mouseout',
+  topMouseOver: 'mouseover',
+  topMouseUp: 'mouseup',
+  topPaste: 'paste',
+  topScroll: 'scroll',
+  topSelectionChange: 'selectionchange',
+  topSubmit: 'submit',
+  topTouchCancel: 'touchcancel',
+  topTouchEnd: 'touchend',
+  topTouchMove: 'touchmove',
+  topTouchStart: 'touchstart',
+  topWheel: 'wheel'
 };
+
+/**
+ * To ensure no conflicts with other potential React instances on the page
+ */
+var topListenersIDKey = "_react" + String(Math.random()).slice(2);
+
 /**
  * Traps top-level events by using event bubbling.
  *
@@ -221,13 +227,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   listenTo: function(event, contentDocument) {
     var mountAt = contentDocument;
-    if (!mountAt._reactTopListenersID) {
-      mountAt._reactTopListenersID = '' + reactTopListenersCounter++;
-      alreadyListeningTo[mountAt._reactTopListenersID] = [];
+    if (mountAt[topListenersIDKey] == null) {
+      mountAt[topListenersIDKey] = reactTopListenersCounter++;
+      alreadyListeningTo[mountAt[topListenersIDKey]] = {};
     }
-    var topListenersID = mountAt._reactTopListenersID;
-    var registrationName = ReactEventEmitter.registrationNames[event];
-    var dependencies = registrationName.eventTypes[EventPluginRegistry.domEventMapping[event]].dependencies;
+    var topListenersID = mountAt[topListenersIDKey];
+    var registrationName = ReactEventEmitter.registrationNameModules[event];
+    var dependencies = registrationName.eventTypes[EventPluginRegistry.registrationNameEventNameMapping[event]].dependencies;
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
@@ -269,7 +275,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           alreadyListeningTo[topListenersID][keyOf({topBlur: null})] = true;
           alreadyListeningTo[topListenersID][keyOf({topFocus: null})] = true;
         } else {
-          trapBubbledEvent(topLevelType, EventPluginRegistry.domEventMapping[topEventMapping[dependency]], mountAt);
+          trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 
         alreadyListeningTo[topListenersID][dependency] = true;
@@ -294,7 +300,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     }
   },
 
-  registrationNames: EventPluginHub.registrationNames,
+  registrationNameModules: EventPluginHub.registrationNameModules,
 
   putListener: EventPluginHub.putListener,
 
@@ -309,6 +315,5 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   trapCapturedEvent: trapCapturedEvent
 
 });
-
 
 module.exports = ReactEventEmitter;

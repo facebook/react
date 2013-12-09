@@ -104,7 +104,7 @@ var EventPluginHub = {
 
   },
 
-  registrationNames: EventPluginRegistry.registrationNames,
+  registrationNameModules: EventPluginRegistry.registrationNameModules,
 
   putListener: CallbackRegistry.putListener,
 

@@ -101,7 +101,6 @@ describe('ReactEventEmitter', function() {
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
-    delete document['_reactTopListenersID'];
   });
 
   it('should store a listener correctly', function() {
@@ -349,7 +348,7 @@ describe('ReactEventEmitter', function() {
     }
 
     var dependencies =
-      ReactEventEmitter.registrationNames[ON_CHANGE_KEY].eventTypes.change.dependencies;
+      ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY].eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
     for(i = 0, l = setEventListeners.length; i < l; i++) {

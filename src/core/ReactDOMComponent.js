@@ -37,7 +37,7 @@ var mixInto = require('mixInto');
 var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
-var registrationNames = ReactEventEmitter.registrationNames;
+var registrationNameModules = ReactEventEmitter.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
@@ -130,7 +130,7 @@ ReactDOMComponent.Mixin = {
       if (propValue == null) {
         continue;
       }
-      if (registrationNames[propKey]) {
+      if (registrationNameModules[propKey]) {
         var container = ReactMount.findReactContainerForID(this._rootNodeID);
         if (container) {
           var doc = container.nodeType === ELEMENT_NODE_TYPE ?
@@ -254,7 +254,7 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-      } else if (registrationNames[propKey]) {
+      } else if (registrationNameModules[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else if (
           DOMProperty.isStandardName[propKey] ||
@@ -296,7 +296,7 @@ ReactDOMComponent.Mixin = {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
-      } else if (registrationNames[propKey]) {
+      } else if (registrationNameModules[propKey]) {
         var container = ReactMount.findReactContainerForID(this._rootNodeID);
         if (container) {
           var doc = container.nodeType === ELEMENT_NODE_TYPE ?
