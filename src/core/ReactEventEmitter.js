@@ -275,7 +275,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
             trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
           }
 
-          // to make sure event listeners are only attached once
+          // to make sure blur and focus event listeners are only attached once
           alreadyListeningTo[topListenersID][keyOf({topBlur: null})] = true;
           alreadyListeningTo[topListenersID][keyOf({topFocus: null})] = true;
         } else {
