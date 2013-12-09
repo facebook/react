@@ -79,7 +79,8 @@ setID(GRANDPARENT, '.reactRoot.[0]');
 
 function registerSimpleTestHandler() {
   ReactEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
-  var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
+  var listener = ReactEventEmitter.getListener(getID(CHILD),
+    ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
   return ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
 }
@@ -347,8 +348,8 @@ describe('ReactEventEmitter', function() {
       setEventListeners.push(captureCalls[i][1]);
     }
 
-    var dependencies =
-      ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY].eventTypes.change.dependencies;
+    var dependencies = ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY].
+      eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
     for(i = 0, l = setEventListeners.length; i < l; i++) {

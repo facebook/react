@@ -233,7 +233,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     }
     var topListenersID = mountAt[topListenersIDKey];
     var registrationName = ReactEventEmitter.registrationNameModules[event];
-    var dependencies = registrationName.eventTypes[EventPluginRegistry.registrationNameEventNameMapping[event]].dependencies;
+    var dependencies = registrationName.eventTypes[EventPluginRegistry.
+      registrationNameEventNameMapping[event]].dependencies;
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
@@ -249,7 +250,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
+            trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll',
+              mountAt);
           }
         } else if (topLevelType === topLevelTypes.topScroll) {
 

@@ -208,5 +208,4 @@ describe('ReactComponent', function() {
     expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
     expect(root.refs.child.refs.span._mountDepth).toBe(6);
   });
-
 });
