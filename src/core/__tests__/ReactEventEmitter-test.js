@@ -79,8 +79,7 @@ setID(GRANDPARENT, '.reactRoot.[0]');
 
 function registerSimpleTestHandler() {
   ReactEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
-  var listener = ReactEventEmitter.getListener(getID(CHILD),
-    ON_CLICK_KEY);
+  var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
   expect(listener).toEqual(LISTENER);
   return ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
 }
