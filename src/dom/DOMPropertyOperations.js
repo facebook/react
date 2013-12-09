@@ -28,7 +28,7 @@ function shouldIgnoreValue(name, value) {
   return value == null ||
     DOMProperty.hasBooleanValue[name] && !value ||
     DOMProperty.hasPositiveNumericValue[name] && (isNaN(value) || value < 1);
-};
+}
 
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
   return escapeTextForBrowser(name) + '="';
