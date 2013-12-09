@@ -36,6 +36,7 @@ var ReactTextComponent = require('ReactTextComponent');
 ReactDefaultInjection.inject();
 
 var React = {
+  EventPluginRegistry: require('EventPluginRegistry'),
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {

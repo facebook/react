@@ -21,8 +21,10 @@
 var ReactComponent = require('ReactComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactOwner = require('ReactOwner');
+var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -35,6 +37,10 @@ var merge = require('merge');
 var mixInto = require('mixInto');
 var objMap = require('objMap');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -659,7 +665,7 @@ var ReactCompositeComponentMixin = {
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
-   * @return {?string} Rendered markup to be inserted into the DOM.
+   * @return {ReactDOMMountImage} Mount image to be inserted into the DOM.
    * @final
    * @internal
    */
@@ -700,7 +706,7 @@ var ReactCompositeComponentMixin = {
 
       // Done with mounting, `setState` will now trigger UI changes.
       this._compositeLifeCycleState = null;
-      var markup = this._renderedComponent.mountComponent(
+      var mountImage = this._renderedComponent.mountComponent(
         rootID,
         transaction,
         mountDepth + 1
@@ -708,7 +714,7 @@ var ReactCompositeComponentMixin = {
       if (this.componentDidMount) {
         transaction.getReactMountReady().enqueue(this, this.componentDidMount);
       }
-      return markup;
+      return mountImage;
     }
   ),
 
@@ -1052,15 +1058,20 @@ var ReactCompositeComponentMixin = {
         var prevComponentID = prevComponent._rootNodeID;
         prevComponent.unmountComponent();
         this._renderedComponent = nextComponent;
-        var nextMarkup = nextComponent.mountComponent(
+        var nextMountImage = nextComponent.mountComponent(
           thisID,
           transaction,
           this._mountDepth + 1
         );
+        if (__DEV__) {
+          var parentNode = ReactMount.getNode(prevComponentID).parentNode;
+          validateNodeNesting(parentNode.nodeName, nextMountImage.nodeName);
+        }
         ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
-          nextMarkup
+          nextMountImage.markup
         );
+        ReactDOMMountImage.release(nextMountImage);
       }
     }
   ),

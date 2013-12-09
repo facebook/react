@@ -204,6 +204,20 @@ describe('ReactDOMComponent', function() {
       stub.receiveComponent({props: {}}, transaction);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
+
+    it("should warn on invalid markup nesting", function() {
+      spyOn(console, 'warn');
+      expect(console.warn.argsForCall.length).toBe(0);
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div><tr /></div>
+      );
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toBe(
+        'validateNodeNesting(...): Node of type DIV cannot contain node of ' +
+        'type TR.'
+      );
+    });
   });
 
   describe('createOpenTagMarkup', function() {
@@ -272,7 +286,8 @@ describe('ReactDOMComponent', function() {
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(transaction);
+        var component = (new NodeStub(props));
+        return component._createContentMountImages(transaction).join('');
       };
 
       this.addMatchers({

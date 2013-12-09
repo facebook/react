@@ -23,6 +23,7 @@ var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
+var ReactDOMMountImage = require('ReactDOMMountImage');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactMount = require('ReactMount');
@@ -33,6 +34,10 @@ var invariant = require('invariant');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
+
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
 
 var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
@@ -83,7 +88,7 @@ ReactDOMComponent.Mixin = {
    * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
-   * @return {string} The computed markup.
+   * @return {ReactDOMMountImage} The computed mount image.
    */
   mountComponent: ReactPerf.measure(
     'ReactDOMComponent',
@@ -96,9 +101,21 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
-      return (
+      var contentImages = this._createContentMountImages(transaction);
+      var contentMarkup = contentImages.join('');
+      for (var i = 0; i < contentImages.length; i++) {
+        var image = contentImages[i];
+        if (__DEV__) {
+          if (image.nodeName != null) {
+            validateNodeNesting(this.tagName, image.nodeName);
+          }
+        }
+        ReactDOMMountImage.release(image);
+      }
+      return ReactDOMMountImage.getPooled(
+        this.tagName,
         this._createOpenTagMarkup() +
-        this._createContentMarkup(transaction) +
+        contentMarkup +
         this._tagClose
       );
     }
@@ -153,30 +170,33 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction} transaction
-   * @return {string} Content markup.
+   * @return {array} List of mount images
    */
-  _createContentMarkup: function(transaction) {
+  _createContentMountImages: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = this.props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return innerHTML.__html;
+        return [ReactDOMMountImage.getPooled(null, innerHTML.__html)];
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
       if (contentToUse != null) {
-        return escapeTextForBrowser(contentToUse);
+        return [ReactDOMMountImage.getPooled(
+          '#text',
+          escapeTextForBrowser(contentToUse)
+        )];
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction
         );
-        return mountImages.join('');
+        return mountImages;
       }
     }
-    return '';
+    return [];
   },
 
   receiveComponent: function(nextComponent, transaction) {
