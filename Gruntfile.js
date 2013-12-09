@@ -109,6 +109,53 @@ module.exports = function(grunt) {
     'webdriver-phantomjs',
     'webdriver-jasmine:local'
   ]);
+
+  grunt.registerTask('test:full', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-jasmine:local',
+
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_android',
+    'webdriver-jasmine:saucelabs_firefox',
+    'webdriver-jasmine:saucelabs_chrome'
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8')
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs:ie', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ie8',
+    'webdriver-jasmine:saucelabs_ie9',
+    'webdriver-jasmine:saucelabs_ie10',
+    'webdriver-jasmine:saucelabs_ie11'
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs:ios', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ios6_1',
+    'webdriver-jasmine:saucelabs_ios5_1',
+    'webdriver-jasmine:saucelabs_ios4'
+  ]);
+
   grunt.registerTask('test:coverage', [
     'build:test',
     'build:withCodeCoverageLogging',
