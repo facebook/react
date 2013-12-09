@@ -187,7 +187,7 @@ describe('ReactDOMComponent', function() {
       var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
 
       var node = stub.getDOMNode();
-      var nodeValue = node.value;
+      var nodeValue = ''; // node.value always returns undefined
       var nodeValueSetter = mocks.getMockFunction();
       Object.defineProperty(node, 'value', {
         get: function() {
