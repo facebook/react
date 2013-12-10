@@ -320,7 +320,7 @@ That's it!
 
 Let's replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:
 
-```javascript{2}
+```javascript{3}
 // tutorial11.js
 React.renderComponent(
   <CommentBox url="comments.json" />,
@@ -373,7 +373,7 @@ We will use jQuery to help make an asynchronous request to the server.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
-```javascript{4-11}
+```javascript{4-10}
 // tutorial13.js
 var CommentBox = React.createClass({
   getInitialState: function() {
@@ -399,7 +399,7 @@ var CommentBox = React.createClass({
 
 The key is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
-```javascript{3,17-21,35}
+```javascript{3,14-17,30}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -458,7 +458,7 @@ var CommentForm = React.createClass({
 
 Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
-```javascript{3-13,16,21}
+```javascript{3-13,16-17,21}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function() {
@@ -504,7 +504,7 @@ When a user submits a comment, we will need to refresh the list of comments to i
 
 We need to pass data from the child component to its parent. We do this by passing a `callback` in props from parent to child:
 
-```javascript{13-15,32}
+```javascript{11-13,27}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -570,7 +570,7 @@ var CommentForm = React.createClass({
 
 Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
 
-```javascript{14-22}
+```javascript{12-19}
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -616,7 +616,7 @@ var CommentBox = React.createClass({
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
-```javascript{14-16}
+```javascript{12-14}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
