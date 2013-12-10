@@ -1,6 +1,6 @@
 ---
 id: props-in-getInitialState-as-anti-pattern
-title: Using state to cache calculations is an antipattern
+title: Using State to Cache Calculations Is an Anti-Pattern
 layout: tips
 permalink: props-in-getInitialState-as-anti-pattern.html
 prev: componentWillReceiveProps-not-triggered-after-mounting.html
