@@ -53,5 +53,7 @@ notifications:
   irc:
     use_notice: true
     skip_join: true
+    on_success: change
+    on_failure: change
     channels:
     - chat.freenode.net#reactjs
