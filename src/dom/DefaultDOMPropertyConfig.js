@@ -77,6 +77,7 @@ var DefaultDOMPropertyConfig = {
     label: null,
     lang: null,
     list: null,
+    loop: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     max: null,
     maxLength: MUST_USE_ATTRIBUTE,
     method: null,
