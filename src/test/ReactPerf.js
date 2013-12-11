@@ -70,7 +70,7 @@ if (__DEV__) {
   var ExecutionEnvironment = require('ExecutionEnvironment');
   var URL = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
   ReactPerf.enableMeasure = ReactPerf.enableMeasure ||
-    !!URL.match(/[?&]react_perf\b/);
+    (/[?&]react_perf\b/).test(URL);
 }
 
 /**
