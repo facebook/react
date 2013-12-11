@@ -100,7 +100,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  statics: SpecPolicy.DEFINE_MANY_MERGED,
+  statics: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of prop types for this component.
@@ -108,7 +108,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  propTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  propTypes: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of context types for this component.
@@ -116,7 +116,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  contextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  contextTypes: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of context types this component sets for its children.
@@ -124,7 +124,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  childContextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  childContextTypes: SpecPolicy.DEFINE_MANY,
 
   // ==== Definition methods ====
 
@@ -337,7 +337,10 @@ var RESERVED_SPEC_KEYS = {
       childContextTypes,
       ReactPropTypeLocations.childContext
     );
-    Constructor.childContextTypes = childContextTypes;
+    Constructor.childContextTypes = merge(
+      Constructor.childContextTypes,
+      childContextTypes
+    );
   },
   contextTypes: function(ConvenienceConstructor, contextTypes) {
     var Constructor = ConvenienceConstructor.componentConstructor;
@@ -346,7 +349,7 @@ var RESERVED_SPEC_KEYS = {
       contextTypes,
       ReactPropTypeLocations.context
     );
-    Constructor.contextTypes = contextTypes;
+    Constructor.contextTypes = merge(Constructor.contextTypes, contextTypes);
   },
   propTypes: function(ConvenienceConstructor, propTypes) {
     var Constructor = ConvenienceConstructor.componentConstructor;
@@ -355,7 +358,7 @@ var RESERVED_SPEC_KEYS = {
       propTypes,
       ReactPropTypeLocations.prop
     );
-    Constructor.propTypes = propTypes;
+    Constructor.propTypes = merge(Constructor.propTypes, propTypes);
   },
   statics: function(ConvenienceConstructor, statics) {
     mixStaticSpecIntoComponent(ConvenienceConstructor, statics);
