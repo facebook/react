@@ -141,3 +141,34 @@ React.renderComponent(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
 
+## The Special "key" Prop
+
+When rendering a list, passing in a `key` property to each of the items allows React to intelligently re-arrange the DOM if the list is modified. For example: (yes, it's contrived, but it's simple)
+
+```js
+var DictView = React.createClass({
+  ...
+  addItem: function (name, value) {
+    var items = this.state.items.slice()
+    items.push({name: name, value: value})
+    this.setState({items: items})
+  },
+  render: function () {
+    return (
+      <ul>
+        {
+          this.state.items.map(function (item) {
+            return DictItem({
+              key: item.name,
+              ... other props
+            })
+          })
+        }
+      </ul>
+    )
+  }
+})
+```
+
+When render is called after the first time, React will intelligently re-arrange the `DictItem` children based on the `key`. Of course, within the list, the keys have to be unique.
+
