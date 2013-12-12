@@ -68,9 +68,9 @@ var ReactPerf = {
 
 if (__DEV__) {
   var ExecutionEnvironment = require('ExecutionEnvironment');
-  var URL = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+  var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
   ReactPerf.enableMeasure = ReactPerf.enableMeasure ||
-    (/[?&]react_perf\b/).test(URL);
+    (/[?&]react_perf\b/).test(url);
 }
 
 /**
