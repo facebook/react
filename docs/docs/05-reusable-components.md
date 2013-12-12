@@ -141,7 +141,7 @@ React.renderComponent(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
 
-## The special "key" prop
+## The Special "key" Prop
 
 When rendering a list, passing in a `key` property to each of the items allows React to intelligently re-arrange the DOM if the list is modified. For example: (yes, it's contrived, but it's simple)
 
