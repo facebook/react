@@ -46,8 +46,8 @@ var EventListener = {
     if (!el.addEventListener) {
       if (__DEV__) {
         console.error(
-          'You are attempting to use addEventlistener ' +
-          'in a browser that does not support it support it.' +
+          'You are attempting to use addEventListener ' +
+          'in a browser that does not support it.' +
           'This likely means that you will not receive events that ' +
           'your application relies on (such as scroll).');
       }
