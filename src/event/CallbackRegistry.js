@@ -20,6 +20,7 @@
 "use strict";
 
 var listenerBank = {};
+var invariant = require('invariant');
 
 /**
  * Stores "listeners" by `registrationName`/`id`. There should be at most one
@@ -40,6 +41,11 @@ var CallbackRegistry = {
    * @param {?function} listener The callback to store.
    */
   putListener: function(id, registrationName, listener) {
+    invariant(
+      typeof listener === 'function',
+      'Trying to bind an event handler to a non-function for %s',
+      registrationName
+    );
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[id] = listener;
