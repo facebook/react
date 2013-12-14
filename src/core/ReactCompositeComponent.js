@@ -138,7 +138,7 @@ var ReactCompositeComponentInterface = {
    * @return {object}
    * @optional
    */
-  getDefaultProps: SpecPolicy.DEFINE_MANY_MERGED,
+  getDefaultProps: SpecPolicy.DEFINE_MANY,
 
   /**
    * Invoked once before the component is mounted. The return value will be used
@@ -154,7 +154,7 @@ var ReactCompositeComponentInterface = {
    * @return {object}
    * @optional
    */
-  getInitialState: SpecPolicy.DEFINE_MANY_MERGED,
+  getInitialState: SpecPolicy.DEFINE_MANY,
 
   /**
    * @return {object}
