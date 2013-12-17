@@ -1,6 +1,6 @@
 ---
 id: props-in-getInitialState-as-anti-pattern
-title: Using State to Cache Calculations Is an Anti-Pattern
+title: Props in getInitialState Is an Anti-Pattern
 layout: tips
 permalink: props-in-getInitialState-as-anti-pattern.html
 prev: componentWillReceiveProps-not-triggered-after-mounting.html
@@ -11,7 +11,7 @@ next: dom-event-listeners.html
 >
 > This isn't really a React-specific tip, as such anti-patterns often occur in code in general; in this case, React simply points them out more clearly.
 
-Using state to cache values calculated from props (for example in `getInitialState`) often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
+Using props, passed down from parent, to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is (see [denormalization](http://en.wikipedia.org/wiki/Denormalization)). Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble. Javascript is plently fast for most use cases.
 
 Bad example:
 
@@ -59,4 +59,32 @@ var MessageBox = React.createClass({
 });
 
 React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
+```
+
+**But** in situations where your component truly is stateful, using props to initialize that state is totally fine. In such cases, it can be helpful to name the prop `initialX` (or similar) to make it clear that the state will not stay in sync.
+
+For example:
+
+```js
+/** @jsx React.DOM */
+
+var Counter = React.createClass({
+  getInitialState: function() {
+    return {count: this.props.initialCount};
+  },
+  handleClick: function() {
+    this.setState({
+      count: this.state.count + 1
+    });
+  },
+  render: function() {
+    return (
+      <div onClick={this.handleClick}>
+        {this.state.count}
+      </div>
+    );
+  }
+});
+
+React.renderComponent(<Counter initialCount={7}/>, mountNode);
 ```
