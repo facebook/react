@@ -65,7 +65,7 @@ mixInto(ReactTextComponent, {
       mountDepth
     );
     return (
-      '<span ' + ReactMount.ATTR_NAME + '="' + rootID + '">' +
+      '<span ' + ReactMount.ATTR_NAME + '="' + escapeTextForBrowser(rootID) + '">' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );
