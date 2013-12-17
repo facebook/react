@@ -21,7 +21,8 @@ module.exports = function(grunt) {
     browserify: require('./grunt/config/browserify'),
     populist: require('./grunt/config/populist'),
     connect: require('./grunt/config/server')(grunt),
-    "webdriver-jasmine": require('./grunt/config/webdriver-jasmine.js'),
+    "webdriver-jasmine": require('./grunt/config/webdriver-jasmine'),
+    "webdriver-perf": require('./grunt/config/webdriver-perf'),
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js', '.module-cache'],
     jshint: require('./grunt/config/jshint'),
@@ -39,6 +40,8 @@ module.exports = function(grunt) {
   // Alias 'jshint' to 'lint' to better match the workflow we know
   grunt.registerTask('lint', ['jshint']);
 
+  grunt.registerTask('download-previous-version', require('./grunt/tasks/download-previous-version.js'));
+
   // Register jsx:debug and :release tasks.
   grunt.registerMultiTask('jsx', jsxTask);
 
@@ -50,6 +53,8 @@ module.exports = function(grunt) {
   grunt.registerTask('sauce-tunnel', sauceTunnelTask);
 
   grunt.registerMultiTask('webdriver-jasmine', webdriverJasmineTasks);
+
+  grunt.registerMultiTask('webdriver-perf', require('./grunt/tasks/webdriver-perf'));
 
   grunt.registerMultiTask('npm', npmTask);
 
@@ -66,6 +71,14 @@ module.exports = function(grunt) {
     'jsx:debug',
     'version-check',
     'browserify:withCodeCoverageLogging'
+  ]);
+  grunt.registerTask('build:perf', [
+    'jsx:release',
+    'version-check',
+    'browserify:transformer',
+    'browserify:basic',
+    'browserify:min',
+    'download-previous-version'
   ]);
   grunt.registerTask('build:test', [
     'jsx:test',
@@ -84,6 +97,12 @@ module.exports = function(grunt) {
     'webdriver-jasmine:local'
   ]);
 
+  grunt.registerTask('perf:webdriver:phantomjs', [
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-perf:local'
+  ]);
+
   grunt.registerTask('test:full', [
     'build:test',
     'build:basic',
@@ -96,6 +115,20 @@ module.exports = function(grunt) {
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
     'webdriver-jasmine:saucelabs_chrome'
+  ]);
+
+  grunt.registerTask('perf:full', [
+    'build:perf',
+
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-perf:local',
+
+    'sauce-tunnel',
+    'webdriver-perf:saucelabs_firefox',
+    'webdriver-perf:saucelabs_chrome',
+    'webdriver-perf:saucelabs_ie11',
+    'webdriver-perf:saucelabs_ie8',
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs', [
@@ -137,6 +170,7 @@ module.exports = function(grunt) {
     'coverage:parse'
   ]);
   grunt.registerTask('test', ['build:test', 'build:basic', 'test:webdriver:phantomjs']);
+  grunt.registerTask('perf', ['build:perf', 'perf:webdriver:phantomjs']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run

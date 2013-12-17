@@ -44,6 +44,8 @@ module.exports = function(grunt){
         coverageWriteStream.write(log.message + '\n');
       } else if (log.type == 'coverage done') {
         grunt.task.run('finalize-coverage-stream');
+      } else if (log.type == 'perf') {
+        grunt.event.emit('perf results', log.message);
       } else {
         grunt.verbose.writeln(log);
       }
