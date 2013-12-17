@@ -47,7 +47,7 @@
     "grunt-contrib-jshint": "~0.7.2",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
-    "recast": "~0.4.24",
+    "recast": "~0.5.6",
     "semver": "~2.2.1",
     "uglify-js": "~2.4.0",
     "grunt-contrib-clean": "~0.5.0",
