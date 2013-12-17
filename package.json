@@ -40,7 +40,7 @@
   "devDependencies": {
     "browserify": "~2.36.1",
     "envify": "~0.2.0",
-    "populist": "~0.1.5",
+    "populist": "~0.1.6",
     "grunt-cli": "~0.1.9",
     "grunt": "~0.4.1",
     "grunt-contrib-copy": "~0.4.1",
