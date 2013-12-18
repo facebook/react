@@ -116,6 +116,20 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
+  it('should not select other options automatically', function() {
+    var stub =
+      <select multiple={true} value={['12']}>
+        <option value="1">one</option>
+        <option value="2">two</option>
+        <option value="12">twelve</option>
+      </select>;
+    var node = renderSelect(stub);
+
+    expect(node.options[0].selected).toBe(false);  // one
+    expect(node.options[1].selected).toBe(false);  // two
+    expect(node.options[2].selected).toBe(true);  // twelve
+  });
+
   it('should allow setting `value` with `objectToString`', function() {
     var objectToString = {
       animal: "giraffe",
