@@ -66,6 +66,6 @@ var React = {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = '0.5.1';
+React.version = '0.5.2';
 
 module.exports = React;
