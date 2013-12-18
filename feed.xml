@@ -7,6 +7,25 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.5.2, v0.4.2</title>
+				<description>&lt;p&gt;We take security very seriously at Facebook. For most of our products, users don&amp;#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.&lt;/p&gt;
+
+&lt;p&gt;Today we&amp;#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a &lt;code&gt;key&lt;/code&gt;. Typically &amp;quot;safe&amp;quot; data is used for a &lt;code&gt;key&lt;/code&gt;, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.&lt;/p&gt;
+
+&lt;p&gt;This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.&lt;/p&gt;
+
+&lt;p&gt;Updated versions are available for immediate download via npm, bower, and on our &lt;a href=&quot;http://facebook.github.io/react/downloads.html&quot;&gt;download page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;While we&amp;#39;ve encouraged responsible disclosure as part of &lt;a href=&quot;https://www.facebook.com/whitehat/&quot;&gt;Facebook&amp;#39;s whitehat bounty program&lt;/a&gt; since we launched, we don&amp;#39;t have a good process for notifying our users. Hopefully we don&amp;#39;t need to use it, but moving forward we&amp;#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has &lt;a href=&quot;http://emberjs.com/security/&quot;&gt;an excellent policy&lt;/a&gt; which we may use as our model.&lt;/p&gt;
+
+&lt;p&gt;You can learn more about the vulnerability discussed here: &lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU&quot;&gt;CVE-2013-7035&lt;/a&gt;.&lt;/p&gt;
+</description>
+				<pubDate>2013-12-18T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #11</title>
 				<description>&lt;p&gt;This round-up is the proof that React has taken off from its Facebook&amp;#39;s root: it features three in-depth presentations of React done by external people. This is awesome, keep them coming!&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;super-vanjs-2013-talk&quot;&gt;&lt;/a&gt;Super VanJS 2013 Talk &lt;a class=&quot;hash-link&quot; href=&quot;#super-vanjs-2013-talk&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -680,78 +699,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-08-19T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #6</title>
-				<description>&lt;p&gt;This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&amp;#39;s great to see the adoption of React growing.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-game-tutorial&quot;&gt;&lt;/a&gt;React Game Tutorial &lt;a class=&quot;hash-link&quot; href=&quot;#react-game-tutorial&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/CalebCassel&quot;&gt;Caleb Cassel&lt;/a&gt; wrote a &lt;a href=&quot;https://rawgithub.com/calebcassel/react-demo/master/part1.html&quot;&gt;step-by-step tutorial&lt;/a&gt; about making a small game. It covers JSX, State and Events, Embedded Components and Integration with Backbone.
-&lt;figure&gt;&lt;a href=&quot;https://rawgithub.com/calebcassel/react-demo/master/part1.html&quot;&gt;&lt;img src=&quot;/react/img/blog/dog-tutorial.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactify&quot;&gt;&lt;/a&gt;Reactify &lt;a class=&quot;hash-link&quot; href=&quot;#reactify&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://andreypopp.com/&quot;&gt;Andrey Popp&lt;/a&gt; created a &lt;a href=&quot;http://browserify.org/&quot;&gt;Browserify&lt;/a&gt; helper to compile JSX files.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Browserify v2 transform for &lt;code&gt;text/jsx&lt;/code&gt;. Basic usage is:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;% browserify -t reactify main.jsx
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;code&gt;reactify&lt;/code&gt; transform activates for files with either &lt;code&gt;.jsx&lt;/code&gt; extension or &lt;code&gt;/** @jsx React.DOM */&lt;/code&gt; pragma as a first line for any &lt;code&gt;.js&lt;/code&gt; file.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/andreypopp/reactify&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-integration-with-este&quot;&gt;&lt;/a&gt;React Integration with Este &lt;a class=&quot;hash-link&quot; href=&quot;#react-integration-with-este&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://daniel.steigerwald.cz/&quot;&gt;Daniel Steigerwald&lt;/a&gt; is now using React within &lt;a href=&quot;https://github.com/steida/este&quot;&gt;Este&lt;/a&gt;, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;coffeescript language-coffeescript&quot; data-lang=&quot;coffeescript&quot;&gt;&lt;span class=&quot;nv&quot;&gt;este.demos.react.todoApp = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;este&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;react&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;create&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/** @lends {React.ReactComponent.prototype} */&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;render: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;@div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;este&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;demos&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;react&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todoList&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;items&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;items&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;items&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;@p&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;items&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; items.&amp;quot;&lt;/span&gt;
-      &lt;span class=&quot;nx&quot;&gt;@form&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;onSubmit&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@onFormSubmit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;@input&lt;/span&gt;
-          &lt;span class=&quot;s&quot;&gt;&amp;#39;onChange&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@onChange&lt;/span&gt;
-          &lt;span class=&quot;s&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;text&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-          &lt;span class=&quot;s&quot;&gt;&amp;#39;autoFocus&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;
-          &lt;span class=&quot;s&quot;&gt;&amp;#39;ref&amp;#39;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;textInput&amp;#39;&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;@button&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;Add &lt;/span&gt;&lt;span class=&quot;err&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;items&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/steida/este-library/blob/master/este/demos/thirdparty/react/start.coffee&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-stylus-boilerplate&quot;&gt;&lt;/a&gt;React Stylus Boilerplate &lt;a class=&quot;hash-link&quot; href=&quot;#react-stylus-boilerplate&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://zaim.github.io/&quot;&gt;Zaim Bakar&lt;/a&gt; shared his boilerplate to get started with Stylus CSS processor.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Very minimal HTML boilerplate&lt;/li&gt;
-&lt;li&gt;Uses Stylus, with nib included&lt;/li&gt;
-&lt;li&gt;Uses two build targets:
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;grunt build&lt;/code&gt; to compile JSX and Stylus into a development build&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;grunt dist&lt;/code&gt; to minify and optimize the development build for production&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/zaim/react-stylus-boilerplate&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;webfui&quot;&gt;&lt;/a&gt;WebFUI &lt;a class=&quot;hash-link&quot; href=&quot;#webfui&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://lisperati.com/&quot;&gt;Conrad Barski&lt;/a&gt;, author of the popular book &lt;a href=&quot;http://landoflisp.com/&quot;&gt;Land of Lisp&lt;/a&gt;, wants to use React for his ClojureScript library called &lt;a href=&quot;https://github.com/drcode/webfui&quot;&gt;WebFUI&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;I&amp;#39;m the author of &amp;quot;&lt;a href=&quot;http://landoflisp.com/&quot;&gt;Land of Lisp&lt;/a&gt;&amp;quot; and I love your framework. I built a somewhat similar framework a year ago &lt;a href=&quot;https://github.com/drcode/webfui&quot;&gt;WebFUI&lt;/a&gt; aimed at ClojureScript. My framework also uses global event delegates, a global &amp;quot;render&amp;quot; function, DOM reconciliation, etc just like react.js. (Of course these ideas all have been floating around the ether for ages, always great to see more people building on them.)&lt;/p&gt;
-
-&lt;p&gt;Your implementation is more robust, and so I think the next point release of webfui will simply delegate all the &amp;quot;hard work&amp;quot; to react.js and will only focus on the areas where it adds value (enabling purely functional UI programming in clojurescript, and some other stuff related to streamlining event handling)
-&lt;figure&gt;&lt;a href=&quot;https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ&quot;&gt;&lt;img src=&quot;/react/img/blog/landoflisp.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-08-05T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/08/05/community-roundup-6.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/05/community-roundup-6.html</guid>
 			</item>
 		
 	</channel>

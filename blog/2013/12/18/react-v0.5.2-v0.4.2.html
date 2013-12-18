@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.4.1</title>
+  <title>React | React v0.5.2, v0.4.2</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.4.1" />
+  <meta property="og:title" content="React | React v0.5.2, v0.4.2" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -58,7 +58,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a></li>
+        <li><a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html" class="active">React v0.5.2, v0.4.2</a></li>
       
         <li><a href="/react/blog/2013/11/18/community-roundup-11.html">Community Round-up #11</a></li>
       
@@ -84,33 +84,28 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.4.1</h1>
-    <p class="meta">July 26, 2013 by Paul O'Shannessy</p>
+    <h1>React v0.5.2, v0.4.2</h1>
+    <p class="meta">December 18, 2013 by Paul O'Shannessy</p>
 
     <hr>
 
     <div class="post">
-      <p>React v0.4.1 is a small update, mostly containing correctness fixes. Some code has been restructured internally but those changes do not impact any of our public APIs.</p>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
-<ul>
-<li><code>setState</code> callbacks are now executed in the scope of your component.</li>
-<li><code>click</code> events now work on Mobile Safari.</li>
-<li>Prevent a potential error in event handling if <code>Object.prototype</code> is extended.</li>
-<li>Don&#39;t set DOM attributes to the string <code>&quot;undefined&quot;</code> on update when previously defined.</li>
-<li>Improved support for <code>&lt;iframe&gt;</code> attributes.</li>
-<li>Added checksums to detect and correct cases where server-side rendering markup mismatches what React expects client-side.</li>
-</ul>
-<h2><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h2>
-<ul>
-<li>Improved environment detection so it can be run in a non-browser environment.</li>
-</ul>
+      <p>We take security very seriously at Facebook. For most of our products, users don&#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.</p>
 
-<p><a href="/react/downloads.html">Download it now!</a></p>
+<p>Today we&#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a <code>key</code>. Typically &quot;safe&quot; data is used for a <code>key</code>, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.</p>
+
+<p>This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.</p>
+
+<p>Updated versions are available for immediate download via npm, bower, and on our <a href="http://facebook.github.io/react/downloads.html">download page</a>.</p>
+
+<p>While we&#39;ve encouraged responsible disclosure as part of <a href="https://www.facebook.com/whitehat/">Facebook&#39;s whitehat bounty program</a> since we launched, we don&#39;t have a good process for notifying our users. Hopefully we don&#39;t need to use it, but moving forward we&#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has <a href="http://emberjs.com/security/">an excellent policy</a> which we may use as our model.</p>
+
+<p>You can learn more about the vulnerability discussed here: <a href="https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU">CVE-2013-7035</a>.</p>
 
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/07/26/react-v0-4-1.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html"></div>
   </div>
 </section>
 
