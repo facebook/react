@@ -13,7 +13,7 @@ next: dom-event-listeners.html
 
 Using props, passed down from parent, to generate state in `getInitialState` often leads to duplication of "source of truth", i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don't get out of sync later on and cause maintenance trouble.
 
-Bad example:
+**Bad example:**
 
 ```js
 /** @jsx React.DOM */
@@ -59,4 +59,26 @@ var MessageBox = React.createClass({
 });
 
 React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
+```
+
+However, it's **not** an anti-pattern if you intentionally make it clear that synchronization's not the goal here:
+
+```js
+/** @jsx React.DOM */
+
+var Counter = React.createClass({
+  getInitialState: function() {
+    // naming it initialX clearly indicates that the only purpose
+    // of the passed down prop is to initialize something internal
+    return {count: this.props.initialCount};
+  },
+  handleClick: function() {
+    this.setState({count: this.state.count + 1});
+  },
+  render: function() {
+    return <div onClick={this.handleClick}>{this.state.count}</div>;
+  }
+});
+
+React.renderComponent(<Counter initialCount={7}/>, mountNode);
 ```
