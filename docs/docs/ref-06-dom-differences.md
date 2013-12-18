@@ -4,6 +4,7 @@ title: DOM Differences
 layout: docs
 permalink: dom-differences.html
 prev: events.html
+next: special-non-dom-attributes.html
 ---
 
 React has implemented a browser-independent events and DOM system for performance and cross-browser compatibility reasons. We took the opportunity to clean up a few rough edges in browser DOM implementations.

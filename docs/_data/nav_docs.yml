@@ -55,3 +55,5 @@
     title: Event System
   - id: dom-differences
     title: DOM Differences
+  - id: special-non-dom-attributes
+    title: Special Non-DOM attributes
