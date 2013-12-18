@@ -13,3 +13,4 @@ React has implemented a browser-independent events and DOM system for performanc
 * The `style` attribute accepts a JavaScript object with camelCased properties rather than a CSS string. This is consistent with the DOM `style` JavaScript property, is more efficient, and prevents XSS security holes.
 * All event objects conform to the W3C spec, and all events (including submit) bubble correctly per the W3C spec. See [Event System](events.html) for more details.
 * The `onChange` event behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because `onChange` is a misnomer for its behavior and React relies on this event to react to user input in real time. See [Forms](forms.html) for more details.
+* Form input attributes such as `value` and `checked`, as well as `textarea`. [More here](/react/docs/forms.html).
