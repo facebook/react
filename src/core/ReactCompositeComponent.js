@@ -100,7 +100,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  statics: SpecPolicy.DEFINE_MANY_MERGED,
+  statics: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of prop types for this component.
@@ -108,7 +108,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  propTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  propTypes: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of context types for this component.
@@ -116,7 +116,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  contextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  contextTypes: SpecPolicy.DEFINE_MANY,
 
   /**
    * Definition of context types this component sets for its children.
@@ -124,7 +124,7 @@ var ReactCompositeComponentInterface = {
    * @type {object}
    * @optional
    */
-  childContextTypes: SpecPolicy.DEFINE_MANY_MERGED,
+  childContextTypes: SpecPolicy.DEFINE_MANY,
 
   // ==== Definition methods ====
 
@@ -337,7 +337,10 @@ var RESERVED_SPEC_KEYS = {
       childContextTypes,
       ReactPropTypeLocations.childContext
     );
-    Constructor.childContextTypes = childContextTypes;
+    Constructor.childContextTypes = merge(
+      Constructor.childContextTypes,
+      childContextTypes
+    );
   },
   contextTypes: function(ConvenienceConstructor, contextTypes) {
     var Constructor = ConvenienceConstructor.componentConstructor;
@@ -346,7 +349,7 @@ var RESERVED_SPEC_KEYS = {
       contextTypes,
       ReactPropTypeLocations.context
     );
-    Constructor.contextTypes = contextTypes;
+    Constructor.contextTypes = merge(Constructor.contextTypes, contextTypes);
   },
   propTypes: function(ConvenienceConstructor, propTypes) {
     var Constructor = ConvenienceConstructor.componentConstructor;
@@ -355,7 +358,7 @@ var RESERVED_SPEC_KEYS = {
       propTypes,
       ReactPropTypeLocations.prop
     );
-    Constructor.propTypes = propTypes;
+    Constructor.propTypes = merge(Constructor.propTypes, propTypes);
   },
   statics: function(ConvenienceConstructor, statics) {
     mixStaticSpecIntoComponent(ConvenienceConstructor, statics);
@@ -1156,7 +1159,7 @@ var ReactCompositeComponentMixin = {
       boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis) {
+      boundMethod.bind = function(newThis, ...args) {
         // User is trying to bind() an autobound method; we effectively will
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
@@ -1165,7 +1168,7 @@ var ReactCompositeComponentMixin = {
             'bind(): React component methods may only be bound to the ' +
             'component instance. See ' + componentName
           );
-        } else if (arguments.length === 1) {
+        } else if (!args.length) {
           console.warn(
             'bind(): You are binding a component method to the component. ' +
             'React does this for you automatically in a high-performance ' +
@@ -1176,8 +1179,7 @@ var ReactCompositeComponentMixin = {
         var reboundMethod = _bind.apply(boundMethod, arguments);
         reboundMethod.__reactBoundContext = component;
         reboundMethod.__reactBoundMethod = method;
-        reboundMethod.__reactBoundArguments =
-          Array.prototype.slice.call(arguments, 1);
+        reboundMethod.__reactBoundArguments = args;
         return reboundMethod;
       };
     }

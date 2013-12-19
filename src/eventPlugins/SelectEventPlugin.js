@@ -200,6 +200,7 @@ var SelectEventPlugin = {
       case topLevelTypes.topMouseDown:
         mouseDown = true;
         break;
+      case topLevelTypes.topContextMenu:
       case topLevelTypes.topMouseUp:
         mouseDown = false;
         return constructSelectEvent(nativeEvent);

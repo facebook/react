@@ -29,13 +29,9 @@
  * @param {string} errorMessage
  */
 
-var ex = function(errorMessage/*, arg1, arg2, ...*/) {
-  var args = Array.prototype.slice.call(arguments).map(function(arg) {
-    return String(arg);
-  });
-  var expectedLength = errorMessage.split('%s').length - 1;
-
-  if (expectedLength !== args.length - 1) {
+var ex = function(...args) {
+  args = args.map((arg) => String(arg));
+  if (args[0].split('%s').length !== args.length) {
     // something wrong with the formatting string
     return ex('ex args number mismatch: %s', JSON.stringify(args));
   }

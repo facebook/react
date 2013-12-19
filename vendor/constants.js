@@ -15,7 +15,6 @@
  */
 'use strict';
 
-var assert = require('assert');
 var recast = require('recast');
 var types = recast.types;
 var namedTypes = types.namedTypes;
@@ -23,7 +22,7 @@ var builders = types.builders;
 var hasOwn = Object.prototype.hasOwnProperty;
 
 function propagate(constants, source) {
-  return recast.print(transform(recast.parse(source), constants));
+  return recast.print(transform(recast.parse(source), constants)).code;
 }
 
 var DEV_EXPRESSION = builders.binaryExpression(

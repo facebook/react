@@ -1,5 +1,6 @@
 {
   "browser": true,
+  "esnext": true,
 
   "bitwise": true,
   "boss": true,

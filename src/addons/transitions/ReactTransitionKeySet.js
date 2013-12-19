@@ -52,7 +52,7 @@ var ReactTransitionKeySet = {
 
   /**
    * When you're adding or removing children some may be added or removed in the
-   * same render pass. We want ot show *both* since we want to simultaneously
+   * same render pass. We want to show *both* since we want to simultaneously
    * animate elements in and out. This function takes a previous set of keys
    * and a new set of keys and merges them with its best guess of the correct
    * ordering. In the future we may expose some of the utilities in

@@ -1,4 +1,4 @@
-# react-core
+# react
 
 An npm package to get you immediate access to [React](http://facebook.github.io/react/),
 without also requiring the JSX transformer. This is especially useful for cases where you
@@ -7,7 +7,7 @@ want to [`browserify`](https://github.com/substack/node-browserify) your module 
 
 ## The `react` npm package has recently changed!
 
-If you're looking for jeffbski's [React.js](https://github.com/jeffbski/react) project, it's now in `npm` as `reactjs` rather than `react`.
+If you're looking for jeffbski's [React.js](https://github.com/jeffbski/react) project, it's now in `npm` as `autoflow` rather than `react`.
 
 ## Example Usage
 

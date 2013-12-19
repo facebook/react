@@ -40,6 +40,9 @@ describe('ReactCompositeComponent-mixin', function() {
     componentPropValidator = mocks.getMockFunction();
 
     var MixinA = {
+      propTypes: {
+        propA: function() {}
+      },
       componentDidMount: function() {
         this.props.listener('MixinA didMount');
       }
@@ -47,12 +50,18 @@ describe('ReactCompositeComponent-mixin', function() {
 
     var MixinB = {
       mixins: [MixinA],
+      propTypes: {
+        propB: function() {}
+      },
       componentDidMount: function() {
         this.props.listener('MixinB didMount');
       }
     };
 
     var MixinC = {
+      statics: {
+        staticC: function() {}
+      },
       componentDidMount: function() {
         this.props.listener('MixinC didMount');
       }
@@ -66,11 +75,15 @@ describe('ReactCompositeComponent-mixin', function() {
 
     TestComponent = React.createClass({
       mixins: [MixinB, MixinC, MixinD],
-
+      statics: {
+        staticComponent: function() {}
+      },
+      propTypes: {
+        propComponent: function() {}
+      },
       componentDidMount: function() {
         this.props.listener('Component didMount');
       },
-
       render: function() {
         return <div />;
       }
@@ -85,6 +98,21 @@ describe('ReactCompositeComponent-mixin', function() {
         return <div />;
       }
     });
+  });
+
+  it('should support merging propTypes and statics', function() {
+    var listener = mocks.getMockFunction();
+    var instance = <TestComponent listener={listener} />;
+    ReactTestUtils.renderIntoDocument(instance);
+
+    var instancePropTypes = instance.constructor.propTypes;
+
+    expect('propA' in instancePropTypes).toBe(true);
+    expect('propB' in instancePropTypes).toBe(true);
+    expect('propComponent' in instancePropTypes).toBe(true);
+
+    expect('staticC' in TestComponent).toBe(true);
+    expect('staticComponent' in TestComponent).toBe(true);
   });
 
   it('should support chaining delegate functions', function() {

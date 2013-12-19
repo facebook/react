@@ -10,6 +10,7 @@ var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 var npmReactTasks = require('./grunt/tasks/npm-react');
+var versionCheckTask = require('./grunt/tasks/version-check');
 
 module.exports = function(grunt) {
 
@@ -54,34 +55,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
 
-  // Check that the version we're exporting is the same one we expect in the
-  // package. This is not an ideal way to do this, but makes sure that we keep
-  // them in sync.
-  var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
-  grunt.registerTask('version-check', function() {
-    var reactVersion = reactVersionExp.exec(
-      grunt.file.read('./build/modules/React.js')
-    )[1];
-    var npmReactVersion = grunt.file.readJSON('./npm-react/package.json').version;
-    var reactToolsVersion = grunt.config.data.pkg.version;
-
-    if (reactVersion !== reactToolsVersion) {
-      grunt.log.error(
-        'React version does not match react-tools version. Expected %s, saw %s',
-        reactToolsVersion,
-        reactVersion
-      );
-      return false;
-    }
-    if (npmReactVersion !== reactToolsVersion) {
-      grunt.log.error(
-        'npm-react version does not match react-tools veersion. Expected %s, saw %s',
-        reactToolsVersion,
-        npmReactVersion
-      );
-      return false;
-    }
-  });
+  grunt.registerTask('version-check', versionCheckTask);
 
   grunt.registerTask('build:basic', ['jsx:debug', 'version-check', 'browserify:basic']);
   grunt.registerTask('build:addons', ['jsx:debug', 'browserify:addons']);
@@ -109,6 +83,53 @@ module.exports = function(grunt) {
     'webdriver-phantomjs',
     'webdriver-jasmine:local'
   ]);
+
+  grunt.registerTask('test:full', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'webdriver-phantomjs',
+    'webdriver-jasmine:local',
+
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_android',
+    'webdriver-jasmine:saucelabs_firefox',
+    'webdriver-jasmine:saucelabs_chrome'
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_' + (process.env.BROWSER_NAME || 'ie8')
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs:ie', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ie8',
+    'webdriver-jasmine:saucelabs_ie9',
+    'webdriver-jasmine:saucelabs_ie10',
+    'webdriver-jasmine:saucelabs_ie11'
+  ]);
+
+  grunt.registerTask('test:webdriver:saucelabs:ios', [
+    'build:test',
+    'build:basic',
+
+    'connect',
+    'sauce-tunnel',
+    'webdriver-jasmine:saucelabs_ios6_1',
+    'webdriver-jasmine:saucelabs_ios5_1',
+    'webdriver-jasmine:saucelabs_ios4'
+  ]);
+
   grunt.registerTask('test:coverage', [
     'build:test',
     'build:withCodeCoverageLogging',

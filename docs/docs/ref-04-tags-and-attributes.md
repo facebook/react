@@ -51,13 +51,15 @@ accept accessKey action allowFullScreen allowTransparency alt autoCapitalize
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan content contentEditable contextMenu controls data dateTime
 dir disabled draggable encType form frameBorder height hidden href htmlFor
-httpEquiv icon id label lang list max maxLength method min multiple name
+httpEquiv icon id label lang list loop max maxLength method min multiple name
 pattern placeholder poster preload radioGroup readOnly rel required role
 rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
 target title type value width wmode
 ```
 
-In addition, the non-standard `autoCapitalize` attribute is supported for Mobile Safari.
+The non-standard `autoCapitalize` attribute is supported for Mobile Safari.
+
+In addition, there is the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting DOM strings into a component.
 
 ### SVG Attributes
 
