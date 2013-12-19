@@ -15,7 +15,7 @@ prev: addons.html
 
 ### Sample Code
 
-* We've included [a step-by-step comment box tutorial](./tutorial.html).
+* We've included [a step-by-step comment box tutorial](/react/docs/tutorial.html).
 * [The React starter kit](/react/downloads.html) includes several examples which you can [view online in our GitHub repository](https://github.com/facebook/react/tree/master/examples/).
 * [React Page](https://github.com/facebook/react-page) is a simple React project creator to get you up-and-running quickly with React. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.
 * [React one-hour email](https://github.com/petehunt/react-one-hour-email/commits/master) goes step-by-step from a static HTML mock to an interactive email reader (written in just one hour!)
