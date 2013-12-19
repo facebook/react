@@ -100,7 +100,7 @@ React.renderComponent(
 );
 ```
 
-Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](jsx-in-depth.html).
+Its use is optional but we've found JSX syntax easier to use than plain JavaScript. Read more on the [JSX Syntax article](/react/docs/jsx-in-depth.html).
 
 #### What's going on
 
@@ -664,4 +664,4 @@ var CommentBox = React.createClass({
 
 ### Congrats!
 
-You have just built a comment box in a few simple steps. Learn more about [why to use React](why-react.html), or dive into the [API reference](top-level-api.html) and start hacking! Good luck!
+You have just built a comment box in a few simple steps. Learn more about [why to use React](/react/docs/why-react.html), or dive into the [API reference](/react/docs/top-level-api.html) and start hacking! Good luck!
