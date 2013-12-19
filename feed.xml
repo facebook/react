@@ -7,6 +7,55 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.8</title>
+				<description>&lt;p&gt;I&amp;#39;ll start by answering the obvious question:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;What happened to 0.6 and 0.7?&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;It&amp;#39;s become increasingly obvious since our launch in May that people want to use React on the server. With the server-side rendering abilities, that&amp;#39;s a perfect fit. However using the same copy of React on the server and then packaging it up for the client is surprisingly a harder problem. People have been using our &lt;code&gt;react-tools&lt;/code&gt; module which includes React, but when browserifying that ends up packaging all of &lt;code&gt;esprima&lt;/code&gt; and some other dependencies that aren&amp;#39;t needed on the client. So we wanted to make this whole experience better.&lt;/p&gt;
+
+&lt;p&gt;We talked with &lt;a href=&quot;https://github.com/jeffbski&quot;&gt;Jeff Barczewski&lt;/a&gt; who was the owner of the &lt;code&gt;react&lt;/code&gt; module on npm. He was kind enough to transition ownership to us and release his package under a different name: &lt;code&gt;autoflow&lt;/code&gt;. I encourage you to &lt;a href=&quot;https://github.com/jeffbski/autoflow&quot;&gt;check it out&lt;/a&gt; if you&amp;#39;re writing a lot of asynchronous code. In order to not break all of &lt;code&gt;react&lt;/code&gt;&amp;#39;s current users of 0.7.x, we decided to bump our version to 0.8 and skip the issue entirely. We&amp;#39;re also including a warning if you use our &lt;code&gt;react&lt;/code&gt; module like you would use the previous package.&lt;/p&gt;
+
+&lt;p&gt;In order to make the transition to 0.8 for our current users as painless as possible, we decided to make 0.8 primarily a bug fix release on top of 0.5. No public APIs were changed (even if they were already marked as deprecated). We haven&amp;#39;t added any of the new features we have in master, though we did take the opportunity to pull in some improvements to internals.&lt;/p&gt;
+
+&lt;p&gt;We hope that by releasing &lt;code&gt;react&lt;/code&gt; on npm, we will enable a new set of uses that have been otherwise difficult. All feedback is welcome!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for more attributes:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;rows&lt;/code&gt; &amp;amp; &lt;code&gt;cols&lt;/code&gt; for &lt;code&gt;&amp;lt;textarea&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;defer&lt;/code&gt; &amp;amp; &lt;code&gt;async&lt;/code&gt; for &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;loop&lt;/code&gt; for &lt;code&gt;&amp;lt;audio&amp;gt;&lt;/code&gt; &amp;amp; &lt;code&gt;&amp;lt;video&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;autoCorrect&lt;/code&gt; for form fields (a non-standard attribute only supported by mobile WebKit)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Improved error messages&lt;/li&gt;
+&lt;li&gt;Fixed Selection events in IE11&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;onContextMenu&lt;/code&gt; events&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React with Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed bugs with TransitionGroup when children were undefined&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;onTransition&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;react-tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Upgraded &lt;code&gt;jstransform&lt;/code&gt; and &lt;code&gt;esprima-fb&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsxtransformer&quot;&gt;&lt;/a&gt;JSXTransformer &lt;a class=&quot;hash-link&quot; href=&quot;#jsxtransformer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for use in IE8&lt;/li&gt;
+&lt;li&gt;Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2013-12-19T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.5.2, v0.4.2</title>
 				<description>&lt;p&gt;Today we&amp;#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a &lt;code&gt;key&lt;/code&gt;. Typically &amp;quot;safe&amp;quot; data is used for a &lt;code&gt;key&lt;/code&gt;, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.&lt;/p&gt;
 
@@ -658,47 +707,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-08-26T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</guid>
-			</item>
-		
-			<item>
-				<title>Use React and JSX in Python Applications</title>
-				<description>&lt;p&gt;Today we&amp;#39;re happy to announce the initial release of &lt;a href=&quot;https://github.com/facebook/react-python&quot;&gt;PyReact&lt;/a&gt;, which makes it easier to use React and JSX in your Python applications. It&amp;#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;usage&quot;&gt;&lt;/a&gt;Usage &lt;a class=&quot;hash-link&quot; href=&quot;#usage&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Transform your JSX files via the provided &lt;code&gt;jsx&lt;/code&gt; module:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;react&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# For multiple paths, use the JSXTransformer class.&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;transformer&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;JSXTransformer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;jsx_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;js_path&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;my_paths&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;n&quot;&gt;transformer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;jsx_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;js_path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# For a single file, you can use a shortcut method.&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;path/to/input/file.jsx&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;path/to/output/file.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;For full paths to React files, use the &lt;code&gt;source&lt;/code&gt; module:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;react&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;
-
-&lt;span class=&quot;c&quot;&gt;# path_for raises IOError if the file doesn&amp;#39;t exist.&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;react_js&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;source&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path_for&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;#39;react.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;django&quot;&gt;&lt;/a&gt;Django &lt;a class=&quot;hash-link&quot; href=&quot;#django&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;PyReact includes a JSX compiler for &lt;a href=&quot;https://github.com/cyberdelia/django-pipeline&quot;&gt;django-pipeline&lt;/a&gt;. Add it to your project&amp;#39;s pipeline settings like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;python language-python&quot; data-lang=&quot;python&quot;&gt;&lt;span class=&quot;n&quot;&gt;PIPELINE_COMPILERS&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;s&quot;&gt;&amp;#39;react.utils.pipeline.JSXCompiler&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;PyReact is hosted on PyPI, and can be installed with &lt;code&gt;pip&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;$ pip install PyReact
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Alternatively, add it into your &lt;code&gt;requirements&lt;/code&gt; file:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;PyReact==0.1.1
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;strong&gt;Dependencies&lt;/strong&gt;: PyReact uses &lt;a href=&quot;https://github.com/doloopwhile/PyExecJS&quot;&gt;PyExecJS&lt;/a&gt; to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&amp;#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&amp;#39;re on a different platform, we recommend &lt;a href=&quot;https://code.google.com/p/pyv8/&quot;&gt;PyV8&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;For the initial release, we&amp;#39;ve only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your &lt;a href=&quot;https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md&quot;&gt;contributions&lt;/a&gt;!&lt;/p&gt;
-</description>
-				<pubDate>2013-08-19T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/19/use-react-and-jsx-in-python-applications.html</guid>
 			</item>
 		
 	</channel>
