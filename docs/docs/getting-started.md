@@ -44,7 +44,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 </html>
 ```
 
-The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
+The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](/react/docs/jsx-in-depth.html) to learn more about it. In order to translate it to vanilla JavaScript we use `<script type="text/jsx">` and include `JSXTransformer.js` to actually perform the transformation in the browser.
 
 ### Separate File
 
@@ -115,4 +115,4 @@ If you want to use React within a module system, [fork our repo](http://github.c
 
 ## Next Steps
 
-Check out [the tutorial](tutorial.html) and the other examples in the `/examples` directory to learn more. Good luck, and welcome!
+Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the `/examples` directory to learn more. Good luck, and welcome!
