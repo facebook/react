@@ -96,7 +96,7 @@ module.exports = function(grunt) {
     'populist:jasmine',
     'populist:test'
   ]);
-  grunt.registerTask('build:npm-react', ['version-check', 'jsx:release', 'react-core:release']);
+  grunt.registerTask('build:npm-react', ['version-check', 'jsx:release', 'npm-react:release']);
 
   grunt.registerTask('test', ['build:test', 'build:basic', 'phantom:run']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
@@ -112,6 +112,7 @@ module.exports = function(grunt) {
     'jsx:release',
     'browserify:min',
     'browserify:addonsMin',
+    'npm-react:release',
     'copy:react_docs',
     'compare_size'
   ]);
