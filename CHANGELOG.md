@@ -1,3 +1,10 @@
+## 0.5.2, 0.4.2 (December 18, 2013)
+
+### React
+
+* Fixed a potential XSS vulnerability when using user content as a `key`: [CVE-2013-7035](https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU)
+
+
 ## 0.5.1 (October 29, 2013)
 
 ### React
