@@ -8,13 +8,13 @@
 		
 			<item>
 				<title>React v0.5.2, v0.4.2</title>
-				<description>&lt;p&gt;We take security very seriously at Facebook. For most of our products, users don&amp;#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.&lt;/p&gt;
-
-&lt;p&gt;Today we&amp;#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a &lt;code&gt;key&lt;/code&gt;. Typically &amp;quot;safe&amp;quot; data is used for a &lt;code&gt;key&lt;/code&gt;, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.&lt;/p&gt;
+				<description>&lt;p&gt;Today we&amp;#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a &lt;code&gt;key&lt;/code&gt;. Typically &amp;quot;safe&amp;quot; data is used for a &lt;code&gt;key&lt;/code&gt;, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.&lt;/p&gt;
 
 &lt;p&gt;This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.&lt;/p&gt;
 
 &lt;p&gt;Updated versions are available for immediate download via npm, bower, and on our &lt;a href=&quot;http://facebook.github.io/react/downloads.html&quot;&gt;download page&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We take security very seriously at Facebook. For most of our products, users don&amp;#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.&lt;/p&gt;
 
 &lt;p&gt;While we&amp;#39;ve encouraged responsible disclosure as part of &lt;a href=&quot;https://www.facebook.com/whitehat/&quot;&gt;Facebook&amp;#39;s whitehat bounty program&lt;/a&gt; since we launched, we don&amp;#39;t have a good process for notifying our users. Hopefully we don&amp;#39;t need to use it, but moving forward we&amp;#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has &lt;a href=&quot;http://emberjs.com/security/&quot;&gt;an excellent policy&lt;/a&gt; which we may use as our model.&lt;/p&gt;
 
