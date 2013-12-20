@@ -51,7 +51,7 @@ This method is invoked before `getInitialState` and therefore cannot rely on `th
 object propTypes
 ```
 
-The `propTypes` object allows you to validate props being passed to your components. For more information about `propTypes`, see [Reusable Components](reusable-components.html).
+The `propTypes` object allows you to validate props being passed to your components. For more information about `propTypes`, see [Reusable Components](/react/docs/reusable-components.html).
 
 <!-- TODO: Document propTypes here directly. -->
 
@@ -62,7 +62,7 @@ The `propTypes` object allows you to validate props being passed to your compone
 array mixins
 ```
 
-The `mixins` array allows you to use mixins to share behavior among multiple components. For more information about mixins, see [Reusable Components](reusable-components.html).
+The `mixins` array allows you to use mixins to share behavior among multiple components. For more information about mixins, see [Reusable Components](/react/docs/reusable-components.html).
 
 <!-- TODO: Document mixins here directly. -->
 

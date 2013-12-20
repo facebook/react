@@ -7,7 +7,7 @@ prev: jsx-gotchas.html
 next: multiple-components.html
 ---
 
-You've already [learned how to display data](./displaying-data.html) with React. Now let's look at how to make our UIs interactive.
+You've already [learned how to display data](/react/docs/displaying-data.html) with React. Now let's look at how to make our UIs interactive.
 
 
 ## A Simple Example

@@ -1,3 +1,31 @@
+## 0.8.0 (December 19, 2013)
+
+### React
+
+* Added support for more attributes:
+  * `rows` & `cols` for `<textarea>`
+  * `defer` & `async` for `<script>`
+  * `loop` for `<audio>` & `<video>`
+  * `autoCorrect` for form fields (a non-standard attribute only supported by mobile WebKit)
+* Improved error messages
+* Fixed Selection events in IE11
+* Added `onContextMenu` events
+
+### React with Addons
+
+* Fixed bugs with TransitionGroup when children were undefined
+* Added support for `onTransition`
+
+### react-tools
+
+* Upgraded `jstransform` and `esprima-fb`
+
+### JSXTransformer
+
+* Added support for use in IE8
+* Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)
+
+
 ## 0.5.2, 0.4.2 (December 18, 2013)
 
 ### React
