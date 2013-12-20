@@ -132,7 +132,7 @@ function visitReactTag(traverse, object, path, state) {
 
   // filter out whitespace
   if (childrenToRender.length > 0) {
-    utils.append(', ', state);
+    utils.append(',', state);
 
     object.children.forEach(function(child) {
       if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
