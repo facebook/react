@@ -65,17 +65,17 @@ function updateOptions() {
   var options = this.getDOMNode().options;
   var selectedValue, i, l;
   if (multiple) {
-    selectedValue = [];
+    selectedValue = {};
     for (i = 0, l = value.length; i < l; ++i) {
-      selectedValue.push('' + value[i]);
+      selectedValue['' + value[i]] = true;
     }
   } else {
     selectedValue = '' + value;
   }
   for (i = 0, l = options.length; i < l; i++) {
     var selected = multiple ?
-      selectedValue.indexOf(options[i].value) >= 0 :
-      selected = options[i].value === selectedValue;
+      selectedValue.hasOwnProperty(options[i].value) :
+      options[i].value === selectedValue;
 
     if (selected !== options[i].selected) {
       options[i].selected = selected;
