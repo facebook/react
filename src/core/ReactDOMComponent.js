@@ -144,8 +144,11 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var escapedID = escapeTextForBrowser(this._rootNodeID);
-    return ret + ' ' + ReactMount.ATTR_NAME + '="' + escapedID + '">';
+    var idMarkup = DOMPropertyOperations.createMarkupForProperty(
+      ReactMount.ATTR_NAME,
+      this._rootNodeID
+    );
+    return ret + ' ' + idMarkup + '>';
   },
 
   /**

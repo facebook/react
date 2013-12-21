@@ -19,6 +19,7 @@
 
 "use strict";
 
+var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactMount = require('ReactMount');
 
@@ -64,8 +65,12 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
+    var idMarkup = DOMPropertyOperations.createMarkupForProperty(
+      ReactMount.ATTR_NAME,
+      rootID
+    );
     return (
-      '<span ' + ReactMount.ATTR_NAME + '="' + escapeTextForBrowser(rootID) + '">' +
+      '<span ' + idMarkup + '>' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );
