@@ -20,6 +20,7 @@
 "use strict";
 
 var Props = require('ReactPropTypes');
+var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 function typeCheck(declaration, value) {
@@ -35,6 +36,12 @@ function typeCheck(declaration, value) {
     ReactPropTypeLocations.prop
   );
 }
+
+var MyComponent = React.createClass({
+  render: function() {
+    return <div />;
+  }
+});
 
 describe('Primitive Types', function() {
   beforeEach(function() {
@@ -204,6 +211,86 @@ describe('Union Types', function() {
     expect(typeCheck(checker, null)).not.toThrow();
     expect(typeCheck(checker, 'foo')).not.toThrow();
     expect(typeCheck(checker, 123)).not.toThrow();
+  });
+
+  describe('React Component Types', function() {
+    beforeEach(function() {
+      require('mock-modules').dumpCache();
+    });
+
+    var myFunc = function() {};
+
+    it('should throw for invalid values', function() {
+      expect(typeCheck(Props.renderable, false)).toThrow(
+        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a renderable prop.'
+      );
+      expect(typeCheck(Props.renderable, myFunc)).toThrow(
+        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a renderable prop.'
+      );
+      expect(typeCheck(Props.renderable, {key: myFunc})).toThrow(
+        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+        '`testComponent`, expected a renderable prop.'
+      );
+    });
+
+    it('should not throw for valid values', function() {
+      // DOM component
+      expect(typeCheck(Props.renderable, <div />)).not.toThrow();
+      // Custom component
+      expect(typeCheck(Props.renderable, <MyComponent />)).not.toThrow();
+      // String
+      expect(typeCheck(Props.renderable, 'Some string')).not.toThrow();
+      // Empty array
+      expect(typeCheck(Props.renderable, [])).not.toThrow();
+      // Empty object
+      expect(typeCheck(Props.renderable, {})).not.toThrow();
+      // Array of renderable things
+      expect(
+        typeCheck(Props.renderable, [
+          123,
+          'Some string',
+          <div />,
+          ['Another string', [456], <span />, <MyComponent />],
+          <MyComponent />
+        ])
+      ).not.toThrow();
+      // Object of rendereable things
+      expect(
+        typeCheck(Props.renderable, {
+          k0: 123,
+          k1: 'Some string',
+          k2: <div />,
+          k3: {
+            k30: <MyComponent />,
+            k31: {k310: <a />},
+            k32: 'Another string'
+          }
+        })
+      ).not.toThrow();
+    });
+
+    it('should not throw for null/undefined if not required', function() {
+      expect(typeCheck(Props.renderable, null)).not.toThrow();
+      expect(typeCheck(Props.renderable, undefined)).not.toThrow();
+    });
+
+    it('should throw for missing required values', function() {
+      expect(typeCheck(Props.renderable.isRequired, null)).toThrow(
+        'Invariant Violation: Required prop `testProp` was not specified in ' +
+        '`testComponent`.'
+      );
+      expect(typeCheck(Props.renderable.isRequired, undefined)).toThrow(
+        'Invariant Violation: Required prop `testProp` was not specified in ' +
+        '`testComponent`.'
+      );
+    });
+
+    it('should accept empty array & object for required props', function() {
+      expect(typeCheck(Props.renderable.isRequired, [])).not.toThrow();
+      expect(typeCheck(Props.renderable.isRequired, {})).not.toThrow();
+    });
   });
 
 });
