@@ -21,7 +21,6 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
-var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -65,12 +64,8 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
-    var idMarkup = DOMPropertyOperations.createMarkupForProperty(
-      ReactMount.ATTR_NAME,
-      rootID
-    );
     return (
-      '<span ' + idMarkup + '>' +
+      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );

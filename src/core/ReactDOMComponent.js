@@ -25,7 +25,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
-var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -144,10 +143,7 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var idMarkup = DOMPropertyOperations.createMarkupForProperty(
-      ReactMount.ATTR_NAME,
-      this._rootNodeID
-    );
+    var idMarkup = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
     return ret + ' ' + idMarkup + '>';
   },
 

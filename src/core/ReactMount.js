@@ -18,6 +18,7 @@
 
 "use strict";
 
+var DOMProperty = require('DOMProperty');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
@@ -29,7 +30,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
-var ATTR_NAME = 'data-reactid';
+var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
@@ -595,8 +596,6 @@ var ReactMount = {
   /**
    * React ID utilities.
    */
-
-  ATTR_NAME: ATTR_NAME,
 
   getReactRootID: getReactRootID,
 
