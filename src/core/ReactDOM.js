@@ -178,6 +178,7 @@ var ReactDOM = objMapKeyVal({
   line: false,
   path: false,
   polyline: false,
+  polygon: false,
   rect: false,
   svg: false,
   text: false
