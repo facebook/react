@@ -248,6 +248,20 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -418,7 +432,7 @@
 <h2><a class="anchor" name="a-note-on-performance"></a>A Note on Performance <a class="hash-link" href="#a-note-on-performance">#</a></h2>
 <p>You may be thinking that it&#39;s expensive to react to changing data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and <code>render()</code> methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution and React will optimize this for you using batching and change detection.</p>
 
-<p>However, sometimes you really want to have fine-grained control over your performance. In that case, simply override <code>shouldComponentUpdate()</code> to return false when you want React to skip processing of a subtree. See <a href="component-specs.html">the React reference docs</a> for more information.</p>
+<p>However, sometimes you really want to have fine-grained control over your performance. In that case, simply override <code>shouldComponentUpdate()</code> to return false when you want React to skip processing of a subtree. See <a href="/react/docs/component-specs.html">the React reference docs</a> for more information.</p>
 
 <blockquote>
 <p>Note:</p>

@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | componentWillReceiveProps Not Triggered After Mounting</title>
+  <title>React | Special Non-DOM Attributes</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | componentWillReceiveProps Not Triggered After Mounting" />
+  <meta property="og:title" content="React | Special Non-DOM Attributes" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/special-non-dom-attributes.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -40,7 +40,7 @@
           React
         </a>
         <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
@@ -249,7 +249,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/special-non-dom-attributes.html">
+            <a href="/react/docs/special-non-dom-attributes.html" class="active">
               Special Non-DOM attributes
             </a>
             
@@ -305,7 +305,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html" class="active">componentWillReceiveProps Not Triggered After Mounting</a>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
           </li>
         
           <li>
@@ -335,23 +335,27 @@
 
 
   <div class="inner-content">
-    <h1>componentWillReceiveProps Not Triggered After Mounting</h1>
+    <h1>Special Non-DOM Attributes</h1>
     <div class="subHeader"></div>
-    <p><code>componentWillReceiveProps</code> isn&#39;t triggered after the node is put on scene. This is by design. Check out <a href="/react/docs/component-specs.html">other lifecycle methods</a> for the one that suits your needs.</p>
+    <p>Beside <a href="/react/docs/dom-differences.html">DOM differences</a>, React offers some attributes that simply don&#39;t exist in DOM.</p>
 
-<p>The reason for that is because <code>componentWillReceiveProps</code> often handles the logic of comparing with the old props and acting upon changes; not triggering it at mounting (where there are no old props) helps in defining what the method does.</p>
+<ul>
+<li><code>key</code>: an optional, unique identifier. When your component shuffles around during <code>render</code> passes, it might be destroyed and recreated due to the diff algorithm. Assigning it a key that persists makes sure the component stays. See more <a href="/react/docs/multiple-components.html#dynamic-children">here</a>.</li>
+<li><code>ref</code>: see <a href="/react/docs/more-about-refs.html">here</a>.</li>
+<li><code>dangerouslySetInnerHTML</code>: takes an object with the key <code>__html</code> and a DOM string as value. This is mainly for cooperating with DOM string manipulation libraries. Refer to the last example on the front page.</li>
+</ul>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/controlled-input-null-value.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/dom-differences.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/reconciliation.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/special-non-dom-attributes.html"></div>
   </div>
 </section>
 

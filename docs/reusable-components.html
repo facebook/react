@@ -248,6 +248,20 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -391,7 +405,7 @@
 </code></pre></div><h2><a class="anchor" name="mixins"></a>Mixins <a class="hash-link" href="#mixins">#</a></h2>
 <p>Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called <a href="http://en.wikipedia.org/wiki/Cross-cutting_concern">cross-cutting concerns</a>. React provides <code>mixins</code> to solve this problem.</p>
 
-<p>One common use case is a component wanting to update itself on a time interval. It&#39;s easy to use <code>setInterval()</code>, but it&#39;s important to cancel your interval when you don&#39;t need it anymore to save memory. React provides <a href="./working-with-the-browser.html">lifecycle methods</a> that let you know when a component is about to be created or destroyed. Let&#39;s create a simple mixin that uses these methods to provide an easy <code>setInterval()</code> function that will automatically get cleaned up when your component is destroyed.</p>
+<p>One common use case is a component wanting to update itself on a time interval. It&#39;s easy to use <code>setInterval()</code>, but it&#39;s important to cancel your interval when you don&#39;t need it anymore to save memory. React provides <a href="/react/docs/working-with-the-browser.html">lifecycle methods</a> that let you know when a component is about to be created or destroyed. Let&#39;s create a simple mixin that uses these methods to provide an easy <code>setInterval()</code> function that will automatically get cleaned up when your component is destroyed.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">SetIntervalMixin</span> <span class="o">=</span> <span class="p">{</span>

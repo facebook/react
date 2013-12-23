@@ -248,6 +248,20 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -328,8 +342,9 @@
 <ul>
 <li>All DOM properties and attributes (including event handlers) should be camelCased to be consistent with standard JavaScript style. We intentionally break with the spec here since the spec is inconsistent.</li>
 <li>The <code>style</code> attribute accepts a JavaScript object with camelCased properties rather than a CSS string. This is consistent with the DOM <code>style</code> JavaScript property, is more efficient, and prevents XSS security holes.</li>
-<li>All event objects conform to the W3C spec, and all events (including submit) bubble correctly per the W3C spec. See <a href="events.html">Event System</a> for more details.</li>
-<li>The <code>onChange</code> event behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because <code>onChange</code> is a misnomer for its behavior and React relies on this event to react to user input in real time. See <a href="forms.html">Forms</a> for more details.</li>
+<li>All event objects conform to the W3C spec, and all events (including submit) bubble correctly per the W3C spec. See <a href="/react/docs/events.html">Event System</a> for more details.</li>
+<li>The <code>onChange</code> event behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because <code>onChange</code> is a misnomer for its behavior and React relies on this event to react to user input in real time. See <a href="/react/docs/forms.html">Forms</a> for more details.</li>
+<li>Form input attributes such as <code>value</code> and <code>checked</code>, as well as <code>textarea</code>. <a href="/react/docs/forms.html">More here</a>.</li>
 </ul>
 
 
@@ -337,6 +352,8 @@
       
         <a class="docs-prev" href="/react/docs/events.html">&larr; Prev</a>
       
+      
+        <a class="docs-next" href="/react/docs/special-non-dom-attributes.html">Next &rarr;</a>
       
     </div>
 

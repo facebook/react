@@ -248,6 +248,20 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -345,7 +359,7 @@ title tr track u ul var video wbr
 <p>All attributes are camel-cased and the attributes <code>class</code> and <code>for</code> are <code>className</code> and <code>htmlFor</code>, respectively, to match the DOM API specification.</p>
 </blockquote>
 
-<p>For a list of events, see <a href="events.html">Supported Events</a>.</p>
+<p>For a list of events, see <a href="/react/docs/events.html">Supported Events</a>.</p>
 <h3><a class="anchor" name="html-attributes"></a>HTML Attributes <a class="hash-link" href="#html-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">accept accessKey action allowFullScreen allowTransparency alt autoCapitalize
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan content contentEditable contextMenu controls data dateTime
@@ -355,7 +369,9 @@ pattern placeholder poster preload radioGroup readOnly rel required role
 rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
 target title type value width wmode
 </code></pre></div>
-<p>In addition, the non-standard <code>autoCapitalize</code> attribute is supported for Mobile Safari.</p>
+<p>The non-standard <code>autoCapitalize</code> attribute is supported for Mobile Safari.</p>
+
+<p>In addition, there is the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting DOM strings into a component.</p>
 <h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
 spreadMethod stopColor stopOpacity stroke strokeLinecap strokeWidth transform
 version viewBox x1 x2 x y1 y2 y

@@ -248,6 +248,20 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -335,7 +349,7 @@
 
 <p>However, there are lots of applications that require you to read some data and flow it back into your program. For example, when developing forms, you&#39;ll often want to update some React <code>state</code> when you receive user input. Or perhaps you want to perform layout in JavaScript and react to changes in some DOM element size.</p>
 
-<p>In React, you would implement this by listening to a &quot;change&quot; event, read from your data source (usually the DOM) and call <code>setState()</code> on one of your components. &quot;Closing the data flow loop&quot; explicitly leads to more understandable and easier-to-maintain programs. See <a href="./forms.html">our forms documentation</a> for more information.</p>
+<p>In React, you would implement this by listening to a &quot;change&quot; event, read from your data source (usually the DOM) and call <code>setState()</code> on one of your components. &quot;Closing the data flow loop&quot; explicitly leads to more understandable and easier-to-maintain programs. See <a href="/react/docs/forms.html">our forms documentation</a> for more information.</p>
 
 <p>Two-way binding -- implicitly enforcing that some value in the DOM is always consistent with some React <code>state</code> -- is concise and supports a wide variety of applications. We&#39;ve provided <code>ReactLink</code>: syntactic sugar for setting up the common data flow loop pattern described above, or &quot;linking&quot; some data source to React <code>state</code>.</p>
 
@@ -374,7 +388,7 @@
 </span>  <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p><code>LinkedStateMixin</code> adds a method ot your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
+<p><code>LinkedStateMixin</code> adds a method to your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
 
 <p><code>ReactLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
 <h2><a class="anchor" name="under-the-hood"></a>Under the Hood <a class="hash-link" href="#under-the-hood">#</a></h2>

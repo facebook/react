@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Reconciliation</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Reconciliation" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/reconciliation.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+  <meta property="fb:app_id" content="623268441017527" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">
+              Getting Started
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">
+              Tutorial
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">
+              Why React?
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">
+              Displaying Data
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">
+                      JSX in Depth
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">
+                      JSX Gotchas
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">
+              Interactivity and Dynamic UIs
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">
+              Multiple Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">
+              Reusable Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">
+              Forms
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">
+              Working With the Browser
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">
+                      More About Refs
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">
+              Tooling Integration
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">
+              Add-Ons
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">
+              Examples
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">
+              Top-Level API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">
+              Component API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">
+              Component Specs and Lifecycle
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">
+              Supported Tags and Attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">
+              Event System
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">
+              DOM Differences
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html" class="active">
+              Reconciliation
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>Reconciliation</h1>
+    <div class="subHeader"></div>
+    <p>React key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.</p>
+<h2><a class="anchor" name="motivation"></a>Motivation <a class="hash-link" href="#motivation">#</a></h2>
+<p>Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The <a href="http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf">state of the art algorithms</a> have a complexity in the order of O(n<sup>3</sup>) where n is the number of nodes in the tree.</p>
+
+<p>This means that displaying 1000 nodes would require in the order of one billion comparisons. This is far too expensive for our use case. To put this number in perspective, CPUs nowadays execute roughly 3 billion instruction per second. So even with the most performant implementation, we wouldn&#39;t be able to compute that diff in less than a second.</p>
+
+<p>Since an optimal algorithm is not tractable, we implement a non-optimal O(n) algorithm using heuristics based on two assumptions:</p>
+
+<ol>
+<li>Two components of the same class will generate similar trees and two components of different classes will generate different trees.</li>
+<li>It is possible to provide a unique key for elements that is stable across different renders.</li>
+</ol>
+
+<p>In practice, these assumptions are ridiculously fast for almost all practical use cases.</p>
+<h2><a class="anchor" name="pair-wise-diff"></a>Pair-wise diff <a class="hash-link" href="#pair-wise-diff">#</a></h2>
+<p>In order to do a tree diff, we first need to be able to diff two nodes. There are three different cases being handled.</p>
+<h3><a class="anchor" name="different-node-types"></a>Different Node Types <a class="hash-link" href="#different-node-types">#</a></h3>
+<p>If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one. </p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>
+renderB: <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>
+=&gt; [removeNode <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>]
+</code></pre></div>
+<p>The same logic is used for custom components. If they are not of the same type, React is not going to even try at matching what they render. It is just going to remove the first one from the DOM and insert the second one.</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>
+renderB: <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>
+=&gt; [removeNode <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>]
+</code></pre></div>
+<p>Having this high level knowledge is a very important aspect of why React diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.</p>
+
+<p>It is very unlikely that a <code>&lt;Header&gt;</code> element is going generate a DOM that is going to look like what a <code>&lt;Content&gt;</code> would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.</p>
+
+<p>As a corollary, if there is a <code>&lt;Header&gt;</code> element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.</p>
+<h3><a class="anchor" name="dom-nodes"></a>DOM Nodes <a class="hash-link" href="#dom-nodes">#</a></h3>
+<p>When comparing two DOM nodes, we look at the attributes of both and can decide which of them changed in linear time.</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;before&quot;</span> <span class="nt">/&gt;</span>
+renderB: <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;after&quot;</span> <span class="nt">/&gt;</span>
+=&gt; [replaceAttribute id &quot;after&quot;]
+</code></pre></div>
+<p>Instead of treating style as an opaque string, a key-value object is used instead. This lets us update only the properties that changed.</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">{{color:</span> <span class="err">&#39;red&#39;}}</span> <span class="nt">/&gt;</span>
+renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">{{fontWeight:</span> <span class="err">&#39;bold&#39;}}</span> <span class="nt">/&gt;</span>
+=&gt; [removeStyle color], [addStyle font-weight &#39;bold&#39;]
+</code></pre></div>
+<p>After the attributes have been updated, we recurse on all the children.</p>
+<h3><a class="anchor" name="custom-components"></a>Custom Components <a class="hash-link" href="#custom-components">#</a></h3>
+<p>We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and call <code>component[Will/Did]ReceiveProps()</code> on the previous one.</p>
+
+<p>The previous component is now operational. Its <code>render()</code> method is called and the diff algorithm restarts with the new result and the previous result.</p>
+<h2><a class="anchor" name="list-wise-diff"></a>List-wise diff <a class="hash-link" href="#list-wise-diff">#</a></h2><h3><a class="anchor" name="problematic-case"></a>Problematic Case <a class="hash-link" href="#problematic-case">#</a></h3>
+<p>In order to do children reconciliation, React adopts a very naive approach. It goes over the list of children both at the same time and whenever there&#39;s a difference generates a mutation.</p>
+
+<p>For example if you add an element at the end:</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+=&gt; [insertNode <span class="nt">&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;</span>]
+</code></pre></div>
+<p>Inserting an element at the beginning is problematic. React is going to see that both nodes are spans and therefore run into a mutation mode.</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+=&gt; [replaceAttribute textContent &#39;second&#39;], [insertNode <span class="nt">&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;</span>]
+</code></pre></div>
+<p>There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. <a href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn&#39;t find when a node has moved into another position and algorithms to do that have a much worst complexity.</p>
+<h3><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h3>
+<p>In order to solve this seemingly intractable issue, an optional attribute has been introduced. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.</p>
+<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+renderB: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;second&quot;</span><span class="nt">&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+=&gt; [insertNode <span class="nt">&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;</span>]
+</code></pre></div>
+<p>In practice, finding a key is not really hard. Most of the time, the element you are going to display already have a unique id. When it is not the case, you can hash some parts of the content to generate an id. Remember that the id only has to be unique among its sibling, not globally unique.</p>
+<h2><a class="anchor" name="trade-offs"></a>Trade-offs <a class="hash-link" href="#trade-offs">#</a></h2>
+<p>It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action, the end-result would be the same. We are regularly refining the heuristics in order to make common use cases faster.</p>
+
+<p>In the current implementation, you can express the fact that a sub-tree has been moved between siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.</p>
+
+<p>Because we rely on two heuristics, if the assumptions behind them are not met, performance will suffer.</p>
+
+<ol>
+<li><p>The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven&#39;t found this to be an issue.</p></li>
+<li><p>If you don&#39;t provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to chose the key, they have the ability to shoot themselves in the foot.</p></li>
+</ol>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/special-non-dom-attributes.html">&larr; Prev</a>
+      
+      
+    </div>
+
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/reconciliation.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
