@@ -55,12 +55,6 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
 var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
   MODES: {XJS: 'XJS', JS: 'JS'}, //keyMirror({XJS: true, JS: true}),
 
-  propTypes: {
-    codeText: React.PropTypes.string.isRequired,
-    transformer: React.PropTypes.func.isRequired,
-    renderCode: React.PropTypes.bool,
-  },
-
   getInitialState: function() {
     return {mode: this.MODES.XJS, code: this.props.codeText};
   },
@@ -73,8 +67,8 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     }.bind(this);
   },
 
-  compileCode: function() {
-    return this.props.transformer(this.state.code);
+  getDesugaredCode: function() {
+    return JSXTransformer.transform(this.state.code).code;
   },
 
   render: function() {
@@ -89,7 +83,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } else if (this.state.mode === this.MODES.JS) {
       content =
         React.DOM.div( {className:"playgroundJS playgroundStage"}, 
-          this.compileCode()
+          this.getDesugaredCode()
         );
     }
 
@@ -118,14 +112,14 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } catch (e) { }
 
     try {
-      var compiledCode = this.compileCode();
+      var desugaredCode = this.getDesugaredCode();
       if (this.props.renderCode) {
         React.renderComponent(
-          CodeMirrorEditor( {codeText:compiledCode, readOnly:true} ),
+          CodeMirrorEditor( {codeText:desugaredCode, readOnly:true} ),
           mountNode
         );
       } else {
-        eval(compiledCode);
+        eval(desugaredCode);
       }
     } catch (e) {
       React.renderComponent(
