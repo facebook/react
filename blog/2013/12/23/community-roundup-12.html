@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #12</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #12" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+  <meta property="fb:app_id" content="623268441017527" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/react.css">
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2013/12/23/community-roundup-12.html" class="active">Community Round-up #12</a></li>
+      
+        <li><a href="/react/blog/2013/12/19/react-v0.8.0.html">React v0.8</a></li>
+      
+        <li><a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a></li>
+      
+        <li><a href="/react/blog/2013/11/18/community-roundup-11.html">Community Round-up #11</a></li>
+      
+        <li><a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a></li>
+      
+        <li><a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a></li>
+      
+        <li><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></li>
+      
+        <li><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></li>
+      
+        <li><a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a></li>
+      
+        <li><a href="/react/blog/2013/09/24/community-roundup-8.html">Community Round-up #8</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #12</h1>
+    <p class="meta">December 23, 2013 by Vjeux</p>
+
+    <hr>
+
+    <div class="post">
+      <p>React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the <a href="/react/docs/getting-started.html">docs</a> and do not hesitate to ask questions on the <a href="http://groups.google.com/group/reactjs">Google Group</a>, <a href="irc://chat.freenode.net/reactjs">IRC</a> or <a href="http://stackoverflow.com/questions/tagged/reactjs">Stack Overflow</a>. We are trying our best to help you out!</p>
+<h2><a class="anchor" name="the-future-of-javascript-mvc"></a>The Future of Javascript MVC <a class="hash-link" href="#the-future-of-javascript-mvc">#</a></h2>
+<p><a href="http://swannodette.github.io/">David Nolan</a> announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient <a href="http://facebook.github.io/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> and get huge performance improvements on some tasks.</p>
+
+<blockquote>
+<p>We&#39;ve known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it&#39;s no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.</p>
+
+<p>Wait, wait, wait. What does the performance of persistent data structures have to do with the future of JavaScript MVCs?</p>
+
+<p>A whole lot.
+<figure><a href="http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"><img src="/react/img/blog/om-backbone.png" alt=""></a></figure></p>
+
+<p><a href="http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">Read the full article...</a></p>
+</blockquote>
+<h2><a class="anchor" name="scroll-position-with-react"></a>Scroll Position with React <a class="hash-link" href="#scroll-position-with-react">#</a></h2>
+<p>Managing the scroll position when new content is inserted is usually very tricky to get right. <a href="http://blog.vjeux.com/">Vjeux</a> discovered that <a href="http://facebook.github.io/react/docs/component-specs.html#updating-componentwillupdate">componentWillUpdate</a> and <a href="http://facebook.github.io/react/docs/component-specs.html#updating-componentdidupdate">componentDidUpdate</a> were triggered exactly at the right time to manage the scroll position.</p>
+
+<blockquote>
+<p>We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">componentWillUpdate: function() {
+  var node = this.getDOMNode();
+  this.shouldScrollBottom =
+    (node.scrollTop + node.offsetHeight) === node.scrollHeight;
+},
+componentDidUpdate: function() {
+  if (this.shouldScrollBottom) {
+    var node = this.getDOMNode();
+    node.scrollTop = node.scrollHeight
+  }
+},
+</code></pre></div>
+<p><a href="http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html">Check out the blog article...</a></p>
+</blockquote>
+<h2><a class="anchor" name="lights-out"></a>Lights Out <a class="hash-link" href="#lights-out">#</a></h2>
+<p>React declarative approach is well suited to write games. <a href="https://github.com/chenglou">Cheng Lou</a> wrote the famous Lights Out game in React. It&#39;s a good example of use of <a href="http://facebook.github.io/react/docs/animation.html">TransitionGroup</a> to implement animations.
+<figure><a href="http://chenglou.github.io/react-lights-out/"><img src="/react/img/blog/lights-out.png" alt=""></a></figure></p>
+
+<p><a href="http://chenglou.github.io/react-lights-out/">Try it out!</a></p>
+<h2><a class="anchor" name="reactive-table-bookmarklet"></a>Reactive Table Bookmarklet <a class="hash-link" href="#reactive-table-bookmarklet">#</a></h2>
+<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> wrote a bookmarklet to process tables on the internet. It adds a little &quot;pop&quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
+<figure><a href="http://www.phpied.com/reactivetable-bookmarklet/"><img src="/react/img/blog/reactive-bookmarklet.png" alt=""></a></figure></p>
+
+<p><a href="http://www.phpied.com/reactivetable-bookmarklet/">Check out the blog post...</a></p>
+<h2><a class="anchor" name="montagejs-tutorial-in-react"></a>MontageJS Tutorial in React <a class="hash-link" href="#montagejs-tutorial-in-react">#</a></h2>
+<p><a href="https://twitter.com/ssorallen">Ross Allen</a> implemented <a href="http://montagejs.org/">MontageJS</a>&#39;s <a href="http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html">Reddit tutorial</a> in React. This is a good opportunity to compare the philosophies of the two libraries.</p>
+
+<iframe width="100%" height="300" src="http://jsfiddle.net/ssorallen/fEsYt/embedded/result,html,js" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+
+<p><a href="http://jsfiddle.net/ssorallen/fEsYt/">View the source on JSFiddle...</a></p>
+<h2><a class="anchor" name="writing-good-react-components"></a>Writing Good React Components <a class="hash-link" href="#writing-good-react-components">#</a></h2>
+<p><a href="http://blog.whn.se/">William Högman Rudenmalm</a> wrote an article on how to write good React components. This is full of good advice.</p>
+
+<blockquote>
+<p>The idea of dividing software into smaller parts or components is hardly new - It is the essance of good software. The same principles that apply to software in general apply to building React components. That doesn’t mean that writing good React components is just about applying general rules.</p>
+
+<p>The web offers a unique set of challenges, which React offers interesting solutions to. First and foremost among these solutions is the what is called the Mock DOM. Rather than having user code interface with the DOM in a direct fashion, as is the case with most DOM manipulation libraries.</p>
+
+<p>You build a model of how you want the DOM end up like. React then inserts this model into the DOM. This is very useful for updates because React simply compares the model or mock DOM against the actual DOM, and then only updates based on the difference between the two states.</p>
+
+<p><a href="http://blog.whn.se/post/69621609605/writing-good-react-components">Read the full article ...</a></p>
+</blockquote>
+<h2><a class="anchor" name="hoodie-react-todomvc"></a>Hoodie React TodoMVC <a class="hash-link" href="#hoodie-react-todomvc">#</a></h2>
+<p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
+</code></pre></div>
+<p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
+<h2><a class="anchor" name="jsx-compiler"></a>JSX Compiler <a class="hash-link" href="#jsx-compiler">#</a></h2>
+<p>Ever wanted to have a quick way to see what a JSX tag would be converted to? <a href="http://www.yungsters.com/">Tim Yung</a> made a page for it.
+<figure><a href="http://facebook.github.io/react/jsx-compiler.html"><img src="/react/img/blog/jsx-compiler.png" alt=""></a></figure></p>
+
+<p><a href="http://facebook.github.io/react/jsx-compiler.html">Try it out!</a></p>
+<h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+<p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">A Facebook &amp; Instagram collaboration.</div>
+      <div class="right">&copy; 2013 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

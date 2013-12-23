@@ -7,6 +7,87 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #12</title>
+				<description>&lt;p&gt;React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the &lt;a href=&quot;/react/docs/getting-started.html&quot;&gt;docs&lt;/a&gt; and do not hesitate to ask questions on the &lt;a href=&quot;http://groups.google.com/group/reactjs&quot;&gt;Google Group&lt;/a&gt;, &lt;a href=&quot;irc://chat.freenode.net/reactjs&quot;&gt;IRC&lt;/a&gt; or &lt;a href=&quot;http://stackoverflow.com/questions/tagged/reactjs&quot;&gt;Stack Overflow&lt;/a&gt;. We are trying our best to help you out!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-future-of-javascript-mvc&quot;&gt;&lt;/a&gt;The Future of Javascript MVC &lt;a class=&quot;hash-link&quot; href=&quot;#the-future-of-javascript-mvc&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://swannodette.github.io/&quot;&gt;David Nolan&lt;/a&gt; announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient &lt;a href=&quot;http://facebook.github.io/react/docs/component-specs.html#updating-shouldcomponentupdate&quot;&gt;shouldComponentUpdate&lt;/a&gt; and get huge performance improvements on some tasks.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We&amp;#39;ve known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it&amp;#39;s no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.&lt;/p&gt;
+
+&lt;p&gt;Wait, wait, wait. What does the performance of persistent data structures have to do with the future of JavaScript MVCs?&lt;/p&gt;
+
+&lt;p&gt;A whole lot.
+&lt;figure&gt;&lt;a href=&quot;http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/&quot;&gt;&lt;img src=&quot;/react/img/blog/om-backbone.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;scroll-position-with-react&quot;&gt;&lt;/a&gt;Scroll Position with React &lt;a class=&quot;hash-link&quot; href=&quot;#scroll-position-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Managing the scroll position when new content is inserted is usually very tricky to get right. &lt;a href=&quot;http://blog.vjeux.com/&quot;&gt;Vjeux&lt;/a&gt; discovered that &lt;a href=&quot;http://facebook.github.io/react/docs/component-specs.html#updating-componentwillupdate&quot;&gt;componentWillUpdate&lt;/a&gt; and &lt;a href=&quot;http://facebook.github.io/react/docs/component-specs.html#updating-componentdidupdate&quot;&gt;componentDidUpdate&lt;/a&gt; were triggered exactly at the right time to manage the scroll position.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;componentWillUpdate: function() {
+  var node = this.getDOMNode();
+  this.shouldScrollBottom =
+    (node.scrollTop + node.offsetHeight) === node.scrollHeight;
+},
+componentDidUpdate: function() {
+  if (this.shouldScrollBottom) {
+    var node = this.getDOMNode();
+    node.scrollTop = node.scrollHeight
+  }
+},
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html&quot;&gt;Check out the blog article...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;lights-out&quot;&gt;&lt;/a&gt;Lights Out &lt;a class=&quot;hash-link&quot; href=&quot;#lights-out&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;React declarative approach is well suited to write games. &lt;a href=&quot;https://github.com/chenglou&quot;&gt;Cheng Lou&lt;/a&gt; wrote the famous Lights Out game in React. It&amp;#39;s a good example of use of &lt;a href=&quot;http://facebook.github.io/react/docs/animation.html&quot;&gt;TransitionGroup&lt;/a&gt; to implement animations.
+&lt;figure&gt;&lt;a href=&quot;http://chenglou.github.io/react-lights-out/&quot;&gt;&lt;img src=&quot;/react/img/blog/lights-out.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://chenglou.github.io/react-lights-out/&quot;&gt;Try it out!&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactive-table-bookmarklet&quot;&gt;&lt;/a&gt;Reactive Table Bookmarklet &lt;a class=&quot;hash-link&quot; href=&quot;#reactive-table-bookmarklet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt; wrote a bookmarklet to process tables on the internet. It adds a little &amp;quot;pop&amp;quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
+&lt;figure&gt;&lt;a href=&quot;http://www.phpied.com/reactivetable-bookmarklet/&quot;&gt;&lt;img src=&quot;/react/img/blog/reactive-bookmarklet.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/reactivetable-bookmarklet/&quot;&gt;Check out the blog post...&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;montagejs-tutorial-in-react&quot;&gt;&lt;/a&gt;MontageJS Tutorial in React &lt;a class=&quot;hash-link&quot; href=&quot;#montagejs-tutorial-in-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/ssorallen&quot;&gt;Ross Allen&lt;/a&gt; implemented &lt;a href=&quot;http://montagejs.org/&quot;&gt;MontageJS&lt;/a&gt;&amp;#39;s &lt;a href=&quot;http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html&quot;&gt;Reddit tutorial&lt;/a&gt; in React. This is a good opportunity to compare the philosophies of the two libraries.&lt;/p&gt;
+
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/ssorallen/fEsYt/embedded/result,html,js&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://jsfiddle.net/ssorallen/fEsYt/&quot;&gt;View the source on JSFiddle...&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;writing-good-react-components&quot;&gt;&lt;/a&gt;Writing Good React Components &lt;a class=&quot;hash-link&quot; href=&quot;#writing-good-react-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://blog.whn.se/&quot;&gt;William Högman Rudenmalm&lt;/a&gt; wrote an article on how to write good React components. This is full of good advice.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The idea of dividing software into smaller parts or components is hardly new - It is the essance of good software. The same principles that apply to software in general apply to building React components. That doesn’t mean that writing good React components is just about applying general rules.&lt;/p&gt;
+
+&lt;p&gt;The web offers a unique set of challenges, which React offers interesting solutions to. First and foremost among these solutions is the what is called the Mock DOM. Rather than having user code interface with the DOM in a direct fashion, as is the case with most DOM manipulation libraries.&lt;/p&gt;
+
+&lt;p&gt;You build a model of how you want the DOM end up like. React then inserts this model into the DOM. This is very useful for updates because React simply compares the model or mock DOM against the actual DOM, and then only updates based on the difference between the two states.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://blog.whn.se/post/69621609605/writing-good-react-components&quot;&gt;Read the full article ...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;hoodie-react-todomvc&quot;&gt;&lt;/a&gt;Hoodie React TodoMVC &lt;a class=&quot;hash-link&quot; href=&quot;#hoodie-react-todomvc&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://svenlito.com/&quot;&gt;Sven Lito&lt;/a&gt; integrated the React TodoMVC example within an &lt;a href=&quot;http://hood.ie/&quot;&gt;Hoodie&lt;/a&gt; web app environment. This should let you get started using Hoodie and React.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;hoodie new todomvc -t &amp;quot;hoodiehq/hoodie-react-todomvc&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/hoodiehq/hoodie-react-todomvc&quot;&gt;Check out on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-compiler&quot;&gt;&lt;/a&gt;JSX Compiler &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-compiler&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ever wanted to have a quick way to see what a JSX tag would be converted to? &lt;a href=&quot;http://www.yungsters.com/&quot;&gt;Tim Yung&lt;/a&gt; made a page for it.
+&lt;figure&gt;&lt;a href=&quot;http://facebook.github.io/react/jsx-compiler.html&quot;&gt;&lt;img src=&quot;/react/img/blog/jsx-compiler.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://facebook.github.io/react/jsx-compiler.html&quot;&gt;Try it out!&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;center&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;.&lt;a href=&quot;https://twitter.com/jordwalke&quot;&gt;@jordwalke&lt;/a&gt; lays down some truth &lt;a href=&quot;http://t.co/AXAn0UlUe3&quot;&gt;http://t.co/AXAn0UlUe3&lt;/a&gt;, optimizing your JS application shouldn&amp;#39;t force you to rewrite so much code &lt;a href=&quot;https://twitter.com/search?q=%23reactjs&amp;amp;src=hash&quot;&gt;#reactjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Nolen (@swannodette) &lt;a href=&quot;https://twitter.com/swannodette/statuses/413780079249215488&quot;&gt;December 19, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/center&gt;&lt;/p&gt;
+</description>
+				<pubDate>2013-12-23T00:00:00+01:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.8</title>
 				<description>&lt;p&gt;I&amp;#39;ll start by answering the obvious question:&lt;/p&gt;
 
@@ -626,87 +707,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-09-24T00:00:00+02:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/09/24/community-roundup-8.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/09/24/community-roundup-8.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #7</title>
-				<description>&lt;p&gt;It&amp;#39;s been three months since we open sourced React and it is going well. Some stats so far:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;114 285 unique visitors on this website&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/stargazers&quot;&gt;1933 stars&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/network/members&quot;&gt;210 forks&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;226 posts on Google Group&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://gist.github.com/vjeux/6335762&quot;&gt;76 Github projects using React&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/graphs/contributors&quot;&gt;30 contributors&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;http://facebook.github.io/react/blog/&quot;&gt;15 blog posts&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;2 early adopters: &lt;a href=&quot;http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html&quot;&gt;Khan Academy&lt;/a&gt; and &lt;a href=&quot;http://usepropeller.com/blog/posts/from-backbone-to-react/&quot;&gt;Propeller&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;wolfenstein-rendering-engine-ported-to-react&quot;&gt;&lt;/a&gt;Wolfenstein Rendering Engine Ported to React &lt;a class=&quot;hash-link&quot; href=&quot;#wolfenstein-rendering-engine-ported-to-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt; ported the render code of the web version of Wolfenstein 3D to React. Check out &lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;the demo&lt;/a&gt; and &lt;a href=&quot;https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183&quot;&gt;render.js&lt;/a&gt; file for the implementation.
-&lt;figure&gt;&lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;&lt;img src=&quot;/react/img/blog/wolfenstein_react.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-amp-meteor&quot;&gt;&lt;/a&gt;React &amp;amp; Meteor &lt;a class=&quot;hash-link&quot; href=&quot;#react-amp-meteor&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/benjamn&quot;&gt;Ben Newman&lt;/a&gt; made a &lt;a href=&quot;https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js&quot;&gt;13-lines wrapper&lt;/a&gt; to use React and Meteor together. &lt;a href=&quot;http://www.meteor.com/&quot;&gt;Meteor&lt;/a&gt; handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.&lt;/p&gt;
-
-&lt;p&gt;The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
- &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MeteorMixin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
-
- &lt;span class=&quot;nx&quot;&gt;getMeteorState&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Session&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-
- &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
- &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Dependencies will be registered for any data accesses performed by getMeteorState so that the component can be automatically re-rendered whenever the data changes.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/benjamn/meteor-react&quot;&gt;Read more ...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-page&quot;&gt;&lt;/a&gt;React Page &lt;a class=&quot;hash-link&quot; href=&quot;#react-page&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/jordwalke&quot;&gt;Jordan Walke&lt;/a&gt; implemented a complete React project creator called &lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;react-page&lt;/a&gt;. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Easy Application Development with React JavaScript
-&lt;figure&gt;&lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-page.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Why Server Rendering?&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Faster initial page speed:
-
-&lt;ul&gt;
-&lt;li&gt;Markup displayed before downloading large JavaScript.&lt;/li&gt;
-&lt;li&gt;Markup can be generated more quickly on a fast server than low power client devices.&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Faster Development and Prototyping:
-
-&lt;ul&gt;
-&lt;li&gt;Instantly refresh your app without waiting for any watch scripts or bundlers.&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Easy deployment of static content pages/blogs: just archive using recursive wget.&lt;/li&gt;
-&lt;li&gt;SEO benefits of indexability and perf.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;How Does Server Rendering Work?&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;react-page&lt;/code&gt; computes page markup on the server, sends it to the client so the user can see it quickly.&lt;/li&gt;
-&lt;li&gt;The corresponding JavaScript is then packaged and sent.&lt;/li&gt;
-&lt;li&gt;The browser runs that JavaScript, so that all of the event handlers, interactions and update code will run seamlessly on top of the server generated markup.&lt;/li&gt;
-&lt;li&gt;From the developer&amp;#39;s (and the user&amp;#39;s) perspective, it&amp;#39;s just as if the rendering occurred on the client, only faster.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/facebook/react-page/&quot;&gt;Try it out ...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-08-26T00:00:00+02:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/08/26/community-roundup-7.html</guid>
 			</item>
 		
 	</channel>
