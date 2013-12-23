@@ -61,6 +61,14 @@ var ReactPlayground = React.createClass({
     renderCode: React.PropTypes.bool,
   },
 
+  getDefaultProps: function() {
+    return {
+      transformer: function(code) {
+        return JSXTransformer.transform(code).code;
+      }
+    };
+  },
+
   getInitialState: function() {
     return {mode: this.MODES.XJS, code: this.props.codeText};
   },
