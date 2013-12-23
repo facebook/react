@@ -116,6 +116,7 @@ var DefaultDOMPropertyConfig = {
      */
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
     autoCorrect: null, // Supported in Mobile Safari for keyboard hints
+    property: null, // Supports OG in meta tags
 
     /**
      * SVG Properties
