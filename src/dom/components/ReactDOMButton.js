@@ -18,6 +18,7 @@
 
 "use strict";
 
+var AutoFocusMixin = require('AutoFocusMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -44,6 +45,7 @@ var mouseListenerNames = keyMirror({
  * when `disabled` is set.
  */
 var ReactDOMButton = ReactCompositeComponent.createClass({
+  mixins: [AutoFocusMixin],
 
   render: function() {
     var props = {};

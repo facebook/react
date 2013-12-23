@@ -20,6 +20,7 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueMixin = require('LinkedValueMixin');
+var AutoFocusMixin = require('AutoFocusMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
@@ -49,7 +50,7 @@ var instancesByReactID = {};
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = ReactCompositeComponent.createClass({
-  mixins: [LinkedValueMixin],
+  mixins: [LinkedValueMixin, AutoFocusMixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
