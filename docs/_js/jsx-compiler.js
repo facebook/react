@@ -13,14 +13,7 @@ var HelloMessage = React.createClass({\n\
 React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
-var transformer = function(code) {
-  return JSXTransformer.transform(code).code;
-}
 React.renderComponent(
-  <ReactPlayground
-    codeText={HELLO_COMPONENT}
-    renderCode={true}
-    transformer={transformer}
-    />,
+  <ReactPlayground codeText={HELLO_COMPONENT} renderCode={true} />,
   document.getElementById('jsxCompiler')
 );
