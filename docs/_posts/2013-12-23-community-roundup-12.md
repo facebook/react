@@ -8,7 +8,7 @@ React got featured on the front-page of Hacker News thanks to the Om library. If
 
 ## The Future of Javascript MVC
 
-[David Nolan](http://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](http://facebook.github.io/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
+[David Nolen](http://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](http://facebook.github.io/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
 
 > We've known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it's no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.
 >
