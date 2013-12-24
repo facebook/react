@@ -299,7 +299,7 @@
 <p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
 <div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
 
-<span class="no">MyApp</span><span class="o">::</span><span class="no">Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
+<span class="ss">MyApp</span><span class="p">:</span><span class="ss">:Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
   <span class="n">config</span><span class="o">.</span><span class="n">react</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="ss">:development</span>
   <span class="c1"># use :production in production.rb</span>
 <span class="k">end</span>

@@ -447,6 +447,13 @@ calling <code>this.getDOMNode()</code>.</p>
 <li><code>Object.create</code> – Provided by <code>es5-sham.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>.</li>
 <li><code>console.*</code> – Only needed when using the unminified build. If you need to polyfill this, try <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</li>
 </ul>
+<h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
+<p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround.</p>
+<h4><a class="anchor" name="onscroll-event-on-ie8"></a>onScroll event on IE8 <a class="hash-link" href="#onscroll-event-on-ie8">#</a></h4>
+<p>On IE8 the <code>onScroll</code> event doesn&#39;t bubbles and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
+Currently a handler to this event is ignored on IE8.</p>
+
+<p>See the <a href="https://github.com/facebook/react/issues/631">onScroll doesn&#39;t work in IE8</a> GitHub issue for more information.</p>
 
 
     <div class="docs-prevnext">
