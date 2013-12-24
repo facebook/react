@@ -137,4 +137,5 @@ Although React is pretty good at abstracting browser differences, some browsers 
 
 On IE8 the `onScroll` event doesn't bubbles and IE8 doesn't have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
 Currently a handler to this event is ignored on IE8.
-[onScroll doesn't work in IE8](https://github.com/facebook/react/issues/631)
+
+See the [onScroll doesn't work in IE8](https://github.com/facebook/react/issues/631) GitHub issue for more information.
