@@ -85,6 +85,7 @@ id: home
 <section class="home-section home-presentation">
   <h3>Presentation</h3>
   <p>Watch this 30-minute presentation followed by a Q&A to learn more about React.</p>
+  <p><strong>Note:</strong> React was at 0.3.2 by the time of this talk and some APIs have changed since then.</p>
   <figure><iframe width="650" height="400" src="//www.youtube.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
 </section>
 <hr class="home-divider" />
