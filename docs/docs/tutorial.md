@@ -2,7 +2,10 @@
 id: tutorial
 title: Tutorial
 layout: docs
+prev: getting-started.html
+next: videos.html
 ---
+
 We'll be building a simple, but realistic comments box that you can drop into a blog, similar to Disqus, LiveFyre or Facebook comments.
 
 We'll provide:

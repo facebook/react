@@ -4,6 +4,8 @@
     title: Getting Started
   - id: tutorial
     title: Tutorial
+  - id: videos
+    title: Videos
 - title: Guides
   items:
   - id: why-react
