@@ -126,3 +126,15 @@ Other required polyfills:
 
 * `Object.create` – Provided by `es5-sham.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim).
 * `console.*` – Only needed when using the unminified build. If you need to polyfill this, try [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
+
+
+### Cross-browser Issues
+
+Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn't find a workaround.
+
+
+#### onScroll event on IE8
+
+On IE8 the `onScroll` event doesn't bubbles and IE8 doesn't have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
+Currently a handler to this event is ignored on IE8.
+[onScroll doesn't work in IE8](https://github.com/facebook/react/issues/631)
