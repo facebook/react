@@ -53,6 +53,10 @@ var TransferStrategies = {
    */
   className: createTransferStrategy(joinClasses),
   /**
+   * Never transfer the `key` prop.
+   */
+  key: emptyFunction,
+  /**
    * Never transfer the `ref` prop.
    */
   ref: emptyFunction,
