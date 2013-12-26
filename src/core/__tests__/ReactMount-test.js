@@ -54,19 +54,19 @@ describe('ReactMount', function() {
     expect(mockUnmount.mock.calls.length).toBe(0);
 
     ReactMount.renderComponent(<Component text="orange" key="A" />, container);
-    expect(container.firstChild.innerText).toBe('orange');
+    expect(container.firstChild.innerHTML).toBe('orange');
     expect(mockMount.mock.calls.length).toBe(1);
     expect(mockUnmount.mock.calls.length).toBe(0);
 
     // If we change the key, the component is unmounted and remounted
     ReactMount.renderComponent(<Component text="green" key="B" />, container);
-    expect(container.firstChild.innerText).toBe('green');
+    expect(container.firstChild.innerHTML).toBe('green');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
 
     // But if we don't change the key, the component instance is reused
     ReactMount.renderComponent(<Component text="blue" key="B" />, container);
-    expect(container.firstChild.innerText).toBe('blue');
+    expect(container.firstChild.innerHTML).toBe('blue');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
   });
