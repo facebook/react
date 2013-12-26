@@ -137,7 +137,8 @@ describe('ReactIdentity', function() {
   });
 
   it('should not allow scripts in keys to execute', function() {
-    var h4x0rKey = '"><script>window.YOUVEBEENH4X0RED=true;</script><div id="';
+    var h4x0rKey =
+      '"><script>window[\'YOUVEBEENH4X0RED\']=true;</script><div id="';
 
     var attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
