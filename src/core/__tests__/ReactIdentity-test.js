@@ -55,8 +55,8 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
-    checkId(node.childNodes[0], '.r[0].{first}');
-    checkId(node.childNodes[1], '.r[0].{second}');
+    checkId(node.childNodes[0], '.r[0].{first}[0]');
+    checkId(node.childNodes[1], '.r[0].{second}[0]');
   });
 
   it('should allow key property to express identity', function() {
@@ -117,7 +117,7 @@ describe('ReactIdentity', function() {
     expect(span2.getDOMNode()).not.toBe(null);
 
     checkId(span1.getDOMNode(), '.r[0].{' + key + '}');
-    checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}');
+    checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}[0]');
   }
 
   it('should allow any character as a key, in a detached parent', function() {
