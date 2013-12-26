@@ -20,7 +20,6 @@
 
 var ReactTextComponent = require('ReactTextComponent');
 
-var getComponentKey = require('getComponentKey');
 var invariant = require('invariant');
 
 /**
@@ -30,6 +29,22 @@ var invariant = require('invariant');
  * 3. That a single child and an array with one item have the same key pattern.
  * });
  */
+
+/**
+ * Generate a key string that identifies a component within a set.
+ *
+ * @param {*} component A component that could contain a manual key.
+ * @param {number} index Index that is used if a manual key is not provided.
+ * @return {string}
+ */
+function getComponentKey(component, index) {
+  if (component && component.props && component.props.key != null) {
+    // Explicit key
+    return '{' + component.props.key + '}';
+  }
+  // Implicit key determined by the index in the set
+  return '[' + index + ']';
+}
 
 /**
  * @param {?*} children Children tree container.

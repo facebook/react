@@ -19,8 +19,6 @@
 
 "use strict";
 
-var getComponentKey = require('getComponentKey');
-
 /**
  * Given a `prevComponent` and `nextComponent`, determines if `prevComponent`
  * should be updated as opposed to being destroyed or replaced.
@@ -35,8 +33,8 @@ function shouldUpdateReactComponent(prevComponent, nextComponent) {
   if (prevComponent && nextComponent &&
       prevComponent.constructor === nextComponent.constructor) {
     if (prevComponent._owner === nextComponent._owner && (
-          getComponentKey(prevComponent, /* index: */ 0) ===
-          getComponentKey(nextComponent, /* index: */ 0)
+          (prevComponent.props && prevComponent.props.key) ===
+          (nextComponent.props && nextComponent.props.key)
         )) {
       return true;
     } else {
