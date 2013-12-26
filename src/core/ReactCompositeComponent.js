@@ -901,9 +901,9 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   _performUpdateIfNecessary: function(transaction) {
-    if (this._pendingProps == null &&
-        this._pendingState == null &&
-        this._pendingContext == null &&
+    if (this._pendingProps === null &&
+        this._pendingState === null &&
+        this._pendingContext === null &&
         !this._pendingForceUpdate) {
       return;
     }
@@ -913,7 +913,7 @@ var ReactCompositeComponentMixin = {
     this._pendingContext = null;
 
     var nextProps = this.props;
-    if (this._pendingProps != null) {
+    if (this._pendingProps !== null) {
       nextProps = this._pendingProps;
       this._processProps(nextProps);
       this._pendingProps = null;

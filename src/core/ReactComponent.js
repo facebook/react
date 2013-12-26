@@ -150,6 +150,7 @@ var ReactComponent = {
   isValidComponent: function(object) {
     return !!(
       object &&
+      typeof object === 'object' &&
       typeof object.mountComponentIntoNode === 'function' &&
       typeof object.receiveComponent === 'function'
     );
@@ -414,7 +415,7 @@ var ReactComponent = {
      * @internal
      */
     _performUpdateIfNecessary: function(transaction) {
-      if (this._pendingProps == null) {
+      if (this._pendingProps === null) {
         return;
       }
       var prevProps = this.props;

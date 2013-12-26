@@ -56,6 +56,7 @@
     "tmp": "~0.0.18",
     "grunt-contrib-compress": "~0.5.1",
     "jasmine-tapreporter": "~0.2.2",
+    "jsdom": "~0.8.8",
     "grunt-contrib-connect": "~0.5.0",
     "es5-shim": "~2.1.0",
     "wd": "~0.2.6",
