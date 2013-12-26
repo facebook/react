@@ -40,6 +40,7 @@ var shouldWrap = {
   'line': true,
   'path': true,
   'polyline': true,
+  'polygon': true,
   'rect': true,
   'text': true
 };
@@ -76,6 +77,7 @@ var markupWrap = {
   'line': svgWrap,
   'path': svgWrap,
   'polyline': svgWrap,
+  'polygon': svgWrap,
   'rect': svgWrap,
   'text': svgWrap
 };
