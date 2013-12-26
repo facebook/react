@@ -36,7 +36,7 @@ var MAX_TREE_DEPTH = 100;
  * loads 1 page per minute 24/7 for 50 years, with a mount point space of
  * 9,999,999 the likelihood of never having a collision is 99.997%.
  */
-var GLOBAL_MOUNT_POINT_MAX = 9999999;
+var GLOBAL_MOUNT_POINT_MAX = 60466176;
 
 /**
  * Creates a DOM ID prefix to use when mounting React components.
