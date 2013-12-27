@@ -53,7 +53,12 @@ var CSSPropertyOperations = {
         continue;
       }
       var styleValue = styles[styleName];
-      if (styleValue != null) {
+      if (Array.isArray(styleValue)) {
+        styleValue.forEach(function(styleValue) {
+          serialized += processStyleName(styleName) + ':';
+          serialized += dangerousStyleValue(styleName, styleValue) + ';';
+        });
+      } else if (styleValue != null && styleValue.length !== 0) {
         serialized += processStyleName(styleName) + ':';
         serialized += dangerousStyleValue(styleName, styleValue) + ';';
       }
@@ -74,9 +79,13 @@ var CSSPropertyOperations = {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
-      var styleValue = dangerousStyleValue(styleName, styles[styleName]);
-      if (styleValue) {
-        style[styleName] = styleValue;
+      var styleValue = styles[styleName];
+      if (Array.isArray(styleValue) && styleValue.length) {
+        styleValue.forEach(function(styleValue) {
+          style[styleName] = dangerousStyleValue(styleName, styleValue);
+        });
+      } else if (styleValue != null && styleValue.length !== 0) {
+        style[styleName] = dangerousStyleValue(styleName, styleValue);
       } else {
         var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
