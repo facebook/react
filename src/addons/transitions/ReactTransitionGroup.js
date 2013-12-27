@@ -79,6 +79,15 @@ var ReactTransitionGroup = React.createClass({
           enter: this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
+      } else {
+        // If there's no leave transition and the child has been removed from
+        // the source children list, we want to remove it immediately from the
+        // _transitionGroupCurrentKeys cache because _handleDoneLeaving won't
+        // be called. In normal cases, this prevents a small memory leak; in
+        // the case of switching transitionLeave from false to true, it
+        // prevents a confusing bug where ReactTransitionableChild.render()
+        // returns nothing, throwing an error.
+        delete currentKeys[key];
       }
     }
 
