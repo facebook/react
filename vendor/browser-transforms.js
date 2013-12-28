@@ -44,6 +44,7 @@ var transformCode = function(code, source) {
     try {
       var transformed = transformReact(code);
     } catch(e) {
+      e.message += '\n    at ';
       if (source) {
         if ('fileName' in e) {
           // We set `fileName` if it's supported by this error object and
@@ -51,7 +52,9 @@ var transformCode = function(code, source) {
           // The error will correctly point to `source` in Firefox.
           e.fileName = source;
         }
-        e.message += '\n    at ' + source + ':' + e.lineNumber + ':' + e.column;
+        e.message += source + ':' + e.lineNumber + ':' + e.column;
+      } else {
+        e.message += location.href;
       }
       throw e;
     }
