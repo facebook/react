@@ -25,6 +25,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var SyntheticFocusEvent = require('SyntheticFocusEvent');
 var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
+var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
@@ -315,6 +316,11 @@ var SimpleEventPlugin = {
         /* falls through */
       case topLevelTypes.topContextMenu:
       case topLevelTypes.topDoubleClick:
+      case topLevelTypes.topMouseDown:
+      case topLevelTypes.topMouseMove:
+      case topLevelTypes.topMouseUp:
+        EventConstructor = SyntheticMouseEvent;
+        break;
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:
       case topLevelTypes.topDragEnter:
@@ -323,10 +329,7 @@ var SimpleEventPlugin = {
       case topLevelTypes.topDragOver:
       case topLevelTypes.topDragStart:
       case topLevelTypes.topDrop:
-      case topLevelTypes.topMouseDown:
-      case topLevelTypes.topMouseMove:
-      case topLevelTypes.topMouseUp:
-        EventConstructor = SyntheticMouseEvent;
+        EventConstructor = SyntheticDragEvent;
         break;
       case topLevelTypes.topTouchCancel:
       case topLevelTypes.topTouchEnd:
