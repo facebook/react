@@ -288,7 +288,10 @@ describe('ReactChildren', function() {
     var mappedForcedKeys = Object.keys(mappedChildrenForcedKeys);
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
-    var expectedRemappedForcedKeys = ['{{keyZero}}{giraffe}', '{{keyOne}}[0]'];
+    var expectedRemappedForcedKeys = [
+      '{{keyZero^C}{giraffe}',
+      '{{keyOne^C}[0]'
+    ];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);
     expect(
