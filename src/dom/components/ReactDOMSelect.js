@@ -19,6 +19,7 @@
 "use strict";
 
 var LinkedValueMixin = require('LinkedValueMixin');
+var AutoFocusMixin = require('AutoFocusMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -99,7 +100,7 @@ function updateOptions() {
  * selected.
  */
 var ReactDOMSelect = ReactCompositeComponent.createClass({
-  mixins: [LinkedValueMixin],
+  mixins: [LinkedValueMixin, AutoFocusMixin],
 
   propTypes: {
     defaultValue: selectValueType,
