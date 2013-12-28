@@ -41,7 +41,20 @@ var transformCode = function(code, source) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
   if (jsx) {
-    var transformed = transformReact(code);
+    try {
+      var transformed = transformReact(code);
+    } catch(e) {
+      if (source) {
+        if ('fileName' in e) {
+          // We set `fileName` if it's supported by this error object and
+          // a `source` was provided.
+          // The error will correctly point to `source` in Firefox.
+          e.fileName = source;
+        }
+        e.message += '\n    at ' + source + ':' + e.lineNumber + ':' + e.column;
+      }
+      throw e;
+    }
 
     var map = transformed.sourceMap.toJSON();
     if (source == null) {
@@ -98,7 +111,7 @@ var load = exports.load = function(url, callback) {
 
 runScripts = function() {
   var scripts = document.getElementsByTagName('script');
-  
+
   // Array.prototype.slice cannot be used on NodeList on IE8
   var jsxScripts = [];
   for (var i = 0; i < scripts.length; i++) {
@@ -106,7 +119,7 @@ runScripts = function() {
       jsxScripts.push(scripts.item(i));
     }
   }
-  
+
   console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
   jsxScripts.forEach(function(script) {
