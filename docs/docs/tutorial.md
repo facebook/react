@@ -374,14 +374,17 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We will use jQuery to help make an asynchronous request to the server.
+We'll use jQuery to help make an asynchronous request to the server.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
-```javascript{4-10}
+```javascript{6-17}
 // tutorial13.js
 var CommentBox = React.createClass({
   getInitialState: function() {
+    return {data: []};
+  },
+  componentWillMount: function() {
     $.ajax({
       url: 'comments.json',
       dataType: 'json',
@@ -392,7 +395,6 @@ var CommentBox = React.createClass({
         console.error("comments.json", status, err.toString());
       }.bind(this)
     });
-    return {data: []};
   },
   render: function() {
     return (
@@ -406,9 +408,9 @@ var CommentBox = React.createClass({
 });
 ```
 
-The key is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
+Here, `componentWillMount` is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
-```javascript{3,14-17,30}
+```javascript{3,15-16,30}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
