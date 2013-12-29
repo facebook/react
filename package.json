@@ -59,9 +59,9 @@
     "recast": "~0.5.6",
     "sauce-tunnel": "~1.1.0",
     "semver": "~2.2.1",
-    "through": "~2.3.4",
     "tmp": "~0.0.18",
     "uglify-js": "~2.4.0",
+    "uglifyify": "~1.0.1",
     "wd": "~0.2.6"
   },
   "engines": {
