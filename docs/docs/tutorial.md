@@ -384,8 +384,12 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     $.ajax({
       url: 'comments.json',
+      dataType: 'json',
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error("comments.json", status, err.toString());
       }.bind(this)
     });
     return {data: []};
