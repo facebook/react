@@ -5,6 +5,7 @@
 
 var envify = require('envify/custom');
 var grunt = require('grunt');
+var through = require('through');
 var UglifyJS = require('uglify-js');
 
 var SIMPLE_TEMPLATE =
@@ -32,7 +33,20 @@ var LICENSE_TEMPLATE =
  */';
 
 function minify(src) {
-  return UglifyJS.minify(src, { fromString: true }).code;
+  return UglifyJS.minify(src, {
+    fromString: true,
+    mangle: {toplevel: true}
+  }).code;
+}
+
+function minifyTransform(file) {
+  var src = '';
+  return through(function write(buf) {
+    src += buf;
+  }, function end() {
+    this.queue(minify(src));
+    this.queue(null);
+  });
 }
 
 // TODO: move this out to another build step maybe.
@@ -67,7 +81,7 @@ var basic = {
 var min = grunt.util._.merge({}, basic, {
   outfile: './build/react.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'})],
+  transforms: [envify({NODE_ENV: 'production'}), minifyTransform],
   after: [minify, bannerify]
 });
 
@@ -96,7 +110,7 @@ var addons = {
 var addonsMin = grunt.util._.merge({}, addons, {
   outfile: './build/react-with-addons.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'})],
+  transforms: [envify({NODE_ENV: 'production'}), minifyTransform],
   after: [minify, bannerify]
 });
 
