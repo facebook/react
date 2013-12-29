@@ -82,6 +82,26 @@ function wrapUserProvidedKey(key) {
   return '{' + escapeUserProvidedKey(key) + '}';
 }
 
+
+var pendingText = null;
+var pendingTextStorageName = null;
+var pendingTextIndex = null;
+
+function callWithPendingText(callback, traverseContext) {
+  if (pendingText != null) {
+    callback(
+      traverseContext,
+      new ReactTextComponent(pendingText),
+      pendingTextStorageName,
+      pendingTextIndex
+    );
+    pendingText = null;
+    pendingTextStorageName = null;
+    pendingTextIndex = null;
+  }
+}
+
+
 /**
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
@@ -113,45 +133,68 @@ var traverseAllChildrenImpl =
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows
       var storageName = isOnlyChild ? getComponentKey(children, 0) : nameSoFar;
-      if (children === null || children === undefined || type === 'boolean') {
+      if (type === 'string' || type === 'number') {
+        if (pendingText == null) {
+          pendingText = '' + children;
+        } else {
+          // Two consecutive text nodes; coalesce them by adding to the pending
+          // text and inserting a null spacer where the first text node was
+          pendingText += children;
+          callback(
+            traverseContext,
+            null,
+            pendingTextStorageName,
+            pendingTextIndex
+          );
+        }
+        pendingTextStorageName = storageName;
+        pendingTextIndex = indexSoFar;
+        subtreeCount = 1;
+      } else if (children === null || children === undefined ||
+          type === 'boolean') {
         // All of the above are perceived as null.
-        callback(traverseContext, null, storageName, indexSoFar);
+        if (pendingText == null) {
+          callback(traverseContext, null, storageName, indexSoFar);
+        } else {
+          // If text is pending, essentially treat this as an empty string so
+          // that we can coalesce ['monkey', null, 'gorilla']
+          callback(
+            traverseContext,
+            null,
+            pendingTextStorageName,
+            pendingTextIndex
+          );
+          pendingTextStorageName = storageName;
+          pendingTextIndex = indexSoFar;
+        }
         subtreeCount = 1;
       } else if (children.mountComponentIntoNode) {
+        callWithPendingText(callback, traverseContext);
         callback(traverseContext, children, storageName, indexSoFar);
         subtreeCount = 1;
-      } else {
-        if (type === 'object') {
-          invariant(
-            !children || children.nodeType !== 1,
-            'traverseAllChildren(...): Encountered an invalid child; DOM ' +
-            'elements are not valid children of React components.'
-          );
-          for (var key in children) {
-            if (children.hasOwnProperty(key)) {
-              subtreeCount += traverseAllChildrenImpl(
-                children[key],
-                (
-                  nameSoFar +
-                  wrapUserProvidedKey(key) +
-                  getComponentKey(children[key], 0)
-                ),
-                indexSoFar + subtreeCount,
-                callback,
-                traverseContext
-              );
-            }
+      } else if (type === 'object') {
+        invariant(
+          !children || children.nodeType !== 1,
+          'traverseAllChildren(...): Encountered an invalid child; DOM ' +
+          'elements are not valid children of React components.'
+        );
+        for (var key in children) {
+          if (children.hasOwnProperty(key)) {
+            subtreeCount += traverseAllChildrenImpl(
+              children[key],
+              (
+                nameSoFar +
+                wrapUserProvidedKey(key) +
+                getComponentKey(children[key], 0)
+              ),
+              indexSoFar + subtreeCount,
+              callback,
+              traverseContext
+            );
           }
-        } else if (type === 'string') {
-          var normalizedText = new ReactTextComponent(children);
-          callback(traverseContext, normalizedText, storageName, indexSoFar);
-          subtreeCount += 1;
-        } else if (type === 'number') {
-          var normalizedNumber = new ReactTextComponent('' + children);
-          callback(traverseContext, normalizedNumber, storageName, indexSoFar);
-          subtreeCount += 1;
         }
       }
+      // TODO: else, warn?
     }
     return subtreeCount;
   };
@@ -174,6 +217,7 @@ var traverseAllChildrenImpl =
 function traverseAllChildren(children, callback, traverseContext) {
   if (children !== null && children !== undefined) {
     traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
+    callWithPendingText(callback, traverseContext);
   }
 }
 

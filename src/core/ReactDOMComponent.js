@@ -26,8 +26,10 @@ var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactTextComponent = require('ReactTextComponent');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
+var flattenChildren = require('flattenChildren');
 var invariant = require('invariant');
 var keyOf = require('keyOf');
 var merge = require('merge');
@@ -59,6 +61,35 @@ function assertValidProps(props) {
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string.'
   );
+}
+
+/**
+ * Given a flattened child map with exactly one text component, return its
+ * text. Otherwise, return null.
+ *
+ * @param {?object} children Flattened child map
+ * @return {?string}
+ */
+function singleTextChildContent(children) {
+  var firstChild = null;
+
+  for (var key in children) {
+    if (!children.hasOwnProperty(key)) {
+      continue;
+    }
+    if (firstChild != null) {
+      // More than one child
+      return null;
+    } else {
+      firstChild = children[key];
+    }
+  }
+
+  if (firstChild instanceof ReactTextComponent) {
+    return firstChild.props.text;
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -162,14 +193,13 @@ ReactDOMComponent.Mixin = {
         return innerHTML.__html;
       }
     } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
-      var childrenToUse = contentToUse != null ? null : this.props.children;
+      var children = flattenChildren(this.props.children);
+      var contentToUse = singleTextChildContent(children);
       if (contentToUse != null) {
         return escapeTextForBrowser(contentToUse);
-      } else if (childrenToUse != null) {
+      } else if (children) {
         var mountImages = this.mountChildren(
-          childrenToUse,
+          children,
           transaction
         );
         return mountImages.join('');
@@ -315,10 +345,11 @@ ReactDOMComponent.Mixin = {
   _updateDOMChildren: function(lastProps, transaction) {
     var nextProps = this.props;
 
-    var lastContent =
-      CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
-    var nextContent =
-      CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+    var lastChildren = this._renderedChildren;
+    var nextChildren = flattenChildren(nextProps.children);
+
+    var lastContent = singleTextChildContent(lastChildren);
+    var nextContent = singleTextChildContent(nextChildren);
 
     var lastHtml =
       lastProps.dangerouslySetInnerHTML &&
@@ -328,14 +359,14 @@ ReactDOMComponent.Mixin = {
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.
-    var lastChildren = lastContent != null ? null : lastProps.children;
-    var nextChildren = nextContent != null ? null : nextProps.children;
+    var useLastChildren = lastContent == null && lastProps.children != null;
+    var useNextChildren = nextContent == null && nextProps.children != null;
 
     // If we're switching from children to content/html or vice versa, remove
     // the old content
     var lastHasContentOrHtml = lastContent != null || lastHtml != null;
     var nextHasContentOrHtml = nextContent != null || nextHtml != null;
-    if (lastChildren != null && nextChildren == null) {
+    if (useLastChildren && !useNextChildren) {
       this.updateChildren(null, transaction);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
       this.updateTextContent('');
@@ -352,7 +383,7 @@ ReactDOMComponent.Mixin = {
           nextHtml
         );
       }
-    } else if (nextChildren != null) {
+    } else if (useNextChildren) {
       this.updateChildren(nextChildren, transaction);
     }
   },
