@@ -101,6 +101,9 @@ var ReactTransitionableChild = React.createClass({
       return;
     }
 
+    // TODO: Collect stagger delay from animation delay getComputedStyle
+    // multiplied by this.property.cascadeCounter + tick in milliseconds
+
     if (!this.timeout) {
       this.timeout = setTimeout(this.flushClassNameQueue, TICK);
     }

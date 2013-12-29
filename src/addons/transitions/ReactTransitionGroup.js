@@ -28,6 +28,8 @@ var ReactTransitionGroup = React.createClass({
     transitionName: React.PropTypes.string.isRequired,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
+    transitionStaggering: React.PropTypes.bool,
+    transitionStaggeringDirectional: React.PropTypes.bool,
     onTransition: React.PropTypes.func,
     component: React.PropTypes.func
   },
@@ -36,6 +38,8 @@ var ReactTransitionGroup = React.createClass({
     return {
       transitionEnter: true,
       transitionLeave: true,
+      transitionStaggering: false,
+      transitionStaggeringDirectional: false,
       component: React.DOM.span
     };
   },
@@ -62,10 +66,31 @@ var ReactTransitionGroup = React.createClass({
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
 
+    var renderKeys = ReactTransitionKeySet.getKeySet(sourceChildren);
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
-      this._transitionGroupCurrentKeys,
-      ReactTransitionKeySet.getKeySet(sourceChildren)
+      this._transitionGroupCurrentKeys, renderKeys
     );
+
+    var cascadeCounter = 0;
+    var cascadeDirection = 1;
+
+    if (this.props.transitionStaggeringDirectional) {
+      // Using a key set of the current - meant to be visible - items to allow for
+      // checking whether the stagger required will be going backwards or forwards
+      // through the render list.
+      var visibleKeys = ReactTransitionKeySet.mergeKeySets(
+        this._transitionGroupVisibleKeys, renderKeys
+      );
+
+      var lastTransIx = Object.keys(visibleKeys).indexOf(
+        Object.keys(renderKeys).pop()
+      );
+
+      if (lastTransIx !== Object.keys(visibleKeys).length-1) {
+        cascadeDirection = -1;
+        cascadeCounter = Object.keys(renderKeys).length;
+      }
+    }
 
     for (var key in currentKeys) {
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild
@@ -76,6 +101,7 @@ var ReactTransitionGroup = React.createClass({
       if (childMapping[key] || this.props.transitionLeave) {
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
+          cascade: cascadeCounter,
           enter: this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
@@ -89,8 +115,14 @@ var ReactTransitionGroup = React.createClass({
         // returns nothing, throwing an error.
         delete currentKeys[key];
       }
+      if (this._transitionGroupCurrentKeys[key]) {
+        cascadeCounter += cascadeDirection;
+      }
     }
 
+    if (this.props.transitionStaggeringDirectional) {
+      this._transitionGroupVisibleKeys = renderKeys;
+    }
     this._transitionGroupCurrentKeys = currentKeys;
 
     return children;
