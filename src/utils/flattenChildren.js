@@ -35,11 +35,14 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
     'Children keys must be unique.',
     name
   );
-  result[name] = child;
+  if (child != null) {
+    result[name] = child;
+  }
 }
 
 /**
- * Flattens children that are typically specified as `props.children`.
+ * Flattens children that are typically specified as `props.children`. Any null
+ * children will not be included in the resulting object.
  * @return {!object} flattened children keyed by name.
  */
 function flattenChildren(children) {
