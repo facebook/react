@@ -388,7 +388,7 @@ var CommentBox = React.createClass({
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
-        console.log("comments.json", status, err.toString());
+        console.error("comments.json", status, err.toString());
       }.bind(this)
     });
     return {data: []};
