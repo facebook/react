@@ -204,6 +204,20 @@ describe('ReactDOMComponent', function() {
       stub.receiveComponent({props: {}}, transaction);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
+
+    it("should warn on invalid markup nesting", function() {
+      spyOn(console, 'warn');
+      expect(console.warn.argsForCall.length).toBe(0);
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div><tr /></div>
+      );
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toBe(
+        'validateNodeNesting(...): Node of type div cannot contain node of ' +
+        'type tr.'
+      );
+    });
   });
 
   describe('createOpenTagMarkup', function() {
@@ -260,9 +274,11 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
+
+      var joinAccumulated = require('joinAccumulated');
+      var mixInto = require('mixInto');
 
       var NodeStub = function(initialProps) {
         this.props = initialProps || {};
@@ -272,11 +288,12 @@ describe('ReactDOMComponent', function() {
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(transaction);
+        var markup = (new NodeStub(props))._createContentMarkup(transaction);
+        return joinAccumulated(markup, '');
       };
 
       this.addMatchers({
-        toHaveInnerhtml: function(html) {
+        toHaveInnerHTML: function(html) {
           var expected = '^' + quoteRegexp(html) + '$';
           return this.actual.match(new RegExp(expected));
         }
@@ -287,7 +304,7 @@ describe('ReactDOMComponent', function() {
       var innerHTML = {__html: 'testContent'};
       expect(
         genMarkup({ dangerouslySetInnerHTML: innerHTML })
-      ).toHaveInnerhtml('testContent');
+      ).toHaveInnerHTML('testContent');
     });
   });
 

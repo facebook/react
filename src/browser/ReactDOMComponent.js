@@ -30,9 +30,16 @@ var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
+var joinAccumulated = require('joinAccumulated');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
+
+if (__DEV__) {
+  var forEachAccumulated = require('forEachAccumulated');
+  var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
+  var validateNodeNesting = require('validateNodeNesting');
+}
 
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
@@ -114,9 +121,17 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
+      var contentMarkup = this._createContentMarkup(transaction);
+      if (__DEV__) {
+        var tagName = this.tagName;
+        forEachAccumulated(contentMarkup, function(markup) {
+          var nodeName = getNodeNameFromReactMarkup(markup);
+          validateNodeNesting(tagName, nodeName);
+        });
+      }
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
-        this._createContentMarkup(transaction) +
+        joinAccumulated(contentMarkup, '') +
         this._tagClose
       );
     }
@@ -172,7 +187,7 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction} transaction
-   * @return {string} Content markup.
+   * @return {string|array<string>} Content markup or list of content markup.
    */
   _createContentMarkup: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
@@ -192,7 +207,7 @@ ReactDOMComponent.Mixin = {
           childrenToUse,
           transaction
         );
-        return mountImages.join('');
+        return mountImages;
       }
     }
     return '';

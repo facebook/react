@@ -36,6 +36,11 @@ var mixInto = require('mixInto');
 var objMap = require('objMap');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
+if (__DEV__) {
+  var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
+  var validateNodeNesting = require('validateNodeNesting');
+}
+
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
  */
@@ -1224,6 +1229,11 @@ var ReactCompositeComponentMixin = {
           transaction,
           this._mountDepth + 1
         );
+        if (__DEV__) {
+          var parentNode = this.getDOMNode().parentNode;
+          var nodeName = getNodeNameFromReactMarkup(nextMarkup);
+          validateNodeNesting(parentNode.nodeName, nodeName);
+        }
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
           nextMarkup
