@@ -37,6 +37,43 @@ exports.exec = function(code) {
 
 var inlineScriptCount = 0;
 
+// This method returns a nicely formated line of code pointing the
+// exactly location of the error `e`.
+// The line is limited in size so big lines of code are also shown
+// in a readable way.
+// Example:
+//
+// ... x', overflow:'scroll'}} id={} onScroll={this.scroll} class=" ...
+//                                 ^
+var createSourceCodeErrorMessage = function(code, e) {
+  var sourceLines = code.split('\n');
+  var erroneousLine = sourceLines[e.lineNumber - 1];
+
+  // Removes any leading indenting spaces and gets the number of
+  // chars indenting the `erroneousLine`
+  var indentation = 0;
+  erroneousLine = erroneousLine.replace(/^\s+/, function(leadingSpaces) {
+    indentation = leadingSpaces.length;
+    return '';
+  });
+
+  // Defines the number of characters that are going to show
+  // before and after the erroneous code
+  var LIMIT = 30;
+  var errorColumn = e.column - indentation;
+
+  if (errorColumn > LIMIT) {
+    erroneousLine = '... ' + erroneousLine.slice(errorColumn - LIMIT);
+    errorColumn = 4 + LIMIT;
+  }
+  if (erroneousLine.length - errorColumn > LIMIT) {
+    erroneousLine = erroneousLine.slice(0, errorColumn + LIMIT) + ' ...';
+  }
+  var message = '\n\n' + erroneousLine + '\n';
+  message += new Array(errorColumn - 1).join(' ') + '^';
+  return message;
+};
+
 var transformCode = function(code, source) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
@@ -56,6 +93,7 @@ var transformCode = function(code, source) {
       } else {
         e.message += location.href;
       }
+      e.message += createSourceCodeErrorMessage(code, e);
       throw e;
     }
 
