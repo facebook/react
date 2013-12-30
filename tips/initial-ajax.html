@@ -365,6 +365,7 @@
       <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
     <span class="p">};</span>
   <span class="p">},</span>
+
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">source</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
       <span class="kd">var</span> <span class="nx">lastGist</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
@@ -374,6 +375,7 @@
       <span class="p">});</span>
     <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
   <span class="p">},</span>
+
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
