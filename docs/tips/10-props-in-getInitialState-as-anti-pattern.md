@@ -22,6 +22,7 @@ var MessageBox = React.createClass({
   getInitialState: function() {
     return {nameWithQualifier: "Mr. " + this.props.name};
   },
+
   render: function() {
     return <div>{this.state.nameWithQualifier}</div>;
   }
@@ -44,24 +45,9 @@ var MessageBox = React.createClass({
 React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
 ```
 
-For more complex logic:
+(For more complex logic, simply isolate the computation in a method.)
 
-```js
-/** @jsx React.DOM */
-
-var MessageBox = React.createClass({
-  render: function() {
-    return <div>{this.getNameWithQualifier(this.props.name)}</div>;
-  },
-  getNameWithQualifier: function(name) {
-    return 'Mr. ' + name;
-  }
-});
-
-React.renderComponent(<MessageBox name="Rogers"/>, mountNode);
-```
-
-However, it's **not** an anti-pattern if you intentionally make it clear that synchronization's not the goal here:
+However, it's **not** an anti-pattern if you make it clear that synchronization's not the goal here:
 
 ```js
 /** @jsx React.DOM */
@@ -69,12 +55,14 @@ However, it's **not** an anti-pattern if you intentionally make it clear that sy
 var Counter = React.createClass({
   getInitialState: function() {
     // naming it initialX clearly indicates that the only purpose
-    // of the passed down prop is to initialize something internal
+    // of the passed down prop is to initialize something internally
     return {count: this.props.initialCount};
   },
+
   handleClick: function() {
     this.setState({count: this.state.count + 1});
   },
+
   render: function() {
     return <div onClick={this.handleClick}>{this.state.count}</div>;
   }

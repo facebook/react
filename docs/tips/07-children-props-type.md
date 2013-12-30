@@ -16,6 +16,7 @@ var GenericWrapper = React.createClass({
   componentDidMount: function() {
     console.log(Array.isArray(this.props.children)); // => true
   },
+
   render: function() {
     return <div />;
   }
@@ -40,6 +41,7 @@ var GenericWrapper = React.createClass({
     // length of the non-existant array wrapper!
     console.log(this.props.children.length);
   },
+
   render: function() {
     return <div />;
   }

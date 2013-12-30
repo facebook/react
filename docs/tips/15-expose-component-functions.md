@@ -17,7 +17,7 @@ var Todo = React.createClass({
   render: function() {
     return <div onClick={this.props.onClick}>{this.props.title}</div>;
   },
-  
+
   //this component will be accessed by the parent through the `ref` attribute
   animate: function() {
     console.log('Pretend %s is animating', this.props.title);
@@ -28,7 +28,7 @@ var Todos = React.createClass({
   getInitialState: function() {
     return {items: ['Apple', 'Banana', 'Cranberry']};
   },
-  
+
   handleClick: function(i) {
     var items = this.state.items;
     items.splice(i, 1);
@@ -38,7 +38,7 @@ var Todos = React.createClass({
       }
     }.bind(this));
   },
-  
+
   render: function() {
     return (
       <div>
