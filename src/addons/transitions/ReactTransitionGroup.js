@@ -71,8 +71,14 @@ var ReactTransitionGroup = React.createClass({
       this._transitionGroupCurrentKeys, renderKeys
     );
 
+    var visibleKeyArray = ReactTransitionKeySet.getOrderedKeys(sourceChildren);
+    var newKeys = ReactTransitionKeySet.diffKeySets(
+      this._transitionGroupCurrentKeys, renderKeys
+    );
+
     var cascadeCounter = 0;
     var cascadeDirection = 1;
+    console.log(newKeys);
 
     if (this.props.transitionStaggeringDirectional) {
       // Using a key set of the current - meant to be visible - items to allow for
@@ -91,6 +97,7 @@ var ReactTransitionGroup = React.createClass({
         cascadeCounter = Object.keys(renderKeys).length;
       }
     }
+    console.log(cascadeCounter, cascadeDirection);
 
     for (var key in currentKeys) {
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild

@@ -51,6 +51,41 @@ var ReactTransitionKeySet = {
   },
 
   /**
+   * Simple syntactic sugar to get an object with keys of all of `children`.
+   * Does not have references to the children themselves.
+   *
+   * @param {*} children `this.props.children`
+   * @return {array} Mapping of key to the value "true"
+   */
+  getOrderedKeys: function(children) {
+    return ReactChildren.map(children, function() {
+      return child.props.key;
+    });
+  },
+
+  diffKeySets: function(prev, next) {
+    prev = prev || {};
+    next = next || {};
+
+    var keySet = {};
+    var prevKeys = Object.keys(prev).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
+    var nextKeys = Object.keys(next).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
+
+    var newKeys = {};
+
+    for (var i=0; i < nextKeys.length; i++) {
+      var nextKey = nextKeys[i];
+      if (!prev[nextKey]) {
+        newKeys[nextKey] = true;
+      }
+    }
+
+    return newKeys;
+
+  },
+
+
+  /**
    * When you're adding or removing children some may be added or removed in the
    * same render pass. We want to show *both* since we want to simultaneously
    * animate elements in and out. This function takes a previous set of keys
