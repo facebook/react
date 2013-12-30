@@ -75,29 +75,23 @@ var ReactTransitionGroup = React.createClass({
     var newKeys = ReactTransitionKeySet.diffKeySets(
       this._transitionGroupCurrentKeys, renderKeys
     );
-
     var cascadeCounter = 0;
     var cascadeDirection = 1;
-    console.log(newKeys);
 
     if (this.props.transitionStaggeringDirectional) {
       // Using a key set of the current - meant to be visible - items to allow for
       // checking whether the stagger required will be going backwards or forwards
       // through the render list.
-      var visibleKeys = ReactTransitionKeySet.mergeKeySets(
-        this._transitionGroupVisibleKeys, renderKeys
-      );
 
-      var lastTransIx = Object.keys(visibleKeys).indexOf(
-        Object.keys(renderKeys).pop()
-      );
+      var lastTransKey = '{' + visibleKeyArray[visibleKeyArray.length-1] + '}';
 
-      if (lastTransIx !== Object.keys(visibleKeys).length-1) {
+      if (!newKeys[lastTransKey]) {
+        // if the last visible key is not a new one, assume the transition
+        // direction is backwards
         cascadeDirection = -1;
-        cascadeCounter = Object.keys(renderKeys).length;
+        cascadeCounter = Object.keys(newKeys).length-1;
       }
     }
-    console.log(cascadeCounter, cascadeDirection);
 
     for (var key in currentKeys) {
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild
@@ -122,14 +116,11 @@ var ReactTransitionGroup = React.createClass({
         // returns nothing, throwing an error.
         delete currentKeys[key];
       }
-      if (this._transitionGroupCurrentKeys[key]) {
+      if (newKeys[key]) {
         cascadeCounter += cascadeDirection;
       }
     }
 
-    if (this.props.transitionStaggeringDirectional) {
-      this._transitionGroupVisibleKeys = renderKeys;
-    }
     this._transitionGroupCurrentKeys = currentKeys;
 
     return children;

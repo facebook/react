@@ -53,6 +53,19 @@ describe('ReactTransitionKeySet', function() {
     });
   });
 
+  it('should support getOrderedKeys', function() {
+    var oneone = <div key="oneone" />;
+    var onetwo = <div key="onetwo" />;
+    var one = <div key="one">{oneone}{onetwo}</div>;
+    var two = <div key="two" />;
+    var three = <div key="three" />;
+    var four = <div key="four" />;
+    var component = <div>{one}{two}{four}{three}</div>;
+    expect(ReactTransitionKeySet.getOrderedKeys(component.props.children)).toEqual([
+      'one', 'two', 'four', 'three'
+    ]);
+  });
+
   it('should support mergeKeySets for adding keys', function() {
     var prev = {
       one: true,

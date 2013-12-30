@@ -58,20 +58,31 @@ var ReactTransitionKeySet = {
    * @return {array} Mapping of key to the value "true"
    */
   getOrderedKeys: function(children) {
-    return ReactChildren.map(children, function() {
-      return child.props.key;
-    });
+    if (children) {
+      return children.map(function(child) {
+        return child.props.key;
+      });
+    } else {
+      return [];
+    }
   },
 
+  /**
+   *
+   * @param {object} prev prev child keys as returned from
+   * `ReactTransitionKeySet.getKeySet()`.
+   * @param {object} next next child keys as returned from
+   * `ReactTransitionKeySet.getKeySet()`.
+   * @return {object} a key set that contains any 'new' keys
+   * going from prev to next
+   */
   diffKeySets: function(prev, next) {
     prev = prev || {};
     next = next || {};
 
-    var keySet = {};
-    var prevKeys = Object.keys(prev).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
-    var nextKeys = Object.keys(next).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
-
     var newKeys = {};
+    var prevKeys = Object.keys(prev);
+    var nextKeys = Object.keys(next);
 
     for (var i=0; i < nextKeys.length; i++) {
       var nextKey = nextKeys[i];
@@ -81,7 +92,6 @@ var ReactTransitionKeySet = {
     }
 
     return newKeys;
-
   },
 
 
