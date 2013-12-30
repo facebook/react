@@ -18,8 +18,8 @@
 
 "use strict";
 
-var LinkedValueMixin = require('LinkedValueMixin');
 var AutoFocusMixin = require('AutoFocusMixin');
+var LinkedValueUtils = require('LinkedValueUtils');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -61,7 +61,7 @@ function selectValueType(props, propName, componentName) {
 function updateOptions() {
   /*jshint validthis:true */
   var multiple = this.props.multiple;
-  var propValue = this.getValue();
+  var propValue = LinkedValueUtils.getValue(this);
   var value = propValue != null ? propValue : this.state.value;
   var options = this.getDOMNode().options;
   var selectedValue, i, l;
@@ -102,7 +102,7 @@ function updateOptions() {
 var ReactDOMSelect = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMSelect',
 
-  mixins: [LinkedValueMixin, AutoFocusMixin],
+  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin],
 
   propTypes: {
     defaultValue: selectValueType,
@@ -142,10 +142,10 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    var onChange = this.getOnChange();
+    var onChange = LinkedValueUtils.getOnChange(this);
     if (onChange) {
       this._isChanging = true;
-      returnValue = onChange(event);
+      returnValue = onChange.call(this, event);
       this._isChanging = false;
     }
 
