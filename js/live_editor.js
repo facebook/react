@@ -122,7 +122,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     var mountNode = this.refs.mount.getDOMNode();
 
     try {
-      React.unmountAndReleaseReactRootNode(mountNode);
+      React.unmountComponentAtNode(mountNode);
     } catch (e) { }
 
     try {
