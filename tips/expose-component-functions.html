@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Inline Styles</title>
+  <title>React | Expose Component Functions</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Inline Styles" />
+  <meta property="og:title" content="React | Expose Component Functions" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/inline-styles.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/tips/expose-component-functions.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -289,7 +289,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/inline-styles.html" class="active">Inline Styles</a>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
           </li>
         
           <li>
@@ -341,7 +341,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+            <a href="/react/tips/expose-component-functions.html" class="active">Expose Component Functions</a>
           </li>
         
       </ul>
@@ -351,32 +351,66 @@
 
 
   <div class="inner-content">
-    <h1>Inline Styles</h1>
+    <h1>Expose Component Functions</h1>
     <div class="subHeader"></div>
-    <p>In React, inline styles are not specified as a string. Instead they are specified with an object whose key is the camelCased version of the style name, and whose value is the style&#39;s value, usually a string (<a href="/react/tips/style-props-value-px.html">more on that later</a>):</p>
+    <p>There&#39;s another (uncommon) way of <a href="/react/tips/communicate-between-components.html">communicating between components</a>: simply expose a method on the child component for the parent to call.</p>
+
+<p>Say a list of todos, which upon clicking get removed. If there&#39;s only one unfinished todo left, animate it:</p>
 <div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
-<span class="kd">var</span> <span class="nx">divStyle</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span>
-  <span class="nx">backgroundImage</span><span class="o">:</span> <span class="s1">&#39;url(&#39;</span> <span class="o">+</span> <span class="nx">imgUrl</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span>
-  <span class="nx">WebkitTransition</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span> <span class="c1">// note the capital &#39;W&#39; here</span>
-<span class="p">};</span>
+<span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">title</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">},</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">divStyle</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
+  <span class="c1">//this component will be accessed by the parent through the `ref` attribute</span>
+  <span class="nx">animate</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Pretend %s is animating&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">title</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="kd">var</span> <span class="nx">Todos</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">items</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;Apple&#39;</span><span class="p">,</span> <span class="s1">&#39;Banana&#39;</span><span class="p">,</span> <span class="s1">&#39;Cranberry&#39;</span><span class="p">]};</span>
+  <span class="p">},</span>
+
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">;</span>
+    <span class="nx">items</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">items</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">item0</span><span class="p">.</span><span class="nx">animate</span><span class="p">();</span>
+      <span class="p">}</span>
+    <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
+  <span class="p">},</span>
+
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+          <span class="kd">var</span> <span class="nx">boundClick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">i</span><span class="p">);</span>
+          <span class="k">return</span> <span class="p">(</span>
+            <span class="o">&lt;</span><span class="nx">Todo</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">boundClick</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">i</span><span class="p">}</span> <span class="nx">title</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">ref</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;item&#39;</span> <span class="o">+</span> <span class="nx">i</span><span class="p">}</span> <span class="o">/&gt;</span>
+          <span class="p">);</span>
+        <span class="p">},</span> <span class="k">this</span><span class="p">)}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Todos</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
-<p>Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. <code>node.style.backgroundImage</code>). Vendor prefixes should begin with a capital letter. This is why <code>WebkitTransition</code> has an uppercase &quot;W&quot;.</p>
+<p>Alternatively, you could have achieve this by passing the <code>todo</code> an <code>isLastUnfinishedItem</code> prop, let it check this prop in <code>componentDidUpdate</code>, then animate itself; however, this quickly gets messy if you pass around different props to control animations.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/introduction.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/tips/communicate-between-components.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/tips/if-else-in-JSX.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/inline-styles.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/expose-component-functions.html"></div>
   </div>
 </section>
 

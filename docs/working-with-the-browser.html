@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--[if IE]><![endif]-->
 <html>
 <head>
   <meta charset="utf-8">
@@ -22,6 +23,10 @@
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/es5-shim.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.js"></script>
+  <![endif]-->
   <script type="text/javascript" src="/react/js/codemirror.js"></script>
   <script type="text/javascript" src="/react/js/javascript.js"></script>
   <script type="text/javascript" src="/react/js/react.min.js"></script>
@@ -335,6 +340,10 @@
             <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
           </li>
         
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -457,7 +466,7 @@ calling <code>this.getDOMNode()</code>.</p>
 <h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
 <p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround.</p>
 <h4><a class="anchor" name="onscroll-event-on-ie8"></a>onScroll event on IE8 <a class="hash-link" href="#onscroll-event-on-ie8">#</a></h4>
-<p>On IE8 the <code>onScroll</code> event doesn&#39;t bubbles and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
+<p>On IE8 the <code>onScroll</code> event doesn&#39;t bubble and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
 Currently a handler to this event is ignored on IE8.</p>
 
 <p>See the <a href="https://github.com/facebook/react/issues/631">onScroll doesn&#39;t work in IE8</a> GitHub issue for more information.</p>
