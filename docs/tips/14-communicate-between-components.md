@@ -18,7 +18,7 @@ var GroceryList = React.createClass({
   handleClick: function(i) {
     console.log('You clicked: ' + this.props.items[i]);
   },
-  
+
   render: function() {
     return (
       <div>
@@ -26,7 +26,7 @@ var GroceryList = React.createClass({
           return (
             <div onClick={this.handleClick.bind(this, i)} key={i}>{item}</div>
           );
-        }, this)}  
+        }, this)}
       </div>
     );
   }
@@ -38,3 +38,5 @@ React.renderComponent(
 ```
 
 Notice the use of `bind(this, arg1, arg2, ...)`: we're simply passing more arguments to `handleClick`. This is not a new React concept; it's just JavaScript.
+
+For communication between two components that don't have a parent-child relationship, you can set up your own global event system. Subscribe to events in `componentDidMount()`, unsubscribe in `componentWillUnmount()`, and when you receive an event call `setState()`.
