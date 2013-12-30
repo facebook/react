@@ -29,6 +29,7 @@ var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 var ReactRootIndex = require('ReactRootIndex');
 
@@ -53,10 +54,11 @@ var ReactUpdates = require('ReactUpdates');
 function inject() {
   ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
-   * Inject module for resolving DOM hierarchy and plugin ordering.
+   * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
   EventPluginHub.injection.injectEventPluginOrder(DefaultEventPluginOrder);
   EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
+  EventPluginHub.injection.injectMount(ReactMount);
 
   /**
    * Some important event plugins included by default (without having to require

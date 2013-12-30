@@ -22,6 +22,28 @@ var EventConstants = require('EventConstants');
 
 var invariant = require('invariant');
 
+/**
+ * Injected dependencies:
+ */
+
+/**
+ * - `Mount`: [required] Module that can convert between React dom IDs and
+ *   actual node references.
+ */
+var injection = {
+  Mount: null,
+  injectMount: function(InjectedMount) {
+    injection.Mount = InjectedMount;
+    if (__DEV__) {
+      invariant(
+        InjectedMount && InjectedMount.getNode,
+        'EventPluginUtils.injection.injectMount(...): Injected Mount module ' +
+        'is missing getNode.'
+      );
+    }
+  }
+};
+
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
@@ -38,6 +60,7 @@ function isStartish(topLevelType) {
   return topLevelType === topLevelTypes.topMouseDown ||
          topLevelType === topLevelTypes.topTouchStart;
 }
+
 
 var validateEventDispatches;
 if (__DEV__) {
@@ -90,7 +113,10 @@ function forEachEventDispatch(event, cb) {
  * @param {string} domID DOM id to pass to the callback.
  */
 function executeDispatch(event, listener, domID) {
-  listener(event, domID);
+  event.currentTarget = injection.Mount.getNode(domID);
+  var returnValue = listener(event, domID);
+  event.currentTarget = null;
+  return returnValue;
 }
 
 /**
@@ -175,11 +201,13 @@ var EventPluginUtils = {
   isEndish: isEndish,
   isMoveish: isMoveish,
   isStartish: isStartish,
+
+  executeDirectDispatch: executeDirectDispatch,
+  executeDispatch: executeDispatch,
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
-  executeDirectDispatch: executeDirectDispatch,
   hasDispatches: hasDispatches,
-  executeDispatch: executeDispatch,
+  injection: injection,
   useTouchEvents: false
 };
 

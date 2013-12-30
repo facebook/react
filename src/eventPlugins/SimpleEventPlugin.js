@@ -19,6 +19,7 @@
 "use strict";
 
 var EventConstants = require('EventConstants');
+var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
 var SyntheticEvent = require('SyntheticEvent');
@@ -270,7 +271,7 @@ var SimpleEventPlugin = {
    * @param {string} domID DOM ID to pass to the callback.
    */
   executeDispatch: function(event, listener, domID) {
-    var returnValue = listener(event, domID);
+    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
     if (returnValue === false) {
       event.stopPropagation();
       event.preventDefault();

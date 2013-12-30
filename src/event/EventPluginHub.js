@@ -86,6 +86,12 @@ var EventPluginHub = {
   injection: {
 
     /**
+     * @param {object} InjectedMount
+     * @public
+     */
+    injectMount: EventPluginUtils.injection.injectMount,
+
+    /**
      * @param {object} InjectedInstanceHandle
      * @public
      */
