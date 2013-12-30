@@ -346,6 +346,14 @@
     <div class="subHeader"></div>
     <p>JSX is a JavaScript XML syntax transform recommended for use
 with React.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Don&#39;t forget the <code>/** @jsx React.DOM */</code> pragma at the beginning of your file! This tells JSX to process the file for React.</p>
+
+<p>If you don&#39;t include the pragma, your source will remain untouched, so it&#39;s safe to run the JSX transformer on all JS files in your codebase if you want to.</p>
+</blockquote>
 <h2><a class="anchor" name="why-jsx"></a>Why JSX? <a class="hash-link" href="#why-jsx">#</a></h2>
 <p>React works out of the box without JSX. Simply construct your markup using the
 functions on <code>React.DOM</code>. For example, here&#39;s how to construct a simple link:</p>
