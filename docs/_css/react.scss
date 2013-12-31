@@ -290,7 +290,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .marketing-col {
   float: left;
-  margin-right: 40px;
+  margin-left: 40px;
   width: $columnWidth;
 
   h3 {
@@ -304,8 +304,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-.marketing-col:last-child {
-  margin-right: 0;
+.marketing-col:first-child {
+  margin-left: 0;
 }
 
 #examples h3, .home-presentation h3 {
@@ -419,7 +419,7 @@ section.black content {
 
   padding-top: 20px;
 
-  // Make a notice box out of blockquotes in the documetation:
+  // Make a notice box out of blockquotes in the documentation:
   blockquote {
       padding: 15px 30px 15px 15px;
       margin: 20px 0;
@@ -428,7 +428,7 @@ section.black content {
     h4 {
       margin-top: 0;
     }
-    p:last-child {
+    p {
       margin-bottom: 0;
     }
     // Treat first child as the title - promote to H4.
