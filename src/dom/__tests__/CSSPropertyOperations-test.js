@@ -52,6 +52,19 @@ describe('CSSPropertyOperations', function() {
     })).toBe('display:none;');
   });
 
+  it('should ignore empty strings', function() {
+    expect(CSSPropertyOperations.createMarkupForStyles({
+      backgroundColor: '',
+      display: 'none'
+    })).toBe('display:none;');
+  });
+
+  it('should add multiple styles', function() {
+    expect(CSSPropertyOperations.createMarkupForStyles({
+      cursor: ['-webkit-grab', '-moz-grab', 'grab']
+    })).toBe('cursor:-webkit-grab;cursor:-moz-grab;cursor:grab;');
+  });
+
   it('should return null for no styles', function() {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
@@ -103,6 +116,25 @@ describe('CSSPropertyOperations', function() {
     var root = document.createElement('div');
     React.renderComponent(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(false);
+  });
+
+  it('should set style for node', function() {
+    var div = document.createElement('div');
+    CSSPropertyOperations.setValueForStyles(div, {
+      backgroundColor: null,
+      display: 'none'
+    });
+    expect(div.style.getPropertyValue('background-color')).toBe(null);
+    expect(div.style.getPropertyValue('display')).toBe('none');
+  });
+
+  it('should set multiple style rules for node', function() {
+    var div = document.createElement('div');
+    // Last valid style wins
+    CSSPropertyOperations.setValueForStyles(div, {
+      cursor: ['crosshair', 'auto']
+    });
+    expect(div.style.getPropertyValue('cursor')).toBe('auto');
   });
 
 });
