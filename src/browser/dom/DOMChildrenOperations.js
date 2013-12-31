@@ -24,6 +24,10 @@ var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var getTextContentAccessor = require('getTextContentAccessor');
 
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
+
 /**
  * The DOM property to use when setting text content.
  *
@@ -41,6 +45,9 @@ var textContentAccessor = getTextContentAccessor();
  * @internal
  */
 function insertChildAt(parentNode, childNode, index) {
+  if (__DEV__) {
+    validateNodeNesting(parentNode.nodeName, childNode.nodeName);
+  }
   var childNodes = parentNode.childNodes;
   if (childNodes[index] === childNode) {
     return;

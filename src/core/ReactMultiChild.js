@@ -25,11 +25,6 @@ var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var flattenChildren = require('flattenChildren');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
-if (__DEV__) {
-  var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
-  var validateNodeNesting = require('validateNodeNesting');
-}
-
 /**
  * Updating children of a component may trigger recursive updates. The depth is
  * used to batch recursive updates to render markup more efficiently.
@@ -354,11 +349,6 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, mountImage) {
-      if (__DEV__) {
-        var parentNode = this.getDOMNode();
-        var nodeName = getNodeNameFromReactMarkup(child._mountImage);
-        validateNodeNesting(parentNode.nodeName, nodeName);
-      }
       enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
     },
 

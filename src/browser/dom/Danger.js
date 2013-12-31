@@ -29,6 +29,10 @@ var getMarkupWrap = require('getMarkupWrap');
 var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
 var invariant = require('invariant');
 
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
+
 var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
 var RESULT_INDEX_ATTR = 'data-danger-index';
 
@@ -165,6 +169,9 @@ var Danger = {
     );
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+    if (__DEV__) {
+      validateNodeNesting(oldChild.parentNode.nodeName, newChild.nodeName);
+    }
     oldChild.parentNode.replaceChild(newChild, oldChild);
   }
 
