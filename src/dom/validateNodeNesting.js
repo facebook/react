@@ -18,20 +18,40 @@
 
 "use strict";
 
-if (__DEV__) {
-  var nodeCanContainNode = require('nodeCanContainNode');
-}
+var emptyFunction = require('emptyFunction');
 
-var validateNodeNesting = function(parentNodeName, childNodeName) {
-  if (__DEV__) {
-    if (!nodeCanContainNode(parentNodeName, childNodeName)) {
-      console.warn(
-        'validateNodeNesting(...): Node of type ' +
-        parentNodeName.toLowerCase() + ' cannot contain node of type ' +
-        childNodeName.toLowerCase() + '.'
-      );
+var validateNodeNesting = emptyFunction;
+
+if (__DEV__) {
+  // TODO: Validate all possible tag combinations, along the lines of
+  // https://github.com/facebook/xhp/blob/master/php-lib/html.php
+
+  var nodeCanContainNode = function(parentNodeName, childNodeName) {
+    parentNodeName = parentNodeName.toLowerCase();
+    childNodeName = childNodeName.toLowerCase();
+
+    if (childNodeName === 'p') {
+      return parentNodeName !== 'p';
+    } else if (childNodeName === 'tr') {
+      return ['tbody', 'tfoot', 'thead'].indexOf(parentNodeName) !== -1;
+    } else if (['tbody', 'tfoot', 'thead'].indexOf(childNodeName) !== -1) {
+      return parentNodeName === 'table';
     }
-  }
-};
+
+    return true;
+  };
+
+  validateNodeNesting = function(parentNodeName, childNodeName) {
+    if (__DEV__) {
+      if (!nodeCanContainNode(parentNodeName, childNodeName)) {
+        console.warn(
+          'validateNodeNesting(...): Node of type ' +
+          parentNodeName.toLowerCase() + ' cannot contain node of type ' +
+          childNodeName.toLowerCase() + '.'
+        );
+      }
+    }
+  };
+}
 
 module.exports = validateNodeNesting;
