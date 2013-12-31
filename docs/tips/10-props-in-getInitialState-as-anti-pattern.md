@@ -20,7 +20,7 @@ Using props, passed down from parent, to generate state in `getInitialState` oft
 
 var MessageBox = React.createClass({
   getInitialState: function() {
-    return {nameWithQualifier: "Mr. " + this.props.name};
+    return {nameWithQualifier: 'Mr. ' + this.props.name};
   },
 
   render: function() {
@@ -38,7 +38,7 @@ Better:
 
 var MessageBox = React.createClass({
   render: function() {
-    return <div>{"Mr. " + this.props.name}</div>;
+    return <div>{'Mr. ' + this.props.name}</div>;
   }
 });
 
