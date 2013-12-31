@@ -16,7 +16,7 @@ Renders as `id="false"`:
 React.renderComponent(<div id={false} />, mountNode);
 ```
 
-String "false" as input value:
+String `"false"` as input value:
 
 ```js
 /** @jsx React.DOM */
