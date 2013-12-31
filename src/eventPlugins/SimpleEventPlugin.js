@@ -164,6 +164,18 @@ var eventTypes = {
       captured: keyOf({onMouseMoveCapture: true})
     }
   },
+  mouseOut: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onMouseOut: true}),
+      captured: keyOf({onMouseOutCapture: true})
+    }
+  },
+  mouseOver: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onMouseOver: true}),
+      captured: keyOf({onMouseOverCapture: true})
+    }
+  },
   mouseUp: {
     phasedRegistrationNames: {
       bubbled: keyOf({onMouseUp: true}),
@@ -242,6 +254,8 @@ var topLevelEventsToDispatchConfig = {
   topKeyUp:       eventTypes.keyUp,
   topMouseDown:   eventTypes.mouseDown,
   topMouseMove:   eventTypes.mouseMove,
+  topMouseOut:    eventTypes.mouseOut,
+  topMouseOver:   eventTypes.mouseOver,
   topMouseUp:     eventTypes.mouseUp,
   topPaste:       eventTypes.paste,
   topScroll:      eventTypes.scroll,
@@ -318,6 +332,8 @@ var SimpleEventPlugin = {
       case topLevelTypes.topDoubleClick:
       case topLevelTypes.topMouseDown:
       case topLevelTypes.topMouseMove:
+      case topLevelTypes.topMouseOut:
+      case topLevelTypes.topMouseOver:
       case topLevelTypes.topMouseUp:
         EventConstructor = SyntheticMouseEvent;
         break;
