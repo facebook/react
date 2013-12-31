@@ -21,6 +21,7 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
     this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), {
       mode: 'javascript',
       lineNumbers: false,
+      lineWrapping: true,
       matchBrackets: true,
       theme: 'solarized-light',
       readOnly: this.props.readOnly
