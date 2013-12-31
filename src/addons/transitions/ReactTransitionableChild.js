@@ -88,9 +88,11 @@ var ReactTransitionableChild = React.createClass({
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
-    if (this.props.cascade) {
+    // Queueing will be delayed if a stagger is required, as the
+    // stagger class must be applied TICK before the active class
+    if (this.props.cascade > 0 || this.props.leaveCascade > 0) {
       if (!this.staggerTimeout) {
-        this.staggerTimeout = setTimeout(this.addStagger, TICK-1,
+        this.staggerTimeout = setTimeout(this.addStagger, TICK,
                                          staggerClassName);
       }
       setTimeout(this.queueClass, TICK, activeClassName);
@@ -118,12 +120,17 @@ var ReactTransitionableChild = React.createClass({
 
     var delay = TICK;
 
-    if (this.props.cascade) {
+    if (this.props.cascade > 0 || this.props.leaveCascade > 0) {
+      
+      // Collect the required delay from either the animation or the
+      // transition delay css property.
+      var cascade = (this.props.cascade > 0) ? this.props.cascade
+                                             : this.props.leaveCascade;
       var domStyle = getComputedStyle(this.getDOMNode());
-      var animDelay = parseFloat(domStyle.webkitAnimationDelay) * 1000;
-      var transDelay = parseFloat(domStyle.webkitTransitionDelay) * 1000;
+      var animDelay = parseFloat(domStyle.animationDelay) * 1000;
+      var transDelay = parseFloat(domStyle.transitionDelay) * 1000;
 
-      delay += (this.props.cascade - 1) * (animDelay || transDelay);
+      delay += (cascade - 1) * (animDelay || transDelay);
     }
 
     if (!this.timeout) {

@@ -51,6 +51,7 @@ var ReactTransitionGroup = React.createClass({
     // call to animateChildren() which happens in render(), so we can't
     // call setState() in there.
     this._transitionGroupCurrentKeys = {};
+    this._transitionGroupLastVisibleOrder = [];
   },
 
   componentDidUpdate: function() {
@@ -71,26 +72,48 @@ var ReactTransitionGroup = React.createClass({
       this._transitionGroupCurrentKeys, renderKeys
     );
 
-    var visibleKeyArray = ReactTransitionKeySet.getOrderedKeys(sourceChildren);
-    var newKeys = ReactTransitionKeySet.diffKeySets(
-      this._transitionGroupCurrentKeys, renderKeys
-    );
     var cascadeCounter = 0;
-    var cascadeDirection = 1;
+    var leaveCascadeCounter = 0;
+    var cascadeDirection, leaveCascadeDirection;
+
+    if (this.props.transitionStaggering ||
+        this.props.transitionStaggeringDirectional) {
+      var diffKeys = ReactTransitionKeySet.diffKeySets(
+        this._transitionGroupCurrentKeys, renderKeys
+      );
+      var newKeys = diffKeys['new'];
+      var removedKeys = diffKeys.removed;
+
+      cascadeCounter = 0;
+      cascadeDirection = 1;
+      leaveCascadeDirection = -1;
+      leaveCascadeCounter = Object.keys(removedKeys).length-1;
+    }
 
     if (this.props.transitionStaggeringDirectional) {
-      // Using a key set of the current - meant to be visible - items to allow for
-      // checking whether the stagger required will be going backwards or forwards
-      // through the render list.
+      leaveCascadeCounter = 0;
+      leaveCascadeDirection = 1;
 
-      var lastTransKey = '{' + visibleKeyArray[visibleKeyArray.length-1] + '}';
+      // Using an array on next ordered keys to allow
+      // for checking whether the stagger required will be going backwards or
+      // forwards through the render list.
+      var nextOrdKeys = ReactTransitionKeySet.getOrderedKeys(sourceChildren);
+      var nextLastKey = '{' + nextOrdKeys[nextOrdKeys.length-1] + '}';
+      var prevFirstKey = '{' + this._transitionGroupLastVisibleOrder[0] + '}';
 
-      if (!newKeys[lastTransKey]) {
+      if (!newKeys[nextLastKey]) {
         // if the last visible key is not a new one, assume the transition
         // direction is backwards
         cascadeDirection = -1;
         cascadeCounter = Object.keys(newKeys).length-1;
       }
+      if (!removedKeys[prevFirstKey]) {
+        // if the first visible key is not a removed one, assume the leave
+        // transition direction is backwards
+        leaveCascadeDirection = -1;
+        leaveCascadeCounter = Object.keys(removedKeys).length-1;
+      }
+      this._transitionGroupLastVisibleOrder = nextOrdKeys;
     }
 
     for (var key in currentKeys) {
@@ -103,6 +126,7 @@ var ReactTransitionGroup = React.createClass({
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
           cascade: cascadeCounter,
+          leaveCascade: leaveCascadeCounter,
           enter: this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
@@ -116,8 +140,10 @@ var ReactTransitionGroup = React.createClass({
         // returns nothing, throwing an error.
         delete currentKeys[key];
       }
-      if (newKeys[key]) {
-        cascadeCounter += cascadeDirection;
+      if (this.props.transitionStaggering ||
+          this.props.transitionStaggeringDirectional) {
+        if (newKeys[key]) { cascadeCounter += cascadeDirection; }
+        if (removedKeys[key]) { leaveCascadeCounter += leaveCascadeDirection; }
       }
     }
 

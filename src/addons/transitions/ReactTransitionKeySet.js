@@ -51,11 +51,10 @@ var ReactTransitionKeySet = {
   },
 
   /**
-   * Simple syntactic sugar to get an object with keys of all of `children`.
-   * Does not have references to the children themselves.
+   * Simple mapping to get an ordered array of the children's keys
    *
    * @param {*} children `this.props.children`
-   * @return {array} Mapping of key to the value "true"
+   * @return {array} Array of keys in order
    */
   getOrderedKeys: function(children) {
     if (children) {
@@ -68,6 +67,8 @@ var ReactTransitionKeySet = {
   },
 
   /**
+   * When trying to find out the correct direction of a transition when
+   * staggering, we need to know which keys are new, and which are removed
    *
    * @param {object} prev prev child keys as returned from
    * `ReactTransitionKeySet.getKeySet()`.
@@ -81,6 +82,7 @@ var ReactTransitionKeySet = {
     next = next || {};
 
     var newKeys = {};
+    var removedKeys = {};
     var prevKeys = Object.keys(prev);
     var nextKeys = Object.keys(next);
 
@@ -88,12 +90,20 @@ var ReactTransitionKeySet = {
       var nextKey = nextKeys[i];
       if (!prev[nextKey]) {
         newKeys[nextKey] = true;
+      } else if (prevKeys.indexOf(nextKey) != -1) {
+        prevKeys.splice(prevKeys.indexOf(nextKey), 1);
       }
     }
 
-    return newKeys;
-  },
+    for (var i2=0; i2 < prevKeys.length; i2++) {
+      var prevKey = prevKeys[i2];
+      if (!next[prevKey]) {
+        removedKeys[prevKey] = true;
+      }
+    }
 
+    return {'new': newKeys, 'removed': removedKeys};
+  },
 
   /**
    * When you're adding or removing children some may be added or removed in the
