@@ -360,7 +360,7 @@
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
 
-<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child component. This child component can be either a native DOM component (such as <code>&lt;div&gt;</code>) or another composite component that you&#39;ve defined yourself.</p>
+<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child component. This child component can be either a virtual representation of a native DOM component (such as <code>&lt;div /&gt;</code> or <code>React.DOM.div()</code>) or another composite component that you&#39;ve defined yourself.</p>
 
 <p>The <code>render()</code> function should be <em>pure</em>, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using <code>setTimeout</code>). If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes server rendering more practical and makes components easier to think about.</p>
 <h3><a class="anchor" name="getinitialstate"></a>getInitialState <a class="hash-link" href="#getinitialstate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">getInitialState</span><span class="p">()</span>
