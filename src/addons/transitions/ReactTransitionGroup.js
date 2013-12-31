@@ -75,9 +75,10 @@ var ReactTransitionGroup = React.createClass({
     var cascadeCounter = 0;
     var leaveCascadeCounter = 0;
     var cascadeDirection, leaveCascadeDirection;
+    var staggerEnabled = (this.props.transitionStaggering ||
+                          this.props.transitionStaggeringDirectional);
 
-    if (this.props.transitionStaggering ||
-        this.props.transitionStaggeringDirectional) {
+    if (staggerEnabled) {
       var diffKeys = ReactTransitionKeySet.diffKeySets(
         this._transitionGroupCurrentKeys, renderKeys
       );
@@ -87,7 +88,7 @@ var ReactTransitionGroup = React.createClass({
       cascadeCounter = 0;
       cascadeDirection = 1;
       leaveCascadeDirection = -1;
-      leaveCascadeCounter = Object.keys(removedKeys).length-1;
+      leaveCascadeCounter = Object.keys(removedKeys).length - 1;
     }
 
     if (this.props.transitionStaggeringDirectional) {
@@ -98,20 +99,20 @@ var ReactTransitionGroup = React.createClass({
       // for checking whether the stagger required will be going backwards or
       // forwards through the render list.
       var nextOrdKeys = ReactTransitionKeySet.getOrderedKeys(sourceChildren);
-      var nextLastKey = '{' + nextOrdKeys[nextOrdKeys.length-1] + '}';
+      var nextLastKey = '{' + nextOrdKeys[nextOrdKeys.length - 1] + '}';
       var prevFirstKey = '{' + this._transitionGroupLastVisibleOrder[0] + '}';
 
       if (!newKeys[nextLastKey]) {
         // if the last visible key is not a new one, assume the transition
         // direction is backwards
         cascadeDirection = -1;
-        cascadeCounter = Object.keys(newKeys).length-1;
+        cascadeCounter = Object.keys(newKeys).length - 1;
       }
       if (!removedKeys[prevFirstKey]) {
         // if the first visible key is not a removed one, assume the leave
         // transition direction is backwards
         leaveCascadeDirection = -1;
-        leaveCascadeCounter = Object.keys(removedKeys).length-1;
+        leaveCascadeCounter = Object.keys(removedKeys).length - 1;
       }
       this._transitionGroupLastVisibleOrder = nextOrdKeys;
     }
@@ -140,8 +141,7 @@ var ReactTransitionGroup = React.createClass({
         // returns nothing, throwing an error.
         delete currentKeys[key];
       }
-      if (this.props.transitionStaggering ||
-          this.props.transitionStaggeringDirectional) {
+      if (staggerEnabled) {
         if (newKeys[key]) { cascadeCounter += cascadeDirection; }
         if (removedKeys[key]) { leaveCascadeCounter += leaveCascadeDirection; }
       }

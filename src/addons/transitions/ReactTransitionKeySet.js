@@ -61,9 +61,8 @@ var ReactTransitionKeySet = {
       return children.map(function(child) {
         return child.props.key;
       });
-    } else {
-      return [];
     }
+    return [];
   },
 
   /**
@@ -86,7 +85,8 @@ var ReactTransitionKeySet = {
     var prevKeys = Object.keys(prev);
     var nextKeys = Object.keys(next);
 
-    for (var i=0; i < nextKeys.length; i++) {
+    var i;
+    for (i = 0; i < nextKeys.length; i++) {
       var nextKey = nextKeys[i];
       if (!prev[nextKey]) {
         newKeys[nextKey] = true;
@@ -95,8 +95,8 @@ var ReactTransitionKeySet = {
       }
     }
 
-    for (var i2=0; i2 < prevKeys.length; i2++) {
-      var prevKey = prevKeys[i2];
+    for (i = 0; i < prevKeys.length; i++) {
+      var prevKey = prevKeys[i];
       if (!next[prevKey]) {
         removedKeys[prevKey] = true;
       }
