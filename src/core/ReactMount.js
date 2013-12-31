@@ -576,17 +576,11 @@ var ReactMount = {
 
     firstChildren.length = 0;
 
-    if (__DEV__) {
-      console.error(
-        'Error while invoking `findComponentRoot` with the following ' +
-        'ancestor node:',
-        ancestorNode
-      );
-    }
     invariant(
       false,
       'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g. by the browser).',
+      'means the DOM was unexpectedly mutated (e.g., by the browser). ' +
+      'Try inspecting the child nodes of the element with React ID `%s`.',
       id,
       ReactMount.getID(ancestorNode)
     );
