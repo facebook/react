@@ -20,7 +20,7 @@ ReactComponent render()
 
 The `render()` method is required.
 
-When called, it should examine `this.props` and `this.state` and return a single child component. This child component can be either a native DOM component (such as `<div>`) or another composite component that you've defined yourself.
+When called, it should examine `this.props` and `this.state` and return a single child component. This child component can be either a virtual representation of a native DOM component (such as `<div />` or `React.DOM.div()`) or another composite component that you've defined yourself.
 
 The `render()` function should be *pure*, meaning that it does not modify component state, it returns the same result each time it's invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using `setTimeout`). If you need to interact with the browser, perform your work in `componentDidMount()` or the other lifecycle methods instead. Keeping `render()` pure makes server rendering more practical and makes components easier to think about.
 
