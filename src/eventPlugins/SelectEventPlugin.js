@@ -96,8 +96,12 @@ function getSelection(node) {
  */
 function constructSelectEvent(nativeEvent) {
   // Ensure we have the right element, and that the user is not dragging a
-  // selection (this matches native `select` event behavior).
-  if (mouseDown || activeElement != getActiveElement()) {
+  // selection (this matches native `select` event behavior). In HTML5, select
+  // fires only on input and textarea thus if there's no focused element we
+  // won't dispatch.
+  if (mouseDown ||
+      activeElement == null ||
+      activeElement != getActiveElement()) {
     return;
   }
 
