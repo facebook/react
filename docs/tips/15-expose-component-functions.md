@@ -29,9 +29,10 @@ var Todos = React.createClass({
     return {items: ['Apple', 'Banana', 'Cranberry']};
   },
 
-  handleClick: function(i) {
-    var items = this.state.items;
-    items.splice(i, 1);
+  handleClick: function(index) {
+    var items = this.state.items.filter(function(item, i) {
+      return index !== i;
+    });
     this.setState({items: items}, function() {
       if (items.length === 1) {
         this.refs.item0.animate();
@@ -56,4 +57,4 @@ var Todos = React.createClass({
 React.renderComponent(<Todos />, mountNode);
 ```
 
-Alternatively, you could have achieve this by passing the `todo` an `isLastUnfinishedItem` prop, let it check this prop in `componentDidUpdate`, then animate itself; however, this quickly gets messy if you pass around different props to control animations.
+Alternatively, you could have achieved this by passing the `todo` an `isLastUnfinishedItem` prop, let it check this prop in `componentDidUpdate`, then animate itself; however, this quickly gets messy if you pass around different props to control animations.
