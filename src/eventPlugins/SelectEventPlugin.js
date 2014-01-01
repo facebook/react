@@ -19,9 +19,7 @@
 "use strict";
 
 var EventConstants = require('EventConstants');
-var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -49,15 +47,8 @@ var eventTypes = {
   }
 };
 
-var useSelectionChange = false;
-
-if (ExecutionEnvironment.canUseDOM) {
-  useSelectionChange = 'onselectionchange' in document;
-}
-
 var activeElement = null;
 var activeElementID = null;
-var activeNativeEvent = null;
 var lastSelection = null;
 var mouseDown = false;
 
@@ -130,24 +121,6 @@ function constructSelectEvent(nativeEvent) {
 }
 
 /**
- * Handle deferred event. And manually dispatch synthetic events.
- */
-function dispatchDeferredSelectEvent() {
-  if (!activeNativeEvent) {
-    return;
-  }
-
-  var syntheticEvent = constructSelectEvent(activeNativeEvent);
-  activeNativeEvent = null;
-
-  // Enqueue and process the abstract event manually.
-  if (syntheticEvent) {
-    EventPluginHub.enqueueEvents(syntheticEvent);
-    EventPluginHub.processEventQueue();
-  }
-}
-
-/**
  * This plugin creates an `onSelect` event that normalizes select events
  * across form elements.
  *
@@ -207,17 +180,14 @@ var SelectEventPlugin = {
 
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't).
-      case topLevelTypes.topSelectionChange:
-        return constructSelectEvent(nativeEvent);
-
       // Firefox doesn't support selectionchange, so check selection status
-      // after each key entry.
+      // after each key entry. The selection changes after keydown and before
+      // keyup, but we check on keydown as well in the case of holding down a
+      // key, when multiple keydown events are fired but only one keyup is.
+      case topLevelTypes.topSelectionChange:
       case topLevelTypes.topKeyDown:
-        if (!useSelectionChange) {
-          activeNativeEvent = nativeEvent;
-          setTimeout(dispatchDeferredSelectEvent, 0);
-        }
-        break;
+      case topLevelTypes.topKeyUp:
+        return constructSelectEvent(nativeEvent);
     }
   }
 };
