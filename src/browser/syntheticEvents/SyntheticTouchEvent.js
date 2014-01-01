@@ -21,6 +21,8 @@
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
 
+var getEventModifierState = require('getEventModifierState');
+
 /**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
@@ -32,7 +34,8 @@ var TouchEventInterface = {
   altKey: null,
   metaKey: null,
   ctrlKey: null,
-  shiftKey: null
+  shiftKey: null,
+  getModifierState: getEventModifierState
 };
 
 /**

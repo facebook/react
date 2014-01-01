@@ -62,8 +62,9 @@ Properties:
 
 ```javascript
 boolean altKey
-boolean ctrlKey
 Number charCode
+boolean ctrlKey
+function getModifierState(key)
 String key
 Number keyCode
 String locale
@@ -120,6 +121,7 @@ Number buttons
 Number clientX
 Number clientY
 boolean ctrlKey
+function getModifierState(key)
 boolean metaKey
 Number pageX
 Number pageY
@@ -147,6 +149,7 @@ Properties:
 boolean altKey
 DOMTouchList changedTouches
 boolean ctrlKey
+function getModifierState(key)
 boolean metaKey
 boolean shiftKey
 DOMTouchList targetTouches
@@ -181,8 +184,8 @@ onWheel
 Properties:
 
 ```javascript
-Number deltaX
 Number deltaMode
+Number deltaX
 Number deltaY
 Number deltaZ
 ```
