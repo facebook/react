@@ -35,6 +35,10 @@ var MouseEventInterface = {
   shiftKey: null,
   altKey: null,
   metaKey: null,
+  // IE8 does not implement getModifierState, we could polyfill it for modifier
+  // keys exposed by the event itself, however since they are already exposed
+  // and there is no way to polyfill Lock-keys, this would only hide the truth.
+  getModifierState: null,
   button: function(event) {
     // Webkit, Firefox, IE9+
     // which:  1 2 3
