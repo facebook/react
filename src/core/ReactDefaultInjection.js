@@ -23,6 +23,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
+var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
@@ -74,6 +75,7 @@ function inject() {
   ReactDOM.injection.injectComponentClasses({
     button: ReactDOMButton,
     form: ReactDOMForm,
+    img: ReactDOMImg,
     input: ReactDOMInput,
     option: ReactDOMOption,
     select: ReactDOMSelect,
