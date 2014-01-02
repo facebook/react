@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.5.1</title>
+  <title>React | React Chrome Developer Tools</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.5.1" />
+  <meta property="og:title" content="React | React Chrome Developer Tools" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -64,7 +64,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2014/01/02/react-chrome-developer-tools.html">React Chrome Developer Tools</a></li>
+        <li><a href="/react/blog/2014/01/02/react-chrome-developer-tools.html" class="active">React Chrome Developer Tools</a></li>
       
         <li><a href="/react/blog/2013/12/30/community-roundup-13.html">Community Round-up #13</a></li>
       
@@ -80,7 +80,7 @@
       
         <li><a href="/react/blog/2013/11/05/thinking-in-react.html">Thinking in React</a></li>
       
-        <li><a href="/react/blog/2013/10/29/react-v0-5-1.html" class="active">React v0.5.1</a></li>
+        <li><a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a></li>
       
         <li><a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a></li>
       
@@ -90,29 +90,29 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.5.1</h1>
-    <p class="meta">October 29, 2013 by Paul O'Shannessy</p>
+    <h1>React Chrome Developer Tools</h1>
+    <p class="meta">January  2, 2014 by Sebastian Markbåge</p>
 
     <hr>
 
     <div class="post">
-      <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
-<ul>
-<li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
-<li>Fixed bug with selection and focus.</li>
-<li>Made it possible to unmount components from the document root.</li>
-<li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
-</ul>
-<h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
-<ul>
-<li>Fixed bug with transition and animation event detection.</li>
-</ul>
+      <p>With the new year, we thought you&#39;d enjoy some new tools for debugging React code. Today we&#39;re releasing the <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">React Developer Tools</a>, an extension to the Chrome Developer Tools. <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">Download them from the Chrome Web Store</a>.</p>
+
+<figure><iframe width="560" height="315" src="//www.youtube.com/embed/Cey7BS6dE0M" frameborder="0" allowfullscreen></iframe></figure>
+
+<p>You will get a new tab titled &quot;React&quot; in your Chrome DevTools. This tab shows you a list of the root React Components that are rendered on the page as well as the subcomponents that each root renders.</p>
+
+<p>Selecting a Component in this tab allows you to view and edit its props and state in the panel on the right. In the breadcrumbs at the bottom, you can inspect the selected Component, the Component that created it, the Component that created that one, and so on.</p>
+
+<p>When you inspect a DOM element using the regular Elements tab, you can switch over to the React tab and the corresponding Component will be automatically selected. The Component will also be automatically selected if you have a breakpoint within its render phase. This allows you to step through the render tree and see how one Component affects another one.
+<figure><a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi"><img src="/react/img/blog/react-dev-tools.jpg" alt=""></a></figure></p>
+
+<p>We hope these tools will help your team better understand your component hierarchy and track down bugs. We&#39;re very excited about this initial launch and appreciate any feedback you may have. As always, we also accept <a href="https://github.com/facebook/react-devtools">pull requests on GitHub</a>.</p>
 
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html"></div>
   </div>
 </section>
 

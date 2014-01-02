@@ -375,9 +375,10 @@
     <span class="k">return</span> <span class="p">{</span><span class="nx">items</span><span class="o">:</span> <span class="p">[</span><span class="s1">&#39;Apple&#39;</span><span class="p">,</span> <span class="s1">&#39;Banana&#39;</span><span class="p">,</span> <span class="s1">&#39;Cranberry&#39;</span><span class="p">]};</span>
   <span class="p">},</span>
 
-  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">;</span>
-    <span class="nx">items</span><span class="p">.</span><span class="nx">splice</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">index</span> <span class="o">!==</span> <span class="nx">i</span><span class="p">;</span>
+    <span class="p">});</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="nx">items</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">if</span> <span class="p">(</span><span class="nx">items</span><span class="p">.</span><span class="nx">length</span> <span class="o">===</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
         <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">item0</span><span class="p">.</span><span class="nx">animate</span><span class="p">();</span>
@@ -401,7 +402,7 @@
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Todos</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
-<p>Alternatively, you could have achieve this by passing the <code>todo</code> an <code>isLastUnfinishedItem</code> prop, let it check this prop in <code>componentDidUpdate</code>, then animate itself; however, this quickly gets messy if you pass around different props to control animations.</p>
+<p>Alternatively, you could have achieved this by passing the <code>todo</code> an <code>isLastUnfinishedItem</code> prop, let it check this prop in <code>componentDidUpdate</code>, then animate itself; however, this quickly gets messy if you pass around different props to control animations.</p>
 
 
     <div class="docs-prevnext">
