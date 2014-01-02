@@ -466,6 +466,12 @@ section.black content {
       @include code-typography;
     }
   }
+
+  .playgroundError {
+    // The compiler view kills padding in order to render the CodeMirror code
+    // more nicely. For the error view, put a padding back
+    padding: 15px 20px;
+  }
 }
 
 /* Button */
@@ -560,7 +566,7 @@ figure {
   margin-top: 60px;
 }
 
-/* Code Mirror */
+/* CodeMirror */
 
 div.CodeMirror pre, div.CodeMirror-linenumber, code {
   @include code-typography;
@@ -622,6 +628,11 @@ p code {
   width: $columnWidth;
 }
 
+.playgroundError {
+  color: darken($primary, 5%);
+  font-size: 15px;
+}
+
 .MarkdownEditor textarea {
   width: 100%;
   height: 100px
@@ -636,7 +647,7 @@ p code {
   padding-left: 9px;
 }
 
-/* Codemirror doesn't support <jsx> syntax. Instead of highlighting it
+/* CodeMirror doesn't support <jsx> syntax. Instead of highlighting it
    as error, just ignore it */
 .highlight .javascript .err {
   background-color: transparent;

@@ -53,7 +53,20 @@ var CodeMirrorEditor = React.createClass({
   }
 });
 
+var selfCleaningTimeout = {
+  componentDidUpdate: function() {
+    clearTimeout(this.timeoutID);
+  },
+
+  setTimeout: function() {
+    clearTimeout(this.timeoutID);
+    this.timeoutID = setTimeout.apply(null, arguments);
+  }
+};
+
 var ReactPlayground = React.createClass({
+  mixins: [selfCleaningTimeout],
+
   MODES: {XJS: 'XJS', JS: 'JS'}, //keyMirror({XJS: true, JS: true}),
 
   propTypes: {
@@ -137,11 +150,12 @@ var ReactPlayground = React.createClass({
         eval(compiledCode);
       }
     } catch (e) {
-      React.renderComponent(
-        <div content={e.toString()} className="playgroundError" />,
-        mountNode
-      );
+      this.setTimeout(function() {
+        React.renderComponent(
+          <div className="playgroundError">{e.toString()}</div>,
+          mountNode
+        );
+      }, 500);
     }
   }
 });
-
