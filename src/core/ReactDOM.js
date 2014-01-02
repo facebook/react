@@ -50,6 +50,8 @@ function createDOMComponentClass(tag, omitClose) {
     instance.construct.apply(instance, arguments);
     return instance;
   };
+
+  Constructor.ConvenienceConstructor = ConvenienceConstructor;
   ConvenienceConstructor.componentConstructor = Constructor;
   return ConvenienceConstructor;
 }
