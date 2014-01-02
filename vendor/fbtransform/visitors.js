@@ -41,7 +41,7 @@ var transformRunOrder = [
  * @param {array?} excludes
  * @return {array}
  */
-function getVisitorsList(excludes) {
+function getAllVisitors(excludes) {
   var ret = [];
   for (var i = 0, il = transformRunOrder.length; i < il; i++) {
     if (!excludes || excludes.indexOf(transformRunOrder[i]) === -1) {
@@ -51,5 +51,5 @@ function getVisitorsList(excludes) {
   return ret;
 }
 
-exports.getVisitorsList = getVisitorsList;
+exports.getAllVisitors = getAllVisitors;
 exports.transformVisitors = transformVisitors;
