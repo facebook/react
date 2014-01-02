@@ -33,7 +33,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "commoner": "~0.8.8",
+    "commoner": "~0.8.12",
     "esprima-fb": "~2001.1001.0-dev-harmony-fb",
     "jstransform": "~2.0.1"
   },
