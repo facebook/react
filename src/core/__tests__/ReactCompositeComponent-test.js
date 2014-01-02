@@ -458,6 +458,54 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should work with a null getInitialState() return value', function() {
+    var Component = React.createClass({
+      getInitialState: function() {
+        return null;
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(() => <Component />).not.toThrow();
+  });
+
+  it('should work with object getInitialState() return values', function() {
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {
+          occupation: 'clown'
+        };
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state.occupation).toEqual('clown');
+  });
+
+  it('should throw with non-object getInitialState() return values', function() {
+    [['an array'], 'a string', 1234].forEach(function(state) {
+      var Component = React.createClass({
+        getInitialState: function() {
+          return state;
+        },
+        render: function() {
+          return <span />;
+        }
+      });
+      var instance = <Component />;
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(instance);
+      }).toThrow(
+        'Invariant Violation: Component.getInitialState(): ' +
+        'must return an object or null'
+      );
+    });
+  });
+
   it('should detect valid CompositeComponent classes', function() {
     var Component = React.createClass({
       render: function() {
