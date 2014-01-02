@@ -128,6 +128,11 @@ var DOMChildrenOperations = {
           );
           break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
+          if (__DEV__) {
+            if (update.textContent !== '') {
+              validateNodeNesting(update.parentNode.nodeName, '#text');
+            }
+          }
           update.parentNode[textContentAccessor] = update.textContent;
           break;
         case ReactMultiChildUpdateTypes.REMOVE_NODE:

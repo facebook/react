@@ -44,7 +44,7 @@ var ClickCounter = React.createClass({
     var i;
     for (i=0; i < this.state.count; i++) {
       children.push(
-        <div
+        <span
           className="clickLogDiv"
           key={"clickLog" + i}
           ref={"clickLog" + i}
