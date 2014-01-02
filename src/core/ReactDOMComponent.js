@@ -364,9 +364,9 @@ ReactDOMComponent.Mixin = {
    * @internal
    */
   unmountComponent: function() {
+    this.unmountChildren();
     ReactEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
-    this.unmountChildren();
   }
 
 };
