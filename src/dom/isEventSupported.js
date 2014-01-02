@@ -20,13 +20,13 @@
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var testNode, useHasFeature;
+var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
-  testNode = document.createElement('div');
   useHasFeature =
     document.implementation &&
     document.implementation.hasFeature &&
-    // `hasFeature` always returns true in Firefox 19+.
+    // always returns true in newer browsers as per the standard.
+    // @see http://dom.spec.whatwg.org/#dom-domimplementation-hasfeature
     document.implementation.hasFeature('', '') !== true;
 }
 
@@ -45,15 +45,16 @@ if (ExecutionEnvironment.canUseDOM) {
  * @license Modernizr 3.0.0pre (Custom Build) | MIT
  */
 function isEventSupported(eventNameSuffix, capture) {
-  if (!testNode || (capture && !testNode.addEventListener)) {
+  if (!ExecutionEnvironment.canUseDOM ||
+      capture && !('addEventListener' in document)) {
     return false;
   }
-  var element = document.createElement('div');
-
+  
   var eventName = 'on' + eventNameSuffix;
-  var isSupported = eventName in element;
+  var isSupported = eventName in document;
 
   if (!isSupported) {
+    var element = document.createElement('div');
     element.setAttribute(eventName, 'return;');
     isSupported = typeof element[eventName] === 'function';
   }
