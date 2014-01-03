@@ -19,6 +19,8 @@
 
 "use strict";
 
+var isEventSupported = require('isEventSupported');
+
 var listenerBank = {};
 
 /**
@@ -40,6 +42,14 @@ var CallbackRegistry = {
    * @param {?function} listener The callback to store.
    */
   putListener: function(id, registrationName, listener) {
+    if (__DEV__) {
+      // IE8 has no API for event capturing and the `onScroll` event doesn't
+      // bubble.
+      if (registrationName === 'onScroll' &&
+          !isEventSupported('scroll', true)) {
+        console.warn('This browser doesn\'t support the `onScroll` event');
+      }
+    }
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[id] = listener;
