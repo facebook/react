@@ -34,7 +34,6 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
 var registrationNameModules = ReactEventEmitter.registrationNameModules;
@@ -64,6 +63,19 @@ function assertValidProps(props) {
     'not a string.'
   );
 }
+
+function putListener(id, registrationName, listener) {
+  var container = ReactMount.findReactContainerForID(id);
+  if (container) {
+    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+      container.ownerDocument :
+      container;
+    listenTo(registrationName, doc);
+  }
+
+  ReactEventEmitter.putListener(id, registrationName, listener);
+}
+
 
 /**
  * @constructor ReactDOMComponent
@@ -131,13 +143,6 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNameModules[propKey]) {
-        var container = ReactMount.findReactContainerForID(this._rootNodeID);
-        if (container) {
-          var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-            container.ownerDocument :
-            container;
-          listenTo(propKey, doc);
-        }
         putListener(this._rootNodeID, propKey, propValue);
       } else {
         if (propKey === STYLE) {
@@ -297,13 +302,6 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules[propKey]) {
-        var container = ReactMount.findReactContainerForID(this._rootNodeID);
-        if (container) {
-          var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-            container.ownerDocument :
-            container;
-          listenTo(propKey, doc);
-        }
         putListener(this._rootNodeID, propKey, nextProp);
       } else if (
           DOMProperty.isStandardName[propKey] ||

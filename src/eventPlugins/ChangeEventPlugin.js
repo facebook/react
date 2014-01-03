@@ -37,12 +37,12 @@ var eventTypes = {
       captured: keyOf({onChangeCapture: null})
     },
     dependencies: [
-      keyOf({topBlur: null}),
-      keyOf({topChange: null}),
-      keyOf({topFocus: null}),
-      keyOf({topInput: null}),
-      keyOf({topKeyDown: null}),
-      keyOf({topKeyUp: null})
+      topLevelTypes.topBlur,
+      topLevelTypes.topChange,
+      topLevelTypes.topFocus,
+      topLevelTypes.topInput,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyUp
     ]
   }
 };

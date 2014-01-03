@@ -19,6 +19,7 @@
 
 "use strict";
 
+var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticUIEvent = require('SyntheticUIEvent');
@@ -26,6 +27,7 @@ var TouchEventUtils = require('TouchEventUtils');
 var ViewportMetrics = require('ViewportMetrics');
 
 var keyOf = require('keyOf');
+var topLevelTypes = EventConstants.topLevelTypes;
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
@@ -62,17 +64,17 @@ function getDistance(coords, nativeEvent) {
 }
 
 var dependencies = [
-  keyOf({topMouseDown: null}),
-  keyOf({topMouseMove: null}),
-  keyOf({topMouseUp: null})
+  topLevelTypes.topMouseDown,
+  topLevelTypes.topMouseMove,
+  topLevelTypes.topMouseUp
 ];
 
 if (EventPluginUtils.useTouchEvents) {
   dependencies.push(
-    keyOf({topTouchStart: null}),
-    keyOf({topTouchMove: null}),
-    keyOf({topTouchEnd: null}),
-    keyOf({topTouchCancel: null})
+    topLevelTypes.topTouchCancel,
+    topLevelTypes.topTouchEnd,
+    topLevelTypes.topTouchStart,
+    topLevelTypes.topTouchMove
   );
 }
 

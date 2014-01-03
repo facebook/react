@@ -44,12 +44,12 @@ var eventTypes = {
       captured: keyOf({onCompositionEndCapture: null})
     },
     dependencies: [
-      keyOf({topBlur: null}),
-      keyOf({topCompositionEnd: null}),
-      keyOf({topKeyDown: null}),
-      keyOf({topKeyPress: null}),
-      keyOf({topKeyUp: null}),
-      keyOf({topMouseDown: null})
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionEnd,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
     ]
   },
   compositionStart: {
@@ -58,12 +58,12 @@ var eventTypes = {
       captured: keyOf({onCompositionStartCapture: null})
     },
     dependencies: [
-      keyOf({topBlur: null}),
-      keyOf({topCompositionStart: null}),
-      keyOf({topKeyDown: null}),
-      keyOf({topKeyPress: null}),
-      keyOf({topKeyUp: null}),
-      keyOf({topMouseDown: null})
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionStart,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
     ]
   },
   compositionUpdate: {
@@ -72,12 +72,12 @@ var eventTypes = {
       captured: keyOf({onCompositionUpdateCapture: null})
     },
     dependencies: [
-      keyOf({topBlur: null}),
-      keyOf({topCompositionUpdate: null}),
-      keyOf({topKeyDown: null}),
-      keyOf({topKeyPress: null}),
-      keyOf({topKeyUp: null}),
-      keyOf({topMouseDown: null})
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionUpdate,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
     ]
   }
 };
