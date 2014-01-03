@@ -222,19 +222,19 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
    * they bubble to document.
    *
-   * @param {string} event
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {DOMDocument} contentDocument Document which owns the container
    */
-  listenTo: function(event, contentDocument) {
+  listenTo: function(registrationName, contentDocument) {
     var mountAt = contentDocument;
     if (mountAt[topListenersIDKey] == null) {
       mountAt[topListenersIDKey] = reactTopListenersCounter++;
       alreadyListeningTo[mountAt[topListenersIDKey]] = {};
     }
     var topListenersID = mountAt[topListenersIDKey];
-    var registrationName = ReactEventEmitter.registrationNameModules[event];
-    var dependencies = registrationName.eventTypes[EventPluginRegistry.
-      registrationNameEventNames[event]].dependencies;
+    var eventPlugin = ReactEventEmitter.registrationNameModules[registrationName];
+    var dependencies = eventPlugin.eventTypes[EventPluginRegistry.
+      registrationNameEventNames[registrationName]].dependencies;
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {

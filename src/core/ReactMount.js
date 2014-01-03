@@ -235,7 +235,8 @@ var ReactMount = {
   },
 
   /**
-   * Register a component into the instance map and starts scroll value monitoring
+   * Register a component into the instance map and starts scroll value
+   * monitoring
    * @param {ReactComponent} nextComponent component instance to render
    * @param {DOMElement} container container to render into
    * @return {string} reactRoot ID prefix

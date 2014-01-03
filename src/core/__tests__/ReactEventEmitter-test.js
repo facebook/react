@@ -348,8 +348,8 @@ describe('ReactEventEmitter', function() {
       setEventListeners.push(captureCalls[i][1]);
     }
 
-    var dependencies = ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY].
-      eventTypes.change.dependencies;
+    var module = ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY];
+    var dependencies = module.eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
     for(i = 0, l = setEventListeners.length; i < l; i++) {
