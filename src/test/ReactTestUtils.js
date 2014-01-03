@@ -197,18 +197,24 @@ var ReactTestUtils = {
    * useful methods that allow it to be used as a dummy React component.
    * Instead of rendering as usual, the component will become a simple
    * <div> containing any provided children.
+   *
+   * @param {object} module the mock function object exported from a
+   *                        module that defines the component to be mocked
+   * @param {?string} mockTagName optional dummy root tag name to return
+   *                              from render method (overrides
+   *                              module.mockTagName if provided)
+   * @return {object} the ReactTestUtils object (for chaining)
    */
-  mockComponent: function(module) {
+  mockComponent: function(module, mockTagName) {
     var ConvenienceConstructor = React.createClass({
       render: function() {
-        return ReactDOM.div(null, this.props.children);
+        var mockTagName = mockTagName || module.mockTagName || "div";
+        return ReactDOM[mockTagName](null, this.props.children);
       }
     });
 
     copyProperties(module, ConvenienceConstructor);
-    module.mockImplementation(function() {
-      return ConvenienceConstructor.apply(null, arguments);
-    });
+    module.mockImplementation(ConvenienceConstructor);
 
     return this;
   },
