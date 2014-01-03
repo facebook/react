@@ -56,10 +56,6 @@ function isEventSupported(eventNameSuffix, capture) {
   if (!isSupported) {
     element.setAttribute(eventName, 'return;');
     isSupported = typeof element[eventName] === 'function';
-    if (typeof element[eventName] !== 'undefined') {
-      element[eventName] = undefined;
-    }
-    element.removeAttribute(eventName);
   }
 
   if (!isSupported && useHasFeature && eventNameSuffix === 'wheel') {
@@ -67,7 +63,6 @@ function isEventSupported(eventNameSuffix, capture) {
     isSupported = document.implementation.hasFeature('Events.wheel', '3.0');
   }
 
-  element = null;
   return isSupported;
 }
 

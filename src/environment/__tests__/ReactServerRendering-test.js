@@ -38,6 +38,8 @@ var ReactServerRendering;
 var ReactMarkupChecksum;
 var ExecutionEnvironment;
 
+var ID_ATTRIBUTE_NAME;
+
 describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
@@ -48,6 +50,9 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
+
+    var DOMProperty = require('DOMProperty');
+    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
   });
 
   it('should generate simple markup', function() {
@@ -59,7 +64,7 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<span ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
+      '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
     );
   });
@@ -83,11 +88,11 @@ describe('ReactServerRendering', function() {
       }
     );
     expect(response).toMatch(
-      '<div ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
+      '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">' +
-          '<span ' + ReactMount.ATTR_NAME + '="[^"]+">My name is </span>' +
-          '<span ' + ReactMount.ATTR_NAME + '="[^"]+">child</span>' +
+        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
+          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
+          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">child</span>' +
         '</span>' +
       '</div>'
     );
@@ -137,10 +142,10 @@ describe('ReactServerRendering', function() {
     );
 
     expect(response).toMatch(
-      '<span ' + ReactMount.ATTR_NAME + '="[^"]+" ' +
+      '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
         ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">Component name: </span>' +
-        '<span ' + ReactMount.ATTR_NAME + '="[^"]+">TestComponent</span>' +
+        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
+        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
       '</span>'
     );
     expect(lifecycle).toEqual(

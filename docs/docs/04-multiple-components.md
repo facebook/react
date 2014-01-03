@@ -124,7 +124,7 @@ The situation gets more complicated when the children are shuffled around (as in
     var results = this.props.results;
     return (
       <ol>
-        {this.results.map(function(result) {
+        {results.map(function(result) {
           return <li key={result.id}>{result.text}</li>;
         })}
       </ol>

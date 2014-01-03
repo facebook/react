@@ -19,8 +19,8 @@
 
 "use strict";
 
+var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
-var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -65,7 +65,7 @@ mixInto(ReactTextComponent, {
       mountDepth
     );
     return (
-      '<span ' + ReactMount.ATTR_NAME + '="' + escapeTextForBrowser(rootID) + '">' +
+      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
         escapeTextForBrowser(this.props.text) +
       '</span>'
     );

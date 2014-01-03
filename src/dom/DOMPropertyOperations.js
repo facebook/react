@@ -72,6 +72,17 @@ if (__DEV__) {
 var DOMPropertyOperations = {
 
   /**
+   * Creates markup for the ID property.
+   *
+   * @param {string} id Unescaped ID.
+   * @return {string} Markup string.
+   */
+  createMarkupForID: function(id) {
+    return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
+      escapeTextForBrowser(id) + '"';
+  },
+
+  /**
    * Creates markup for a property.
    *
    * @param {string} name

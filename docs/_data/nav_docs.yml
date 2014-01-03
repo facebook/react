@@ -4,6 +4,8 @@
     title: Getting Started
   - id: tutorial
     title: Tutorial
+  - id: videos
+    title: Videos
 - title: Guides
   items:
   - id: why-react
@@ -57,3 +59,5 @@
     title: DOM Differences
   - id: special-non-dom-attributes
     title: Special Non-DOM attributes
+  - id: reconciliation
+    title: Reconciliation

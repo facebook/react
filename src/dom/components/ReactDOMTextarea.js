@@ -20,6 +20,7 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueMixin = require('LinkedValueMixin');
+var AutoFocusMixin = require('AutoFocusMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -45,7 +46,7 @@ var textarea = ReactDOM.textarea;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
-  mixins: [LinkedValueMixin],
+  mixins: [LinkedValueMixin, AutoFocusMixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;

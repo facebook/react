@@ -156,23 +156,6 @@ var ReactComponent = {
   },
 
   /**
-   * Generate a key string that identifies a component within a set.
-   *
-   * @param {*} component A component that could contain a manual key.
-   * @param {number} index Index that is used if a manual key is not provided.
-   * @return {string}
-   * @internal
-   */
-  getKey: function(component, index) {
-    if (component && component.props && component.props.key != null) {
-      // Explicit key
-      return '{' + component.props.key + '}';
-    }
-    // Implicit key determined by the index in the set
-    return '[' + index + ']';
-  },
-
-  /**
    * @internal
    */
   LifeCycle: ComponentLifeCycle,

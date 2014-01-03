@@ -83,6 +83,41 @@ describe('ReactTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
   });
 
+  it('should switch transitionLeave from false to true', function() {
+    var a = React.renderComponent(
+      <ReactTransitionGroup
+          transitionName="yolo"
+          transitionEnter={false}
+          transitionLeave={false}>
+        <span key="one" id="one" />
+      </ReactTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    React.renderComponent(
+      <ReactTransitionGroup
+          transitionName="yolo"
+          transitionEnter={false}
+          transitionLeave={false}>
+        <span key="two" id="two" />
+      </ReactTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    React.renderComponent(
+      <ReactTransitionGroup
+          transitionName="yolo"
+          transitionEnter={false}
+          transitionLeave={true}>
+        <span key="three" id="three" />
+      </ReactTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(2);
+    expect(a.getDOMNode().childNodes[0].id).toBe('three');
+    expect(a.getDOMNode().childNodes[1].id).toBe('two');
+  });
+
   describe('with an undefined child', function () {
     it('should fail silently', function () {
       React.renderComponent(

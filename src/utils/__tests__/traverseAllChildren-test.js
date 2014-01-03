@@ -141,11 +141,12 @@ describe('traverseAllChildren', function() {
     var two = <div key="keyTwo" />;
     var three = null;
     var four = <div key="keyFour" />;
-    var five = <div key="keyFiveCompletelyIgnored" />;
-    // Name precedence is as follows:
-    // 1. JavaScript Object key if in a JavaScript object:
-    // 2. If grouped in an Array, the `key` attribute.
-    // 3. The array index if in a JavaScript Array.
+    var five = <div key="keyFiveInner" />;
+    // five is placed into a JS object with a key that is joined to the
+    // component key attribute.
+    // Precedence is as follows:
+    // 1. If grouped in an Object, the object key combined with `key` prop
+    // 2. If grouped in an Array, the `key` prop, falling back to array index
 
 
     var traverseContext = [];
@@ -170,32 +171,40 @@ describe('traverseAllChildren', function() {
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       zero,
-      '[0]{firstHalfKey}{keyZero}',
+      '[0]{firstHalfKey}[0]{keyZero}',
       0
     );
 
     expect(traverseFn)
-      .toHaveBeenCalledWith(traverseContext, one, '[0]{firstHalfKey}[1]', 1);
+      .toHaveBeenCalledWith(traverseContext, one, '[0]{firstHalfKey}[0][1]', 1);
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       two,
-      '[0]{firstHalfKey}{keyTwo}',
+      '[0]{firstHalfKey}[0]{keyTwo}',
       2
     );
 
-    expect(traverseFn)
-      .toHaveBeenCalledWith(traverseContext, three, '[0]{secondHalfKey}[0]', 3);
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      three,
+      '[0]{secondHalfKey}[0][0]',
+      3
+    );
 
     expect(traverseFn).toHaveBeenCalledWith(
       traverseContext,
       four,
-      '[0]{secondHalfKey}{keyFour}',
+      '[0]{secondHalfKey}[0]{keyFour}',
       4
     );
 
-    expect(traverseFn)
-      .toHaveBeenCalledWith(traverseContext, five, '[0]{keyFive}', 5);
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      five,
+      '[0]{keyFive}{keyFiveInner}',
+      5
+    );
   });
 
   it('should retain key across two mappings', function() {

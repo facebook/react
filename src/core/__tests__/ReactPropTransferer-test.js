@@ -110,25 +110,26 @@ describe('ReactPropTransferer', function() {
         .toBeDOMComponentWithNoChildren();
   });
 
-  it('should not transfer ref', function() {
-    var RefTestComponent = React.createClass({
+  it('should not transfer ref or key', function() {
+    var TestComponent = React.createClass({
       render: function() {
         expect(this.props.ref).toBeUndefined();
+        expect(this.props.key).toBeUndefined();
         return <div />;
       }
     });
-    var OuterRefTestComponent = React.createClass({
+    var OuterTestComponent = React.createClass({
       render: function() {
-        return this.transferPropsTo(<RefTestComponent />);
+        return this.transferPropsTo(<TestComponent />);
       }
     });
-    var OuterOuterRefTestComponent = React.createClass({
+    var OuterOuterTestComponent = React.createClass({
       render: function() {
-        return <OuterRefTestComponent ref="testref" />;
+        return <OuterTestComponent ref="testref" key="testkey" />;
       }
     });
 
-    ReactTestUtils.renderIntoDocument(<OuterOuterRefTestComponent />);
+    ReactTestUtils.renderIntoDocument(<OuterOuterTestComponent />);
   });
 
   it('should not transferPropsTo() a component you don\'t own', function() {

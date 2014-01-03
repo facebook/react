@@ -47,19 +47,21 @@ describe('ReactDOMIDOperations', function() {
     ).toBe(0);
   });
 
-  it('should update innerHTML and special-case whitespace', function() {
+  it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
     spyOn(ReactMount, "getNode").andReturn(stubNode);
 
+    var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
+    
     ReactDOMIDOperations.updateInnerHTMLByID(
       'testID',
-      ' testContent'
+      html
     );
 
     expect(
       ReactMount.getNode.argsForCall[0][0]
     ).toBe('testID');
 
-    expect(stubNode.innerHTML).toBe('&nbsp;testContent');
+    expect(stubNode.innerHTML).toBe(html);
   });
 });

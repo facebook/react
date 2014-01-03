@@ -4,6 +4,7 @@ title: Special Non-DOM Attributes
 layout: docs
 permalink: special-non-dom-attributes.html
 prev: dom-differences.html
+next: reconciliation.html
 ---
 
 Beside [DOM differences](/react/docs/dom-differences.html), React offers some attributes that simply don't exist in DOM.

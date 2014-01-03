@@ -35,4 +35,39 @@ describe('ReactMount', function() {
     ReactMount.renderComponent(<span></span>, container);
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
+
+  it('should unmount and remount if the key changes', function() {
+    var container = document.createElement('container');
+
+    var mockMount = mocks.getMockFunction();
+    var mockUnmount = mocks.getMockFunction();
+
+    var Component = React.createClass({
+      componentDidMount: mockMount,
+      componentWillUnmount: mockUnmount,
+      render: function() {
+        return <span>{this.props.text}</span>;
+      }
+    });
+
+    expect(mockMount.mock.calls.length).toBe(0);
+    expect(mockUnmount.mock.calls.length).toBe(0);
+
+    ReactMount.renderComponent(<Component text="orange" key="A" />, container);
+    expect(container.firstChild.innerHTML).toBe('orange');
+    expect(mockMount.mock.calls.length).toBe(1);
+    expect(mockUnmount.mock.calls.length).toBe(0);
+
+    // If we change the key, the component is unmounted and remounted
+    ReactMount.renderComponent(<Component text="green" key="B" />, container);
+    expect(container.firstChild.innerHTML).toBe('green');
+    expect(mockMount.mock.calls.length).toBe(2);
+    expect(mockUnmount.mock.calls.length).toBe(1);
+
+    // But if we don't change the key, the component instance is reused
+    ReactMount.renderComponent(<Component text="blue" key="B" />, container);
+    expect(container.firstChild.innerHTML).toBe('blue');
+    expect(mockMount.mock.calls.length).toBe(2);
+    expect(mockUnmount.mock.calls.length).toBe(1);
+  });
 });

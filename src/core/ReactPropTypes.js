@@ -18,6 +18,7 @@
 
 "use strict";
 
+var ReactComponent = require('ReactComponent');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var createObjectFrom = require('createObjectFrom');
@@ -83,11 +84,36 @@ var Props = {
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
 
-  instanceOf: createInstanceTypeChecker
+  instanceOf: createInstanceTypeChecker,
+
+  renderable: createRenderableTypeChecker()
 
 };
 
 var ANONYMOUS = '<<anonymous>>';
+
+function isRenderable(propValue) {
+  switch(typeof propValue) {
+    case 'number':
+    case 'string':
+      return true;
+    case 'object':
+      if (Array.isArray(propValue)) {
+        return propValue.every(isRenderable);
+      }
+      if (ReactComponent.isValidComponent(propValue)) {
+        return true;
+      }
+      for (var k in propValue) {
+        if (!isRenderable(propValue[k])) {
+          return false;
+        }
+      }
+      return true;
+    default:
+      return false;
+  }
+}
 
 function createPrimitiveTypeChecker(expectedType) {
   function validatePrimitiveType(
@@ -153,6 +179,25 @@ function createInstanceTypeChecker(expectedClass) {
     );
   }
   return createChainableTypeChecker(validateInstanceType);
+}
+
+function createRenderableTypeChecker() {
+  function validateRenderableType(
+    shouldThrow, propValue, propName, componentName, location
+  ) {
+    var isValid = isRenderable(propValue);
+    if (!shouldThrow) {
+      return isValid;
+    }
+    invariant(
+      isValid,
+      'Invalid %s `%s` supplied to `%s`, expected a renderable prop.',
+      ReactPropTypeLocationNames[location],
+      propName,
+      componentName
+    );
+  }
+  return createChainableTypeChecker(validateRenderableType);
 }
 
 function createChainableTypeChecker(validate) {

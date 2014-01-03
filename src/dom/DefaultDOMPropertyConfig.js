@@ -45,7 +45,8 @@ var DefaultDOMPropertyConfig = {
     alt: null,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: null,
-    autoFocus: HAS_BOOLEAN_VALUE,
+    // autoFocus is polyfilled/normalized by AutoFocusMixin
+    // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
     cellPadding: null,
     cellSpacing: null,
@@ -116,6 +117,7 @@ var DefaultDOMPropertyConfig = {
      */
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
     autoCorrect: null, // Supported in Mobile Safari for keyboard hints
+    property: null, // Supports OG in meta tags
 
     /**
      * SVG Properties
