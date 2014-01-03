@@ -20,7 +20,6 @@
 
 require('mock-modules')
     .dontMock('BrowserScroll')
-    .dontMock('CallbackRegistry')
     .dontMock('EventPluginHub')
     .dontMock('ReactMount')
     .dontMock('ReactEventEmitter')

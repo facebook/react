@@ -18,39 +18,14 @@
 
 "use strict";
 
-var CallbackRegistry = require('CallbackRegistry');
 var EventConstants = require('EventConstants');
+var EventPluginHub = require('EventPluginHub');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
-var getListener = CallbackRegistry.getListener;
+
 var PropagationPhases = EventConstants.PropagationPhases;
-
-/**
- * Injected dependencies:
- */
-
-/**
- * - `InstanceHandle`: [required] Module that performs logical traversals of DOM
- *   hierarchy given ids of the logical DOM elements involved.
- */
-var injection = {
-  InstanceHandle: null,
-  injectInstanceHandle: function(InjectedInstanceHandle) {
-    injection.InstanceHandle = InjectedInstanceHandle;
-    if (__DEV__) {
-      injection.validate();
-    }
-  },
-  validate: function() {
-    var invalid = !injection.InstanceHandle||
-      !injection.InstanceHandle.traverseTwoPhase ||
-      !injection.InstanceHandle.traverseEnterLeave;
-    if (invalid) {
-      throw new Error('InstanceHandle not injected before use!');
-    }
-  }
-};
+var getListener = EventPluginHub.getListener;
 
 /**
  * Some event types have a notion of different registration names for different
@@ -73,7 +48,6 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
     if (!domID) {
       throw new Error('Dispatching id must not be null');
     }
-    injection.validate();
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
   var listener = listenerAtPhase(domID, event, phase);
@@ -92,7 +66,7 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    injection.InstanceHandle.traverseTwoPhase(
+    EventPluginHub.injection.getInstanceHandle().traverseTwoPhase(
       event.dispatchMarker,
       accumulateDirectionalDispatches,
       event
@@ -129,17 +103,11 @@ function accumulateDirectDispatchesSingle(event) {
 }
 
 function accumulateTwoPhaseDispatches(events) {
-  if (__DEV__) {
-    injection.validate();
-  }
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
 function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
-  if (__DEV__) {
-    injection.validate();
-  }
-  injection.InstanceHandle.traverseEnterLeave(
+  EventPluginHub.injection.getInstanceHandle().traverseEnterLeave(
     fromID,
     toID,
     accumulateDispatches,
@@ -150,9 +118,6 @@ function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
 
 
 function accumulateDirectDispatches(events) {
-  if (__DEV__) {
-    injection.validate();
-  }
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
 
@@ -172,8 +137,7 @@ function accumulateDirectDispatches(events) {
 var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
-  injection: injection
+  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches
 };
 
 module.exports = EventPropagators;

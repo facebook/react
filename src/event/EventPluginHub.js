@@ -18,14 +18,18 @@
 
 "use strict";
 
-var CallbackRegistry = require('CallbackRegistry');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
+var isEventSupported = require('isEventSupported');
+
+/**
+ * Internal store for event listeners
+ */
+var listenerBank = {};
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -54,6 +58,21 @@ var executeDispatchesAndRelease = function(event) {
     }
   }
 };
+
+/**
+ * - `InstanceHandle`: [required] Module that performs logical traversals of DOM
+ *   hierarchy given ids of the logical DOM elements involved.
+ */
+var InstanceHandle = null;
+
+function validateInstanceHandle() {
+  var invalid = !InstanceHandle||
+    !InstanceHandle.traverseTwoPhase ||
+    !InstanceHandle.traverseEnterLeave;
+  if (invalid) {
+    throw new Error('InstanceHandle not injected before use!');
+  }
+}
 
 /**
  * This is a unified interface for event plugins to be installed and configured.
@@ -94,7 +113,19 @@ var EventPluginHub = {
      * @param {object} InjectedInstanceHandle
      * @public
      */
-    injectInstanceHandle: EventPropagators.injection.injectInstanceHandle,
+    injectInstanceHandle: function(InjectedInstanceHandle) {
+      InstanceHandle = InjectedInstanceHandle;
+      if (__DEV__) {
+        validateInstanceHandle();
+      }
+    },
+
+    getInstanceHandle: function() {
+      if (__DEV__) {
+        validateInstanceHandle();
+      }
+      return InstanceHandle;
+    },
 
     /**
      * @param {array} InjectedEventPluginOrder
@@ -111,13 +142,60 @@ var EventPluginHub = {
 
   registrationNameModules: EventPluginRegistry.registrationNameModules,
 
-  putListener: CallbackRegistry.putListener,
+  /**
+   * Stores `listener` at `listenerBank[registrationName][id]`. Is idempotent.
+   *
+   * @param {string} id ID of the DOM element.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @param {?function} listener The callback to store.
+   */
+  putListener: function(id, registrationName, listener) {
+    if (__DEV__) {
+      // IE8 has no API for event capturing and the `onScroll` event doesn't
+      // bubble.
+      if (registrationName === 'onScroll' &&
+          !isEventSupported('scroll', true)) {
+        console.warn('This browser doesn\'t support the `onScroll` event');
+      }
+    }
+    var bankForRegistrationName =
+      listenerBank[registrationName] || (listenerBank[registrationName] = {});
+    bankForRegistrationName[id] = listener;
+  },
 
-  getListener: CallbackRegistry.getListener,
+  /**
+   * @param {string} id ID of the DOM element.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @return {?function} The stored callback.
+   */
+  getListener: function(id, registrationName) {
+    var bankForRegistrationName = listenerBank[registrationName];
+    return bankForRegistrationName && bankForRegistrationName[id];
+  },
 
-  deleteListener: CallbackRegistry.deleteListener,
+  /**
+   * Deletes a listener from the registration bank.
+   *
+   * @param {string} id ID of the DOM element.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   */
+  deleteListener: function(id, registrationName) {
+    var bankForRegistrationName = listenerBank[registrationName];
+    if (bankForRegistrationName) {
+      delete bankForRegistrationName[id];
+    }
+  },
 
-  deleteAllListeners: CallbackRegistry.deleteAllListeners,
+  /**
+   * Deletes all listeners for the DOM element with the supplied ID.
+   *
+   * @param {string} id ID of the DOM element.
+   */
+  deleteAllListeners: function(id) {
+    for (var registrationName in listenerBank) {
+      delete listenerBank[registrationName][id];
+    }
+  },
 
   /**
    * Allows registered plugins an opportunity to extract events from top-level
@@ -184,6 +262,13 @@ var EventPluginHub = {
       'processEventQueue(): Additional events were enqueued while processing ' +
       'an event queue. Support for this has not yet been implemented.'
     );
+  },
+
+  /**
+   * This is needed for tests only. Do not use!
+   */
+  __purge: function() {
+    listenerBank = {};
   }
 
 };
