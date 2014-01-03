@@ -19,11 +19,13 @@
 var EventConstants = require('EventConstants');
 var React = require('React');
 var ReactComponent = require('ReactComponent');
+var ReactDOM = require('ReactDOM');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
 var ReactMount = require('ReactMount');
 
 var mergeInto = require('mergeInto');
+var copyProperties = require('copyProperties');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -188,6 +190,27 @@ var ReactTestUtils = {
       );
     }
     return all[0];
+  },
+
+  /**
+   * Pass a mocked component module to this method to augment it with
+   * useful methods that allow it to be used as a dummy React component.
+   * Instead of rendering as usual, the component will become a simple
+   * <div> containing any provided children.
+   */
+  mockComponent: function(module) {
+    var ConvenienceConstructor = React.createClass({
+      render: function() {
+        return ReactDOM.div(null, this.props.children);
+      }
+    });
+
+    copyProperties(module, ConvenienceConstructor);
+    module.mockImplementation(function() {
+      return ConvenienceConstructor.apply(null, arguments);
+    });
+
+    return this;
   },
 
   /**
