@@ -19,6 +19,8 @@
 
 "use strict";
 
+var ReactRootIndex = require('ReactRootIndex');
+
 var invariant = require('invariant');
 
 var SEPARATOR = '.';
@@ -28,15 +30,6 @@ var SEPARATOR_LENGTH = SEPARATOR.length;
  * Maximum depth of traversals before we consider the possibility of a bad ID.
  */
 var MAX_TREE_DEPTH = 100;
-
-/**
- * Size of the reactRoot ID space. We generate random numbers for React root
- * IDs and if there's a collision the events and DOM update system will
- * get confused. If we assume 100 React components per page, and a user
- * loads 1 page per minute 24/7 for 50 years, with a mount point space of
- * 9,999,999 the likelihood of never having a collision is 99.997%.
- */
-var GLOBAL_MOUNT_POINT_MAX = 9999999;
 
 /**
  * Creates a DOM ID prefix to use when mounting React components.
@@ -229,10 +222,12 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
  */
 var ReactInstanceHandles = {
 
+  /**
+   * Constructs a React root ID
+   * @return {string} A React root ID.
+   */
   createReactRootID: function() {
-    return getReactRootIDString(
-      Math.ceil(Math.random() * GLOBAL_MOUNT_POINT_MAX)
-    );
+    return getReactRootIDString(ReactRootIndex.createReactRootIndex());
   },
 
   /**

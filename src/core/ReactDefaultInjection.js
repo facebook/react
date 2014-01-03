@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
@@ -28,11 +30,13 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 var ReactPerf = require('ReactPerf');
+var ReactRootIndex = require('ReactRootIndex');
 
 var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
 var DOMProperty = require('DOMProperty');
 
 var ChangeEventPlugin = require('ChangeEventPlugin');
+var ClientReactRootIndex = require('ClientReactRootIndex');
 var CompositionEventPlugin = require('CompositionEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
@@ -40,6 +44,7 @@ var EventPluginHub = require('EventPluginHub');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var SelectEventPlugin = require('SelectEventPlugin');
+var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -83,6 +88,12 @@ function inject() {
 
   ReactUpdates.injection.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
+  );
+
+  ReactRootIndex.injection.injectCreateReactRootIndex(
+    ExecutionEnvironment.canUseDOM ?
+      ClientReactRootIndex.createReactRootIndex :
+      ServerReactRootIndex.createReactRootIndex
   );
 }
 
