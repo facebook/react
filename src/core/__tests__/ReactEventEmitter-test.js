@@ -86,6 +86,7 @@ function registerSimpleTestHandler() {
 describe('ReactEventEmitter', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
     ReactMount = require('ReactMount');
