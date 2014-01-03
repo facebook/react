@@ -50,6 +50,8 @@ var instancesByReactID = {};
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
 var ReactDOMInput = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMInput',
+
   mixins: [LinkedValueMixin, AutoFocusMixin],
 
   getInitialState: function() {

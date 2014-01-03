@@ -33,6 +33,8 @@ var form = ReactDOM.form;
  * composite component and use `componentDidMount` to attach the event handlers.
  */
 var ReactDOMForm = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMForm',
+
   render: function() {
     // TODO: Instead of using `ReactDOM` directly, we should use JSX. However,
     // `jshint` fails to parse JSX so in order for linting to work in the open

@@ -28,6 +28,7 @@ var option = ReactDOM.option;
  * Implements an <option> native component that warns when `selected` is set.
  */
 var ReactDOMOption = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMOption',
 
   componentWillMount: function() {
     // TODO (yungsters): Remove support for `selected` in <option>.
