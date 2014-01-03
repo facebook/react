@@ -21,24 +21,22 @@
 
 /**
  * Combines multiple className strings into one.
- * http://jsperf.com/joinclasses-args-vs-array
+ * http://jsperf.com/joinclasses-args-vs-array/8
  *
- * @param {...?string} classes
+ * @param {?string} className1
+ * @param {?string} className2
  * @return {string}
  */
-function joinClasses(className/*, ... */) {
-  if (!className) {
-    className = '';
+function joinClasses(className1, className2) {
+  if (className1 && className2) {
+    return className1 + ' ' + className2;
+  } else if (className1) {
+    return className1;
+  } else if (className2) {
+    return className2;
+  } else {
+    return '';
   }
-  var nextClass;
-  var argLength = arguments.length;
-  if (argLength > 1) {
-    for (var ii = 1; ii < argLength; ii++) {
-      nextClass = arguments[ii];
-      nextClass && (className += ' ' + nextClass);
-    }
-  }
-  return className;
 }
 
 module.exports = joinClasses;
