@@ -18,7 +18,7 @@
 
 "use strict";
 
-var CallbackRegistry;
+var EventPluginHub;
 var EventConstants;
 var EventPropagators;
 var ReactInstanceHandles;
@@ -40,7 +40,7 @@ var onStartShouldSetResponder = function(id, cb, capture) {
   var registrationNames = responderEventTypes
     .startShouldSetResponder
     .phasedRegistrationNames;
-  CallbackRegistry.putListener(
+  EventPluginHub.putListener(
     id,
     capture ? registrationNames.captured : registrationNames.bubbled,
     cb
@@ -51,7 +51,7 @@ var onScrollShouldSetResponder = function(id, cb, capture) {
   var registrationNames = responderEventTypes
     .scrollShouldSetResponder
     .phasedRegistrationNames;
-  CallbackRegistry.putListener(
+  EventPluginHub.putListener(
     id,
     capture ? registrationNames.captured : registrationNames.bubbled,
     cb
@@ -62,7 +62,7 @@ var onMoveShouldSetResponder = function(id, cb, capture) {
   var registrationNames = responderEventTypes
     .moveShouldSetResponder
     .phasedRegistrationNames;
-  CallbackRegistry.putListener(
+  EventPluginHub.putListener(
     id,
     capture ? registrationNames.captured : registrationNames.bubbled,
     cb
@@ -71,7 +71,7 @@ var onMoveShouldSetResponder = function(id, cb, capture) {
 
 
 var onResponderGrant = function(id, cb) {
-  CallbackRegistry.putListener(
+  EventPluginHub.putListener(
     id,
     responderEventTypes.responderGrant.registrationName,
     cb
@@ -222,18 +222,18 @@ describe('ResponderEventPlugin', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    CallbackRegistry = require('CallbackRegistry');
+    EventPluginHub = require('EventPluginHub');
     EventConstants = require('EventConstants');
     EventPropagators = require('EventPropagators');
     ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
     SyntheticEvent = require('SyntheticEvent');
-    EventPropagators.injection.injectInstanceHandle(ReactInstanceHandles);
+    EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
 
     // dumpCache, in open-source tests, only resets existing mocks. It does not
     // reset module-state though -- so we need to do this explicitly in the test
     // for now. Once that's no longer the case, we can delete this line.
-    CallbackRegistry.__purge();
+    EventPluginHub.__purge();
 
     topLevelTypes = EventConstants.topLevelTypes;
     responderEventTypes = ResponderEventPlugin.eventTypes;

@@ -19,23 +19,23 @@
 "use strict";
 
 require('mock-modules')
-  .dontMock('CallbackRegistry')
+  .dontMock('EventPluginHub')
   .mock('isEventSupported');
 
-describe('CallbackRegistry', function() {
-  var CallbackRegistry;
+describe('EventPluginHub', function() {
+  var EventPluginHub;
   var isEventSupported;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    CallbackRegistry = require('CallbackRegistry');
+    EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
     isEventSupported.mockReturnValue(false);
   });
 
   it('should warn about the `onScroll` issue on IE8', function() {
     spyOn(console, 'warn');
-    CallbackRegistry.putListener(1, 'onScroll', function(){});
+    EventPluginHub.putListener(1, 'onScroll', function(){});
     expect(console.warn.callCount).toBe(1);
     expect(console.warn.mostRecentCall.args[0]).toBe(
       'This browser doesn\'t support the `onScroll` event'
