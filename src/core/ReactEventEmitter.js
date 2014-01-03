@@ -29,7 +29,6 @@ var ViewportMetrics = require('ViewportMetrics');
 
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
-var keyOf = require('keyOf');
 var merge = require('merge');
 
 /**
@@ -124,6 +123,14 @@ var topEventMapping = {
  * To ensure no conflicts with other potential React instances on the page
  */
 var topListenersIDKey = "_reactListenersID" + String(Math.random()).slice(2);
+
+function getListeningDocument(mountAt) {
+  if (mountAt[topListenersIDKey] == null) {
+    mountAt[topListenersIDKey] = reactTopListenersCounter++;
+    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  }
+  return alreadyListeningTo[mountAt[topListenersIDKey]];
+}
 
 /**
  * Traps top-level events by using event bubbling.
@@ -227,19 +234,14 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   listenTo: function(registrationName, contentDocument) {
     var mountAt = contentDocument;
-    if (mountAt[topListenersIDKey] == null) {
-      mountAt[topListenersIDKey] = reactTopListenersCounter++;
-      alreadyListeningTo[mountAt[topListenersIDKey]] = {};
-    }
-    var topListenersID = mountAt[topListenersIDKey];
-    var eventPlugin = ReactEventEmitter.registrationNameModules[registrationName];
-    var dependencies = eventPlugin.eventTypes[EventPluginRegistry.
-      registrationNameEventNames[registrationName]].dependencies;
+    var listeningDocument = getListeningDocument(mountAt);
+    var dependencies = EventPluginRegistry.
+      registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
       var dependency = dependencies[i];
-      if (!alreadyListeningTo[topListenersID][dependency]) {
+      if (!listeningDocument[dependency]) {
         var topLevelType = topLevelTypes[dependency];
 
         if (topLevelType === topLevelTypes.topWheel) {
@@ -276,13 +278,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           }
 
           // to make sure blur and focus event listeners are only attached once
-          alreadyListeningTo[topListenersID][keyOf({topBlur: null})] = true;
-          alreadyListeningTo[topListenersID][keyOf({topFocus: null})] = true;
+          listeningDocument[topLevelTypes.topBlur] = true;
+          listeningDocument[topLevelTypes.topFocus] = true;
         } else {
           trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 
-        alreadyListeningTo[topListenersID][dependency] = true;
+        listeningDocument[dependency] = true;
       }
     }
   },

@@ -113,7 +113,8 @@ function publishRegistrationName(registrationName, PluginModule, eventName) {
     registrationName
   );
   EventPluginRegistry.registrationNameModules[registrationName] = PluginModule;
-  EventPluginRegistry.registrationNameEventNames[registrationName] = eventName;
+  EventPluginRegistry.registrationNameDependencies[registrationName] =
+    PluginModule.eventTypes[eventName].dependencies;
 }
 
 /**
@@ -136,7 +137,7 @@ var EventPluginRegistry = {
   /**
    * Mapping from registration name to event name
    */
-  registrationNameEventNames: {},
+  registrationNameDependencies: {},
 
   /**
    * Injects an ordering of plugins (by plugin name). This allows the ordering
