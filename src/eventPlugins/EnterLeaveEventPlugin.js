@@ -93,11 +93,16 @@ var EnterLeaveEventPlugin = {
       fromID,
       nativeEvent
     );
+    leave.target = from;
+    leave.relatedTarget = to;
+
     var enter = SyntheticMouseEvent.getPooled(
       eventTypes.mouseEnter,
       toID,
       nativeEvent
     );
+    enter.target = to;
+    enter.relatedTarget = from;
 
     EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
 
