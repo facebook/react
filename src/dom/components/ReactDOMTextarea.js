@@ -46,6 +46,8 @@ var textarea = ReactDOM.textarea;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMTextarea',
+
   mixins: [LinkedValueMixin, AutoFocusMixin],
 
   getInitialState: function() {

@@ -45,6 +45,8 @@ var mouseListenerNames = keyMirror({
  * when `disabled` is set.
  */
 var ReactDOMButton = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMButton',
+
   mixins: [AutoFocusMixin],
 
   render: function() {

@@ -21,6 +21,7 @@ var UserGist = React.createClass({
       lastGistUrl: ''
     };
   },
+
   componentDidMount: function() {
     $.get(this.props.source, function(result) {
       var lastGist = result[0];
@@ -30,6 +31,7 @@ var UserGist = React.createClass({
       });
     }.bind(this));
   },
+
   render: function() {
     return (
       <div>

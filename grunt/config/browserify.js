@@ -6,6 +6,7 @@
 var envify = require('envify/custom');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
+var uglifyify = require('uglifyify');
 
 var SIMPLE_TEMPLATE =
 '/**\n\
@@ -67,7 +68,7 @@ var basic = {
 var min = grunt.util._.merge({}, basic, {
   outfile: './build/react.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'})],
+  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
   after: [minify, bannerify]
 });
 
@@ -96,7 +97,7 @@ var addons = {
 var addonsMin = grunt.util._.merge({}, addons, {
   outfile: './build/react-with-addons.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'})],
+  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
   after: [minify, bannerify]
 });
 

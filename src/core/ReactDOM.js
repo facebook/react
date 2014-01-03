@@ -50,6 +50,8 @@ function createDOMComponentClass(tag, omitClose) {
     instance.construct.apply(instance, arguments);
     return instance;
   };
+
+  Constructor.ConvenienceConstructor = ConvenienceConstructor;
   ConvenienceConstructor.componentConstructor = Constructor;
   return ConvenienceConstructor;
 }
@@ -177,6 +179,7 @@ var ReactDOM = objMapKeyVal({
   g: false,
   line: false,
   path: false,
+  polygon: false,
   polyline: false,
   rect: false,
   svg: false,

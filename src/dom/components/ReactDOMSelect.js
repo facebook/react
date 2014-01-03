@@ -100,6 +100,8 @@ function updateOptions() {
  * selected.
  */
 var ReactDOMSelect = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMSelect',
+
   mixins: [LinkedValueMixin, AutoFocusMixin],
 
   propTypes: {

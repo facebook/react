@@ -686,6 +686,12 @@ var ReactCompositeComponentMixin = {
       }
 
       this.state = this.getInitialState ? this.getInitialState() : null;
+      invariant(
+        typeof this.state === 'object' && !Array.isArray(this.state),
+        '%s.getInitialState(): must return an object or null',
+        this.constructor.displayName || 'ReactCompositeComponent'
+      );
+
       this._pendingState = null;
       this._pendingForceUpdate = false;
 

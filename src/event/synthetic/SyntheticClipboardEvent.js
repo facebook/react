@@ -26,7 +26,13 @@ var SyntheticEvent = require('SyntheticEvent');
  * @see http://www.w3.org/TR/clipboard-apis/
  */
 var ClipboardEventInterface = {
-  clipboardData: null
+  clipboardData: function(event) {
+    return (
+      'clipboardData' in event ?
+        event.clipboardData :
+        global.clipboardData
+    );
+  }
 };
 
 /**

@@ -77,6 +77,33 @@ var ReactPropTransferer = {
   TransferStrategies: TransferStrategies,
 
   /**
+   * Merge two props objects using TransferStrategies.
+   *
+   * @param {object} oldProps original props (they take precedence)
+   * @param {object} newProps new props to merge in
+   * @return {object} a new object containing both sets of props merged.
+   */
+  mergeProps: function(oldProps, newProps) {
+    var props = merge(oldProps);
+
+    for (var thisKey in newProps) {
+      if (!newProps.hasOwnProperty(thisKey)) {
+        continue;
+      }
+
+      var transferStrategy = TransferStrategies[thisKey];
+
+      if (transferStrategy) {
+        transferStrategy(props, thisKey, newProps[thisKey]);
+      } else if (!props.hasOwnProperty(thisKey)) {
+        props[thisKey] = newProps[thisKey];
+      }
+    }
+
+    return props;
+  },
+
+  /**
    * @lends {ReactPropTransferer.prototype}
    */
   Mixin: {
@@ -104,29 +131,15 @@ var ReactPropTransferer = {
         component.constructor.displayName
       );
 
-      var props = {};
-      for (var thatKey in component.props) {
-        if (component.props.hasOwnProperty(thatKey)) {
-          props[thatKey] = component.props[thatKey];
-        }
-      }
-      for (var thisKey in this.props) {
-        if (!this.props.hasOwnProperty(thisKey)) {
-          continue;
-        }
-        var transferStrategy = TransferStrategies[thisKey];
-        if (transferStrategy) {
-          transferStrategy(props, thisKey, this.props[thisKey]);
-        } else if (!props.hasOwnProperty(thisKey)) {
-          props[thisKey] = this.props[thisKey];
-        }
-      }
-      component.props = props;
+      component.props = ReactPropTransferer.mergeProps(
+        component.props,
+        this.props
+      );
+
       return component;
     }
 
   }
-
 };
 
 module.exports = ReactPropTransferer;
