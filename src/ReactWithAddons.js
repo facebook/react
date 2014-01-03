@@ -25,16 +25,33 @@
 
 "use strict";
 
+var EventPluginHub = require('EventPluginHub');
+var ImmutableObject = require('ImmutableObject');
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
+var ReactStateSetters = require('ReactStateSetters');
+var ReactTestUtils = require('ReactTestUtils');
 var ReactTransitionGroup = require('ReactTransitionGroup');
+var ResponderEventPlugin = require('ResponderEventPlugin');
+var TapEventPlugin = require('TapEventPlugin');
 
 var cx = require('cx');
 
 React.addons = {
   classSet: cx,
+
+  ImmutableObject: ImmutableObject,
   LinkedStateMixin: LinkedStateMixin,
-  TransitionGroup: ReactTransitionGroup
+  ResponderEventPlugin: ResponderEventPlugin,
+  StateSetters: ReactStateSetters,
+  TestUtils: ReactTestUtils,
+  TapEventPlugin: TapEventPlugin,
+  TransitionGroup: ReactTransitionGroup,
+
+  injection: {
+    injectEventPluginsByName:
+      EventPluginHub.injection.injectEventPluginsByName
+  }
 };
 
 module.exports = React;
