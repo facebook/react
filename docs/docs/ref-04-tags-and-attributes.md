@@ -11,10 +11,9 @@ next: events.html
 
 React attempts to support all common elements. If you need an element that isn't listed here, please file an issue.
 
-The following elements are supported:
-
-
 ### HTML Elements
+
+The following SVG elements are supported:
 
 ```
 a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -29,9 +28,13 @@ title tr track u ul var video wbr
 
 ### SVG elements
 
+The following SVG elements are supported:
+
 ```
-circle g line path polyline rect svg text
+circle g line path polygon polyline rect svg text
 ```
+
+You may also be interested in [react-art](https://github.com/facebook/react-art), a drawing library for React that can render to Canvas, SVG, or VML (for IE8).
 
 
 ## Supported Attributes
