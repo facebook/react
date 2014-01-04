@@ -34,7 +34,18 @@ var utils = require('jstransform/src/utils');
  * });
  */
 function visitReactDisplayName(traverse, object, path, state) {
-  if (object.id.type === Syntax.Identifier &&
+  var displayName = object.id.name;
+  utils.catchup(object.init['arguments'][0].range[0] + 1, state);
+  utils.append("displayName: '" + displayName + "',", state);
+}
+
+/**
+ * Will only run on @jsx files for now.
+ */
+visitReactDisplayName.test = function(object, path, state) {
+  if (!!utils.getDocblock(state).jsx &&
+      object.type === Syntax.VariableDeclarator &&
+      object.id.type === Syntax.Identifier &&
       object.init &&
       object.init.type === Syntax.CallExpression &&
       object.init.callee.type === Syntax.MemberExpression &&
@@ -45,17 +56,16 @@ function visitReactDisplayName(traverse, object, path, state) {
       object.init['arguments'].length === 1 &&
       object.init['arguments'][0].type === Syntax.ObjectExpression) {
 
-    var displayName = object.id.name;
-    utils.catchup(object.init['arguments'][0].range[0] + 1, state);
-    utils.append("displayName: '" + displayName + "',", state);
+    // Verify that the displayName property isn't already set
+    var properties = object.init['arguments'][0].properties;
+    return properties.reduce(function (safe, property) {
+      var value = property.key.type === 'Identifier'
+        ? property.key.name
+        : property.key.value;
+      return safe && value !== 'displayName';
+    }, true);
   }
-}
-
-/**
- * Will only run on @jsx files for now.
- */
-visitReactDisplayName.test = function(object, path, state) {
-  return object.type === Syntax.VariableDeclarator && !!utils.getDocblock(state).jsx;
+  return false;
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;
