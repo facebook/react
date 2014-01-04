@@ -199,6 +199,11 @@ describe('ReactDOMInput', function() {
   });
 
   it('should throw if both value and valueLink are provided', function() {
+    // Silences console.error messages
+    // ReactErrorUtils.guard is applied to all methods of a React component
+    // and calls console.error in __DEV__ (true for test environment)
+    spyOn(console, 'error');
+
     var node = document.createElement('div');
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
