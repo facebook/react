@@ -21,13 +21,30 @@
 
 var SyntheticEvent = require('SyntheticEvent');
 
+var getEventTarget = require('getEventTarget');
+
 /**
  * @interface UIEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var UIEventInterface = {
-  view: null,
-  detail: null
+  view: function(event) {
+    if (event.view) {
+      return event.view;
+    } else {
+      var target = getEventTarget(event);
+      if (target != null && target.window === target) {
+        // target is a window object
+        return target;
+      } else {
+        var doc = target.ownerDocument;
+        return doc.defaultView || doc.parentWindow;
+      }
+    }
+  },
+  detail: function(event) {
+    return event.detail || 0;
+  }
 };
 
 /**
