@@ -81,14 +81,23 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
+    var win;
+    if (topLevelTarget != null && topLevelTarget.window === topLevelTarget) {
+      // topLevelTarget probably is a window object
+      win = topLevelTarget;
+    } else {
+      var doc = topLevelTarget.ownerDocument;
+      win = doc.defaultView || doc.parentWindow;
+    }
+
     var from, to;
     if (topLevelType === topLevelTypes.topMouseOut) {
       from = topLevelTarget;
       to =
         getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-        window;
+        win;
     } else {
-      from = window;
+      from = win;
       to = topLevelTarget;
     }
 
