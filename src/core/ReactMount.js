@@ -209,27 +209,6 @@ var ReactMount = {
   },
 
   /**
-   * Ensures that the top-level event delegation listener is set up. This will
-   * be invoked some time before the first time any React component is rendered.
-   * @param {DOMElement} container container we're rendering into
-   *
-   * @private
-   */
-  prepareEnvironmentForDOM: function(container) {
-    invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
-      ),
-      'prepareEnvironmentForDOM(...): Target container is not a DOM element.'
-    );
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    ReactEventEmitter.ensureListening(ReactMount.useTouchEvents, doc);
-  },
-
-  /**
    * Take a component that's already mounted into the DOM and replace its props
    * @param {ReactComponent} prevComponent component instance already in the DOM
    * @param {ReactComponent} nextComponent component instance to render
@@ -256,13 +235,22 @@ var ReactMount = {
   },
 
   /**
-   * Register a component into the instance map and start the events system.
+   * Register a component into the instance map and starts scroll value
+   * monitoring
    * @param {ReactComponent} nextComponent component instance to render
    * @param {DOMElement} container container to render into
    * @return {string} reactRoot ID prefix
    */
   _registerComponent: function(nextComponent, container) {
-    ReactMount.prepareEnvironmentForDOM(container);
+    invariant(
+      container && (
+        container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOC_NODE_TYPE
+      ),
+      '_registerComponent(...): Target container is not a DOM element.'
+    );
+
+    ReactEventEmitter.ensureScrollValueMonitoring();
 
     var reactRootID = ReactMount.registerContainer(container);
     instancesByReactRootID[reactRootID] = nextComponent;

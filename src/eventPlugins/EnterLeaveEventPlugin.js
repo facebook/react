@@ -30,8 +30,20 @@ var topLevelTypes = EventConstants.topLevelTypes;
 var getFirstReactDOM = ReactMount.getFirstReactDOM;
 
 var eventTypes = {
-  mouseEnter: {registrationName: keyOf({onMouseEnter: null})},
-  mouseLeave: {registrationName: keyOf({onMouseLeave: null})}
+  mouseEnter: {
+    registrationName: keyOf({onMouseEnter: null}),
+    dependencies: [
+      topLevelTypes.topMouseOut,
+      topLevelTypes.topMouseOver
+    ]
+  },
+  mouseLeave: {
+    registrationName: keyOf({onMouseLeave: null}),
+    dependencies: [
+      topLevelTypes.topMouseOut,
+      topLevelTypes.topMouseOver
+    ]
+  }
 };
 
 var extractedEvents = [null, null];

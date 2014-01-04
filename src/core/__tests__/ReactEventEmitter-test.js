@@ -41,6 +41,7 @@ var setID = ReactMount.setID;
 var ReactEventEmitter;
 var ReactTestUtils;
 var TapEventPlugin;
+var EventListener;
 
 var tapMoveThreshold;
 var idCallOrder = [];
@@ -58,6 +59,7 @@ var recordIDAndReturnFalse = function(id, event) {
 var LISTENER = mocks.getMockFunction();
 var ON_CLICK_KEY = keyOf({onClick: null});
 var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
+var ON_CHANGE_KEY = keyOf({onChange: null});
 
 
 /**
@@ -90,13 +92,13 @@ describe('ReactEventEmitter', function() {
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
     ReactMount = require('ReactMount');
+    EventListener = require('EventListener');
     getID = ReactMount.getID;
     setID = ReactMount.setID;
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    ReactEventEmitter.ensureListening(false, document);
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
@@ -315,6 +317,45 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder.length).toBe(0);
   });
 
+  it('should listen to events only once', function() {
+    spyOn(EventListener, 'listen');
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
+    expect(EventListener.listen.callCount).toBe(1);
+  });
+
+  it('should work with event plugins without dependencies', function() {
+    spyOn(EventListener, 'listen');
+
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
+
+    expect(EventListener.listen.argsForCall[0][1]).toBe('click');
+  });
+
+  it('should work with event plugins with dependencies', function() {
+    spyOn(EventListener, 'listen');
+    spyOn(EventListener, 'capture');
+
+    ReactEventEmitter.listenTo(ON_CHANGE_KEY, document);
+
+    var setEventListeners = [];
+    var listenCalls = EventListener.listen.argsForCall;
+    var captureCalls = EventListener.capture.argsForCall;
+    for (var i = 0, l = listenCalls.length; i < l; i++) {
+      setEventListeners.push(listenCalls[i][1]);
+    }
+    for (i = 0, l = captureCalls.length; i < l; i++) {
+      setEventListeners.push(captureCalls[i][1]);
+    }
+
+    var module = ReactEventEmitter.registrationNameModules[ON_CHANGE_KEY];
+    var dependencies = module.eventTypes.change.dependencies;
+    expect(setEventListeners.length).toEqual(dependencies.length);
+
+    for (i = 0, l = setEventListeners.length; i < l; i++) {
+      expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
+    }
+  });
 
   it('should bubble onTouchTap', function() {
     ReactEventEmitter.putListener(

@@ -19,6 +19,7 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var EventPluginUtils = require('EventPluginUtils');
 var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
@@ -40,7 +41,7 @@ var React = {
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
-    ReactMount.useTouchEvents = shouldUseTouch;
+    EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,

@@ -24,6 +24,7 @@ var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
+var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
@@ -33,14 +34,16 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
-var putListener = ReactEventEmitter.putListener;
 var deleteListener = ReactEventEmitter.deleteListener;
-var registrationNames = ReactEventEmitter.registrationNames;
+var listenTo = ReactEventEmitter.listenTo;
+var registrationNameModules = ReactEventEmitter.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
+
+var ELEMENT_NODE_TYPE = 1;
 
 /**
  * @param {?object} props
@@ -60,6 +63,19 @@ function assertValidProps(props) {
     'not a string.'
   );
 }
+
+function putListener(id, registrationName, listener) {
+  var container = ReactMount.findReactContainerForID(id);
+  if (container) {
+    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+      container.ownerDocument :
+      container;
+    listenTo(registrationName, doc);
+  }
+
+  ReactEventEmitter.putListener(id, registrationName, listener);
+}
+
 
 /**
  * @constructor ReactDOMComponent
@@ -126,7 +142,7 @@ ReactDOMComponent.Mixin = {
       if (propValue == null) {
         continue;
       }
-      if (registrationNames[propKey]) {
+      if (registrationNameModules[propKey]) {
         putListener(this._rootNodeID, propKey, propValue);
       } else {
         if (propKey === STYLE) {
@@ -243,7 +259,7 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
-      } else if (registrationNames[propKey]) {
+      } else if (registrationNameModules[propKey]) {
         deleteListener(this._rootNodeID, propKey);
       } else if (
           DOMProperty.isStandardName[propKey] ||
@@ -285,7 +301,7 @@ ReactDOMComponent.Mixin = {
           // Relies on `updateStylesByID` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
-      } else if (registrationNames[propKey]) {
+      } else if (registrationNameModules[propKey]) {
         putListener(this._rootNodeID, propKey, nextProp);
       } else if (
           DOMProperty.isStandardName[propKey] ||

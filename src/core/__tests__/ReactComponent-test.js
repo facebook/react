@@ -37,14 +37,14 @@ describe('ReactComponent', function() {
     expect(function() {
       React.renderComponent(<div></div>, [container]);
     }).toThrow(
-      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'
     );
 
     expect(function() {
       React.renderComponent(<div></div>, null);
     }).toThrow(
-      'Invariant Violation: prepareEnvironmentForDOM(...): Target container ' +
+      'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'
     );
   });

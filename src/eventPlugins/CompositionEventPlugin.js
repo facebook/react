@@ -42,19 +42,43 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionEnd: null}),
       captured: keyOf({onCompositionEndCapture: null})
-    }
+    },
+    dependencies: [
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionEnd,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
+    ]
   },
   compositionStart: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionStart: null}),
       captured: keyOf({onCompositionStartCapture: null})
-    }
+    },
+    dependencies: [
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionStart,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
+    ]
   },
   compositionUpdate: {
     phasedRegistrationNames: {
       bubbled: keyOf({onCompositionUpdate: null}),
       captured: keyOf({onCompositionUpdateCapture: null})
-    }
+    },
+    dependencies: [
+      topLevelTypes.topBlur,
+      topLevelTypes.topCompositionUpdate,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topKeyPress,
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topMouseDown
+    ]
   }
 };
 

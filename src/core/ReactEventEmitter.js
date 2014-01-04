@@ -22,6 +22,7 @@
 var EventConstants = require('EventConstants');
 var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
+var EventPluginRegistry = require('EventPluginRegistry');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
@@ -75,6 +76,62 @@ var merge = require('merge');
  *    React Core     .  General Purpose Event Plugin System
  */
 
+var alreadyListeningTo = {};
+var isMonitoringScrollValue = false;
+var reactTopListenersCounter = 0;
+var topEventMapping = {
+  topBlur: 'blur',
+  topChange: 'change',
+  topClick: 'click',
+  topCompositionEnd: 'compositionend',
+  topCompositionStart: 'compositionstart',
+  topCompositionUpdate: 'compositionupdate',
+  topContextMenu: 'contextmenu',
+  topCopy: 'copy',
+  topCut: 'cut',
+  topDoubleClick: 'dblclick',
+  topDrag: 'drag',
+  topDragEnd: 'dragend',
+  topDragEnter: 'dragenter',
+  topDragExit: 'dragexit',
+  topDragLeave: 'dragleave',
+  topDragOver: 'dragover',
+  topDragStart: 'dragstart',
+  topDrop: 'drop',
+  topFocus: 'focus',
+  topInput: 'input',
+  topKeyDown: 'keydown',
+  topKeyPress: 'keypress',
+  topKeyUp: 'keyup',
+  topMouseDown: 'mousedown',
+  topMouseMove: 'mousemove',
+  topMouseOut: 'mouseout',
+  topMouseOver: 'mouseover',
+  topMouseUp: 'mouseup',
+  topPaste: 'paste',
+  topScroll: 'scroll',
+  topSelectionChange: 'selectionchange',
+  topSubmit: 'submit',
+  topTouchCancel: 'touchcancel',
+  topTouchEnd: 'touchend',
+  topTouchMove: 'touchmove',
+  topTouchStart: 'touchstart',
+  topWheel: 'wheel'
+};
+
+/**
+ * To ensure no conflicts with other potential React instances on the page
+ */
+var topListenersIDKey = "_reactListenersID" + String(Math.random()).slice(2);
+
+function getListeningDocument(mountAt) {
+  if (mountAt[topListenersIDKey] == null) {
+    mountAt[topListenersIDKey] = reactTopListenersCounter++;
+    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  }
+  return alreadyListeningTo[mountAt[topListenersIDKey]];
+}
+
 /**
  * Traps top-level events by using event bubbling.
  *
@@ -112,21 +169,6 @@ function trapCapturedEvent(topLevelType, handlerBaseName, element) {
 }
 
 /**
- * Listens to window scroll and resize events. We cache scroll values so that
- * application code can access them without triggering reflows.
- *
- * NOTE: Scroll events do not bubble.
- *
- * @private
- * @see http://www.quirksmode.org/dom/events/scroll.html
- */
-function registerScrollValueMonitoring() {
-  var refresh = ViewportMetrics.refreshScrollValues;
-  EventListener.listen(window, 'scroll', refresh);
-  EventListener.listen(window, 'resize', refresh);
-}
-
-/**
  * `ReactEventEmitter` is used to attach top-level event listeners. For example:
  *
  *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
@@ -142,39 +184,6 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * to allow dependency injection.
    */
   TopLevelCallbackCreator: null,
-
-  /**
-   * Ensures that top-level event delegation listeners are installed.
-   *
-   * There are issues with listening to both touch events and mouse events on
-   * the top-level, so we make the caller choose which one to listen to. (If
-   * there's a touch top-level listeners, anchors don't receive clicks for some
-   * reason, and only in some cases).
-   *
-   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
-   * @param {DOMDocument} contentDocument DOM document to listen on
-   */
-  ensureListening: function(touchNotMouse, contentDocument) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'ensureListening(...): Cannot toggle event listening in a Worker ' +
-      'thread. This is likely a bug in the framework. Please report ' +
-      'immediately.'
-    );
-    invariant(
-      ReactEventEmitter.TopLevelCallbackCreator,
-      'ensureListening(...): Cannot be called without a top level callback ' +
-      'creator being injected.'
-    );
-    // Call out to base implementation.
-    ReactEventEmitterMixin.ensureListening.call(
-      ReactEventEmitter,
-      {
-        touchNotMouse: touchNotMouse,
-        contentDocument: contentDocument
-      }
-    );
-  },
 
   /**
    * Sets whether or not any created callbacks should be enabled.
@@ -220,108 +229,84 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
    * they bubble to document.
    *
-   * @param {boolean} touchNotMouse Listen to touch events instead of mouse.
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {DOMDocument} contentDocument Document which owns the container
-   * @private
-   * @see http://www.quirksmode.org/dom/events/keys.html.
    */
-  listenAtTopLevel: function(touchNotMouse, contentDocument) {
-    invariant(
-      !contentDocument._isListening,
-      'listenAtTopLevel(...): Cannot setup top-level listener more than once.'
-    );
-    var topLevelTypes = EventConstants.topLevelTypes;
+  listenTo: function(registrationName, contentDocument) {
     var mountAt = contentDocument;
+    var listeningDocument = getListeningDocument(mountAt);
+    var dependencies = EventPluginRegistry.
+      registrationNameDependencies[registrationName];
 
-    registerScrollValueMonitoring();
-    trapBubbledEvent(topLevelTypes.topMouseOver, 'mouseover', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseDown, 'mousedown', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseUp, 'mouseup', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseMove, 'mousemove', mountAt);
-    trapBubbledEvent(topLevelTypes.topMouseOut, 'mouseout', mountAt);
-    trapBubbledEvent(topLevelTypes.topClick, 'click', mountAt);
-    trapBubbledEvent(topLevelTypes.topDoubleClick, 'dblclick', mountAt);
-    trapBubbledEvent(topLevelTypes.topContextMenu, 'contextmenu', mountAt);
-    if (touchNotMouse) {
-      trapBubbledEvent(topLevelTypes.topTouchStart, 'touchstart', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchEnd, 'touchend', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchMove, 'touchmove', mountAt);
-      trapBubbledEvent(topLevelTypes.topTouchCancel, 'touchcancel', mountAt);
-    }
-    trapBubbledEvent(topLevelTypes.topKeyUp, 'keyup', mountAt);
-    trapBubbledEvent(topLevelTypes.topKeyPress, 'keypress', mountAt);
-    trapBubbledEvent(topLevelTypes.topKeyDown, 'keydown', mountAt);
-    trapBubbledEvent(topLevelTypes.topInput, 'input', mountAt);
-    trapBubbledEvent(topLevelTypes.topChange, 'change', mountAt);
-    trapBubbledEvent(
-      topLevelTypes.topSelectionChange,
-      'selectionchange',
-      mountAt
-    );
+    var topLevelTypes = EventConstants.topLevelTypes;
+    for (var i = 0, l = dependencies.length; i < l; i++) {
+      var dependency = dependencies[i];
+      if (!listeningDocument[dependency]) {
+        var topLevelType = topLevelTypes[dependency];
 
-    trapBubbledEvent(
-      topLevelTypes.topCompositionEnd,
-      'compositionend',
-      mountAt
-    );
-    trapBubbledEvent(
-      topLevelTypes.topCompositionStart,
-      'compositionstart',
-      mountAt
-    );
-    trapBubbledEvent(
-      topLevelTypes.topCompositionUpdate,
-      'compositionupdate',
-      mountAt
-    );
+        if (topLevelType === topLevelTypes.topWheel) {
+          if (isEventSupported('wheel')) {
+            trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
+          } else if (isEventSupported('mousewheel')) {
+            trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
+          } else {
+            // Firefox needs to capture a different mouse scroll event.
+            // @see http://www.quirksmode.org/dom/events/tests/scroll.html
+            trapBubbledEvent(
+              topLevelTypes.topWheel,
+              'DOMMouseScroll',
+              mountAt);
+          }
+        } else if (topLevelType === topLevelTypes.topScroll) {
 
-    if (isEventSupported('drag')) {
-      trapBubbledEvent(topLevelTypes.topDrag, 'drag', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragEnd, 'dragend', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragEnter, 'dragenter', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragExit, 'dragexit', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragLeave, 'dragleave', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragOver, 'dragover', mountAt);
-      trapBubbledEvent(topLevelTypes.topDragStart, 'dragstart', mountAt);
-      trapBubbledEvent(topLevelTypes.topDrop, 'drop', mountAt);
-    }
+          if (isEventSupported('scroll', true)) {
+            trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
+          } else {
+            trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
+          }
+        } else if (topLevelType === topLevelTypes.topFocus ||
+            topLevelType === topLevelTypes.topBlur) {
 
-    if (isEventSupported('wheel')) {
-      trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
-    } else if (isEventSupported('mousewheel')) {
-      trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
-    } else {
-      // Firefox needs to capture a different mouse scroll event.
-      // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-      trapBubbledEvent(topLevelTypes.topWheel, 'DOMMouseScroll', mountAt);
-    }
+          if (isEventSupported('focus', true)) {
+            trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
+            trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
+          } else if (isEventSupported('focusin')) {
+            // IE has `focusin` and `focusout` events which bubble.
+            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
+            trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
+          }
 
-    // IE<9 does not support capturing so just trap the bubbled event there.
-    if (isEventSupported('scroll', true)) {
-      trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
-    } else {
-      trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
-    }
+          // to make sure blur and focus event listeners are only attached once
+          listeningDocument[topLevelTypes.topBlur] = true;
+          listeningDocument[topLevelTypes.topFocus] = true;
+        } else {
+          trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
+        }
 
-    if (isEventSupported('focus', true)) {
-      trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
-      trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
-    } else if (isEventSupported('focusin')) {
-      // IE has `focusin` and `focusout` events which bubble.
-      // @see
-      // http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-      trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
-      trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
-    }
-
-    if (isEventSupported('copy')) {
-      trapBubbledEvent(topLevelTypes.topCopy, 'copy', mountAt);
-      trapBubbledEvent(topLevelTypes.topCut, 'cut', mountAt);
-      trapBubbledEvent(topLevelTypes.topPaste, 'paste', mountAt);
+        listeningDocument[dependency] = true;
+      }
     }
   },
 
-  registrationNames: EventPluginHub.registrationNames,
+  /**
+   * Listens to window scroll and resize events. We cache scroll values so that
+   * application code can access them without triggering reflows.
+   *
+   * NOTE: Scroll events do not bubble.
+   *
+   * @see http://www.quirksmode.org/dom/events/scroll.html
+   */
+  ensureScrollValueMonitoring: function(){
+    if (!isMonitoringScrollValue) {
+      var refresh = ViewportMetrics.refreshScrollValues;
+      EventListener.listen(window, 'scroll', refresh);
+      EventListener.listen(window, 'resize', refresh);
+      isMonitoringScrollValue = true;
+    }
+  },
+
+  registrationNameModules: EventPluginHub.registrationNameModules,
 
   putListener: EventPluginHub.putListener,
 
@@ -336,6 +321,5 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   trapCapturedEvent: trapCapturedEvent
 
 });
-
 
 module.exports = ReactEventEmitter;

@@ -37,7 +37,15 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onSelect: null}),
       captured: keyOf({onSelectCapture: null})
-    }
+    },
+    dependencies: [
+      topLevelTypes.topBlur,
+      topLevelTypes.topFocus,
+      topLevelTypes.topKeyDown,
+      topLevelTypes.topMouseDown,
+      topLevelTypes.topMouseUp,
+      topLevelTypes.topSelectionChange
+    ]
   }
 };
 

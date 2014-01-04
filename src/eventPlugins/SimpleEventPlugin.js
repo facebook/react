@@ -253,6 +253,10 @@ var topLevelEventsToDispatchConfig = {
   topWheel:       eventTypes.wheel
 };
 
+for (var topLevelType in topLevelEventsToDispatchConfig) {
+  topLevelEventsToDispatchConfig[topLevelType].dependencies = [topLevelType];
+}
+
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
