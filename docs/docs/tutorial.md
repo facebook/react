@@ -389,7 +389,7 @@ var CommentBox = React.createClass({
       if (req.readyState !== 4 || req.status !== 200) return;
       this.setState({data: JSON.parse(req.responseText)});
     }.bind(this);
-    req.open("GET", this.props.url, true);
+    req.open("GET", 'comments.json', true);
     req.send();
     // $.ajax({
     //   url: 'comments.json',
