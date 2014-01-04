@@ -42,6 +42,7 @@ The open-source community has built tools that integrate JSX with several build 
 
 * [reactify](https://github.com/andreypopp/reactify) - use JSX with [browserify](http://browserify.org/)
 * [grunt-react](https://github.com/ericclemmons/grunt-react) - [grunt](http://gruntjs.com/) task for JSX
+* [gulp-react](https://github.com/sindresorhus/gulp-react) - [gulp](http://gulpjs.com/) task for JSX
 * [jsx-requirejs-plugin](https://github.com/philix/jsx-requirejs-plugin) - use JSX with [require.js](http://requirejs.org/) and precompile JSX files with r.js
 * [pyReact](https://github.com/facebook/react-python) - use JSX with [Python](http://www.python.org/)
 * [react-rails](https://github.com/facebook/react-rails) - use JSX with [Ruby on Rails](http://rubyonrails.org/)
