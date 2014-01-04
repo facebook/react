@@ -13,7 +13,7 @@ React attempts to support all common elements. If you need an element that isn't
 
 ### HTML Elements
 
-The following SVG elements are supported:
+The following HTML elements are supported:
 
 ```
 a abbr address area article aside audio b base bdi bdo big blockquote body br
