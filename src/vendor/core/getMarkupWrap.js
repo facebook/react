@@ -36,11 +36,15 @@ var shouldWrap = {
   // Force wrapping for SVG elements because if they get created inside a <div>,
   // they will be initialized in the wrong namespace (and will not display).
   'circle': true,
+  'defs': true,
   'g': true,
   'line': true,
+  'linearGradient': true,
   'path': true,
   'polyline': true,
+  'radialGradient': true,
   'rect': true,
+  'stop': true,
   'text': true
 };
 
@@ -72,11 +76,15 @@ var markupWrap = {
   'th': trWrap,
 
   'circle': svgWrap,
+  'defs': svgWrap,
   'g': svgWrap,
   'line': svgWrap,
+  'linearGradient': svgWrap,
   'path': svgWrap,
   'polyline': svgWrap,
+  'radialGradient': svgWrap,
   'rect': svgWrap,
+  'stop': svgWrap,
   'text': svgWrap
 };
 
