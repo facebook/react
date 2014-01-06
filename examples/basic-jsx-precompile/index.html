@@ -2,42 +2,26 @@
 <html>
   <head>
     <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
-    <title>Basic Example with precompiled JSX</title>
+    <title>Basic Example with Precompiled JSX</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
   <body>
-    <h1>Basic Example with precompiled JSX</h1>
+    <h1>Basic Example with Precompiled JSX</h1>
     <div id="container">
       <p>
-        To install React, follow the instructions on
-        <a href="http://www.github.com/facebook/react/">GitHub</a>.
+        If you can see this, React is not running. Try running:
       </p>
-      <p>
-        If you can see this, React is not running. You probably didn't run:
-        <pre>
-          npm install -g react-tools
-          jsx . build/
-        </pre>
-      </p>
+      <pre>npm install -g react-tools
+cd examples/basic-jsx-precompile/
+jsx . build/</pre>
     </div>
     <h4>Example Details</h4>
-    <ul>
-      <li>
-        This is built with
-        <a href="https://github.com/substack/node-browserify">browserify</a>.
-      </li>
-      <li>
-        This is written with JSX and precompiled to vanilla JS by doing:
-        <pre>
-          npm install -g react-tools
-          jsx . build/
-        </pre>
-      </li>
-    </ul>
+    <p>This is written with JSX in a separate file and precompiled to vanilla JS by running:</p>
+    <pre>npm install -g react-tools
+cd examples/basic-jsx-precompile/
+jsx . build/</pre>
     <p>
-    </p>
-    <p>
-      Learn more at
+      Learn more about React at
       <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
     <script src="../../build/react.js"></script>
