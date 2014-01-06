@@ -17,11 +17,9 @@
  * @typechecks
  */
 
+var toArray = require('toArray');
+
 /**
- * NOTE: if you are a previous user of this function, it has been considered
- * unsafe because it's inconsistent across browsers for some inputs.
- * Instead use `Array.isArray()`.
- *
  * Perform a heuristic test to determine if an object is "array-like".
  *
  *   A monk asked Joshu, a Zen master, "Has a dog Buddha nature?"
@@ -30,6 +28,8 @@
  * This function determines if its argument has "array nature": it returns
  * true if the argument is an actual array, an `arguments' object, or an
  * HTMLCollection (e.g. node.childNodes or node.getElementsByTagName()).
+ *
+ * It will return false for other array-like objects like Filelist.
  *
  * @param {*} obj
  * @return {boolean}
@@ -73,8 +73,8 @@ function hasArrayNature(obj) {
  *
  * This allows you to treat `things' as an array, but accept scalars in the API.
  *
- * This is also good for converting certain pseudo-arrays, like `arguments` or
- * HTMLCollections, into arrays.
+ * If you need to convert an array-like object, like `arguments`, into an array
+ * use toArray instead.
  *
  * @param {*} obj
  * @return {array}
@@ -82,14 +82,11 @@ function hasArrayNature(obj) {
 function createArrayFrom(obj) {
   if (!hasArrayNature(obj)) {
     return [obj];
+  } else if (Array.isArray(obj)) {
+    return obj.slice();
+  } else {
+    return toArray(obj);
   }
-  if (obj.item) {
-    // IE does not support Array#slice on HTMLCollections
-    var l = obj.length, ret = new Array(l);
-    while (l--) { ret[l] = obj[l]; }
-    return ret;
-  }
-  return Array.prototype.slice.call(obj);
 }
 
 module.exports = createArrayFrom;

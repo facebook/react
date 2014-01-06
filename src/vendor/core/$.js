@@ -17,7 +17,6 @@
  * @typechecks
  */
 
-var ge = require('ge');
 var ex = require('ex');
 
 /**
@@ -28,12 +27,9 @@ var ex = require('ex');
  *
  * If you're not sure whether or not the element exists, use ge instead, and
  * manually check for the element's existence in your application code.
- *
- * @param {string|DOMDocument|DOMElement|DOMTextNode|Comment} id
- * @return {DOMDocument|DOMElement|DOMTextNode|Comment}
  */
-function $(id) {
-  var element = ge(id);
+function getRequiredElement(id) {
+  var element = typeof id === 'string' ? document.getElementById(id) : id;
   if (!element) {
     throw new Error(ex(
       'Tried to get element with id of "%s" but it is not present on the page.',
@@ -42,5 +38,24 @@ function $(id) {
   }
   return element;
 }
+
+/**
+ * Find a node by ID with typechecked input and output.
+ *
+ * @param {string|DOMDocument|DOMElement|DOMTextNode|Comment} id
+ * @return {DOMDocument|DOMElement|DOMTextNode|Comment}
+ */
+function $(id) {
+  return getRequiredElement(id);
+}
+
+/**
+ * Find a node by ID without typechecks.
+ *
+ * This is micro-optimization for the small subset of users who have typechecks
+ * enabled. It should only be used by frequently called core modules that are
+ * already checking their params and return values.
+ */
+$.unsafe = getRequiredElement;
 
 module.exports = $;
