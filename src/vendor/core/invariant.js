@@ -28,7 +28,7 @@
 
 function invariant(condition) {
   if (!condition) {
-    throw new Error('Invariant Violation');
+    throw new Error('Generic React Exception. Use the non-minified build for the full message.');
   }
 }
 
