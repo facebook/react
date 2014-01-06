@@ -51,6 +51,8 @@ var SimpleEventPlugin = require('SimpleEventPlugin');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactUpdates = require('ReactUpdates');
 
+var createFullPageComponent = require('createFullPageComponent');
+
 function inject() {
   ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
@@ -79,7 +81,12 @@ function inject() {
     input: ReactDOMInput,
     option: ReactDOMOption,
     select: ReactDOMSelect,
-    textarea: ReactDOMTextarea
+    textarea: ReactDOMTextarea,
+
+    html: createFullPageComponent(ReactDOM.html),
+    head: createFullPageComponent(ReactDOM.head),
+    title: createFullPageComponent(ReactDOM.title),
+    body: createFullPageComponent(ReactDOM.body)
   });
 
   DOMProperty.injection.injectDOMPropertyConfig(DefaultDOMPropertyConfig);

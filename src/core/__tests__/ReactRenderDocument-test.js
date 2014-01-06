@@ -65,7 +65,7 @@ describe('rendering React components at document', function() {
     expect(componentID).toBe(component._rootNodeID);
   });
 
-  it('should be able to unmount component from document node', function() {
+  it('should not be able to unmount component from document node', function() {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -87,72 +87,19 @@ describe('rendering React components at document', function() {
     React.renderComponent(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
-    var unmounted = React.unmountComponentAtNode(testDocument);
-    expect(unmounted).toBe(true);
-    expect(testDocument.documentElement).not.toBe(null);
-    expect(testDocument.documentElement.innerHTML).toBe('');
-  });
-
-  it('should be able to switch root constructors via state', function() {
-    expect(testDocument).not.toBeUndefined();
-
-    var Component = React.createClass({
-      render: function() {
-        return (
-          <html>
-            <head>
-              <title>Hello World</title>
-            </head>
-            <body>
-              Hello world
-            </body>
-          </html>
-        );
-      }
-    });
-
-    var Component2 = React.createClass({
-      render: function() {
-        return (
-          <html>
-            <head>
-              <title>Hello World</title>
-            </head>
-            <body>
-              Goodbye world
-            </body>
-          </html>
-        );
-      }
-    });
-
-    var Root = React.createClass({
-      getInitialState: function() {
-        return {toggled: false};
-      },
-      toggle: function() {
-        this.setState({toggled: !this.state.toggled});
-      },
-      render: function() {
-        if (this.state.toggled) {
-          return <Component2 />;
-        }
-        return <Component />;
-      }
-    });
-
-    ReactMount.allowFullPageRender = true;
-    var component = React.renderComponent(<Root />, testDocument);
+    expect(function() {
+      React.unmountComponentAtNode(testDocument);
+    }).toThrow(
+      'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+      'Because of cross-browser quirks it is impossible to unmount some ' +
+      'top-level components (eg <html>, <head>,  and <body>) reliably and ' +
+      'efficiently. To fix this, have a single top-level component that ' +
+      'never unmounts render these elements.'
+    );
     expect(testDocument.body.innerHTML).toBe(' Hello world ');
-
-    // Reactive update via state transition
-    component.toggle();
-
-    expect(testDocument.body.innerHTML).toBe(' Goodbye world ');
-
   });
 
-  it('should be able to switch root constructors', function() {
+  it('should not be able to switch root constructors', function() {
     expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
@@ -191,9 +138,17 @@ describe('rendering React components at document', function() {
     expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
     // Reactive update
-    React.renderComponent(<Component2 />, testDocument);
+    expect(function() {
+      React.renderComponent(<Component2 />, testDocument);
+    }).toThrow(
+      'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+      'Because of cross-browser quirks it is impossible to unmount some ' +
+      'top-level components (eg <html>, <head>,  and <body>) reliably and ' +
+      'efficiently. To fix this, have a single  top-level component that ' +
+      'never unmounts render these elements.'
+    );
 
-    expect(testDocument.body.innerHTML).toBe(' Goodbye world ');
+    expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
   });
 
