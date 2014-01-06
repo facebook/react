@@ -20,30 +20,53 @@
 var runScripts;
 var headEl;
 
+var buffer = require('buffer');
 var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
-var transform = transform.bind(null, visitors.react);
 var docblock = require('jstransform/src/docblock');
 
+function transformReact(source) {
+  return transform(visitors.react, source, {sourceMap: true});
+}
 
-exports.transform = transform;
+exports.transform = transformReact;
 
 exports.exec = function(code) {
-  return eval(transform(code).code);
+  return eval(transformReact(code).code);
 };
 
-if (typeof window === "undefined" || window === null) {
-  return;
-}
-headEl = document.getElementsByTagName('head')[0];
+var inlineScriptCount = 0;
 
-var run = exports.run = function(code) {
+var transformCode = function(code, source) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
-  var functionBody = jsx ? transform(code).code : code;
-  var scriptEl = document.createElement('script');
+  if (jsx) {
+    var transformed = transformReact(code);
 
-  scriptEl.text = functionBody;
+    var map = transformed.sourceMap.toJSON();
+    if (source == null) {
+      source = "Inline JSX script";
+      inlineScriptCount++;
+      if (inlineScriptCount > 1) {
+        source += ' (' + inlineScriptCount + ')';
+      }
+    }
+    map.sources = [source];
+    map.sourcesContent = [code];
+
+    return (
+      transformed.code +
+      '//# sourceMappingURL=data:application/json;base64,' +
+      buffer.Buffer(JSON.stringify(map)).toString('base64')
+    );
+  } else {
+    return code;
+  }
+};
+
+var run = exports.run = function(code, source) {
+  var scriptEl = document.createElement('script');
+  scriptEl.text = transformCode(code, source);
   headEl.appendChild(scriptEl);
 };
 
@@ -61,7 +84,7 @@ var load = exports.load = function(url, callback) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
       if (xhr.status === 0 || xhr.status === 200) {
-        run(xhr.responseText);
+        run(xhr.responseText, url);
       } else {
         throw new Error("Could not load " + url);
       }
@@ -90,13 +113,17 @@ runScripts = function() {
     if (script.src) {
       load(script.src);
     } else {
-      run(script.innerHTML);
+      run(script.innerHTML, null);
     }
   });
 };
 
-if (window.addEventListener) {
-  window.addEventListener('DOMContentLoaded', runScripts, false);
-} else {
-  window.attachEvent('onload', runScripts);
+if (typeof window !== "undefined" && window !== null) {
+  headEl = document.getElementsByTagName('head')[0];
+
+  if (window.addEventListener) {
+    window.addEventListener('DOMContentLoaded', runScripts, false);
+  } else {
+    window.attachEvent('onload', runScripts);
+  }
 }
