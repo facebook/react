@@ -179,11 +179,6 @@ function purgeID(id) {
  * Inside of `container`, the first element rendered is the "reactRoot".
  */
 var ReactMount = {
-  /**
-   * Safety guard to prevent accidentally rendering over the entire HTML tree.
-   */
-  allowFullPageRender: false,
-
   /** Time spent generating markup. */
   totalInstantiationTime: 0,
 

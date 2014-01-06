@@ -57,12 +57,14 @@ describe('rendering React components at document', function() {
       }
     });
 
-    ReactMount.allowFullPageRender = true;
-    var component = React.renderComponent(<Root />, testDocument);
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    React.renderComponentToString(<Root />, function(markup) {
+      testDocument.innerHTML = markup;
+      var component = React.renderComponent(<Root />, testDocument);
+      expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
-    var componentID = ReactMount.getReactRootID(testDocument);
-    expect(componentID).toBe(component._rootNodeID);
+      var componentID = ReactMount.getReactRootID(testDocument);
+      expect(componentID).toBe(component._rootNodeID);
+    });
   });
 
   it('should not be able to unmount component from document node', function() {
@@ -83,20 +85,22 @@ describe('rendering React components at document', function() {
       }
     });
 
-    ReactMount.allowFullPageRender = true;
-    React.renderComponent(<Root />, testDocument);
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    React.renderComponentToString(<Root />, function(markup) {
+      testDocument.innerHTML = markup;
+      React.renderComponent(<Root />, testDocument);
+      expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
-    expect(function() {
-      React.unmountComponentAtNode(testDocument);
-    }).toThrow(
-      'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
-      'Because of cross-browser quirks it is impossible to unmount some ' +
-      'top-level components (eg <html>, <head>,  and <body>) reliably and ' +
-      'efficiently. To fix this, have a single top-level component that ' +
-      'never unmounts render these elements.'
-    );
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      expect(function() {
+        React.unmountComponentAtNode(testDocument);
+      }).toThrow(
+        'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+          'Because of cross-browser quirks it is impossible to unmount some ' +
+          'top-level components (eg <html>, <head>,  and <body>) reliably ' +
+          'and efficiently. To fix this, have a single top-level component ' +
+          'that never unmounts render these elements.'
+      );
+      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    });
   });
 
   it('should not be able to switch root constructors', function() {
@@ -132,23 +136,26 @@ describe('rendering React components at document', function() {
       }
     });
 
-    ReactMount.allowFullPageRender = true;
-    React.renderComponent(<Component />, testDocument);
+    React.renderComponentToString(<Component />, function(markup) {
+      testDocument.innerHTML = markup;
 
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      React.renderComponent(<Component />, testDocument);
 
-    // Reactive update
-    expect(function() {
-      React.renderComponent(<Component2 />, testDocument);
-    }).toThrow(
-      'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
-      'Because of cross-browser quirks it is impossible to unmount some ' +
-      'top-level components (eg <html>, <head>,  and <body>) reliably and ' +
-      'efficiently. To fix this, have a single  top-level component that ' +
-      'never unmounts render these elements.'
-    );
+      expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
-    expect(testDocument.body.innerHTML).toBe(' Hello world ');
+      // Reactive update
+      expect(function() {
+        React.renderComponent(<Component2 />, testDocument);
+      }).toThrow(
+        'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+          'Because of cross-browser quirks it is impossible to unmount some ' +
+          'top-level components (eg <html>, <head>,  and <body>) reliably ' +
+          'and efficiently. To fix this, have a single top-level component ' +
+          'that never unmounts render these elements.'
+      );
+
+      expect(testDocument.body.innerHTML).toBe(' Hello world ');
+    });
 
   });
 
@@ -169,38 +176,87 @@ describe('rendering React components at document', function() {
         );
       }
     });
-    ReactMount.allowFullPageRender = true;
-    React.renderComponent(<Component text="Hello world" />, testDocument);
 
-    expect(testDocument.body.innerHTML).toBe('Hello world');
-  });
+    React.renderComponentToString(
+      <Component text="Hello world" />,
+      function(markup) {
+        testDocument.innerHTML = markup;
 
-  it('should throw on full document render', function() {
-    expect(testDocument).not.toBeUndefined();
+        React.renderComponent(<Component text="Hello world" />, testDocument);
 
-    var container = testDocument;
-    expect(function() {
-      React.renderComponent(<html />, container);
-    }).toThrow(
-      'Invariant Violation: mountComponentIntoNode(...): Target container is ' +
-      'not valid.'
+        expect(testDocument.body.innerHTML).toBe('Hello world');
+      }
     );
-    ReactMount.allowFullPageRender = true;
-    expect(function() {
-      React.renderComponent(<html />, container);
-    }).not.toThrow();
   });
 
-  it('should throw on full document render of non-html', function() {
+  it('should give helpful errors on state desync', function() {
+    expect(testDocument).not.toBeUndefined();
+
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <html>
+            <head>
+              <title>Hello World</title>
+            </head>
+            <body>
+              {this.props.text}
+            </body>
+          </html>
+        );
+      }
+    });
+
+    React.renderComponentToString(
+      <Component text="Goodbye world" />,
+      function(markup) {
+        testDocument.innerHTML = markup;
+
+        expect(function() {
+          // Notice the text is different!
+          React.renderComponent(<Component text="Hello world" />, testDocument);
+        }).toThrow(
+          'Invariant Violation: ' +
+          'You\'re trying to render a component to the document using ' +
+          'server rendering but the checksum was invalid. This usually ' +
+          'means you rendered a different component type or props on ' +
+          'the client from the one on the server, or your render() methods ' +
+          'are impure. React cannot handle this case due to cross-browser ' +
+          'quirks by rendering at the document root. You should look for ' +
+          'environment dependent code in your components and ensure ' +
+          'the props are the same client and server side.'
+        );
+      }
+    );
+  });
+
+  it('should throw on full document render w/ no markup', function() {
     expect(testDocument).not.toBeUndefined();
 
     var container = testDocument;
-    ReactMount.allowFullPageRender = true;
+
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <html>
+            <head>
+              <title>Hello World</title>
+            </head>
+            <body>
+              {this.props.text}
+            </body>
+          </html>
+        );
+      }
+    });
+
     expect(function() {
-      React.renderComponent(<div />, container);
+      React.renderComponent(<Component />, container);
     }).toThrow(
-      'Invariant Violation: mutateHTMLNodeWithMarkup(): ' +
-        'markup must start with <html'
+      'Invariant Violation: You\'re trying to render a component to the ' +
+      'document but you didn\'t use server rendering. We can\'t do this ' +
+      'without using server rendering due to cross-browser quirks. See ' +
+      'renderComponentToString() for server rendering.'
     );
   });
 

@@ -27,7 +27,6 @@ var createNodesFromMarkup = require('createNodesFromMarkup');
 var emptyFunction = require('emptyFunction');
 var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
-var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
 var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
 var RESULT_INDEX_ATTR = 'data-danger-index';
@@ -171,12 +170,14 @@ var Danger = {
       'immediately.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
-    // createNodesFromMarkup() won't work if the markup is rooted by <html>
-    // since it has special semantic meaning. So we use an alternatie strategy.
-    if (oldChild.tagName.toLowerCase() === 'html') {
-      mutateHTMLNodeWithMarkup(oldChild, markup);
-      return;
-    }
+    invariant(
+      oldChild.tagName.toLowerCase() !== 'html',
+      'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
+      '<html> node. This is because browser quirks make this unreliable ' +
+      'and/or slow. If you want to render to the root you must use ' +
+      'server rendering. See renderComponentToString().'
+    );
+
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
   }

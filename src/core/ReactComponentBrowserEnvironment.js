@@ -27,7 +27,6 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
-var mutateHTMLNodeWithMarkup = require('mutateHTMLNodeWithMarkup');
 
 
 var ELEMENT_NODE_TYPE = 1;
@@ -84,16 +83,29 @@ var ReactComponentBrowserEnvironment = {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE && ReactMount.allowFullPageRender
+        container.nodeType === DOC_NODE_TYPE
       ),
       'mountComponentIntoNode(...): Target container is not valid.'
     );
+
     if (shouldReuseMarkup) {
       if (ReactMarkupChecksum.canReuseMarkup(
             markup,
             getReactRootElementInContainer(container))) {
         return;
       } else {
+        invariant(
+          container.nodeType !== DOC_NODE_TYPE,
+          'You\'re trying to render a component to the document using ' +
+          'server rendering but the checksum was invalid. This usually ' +
+          'means you rendered a different component type or props on ' +
+          'the client from the one on the server, or your render() methods ' +
+          'are impure. React cannot handle this case due to cross-browser ' +
+          'quirks by rendering at the document root. You should look for ' +
+          'environment dependent code in your components and ensure ' +
+          'the props are the same client and server side.'
+        );
+
         if (__DEV__) {
           console.warn(
             'React attempted to use reuse markup in a container but the ' +
@@ -108,13 +120,13 @@ var ReactComponentBrowserEnvironment = {
       }
     }
 
-    // You can't naively set the innerHTML of the entire document. You need
-    // to mutate documentElement which requires doing some crazy tricks. See
-    // mutateHTMLNodeWithMarkup()
-    if (container.nodeType === DOC_NODE_TYPE) {
-      mutateHTMLNodeWithMarkup(container.documentElement, markup);
-      return;
-    }
+    invariant(
+      container.nodeType !== DOC_NODE_TYPE,
+      'You\'re trying to render a component to the document but ' +
+      'you didn\'t use server rendering. We can\'t do this ' +
+      'without using server rendering due to cross-browser quirks. ' +
+      'See renderComponentToString() for server rendering.'
+    );
 
     // Asynchronously inject markup by ensuring that the container is not in
     // the document when settings its `innerHTML`.
