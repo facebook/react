@@ -62,14 +62,16 @@ Properties:
 
 ```javascript
 boolean altKey
-String char
 boolean ctrlKey
+Number charCode
 String key
+Number keyCode
 String locale
 Number location
 boolean metaKey
 boolean repeat
 boolean shiftKey
+Number which
 ```
 
 
