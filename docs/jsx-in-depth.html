@@ -395,7 +395,9 @@ attributes are transformed into function calls and objects, respectively.</p>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">Nav</span><span class="p">({</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">},</span> <span class="nx">Profile</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">));</span>
 </code></pre></div>
 <p>Use the <a href="/react/jsx-compiler.html">JSX Compiler</a> to try out JSX and see how it
-desugars into native JavaScript.</p>
+desugars into native JavaScript, and the 
+<a href="/react/html-jsx.html">HTML to JSX converter</a> to convert your existing HTML to
+JSX.</p>
 
 <p>If you want to use JSX, the <a href="/react/docs/getting-started.html">Getting Started</a> guide shows
 how to setup compilation.</p>
@@ -425,6 +427,9 @@ references the class.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
+<p>JSX will infer the component&#39;s name from the variable assignment and specify
+the class&#39;s <a href="/react/docs/component-specs.html#displayName">displayName</a> accordingly.</p>
+
 <p>See <a href="/react/docs/multiple-components.html">Multiple Components</a> to learn more about using composite components.</p>
 
 <blockquote>

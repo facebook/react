@@ -7,6 +7,79 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #14</title>
+				<description>&lt;p&gt;The theme of this first round-up of 2014 is integration. I&amp;#39;ve tried to assemble a list of articles and projects that use React in various environments.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-baseline&quot;&gt;&lt;/a&gt;React Baseline &lt;a class=&quot;hash-link&quot; href=&quot;#react-baseline&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;React is only one-piece of your web application stack. &lt;a href=&quot;https://github.com/intabulas&quot;&gt;Mark Lussier&lt;/a&gt; shared his baseline stack that uses React along with Grunt, Browserify, Bower, Zepto, Director and Sass. This should help you get started using React for a new project.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;As I do more projects with ReactJS I started to extract a baseline to use when starting new projects. This is very opinionated and I change my opinion from time to time. This is by no ways perfect and in your opinion most likely wrong :).. which is why I love github&lt;/p&gt;
+
+&lt;p&gt;I encourage you to fork, and make it right and submit a pull request!&lt;/p&gt;
+
+&lt;p&gt;My current opinion is using tools like Grunt, Browserify, Bower and mutiple grunt plugins to get the job done. I also opted for Zepto over jQuery and the Flatiron Project&amp;#39;s Director when I need a router. Oh and for the last little bit of tech that makes you mad, I am in the SASS camp when it comes to stylesheets&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/intabulas/reactjs-baseline&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;animal-sounds&quot;&gt;&lt;/a&gt;Animal Sounds &lt;a class=&quot;hash-link&quot; href=&quot;#animal-sounds&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://joshduck.com/&quot;&gt;Josh Duck&lt;/a&gt; used React in order to build a Windows 8 tablet app. This is a good example of a touch app written in React.
+&lt;figure&gt;&lt;a href=&quot;http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9&quot;&gt;&lt;img src=&quot;/react/img/blog/animal-sounds.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9&quot;&gt;Download the app...&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-rails-tutorial&quot;&gt;&lt;/a&gt;React Rails Tutorial &lt;a class=&quot;hash-link&quot; href=&quot;#react-rails-tutorial&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://selem.im&quot;&gt;Selem Delul&lt;/a&gt; bundled the &lt;a href=&quot;http://facebook.github.io/react/docs/tutorial.html&quot;&gt;React Tutorial&lt;/a&gt; into a rails app. This is a good example on how to get started with a rails project.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;git clone https://github.com/necrodome/react-rails-tutorial
+cd react-rails-tutorial
+bundle install
+rake db:migrate
+rails s
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then visit http://localhost:3000/app to see the React application that is explained in the React Tutorial. Try opening multiple tabs!&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/necrodome/react-rails-tutorial&quot;&gt;View on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;mixing-with-backbone&quot;&gt;&lt;/a&gt;Mixing with Backbone &lt;a class=&quot;hash-link&quot; href=&quot;#mixing-with-backbone&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://eldar.djafarov.com/&quot;&gt;Eldar Djafarov&lt;/a&gt; implemented a mixin to link Backbone models to React state and a small abstraction to write two-way binding on-top.&lt;/p&gt;
+
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/djkojb/qZf48/13/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/&quot;&gt;Check out the blog post...&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-infinite-scroll&quot;&gt;&lt;/a&gt;React Infinite Scroll &lt;a class=&quot;hash-link&quot; href=&quot;#react-infinite-scroll&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/guillaumervls&quot;&gt;Guillaume Rivals&lt;/a&gt; implemented an InfiniteScroll component. This is a good example of a React component that has a simple yet powerful API.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;InfiniteScroll&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;pageStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;loadMore&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;hasMore&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;loader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;loader&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Loading&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;}&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// &amp;lt;-- This is the &amp;quot;stuff&amp;quot; you want to load&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/InfiniteScroll&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/guillaumervls/react-infinite-scroll&quot;&gt;Try it out on GitHub!&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;web-components-style&quot;&gt;&lt;/a&gt;Web Components Style &lt;a class=&quot;hash-link&quot; href=&quot;#web-components-style&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://subtlegradient.com/&quot;&gt;Thomas Aylott&lt;/a&gt; implemented an API that looks like Web Components but using React underneath.&lt;/p&gt;
+
+&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/SubtleGradient/ue2Aa/embedded/html,js,result&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs-angular&quot;&gt;&lt;/a&gt;React vs Angular &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs-angular&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;React is often compared with Angular. &lt;a href=&quot;http://skulbuny.com/2013/10/31/react-vs-angular/&quot;&gt;Pete Hunt&lt;/a&gt; wrote an opinionated post on the subject.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;First of all I think it’s important to evaluate technologies on objective rather than subjective features. “It feels nicer” or “it’s cleaner” aren’t valid reasons: performance, modularity, community size and ease of testing / integration with other tools are.&lt;/p&gt;
+
+&lt;p&gt;I’ve done a lot of work benchmarking, building apps, and reading the code of Angular to try to come up with a reasonable comparison between their ways of doing things.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://skulbuny.com/2013/10/31/react-vs-angular/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;figure&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Really intrigued by React.js. I&amp;#39;ve looked at all JS frameworks, and excepting &lt;a href=&quot;https://twitter.com/serenadejs&quot;&gt;@serenadejs&lt;/a&gt; this is the first one which makes sense to me.&lt;/p&gt;&amp;mdash; Jonas Nicklas (@jonicklas) &lt;a href=&quot;https://twitter.com/jonicklas/statuses/412640708755869696&quot;&gt;December 16, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/figure&gt;
+</description>
+				<pubDate>2014-01-06T00:00:00+01:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</guid>
+			</item>
+		
+			<item>
 				<title>React Chrome Developer Tools</title>
 				<description>&lt;p&gt;With the new year, we thought you&amp;#39;d enjoy some new tools for debugging React code. Today we&amp;#39;re releasing the &lt;a href=&quot;https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi&quot;&gt;React Developer Tools&lt;/a&gt;, an extension to the Chrome Developer Tools. &lt;a href=&quot;https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi&quot;&gt;Download them from the Chrome Web Store&lt;/a&gt;.&lt;/p&gt;
 
@@ -628,55 +701,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-10-29T00:00:00+01:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.5</title>
-				<description>&lt;p&gt;This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&amp;#39;ve worked hard to improve performance and memory usage. We&amp;#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.&lt;/p&gt;
-
-&lt;p&gt;The biggest change you&amp;#39;ll notice as a developer is that we no longer support &lt;code&gt;class&lt;/code&gt; in JSX as a way to provide CSS classes. Since this prop was being converted to &lt;code&gt;className&lt;/code&gt; at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are &lt;a href=&quot;https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156&quot;&gt;a few exceptions&lt;/a&gt; where we deviate slightly in an attempt to be consistent internally.&lt;/p&gt;
-
-&lt;p&gt;The other major change in v0.5 is that we&amp;#39;ve added an additional build - &lt;code&gt;react-with-addons&lt;/code&gt; - which adds support for some extras that we&amp;#39;ve been working on including animations and two-way binding. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more about these addons in the docs&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;thanks-to-our-community&quot;&gt;&lt;/a&gt;Thanks to Our Community &lt;a class=&quot;hash-link&quot; href=&quot;#thanks-to-our-community&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We added &lt;em&gt;22 new people&lt;/em&gt; to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our &lt;code&gt;AUTHORS&lt;/code&gt; file, that means we&amp;#39;ve nearly doubled the number of contributors in that time period. We&amp;#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&amp;#39;ve also had people tell us about talks they&amp;#39;ve given in their local community about React.&lt;/p&gt;
-
-&lt;p&gt;It&amp;#39;s been awesome to see the things that people are building with React, and we can&amp;#39;t wait to see what you come up with next!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Memory usage improvements - reduced allocations in core which will help with GC pauses&lt;/li&gt;
-&lt;li&gt;Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.&lt;/li&gt;
-&lt;li&gt;Standardized prop -&amp;gt; DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.&lt;/li&gt;
-&lt;li&gt;Support for Selection events.&lt;/li&gt;
-&lt;li&gt;Support for &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent&quot;&gt;Composition events&lt;/a&gt;.&lt;/li&gt;
-&lt;li&gt;Support for additional DOM properties (&lt;code&gt;charSet&lt;/code&gt;, &lt;code&gt;content&lt;/code&gt;, &lt;code&gt;form&lt;/code&gt;, &lt;code&gt;httpEquiv&lt;/code&gt;, &lt;code&gt;rowSpan&lt;/code&gt;, &lt;code&gt;autoCapitalize&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;Support for additional SVG properties (&lt;code&gt;rx&lt;/code&gt;, &lt;code&gt;ry&lt;/code&gt;).&lt;/li&gt;
-&lt;li&gt;Support for using &lt;code&gt;getInitialState&lt;/code&gt; and &lt;code&gt;getDefaultProps&lt;/code&gt; in mixins.&lt;/li&gt;
-&lt;li&gt;Support mounting into iframes.&lt;/li&gt;
-&lt;li&gt;Bug fixes for controlled form components.&lt;/li&gt;
-&lt;li&gt;Bug fixes for SVG element creation.&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;React.version&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;React.isValidClass&lt;/code&gt; - Used to determine if a value is a valid component constructor.&lt;/li&gt;
-&lt;li&gt;Removed &lt;code&gt;React.autoBind&lt;/code&gt; - This was deprecated in v0.4 and now properly removed.&lt;/li&gt;
-&lt;li&gt;Renamed  &lt;code&gt;React.unmountAndReleaseReactRootNode&lt;/code&gt; to &lt;code&gt;React.unmountComponentAtNode&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Began laying down work for refined performance analysis.&lt;/li&gt;
-&lt;li&gt;Better support for server-side rendering - &lt;a href=&quot;https://github.com/facebook/react-page&quot;&gt;react-page&lt;/a&gt; has helped improve the stability for server-side rendering.&lt;/li&gt;
-&lt;li&gt;Made it possible to use React in environments enforcing a strict &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy&quot;&gt;Content Security Policy&lt;/a&gt;. This also makes it possible to use React to build Chrome extensions.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons-new&quot;&gt;&lt;/a&gt;React with Addons (New!) &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons-new&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Introduced a separate build with several &amp;quot;addons&amp;quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. &lt;a href=&quot;/react/docs/addons.html&quot;&gt;Read more in the docs&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;No longer transform &lt;code&gt;class&lt;/code&gt; to &lt;code&gt;className&lt;/code&gt; as part of the transform! This is a breaking change - if you were using &lt;code&gt;class&lt;/code&gt;, you &lt;em&gt;must&lt;/em&gt; change this to &lt;code&gt;className&lt;/code&gt; or your components will be visually broken.&lt;/li&gt;
-&lt;li&gt;Added warnings to the in-browser transformer to make it clear it is not intended for production use.&lt;/li&gt;
-&lt;li&gt;Improved compatibility for Windows&lt;/li&gt;
-&lt;li&gt;Improved support for maintaining line numbers when transforming.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2013-10-16T00:00:00+02:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/10/16/react-v0.5.0.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/16/react-v0.5.0.html</guid>
 			</item>
 		
 	</channel>
