@@ -772,6 +772,14 @@ var ReactCompositeComponentMixin = {
       typeof partialState === 'object' || partialState == null,
       'setState(...): takes an object of state variables to update.'
     );
+    if (__DEV__){
+      if (partialState == null) {
+        console.warn(
+          'setState(...): You passed an undefined or null state object; ' +
+          'instead, use forceUpdate().'
+        );
+      }
+    }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
       merge(this._pendingState || this.state, partialState),
