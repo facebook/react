@@ -124,7 +124,7 @@ var topEventMapping = {
  */
 var topListenersIDKey = "_reactListenersID" + String(Math.random()).slice(2);
 
-function getListeningDocument(mountAt) {
+function getListeningForDocument(mountAt) {
   if (mountAt[topListenersIDKey] == null) {
     mountAt[topListenersIDKey] = reactTopListenersCounter++;
     alreadyListeningTo[mountAt[topListenersIDKey]] = {};
@@ -234,14 +234,14 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   listenTo: function(registrationName, contentDocument) {
     var mountAt = contentDocument;
-    var listeningDocument = getListeningDocument(mountAt);
+    var isListening = getListeningForDocument(mountAt);
     var dependencies = EventPluginRegistry.
       registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
       var dependency = dependencies[i];
-      if (!listeningDocument[dependency]) {
+      if (!isListening[dependency]) {
         var topLevelType = topLevelTypes[dependency];
 
         if (topLevelType === topLevelTypes.topWheel) {
@@ -278,13 +278,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           }
 
           // to make sure blur and focus event listeners are only attached once
-          listeningDocument[topLevelTypes.topBlur] = true;
-          listeningDocument[topLevelTypes.topFocus] = true;
+          isListening[topLevelTypes.topBlur] = true;
+          isListening[topLevelTypes.topFocus] = true;
         } else {
           trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 
-        listeningDocument[dependency] = true;
+        isListening[dependency] = true;
       }
     }
   },
