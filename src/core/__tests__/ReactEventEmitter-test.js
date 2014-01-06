@@ -34,10 +34,16 @@ require('mock-modules')
 var keyOf = require('keyOf');
 var mocks = require('mocks');
 
-var EventPluginHub;
 var ReactMount = require('ReactMount');
+var idToNode = {};
 var getID = ReactMount.getID;
-var setID = ReactMount.setID;
+var setID = function(el, id) {
+  ReactMount.setID(el, id);
+  idToNode[id] = el;
+};
+var oldGetNode = ReactMount.getNode;
+
+var EventPluginHub;
 var ReactEventEmitter;
 var ReactTestUtils;
 var TapEventPlugin;
@@ -93,15 +99,20 @@ describe('ReactEventEmitter', function() {
     TapEventPlugin = require('TapEventPlugin');
     ReactMount = require('ReactMount');
     EventListener = require('EventListener');
-    getID = ReactMount.getID;
-    setID = ReactMount.setID;
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
+    ReactMount.getNode = function(id) {
+      return idToNode[id];
+    };
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
+  });
+
+  afterEach(function() {
+    ReactMount.getNode = oldGetNode;
   });
 
   it('should store a listener correctly', function() {
@@ -154,6 +165,38 @@ describe('ReactEventEmitter', function() {
       getID(GRANDPARENT),
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
+    );
+    ReactTestUtils.Simulate.click(CHILD);
+    expect(idCallOrder.length).toBe(3);
+    expect(idCallOrder[0]).toBe(getID(CHILD));
+    expect(idCallOrder[1]).toBe(getID(PARENT));
+    expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
+  });
+
+  it('should set currentTarget', function() {
+    ReactEventEmitter.putListener(
+      getID(CHILD),
+      ON_CLICK_KEY,
+      function(event) {
+        recordID(getID(CHILD));
+        expect(event.currentTarget).toBe(CHILD);
+      }
+    );
+    ReactEventEmitter.putListener(
+      getID(PARENT),
+      ON_CLICK_KEY,
+      function(event) {
+        recordID(getID(PARENT));
+        expect(event.currentTarget).toBe(PARENT);
+      }
+    );
+    ReactEventEmitter.putListener(
+      getID(GRANDPARENT),
+      ON_CLICK_KEY,
+      function(event) {
+        recordID(getID(GRANDPARENT));
+        expect(event.currentTarget).toBe(GRANDPARENT);
+      }
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);

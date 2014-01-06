@@ -33,7 +33,8 @@ var mergeInto = require('mergeInto');
 var EventInterface = {
   type: null,
   target: getEventTarget,
-  currentTarget: null,
+  // currentTarget is set when dispatching; no use in copying it here
+  currentTarget: emptyFunction.thatReturnsNull,
   eventPhase: null,
   bubbles: null,
   cancelable: null,
