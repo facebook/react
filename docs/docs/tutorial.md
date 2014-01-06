@@ -35,7 +35,6 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
     <title>Hello React</title>
     <script src="http://fb.me/react-{{site.react_version}}.js"></script>
     <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -374,7 +373,7 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We'll use jQuery to help make an asynchronous request to the server.
+We'll now make an asynchronous request to the server. jQuery isn't needed, but we've included the equivalent jQuery code for reference.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
@@ -385,16 +384,23 @@ var CommentBox = React.createClass({
     return {data: []};
   },
   componentWillMount: function() {
-    $.ajax({
-      url: 'comments.json',
-      dataType: 'json',
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error("comments.json", status, err.toString());
-      }.bind(this)
-    });
+    var req = new XMLHttpRequest();
+    req.onload = function(){
+      if (req.readyState !== 4 || req.status !== 200) return;
+      this.setState({data: JSON.parse(req.responseText)});
+    }.bind(this);
+    req.open("GET", 'comments.json', true);
+    req.send();
+    // $.ajax({
+    //   url: 'comments.json',
+    //   dataType: 'json',
+    //   success: function(data) {
+    //     this.setState({data: data});
+    //   }.bind(this),
+    //   error: function(xhr, status, err) {
+    //     console.error("comments.json", status, err.toString());
+    //   }.bind(this)
+    // });
   },
   render: function() {
     return (
@@ -413,13 +419,20 @@ Here, `componentWillMount` is a method called automatically by React before a co
 ```javascript{3,15-16,30}
 // tutorial14.js
 var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    loadCommentsFromServer: function() {
+    var req = new XMLHttpRequest();
+    req.onload = function(){
+      if (req.readyState !== 4 || req.status !== 200) return;
+      this.setState({data: JSON.parse(req.responseText)});
+    }.bind(this);
+    req.open("GET", this.props.url, true);
+    req.send();
+    // $.ajax({
+    //   url: this.props.url,
+    //   success: function(data) {
+    //     this.setState({data: data});
+    //   }.bind(this)
+    // });
   },
   getInitialState: function() {
     return {data: []};
@@ -519,12 +532,19 @@ We need to pass data from the child component to its parent. We do this by passi
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    var req = new XMLHttpRequest();
+    req.onload = function(){
+      if (req.readyState !== 4 || req.status !== 200) return;
+      this.setState({data: JSON.parse(req.responseText)});
+    }.bind(this);
+    req.open("GET", this.props.url, true);
+    req.send();
+    // $.ajax({
+    //   url: this.props.url,
+    //   success: function(data) {
+    //     this.setState({data: data});
+    //   }.bind(this)
+    // });
   },
   handleCommentSubmit: function(comment) {
     // TODO: submit to the server and refresh the list
@@ -593,14 +613,22 @@ var CommentBox = React.createClass({
     });
   },
   handleCommentSubmit: function(comment) {
-    $.ajax({
-      url: this.props.url,
-      type: 'POST',
-      data: comment,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    var req = new XMLHttpRequest();
+    req.onload = function(){
+      if (req.readyState !== 4 || req.status !== 200) return;
+      this.setState({data: JSON.parse(req.responseText)});
+    }.bind(this);
+    req.open("POST", this.props.url, true);
+    req.setRequestHeader("Content-type","application/json");
+    req.send(JSON.stringify(comment));
+    // $.ajax({
+    //   url: this.props.url,
+    //   type: 'POST',
+    //   data: comment,
+    //   success: function(data) {
+    //     this.setState({data: data});
+    //   }.bind(this)
+    // });
   },
   getInitialState: function() {
     return {data: []};
@@ -642,14 +670,22 @@ var CommentBox = React.createClass({
     var comments = this.state.data;
     var newComments = comments.concat([comment]);
     this.setState({data: newComments});
-    $.ajax({
-      url: this.props.url,
-      type: 'POST',
-      data: comment,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    var req = new XMLHttpRequest();
+    req.onload = function(){
+      if (req.readyState !== 4 || req.status !== 200) return;
+      this.setState({data: JSON.parse(req.responseText)});
+    }.bind(this);
+    req.open("POST", this.props.url, true);
+    req.setRequestHeader("Content-type","application/json");
+    req.send(JSON.stringify(comment));
+    // $.ajax({
+    //   url: this.props.url,
+    //   type: 'POST',
+    //   data: comment,
+    //   success: function(data) {
+    //     this.setState({data: data});
+    //   }.bind(this)
+    // });
   },
   getInitialState: function() {
     return {data: []};
