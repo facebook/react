@@ -35,7 +35,7 @@
   "dependencies": {
     "commoner": "~0.8.12",
     "esprima-fb": "~2001.1001.0-dev-harmony-fb",
-    "jstransform": "~2.0.1"
+    "jstransform": "~2.0.2"
   },
   "devDependencies": {
     "browserify": "~2.36.1",
