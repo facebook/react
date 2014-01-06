@@ -30,7 +30,7 @@ var ClipboardEventInterface = {
     return (
       'clipboardData' in event ?
         event.clipboardData :
-        global.clipboardData
+        window.clipboardData
     );
   }
 };
