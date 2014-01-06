@@ -31,7 +31,9 @@ title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle g line path polygon polyline rect svg text
+circle defs g line linearGradient path polygon polyline radialGradient rect stop 
+svg text   
+
 ```
 
 You may also be interested in [react-art](https://github.com/facebook/react-art), a drawing library for React that can render to Canvas, SVG, or VML (for IE8).

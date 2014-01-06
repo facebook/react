@@ -176,12 +176,16 @@ var ReactDOM = objMapKeyVal({
 
   // SVG
   circle: false,
+  defs: false,
   g: false,
   line: false,
+  linearGradient: false,
   path: false,
   polygon: false,
   polyline: false,
+  radialGradient: false,
   rect: false,
+  stop: false,
   svg: false,
   text: false
 }, createDOMComponentClass);
