@@ -402,7 +402,11 @@ var CommentsService = {
   data: [{author: 'Pete Hunt', text: 'Hey there!'}],
   getAll: function(callback) {
     callback(this.data);
+  },
+  addComment: function(comment) {
+    // if server, make AJAX request to server
   }
+}
 };
 ```
 
