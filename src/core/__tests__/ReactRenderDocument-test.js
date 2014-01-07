@@ -28,6 +28,13 @@ var getTestDocument;
 
 var testDocument;
 
+var UNMOUNT_INVARIANT_MESSAGE =
+  'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
+  'Because of cross-browser quirks it is impossible to unmount some ' +
+  'top-level components (eg <html>, <head>, and <body>) reliably and ' +
+  'efficiently. To fix this, have a single top-level component that ' +
+  'never unmounts render these elements.';
+
 describe('rendering React components at document', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
@@ -92,13 +99,8 @@ describe('rendering React components at document', function() {
 
       expect(function() {
         React.unmountComponentAtNode(testDocument);
-      }).toThrow(
-        'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
-          'Because of cross-browser quirks it is impossible to unmount some ' +
-          'top-level components (eg <html>, <head>,  and <body>) reliably ' +
-          'and efficiently. To fix this, have a single top-level component ' +
-          'that never unmounts render these elements.'
-      );
+      }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+
       expect(testDocument.body.innerHTML).toBe(' Hello world ');
     });
   });
@@ -146,17 +148,10 @@ describe('rendering React components at document', function() {
       // Reactive update
       expect(function() {
         React.renderComponent(<Component2 />, testDocument);
-      }).toThrow(
-        'Invariant Violation: ReactFullPageComponenthtml tried to unmount. ' +
-          'Because of cross-browser quirks it is impossible to unmount some ' +
-          'top-level components (eg <html>, <head>,  and <body>) reliably ' +
-          'and efficiently. To fix this, have a single top-level component ' +
-          'that never unmounts render these elements.'
-      );
+      }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
       expect(testDocument.body.innerHTML).toBe(' Hello world ');
     });
-
   });
 
   it('should be able to mount into document', function() {
