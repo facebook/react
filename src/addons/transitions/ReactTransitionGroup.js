@@ -105,6 +105,13 @@ var ReactTransitionGroup = React.createClass({
   },
 
   render: function() {
+    var children = [];
+    if (Array.isArray(this.props.children)) {
+      children = this.props.children;
+    } else if (this.props.children) {
+      children = [this.props.children];
+    }
+
     return this.transferPropsTo(
       this.props.component(
         {
@@ -113,7 +120,7 @@ var ReactTransitionGroup = React.createClass({
           transitionLeave: null,
           component: null
         },
-        this.renderTransitionableChildren(this.props.children)
+        this.renderTransitionableChildren(children)
       )
     );
   }
