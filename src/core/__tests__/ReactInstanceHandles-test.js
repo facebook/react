@@ -138,9 +138,6 @@ describe('ReactInstanceHandles', function() {
         ReactMount.getID(childNodeB)
       )).toBe(childNodeB);
 
-      spyOn(console, 'error');
-      expect(console.error.argsForCall.length).toBe(0);
-
       expect(function() {
         ReactMount.findComponentRoot(
           parentNode,
@@ -149,10 +146,9 @@ describe('ReactInstanceHandles', function() {
       }).toThrow(
         'Invariant Violation: findComponentRoot(..., .react[0].1:0:junk): ' +
         'Unable to find element. This probably means the DOM was ' +
-        'unexpectedly mutated (e.g. by the browser).'
+        'unexpectedly mutated (e.g., by the browser). Try inspecting the ' +
+        'child nodes of the element with React ID `.react[0]`.'
       );
-
-      expect(console.error.argsForCall.length).toBe(1);
     });
   });
 
