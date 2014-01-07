@@ -42,15 +42,12 @@ function sliceChildren(children, start, end) {
       continue;
     }
     var child = flattenedMap[key];
-    // In this version of slice children we ignore empty children.
-    if (child !== null) {
-      if (ii >= start) {
-        slicedChildren[key] = child;
-      }
-      ii++;
-      if (end != null && ii >= end) {
-        break;
-      }
+    if (ii >= start) {
+      slicedChildren[key] = child;
+    }
+    ii++;
+    if (end != null && ii >= end) {
+      break;
     }
   }
   return slicedChildren;
