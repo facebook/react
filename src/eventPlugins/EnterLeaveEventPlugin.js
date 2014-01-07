@@ -105,6 +105,7 @@ var EnterLeaveEventPlugin = {
       fromID,
       nativeEvent
     );
+    leave.type = 'mouseleave';
     leave.target = from;
     leave.relatedTarget = to;
 
@@ -113,6 +114,7 @@ var EnterLeaveEventPlugin = {
       toID,
       nativeEvent
     );
+    enter.type = 'mouseenter';
     enter.target = to;
     enter.relatedTarget = from;
 
