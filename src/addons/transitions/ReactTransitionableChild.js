@@ -59,6 +59,7 @@ var ReactTransitionableChild = React.createClass({
     var node = this.getDOMNode();
     var className = this.props.name + '-' + animationType;
     var activeClassName = className + '-active';
+    var staggerClassName = className + '-stagger';
     var noEventTimeout = null;
 
     var endListener = function() {
@@ -71,6 +72,7 @@ var ReactTransitionableChild = React.createClass({
         // Usually this means you're about to remove the node if you want to
         // leave it in its animated state.
         CSSCore.removeClass(node, className);
+        CSSCore.removeClass(node, staggerClassName);
         CSSCore.removeClass(node, activeClassName);
       }
 
@@ -86,11 +88,29 @@ var ReactTransitionableChild = React.createClass({
     CSSCore.addClass(node, className);
 
     // Need to do this to actually trigger a transition.
-    this.queueClass(activeClassName);
+    // Queueing will be delayed if a stagger is required, as the
+    // stagger class must be applied one `TICK` before the active class
+    if (this.props.cascade > 0 || this.props.leaveCascade > 0) {
+      if (!this.staggerTimeout) {
+        this.staggerTimeout = setTimeout(
+          this.addStagger,
+          TICK,
+          staggerClassName
+        );
+      }
+      setTimeout(this.queueClass, TICK, activeClassName);
+    } else {
+      this.queueClass(activeClassName);
+    }
 
     if (__DEV__) {
       noEventTimeout = setTimeout(noEventListener, NO_EVENT_TIMEOUT);
     }
+  },
+
+  addStagger: function(className) {
+    CSSCore.addClass(this.getDOMNode(), className);
+    this.staggerTimeout = null;
   },
 
   queueClass: function(className) {
@@ -101,8 +121,24 @@ var ReactTransitionableChild = React.createClass({
       return;
     }
 
+    var delay = TICK;
+
+    if (this.props.cascade > 0 || this.props.leaveCascade > 0) {
+
+      // Collect the required delay from either the animation or the
+      // transition delay css property.
+      var cascade = (this.props.cascade > 0) ?
+        this.props.cascade :
+        this.props.leaveCascade;
+      var domStyle = getComputedStyle(this.getDOMNode());
+      var animDelay = parseFloat(domStyle.animationDelay) * 1000;
+      var transDelay = parseFloat(domStyle.transitionDelay) * 1000;
+
+      delay += (cascade - 1) * (animDelay || transDelay);
+    }
+
     if (!this.timeout) {
-      this.timeout = setTimeout(this.flushClassNameQueue, TICK);
+      this.timeout = setTimeout(this.flushClassNameQueue, delay);
     }
   },
 

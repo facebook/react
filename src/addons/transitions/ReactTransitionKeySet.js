@@ -51,6 +51,61 @@ var ReactTransitionKeySet = {
   },
 
   /**
+   * Simple mapping to get an ordered array of the children's keys
+   *
+   * @param {*} children `this.props.children`
+   * @return {array} Array of keys in order
+   */
+  getOrderedKeys: function(children) {
+    if (children) {
+      return children.map(function(child) {
+        return child.props.key;
+      });
+    }
+    return [];
+  },
+
+  /**
+   * When trying to find out the correct direction of a transition when
+   * staggering, we need to know which keys are new, and which are removed
+   *
+   * @param {object} prev prev child keys as returned from
+   * `ReactTransitionKeySet.getKeySet()`.
+   * @param {object} next next child keys as returned from
+   * `ReactTransitionKeySet.getKeySet()`.
+   * @return {object} a key set that contains any 'new' keys
+   * going from prev to next
+   */
+  diffKeySets: function(prev, next) {
+    prev = prev || {};
+    next = next || {};
+
+    var newKeys = {};
+    var removedKeys = {};
+    var prevKeys = Object.keys(prev);
+    var nextKeys = Object.keys(next);
+
+    var i;
+    for (i = 0; i < nextKeys.length; i++) {
+      var nextKey = nextKeys[i];
+      if (!prev[nextKey]) {
+        newKeys[nextKey] = true;
+      } else if (prevKeys.indexOf(nextKey) != -1) {
+        prevKeys.splice(prevKeys.indexOf(nextKey), 1);
+      }
+    }
+
+    for (i = 0; i < prevKeys.length; i++) {
+      var prevKey = prevKeys[i];
+      if (!next[prevKey]) {
+        removedKeys[prevKey] = true;
+      }
+    }
+
+    return {'new': newKeys, 'removed': removedKeys};
+  },
+
+  /**
    * When you're adding or removing children some may be added or removed in the
    * same render pass. We want to show *both* since we want to simultaneously
    * animate elements in and out. This function takes a previous set of keys

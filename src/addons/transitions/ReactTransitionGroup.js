@@ -28,6 +28,8 @@ var ReactTransitionGroup = React.createClass({
     transitionName: React.PropTypes.string.isRequired,
     transitionEnter: React.PropTypes.bool,
     transitionLeave: React.PropTypes.bool,
+    transitionStaggering: React.PropTypes.bool,
+    transitionStaggeringDirectional: React.PropTypes.bool,
     onTransition: React.PropTypes.func,
     component: React.PropTypes.func
   },
@@ -36,6 +38,8 @@ var ReactTransitionGroup = React.createClass({
     return {
       transitionEnter: true,
       transitionLeave: true,
+      transitionStaggering: false,
+      transitionStaggeringDirectional: false,
       component: React.DOM.span
     };
   },
@@ -47,6 +51,7 @@ var ReactTransitionGroup = React.createClass({
     // call to animateChildren() which happens in render(), so we can't
     // call setState() in there.
     this._transitionGroupCurrentKeys = {};
+    this._transitionGroupLastVisibleOrder = [];
   },
 
   componentDidUpdate: function() {
@@ -62,10 +67,55 @@ var ReactTransitionGroup = React.createClass({
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
 
+    var renderKeys = ReactTransitionKeySet.getKeySet(sourceChildren);
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
-      this._transitionGroupCurrentKeys,
-      ReactTransitionKeySet.getKeySet(sourceChildren)
+      this._transitionGroupCurrentKeys, renderKeys
     );
+
+    var cascadeCounter = 0;
+    var leaveCascadeCounter = 0;
+    var cascadeDirection, leaveCascadeDirection;
+    var staggerEnabled = (this.props.transitionStaggering ||
+                          this.props.transitionStaggeringDirectional);
+
+    if (staggerEnabled) {
+      var diffKeys = ReactTransitionKeySet.diffKeySets(
+        this._transitionGroupCurrentKeys, renderKeys
+      );
+      var newKeys = diffKeys['new'];
+      var removedKeys = diffKeys.removed;
+
+      cascadeCounter = 0;
+      cascadeDirection = 1;
+      leaveCascadeDirection = -1;
+      leaveCascadeCounter = Object.keys(removedKeys).length - 1;
+    }
+
+    if (this.props.transitionStaggeringDirectional) {
+      leaveCascadeCounter = 0;
+      leaveCascadeDirection = 1;
+
+      // Using an array on next ordered keys to allow
+      // for checking whether the stagger required will be going backwards or
+      // forwards through the render list.
+      var nextOrdKeys = ReactTransitionKeySet.getOrderedKeys(sourceChildren);
+      var nextLastKey = '{' + nextOrdKeys[nextOrdKeys.length - 1] + '}';
+      var prevFirstKey = '{' + this._transitionGroupLastVisibleOrder[0] + '}';
+
+      if (!newKeys[nextLastKey]) {
+        // if the last visible key is not a new one, assume the transition
+        // direction is backwards
+        cascadeDirection = -1;
+        cascadeCounter = Object.keys(newKeys).length - 1;
+      }
+      if (!removedKeys[prevFirstKey]) {
+        // if the first visible key is not a removed one, assume the leave
+        // transition direction is backwards
+        leaveCascadeDirection = -1;
+        leaveCascadeCounter = Object.keys(removedKeys).length - 1;
+      }
+      this._transitionGroupLastVisibleOrder = nextOrdKeys;
+    }
 
     for (var key in currentKeys) {
       // Here is how we keep the nodes in the DOM. ReactTransitionableChild
@@ -76,6 +126,8 @@ var ReactTransitionGroup = React.createClass({
       if (childMapping[key] || this.props.transitionLeave) {
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
+          cascade: cascadeCounter,
+          leaveCascade: leaveCascadeCounter,
           enter: this.props.transitionEnter,
           onDoneLeaving: this._handleDoneLeaving.bind(this, key)
         }, childMapping[key]);
@@ -88,6 +140,10 @@ var ReactTransitionGroup = React.createClass({
         // prevents a confusing bug where ReactTransitionableChild.render()
         // returns nothing, throwing an error.
         delete currentKeys[key];
+      }
+      if (staggerEnabled) {
+        if (newKeys[key]) { cascadeCounter += cascadeDirection; }
+        if (removedKeys[key]) { leaveCascadeCounter += leaveCascadeDirection; }
       }
     }
 

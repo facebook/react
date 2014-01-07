@@ -53,6 +53,71 @@ describe('ReactTransitionKeySet', function() {
     });
   });
 
+  it('should support getOrderedKeys', function() {
+    var oneone = <div key="oneone" />;
+    var onetwo = <div key="onetwo" />;
+    var one = <div key="one">{oneone}{onetwo}</div>;
+    var two = <div key="two" />;
+    var three = <div key="three" />;
+    var four = <div key="four" />;
+    var component = <div>{one}{two}{four}{three}</div>;
+    expect(ReactTransitionKeySet.getOrderedKeys(component.props.children)).toEqual([
+      'one', 'two', 'four', 'three'
+    ]);
+  });
+
+  it('should support diffKeySets for adding keys', function() {
+    var prev = {
+      one: true,
+      two: true
+    };
+    var next = {
+      one: true,
+      two: true,
+      three: true
+    };
+    var diff = ReactTransitionKeySet.diffKeySets(prev, next);
+    expect(diff['new']).toEqual({
+      three: true
+    });
+  });
+
+  it('should support diffKeySets for removing keys', function() {
+    var prev = {
+      one: true,
+      two: true,
+      three: true
+    };
+    var next = {
+      one: true,
+      two: true
+    };
+    var diff = ReactTransitionKeySet.diffKeySets(prev, next);
+    expect(diff.removed).toEqual({
+      three: true
+    });
+  });
+
+  it('should support diffKeySets for adding and removing', function() {
+    var prev = {
+      one: true,
+      two: true,
+      three: true
+    };
+    var next = {
+      one: true,
+      two: true,
+      four: true
+    };
+    var diff = ReactTransitionKeySet.diffKeySets(prev, next);
+    expect(diff['new']).toEqual({
+      four: true,
+    });
+    expect(diff.removed).toEqual({
+      three: true,
+    });
+  });
+
   it('should support mergeKeySets for adding keys', function() {
     var prev = {
       one: true,
