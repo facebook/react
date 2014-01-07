@@ -404,7 +404,8 @@ var CommentsService = {
     callback(this.data);
   },
   addComment: function(comment) {
-    // if server, make AJAX request to server
+    this.data.push(comment);
+    // if server, make AJAX request to server here
   }
 }
 };
@@ -573,7 +574,7 @@ var CommentForm = React.createClass({
 });
 ```
 
-Now that the callbacks are in place, all we have to do is get the current state, push the most recent comment onto it, then update the state:
+Now that the callbacks are in place, all we have to do is submit the comment:
 
 ```javascript{12-19}
 // tutorial19.js
@@ -584,15 +585,52 @@ var CommentBox = React.createClass({
     }.bind(this));
   },
   handleCommentSubmit: function(comment) {
-    var comments = this.state.data;
-    comments.push(comment);
-    this.setState({data: comments});
+    CommentsService.addComment(comment);
   },
   getInitialState: function() {
     return {data: []};
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
+  },
+  render: function() {
+    return (
+      <div className="commentBox">
+        <h1>Comments</h1>
+        <CommentList data={this.state.data} />
+        <CommentForm
+          onCommentSubmit={this.handleCommentSubmit}
+        />
+      </div>
+    );
+  }
+});
+```
+
+### Optimization: optimistic updates
+
+Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
+
+```javascript{12-14}
+// tutorial20.js
+var CommentBox = React.createClass({
+  loadCommentsFromServer: function() {
+    CommentsService.getAll(function(data){
+      this.setState({data: data});
+    }.bind(this));
+  },
+  handleCommentSubmit: function(comment) {
+    var comments = this.state.data;
+    comments.push(comment);
+    this.setState({data: comments});
+    CommentsService.addComment(comment);
+  },
+  getInitialState: function() {
+    return {data: []};
+  },
+  componentWillMount: function() {
+    this.loadCommentsFromServer();
+    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
