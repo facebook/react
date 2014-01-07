@@ -35,7 +35,6 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
     <title>Hello React</title>
     <script src="http://fb.me/react-{{site.react_version}}.js"></script>
     <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -374,9 +373,8 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We'll use jQuery to help make an asynchronous request to the server.
+We might use jQuery to help make an asynchronous request to the server, but for this tutorial, let's store the messsages locally in a helper object.
 
-Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
 ```javascript{6-17}
 // tutorial13.js
@@ -385,16 +383,9 @@ var CommentBox = React.createClass({
     return {data: []};
   },
   componentWillMount: function() {
-    $.ajax({
-      url: 'comments.json',
-      dataType: 'json',
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this),
-      error: function(xhr, status, err) {
-        console.error("comments.json", status, err.toString());
-      }.bind(this)
-    });
+    CommentsService.getAll(function(data){
+      this.setState({data: data});
+    }.bind(this)));
   },
   render: function() {
     return (
@@ -406,27 +397,30 @@ var CommentBox = React.createClass({
     );
   }
 });
+
+var CommentsService = {
+  data: [{author: 'Pete Hunt', text: 'Hey there!'}],
+  getAll: function(callback) {
+    callback(this.data);
+  }
+};
 ```
 
-Here, `componentWillMount` is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
+Here, `componentWillMount` is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. 
 
 ```javascript{3,15-16,30}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    CommentsService.getAll(function(data){
+      this.setState({data: data});
+    }.bind(this));
   },
   getInitialState: function() {
     return {data: []};
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
@@ -440,7 +434,7 @@ var CommentBox = React.createClass({
 });
 
 React.renderComponent(
-  <CommentBox url="comments.json" pollInterval={2000} />,
+  <CommentBox />,
   document.getElementById('content')
 );
 
@@ -519,12 +513,9 @@ We need to pass data from the child component to its parent. We do this by passi
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    CommentsService.getAll(function(data){
+      this.setState({data: data});
+    }.bind(this));
   },
   handleCommentSubmit: function(comment) {
     // TODO: submit to the server and refresh the list
@@ -534,7 +525,6 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
@@ -579,84 +569,26 @@ var CommentForm = React.createClass({
 });
 ```
 
-Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
+Now that the callbacks are in place, all we have to do is get the current state, push the most recent comment onto it, then update the state:
 
 ```javascript{12-19}
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
-  },
-  handleCommentSubmit: function(comment) {
-    $.ajax({
-      url: this.props.url,
-      type: 'POST',
-      data: comment,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
-  },
-  getInitialState: function() {
-    return {data: []};
-  },
-  componentWillMount: function() {
-    this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
-  },
-  render: function() {
-    return (
-      <div className="commentBox">
-        <h1>Comments</h1>
-        <CommentList data={this.state.data} />
-        <CommentForm
-          onCommentSubmit={this.handleCommentSubmit}
-        />
-      </div>
-    );
-  }
-});
-```
-
-### Optimization: optimistic updates
-
-Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
-
-```javascript{12-14}
-// tutorial20.js
-var CommentBox = React.createClass({
-  loadCommentsFromServer: function() {
-    $.ajax({
-      url: this.props.url,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    CommentsService.getAll(function(data){
+      this.setState({data: data});
+    }.bind(this));
   },
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
-    var newComments = comments.concat([comment]);
-    this.setState({data: newComments});
-    $.ajax({
-      url: this.props.url,
-      type: 'POST',
-      data: comment,
-      success: function(data) {
-        this.setState({data: data});
-      }.bind(this)
-    });
+    comments.push(comment);
+    this.setState({data: comments});
   },
   getInitialState: function() {
     return {data: []};
   },
   componentWillMount: function() {
     this.loadCommentsFromServer();
-    setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
   render: function() {
     return (
