@@ -58,7 +58,7 @@ describe('rendering React components at document', function() {
     });
 
     React.renderComponentToString(<Root />, function(markup) {
-      testDocument.innerHTML = markup;
+      testDocument = getTestDocument(markup);
       var component = React.renderComponent(<Root />, testDocument);
       expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
@@ -86,7 +86,7 @@ describe('rendering React components at document', function() {
     });
 
     React.renderComponentToString(<Root />, function(markup) {
-      testDocument.innerHTML = markup;
+      testDocument = getTestDocument(markup);
       React.renderComponent(<Root />, testDocument);
       expect(testDocument.body.innerHTML).toBe(' Hello world ');
 
@@ -137,7 +137,7 @@ describe('rendering React components at document', function() {
     });
 
     React.renderComponentToString(<Component />, function(markup) {
-      testDocument.innerHTML = markup;
+      testDocument = getTestDocument(markup);
 
       React.renderComponent(<Component />, testDocument);
 
@@ -180,7 +180,7 @@ describe('rendering React components at document', function() {
     React.renderComponentToString(
       <Component text="Hello world" />,
       function(markup) {
-        testDocument.innerHTML = markup;
+        testDocument = getTestDocument(markup);
 
         React.renderComponent(<Component text="Hello world" />, testDocument);
 
@@ -210,7 +210,7 @@ describe('rendering React components at document', function() {
     React.renderComponentToString(
       <Component text="Goodbye world" />,
       function(markup) {
-        testDocument.innerHTML = markup;
+        testDocument = getTestDocument(markup);
 
         expect(function() {
           // Notice the text is different!
