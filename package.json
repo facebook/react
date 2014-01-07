@@ -38,6 +38,7 @@
     "jstransform": "~2.0.2"
   },
   "devDependencies": {
+    "benchmark": "~1.0.0",
     "browserify": "~2.36.1",
     "coverify": "~0.1.1",
     "envify": "~1.0.1",
@@ -53,8 +54,10 @@
     "grunt-contrib-jshint": "~0.7.2",
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
+    "microtime": "~0.5.1",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
+    "platform": "~1.0.0",
     "populist": "~0.1.6",
     "recast": "~0.5.6",
     "sauce-tunnel": "~1.1.0",

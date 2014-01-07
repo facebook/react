@@ -1,0 +1,59 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Perf Test Runner</title>
+
+<script src="../node_modules/platform/platform.js"></script>
+<script src="../node_modules/benchmark/benchmark.js"></script>
+<script src="lib/perf-test-runner.browser.js"></script>
+
+<script> perfRunner.Polyfill(); </script>
+
+<script>
+
+perfRunner.WriteReactLibScript({
+  version: perfRunner.getQueryParamArrayOrDefault('react', [null])[0],
+  debug: perfRunner.getQueryParamArrayOrDefault('debug', [false])[0]
+});
+
+perfRunner.WriteScript({src:"lib/todolist.browser.js"});
+
+perfRunner.WriteTestScript({ test:perfRunner.getQueryParamArray('test') });
+
+</script>
+
+<script>
+
+function checkIfReady(){
+  if (!window.exports) return setTimeout(checkIfReady, 50);
+
+  console.timeStamp && console.timeStamp(perfRunner.getQueryParamArray('test'));
+  if (typeof gc == 'function') gc();
+  window.parent.postMessage(perfRunner.getQueryParamArrayOrDefault('callback', ['Ready!'])[0], '*');
+}
+checkIfReady();
+
+function main(callback){
+  perfRunner.singleTest(exports, function(results){
+    document.getElementById('results').textContent = JSON.stringify(results, null, 2);
+    callback();
+  });
+}
+
+function runOnce(callback){
+  setTimeout(function(){
+    exports.fn({resolve: function(){
+      setTimeout(callback, 0);
+    }});
+  },0);
+}
+
+</script>
+<button autofocus onclick="if (disabled) return false; main(function(){ disabled=false; textContent='Run again!'; }); textContent='Running!'; disabled=true">Run!</button>
+<div>
+  <button onclick="exports.setup();">Setup!</button>
+  <button onclick="if (disabled) return false; runOnce(function(){ disabled=false; textContent='Run again!'; }); textContent='Running!'; disabled=true">Run once!</button>
+  <button onclick="exports.teardown();">Teardown!</button>
+</div>
+
+<pre id=results style="font-size:9px"></pre>
+
