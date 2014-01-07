@@ -118,13 +118,20 @@ describe('ReactTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[1].id).toBe('two');
   });
 
-  describe('with an undefined child', function () {
-    it('should fail silently', function () {
-      React.renderComponent(
-        <ReactTransitionGroup transitionName="yolo">
-        </ReactTransitionGroup>,
-        container
-      );
-    });
+  it('should work with no children', function () {
+    React.renderComponent(
+      <ReactTransitionGroup transitionName="yolo">
+      </ReactTransitionGroup>,
+      container
+    );
+  });
+
+  it('should work with a null child', function () {
+    React.renderComponent(
+      <ReactTransitionGroup transitionName="yolo">
+        {[null]}
+      </ReactTransitionGroup>,
+      container
+    );
   });
 });
