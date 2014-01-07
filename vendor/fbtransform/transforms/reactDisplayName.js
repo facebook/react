@@ -19,6 +19,32 @@
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
+function addDisplayName(displayName, object, state) {
+  if (object &&
+      object.type === Syntax.CallExpression &&
+      object.callee.type === Syntax.MemberExpression &&
+      object.callee.object.type === Syntax.Identifier &&
+      object.callee.object.name === 'React' &&
+      object.callee.property.type === Syntax.Identifier &&
+      object.callee.property.name === 'createClass' &&
+      object['arguments'].length === 1 &&
+      object['arguments'][0].type === Syntax.ObjectExpression) {
+    // Verify that the displayName property isn't already set
+    var properties = object['arguments'][0].properties;
+    var safe = properties.every(function(property) {
+      var value = property.key.type === Syntax.Identifier ?
+        property.key.name :
+        property.key.value;
+      return value !== 'displayName';
+    });
+
+    if (safe) {
+      utils.catchup(object['arguments'][0].range[0] + 1, state);
+      utils.append("displayName: '" + displayName + "',", state);
+    }
+  }
+}
+
 /**
  * Transforms the following:
  *
@@ -32,40 +58,48 @@ var utils = require('jstransform/src/utils');
  *    displayName: 'MyComponent',
  *    render: ...
  * });
+ *
+ * Also catches:
+ *
+ * MyComponent = React.createClass(...);
+ * exports.MyComponent = React.createClass(...);
+ * module.exports = {MyComponent: React.createClass(...)};
  */
 function visitReactDisplayName(traverse, object, path, state) {
-  var displayName = object.id.name;
-  utils.catchup(object.init['arguments'][0].range[0] + 1, state);
-  utils.append("displayName: '" + displayName + "',", state);
+  var left, right;
+
+  if (object.type === Syntax.AssignmentExpression) {
+    left = object.left;
+    right = object.right;
+  } else if (object.type === Syntax.Property) {
+    left = object.key;
+    right = object.value;
+  } else if (object.type === Syntax.VariableDeclarator) {
+    left = object.id;
+    right = object.init;
+  }
+
+  if (left && left.type === Syntax.MemberExpression) {
+    left = left.property;
+  }
+  if (left && left.type === Syntax.Identifier) {
+    addDisplayName(left.name, right, state);
+  }
 }
 
 /**
  * Will only run on @jsx files for now.
  */
 visitReactDisplayName.test = function(object, path, state) {
-  if (!!utils.getDocblock(state).jsx &&
-      object.type === Syntax.VariableDeclarator &&
-      object.id.type === Syntax.Identifier &&
-      object.init &&
-      object.init.type === Syntax.CallExpression &&
-      object.init.callee.type === Syntax.MemberExpression &&
-      object.init.callee.object.type === Syntax.Identifier &&
-      object.init.callee.object.name === 'React' &&
-      object.init.callee.property.type === Syntax.Identifier &&
-      object.init.callee.property.name === 'createClass' &&
-      object.init['arguments'].length === 1 &&
-      object.init['arguments'][0].type === Syntax.ObjectExpression) {
-
-    // Verify that the displayName property isn't already set
-    var properties = object.init['arguments'][0].properties;
-    return properties.reduce(function (safe, property) {
-      var value = property.key.type === 'Identifier'
-        ? property.key.name
-        : property.key.value;
-      return safe && value !== 'displayName';
-    }, true);
+  if (utils.getDocblock(state).jsx) {
+    return (
+      object.type === Syntax.AssignmentExpression ||
+      object.type === Syntax.Property ||
+      object.type === Syntax.VariableDeclarator
+    );
+  } else {
+    return false;
   }
-  return false;
 };
 
 exports.visitReactDisplayName = visitReactDisplayName;
