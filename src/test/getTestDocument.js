@@ -16,14 +16,16 @@
  * @providesModule getTestDocument
  */
 
-function getTestDocument() {
+function getTestDocument(markup) {
   var iframe = document.createElement('iframe');
   iframe.style.display = 'none';
   document.body.appendChild(iframe);
 
   var testDocument = iframe.contentDocument || iframe.contentWindow.document;
   testDocument.open();
-  testDocument.write('<!doctype html><html><meta charset=utf-8><title>test doc</title>');
+  testDocument.write(
+    markup || '<!doctype html><html><meta charset=utf-8><title>test doc</title>'
+  );
   testDocument.close();
 
   iframe.parentNode.removeChild(iframe);
