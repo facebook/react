@@ -38,10 +38,37 @@ describe('cloneWithProps', function() {
     onlyChild = require('onlyChild');
   });
 
-  it('should clone an object with new props', function() {
+  it('should clone a DOM component with new props', function() {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div className="child" /></Parent>;
+      }
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return (
+          <div className="parent">
+            {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
+          </div>
+        );
+      }
+    });
+    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    expect(component.getDOMNode().childNodes[0].className)
+      .toBe('child xyz');
+  });
+
+  it('should clone a composite component with new props', function() {
+
+    var Child = React.createClass({
+      render: function() {
+        return <div className={this.props.className} />;
+      }
+    });
+
+    var Grandparent = React.createClass({
+      render: function() {
+        return <Parent><Child className="child" /></Parent>;
       }
     });
     var Parent = React.createClass({

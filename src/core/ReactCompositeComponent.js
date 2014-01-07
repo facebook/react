@@ -1231,6 +1231,7 @@ var ReactCompositeComponent = {
       return instance;
     };
     ConvenienceConstructor.componentConstructor = Constructor;
+    Constructor.ConvenienceConstructor = ConvenienceConstructor;
     ConvenienceConstructor.originalSpec = spec;
 
     mixSpecIntoComponent(ConvenienceConstructor, spec);
