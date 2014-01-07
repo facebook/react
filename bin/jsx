@@ -4,15 +4,24 @@
 
 var visitors = require('../vendor/fbtransform/visitors');
 var transform = require('jstransform').transform;
+var commoner = require('commoner');
+var path = require('path');
+var Buffer = require('buffer').Buffer;
 
-require('commoner').version(
+commoner.version(
   require('../package.json').version
-).resolve(function(id) {
-  return this.readModuleP(id);
-}).option(
+).option(
+  '--source-map-inline',
+  'Generate inline JavaScript source maps'
+).option(
+  '--source-map-files',
+  'Generate JavaScript source map files'
+).option(
   '--harmony',
   'Turns on JS transformations such as ES6 Classes etc.'
-).process(function(id, source) {
+).resolve(function(id) {
+  return this.readModuleP(id);
+}).process(function(id, source) {
   // This is where JSX, ES6, etc. desugaring happens.
   var visitorList;
   if (this.options.harmony) {
@@ -20,5 +29,46 @@ require('commoner').version(
   } else {
     visitorList = visitors.transformVisitors.react;
   }
-  return transform(visitorList, source).code;
+  var wantSourceMaps = this.options.sourceMapInline || this.options.sourceMapFiles;
+  var transformed = transform(
+    visitorList,
+    source,
+    { sourceMap: wantSourceMaps }
+  );
+  var code = transformed.code;
+  var sourceMap = wantSourceMaps 
+    ? sourceMapJSON(transformed.sourceMap, source, id + '.' + this.preferredFileExtension.extension)
+    : null;
+
+  var result = {};
+  if (this.options.sourceMapInline) {
+    result['.js'] = code + '\n' + inlineSourceMap(sourceMap);
+
+  } else if (this.options.sourceMapFiles) {
+    var sourceMapFileUrl = id + '.js.map';
+    result['.js'] = code + '\n' + sourceMapComment(sourceMapFileUrl);
+    result['.js.map'] = JSON.stringify(sourceMap);
+
+  } else {
+    result['.js'] = code;
+  }
+
+  return result;
 });
+
+function inlineSourceMap(json) {
+  var base64 = Buffer(JSON.stringify(json)).toString('base64');
+  var url = 'data:application/json;base64,' + base64;
+  return sourceMapComment(url);
+}
+
+function sourceMapComment(url) {
+  return '//# sourceMappingURL=' + url;
+}
+
+function sourceMapJSON(sourceMap, sourceCode, sourceFilename) {
+  var json = sourceMap.toJSON();
+  json.sources = [ sourceFilename ];
+  json.sourcesContent = [ sourceCode ];
+  return json;
+}
