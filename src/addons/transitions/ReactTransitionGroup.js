@@ -62,8 +62,9 @@ var ReactTransitionGroup = React.createClass({
     var children = {};
     var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
 
+    var prevKeys = this._transitionGroupCurrentKeys;
     var currentKeys = ReactTransitionKeySet.mergeKeySets(
-      this._transitionGroupCurrentKeys,
+      prevKeys,
       ReactTransitionKeySet.getKeySet(sourceChildren)
     );
 
@@ -73,7 +74,7 @@ var ReactTransitionGroup = React.createClass({
       // may look up an old key in the new children, and it may switch to
       // undefined. React's reconciler will keep the ReactTransitionableChild
       // instance alive such that we can animate it.
-      if (childMapping[key] || this.props.transitionLeave) {
+      if (childMapping[key] || (this.props.transitionLeave && prevKeys[key])) {
         children[key] = ReactTransitionableChild({
           name: this.props.transitionName,
           enter: this.props.transitionEnter,
