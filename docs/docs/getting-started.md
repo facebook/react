@@ -99,7 +99,7 @@ Update your HTML file as below:
 <html>
   <head>
     <title>Hello React!</title>
-    <script src="build/react.min.js"></script>
+    <script src="build/react.js"></script>
     <!-- No need for JSXTransformer! -->
   </head>
   <body>
