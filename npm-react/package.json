@@ -28,7 +28,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "envify": "~0.2.0"
+    "envify": "~1.0.1"
   },
   "browserify": {
     "transform": ["envify"]
