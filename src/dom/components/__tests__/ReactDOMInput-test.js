@@ -198,6 +198,41 @@ describe('ReactDOMInput', function() {
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
 
+  it('should warn with value and no onChange handler', function() {
+    var oldWarn = console.warn;
+    try {
+      console.warn = mocks.getMockFunction();
+
+      var node = document.createElement('div');
+      var link = new ReactLink('yolo', mocks.getMockFunction());
+      React.renderComponent(<input type="text" valueLink={link} />, node);
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(
+        <input type="text" value="zoink" onChange={mocks.getMockFunction()} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(
+        <input type="text" value="zoink" readOnly={true} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(<input type="text" value="zoink" />, node);
+      expect(console.warn.mock.calls.length).toBe(1);
+
+      React.renderComponent(
+        <input type="text" value="zoink" readOnly={false} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(2);
+    } finally {
+      console.warn = oldWarn;
+    }
+  });
+
   it('should throw if both value and valueLink are provided', function() {
     // Silences console.error messages
     // ReactErrorUtils.guard is applied to all methods of a React component
