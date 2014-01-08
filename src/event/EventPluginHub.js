@@ -22,7 +22,6 @@ var CallbackRegistry = require('CallbackRegistry');
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
@@ -188,9 +187,5 @@ var EventPluginHub = {
   }
 
 };
-
-if (ExecutionEnvironment.canUseDOM) {
-  window.EventPluginHub = EventPluginHub;
-}
 
 module.exports = EventPluginHub;
