@@ -19,7 +19,7 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-{{site.react_version}}.min.js"></script>
+    <script src="http://fb.me/react-{{site.react_version}}.js"></script>
     <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
   </head>
   <body>
