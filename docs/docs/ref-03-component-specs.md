@@ -73,7 +73,7 @@ The `mixins` array allows you to use mixins to share behavior among multiple com
 string displayName
 ```
 
-The `displayName` string is used in debugging messages. JSX sets this value automatically, see [JSX in Depth](react/docs/jsx-in-depth.html#react-composite-components).
+The `displayName` string is used in debugging messages. JSX sets this value automatically, see [JSX in Depth](/react/docs/jsx-in-depth.html#react-composite-components).
 
 
 ## Lifecycle Methods
