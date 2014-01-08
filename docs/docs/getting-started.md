@@ -28,7 +28,7 @@ In the root directory of the starter kit, create a `helloworld.html` with the fo
 <!DOCTYPE html>
 <html>
   <head>
-    <script src="build/react.min.js"></script>
+    <script src="build/react.js"></script>
     <script src="build/JSXTransformer.js"></script>
   </head>
   <body>
