@@ -736,9 +736,10 @@ var ReactCompositeComponentMixin = {
 
     this._defaultProps = null;
 
-    ReactComponent.Mixin.unmountComponent.call(this);
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
+
+    ReactComponent.Mixin.unmountComponent.call(this);
 
     if (this.refs) {
       this.refs = null;

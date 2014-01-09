@@ -22,6 +22,7 @@
 var MorphingComponent;
 var ChildUpdates;
 var React;
+var ReactComponent;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactTestUtils;
@@ -40,6 +41,7 @@ describe('ReactCompositeComponent', function() {
 
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
+    ReactComponent = require('ReactComponent');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
@@ -581,6 +583,42 @@ describe('ReactCompositeComponent', function() {
         'must return an object or null'
       );
     });
+  });
+
+  it('should call componentWillUnmount before unmounting', function() {
+    var container = document.createElement('div');
+    var innerUnmounted = false;
+
+    spyOn(ReactMount, 'purgeID').andCallThrough();
+
+    var Component = React.createClass({
+      render: function() {
+        return <div>
+          <Inner />
+        </div>;
+      }
+    });
+    var Inner = React.createClass({
+      componentWillUnmount: function() {
+        // It's important that ReactMount.purgeID be called after any component
+        // lifecycle methods, because a componentWillMount implementation is
+        // likely call this.getDOMNode(), which will repopulate the node cache
+        // after it's been cleared, causing a memory leak.
+        expect(ReactMount.purgeID.callCount).toBe(0);
+        innerUnmounted = true;
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    React.renderComponent(<Component />, container);
+    React.unmountComponentAtNode(container);
+    expect(innerUnmounted).toBe(true);
+
+    // <Component />, <Inner />, and both <div /> elements each call
+    // unmountIDFromEnvironment which calls purgeID, for a total of 4.
+    expect(ReactMount.purgeID.callCount).toBe(4);
   });
 
   it('should detect valid CompositeComponent classes', function() {
