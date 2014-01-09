@@ -31,7 +31,7 @@ Configure React's event system to handle touch events on mobile devices.
 function createClass(object specification)
 ```
 
-Creates a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
+Create a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
 
 For more information about the specification object, see [Component Specs and Lifecycle](/react/docs/component-specs.html).
 
@@ -46,7 +46,7 @@ ReactComponent renderComponent(
 )
 ```
 
-Renders a React component into the DOM in the supplied `container`.
+Render a React component into the DOM in the supplied `container`.
 
 If the React component was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
 
@@ -56,10 +56,10 @@ If the optional callback is provided, it will be executed after the component is
 ### React.unmountComponentAtNode
 
 ```javascript
-unmountComponentAtNode(DOMElement container)
+boolean unmountComponentAtNode(DOMElement container)
 ```
 
-Remove a mounted React component from the DOM and clean up its event handlers and state.
+Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
 > Note:
 >
