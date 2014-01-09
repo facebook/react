@@ -64,11 +64,43 @@ function assertValidProps(props) {
   );
 }
 
+
+/*
+ * The owning document is the Node to which we should attach event handlers.
+ * Under normal circumstances, this would be the document contained
+ * in the window.
+ *
+ * However, when rendering into a shadow root, we need to bind the handlers
+ * to the shadow root. That is because events are stopped at shadow boundaries.
+ *
+ * This means we have to manually walk up the parents until we find a suitable
+ * node.
+ *
+ * Futher complicated by the fact that this module is tested to run in web
+ * workers, where 'window' is not defined. So the whole function is only
+ * defined if it can actually run.
+ */
+var owningDocument = (function() {
+    if (typeof window != "undefined") {
+        var ShadowRoot = window.ShadowRoot;
+        return function(node) {
+            if (node.parentNode == null) {
+                return node;
+            } else if (ShadowRoot && node instanceof ShadowRoot) {
+                return node;
+            } else {
+                return owningDocument(node.parentNode);
+            }
+        }
+    }
+})();
+
+
 function putListener(id, registrationName, listener) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
+      owningDocument(container) :
       container;
     listenTo(registrationName, doc);
   }
