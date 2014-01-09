@@ -22,6 +22,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
@@ -81,7 +82,7 @@ function assertValidProps(props) {
  * defined if it can actually run.
  */
 var owningDocument = (function() {
-    if (typeof window != "undefined") {
+    if (ExecutionEnvironment.canUseDOM) {
         var ShadowRoot = window.ShadowRoot;
         return function(node) {
             if (node.parentNode == null) {
