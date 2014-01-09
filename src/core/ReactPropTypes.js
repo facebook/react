@@ -86,7 +86,8 @@ var Props = {
 
   instanceOf: createInstanceTypeChecker,
 
-  renderable: createRenderableTypeChecker()
+  renderable: createRenderableTypeChecker(),
+  component: createComponentTypeChecker()
 
 };
 
@@ -198,6 +199,25 @@ function createRenderableTypeChecker() {
     );
   }
   return createChainableTypeChecker(validateRenderableType);
+}
+
+function createComponentTypeChecker() {
+  function validateComponentType(
+    shouldThrow, propValue, propName, componentName, location
+  ) {
+    var isValid = ReactComponent.isValidComponent(propValue);
+    if (!shouldThrow) {
+      return isValid;
+    }
+    invariant(
+      isValid,
+      'Invalid %s `%s` supplied to `%s`, expected a React component.',
+      ReactPropTypeLocationNames[location],
+      propName,
+      componentName
+    );
+  }
+  return createChainableTypeChecker(validateComponentType);
 }
 
 function createChainableTypeChecker(validate) {

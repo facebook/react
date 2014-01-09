@@ -19,6 +19,8 @@
 
 "use strict";
 
+var ReactTestUtils;
+
 var Props = require('ReactPropTypes');
 var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -46,6 +48,8 @@ var MyComponent = React.createClass({
 describe('Primitive Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   it("should throw for invalid strings", function() {
@@ -167,6 +171,56 @@ describe('Instance Types', function() {
 
     expect(typeCheck(Props.instanceOf(Person), new Person())).not.toThrow();
     expect(typeCheck(Props.instanceOf(Person), new Engineer())).not.toThrow();
+  });
+});
+
+describe('Component Type', function() {
+  it('should support components', () => {
+    expect(typeCheck(Props.component, <div />)).not.toThrow();
+  });
+
+  it('should not support multiple components or scalar values', () => {
+    [[<div />, <div />], 123, 'foo', false].forEach((value) => {
+      expect(typeCheck(Props.component, value)).toThrow();
+    });
+  });
+
+  var Component = React.createClass({
+    propTypes: {
+      children: Props.component.isRequired
+    },
+
+    render: function() {
+      return <div>{this.props.children}</div>;
+    }
+  });
+
+  it('should be able to define a single child as children', () => {
+    expect(() => {
+      var instance =
+        <Component>
+          <div />
+        </Component>;
+      ReactTestUtils.renderIntoDocument(instance);
+    }).not.toThrow();
+  });
+
+  it('should throw when passing more than one child', () => {
+    expect(() => {
+      var instance =
+        <Component>
+          <div />
+          <div />
+        </Component>;
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow();
+  });
+
+  it('should throw when passing no children and isRequired is set', () => {
+    expect(() => {
+      var instance = <Component />;
+      ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow();
   });
 });
 
