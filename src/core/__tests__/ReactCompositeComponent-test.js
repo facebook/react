@@ -512,7 +512,7 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
-    spyOn(ReactComponent, 'unmountIDFromEnvironment').andCallThrough();
+    spyOn(ReactMount, 'purgeID').andCallThrough();
 
     var Component = React.createClass({
       render: function() {
@@ -523,12 +523,11 @@ describe('ReactCompositeComponent', function() {
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
-        // It's important that unmountIDFromEnvironment (which clears
-        // ReactMount's node cache) be called after any component lifecycle
-        // methods, because a componentWillMount implementation is likely call
-        // this.getDOMNode(), which will repopulate the node cache after it's
-        // been cleared, causing a memory leak.
-        expect(ReactComponent.unmountIDFromEnvironment.callCount).toBe(0);
+        // It's important that ReactMount.purgeID be called after any component
+        // lifecycle methods, because a componentWillMount implementation is
+        // likely call this.getDOMNode(), which will repopulate the node cache
+        // after it's been cleared, causing a memory leak.
+        expect(ReactMount.purgeID.callCount).toBe(0);
         innerUnmounted = true;
       },
       render: function() {
@@ -541,8 +540,8 @@ describe('ReactCompositeComponent', function() {
     expect(innerUnmounted).toBe(true);
 
     // <Component />, <Inner />, and both <div /> elements each call
-    // unmountIDFromEnvironment, for a total of 4.
-    expect(ReactComponent.unmountIDFromEnvironment.callCount).toBe(4);
+    // unmountIDFromEnvironment which calls purgeID, for a total of 4.
+    expect(ReactMount.purgeID.callCount).toBe(4);
   });
 
   it('should detect valid CompositeComponent classes', function() {
