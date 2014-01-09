@@ -41,10 +41,16 @@ var ReactDOMImg = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function() {
+    var node = this.getDOMNode();
     ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topLoad,
       'load',
-      this.getDOMNode()
+      node
+    );
+    ReactEventEmitter.trapBubbledEvent(
+      EventConstants.topLevelTypes.topError,
+      'error',
+      node
     );
   }
 });
