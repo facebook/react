@@ -679,7 +679,7 @@ var ReactCompositeComponentMixin = {
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
       this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
-      this._processProps(this.props);
+      this.props = this._processProps(this.props);
 
       if (this.__reactAutoBindMap) {
         this._bindAutoBindMethods();
@@ -853,12 +853,15 @@ var ReactCompositeComponentMixin = {
 
   /**
    * Processes props by setting default values for unspecified props and
-   * asserting that the props are valid.
+   * asserting that the props are valid. Does not mutate its argument; returns
+   * a new props object with defaults merged in.
    *
-   * @param {object} props
+   * @param {object} newProps
+   * @return {object}
    * @private
    */
-  _processProps: function(props) {
+  _processProps: function(newProps) {
+    var props = merge(newProps);
     var defaultProps = this._defaultProps;
     for (var propName in defaultProps) {
       if (typeof props[propName] === 'undefined') {
@@ -869,6 +872,7 @@ var ReactCompositeComponentMixin = {
     if (propTypes) {
       this._checkPropTypes(propTypes, props, ReactPropTypeLocations.prop);
     }
+    return props;
   },
 
   /**
@@ -920,8 +924,7 @@ var ReactCompositeComponentMixin = {
 
     var nextProps = this.props;
     if (this._pendingProps != null) {
-      nextProps = this._pendingProps;
-      this._processProps(nextProps);
+      nextProps = this._processProps(this._pendingProps);
       this._pendingProps = null;
 
       this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
