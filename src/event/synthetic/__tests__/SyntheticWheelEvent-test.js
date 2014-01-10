@@ -46,11 +46,11 @@ describe('SyntheticWheelEvent', function() {
   it('should normalize properties from the WheelEvent interface', function() {
     var standardEvent = createEvent({deltaX: 10, deltaY: -50});
     expect(standardEvent.deltaX).toBe(10);
-    expect(standardEvent.deltaY).toBe(50);
+    expect(standardEvent.deltaY).toBe(-50);
 
     var webkitEvent = createEvent({wheelDeltaX: -10, wheelDeltaY: 50});
     expect(webkitEvent.deltaX).toBe(10);
-    expect(webkitEvent.deltaY).toBe(50);
+    expect(webkitEvent.deltaY).toBe(-50);
   });
 
   it('should be able to `preventDefault` and `stopPropagation`', function() {
