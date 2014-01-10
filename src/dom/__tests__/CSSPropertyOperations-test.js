@@ -71,9 +71,13 @@ describe('CSSPropertyOperations', function() {
   it('should not append `px` to styles that might need a number', function() {
     var unitlessProperties = [
       'fillOpacity',
+      'flex',
+      'flexGrow',
+      'flexShrink',
       'fontWeight',
       'lineHeight',
       'opacity',
+      'order',
       'orphans',
       'pitchRange',
       'richness',

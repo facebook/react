@@ -23,9 +23,13 @@
  */
 var isUnitlessNumber = {
   fillOpacity: true,
+  flex: true,
+  flexGrow: true,
+  flexShrink: true,
   fontWeight: true,
   lineHeight: true,
   opacity: true,
+  order: true,
   orphans: true,
   pitchRange: true,
   richness: true,
