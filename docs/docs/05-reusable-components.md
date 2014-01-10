@@ -26,6 +26,13 @@ React.createClass({
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
 
+    // Anything that can be rendered: numbers, strings, components or an array
+    // containing these types.
+    optionalRenderable: React.PropTypes.renderable,
+
+    // A React component.
+    optionalComponent: React.PropTypes.component,
+
     // You can ensure that your prop is limited to specific values by treating
     // it as an enum.
     optionalEnum: React.PropTypes.oneOf(['News','Photos']),
@@ -91,6 +98,26 @@ React.renderComponent(
 );
 ```
 
+## Single Child
+
+With `React.PropTypes.component` you can specify that only a single child can be passed to
+a component as children.
+
+```javascript
+var MyComponent = React.createClass({
+  propTypes: {
+    children: React.PropTypes.component.isRequired
+  },
+
+  render: function() {
+    return
+      <div>
+        {this.props.children} // This must be exactly one element or it will throw.
+      </div>;
+  }
+
+});
+```
 
 ## Mixins
 
