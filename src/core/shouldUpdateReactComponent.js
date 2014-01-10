@@ -31,11 +31,11 @@
 function shouldUpdateReactComponent(prevComponent, nextComponent) {
   // TODO: Remove warning after a release.
   if (prevComponent && nextComponent &&
-      prevComponent.constructor === nextComponent.constructor) {
-    if (prevComponent._owner === nextComponent._owner && (
-          (prevComponent.props && prevComponent.props.key) ===
-          (nextComponent.props && nextComponent.props.key)
-        )) {
+      prevComponent.constructor === nextComponent.constructor && (
+        (prevComponent.props && prevComponent.props.key) ===
+        (nextComponent.props && nextComponent.props.key)
+      )) {
+    if (prevComponent._owner === nextComponent._owner) {
       return true;
     } else {
       if (__DEV__) {
