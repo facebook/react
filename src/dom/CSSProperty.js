@@ -22,6 +22,7 @@
  * CSS properties which accept numbers but are not in units of "px".
  */
 var isUnitlessNumber = {
+  columnCount: true,
   fillOpacity: true,
   flex: true,
   flexGrow: true,

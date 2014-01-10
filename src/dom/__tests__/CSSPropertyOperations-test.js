@@ -70,6 +70,7 @@ describe('CSSPropertyOperations', function() {
 
   it('should not append `px` to styles that might need a number', function() {
     var unitlessProperties = [
+      'columnCount',
       'fillOpacity',
       'flex',
       'flexGrow',
