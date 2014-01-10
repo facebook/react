@@ -77,10 +77,14 @@ describe('CSSPropertyOperations', function() {
       zIndex: 5,
       zoom: 6,
       lineHeight: 7,
-      widows: 8
+      widows: 8,
+      volume: 9,
+      stress: 10,
+      pitchRange: 11,
+      richness: 12
     })).toBe(
       'fill-opacity:1;font-weight:2;opacity:3;orphans:4;z-index:5;zoom:6;' +
-      'line-height:7;widows:8;'
+      'line-height:7;widows:8;volume:9;stress:10;pitch-range:11;richness:12;'
     );
   });
 
