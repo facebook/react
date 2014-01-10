@@ -69,23 +69,26 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should not append `px` to styles that might need a number', function() {
-    expect(CSSPropertyOperations.createMarkupForStyles({
-      fillOpacity: 1,
-      fontWeight: 2,
-      opacity: 3,
-      orphans: 4,
-      zIndex: 5,
-      zoom: 6,
-      lineHeight: 7,
-      widows: 8,
-      volume: 9,
-      stress: 10,
-      pitchRange: 11,
-      richness: 12
-    })).toBe(
-      'fill-opacity:1;font-weight:2;opacity:3;orphans:4;z-index:5;zoom:6;' +
-      'line-height:7;widows:8;volume:9;stress:10;pitch-range:11;richness:12;'
-    );
+    var unitlessProperties = [
+      'fillOpacity',
+      'fontWeight',
+      'lineHeight',
+      'opacity',
+      'orphans',
+      'pitchRange',
+      'richness',
+      'stress',
+      'volume',
+      'widows',
+      'zIndex',
+      'zoom'
+    ];
+    unitlessProperties.forEach(function(property) {
+      var styles = {};
+      styles[property] = 1;
+      expect(CSSPropertyOperations.createMarkupForStyles(styles))
+        .toMatch(/:1;$/);
+    });
   });
 
   it('should set style attribute when styles exist', function() {
