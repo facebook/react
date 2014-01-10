@@ -76,10 +76,11 @@ describe('CSSPropertyOperations', function() {
       orphans: 4,
       zIndex: 5,
       zoom: 6,
-      lineHeight: 7
+      lineHeight: 7,
+      widows: 8
     })).toBe(
       'fill-opacity:1;font-weight:2;opacity:3;orphans:4;z-index:5;zoom:6;' +
-      'line-height:7;'
+      'line-height:7;widows:8;'
     );
   });
 

@@ -27,6 +27,7 @@ var isUnitlessNumber = {
   lineHeight: true,
   opacity: true,
   orphans: true,
+  widows: true,
   zIndex: true,
   zoom: true
 };
