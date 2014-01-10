@@ -21,8 +21,6 @@
 
 var ReactChildren = require('ReactChildren');
 
-var MERGE_KEY_SETS_TAIL_SENTINEL = {};
-
 var ReactTransitionKeySet = {
   /**
    * Given `this.props.children`, return an object mapping key to child. Just
@@ -71,37 +69,36 @@ var ReactTransitionKeySet = {
     prev = prev || {};
     next = next || {};
 
-    var keySet = {};
-    var prevKeys = Object.keys(prev).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
-    var nextKeys = Object.keys(next).concat([MERGE_KEY_SETS_TAIL_SENTINEL]);
-    var i;
-    for (i = 0; i < prevKeys.length - 1; i++) {
-      var prevKey = prevKeys[i];
+    // For each key of `next`, the list of keys to insert before that key in
+    // the combined list
+    var nextKeysPending = {};
+
+    var pendingKeys = [];
+    for (var prevKey in prev) {
       if (next[prevKey]) {
-        continue;
-      }
-
-      // This key is not in the new set. Place it in our
-      // best guess where it should go. We do this by searching
-      // for a key after the current one in prevKeys that is
-      // still in nextKeys, and inserting right before it.
-      // I know this is O(n^2), but this is not a particularly
-      // hot code path.
-      var insertPos = -1;
-
-      for (var j = i + 1; j < prevKeys.length; j++) {
-        insertPos = nextKeys.indexOf(prevKeys[j]);
-        if (insertPos >= 0) {
-          break;
+        if (pendingKeys.length) {
+          nextKeysPending[prevKey] = pendingKeys;
+          pendingKeys = [];
         }
+      } else {
+        pendingKeys.push(prevKey);
       }
-
-      // Insert before insertPos
-      nextKeys.splice(insertPos, 0, prevKey);
     }
 
-    for (i = 0; i < nextKeys.length - 1; i++) {
-      keySet[nextKeys[i]] = true;
+    var i;
+    var keySet = {};
+    for (var nextKey in next) {
+      if (nextKeysPending[nextKey]) {
+        for (i = 0; i < nextKeysPending[nextKey].length; i++) {
+          keySet[nextKeysPending[nextKey][i]] = true;
+        }
+      }
+      keySet[nextKey] = true;
+    }
+
+    // Finally, add the keys which didn't appear before any key in `next`
+    for (i = 0; i < pendingKeys.length; i++) {
+      keySet[pendingKeys[i]] = true;
     }
 
     return keySet;
