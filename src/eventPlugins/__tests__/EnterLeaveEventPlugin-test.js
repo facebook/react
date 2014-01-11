@@ -17,6 +17,8 @@
  * @emails react-core
  */
 
+/*jslint evil: true */
+
 "use strict";
 
 var EnterLeaveEventPlugin;
@@ -42,7 +44,13 @@ describe('EnterLeaveEventPlugin', function() {
     var iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
 
-    var component = React.renderComponent(<div />, iframe.contentDocument.body);
+    var iframeDocument = iframe.contentDocument;
+
+    if (!iframeDocument.innerHTML) {
+      iframeDocument.innerHTML = '<html><head></head><body></body></html>';
+    }
+
+    var component = React.renderComponent(<div />, iframeDocument.body);
     var div = component.getDOMNode();
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
