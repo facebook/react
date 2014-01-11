@@ -21,6 +21,12 @@
 
 var invariant = require('invariant');
 
+var hasReadOnlyValue = {
+  'checked': true,
+  'hidden': true,
+  'radio': true
+};
+
 /**
  * Provide a linked `value` attribute for controlled forms. You should not use
  * this outside of the ReactDOM controlled form components.
@@ -29,12 +35,16 @@ var LinkedValueMixin = {
   propTypes: {
     value: function(props, propName, componentName) {
       if (__DEV__) {
-        if (props[propName] && !props.onChange && !props.readOnly) {
+        if (props[propName] &&
+            !hasReadOnlyValue[props.type] &&
+            !props.onChange &&
+            !props.readOnly &&
+            !props.disabled) {
           console.warn(
             'You provided a `value` prop to a form field without an ' +
             '`onChange` handler. This will render a read-only field. If ' +
             'the field should be mutable use `defaultValue`. Otherwise, set ' +
-            'either `onChange` or `readOnly`. '
+            'either `onChange` or `readOnly`.'
           );
         }
       }
