@@ -82,12 +82,17 @@ var EnterLeaveEventPlugin = {
     }
 
     var win;
-    if (topLevelTarget != null && topLevelTarget.window === topLevelTarget) {
-      // topLevelTarget probably is a window object
+    if (topLevelTarget.window === topLevelTarget) {
+      // `topLevelTarget` is probably a window object.
       win = topLevelTarget;
     } else {
+      // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
       var doc = topLevelTarget.ownerDocument;
-      win = doc.defaultView || doc.parentWindow;
+      if (doc) {
+        win = doc.defaultView || doc.parentWindow;
+      } else {
+        win = window;
+      }
     }
 
     var from, to;
