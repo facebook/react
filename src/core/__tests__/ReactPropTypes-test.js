@@ -368,7 +368,7 @@ describe('Union Types', function() {
     });
 
     it('should have a weak version that returns true/false', function() {
-      expect(typeCheck(Props.string.weak, null)()).toEqual(true);
+      expect(typeCheck(Props.any.weak, null)()).toEqual(true);
       expect(typeCheck(Props.any.weak.isRequired, null)()).toEqual(false);
       expect(typeCheck(Props.any.isRequired.weak, null)()).toEqual(false);
     });
