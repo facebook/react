@@ -68,6 +68,17 @@ var React = {
   }
 };
 
+if (__DEV__) {
+  var ExecutionEnvironment = require('ExecutionEnvironment');
+  if (ExecutionEnvironment.canUseDOM &&
+      navigator.userAgent.indexOf('Chrome') > -1) {
+    console.debug(
+      'Download the React DevTools for a better development experience: ' +
+      'http://fb.me/react-devtools'
+    );
+  }
+}
+
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
 React.version = '0.9.0-alpha';
