@@ -43,7 +43,7 @@ var WheelEventInterface = {
     );
   },
   deltaZ: null,
-  
+
   // Browsers without "deltaMode" is reporting in raw wheel delta where one
   // notch on the scroll is always +/- 120, roughly equivalent to pixels.
   // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or

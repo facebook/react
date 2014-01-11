@@ -49,7 +49,7 @@ function isEventSupported(eventNameSuffix, capture) {
       capture && !('addEventListener' in document)) {
     return false;
   }
-  
+
   var eventName = 'on' + eventNameSuffix;
   var isSupported = eventName in document;
 
