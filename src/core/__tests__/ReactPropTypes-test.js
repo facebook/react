@@ -347,4 +347,30 @@ describe('Union Types', function() {
     });
   });
 
+  describe('Any type', function() {
+    it('should should accept any value', function() {
+      expect(typeCheck(Props.any, 1)).not.toThrow();
+      expect(typeCheck(Props.any, 'str')).not.toThrow();
+      expect(typeCheck(Props.any.isRequired, 1)).not.toThrow();
+      expect(typeCheck(Props.any.isRequired, 'str')).not.toThrow();
+
+      expect(typeCheck(Props.any, null)).not.toThrow();
+      expect(typeCheck(Props.any, undefined)).not.toThrow();
+
+      expect(typeCheck(Props.any.isRequired, null)).toThrow(
+        'Invariant Violation: Required prop `testProp` was not specified in ' +
+        '`testComponent`.'
+      );
+      expect(typeCheck(Props.any.isRequired, undefined)).toThrow(
+        'Invariant Violation: Required prop `testProp` was not specified in ' +
+        '`testComponent`.'
+      );
+    });
+
+    it('should have a weak version that returns true/false', function() {
+      expect(typeCheck(Props.string.weak, null)()).toEqual(true);
+      expect(typeCheck(Props.any.weak.isRequired, null)()).toEqual(false);
+      expect(typeCheck(Props.any.isRequired.weak, null)()).toEqual(false);
+    });
+  });
 });

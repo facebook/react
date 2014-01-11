@@ -87,11 +87,23 @@ var Props = {
   instanceOf: createInstanceTypeChecker,
 
   renderable: createRenderableTypeChecker(),
-  component: createComponentTypeChecker()
 
+  component: createComponentTypeChecker(),
+
+  any: createAnyTypeChecker()
 };
 
 var ANONYMOUS = '<<anonymous>>';
+
+function createAnyTypeChecker() {
+  function validateAnyType(
+    shouldThrow, propValue, propName, componentName, location
+  ) {
+    // always is valid
+    return true;
+  }
+  return createChainableTypeChecker(validateAnyType);
+}
 
 function isRenderable(propValue) {
   switch(typeof propValue) {
