@@ -90,7 +90,7 @@ function validateExplicitKey(component) {
     message += ' It was passed a child from ' + childOwnerName + '.';
   }
 
-  message += ' See http://fb.me/react-warning-keys for more information.'
+  message += ' See http://fb.me/react-warning-keys for more information.';
   console.warn(message);
 }
 
