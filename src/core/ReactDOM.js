@@ -187,7 +187,10 @@ var ReactDOM = objMapKeyVal({
   rect: false,
   stop: false,
   svg: false,
-  text: false
+  text: false,
+  symbol: false,
+  use: false,
+  clipPath: false
 }, createDOMComponentClass);
 
 var injection = {
