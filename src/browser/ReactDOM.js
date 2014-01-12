@@ -109,7 +109,7 @@ var ReactDOM = mapObject({
   hr: true,
   html: false,
   i: false,
-  iframe: false,
+  iframe: false, // NOTE: Injected, see `ReactDOMIFrame`.
   img: true,
   input: true,
   ins: false,
