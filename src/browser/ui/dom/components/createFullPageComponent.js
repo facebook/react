@@ -41,6 +41,8 @@ function createFullPageComponent(componentClass) {
       componentClass.type.displayName || ''
     ),
 
+    tagName: componentClass.type.tagName,
+
     componentWillUnmount: function() {
       invariant(
         false,

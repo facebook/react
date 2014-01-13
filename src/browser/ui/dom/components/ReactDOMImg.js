@@ -35,7 +35,8 @@ var img = ReactDOM.img;
  */
 var ReactDOMImg = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMImg',
-  tagName: 'IMG',
+
+  tagName: img.tagName,
 
   mixins: [ReactBrowserComponentMixin],
 

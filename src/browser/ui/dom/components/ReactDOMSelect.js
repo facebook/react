@@ -104,6 +104,8 @@ function updateOptions(component, propValue) {
 var ReactDOMSelect = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMSelect',
 
+  tagName: select.tagName,
+
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   propTypes: {

@@ -33,6 +33,8 @@ var option = ReactDOM.option;
 var ReactDOMOption = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMOption',
 
+  tagName: option.tagName,
+
   mixins: [ReactBrowserComponentMixin],
 
   componentWillMount: function() {
