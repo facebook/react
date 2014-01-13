@@ -102,7 +102,7 @@ function enqueueUpdate(component, callback) {
 
   if (!batchingStrategy.isBatchingUpdates) {
     component.performUpdateIfNecessary();
-    callback && callback();
+    callback && callback.call(component);
     return;
   }
 
