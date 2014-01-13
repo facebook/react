@@ -252,4 +252,77 @@ describe('ReactDOMInput', function() {
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
   });
+
+  it('should support checkedLink', function() {
+    var container = document.createElement('div');
+    var link = new ReactLink(true, mocks.getMockFunction());
+    var instance = <input type="checked" checkedLink={link} />;
+
+    React.renderComponent(instance, container);
+
+    expect(instance.getDOMNode().checked).toBe(true);
+    expect(link.value).toBe(true);
+    expect(link.requestChange.mock.calls.length).toBe(0);
+
+    instance.getDOMNode().checked = false;
+    ReactTestUtils.Simulate.input(instance.getDOMNode());
+
+    expect(link.requestChange.mock.calls.length).toBe(1);
+    expect(link.requestChange.mock.calls[0][0]).toEqual(false);
+  });
+
+  it('should warn with checked and no onChange handler', function() {
+    var oldWarn = console.warn;
+    try {
+      console.warn = mocks.getMockFunction();
+
+      var node = document.createElement('div');
+      var link = new ReactLink(true, mocks.getMockFunction());
+      React.renderComponent(<input type="checkbox" checkedLink={link} />, node);
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(
+        <input type="checkbox" checked="false" onChange={mocks.getMockFunction()} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(
+        <input type="checkbox" checked="false" readOnly={true} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      React.renderComponent(<input type="checkbox" checked="false" />, node);
+      expect(console.warn.mock.calls.length).toBe(1);
+
+      React.renderComponent(
+        <input type="checkbox" checked="false" readOnly={false} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(2);
+    } finally {
+      console.warn = oldWarn;
+    }
+  });
+
+  it('should throw if both checked and checkedLink are provided', function() {
+    // Silences console.error messages
+    // ReactErrorUtils.guard is applied to all methods of a React component
+    // and calls console.error in __DEV__ (true for test environment)
+    spyOn(console, 'error');
+
+    var node = document.createElement('div');
+    var link = new ReactLink(true, mocks.getMockFunction());
+    var instance = <input type="checkbox" checkedLink={link} />;
+
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+
+    instance = <input type="checkbox" checkedLink={link} checked="false" />;
+    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+
+    instance = <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
+    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+
+  });
 });

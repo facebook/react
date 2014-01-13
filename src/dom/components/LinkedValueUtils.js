@@ -27,11 +27,20 @@ var hasReadOnlyValue = {
   'radio': true
 };
 
-function _assertLink(input) {
+function _assertValueLink(input) {
   invariant(
     input.props.value == null && input.props.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
     'to use value or onChange, you probably don\'t want to use valueLink.'
+  );
+}
+
+function _assertCheckedLink(input) {
+  invariant(
+    input.props.checked == null && input.props.onChange == null,
+    'Cannot provide a checkedLink and a checked property or onChange event. ' +
+    'If you want to use checked or onChange, you probably don\'t want to ' +
+    'use checkedLink'
   );
 }
 
@@ -41,6 +50,14 @@ function _assertLink(input) {
 function _handleLinkedValueChange(e) {
   /*jshint validthis:true */
   this.props.valueLink.requestChange(e.target.value);
+}
+
+/**
+  * @param {SyntheticEvent} e change event to handle
+  */
+function _handleLinkedCheckChange(e) {
+  /*jshint validthis:true */
+  this.props.checkedLink.requestChange(e.target.checked === 'true');
 }
 
 /**
@@ -65,6 +82,21 @@ var LinkedValueUtils = {
             );
           }
         }
+      },
+      checked: function(props, propName, componentName) {
+        if (__DEV__) {
+          if (props[propName] &&
+              !props.onChange &&
+              !props.readOnly &&
+              !props.disabled) {
+            console.warn(
+              'You provided a `checked` prop to a form field without an ' +
+              '`onChange` handler. This will render a read-only field. If ' +
+              'the field should be mutable use `defaultChecked`. Otherwise, ' +
+              'set either `onChange` or `readOnly`.'
+            );
+          }
+        }
       }
     }
   },
@@ -75,10 +107,23 @@ var LinkedValueUtils = {
    */
   getValue: function(input) {
     if (input.props.valueLink) {
-      _assertLink(input);
+      _assertValueLink(input);
       return input.props.valueLink.value;
     }
     return input.props.value;
+  },
+
+  /**
+   * @param {ReactComponent} input Form component
+   * @return {*} current checked status of the input either from checked prop
+   *             or link.
+   */
+  getChecked: function(input) {
+    if (input.props.checkedLink) {
+      _assertCheckedLink(input);
+      return input.props.checkedLink.value;
+    }
+    return input.props.checked;
   },
 
   /**
@@ -87,8 +132,11 @@ var LinkedValueUtils = {
    */
   getOnChange: function(input) {
     if (input.props.valueLink) {
-      _assertLink(input);
+      _assertValueLink(input);
       return _handleLinkedValueChange;
+    } else if (input.props.checkedLink) {
+      _assertCheckedLink(input);
+      return _handleLinkedCheckChange;
     }
     return input.props.onChange;
   }
