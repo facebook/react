@@ -318,7 +318,7 @@ var ReactMount = {
       container,
       shouldReuseMarkup
     );
-    callback && callback();
+    callback && callback.call(component);
     return component;
   },
 
