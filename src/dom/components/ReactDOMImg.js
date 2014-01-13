@@ -34,7 +34,6 @@ var img = ReactDOM.img;
  */
 var ReactDOMImg = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMImg',
-  tagName: 'IMG',
 
   render: function() {
     return img(this.props);
