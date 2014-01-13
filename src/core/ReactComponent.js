@@ -321,7 +321,9 @@ var ReactComponent = {
     mountComponent: function(rootID, transaction, mountDepth) {
       invariant(
         !this.isMounted(),
-        'mountComponent(%s, ...): Can only mount an unmounted component.',
+        'mountComponent(%s, ...): Can only mount an unmounted component. ' +
+        'Make sure to avoid storing components between renders or reusing a ' +
+        'single component instance in multiple places.',
         rootID
       );
       var props = this.props;
