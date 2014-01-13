@@ -22,7 +22,7 @@
 var invariant = require('invariant');
 
 var hasReadOnlyValue = {
-  'checked': true,
+  'checkbox': true,
   'hidden': true,
   'radio': true
 };
