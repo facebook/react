@@ -477,30 +477,6 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should throw with bad getInitialState() return values', function() {
-    var Mixin = {
-      getInitialState: function() {
-        return null;
-      }
-    };
-    var Component = React.createClass({
-      mixins: [Mixin],
-      getInitialState: function() {
-        return {x: true};
-      },
-      render: function() {
-        return <span />;
-      }
-    });
-    var instance = <Component />;
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
-      'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
-      'Cannot merge non-objects'
-    );
-  });
-
   it('should work with object getInitialState() return values', function() {
     var Component = React.createClass({
       getInitialState: function() {
@@ -546,7 +522,77 @@ describe('ReactCompositeComponent', function() {
         return <span />;
       }
     });
-    expect(() => <Component />).not.toThrow();
+    expect(
+      () => ReactTestUtils.renderIntoDocument(<Component />)
+    ).not.toThrow();
+  });
+
+  it('should work with a null getInitialState return value and a mixin', () => {
+    var Component;
+    var instance;
+
+    var Mixin = {
+      getInitialState: function() {
+        return {foo: 'bar'};
+      }
+    };
+    Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return null;
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(
+      () => ReactTestUtils.renderIntoDocument(<Component />)
+    ).not.toThrow();
+
+    instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state).toEqual({foo: 'bar'});
+
+    // Also the other way round should work
+    var Mixin2 = {
+      getInitialState: function() {
+        return null;
+      }
+    };
+    Component = React.createClass({
+      mixins: [Mixin2],
+      getInitialState: function() {
+        return {foo: 'bar'};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(
+      () => ReactTestUtils.renderIntoDocument(<Component />)
+    ).not.toThrow();
+
+    instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state).toEqual({foo: 'bar'});
+
+    // Multiple mixins should be fine too
+    Component = React.createClass({
+      mixins: [Mixin, Mixin2],
+      getInitialState: function() {
+        return {x: true};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(
+      () => ReactTestUtils.renderIntoDocument(<Component />)
+    ).not.toThrow();
+
+    instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(instance.state).toEqual({foo: 'bar', x: true});
   });
 
   it('should work with object getInitialState() return values', function() {
