@@ -410,12 +410,13 @@ var CommentBox = React.createClass({
 
 Here, `componentWillMount` is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
-```javascript{3,15-16,30}
+```javascript{3,16-17,31}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -515,12 +516,13 @@ When a user submits a comment, we will need to refresh the list of comments to i
 
 We need to pass data from the child component to its parent. We do this by passing a `callback` in props from parent to child:
 
-```javascript{11-13,27}
+```javascript{12-14,28}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -581,12 +583,13 @@ var CommentForm = React.createClass({
 
 Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
 
-```javascript{12-19}
+```javascript{13-21}
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -595,6 +598,7 @@ var CommentBox = React.createClass({
   handleCommentSubmit: function(comment) {
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       type: 'POST',
       data: comment,
       success: function(data) {
@@ -627,12 +631,13 @@ var CommentBox = React.createClass({
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
-```javascript{12-14}
+```javascript{13-15}
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       success: function(data) {
         this.setState({data: data});
       }.bind(this)
@@ -644,6 +649,7 @@ var CommentBox = React.createClass({
     this.setState({data: newComments});
     $.ajax({
       url: this.props.url,
+      dataType: 'json',
       type: 'POST',
       data: comment,
       success: function(data) {
