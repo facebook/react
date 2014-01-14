@@ -47,7 +47,7 @@ var INVALID_PROPERTY_ERRORS = {
  * @type {string}
  * @private
  */
-var textContentAccessor = getTextContentAccessor() || 'NA';
+var textContentAccessor = getTextContentAccessor();
 
 var useWhitespaceWorkaround;
 

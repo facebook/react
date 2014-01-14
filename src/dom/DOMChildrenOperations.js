@@ -30,7 +30,7 @@ var getTextContentAccessor = require('getTextContentAccessor');
  * @type {string}
  * @private
  */
-var textContentAccessor = getTextContentAccessor() || 'NA';
+var textContentAccessor = getTextContentAccessor();
 
 /**
  * Inserts `childNode` as a child of `parentNode` at the `index`.
