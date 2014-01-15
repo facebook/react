@@ -430,6 +430,17 @@ function validateLifeCycleOnReplaceState(instance) {
  * specification keys when building `ReactCompositeComponent` classses.
  */
 function mixSpecIntoComponent(ConvenienceConstructor, spec) {
+  invariant(
+    !isValidClass(spec),
+    'ReactCompositeComponent: You\'re attempting to ' +
+    'use a component class as a mixin. Instead, just use a regular object.'
+  );
+  invariant(
+    !ReactComponent.isValidComponent(spec),
+    'ReactCompositeComponent: You\'re attempting to ' +
+    'use a component as a mixin. Instead, just use a regular object.'
+  );
+
   var Constructor = ConvenienceConstructor.componentConstructor;
   var proto = Constructor.prototype;
   for (var name in spec) {
@@ -1212,6 +1223,18 @@ mixInto(ReactCompositeComponentBase, ReactPropTransferer.Mixin);
 mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
 
 /**
+ * Checks if a value is a valid component constructor.
+ *
+ * @param {*}
+ * @return {boolean}
+ * @public
+ */
+function isValidClass(componentClass) {
+  return componentClass instanceof Function &&
+         'componentConstructor' in componentClass &&
+         componentClass.componentConstructor instanceof Function;
+}
+/**
  * Module for creating composite components.
  *
  * @class ReactCompositeComponent
@@ -1274,18 +1297,7 @@ var ReactCompositeComponent = {
     return ConvenienceConstructor;
   },
 
-  /**
-   * Checks if a value is a valid component constructor.
-   *
-   * @param {*}
-   * @return {boolean}
-   * @public
-   */
-  isValidClass: function(componentClass) {
-    return componentClass instanceof Function &&
-           'componentConstructor' in componentClass &&
-           componentClass.componentConstructor instanceof Function;
-  }
+  isValidClass: isValidClass
 };
 
 module.exports = ReactCompositeComponent;

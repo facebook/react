@@ -1068,4 +1068,40 @@ describe('ReactCompositeComponent', function() {
       'may be due to a mixin.'
     );
   });
+
+  it("should throw if the mixin is a React component", function() {
+    expect(function() {
+      React.createClass({
+        mixins: [<div />],
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'use a component as a mixin. Instead, just use a regular object.'
+    );
+  });
+
+  it("should throw if the mixin is a React component class", function() {
+    expect(function() {
+      var Component = React.createClass({
+        render: function() {
+          return <span />;
+        }
+      });
+
+      React.createClass({
+        mixins: [Component],
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'use a component class as a mixin. Instead, just use a regular object.'
+    );
+  });
 });
