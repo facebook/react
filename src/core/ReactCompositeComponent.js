@@ -949,30 +949,34 @@ var ReactCompositeComponentMixin = {
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
 
-    if (this._pendingForceUpdate ||
-        !this.shouldComponentUpdate ||
-        this.shouldComponentUpdate(nextProps, nextState, nextContext)) {
-      this._pendingForceUpdate = false;
-      // Will set `this.props`, `this.state` and `this.context`.
-      this._performComponentUpdate(
-        nextProps,
-        nextOwner,
-        nextState,
-        nextFullContext,
-        nextContext,
-        transaction
-      );
-    } else {
-      // If it's determined that a component should not update, we still want
-      // to set props and state.
-      this.props = nextProps;
-      this._owner = nextOwner;
-      this.state = nextState;
-      this._currentContext = nextFullContext;
-      this.context = nextContext;
+    try {
+      if (this._pendingForceUpdate ||
+          !this.shouldComponentUpdate ||
+          this.shouldComponentUpdate(nextProps, nextState, nextContext)) {
+        this._pendingForceUpdate = false;
+        // Will set `this.props`, `this.state` and `this.context`.
+        this._performComponentUpdate(
+          nextProps,
+          nextOwner,
+          nextState,
+          nextFullContext,
+          nextContext,
+          transaction
+        );
+      } else {
+        // If it's determined that a component should not update, we still want
+        // to set props and state.
+        this.props = nextProps;
+        this._owner = nextOwner;
+        this.state = nextState;
+        this._currentContext = nextFullContext;
+        this.context = nextContext;
+      }
+    } catch (e) {
+      throw e;
+    } finally {
+      this._compositeLifeCycleState = null;
     }
-
-    this._compositeLifeCycleState = null;
   },
 
   /**
