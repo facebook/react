@@ -87,7 +87,7 @@ If you want to initialize the component with a non-empty value, you can supply a
 
 This example will function much like the **Controlled Components** example above.
 
-Likewise, `<input>` supports `defaultChecked` and `<option>` supports `defaultSelected`.
+Likewise, `<input>` supports `defaultChecked` and `<select>` supports `defaultValue`.
 
 
 ## Advanced Topics
