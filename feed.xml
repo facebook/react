@@ -74,7 +74,7 @@ rails s
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;figure&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Really intrigued by React.js. I&amp;#39;ve looked at all JS frameworks, and excepting &lt;a href=&quot;https://twitter.com/serenadejs&quot;&gt;@serenadejs&lt;/a&gt; this is the first one which makes sense to me.&lt;/p&gt;&amp;mdash; Jonas Nicklas (@jonicklas) &lt;a href=&quot;https://twitter.com/jonicklas/statuses/412640708755869696&quot;&gt;December 16, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/figure&gt;
 </description>
-				<pubDate>2014-01-06T00:00:00+01:00</pubDate>
+				<pubDate>2014-01-06T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</guid>
 			</item>
@@ -94,7 +94,7 @@ rails s
 
 &lt;p&gt;We hope these tools will help your team better understand your component hierarchy and track down bugs. We&amp;#39;re very excited about this initial launch and appreciate any feedback you may have. As always, we also accept &lt;a href=&quot;https://github.com/facebook/react-devtools&quot;&gt;pull requests on GitHub&lt;/a&gt;.&lt;/p&gt;
 </description>
-				<pubDate>2014-01-02T00:00:00+01:00</pubDate>
+				<pubDate>2014-01-02T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html</guid>
 			</item>
@@ -190,7 +190,7 @@ rails s
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;center&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.&lt;/p&gt;&amp;mdash; Eric Florenzano (@ericflo) &lt;a href=&quot;https://twitter.com/ericflo/statuses/413842834974732288&quot;&gt;December 20, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/center&gt;&lt;/p&gt;
 </description>
-				<pubDate>2013-12-30T00:00:00+01:00</pubDate>
+				<pubDate>2013-12-30T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/30/community-roundup-13.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/30/community-roundup-13.html</guid>
 			</item>
@@ -271,7 +271,7 @@ componentDidUpdate: function() {
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;center&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;.&lt;a href=&quot;https://twitter.com/jordwalke&quot;&gt;@jordwalke&lt;/a&gt; lays down some truth &lt;a href=&quot;http://t.co/AXAn0UlUe3&quot;&gt;http://t.co/AXAn0UlUe3&lt;/a&gt;, optimizing your JS application shouldn&amp;#39;t force you to rewrite so much code &lt;a href=&quot;https://twitter.com/search?q=%23reactjs&amp;amp;src=hash&quot;&gt;#reactjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Nolen (@swannodette) &lt;a href=&quot;https://twitter.com/swannodette/statuses/413780079249215488&quot;&gt;December 19, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/center&gt;&lt;/p&gt;
 </description>
-				<pubDate>2013-12-23T00:00:00+01:00</pubDate>
+				<pubDate>2013-12-23T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</guid>
 			</item>
@@ -320,7 +320,7 @@ componentDidUpdate: function() {
 &lt;li&gt;Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>2013-12-19T00:00:00+01:00</pubDate>
+				<pubDate>2013-12-19T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</guid>
 			</item>
@@ -339,7 +339,7 @@ componentDidUpdate: function() {
 
 &lt;p&gt;You can learn more about the vulnerability discussed here: &lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU&quot;&gt;CVE-2013-7035&lt;/a&gt;.&lt;/p&gt;
 </description>
-				<pubDate>2013-12-18T00:00:00+01:00</pubDate>
+				<pubDate>2013-12-18T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</guid>
 			</item>
@@ -416,7 +416,7 @@ Is this some sort of template language? Specifically no. This might have been th
 &lt;p&gt;&lt;img src=&quot;/react/img/blog/steve_reverse.gif&quot; style=&quot;float: right;&quot; /&gt;
 &lt;div style=&quot;width: 320px;&quot;&gt;&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p&gt;I think this reversed gif of Steve Urkel best describes my changing emotions towards the React Lib &lt;a href=&quot;http://t.co/JoX0XqSXX3&quot;&gt;http://t.co/JoX0XqSXX3&lt;/a&gt;&lt;/p&gt;&amp;mdash; Ryan Seddon (@ryanseddon) &lt;a href=&quot;https://twitter.com/ryanseddon/statuses/398572848802852864&quot;&gt;November 7, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;&lt;/p&gt;
 </description>
-				<pubDate>2013-11-18T00:00:00+01:00</pubDate>
+				<pubDate>2013-11-18T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/11/18/community-roundup-11.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/18/community-roundup-11.html</guid>
 			</item>
@@ -532,7 +532,7 @@ Is this some sort of template language? Specifically no. This might have been th
 
 &lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p&gt;This weekend &lt;a href=&quot;https://twitter.com/search?q=%23angular&amp;amp;src=hash&quot;&gt;#angular&lt;/a&gt; died for me. Meet new king &lt;a href=&quot;https://twitter.com/search?q=%23reactjs&amp;amp;src=hash&quot;&gt;#reactjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; Eldar Djafarov &amp;#x30C3; (@edjafarov) &lt;a href=&quot;https://twitter.com/edjafarov/statuses/397033796710961152&quot;&gt;November 3, 2013&lt;/a&gt;&lt;/blockquote&gt;
 </description>
-				<pubDate>2013-11-06T00:00:00+01:00</pubDate>
+				<pubDate>2013-11-06T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</guid>
 			</item>
@@ -595,7 +595,7 @@ Is this some sort of template language? Specifically no. This might have been th
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;step-2-build-a-static-version-in-react&quot;&gt;&lt;/a&gt;Step 2: Build a static version in React &lt;a class=&quot;hash-link&quot; href=&quot;#step-2-build-a-static-version-in-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/6wQMG/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
 
-&lt;p&gt;Now that you have your component hierarchy it&amp;#39;s time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&amp;#39;s easiest to decouple these processes because building building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&amp;#39;ll see why.&lt;/p&gt;
+&lt;p&gt;Now that you have your component hierarchy it&amp;#39;s time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&amp;#39;s easiest to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&amp;#39;ll see why.&lt;/p&gt;
 
 &lt;p&gt;To build a static version of your app that renders your data model you&amp;#39;ll want to build components that reuse other components and pass data using &lt;em&gt;props&lt;/em&gt;. &lt;em&gt;props&lt;/em&gt; are a way of passing data from parent to child. If you&amp;#39;re familiar with the concept of &lt;em&gt;state&lt;/em&gt;, &lt;strong&gt;don&amp;#39;t use state at all&lt;/strong&gt; to build this static version. State is reserved only for interactivity, that is, data that changes over time. Since this is a static version of the app you don&amp;#39;t need it.&lt;/p&gt;
 
@@ -678,7 +678,7 @@ Is this some sort of template language? Specifically no. This might have been th
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;and-thats-it&quot;&gt;&lt;/a&gt;And that&amp;#39;s it &lt;a class=&quot;hash-link&quot; href=&quot;#and-thats-it&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Hopefully this gives you an idea of how to think about building components and applications with React. While it may be a little more typing than you&amp;#39;re used to, remember that code is read far more than it&amp;#39;s written, and it&amp;#39;s extremely easy to read this modular, explicit code. As you start to build large libraries of components you&amp;#39;ll appreciate this explicitness and modularity, and with code reuse your lines of code will start to shrink :)&lt;/p&gt;
 </description>
-				<pubDate>2013-11-05T00:00:00+01:00</pubDate>
+				<pubDate>2013-11-05T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</guid>
 			</item>
@@ -698,7 +698,7 @@ Is this some sort of template language? Specifically no. This might have been th
 &lt;li&gt;Fixed bug with transition and animation event detection.&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>2013-10-29T00:00:00+01:00</pubDate>
+				<pubDate>2013-10-29T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</guid>
 			</item>

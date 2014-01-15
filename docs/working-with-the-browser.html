@@ -52,7 +52,6 @@
           <li><a href="/react/blog/">blog</a></li>
           <li><a href="http://github.com/facebook/react">github</a>
         </ul>
-        <!-- <iframe src="http://ghbtns.com/github&#45;btn.html?user=facebook&#38;repo=react.js&#38;type=fork"allowtransparency="true" frameborder="0" scrolling="0" width="62" height="20"></iframe> -->
       </div>
     </div>
 
@@ -447,7 +446,7 @@ calling <code>this.getDOMNode()</code>.</p>
 
 <p>In addition to that philosophy, we&#39;ve also taken the stance that we, as authors of a JS library, should not be shipping polyfills as a part of our library. If every library did this, there&#39;s a good chance you&#39;d be sending down the same polyfill multiple times, which could be a sizable chunk of dead code. If your product needs to support older browsers, chances are you&#39;re already using something like <a href="https://github.com/kriskowal/es5-shim">es5-shim</a>.</p>
 <h3><a class="anchor" name="polyfills-needed-to-support-older-browsers"></a>Polyfills Needed to Support Older Browsers <a class="hash-link" href="#polyfills-needed-to-support-older-browsers">#</a></h3>
-<p>These six functions can be polyfilled using <code>es5-shim.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>:</p>
+<p><code>es5-shim.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a> provides the following that React needs:</p>
 
 <ul>
 <li><code>Array.isArray</code></li>
@@ -458,11 +457,16 @@ calling <code>this.getDOMNode()</code>.</p>
 <li><code>Function.prototype.bind</code></li>
 </ul>
 
-<p>Other required polyfills:</p>
+<p><code>es5-sham.js</code>, also from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>, provides the following that React needs:</p>
 
 <ul>
-<li><code>Object.create</code> – Provided by <code>es5-sham.js</code> from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>.</li>
-<li><code>console.*</code> – Only needed when using the unminified build. If you need to polyfill this, try <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</li>
+<li><code>Object.create</code></li>
+</ul>
+
+<p>The unminified build of React needs the following from <a href="https://github.com/paulmillr/console-polyfill">paulmillr&#39;s console-polyfill</a>.</p>
+
+<ul>
+<li><code>console.*</code></li>
 </ul>
 <h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
 <p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround.</p>
@@ -489,7 +493,7 @@ Currently a handler to this event is ignored on IE8.</p>
 
     <footer class="wrap">
       <div class="left">A Facebook &amp; Instagram collaboration.</div>
-      <div class="right">&copy; 2013 Facebook Inc.</div>
+      <div class="right">&copy; 2014 Facebook Inc.</div>
     </footer>
   </div>
   <div id="fb-root"></div>
