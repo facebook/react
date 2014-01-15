@@ -113,7 +113,7 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 
 ### Polyfills Needed to Support Older Browsers
 
-These six functions can be polyfilled using `es5-shim.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim):
+These six functions can be polyfilled using a combintion of `es5-shim.js` and `es5-sham.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim):
 
 * `Array.isArray`
 * `Array.prototype.forEach`
