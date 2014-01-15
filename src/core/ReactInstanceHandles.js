@@ -168,7 +168,8 @@ function getFirstCommonAncestorID(oneID, twoID) {
 
 /**
  * Traverses the parent path between two IDs (either up or down). The IDs must
- * not be the same, and there must exist a parent path between them.
+ * not be the same, and there must exist a parent path between them. If the
+ * callback returns `false`, traversal is stopped.
  *
  * @param {?string} start ID at which to start traversal.
  * @param {?string} stop ID at which to end traversal.
@@ -197,10 +198,11 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
   var depth = 0;
   var traverse = traverseUp ? getParentID : getNextDescendantID;
   for (var id = start; /* until break */; id = traverse(id, stop)) {
+    var ret;
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
-      cb(id, traverseUp, arg);
+      ret = cb(id, traverseUp, arg);
     }
-    if (id === stop) {
+    if (ret === false || id === stop) {
       // Only break //after// visiting `stop`.
       break;
     }
@@ -294,6 +296,22 @@ var ReactInstanceHandles = {
       traverseParentPath('', targetID, cb, arg, true, false);
       traverseParentPath(targetID, '', cb, arg, false, true);
     }
+  },
+
+  /**
+   * Traverse a node ID, calling the supplied `cb` for each ancestor ID. For
+   * example, passing `.r[0].{row-0}.[1]` would result in `cb` getting called
+   * with `.r[0]`, `.r[0].{row-0}`, and `.r[0].{row-0}.[1]`.
+   *
+   * NOTE: This traversal happens on IDs without touching the DOM.
+   *
+   * @param {string} targetID ID of the target node.
+   * @param {function} cb Callback to invoke.
+   * @param {*} arg Argument to invoke the callback with.
+   * @internal
+   */
+  traverseAncestors: function(targetID, cb, arg) {
+    traverseParentPath('', targetID, cb, arg, true, false);
   },
 
   /**
