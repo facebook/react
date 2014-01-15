@@ -104,10 +104,11 @@ if (textContentAccessor === 'textContent') {
  * @param {number} steps Numbers of steps the child should be moved right.
  * @internal
  */
-function shiftChild(parentNode, childNode, steps) {
+function moveChildTo(parentNode, childNode, index) {
   // We only support moving right as the current implementation of
   // `ReactMultiChild` always moves components by inserting them further right.
-  for (var i = 0; i < steps; i++) {
+  var beforeNode = parentNode.childNodes[index];
+  while (childNode.previousSibling !== beforeNode) {
     parentNode.insertBefore(childNode.nextSibling, childNode);
   }
 }
@@ -120,11 +121,12 @@ function shiftChild(parentNode, childNode, steps) {
  * the DOM and must be considered immovable.
  *
  * @param {DOMElement} node Node to test if it is or has immovable descendants.
+ * @return {boolean}
  * @internal
  */
-function hasImmovableDescendant(node) {
+function hasImmovableDescendants(node) {
   for (var tagName in immovableTagNames) {
-    if (node.getElementsByTagName(tagName).length) {
+    if (node.getElementsByTagName(tagName)[0]) {
       return true;
     }
   }
@@ -157,53 +159,86 @@ var DOMChildrenOperations = {
     var updatedChildren = null;
 
     // Mapping of parents that has immovable descendants.
-    var immovableParents = null;
-    // Mapping of parents to updates, only for immovable parents.
+    var immovableParents = {};
+    // Mapping of parents to updates, for immovable parents.
     var immovableUpdates = null;
-    // Mapping of parents to removed children, only for immovable parents.
-    var removedSiblings = null;
-    // Mapping of parents to inserted children, only for immovable parents.
-    var insertedSiblings = null;
+    // Mapping of parents to inserted children count, for immovable parents.
+    var immovableInsertionCount = null;
+    
+    // Test if there are any has immovable nodes at all in the document.
+    // Optimally, this should be done on the React root node instead.
+    var rootNodeHasImmovableDescendants =
+      hasImmovableDescendants(document.documentElement);
     
     for (var i = 0; update = updates[i]; i++) {
       updatedChild = update.parentNode.childNodes[update.fromIndex];
       parentID = update.parentID;
       
-      // Test if parent has immovable descendants, if it has, test if its
-      // `childNode` has immovable descendants.
-      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
-        immovableParents = immovableParents || {};
-        
+      /**
+       * This implementation for solving immovable nodes relies on two
+       * assumptions that make it extra fast and simple.
+       *
+       * 1. `ReactMultiChild` sends updates in strict ascending `toIndex` order.
+       * 2. `ReactMultiChild` removes from the left and inserts to the right.
+       *
+       * Since immovable nodes must not be detached, we need to push them right
+       * and out of the way so that the indexes remain consistent as is
+       * expected. We do this by counting all insertions taking place before the
+       * immovable node. This allows us to compute its actual toIndex, and thus
+       * its expected previous sibling, after all touches nodes have detached.
+       * This saves us from having to detach it and performs the minimal number
+       * of moves necessary.
+       */
+       
+      if (rootNodeHasImmovableDescendants) {
+        // Test if parent has immovable descendants and cache results.
         if (!(parentID in immovableParents)) {
           immovableParents[parentID] =
-            hasImmovableDescendant(update.parentNode);
+            hasImmovableDescendants(update.parentNode);
+          
+          if (immovableParents[parentID]) {
+            immovableInsertionCount = immovableInsertionCount || {};
+            immovableInsertionCount[parentID] = 0;
+          }
         }
         
-        if (immovableParents[parentID] &&
-            hasImmovableDescendant(updatedChild)) {
-          immovableUpdates = immovableUpdates || {};
-          immovableUpdates[parentID] = immovableUpdates[parentID] || [];
-          
-          var lastImmovableUpdate =
-            immovableUpdates[parentID][immovableUpdates[parentID].length - 1];
-          
-          if (!lastImmovableUpdate ||
-              lastImmovableUpdate.fromIndex < update.fromIndex) {
-            // We're not crossing a boundary of any other immovable object.
+        if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
+          // Test if child has immovable descendants and cache results.
+          if (immovableParents[parentID] &&
+              hasImmovableDescendants(updatedChild)) {
+            immovableUpdates = immovableUpdates || {};
+            immovableUpdates[parentID] = immovableUpdates[parentID] || [];
+            
+            var lastImmovableUpdate =
+              immovableUpdates[parentID][immovableUpdates[parentID].length - 1];
+            
+            // Determine if crossing the boundary of another immovable object.
             // Assumption: `ReactMultiChild` moves nodes by `toIndex` in
             // ascending order.
-            update.type = ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE;
-            immovableUpdates[parentID].push(update);
-          } else if (__DEV__) {
-            // Unstoppable force meets immovable object, this is a violation,
-            // our only way out is treat it as movable and let it break/reset.
-            console.warn(
-              'React has moved an "immovable" iframe/object/embed DOM node ' +
-              'over to the other side of another "immovable" DOM node .' +
-              'This is a valid operation, but the contents of the ' +
-              '"immovable" DOM node has been reset/reloaded. This is a ' +
-              'flaw in HTML that cannot be fixed.'
-            );
+            if (!lastImmovableUpdate ||
+                lastImmovableUpdate.fromIndex < update.fromIndex) {
+              update.type = ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE;
+              update.toIndex -= immovableInsertionCount[parentID];
+              immovableUpdates[parentID].push(update);
+            } else if (__DEV__) {
+              // Unstoppable force meets immovable object, this is a violation,
+              // our only way out is treat it as movable and let it break/reset.
+              console.warn(
+                'React has moved an "immovable" iframe/object/embed DOM node ' +
+                'over to the other side of another "immovable" DOM node .' +
+                'This is a valid operation, but the contents of the ' +
+                '"immovable" DOM node has been reset/reloaded. This is a ' +
+                'flaw in HTML that cannot be fixed.'
+              );
+            }
+          }
+        }
+        
+        if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP ||
+            update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
+          if (immovableParents[parentID]) {
+            // Insertion of a movable object in an immovable parent, count it.
+            immovableInsertionCount[parentID]++;
           }
         }
       }
@@ -214,11 +249,12 @@ var DOMChildrenOperations = {
         initialChildren = initialChildren || {};
         initialChildren[parentID] = initialChildren[parentID] || [];
         initialChildren[parentID][update.fromIndex] = updatedChild;
-        
-        if (update.type !== ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE) {
-          updatedChildren = updatedChildren || [];
-          updatedChildren.push(updatedChild);
-        }
+      }
+      
+      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
+          update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
+        updatedChildren = updatedChildren || [];
+        updatedChildren.push(updatedChild);
       }
     }
 
@@ -231,77 +267,22 @@ var DOMChildrenOperations = {
       }
     }
     
-    // We found immovable nodes, so we need to do another pass and collect
-    // information on all child inserts and removes in the parent. This second
-    // pass could technically be avoided, but it would incur a higher overhead.
+    // We found immovable nodes, move them into position immediately.
     if (immovableUpdates) {
-      for (var k = 0; update = updates[k]; k++) {
-        parentID = update.parentID;
-        
-        // Parent has an immovable descendant so we track its children
-        // inserts and removes so that we can compensate for it.
-        if (immovableUpdates[parentID]) {
-          if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP ||
-              update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
-            insertedSiblings = insertedSiblings || {};
-            insertedSiblings[parentID] = insertedSiblings[parentID] || [];
-            insertedSiblings[parentID].push(update.toIndex);
-          }
-          if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
-              update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
-            removedSiblings = removedSiblings || {};
-            removedSiblings[parentID] = removedSiblings[parentID] || [];
-            removedSiblings[parentID].push(update.fromIndex);
-          }
-        }
-      }
-      
-      /**
-       * Assumption: `toIndex` is always greater than `fromIndex` for moves.
-       * `ReactMultiChild` currently exploits this behavior by not issuing moves
-       * for nodes that will have moved due to nodes being removed before it.
-       * This is based on the assumption that `DOMChildrenOperations` detach all
-       * touched nodes to keep indexes generated by `ReactMultiChild`
-       * consistent.
-       *
-       * Since immovable nodes must not be detached, we need to push them right
-       * and out of the way so that the indexes remain consistent. We do this
-       * by counting all insertions and deletions taking place before the
-       * immovable node, this allows us to compute its actual toIndex and
-       * fromIndex. Now we can simply shift it from its fromIndex to toIndex.
-       */
       for (parentID in immovableUpdates) {
-        for (var l = immovableUpdates[parentID].length - 1; l >= 0; l--) {
-          update = immovableUpdates[parentID][l];
+        for (var k = immovableUpdates[parentID].length - 1; k >= 0; k--) {
+          update = immovableUpdates[parentID][k];
           
-          var actualFromIndex = update.fromIndex;
-          if (removedSiblings && removedSiblings[parentID]) {
-            for (var m = 0; m < removedSiblings[parentID].length; m++) {
-              if (removedSiblings[parentID][m] < update.fromIndex) {
-                actualFromIndex--;
-              }
-            }
-          }
-          
-          var actualToIndex = update.toIndex;
-          if (insertedSiblings && insertedSiblings[parentID]) {
-            for (var n = 0; n < insertedSiblings[parentID].length; n++) {
-              if (insertedSiblings[parentID][n] < update.toIndex) {
-                actualToIndex--;
-              }
-            }
-          }
-          
-          shiftChild(
+          moveChildTo(
             update.parentNode,
             initialChildren[parentID][update.fromIndex],
-            actualToIndex - actualFromIndex
+            update.toIndex
           );
         }
       }
     }
        
-    for (var o = 0; update = updates[o]; o++) {
+    for (var l = 0; update = updates[l]; l++) {
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertChildAt(
