@@ -27,7 +27,15 @@ var hasReadOnlyValue = {
   'radio': true
 };
 
+function _assertSingleLink(input) {
+  invariant(
+      input.props.checkedLink == null || input.props.valueLink == null,
+      'Cannot provide a checkedLink and a valueLink. If you want to use ' +
+      'checkedLink, you probably don\'t want to use valueLink and vice versa.'
+  );
+}
 function _assertValueLink(input) {
+  _assertSingleLink(input);
   invariant(
     input.props.value == null && input.props.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
@@ -36,6 +44,7 @@ function _assertValueLink(input) {
 }
 
 function _assertCheckedLink(input) {
+  _assertSingleLink(input);
   invariant(
     input.props.checked == null && input.props.onChange == null,
     'Cannot provide a checkedLink and a checked property or onChange event. ' +

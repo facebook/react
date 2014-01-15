@@ -325,4 +325,23 @@ describe('ReactDOMInput', function() {
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
   });
+
+  it('should throw if both checkedLink and valueLink are provided', function() {
+    // Silences console.error messages
+    // ReactErrorUtils.guard is applied to all methods of a React component
+    // and calls console.error in __DEV__ (true for test environment)
+    spyOn(console, 'error');
+
+    var node = document.createElement('div');
+    var link = new ReactLink(true, mocks.getMockFunction());
+    var instance = <input type="checkbox" checkedLink={link} />;
+
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+
+    instance = <input type="checkbox" valueLink={link} />;
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+
+    instance = <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
+    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+  });
 });
