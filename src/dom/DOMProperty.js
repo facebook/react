@@ -151,7 +151,10 @@ var defaultValueCache = {};
  */
 var DOMProperty = {
 
-  ID_ATTRIBUTE_NAME: 'data-reactid',
+  ALTERNATE_ID_ATTRIBUTE_NAME: 'data-reactid',
+
+  /** Set of react IDs that don't want their id attribute clobbered */
+  alternateAttributeReactIDs: {},
 
   /**
    * Checks whether a property name is a standard property.

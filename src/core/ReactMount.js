@@ -30,7 +30,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
+var ALTERNATE_ATTR_NAME = DOMProperty.ALTERNATE_ID_ATTRIBUTE_NAME;
 var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
@@ -60,11 +60,12 @@ function getReactRootID(container) {
 }
 
 /**
- * Accessing node[ATTR_NAME] or calling getAttribute(ATTR_NAME) on a form
- * element can return its control whose name or ID equals ATTR_NAME. All
- * DOM nodes support `getAttributeNode` but this can also get called on
- * other objects so just return '' if we're given something other than a
- * DOM node (such as window).
+ * Accessing node[ALTERNATE_ATTR_NAME] or calling
+ * getAttribute(ALTERNATE_ATTR_NAME) on a form element can return its
+ * control whose name or ID equals ATTR_NAME. All DOM nodes support
+ * `getAttributeNode` but this can also get called on other objects so
+ * just return '' if we're given something other than a DOM node (such as
+ * window).
  *
  * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
  * @return {string} ID of the supplied `domNode`.
@@ -77,8 +78,8 @@ function getID(node) {
       if (cached !== node) {
         invariant(
           !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
+          'ReactMount: Two valid but unequal nodes with the same `id` or `%s`: %s',
+          ALTERNATE_ATTR_NAME, id
         );
 
         nodeCache[id] = node;
@@ -95,11 +96,16 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  return (
+    node &&
+    node.getAttribute &&
+    node.getAttribute(ALTERNATE_ATTR_NAME) ||
+    node.id
+  );
 }
 
 /**
- * Sets the React-specific ID of the given node.
+ * Sets the React-specific ID of the given node. Used for testing.
  *
  * @param {DOMElement} node The DOM node whose ID will be set.
  * @param {string} id The value of the ID attribute.
@@ -109,7 +115,10 @@ function setID(node, id) {
   if (oldID !== id) {
     delete nodeCache[oldID];
   }
-  node.setAttribute(ATTR_NAME, id);
+  node.setAttribute(
+    DOMProperty.alternateAttributeReactIDs[id] ? ALTERNATE_ATTR_NAME : 'id',
+    id
+  );
   nodeCache[id] = node;
 }
 
@@ -141,8 +150,8 @@ function isValid(node, id) {
   if (node) {
     invariant(
       internalGetID(node) === id,
-      'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
+      'ReactMount: Unexpected modification of `id` or `%s`',
+      ALTERNATE_ATTR_NAME
     );
 
     var container = ReactMount.findReactContainerForID(id);
@@ -462,6 +471,11 @@ var ReactMount = {
    * @return {DOMElement} Root DOM node of the React component.
    */
   findReactNodeByID: function(id) {
+    var node = document.getElementById(id);
+    if (node) {
+      return node;
+    }
+
     var reactRoot = ReactMount.findReactContainerForID(id);
     return ReactMount.findComponentRoot(reactRoot, id);
   },
