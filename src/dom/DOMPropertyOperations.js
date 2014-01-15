@@ -78,8 +78,12 @@ var DOMPropertyOperations = {
    * @return {string} Markup string.
    */
   createMarkupForID: function(id) {
-    return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
-      escapeTextForBrowser(id) + '"';
+    return (
+      processAttributeNameAndPrefix(
+        DOMProperty.alternateAttributeReactIDs[id] ?
+          DOMProperty.ALTERNATE_ID_ATTRIBUTE_NAME : 'id'
+      ) + escapeTextForBrowser(id) + '"'
+    );
   },
 
   /**

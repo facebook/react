@@ -111,6 +111,10 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
+      if ('id' in this.props) {
+        DOMProperty.alternateAttributeReactIDs[this._rootNodeID] = true;
+      }
+
       return (
         this._createOpenTagMarkup() +
         this._createContentMarkup(transaction) +
@@ -222,6 +226,9 @@ ReactDOMComponent.Mixin = {
         prevProps,
         prevOwner
       );
+      if (!DOMProperty.alternateAttributeReactIDs[this._rootNodeID] && 'id' in this.props) {
+        DOMProperty.alternateAttributeReactIDs[this._rootNodeID] = true;
+      }
       this._updateDOMProperties(prevProps);
       this._updateDOMChildren(prevProps, transaction);
     }
@@ -383,6 +390,7 @@ ReactDOMComponent.Mixin = {
     this.unmountChildren();
     ReactEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
+    delete DOMProperty.alternateAttributeReactIDs[this._rootNodeID];
   }
 
 };
