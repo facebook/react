@@ -113,9 +113,7 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 
 ### Polyfills Needed to Support Older Browsers
 
-`es5-shim.js` from [kriskowal's
-es5-shim](https://github.com/kriskowal/es5-shim) provides the following
-that React needs:
+`es5-shim.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim) provides the following that React needs:
 
 * `Array.isArray`
 * `Array.prototype.forEach`
@@ -124,9 +122,7 @@ that React needs:
 * `Date.now`
 * `Function.prototype.bind`
 
-`es5-sham.js`, also from [kriskowal's
-117 es5-shim](https://github.com/kriskowal/es5-shim), provides the
-following that React needs:
+`es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim), provides the following that React needs:
 
 * `Object.create`
 
