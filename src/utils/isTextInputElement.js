@@ -19,8 +19,7 @@
 "use strict";
 
 /**
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/ ...
- *      the-input-element.html#input-type-attr-summary
+ * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
 var supportedInputTypes = {
   'color': true,
