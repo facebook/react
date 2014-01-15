@@ -113,7 +113,9 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 
 ### Polyfills Needed to Support Older Browsers
 
-These six functions can be polyfilled using `es5-shim.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim):
+`es5-shim.js` from [kriskowal's
+es5-shim](https://github.com/kriskowal/es5-shim) provides the following
+that React needs:
 
 * `Array.isArray`
 * `Array.prototype.forEach`
@@ -122,10 +124,15 @@ These six functions can be polyfilled using `es5-shim.js` from [kriskowal's es5-
 * `Date.now`
 * `Function.prototype.bind`
 
-Other required polyfills:
+`es5-sham.js`, also from [kriskowal's
+117 es5-shim](https://github.com/kriskowal/es5-shim), provides the
+following that React needs:
 
-* `Object.create` – Provided by `es5-sham.js` from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim).
-* `console.*` – Only needed when using the unminified build. If you need to polyfill this, try [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
+* `Object.create`
+
+The unminified build of React needs the following from [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
+
+* `console.*`
 
 
 ### Cross-browser Issues
