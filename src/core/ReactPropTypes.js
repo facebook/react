@@ -81,6 +81,7 @@ var Props = {
   object: createPrimitiveTypeChecker('object'),
   string: createPrimitiveTypeChecker('string'),
 
+  shape: createShapeTypeChecker,
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
 
@@ -128,14 +129,20 @@ function isRenderable(propValue) {
   }
 }
 
+// Equivalent of typeof but with special handling for arrays
+function getPropType(propValue) {
+  var propType = typeof propValue;
+  if (propType === 'object' && Array.isArray(propValue)) {
+    return 'array';
+  }
+  return propType;
+}
+
 function createPrimitiveTypeChecker(expectedType) {
   function validatePrimitiveType(
     shouldThrow, propValue, propName, componentName, location
   ) {
-    var propType = typeof propValue;
-    if (propType === 'object' && Array.isArray(propValue)) {
-      propType = 'array';
-    }
+    var propType = getPropType(propValue);
     var isValid = propType === expectedType;
     if (!shouldThrow) {
       return isValid;
@@ -172,6 +179,36 @@ function createEnumTypeChecker(expectedValues) {
     );
   }
   return createChainableTypeChecker(validateEnumType);
+}
+
+function createShapeTypeChecker(shapeTypes) {
+  function validateShapeType(
+    shouldThrow, propValue, propName, componentName, location
+  ) {
+    var propType = getPropType(propValue);
+    var isValid = propType === 'object';
+    if (isValid) {
+      for (var key in shapeTypes) {
+        var checker = shapeTypes[key];
+        if (checker) {
+          // It's going to throw an exception if it doesn't pass
+          checker(propValue, key, componentName, location);
+        }
+      }
+    }
+    if (!shouldThrow) {
+      return isValid;
+    }
+    invariant(
+      isValid,
+      'Invalid %s `%s` of type `%s` supplied to `%s`, expected `object`.',
+      ReactPropTypeLocationNames[location],
+      propName,
+      propType,
+      componentName
+    );
+  }
+  return createChainableTypeChecker(validateShapeType);
 }
 
 function createInstanceTypeChecker(expectedClass) {

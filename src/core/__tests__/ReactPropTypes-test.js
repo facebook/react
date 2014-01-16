@@ -141,6 +141,69 @@ describe('Enum Types', function() {
   });
 });
 
+describe('Shape Types', function() {
+  beforeEach(function() {
+    require('mock-modules').dumpCache();
+  });
+
+  it("should throw for non objects", function() {
+    expect(typeCheck(Props.shape({}), 'some string')).toThrow(
+      'Invariant Violation: Invalid prop `testProp` of type `string` ' +
+      'supplied to `testComponent`, expected `object`.'
+    );
+    expect(typeCheck(Props.shape({}), ['array'])).toThrow(
+      'Invariant Violation: Invalid prop `testProp` of type `array` ' +
+      'supplied to `testComponent`, expected `object`.'
+    );
+  });
+
+  it("should not throw for empty values", function() {
+    expect(typeCheck(Props.shape({}), undefined)).not.toThrow();
+    expect(typeCheck(Props.shape({}), null)).not.toThrow();
+    expect(typeCheck(Props.shape({}), {})).not.toThrow();
+  });
+
+  it("should throw for empty required value", function() {
+    expect(typeCheck(Props.shape({}).isRequired, undefined)).toThrow(
+      'Invariant Violation: Required prop `testProp` was not specified in ' +
+      '`testComponent`.'
+    );
+    expect(typeCheck(Props.shape({}).isRequired, null)).toThrow(
+      'Invariant Violation: Required prop `testProp` was not specified in ' +
+      '`testComponent`.'
+    );
+    expect(typeCheck(Props.shape({}).isRequired, {})).not.toThrow();
+  });
+
+  it("should not throw for non specified types", function() {
+    expect(typeCheck(Props.shape({}), {key: 1})).not.toThrow();
+  });
+
+  it("should not throw for valid types", function() {
+    expect(typeCheck(Props.shape({
+      key: Props.number
+    }), {key: 1})).not.toThrow();
+  });
+
+  it("should throw for required valid types", function() {
+    expect(typeCheck(Props.shape({
+      key: Props.number.isRequired
+    }), {})).toThrow(
+      'Invariant Violation: Required prop `key` was not specified in ' +
+      '`testComponent`.'
+    );
+  });
+
+  it("should throw for invalid key types", function() {
+    expect(typeCheck(Props.shape({
+      key: Props.number
+    }), {key: 'abc'})).toThrow(
+      'Invariant Violation: Invalid prop `key` of type `string` supplied to ' +
+      '`testComponent`, expected `number`.'
+    );
+  });
+});
+
 describe('Instance Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
