@@ -44,20 +44,20 @@ describe('DOMChildrenOperations', function() {
         var temp = listOfItems.slice();
         var items = this.props.items.slice();
         var count = Math.floor(Math.random() * 15) + 5;
-        
+
         if (this.props.reload) {
           for (var i = 0; i < count; i++) {
             items.unshift(items.pop());
           }
         }
-        
+
         for (var i = 0; i < count; i++) {
           var from = Math.floor(Math.random() * temp.length);
           var to = Math.floor(Math.random() * (items.length + 1));
           var item = temp.splice(from, 1)[0];
           items.splice(to, 0, item);
         }
-        
+
         this.setState({
           items: items
         });
@@ -66,7 +66,7 @@ describe('DOMChildrenOperations', function() {
         var items = this.state.items;
         var childNodes = this.getDOMNode().childNodes;
         var reloaded = false;
-        
+
         for (var i = 0; i < items.length; i++) {
           if (items[i].iframe) {
             reloaded = reloaded ||
@@ -74,13 +74,13 @@ describe('DOMChildrenOperations', function() {
                 childNodes[i].contentWindow.reactKey);
           }
         }
-        
+
         expect(reloaded).toBe(true);
       },
       componentDidMount: function() {
         var items = this.state.items;
         var childNodes = this.getDOMNode().childNodes;
-        
+
         for (var i = 0; i < items.length; i++) {
           if (items[i].iframe) {
             childNodes[i].contentWindow.reactKey = items[i].key;
@@ -90,9 +90,9 @@ describe('DOMChildrenOperations', function() {
       componentDidUpdate: function() {
         var items = this.state.items;
         var childNodes = this.getDOMNode().childNodes;
-            
+
         expect(childNodes.length).toBe(items.length);
-        
+
         for (var i = 0; i < items.length; i++) {
           if (items[i].iframe) {
             if (!this.props.reload) {
@@ -120,9 +120,9 @@ describe('DOMChildrenOperations', function() {
         );
       }
     });
-    
+
     var iterations = 100;
-    
+
     it('should mutate 100 nodes without fault', function() {
       var component = ReactTestUtils.renderIntoDocument(
         <TestComponent items={[]} />
@@ -131,7 +131,7 @@ describe('DOMChildrenOperations', function() {
         component.mutateChildren();
       }
     });
-    
+
     it('should mutate and not reload the immovable object', function() {
       var component = ReactTestUtils.renderIntoDocument(
         <TestComponent items={[iframeItem1]} />
@@ -140,7 +140,7 @@ describe('DOMChildrenOperations', function() {
         component.mutateChildren();
       }
     });
-    
+
     it('should mutate and not reload any immovable object', function() {
       var component = ReactTestUtils.renderIntoDocument(
         <TestComponent items={[iframeItem1, iframeItem2]} />
@@ -149,7 +149,7 @@ describe('DOMChildrenOperations', function() {
         component.mutateChildren();
       }
     });
-    
+
     it('should mutate and reload the immovable objects', function() {
       var component = ReactTestUtils.renderIntoDocument(
         <TestComponent items={[iframeItem1, iframeItem2]} reload={true} />
