@@ -25,6 +25,18 @@ describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
 
+  describe('constructAndRenderComponentByID', function() {
+    it('throws if given an id for a component that doesn\'t exist', function() {
+      expect(function() {
+        ReactMount.constructAndRenderComponentByID(
+          function dummyComponentConstructor() {},
+          {},
+          'SOME_ID_THAT_DOESNT_EXIST'
+        );
+      }).toThrow();
+    });
+  });
+
   it('should render different components in same root', function() {
     var container = document.createElement('container');
     document.documentElement.appendChild(container);

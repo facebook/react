@@ -22,7 +22,6 @@ var DOMProperty = require('DOMProperty');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
-var $ = require('$');
 var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
@@ -195,7 +194,10 @@ function findDeepestCachedAncestor(targetID) {
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
  *
- *   ReactMount.renderComponent(component, $('container'));
+ *   ReactMount.renderComponent(
+ *     component,
+ *     document.getElementById('container')
+ *   );
  *
  *   <div id="container">                   <-- Supplied `container`.
  *     <div data-reactid=".r[3]">           <-- Rendered reactRoot of React
@@ -372,7 +374,13 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in the container node.
    */
   constructAndRenderComponentByID: function(constructor, props, id) {
-    return ReactMount.constructAndRenderComponent(constructor, props, $(id));
+    var domNode = document.getElementById(id);
+    invariant(
+      domNode,
+      'Tried to get element with id of "%s" but it is not present on the page.',
+      id
+    );
+    return ReactMount.constructAndRenderComponent(constructor, props, domNode);
   },
 
   /**
