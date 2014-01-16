@@ -38,6 +38,7 @@ var eventTypes = {
     },
     dependencies: [
       topLevelTypes.topBlur,
+      topLevelTypes.topContextMenu,
       topLevelTypes.topFocus,
       topLevelTypes.topKeyDown,
       topLevelTypes.topMouseDown,
