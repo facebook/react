@@ -837,11 +837,13 @@ var ReactCompositeComponentMixin = {
       for (var contextName in contextTypes) {
         maskedContext[contextName] = context[contextName];
       }
-      this._checkPropTypes(
-        contextTypes,
-        maskedContext,
-        ReactPropTypeLocations.context
-      );
+      if (__DEV__) {
+        this._checkPropTypes(
+          contextTypes,
+          maskedContext,
+          ReactPropTypeLocations.context
+        );
+      }
     }
     return maskedContext;
   },
@@ -861,11 +863,13 @@ var ReactCompositeComponentMixin = {
         'use getChildContext().',
         displayName
       );
-      this._checkPropTypes(
-        this.constructor.childContextTypes,
-        childContext,
-        ReactPropTypeLocations.childContext
-      );
+      if (__DEV__) {
+        this._checkPropTypes(
+          this.constructor.childContextTypes,
+          childContext,
+          ReactPropTypeLocations.childContext
+        );
+      }
       for (var name in childContext) {
         invariant(
           name in this.constructor.childContextTypes,
@@ -896,9 +900,11 @@ var ReactCompositeComponentMixin = {
         props[propName] = defaultProps[propName];
       }
     }
-    var propTypes = this.constructor.propTypes;
-    if (propTypes) {
-      this._checkPropTypes(propTypes, props, ReactPropTypeLocations.prop);
+    if (__DEV__) {
+      var propTypes = this.constructor.propTypes;
+      if (propTypes) {
+        this._checkPropTypes(propTypes, props, ReactPropTypeLocations.prop);
+      }
     }
     return props;
   },

@@ -25,17 +25,16 @@ var Props = require('ReactPropTypes');
 var React = require('React');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
+var warn;
+var mocks;
+
 function typeCheck(declaration, value) {
   var props = {};
   if (arguments.length > 1) {
     props.testProp = value;
   }
-  return declaration.bind(
-    null,
-    props,
-    'testProp',
-    'testComponent',
-    ReactPropTypeLocations.prop
+  return declaration(
+    props, 'testProp', 'testComponent', ReactPropTypeLocations.prop
   );
 }
 
@@ -49,156 +48,240 @@ describe('Primitive Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
+    mocks = require('mocks');
     ReactTestUtils = require('ReactTestUtils');
+
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
   });
 
-  it("should throw for invalid strings", function() {
-    expect(typeCheck(Props.string, [])).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `array` ' +
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it("should warn for invalid strings", function() {
+    typeCheck(Props.string, []);
+    typeCheck(Props.string, false);
+    typeCheck(Props.string, 1);
+    typeCheck(Props.string, {});
+
+    expect(console.warn.mock.calls.length).toBe(4);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `array` ' +
       'supplied to `testComponent`, expected `string`.'
     );
-    expect(typeCheck(Props.string, false)).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `boolean` ' +
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `boolean` ' +
       'supplied to `testComponent`, expected `string`.'
     );
-    expect(typeCheck(Props.string, 1)).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `number` ' +
+    expect(console.warn.mock.calls[2][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `number` ' +
       'supplied to `testComponent`, expected `string`.'
     );
-    expect(typeCheck(Props.string, {})).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `object` ' +
+    expect(console.warn.mock.calls[3][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `object` ' +
       'supplied to `testComponent`, expected `string`.'
     );
   });
 
-  it("should not throw for valid values", function() {
-    expect(typeCheck(Props.array, [])).not.toThrow();
-    expect(typeCheck(Props.bool, false)).not.toThrow();
-    expect(typeCheck(Props.func, function() {})).not.toThrow();
-    expect(typeCheck(Props.number, 0)).not.toThrow();
-    expect(typeCheck(Props.object, {})).not.toThrow();
-    expect(typeCheck(Props.string, '')).not.toThrow();
+  it("should not warn for valid values", function() {
+    typeCheck(Props.array, []);
+    typeCheck(Props.bool, false);
+    typeCheck(Props.func, function() {});
+    typeCheck(Props.number, 0);
+    typeCheck(Props.object, {});
+    typeCheck(Props.string, '');
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should be implicitly optional and not throw without values", function() {
-    expect(typeCheck(Props.string, null)).not.toThrow();
-    expect(typeCheck(Props.string, undefined)).not.toThrow();
+  it("should be implicitly optional and not warn without values", function() {
+    typeCheck(Props.string, null);
+    typeCheck(Props.string, undefined);
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should throw for missing required values", function() {
-    expect(typeCheck(Props.string.isRequired, null)).toThrow(
-      'Invariant Violation: Required prop `testProp` was not specified in ' +
+  it("should warn for missing required values", function() {
+    typeCheck(Props.string.isRequired, null);
+    typeCheck(Props.string.isRequired, undefined);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `testProp` was not specified in ' +
       '`testComponent`.'
     );
-    expect(typeCheck(Props.string.isRequired, undefined)).toThrow(
-      'Invariant Violation: Required prop `testProp` was not specified in ' +
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Required prop `testProp` was not specified in ' +
       '`testComponent`.'
     );
   });
 
   it("should have a weak version that returns true/false", function() {
-    expect(typeCheck(Props.string.weak, null)()).toEqual(true);
-    expect(typeCheck(Props.string.weak.isRequired, null)()).toEqual(false);
-    expect(typeCheck(Props.string.isRequired.weak, null)()).toEqual(false);
+    expect(typeCheck(Props.string.weak, null)).toEqual(true);
+    expect(typeCheck(Props.string.weak.isRequired, null)).toEqual(false);
+    expect(typeCheck(Props.string.isRequired.weak, null)).toEqual(false);
   });
 });
 
 describe('Enum Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
   });
 
-  it("should throw for invalid strings", function() {
-    expect(typeCheck(Props.oneOf(['red', 'blue']), true)).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it("should warn for invalid strings", function() {
+    typeCheck(Props.oneOf(['red', 'blue']), true);
+    typeCheck(Props.oneOf(['red', 'blue']), []);
+    typeCheck(Props.oneOf(['red', 'blue']), '');
+
+    expect(console.warn.mock.calls.length).toBe(3);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected one of ["blue","red"].'
     );
-    expect(typeCheck(Props.oneOf(['red', 'blue']), [])).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected one of ["blue","red"].'
     );
-    expect(typeCheck(Props.oneOf(['red', 'blue']), '')).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+    expect(console.warn.mock.calls[2][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected one of ["blue","red"].'
     );
   });
 
-  it("should not throw for valid values", function() {
-    expect(typeCheck(Props.oneOf(['red', 'blue']), 'red')).not.toThrow();
-    expect(typeCheck(Props.oneOf(['red', 'blue']), 'blue')).not.toThrow();
+  it("should not warn for valid values", function() {
+    typeCheck(Props.oneOf(['red', 'blue']), 'red');
+    typeCheck(Props.oneOf(['red', 'blue']), 'blue');
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should be implicitly optional and not throw without values", function() {
-    expect(typeCheck(Props.oneOf(['red', 'blue']), null)).not.toThrow();
-    expect(typeCheck(Props.oneOf(['red', 'blue']), undefined)).not.toThrow();
+  it("should be implicitly optional and not warn without values", function() {
+    typeCheck(Props.oneOf(['red', 'blue']), null);
+    typeCheck(Props.oneOf(['red', 'blue']), undefined);
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
   it("should have a weak version that returns true/false", function() {
     var checker = Props.oneOf(['red', 'blue']);
-    expect(typeCheck(checker.weak, null)()).toEqual(true);
-    expect(typeCheck(checker.weak.isRequired, null)()).toEqual(false);
-    expect(typeCheck(checker.isRequired.weak, null)()).toEqual(false);
+    expect(typeCheck(checker.weak, null)).toEqual(true);
+    expect(typeCheck(checker.weak.isRequired, null)).toEqual(false);
+    expect(typeCheck(checker.isRequired.weak, null)).toEqual(false);
   });
 });
 
 describe('Shape Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
   });
 
-  it("should throw for non objects", function() {
-    expect(typeCheck(Props.shape({}), 'some string')).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `string` ' +
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it("should warn for non objects", function() {
+    typeCheck(Props.shape({}), 'some string');
+    typeCheck(Props.shape({}), ['array']);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `string` ' +
       'supplied to `testComponent`, expected `object`.'
     );
-    expect(typeCheck(Props.shape({}), ['array'])).toThrow(
-      'Invariant Violation: Invalid prop `testProp` of type `array` ' +
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `testProp` of type `array` ' +
       'supplied to `testComponent`, expected `object`.'
     );
   });
 
-  it("should not throw for empty values", function() {
-    expect(typeCheck(Props.shape({}), undefined)).not.toThrow();
-    expect(typeCheck(Props.shape({}), null)).not.toThrow();
-    expect(typeCheck(Props.shape({}), {})).not.toThrow();
+  it("should not warn for empty values", function() {
+    typeCheck(Props.shape({}), undefined);
+    typeCheck(Props.shape({}), null);
+    typeCheck(Props.shape({}), {});
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should throw for empty required value", function() {
-    expect(typeCheck(Props.shape({}).isRequired, undefined)).toThrow(
-      'Invariant Violation: Required prop `testProp` was not specified in ' +
+  it("should warn for empty required value", function() {
+    typeCheck(Props.shape({}).isRequired, undefined);
+    typeCheck(Props.shape({}).isRequired, null);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `testProp` was not specified in ' +
       '`testComponent`.'
     );
-    expect(typeCheck(Props.shape({}).isRequired, null)).toThrow(
-      'Invariant Violation: Required prop `testProp` was not specified in ' +
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Required prop `testProp` was not specified in ' +
       '`testComponent`.'
     );
-    expect(typeCheck(Props.shape({}).isRequired, {})).not.toThrow();
+
+    // Should not warn
+    typeCheck(Props.shape({}).isRequired, {});
+    expect(console.warn.mock.calls.length).toBe(2);
   });
 
-  it("should not throw for non specified types", function() {
-    expect(typeCheck(Props.shape({}), {key: 1})).not.toThrow();
+  it("should not warn for non specified types", function() {
+    typeCheck(Props.shape({}), {key: 1});
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should not throw for valid types", function() {
-    expect(typeCheck(Props.shape({
+  it("should not warn for valid types", function() {
+    typeCheck(Props.shape({
       key: Props.number
-    }), {key: 1})).not.toThrow();
+    }), {key: 1});
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should throw for required valid types", function() {
-    expect(typeCheck(Props.shape({
+  it("should warn for required valid types", function() {
+    typeCheck(Props.shape({
       key: Props.number.isRequired
-    }), {})).toThrow(
-      'Invariant Violation: Required prop `key` was not specified in ' +
+    }), {});
+
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `key` was not specified in ' +
       '`testComponent`.'
     );
   });
 
-  it("should throw for invalid key types", function() {
-    expect(typeCheck(Props.shape({
+  it("should warn for invalid key types", function() {
+    typeCheck(Props.shape({
       key: Props.number
-    }), {key: 'abc'})).toThrow(
-      'Invariant Violation: Invalid prop `key` of type `string` supplied to ' +
+    }), {key: 'abc'});
+
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `key` of type `string` supplied to ' +
       '`testComponent`, expected `number`.'
     );
   });
@@ -207,45 +290,76 @@ describe('Shape Types', function() {
 describe('Instance Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
   });
 
-  it("should throw for invalid instances", function() {
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it("should warn for invalid instances", function() {
     function Person() {}
     var name = Person.name || '<<anonymous>>';
+    typeCheck(Props.instanceOf(Person), false);
+    typeCheck(Props.instanceOf(Person), {});
+    typeCheck(Props.instanceOf(Person), '');
 
-    expect(typeCheck(Props.instanceOf(Person), false)).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+    expect(console.warn.mock.calls.length).toBe(3);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected instance of `' + name + '`.'
     );
-    expect(typeCheck(Props.instanceOf(Person), {})).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected instance of `' + name + '`.'
     );
-    expect(typeCheck(Props.instanceOf(Person), '')).toThrow(
-      'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+    expect(console.warn.mock.calls[2][0]).toBe(
+      'Warning: Invalid prop `testProp` supplied to ' +
       '`testComponent`, expected instance of `' + name + '`.'
     );
   });
 
-  it("should not throw for valid values", function() {
+  it("should not warn for valid values", function() {
     function Person() {}
     function Engineer() {}
     Engineer.prototype = new Person();
 
-    expect(typeCheck(Props.instanceOf(Person), new Person())).not.toThrow();
-    expect(typeCheck(Props.instanceOf(Person), new Engineer())).not.toThrow();
+    typeCheck(Props.instanceOf(Person), new Person());
+    typeCheck(Props.instanceOf(Person), new Engineer());
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 });
 
 describe('Component Type', function() {
+  beforeEach(function() {
+    require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
+  });
+
+  afterEach(function() {
+    console.warn = warn;
+  });
+
   it('should support components', () => {
-    expect(typeCheck(Props.component, <div />)).not.toThrow();
+    typeCheck(Props.component, <div />);
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
   it('should not support multiple components or scalar values', () => {
-    [[<div />, <div />], 123, 'foo', false].forEach((value) => {
-      expect(typeCheck(Props.component, value)).toThrow();
-    });
+    var list = [[<div />, <div />], 123, 'foo', false];
+    list.forEach((value) => typeCheck(Props.component, value));
+    expect(console.warn.mock.calls.length).toBe(list.length);
   });
 
   var Component = React.createClass({
@@ -259,75 +373,93 @@ describe('Component Type', function() {
   });
 
   it('should be able to define a single child as children', () => {
-    expect(() => {
-      var instance =
-        <Component>
-          <div />
-        </Component>;
-      ReactTestUtils.renderIntoDocument(instance);
-    }).not.toThrow();
+    var instance =
+      <Component>
+        <div />
+      </Component>;
+    ReactTestUtils.renderIntoDocument(instance);
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it('should throw when passing more than one child', () => {
-    expect(() => {
-      var instance =
-        <Component>
-          <div />
-          <div />
-        </Component>;
-      ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+  it('should warn when passing more than one child', () => {
+    var instance =
+      <Component>
+        <div />
+        <div />
+      </Component>;
+    ReactTestUtils.renderIntoDocument(instance);
+    expect(console.warn.mock.calls.length).toBe(1);
   });
 
-  it('should throw when passing no children and isRequired is set', () => {
-    expect(() => {
-      var instance = <Component />;
-      ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow();
+  it('should warn when passing no children and isRequired is set', () => {
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+
+    expect(console.warn.mock.calls.length).toBe(1);
   });
 });
 
 describe('Union Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
   });
 
-  it('should throw if none of the types are valid', function() {
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it('should warn if none of the types are valid', function() {
     var checker = Props.oneOfType([
       Props.string,
       Props.number
     ]);
-    expect(typeCheck(checker, [])).toThrow(
-      'Invariant Violation: Invalid prop `testProp` ' +
-      'supplied to `testComponent`.'
-    );
-
+    typeCheck(checker, []);
     checker = Props.oneOfType([
       Props.string.isRequired,
       Props.number.isRequired
     ]);
-    expect(typeCheck(checker, null)).toThrow(
-      'Invariant Violation: Invalid prop `testProp` ' +
+    typeCheck(checker, null);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `testProp` ' +
+      'supplied to `testComponent`.'
+    );
+
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `testProp` ' +
       'supplied to `testComponent`.'
     );
   });
 
-  it('should not throw if one of the types are valid', function() {
+  it('should not warn if one of the types are valid', function() {
     var checker = Props.oneOfType([
       Props.string,
       Props.number
     ]);
-    expect(typeCheck(checker, null)).not.toThrow();
-    expect(typeCheck(checker, 'foo')).not.toThrow();
-    expect(typeCheck(checker, 123)).not.toThrow();
+    typeCheck(checker, null);
+    expect(console.warn.mock.calls.length).toBe(0);
+    typeCheck(checker, 'foo');
+    expect(console.warn.mock.calls.length).toBe(0);
+    typeCheck(checker, 123);
+    expect(console.warn.mock.calls.length).toBe(0);
 
     checker = Props.oneOfType([
       Props.string,
       Props.number.isRequired
     ]);
-    expect(typeCheck(checker, null)).not.toThrow();
-    expect(typeCheck(checker, 'foo')).not.toThrow();
-    expect(typeCheck(checker, 123)).not.toThrow();
+    typeCheck(checker, null);
+    expect(console.warn.mock.calls.length).toBe(0);
+    typeCheck(checker, 'foo');
+    expect(console.warn.mock.calls.length).toBe(0);
+    typeCheck(checker, 123);
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
   describe('React Component Types', function() {
@@ -337,103 +469,138 @@ describe('Union Types', function() {
 
     var myFunc = function() {};
 
-    it('should throw for invalid values', function() {
-      expect(typeCheck(Props.renderable, false)).toThrow(
-        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+    it('should warn for invalid values', function() {
+      typeCheck(Props.renderable, false);
+      typeCheck(Props.renderable, myFunc);
+      typeCheck(Props.renderable, {key: myFunc});
+
+      expect(console.warn.mock.calls.length).toBe(3);
+
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a renderable prop.'
       );
-      expect(typeCheck(Props.renderable, myFunc)).toThrow(
-        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+      expect(console.warn.mock.calls[1][0]).toBe(
+        'Warning: Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a renderable prop.'
       );
-      expect(typeCheck(Props.renderable, {key: myFunc})).toThrow(
-        'Invariant Violation: Invalid prop `testProp` supplied to ' +
+
+      expect(console.warn.mock.calls[2][0]).toBe(
+        'Warning: Invalid prop `testProp` supplied to ' +
         '`testComponent`, expected a renderable prop.'
       );
     });
 
-    it('should not throw for valid values', function() {
+    it('should not warn for valid values', function() {
       // DOM component
-      expect(typeCheck(Props.renderable, <div />)).not.toThrow();
+      typeCheck(Props.renderable, <div />);
+      expect(console.warn.mock.calls.length).toBe(0);
       // Custom component
-      expect(typeCheck(Props.renderable, <MyComponent />)).not.toThrow();
+      typeCheck(Props.renderable, <MyComponent />);
+      expect(console.warn.mock.calls.length).toBe(0);
       // String
-      expect(typeCheck(Props.renderable, 'Some string')).not.toThrow();
+      typeCheck(Props.renderable, 'Some string');
+      expect(console.warn.mock.calls.length).toBe(0);
       // Empty array
-      expect(typeCheck(Props.renderable, [])).not.toThrow();
+      typeCheck(Props.renderable, []);
+      expect(console.warn.mock.calls.length).toBe(0);
       // Empty object
-      expect(typeCheck(Props.renderable, {})).not.toThrow();
+      typeCheck(Props.renderable, {});
+      expect(console.warn.mock.calls.length).toBe(0);
       // Array of renderable things
-      expect(
-        typeCheck(Props.renderable, [
-          123,
-          'Some string',
-          <div />,
-          ['Another string', [456], <span />, <MyComponent />],
-          <MyComponent />
-        ])
-      ).not.toThrow();
+
+      typeCheck(Props.renderable, [
+        123,
+        'Some string',
+        <div />,
+        ['Another string', [456], <span />, <MyComponent />],
+        <MyComponent />
+      ]);
+      expect(console.warn.mock.calls.length).toBe(0);
+
       // Object of rendereable things
-      expect(
-        typeCheck(Props.renderable, {
-          k0: 123,
-          k1: 'Some string',
-          k2: <div />,
-          k3: {
-            k30: <MyComponent />,
-            k31: {k310: <a />},
-            k32: 'Another string'
-          }
-        })
-      ).not.toThrow();
+      typeCheck(Props.renderable, {
+        k0: 123,
+        k1: 'Some string',
+        k2: <div />,
+        k3: {
+          k30: <MyComponent />,
+          k31: {k310: <a />},
+          k32: 'Another string'
+        }
+      });
+      expect(console.warn.mock.calls.length).toBe(0);
     });
 
-    it('should not throw for null/undefined if not required', function() {
-      expect(typeCheck(Props.renderable, null)).not.toThrow();
-      expect(typeCheck(Props.renderable, undefined)).not.toThrow();
+    it('should not warn for null/undefined if not required', function() {
+      typeCheck(Props.renderable, null);
+      typeCheck(Props.renderable, undefined);
+
+      // No warnings should have been logged.
+      expect(console.warn.mock.calls.length).toBe(0);
     });
 
-    it('should throw for missing required values', function() {
-      expect(typeCheck(Props.renderable.isRequired, null)).toThrow(
-        'Invariant Violation: Required prop `testProp` was not specified in ' +
+    it('should warn for missing required values', function() {
+      typeCheck(Props.renderable.isRequired, null);
+      typeCheck(Props.renderable.isRequired, undefined);
+
+      expect(console.warn.mock.calls.length).toBe(2);
+
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Required prop `testProp` was not specified in ' +
         '`testComponent`.'
       );
-      expect(typeCheck(Props.renderable.isRequired, undefined)).toThrow(
-        'Invariant Violation: Required prop `testProp` was not specified in ' +
+      expect(console.warn.mock.calls[1][0]).toBe(
+        'Warning: Required prop `testProp` was not specified in ' +
         '`testComponent`.'
       );
     });
 
     it('should accept empty array & object for required props', function() {
-      expect(typeCheck(Props.renderable.isRequired, [])).not.toThrow();
-      expect(typeCheck(Props.renderable.isRequired, {})).not.toThrow();
+      typeCheck(Props.renderable.isRequired, []);
+      typeCheck(Props.renderable.isRequired, {});
+
+      // No warnings should have been logged.
+      expect(console.warn.mock.calls.length).toBe(0);
     });
   });
 
   describe('Any type', function() {
     it('should should accept any value', function() {
-      expect(typeCheck(Props.any, 1)).not.toThrow();
-      expect(typeCheck(Props.any, 'str')).not.toThrow();
-      expect(typeCheck(Props.any.isRequired, 1)).not.toThrow();
-      expect(typeCheck(Props.any.isRequired, 'str')).not.toThrow();
+      typeCheck(Props.any, 1);
+      expect(console.warn.mock.calls.length).toBe(0);
+      typeCheck(Props.any, 'str');
+      expect(console.warn.mock.calls.length).toBe(0);
+      typeCheck(Props.any.isRequired, 1);
+      expect(console.warn.mock.calls.length).toBe(0);
+      typeCheck(Props.any.isRequired, 'str');
+      expect(console.warn.mock.calls.length).toBe(0);
 
-      expect(typeCheck(Props.any, null)).not.toThrow();
-      expect(typeCheck(Props.any, undefined)).not.toThrow();
+      typeCheck(Props.any, null);
+      expect(console.warn.mock.calls.length).toBe(0);
+      typeCheck(Props.any, undefined);
+      expect(console.warn.mock.calls.length).toBe(0);
 
-      expect(typeCheck(Props.any.isRequired, null)).toThrow(
-        'Invariant Violation: Required prop `testProp` was not specified in ' +
+      typeCheck(Props.any.isRequired, null);
+      typeCheck(Props.any.isRequired, undefined);
+
+      expect(console.warn.mock.calls.length).toBe(2);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Required prop `testProp` was not specified in ' +
         '`testComponent`.'
       );
-      expect(typeCheck(Props.any.isRequired, undefined)).toThrow(
-        'Invariant Violation: Required prop `testProp` was not specified in ' +
+
+      expect(console.warn.mock.calls[1][0]).toBe(
+        'Warning: Required prop `testProp` was not specified in ' +
         '`testComponent`.'
       );
     });
 
     it('should have a weak version that returns true/false', function() {
-      expect(typeCheck(Props.any.weak, null)()).toEqual(true);
-      expect(typeCheck(Props.any.weak.isRequired, null)()).toEqual(false);
-      expect(typeCheck(Props.any.isRequired.weak, null)()).toEqual(false);
+      expect(typeCheck(Props.any.weak, null)).toEqual(true);
+      expect(typeCheck(Props.any.weak.isRequired, null)).toEqual(false);
+      expect(typeCheck(Props.any.isRequired.weak, null)).toEqual(false);
     });
   });
 });
