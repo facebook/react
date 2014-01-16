@@ -111,6 +111,7 @@ var DefaultDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
+    valign: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
