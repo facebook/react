@@ -21,8 +21,8 @@
 var ReactComponent = require('ReactComponent');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
+var warning = require('warning');
 var createObjectFrom = require('createObjectFrom');
-var invariant = require('invariant');
 
 /**
  * Collection of methods that allow declaration and validation of props that are
@@ -57,7 +57,7 @@ var invariant = require('invariant');
  *       // An optional string or URI prop named "href".
  *       href: function(props, propName, componentName) {
  *         var propValue = props[propName];
- *         invariant(
+ *         warning(
  *           propValue == null ||
  *           typeof propValue === 'string' ||
  *           propValue instanceof URI,
@@ -147,7 +147,7 @@ function createPrimitiveTypeChecker(expectedType) {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` of type `%s` supplied to `%s`, expected `%s`.',
       ReactPropTypeLocationNames[location],
@@ -169,7 +169,7 @@ function createEnumTypeChecker(expectedValues) {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` supplied to `%s`, expected one of %s.',
       ReactPropTypeLocationNames[location],
@@ -199,7 +199,7 @@ function createShapeTypeChecker(shapeTypes) {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` of type `%s` supplied to `%s`, expected `object`.',
       ReactPropTypeLocationNames[location],
@@ -219,7 +219,7 @@ function createInstanceTypeChecker(expectedClass) {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` supplied to `%s`, expected instance of `%s`.',
       ReactPropTypeLocationNames[location],
@@ -239,7 +239,7 @@ function createRenderableTypeChecker() {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` supplied to `%s`, expected a renderable prop.',
       ReactPropTypeLocationNames[location],
@@ -258,7 +258,7 @@ function createComponentTypeChecker() {
     if (!shouldThrow) {
       return isValid;
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` supplied to `%s`, expected a React component.',
       ReactPropTypeLocationNames[location],
@@ -288,7 +288,7 @@ function createChainableTypeChecker(validate) {
       if (!shouldThrow) {
         return isValid;
       }
-      invariant(
+      warning(
         isValid,
         'Required %s `%s` was not specified in `%s`.',
         ReactPropTypeLocationNames[location],
@@ -320,7 +320,7 @@ function createUnionTypeChecker(arrayOfValidators) {
         break;
       }
     }
-    invariant(
+    warning(
       isValid,
       'Invalid %s `%s` supplied to `%s`.',
       ReactPropTypeLocationNames[location],

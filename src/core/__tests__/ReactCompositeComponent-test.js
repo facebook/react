@@ -32,6 +32,7 @@ var ReactDoNotBindDeprecated;
 var cx;
 var reactComponentExpect;
 var mocks;
+var warn;
 
 describe('ReactCompositeComponent', function() {
 
@@ -80,6 +81,13 @@ describe('ReactCompositeComponent', function() {
           <b></b>;
       }
     });
+
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
+  });
+
+  afterEach(function() {
+    console.warn = warn;
   });
 
   it('should support rendering to different child types over time', function() {
@@ -275,11 +283,11 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance).scalarPropsEqual({key: 'testKey'});
     reactComponentExpect(instance).scalarStateEqual({key: 'testKeyState'});
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component key={null} />);
-    }).toThrow(
-      'Invariant Violation: Required prop `key` was not specified in ' +
-      '`Component`.'
+    ReactTestUtils.renderIntoDocument(<Component key={null} />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `key` was not specified in `Component`.'
     );
   });
 
@@ -294,12 +302,11 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var instance = <Component />;
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
-      'Invariant Violation: Required prop `key` was not specified in ' +
-      '`Component`.'
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `key` was not specified in `Component`.'
     );
   });
 
@@ -313,23 +320,23 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
-    }).toThrow(
-      'Invariant Violation: Required prop `key` was not specified in ' +
-      '`Component`.'
+    ReactTestUtils.renderIntoDocument(<Component />);
+    ReactTestUtils.renderIntoDocument(<Component key={42} />);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `key` was not specified in `Component`.'
     );
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component key={42} />);
-    }).toThrow(
-      'Invariant Violation: Invalid prop `key` of type `number` supplied to ' +
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid prop `key` of type `number` supplied to ' +
       '`Component`, expected `string`.'
     );
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component key="string" />);
-    }).not.toThrow();
+    ReactTestUtils.renderIntoDocument(<Component key="string" />);
+
+    // Should not error for strings
+    expect(console.warn.mock.calls.length).toBe(2);
   });
 
   it('should throw on invalid prop types', function() {
@@ -853,25 +860,27 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
-    }).toThrow(
-      'Invariant Violation: Required context `foo` was not specified in ' +
-      '`Component`.'
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required context `foo` was not specified in `Component`.'
     );
 
-    expect(function() {
-      React.withContext({foo: 'bar'}, function() {
-        ReactTestUtils.renderIntoDocument(<Component />);
-      });
-    }).not.toThrow();
+    React.withContext({foo: 'bar'}, function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    });
 
-    expect(function() {
-      React.withContext({foo: 123}, function() {
-        ReactTestUtils.renderIntoDocument(<Component />);
-      });
-    }).toThrow(
-      'Invariant Violation: Invalid context `foo` of type `number` supplied ' +
+    // Previous call should not error
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    React.withContext({foo: 123}, function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    });
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid context `foo` of type `number` supplied ' +
       'to `Component`, expected `string`.'
     );
   });
@@ -892,35 +901,31 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <Component testContext={{bar: 123}} />
-      );
-    }).toThrow(
-      'Invariant Violation: Required child context `foo` was not specified ' +
-      'in `Component`.'
+    ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required child context `foo` was not specified in `Component`.'
     );
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <Component testContext={{foo: 123}} />
-      );
-    }).toThrow(
-      'Invariant Violation: Invalid child context `foo` of type `number` ' +
+    ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Invalid child context `foo` of type `number` ' +
       'supplied to `Component`, expected `string`.'
     );
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <Component testContext={{foo: 'foo', bar: 123}} />
-      );
-    }).not.toThrow();
+    ReactTestUtils.renderIntoDocument(
+      <Component testContext={{foo: 'foo', bar: 123}} />
+    );
 
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(
-        <Component testContext={{foo: 'foo'}} />
-      );
-    }).not.toThrow();
+    ReactTestUtils.renderIntoDocument(
+      <Component testContext={{foo: 'foo'}} />
+    );
+
+    // Previous calls should not log errors
+    expect(console.warn.mock.calls.length).toBe(2);
   });
 
   it('should filter out context not in contextTypes', function() {
