@@ -107,3 +107,12 @@ If your `render()` method reads from something other than `this.props` or `this.
 Calling `forceUpdate()` will cause `render()` to be called on the component and its children, but React will still only update the DOM if the markup changes.
 
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your application much simpler and more efficient.
+
+
+### isMounted()
+
+```javascript
+bool isMounted()
+```
+
+`isMounted()` returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
