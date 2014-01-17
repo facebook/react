@@ -103,7 +103,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         return (
-          <div> </div>
+          <div></div>
         );
       }
     });
@@ -129,7 +129,7 @@ describe('ReactComponentLifeCycle', function() {
         _testJournal.push('Child:onDOMReady');
       },
       render: function() {
-        return <div> </div>;
+        return <div></div>;
       }
     });
 
@@ -175,7 +175,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         return (
-          <div> </div>
+          <div></div>
         );
       }
     });
@@ -197,7 +197,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         return (
-          <div> </div>
+          <div></div>
         );
       }
     });
@@ -214,7 +214,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         return (
-          <div> </div>
+          <div></div>
         );
       }
     });
@@ -233,7 +233,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         return (
-          <div> </div>
+          <div></div>
         );
       }
     });

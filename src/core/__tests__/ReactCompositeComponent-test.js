@@ -163,7 +163,7 @@ describe('ReactCompositeComponent', function() {
         return this;
       }),
       render: function() {
-        return <div> </div>;
+        return <div></div>;
       }
     });
     var instance = <ComponentClass />;

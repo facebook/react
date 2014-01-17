@@ -83,7 +83,7 @@ var renderMultipleTextChildren = function(textOne, textTwo) {
 var TestCompositeComponent = React.createClass({
   render: function() {
     return (
-      <div> </div>
+      <div></div>
     );
   }
 });

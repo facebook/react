@@ -66,7 +66,7 @@ var ClickCounter = React.createClass({
  */
 var GeneralContainerComponent = React.createClass({
   render: function() {
-    return <div> {this.props.children} </div>;
+    return <div>{this.props.children}</div>;
   }
 });
 

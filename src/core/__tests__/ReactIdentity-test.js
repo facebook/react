@@ -173,7 +173,7 @@ describe('ReactIdentity', function() {
     var TestContainer = React.createClass({
 
       render: function() {
-        return <TestComponent>{instance0} {instance1}</TestComponent>;
+        return <TestComponent>{instance0}{instance1}</TestComponent>;
       }
 
     });
@@ -207,7 +207,7 @@ describe('ReactIdentity', function() {
       render: function() {
         return (
           <div>
-            <TestComponent>{instance0} {instance1}</TestComponent>
+            <TestComponent>{instance0}{instance1}</TestComponent>
           </div>
         );
       }
