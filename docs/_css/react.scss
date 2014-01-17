@@ -580,6 +580,11 @@ div.CodeMirror-linenumber:after {
   border: none;
 }
 
+/* hide the cursor. Mostly used when code's in plain JS */
+.CodeMirror-readonly div.CodeMirror-cursor {
+  visibility: hidden;
+}
+
 small code,
 li code,
 p code {
@@ -596,21 +601,26 @@ p code {
   @include clearfix;
 }
 
-.playground::before {
+.playground-tab {
   border-bottom: none !important;
   border-radius: 3px 3px 0 0;
-  padding: 3px 7px;
+  padding: 6px 8px;
   font-size: 12px;
   font-weight: bold;
   color: #c2c0bc;
   background-color: #f1ede4;
-  content: 'Live editor';
+  display: inline-block;
+  cursor: pointer;
 }
 
-.playground::before,
 .playgroundCode,
+.playground-tab,
 .playgroundPreview {
   border: 1px solid rgba(16,16,16,0.1);
+}
+
+.playground-tab-active {
+  color: $darkestColor;
 }
 
 .playgroundCode {
