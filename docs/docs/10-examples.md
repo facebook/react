@@ -3,7 +3,7 @@ id: examples
 title: Examples
 layout: docs
 permalink: examples.html
-prev: addons.html
+prev: class-name-manipulation.html
 ---
 
 ### Production Apps
