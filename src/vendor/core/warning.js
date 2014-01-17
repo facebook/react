@@ -26,16 +26,14 @@
 function warning(condition, format, ...args) {
   if (format === undefined) {
     throw new Error(
-      '`warning(condition, format, ...args)` requires an error message argument'
+      '`warning(condition, format, ...args)` requires a warning ' +
+      'message argument'
     );
   }
 
   if (!condition) {
     var argIndex = 0;
-    console.warn(
-      'Warning: ' +
-      format.replace(/%s/g, () => args[argIndex++])
-    );
+    console.warn('Warning: ' + format.replace(/%s/g, () => args[argIndex++]));
   }
 }
 
