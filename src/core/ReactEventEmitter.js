@@ -79,6 +79,10 @@ var merge = require('merge');
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
+
+// For events like 'submit' which don't consistently bubble (which we trap at a
+// lower node than `document`), binding at `document` would cause duplicate
+// events so we don't include them here
 var topEventMapping = {
   topBlur: 'blur',
   topChange: 'change',
@@ -111,7 +115,6 @@ var topEventMapping = {
   topPaste: 'paste',
   topScroll: 'scroll',
   topSelectionChange: 'selectionchange',
-  topSubmit: 'submit',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
@@ -280,7 +283,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           // to make sure blur and focus event listeners are only attached once
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
-        } else {
+        } else if (topEventMapping[dependency]) {
           trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 
