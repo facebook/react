@@ -256,7 +256,7 @@ describe('ReactDOMInput', function() {
   it('should support checkedLink', function() {
     var container = document.createElement('div');
     var link = new ReactLink(true, mocks.getMockFunction());
-    var instance = <input type="checked" checkedLink={link} />;
+    var instance = <input type="checkbox" checkedLink={link} />;
 
     React.renderComponent(instance, container);
 
