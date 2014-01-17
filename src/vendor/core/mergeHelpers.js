@@ -66,9 +66,9 @@ var mergeHelpers = {
   checkMergeArrayArgs: function(one, two) {
     invariant(
       Array.isArray(one) && Array.isArray(two),
-      'Critical assumptions about the merge functions have been violated. ' +
-      'This is the fault of the merge functions themselves, not necessarily ' +
-      'the callers.'
+      'Tried to merge arrays, instead got %s and %s.',
+      one,
+      two
     );
   },
 
@@ -87,9 +87,8 @@ var mergeHelpers = {
   checkMergeObjectArg: function(arg) {
     invariant(
       !isTerminal(arg) && !Array.isArray(arg),
-      'Critical assumptions about the merge functions have been violated. ' +
-      'This is the fault of the merge functions themselves, not necessarily ' +
-      'the callers.'
+      'Tried to merge an object, instead got %s.',
+      arg
     );
   },
 
