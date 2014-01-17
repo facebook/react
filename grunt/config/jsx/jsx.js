@@ -9,11 +9,9 @@ var rootIDs = [
 
 var getDebugConfig = function() {
   return {
-    "debug": true,
     "commonerConfig": grunt.config.data.pkg.commonerConfig,
     "constants": {
-      "__VERSION__": grunt.config.data.pkg.version,
-      "__DEV__": true
+      "__VERSION__": grunt.config.data.pkg.version
     }
   };
 };
@@ -32,12 +30,10 @@ var test = {
   ]),
   getConfig: function() {
     return {
-      "debug": true,
       "mocking": true,
       "commonerConfig": grunt.config.data.pkg.commonerConfig,
       "constants": {
-        "__VERSION__": grunt.config.data.pkg.version,
-        "__DEV__": true
+        "__VERSION__": grunt.config.data.pkg.version
       }
     };
   },
@@ -50,11 +46,9 @@ var release = {
   rootIDs: rootIDs,
   getConfig: function() {
     return {
-      "debug": false,
       "commonerConfig": grunt.config.data.pkg.commonerConfig,
       "constants": {
-        "__VERSION__": grunt.config.data.pkg.version,
-        "__DEV__": false
+        "__VERSION__": grunt.config.data.pkg.version
       }
     };
   },
