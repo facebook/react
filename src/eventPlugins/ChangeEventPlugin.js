@@ -40,10 +40,12 @@ var eventTypes = {
     dependencies: [
       topLevelTypes.topBlur,
       topLevelTypes.topChange,
+      topLevelTypes.topClick,
       topLevelTypes.topFocus,
       topLevelTypes.topInput,
       topLevelTypes.topKeyDown,
-      topLevelTypes.topKeyUp
+      topLevelTypes.topKeyUp,
+      topLevelTypes.topSelectionChange
     ]
   }
 };
