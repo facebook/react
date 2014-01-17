@@ -199,7 +199,6 @@ var ReactMultiChild = {
             transaction,
             this._mountDepth + 1
           );
-          child._mountImage = mountImage;
           child._mountIndex = index;
           mountImages.push(mountImage);
           index++;
@@ -346,10 +345,11 @@ var ReactMultiChild = {
      * Creates a child component.
      *
      * @param {ReactComponent} child Component to create.
+     * @param {string} mountImage Markup to insert.
      * @protected
      */
-    createChild: function(child) {
-      enqueueMarkup(this._rootNodeID, child._mountImage, child._mountIndex);
+    createChild: function(child, mountImage) {
+      enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
     },
 
     /**
@@ -391,9 +391,8 @@ var ReactMultiChild = {
         transaction,
         this._mountDepth + 1
       );
-      child._mountImage = mountImage;
       child._mountIndex = index;
-      this.createChild(child);
+      this.createChild(child, mountImage);
       this._renderedChildren = this._renderedChildren || {};
       this._renderedChildren[name] = child;
     },
@@ -411,7 +410,6 @@ var ReactMultiChild = {
       // TODO: When is this not true?
       if (ReactComponent.isValidComponent(child)) {
         this.removeChild(child);
-        child._mountImage = null;
         child._mountIndex = null;
         child.unmountComponent();
         delete this._renderedChildren[name];
