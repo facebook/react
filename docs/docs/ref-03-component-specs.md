@@ -87,7 +87,7 @@ Various methods are executed at specific points in a component's lifecycle.
 componentWillMount()
 ```
 
-Invoked immediately before rendering occurs. If you call `setState` within this method, `render()` will see the updated state and will be executed only once despite the state change.
+Invoked once, immediately before the initial rendering occurs. If you call `setState` within this method, `render()` will see the updated state and will be executed only once despite the state change.
 
 
 ### Mounting: componentDidMount
