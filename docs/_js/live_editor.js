@@ -110,7 +110,8 @@ var ReactPlayground = React.createClass({
 
   render: function() {
     var isJS = this.state.mode === this.MODES.JS;
-    var compiledCode = '';
+    // passing an empty string doesn't update CodeMirror
+    var compiledCode = ' ';
     try {
       compiledCode = this.compileCode();
     } catch (err) {}
@@ -171,9 +172,9 @@ var ReactPlayground = React.createClass({
   componentWillUpdate: function(nextProps, nextState) {
     // execute code only when the state's not being updated by switching tab
     // this avoids re-displaying the error, which comes after a certain delay
-    if (this.state.mode === nextState.mode) {
+    if (this.state.code !== nextState.code) {
       this.executeCode();
-    };
+    }
   },
 
   executeCode: function() {
