@@ -22,7 +22,6 @@ var ReactComponent = require('ReactComponent');
 var ReactDOM = require('ReactDOM');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactTextComponent = require('ReactTextComponent');
-var ReactMount = require('ReactMount');
 
 var mergeInto = require('mergeInto');
 var copyProperties = require('copyProperties');
@@ -250,19 +249,11 @@ var ReactTestUtils = {
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateEventOnDOMComponent: function(topLevelType, comp, fakeNativeEvent) {
-    var reactRootID = comp._rootNodeID || comp._rootDomId;
-    if (!reactRootID) {
-      throw new Error('Simulating event on non-rendered component');
-    }
-    var virtualHandler =
-      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-        topLevelType
-      );
-    var node = ReactMount.getNode(reactRootID);
-    fakeNativeEvent.target = node;
-    /* jsdom is returning nodes without id's - fixing that issue here. */
-    ReactMount.setID(node, reactRootID);
-    virtualHandler(fakeNativeEvent);
+    ReactTestUtils.simulateEventOnNode(
+      topLevelType,
+      comp.getDOMNode(),
+      fakeNativeEvent
+    );
   },
 
   nativeTouchData: function(x, y) {
