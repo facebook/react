@@ -39,8 +39,12 @@ id: home
         React components implement a `render()` method that takes input data and
         returns what to display. This example uses an XML-like syntax called
         JSX. Input data that is passed into the component can be accessed by
-        `render()` via `this.props`.<br />
-        <strong>JSX is optional and not required to use React.</strong>
+        `render()` via `this.props`.
+      </p>
+      <p>
+        <strong>JSX is optional and not required to use React.</strong> Try
+        clicking on "Compiled JS" to see the raw JavaScript code produced by
+        the JSX compiler.
       </p>
       <div id="helloExample"></div>
     </div>
@@ -50,8 +54,7 @@ id: home
         In addition to taking input data (accessed via `this.props`), a
         component can maintain internal state data (accessed via `this.state`).
         When a component's state data changes, the rendered markup will be
-        updated by re-invoking `render()`.<br />
-        <strong>This example demonstrates use of React without JSX.</strong>
+        updated by re-invoking `render()`.
       </p>
       <div id="timerExample"></div>
     </div>
