@@ -113,8 +113,14 @@ function visitReactTag(traverse, object, path, state) {
         }
       } else if (attr.value.type === Syntax.Literal) {
         renderXJSLiteral(attr.value, isLast, state);
-      } else {
+      } else if (attr.value.type === Syntax.XJSExpressionContainer) {
         renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
+      } else if (attr.value.type === Syntax.XJSElement) {
+        traverse(attr.value, path, state);
+        if (!isLast) {
+          utils.append(',', state);
+          state.g.buffer = state.g.buffer.replace(/(\s*),$/, ',$1');
+        }
       }
     }
 
