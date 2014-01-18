@@ -36,8 +36,8 @@ describe('ReactTransitionKeySet', function() {
     var component = <div>{one}{two}</div>;
     expect(ReactTransitionKeySet.getChildMapping(component.props.children))
       .toEqual({
-        '{one}': one,
-        '{two}': two
+        '.$one': one,
+        '.$two': two
       });
   });
 
@@ -48,8 +48,8 @@ describe('ReactTransitionKeySet', function() {
     var two = <div key="two" />;
     var component = <div>{one}{two}</div>;
     expect(ReactTransitionKeySet.getKeySet(component.props.children)).toEqual({
-      '{one}': true,
-      '{two}': true
+      '.$one': true,
+      '.$two': true
     });
   });
 

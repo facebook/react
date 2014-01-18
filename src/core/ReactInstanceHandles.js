@@ -39,7 +39,7 @@ var MAX_TREE_DEPTH = 100;
  * @internal
  */
 function getReactRootIDString(index) {
-  return SEPARATOR + 'r[' + index.toString(36) + ']';
+  return SEPARATOR + index.toString(36);
 }
 
 /**
@@ -241,7 +241,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   createReactID: function(rootID, name) {
-    return rootID + SEPARATOR + name;
+    return rootID + name;
   },
 
   /**
@@ -253,8 +253,11 @@ var ReactInstanceHandles = {
    * @internal
    */
   getReactRootIDFromNodeID: function(id) {
-    var regexResult = /\.r\[[^\]]+\]/.exec(id);
-    return regexResult && regexResult[0];
+    if (id && id.charAt(0) === SEPARATOR && id.length > 1) {
+      var index = id.indexOf(SEPARATOR, 1);
+      return index > -1 ? id.substr(0, index) : id;
+    }
+    return null;
   },
 
   /**

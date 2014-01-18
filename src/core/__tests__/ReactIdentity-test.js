@@ -34,7 +34,7 @@ describe('ReactIdentity', function() {
     ReactMount = require('ReactMount');
   });
 
-  var idExp = /^\.r\[.+?\](.*)$/;
+  var idExp = /^\.[^.]+(.*)$/;
   function checkId(child, expectedId) {
     var actual = idExp.exec(ReactMount.getID(child));
     var expected = idExp.exec(expectedId);
@@ -55,8 +55,8 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
-    checkId(node.childNodes[0], '.r[0].{first}[0]');
-    checkId(node.childNodes[1], '.r[0].{second}[0]');
+    checkId(node.childNodes[0], '.0.$first:0');
+    checkId(node.childNodes[1], '.0.$second:0');
   });
 
   it('should allow key property to express identity', function() {
@@ -71,10 +71,10 @@ describe('ReactIdentity', function() {
     React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
-    checkId(node.childNodes[0], '.r[0].{apple}');
-    checkId(node.childNodes[1], '.r[0].{banana}');
-    checkId(node.childNodes[2], '.r[0].{0}');
-    checkId(node.childNodes[3], '.r[0].{123}');
+    checkId(node.childNodes[0], '.0.$apple');
+    checkId(node.childNodes[1], '.0.$banana');
+    checkId(node.childNodes[2], '.0.$0');
+    checkId(node.childNodes[3], '.0.$123');
   });
 
   it('should use instance identity', function() {
@@ -96,12 +96,12 @@ describe('ReactIdentity', function() {
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
 
-    checkId(node.childNodes[0], '.r[0].{wrap1}');
-    checkId(node.childNodes[0].firstChild, '.r[0].{wrap1}.{squirrel}');
-    checkId(node.childNodes[1], '.r[0].{wrap2}');
-    checkId(node.childNodes[1].firstChild, '.r[0].{wrap2}.{bunny}');
-    checkId(node.childNodes[2], '.r[0].[2]');
-    checkId(node.childNodes[2].firstChild, '.r[0].[2].{chipmunk}');
+    checkId(node.childNodes[0], '.0.$wrap1');
+    checkId(node.childNodes[0].firstChild, '.0.$wrap1.$squirrel');
+    checkId(node.childNodes[1], '.0.$wrap2');
+    checkId(node.childNodes[1].firstChild, '.0.$wrap2.$bunny');
+    checkId(node.childNodes[2], '.0.2');
+    checkId(node.childNodes[2].firstChild, '.0.2.$chipmunk');
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
@@ -116,8 +116,10 @@ describe('ReactIdentity', function() {
     expect(span1.getDOMNode()).not.toBe(null);
     expect(span2.getDOMNode()).not.toBe(null);
 
-    checkId(span1.getDOMNode(), '.r[0].{' + key + '}');
-    checkId(span2.getDOMNode(), '.r[0].[1]{' + key + '}[0]');
+    key = key.replace(/=/g, '=0');
+
+    checkId(span1.getDOMNode(), '.0.$' + key);
+    checkId(span2.getDOMNode(), '.0.1:$' + key + ':0');
   }
 
   it('should allow any character as a key, in a detached parent', function() {
