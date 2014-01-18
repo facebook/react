@@ -115,11 +115,9 @@ var ReactPlayground = React.createClass({
       compiledCode = this.compileCode();
     } catch (err) {}
 
-    // we're creating both versions, to avoid the flicker when switching from
-    // one view to another when CodeMirror recompiles
     var jsContent =
       <CodeMirrorEditor
-        style={{display: isJS ? 'inherit' : 'none'}}
+        key="js"
         className="playgroundStage CodeMirror-readonly"
         onChange={this.handleCodeChange}
         codeText={compiledCode}
@@ -128,7 +126,7 @@ var ReactPlayground = React.createClass({
 
     var jsxContent =
       <CodeMirrorEditor
-        style={{display: isJS ? 'none' : 'inherit'}}
+        key="jsx"
         onChange={this.handleCodeChange}
         className="playgroundStage"
         codeText={this.state.code}
@@ -154,8 +152,7 @@ var ReactPlayground = React.createClass({
           </div>
         </div>
         <div className="playgroundCode">
-          {jsxContent}
-          {jsContent}
+          {isJS ? jsContent : jsxContent}
         </div>
         <div className="playgroundPreview">
           <div ref="mount" />
