@@ -46,7 +46,9 @@ module.exports = function() {
   };
 
   // TODO: make sure this works, test with this too
-  config.transforms.forEach(bundle.transform, bundle);
+  config.transforms.forEach(function(transform) {
+    bundle.transform({}, transform);
+  });
 
   // Actually bundle it up
   var _this = this;
