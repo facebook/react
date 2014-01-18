@@ -369,7 +369,7 @@ function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       invariant(
-        typeof typeDef[propName] == 'function',
+        typeof typeDef[propName] === 'function',
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
         'React.PropTypes.',
         Constructor.displayName || 'ReactCompositeComponent',
@@ -459,7 +459,7 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
       // 1. Expected ReactCompositeComponent methods (in the "interface").
       // 2. Overridden methods (that were mixed in).
       var isCompositeComponentMethod = name in ReactCompositeComponentInterface;
-      var isInherited = name in proto;
+      var isInherited = proto[name] !== undefined;
       var markedDontBind = property.__reactDontBind;
       var isFunction = typeof property === 'function';
       var shouldAutoBind =
@@ -502,7 +502,7 @@ function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
       return;
     }
 
-    var isInherited = name in ConvenienceConstructor;
+    var isInherited = ConvenienceConstructor[name] !== undefined;
     var result = property;
     if (isInherited) {
       var existingProperty = ConvenienceConstructor[name];
@@ -892,7 +892,7 @@ var ReactCompositeComponentMixin = {
     var props = merge(newProps);
     var defaultProps = this._defaultProps;
     for (var propName in defaultProps) {
-      if (typeof props[propName] === 'undefined') {
+      if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
       }
     }
@@ -1243,7 +1243,7 @@ mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
  */
 function isValidClass(componentClass) {
   return componentClass instanceof Function &&
-         'componentConstructor' in componentClass &&
+         componentClass.componentConstructor !== undefined &&
          componentClass.componentConstructor instanceof Function;
 }
 /**

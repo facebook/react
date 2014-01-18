@@ -46,7 +46,7 @@ if (ExecutionEnvironment.canUseDOM) {
  */
 function isEventSupported(eventNameSuffix, capture) {
   if (!ExecutionEnvironment.canUseDOM ||
-      capture && !('addEventListener' in document)) {
+      capture && !document.addEventListener) {
     return false;
   }
 

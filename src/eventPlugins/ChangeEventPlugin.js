@@ -72,7 +72,7 @@ var doesChangeEventBubble = false;
 if (ExecutionEnvironment.canUseDOM) {
   // See `handleChange` comment below
   doesChangeEventBubble = isEventSupported('change') && (
-    !('documentMode' in document) || document.documentMode > 8
+    !document.documentMode || document.documentMode > 8
   );
 }
 

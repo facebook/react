@@ -48,7 +48,7 @@ function createObjectFrom(keys, values /* = true */) {
 
   var object = {};
   var isArray = Array.isArray(values);
-  if (typeof values == 'undefined') {
+  if (values === undefined) {
     values = true;
   }
 

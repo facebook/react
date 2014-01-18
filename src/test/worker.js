@@ -1,7 +1,7 @@
 /* jshint worker: true */
 "use strict";
 
-if (typeof console == 'undefined') {
+if (typeof console === 'undefined') {
   this.console = {
     error: function(e){
       postMessage(JSON.stringify({

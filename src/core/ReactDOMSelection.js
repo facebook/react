@@ -101,7 +101,7 @@ function setIEOffsets(node, offsets) {
   var range = document.selection.createRange().duplicate();
   var start, end;
 
-  if (typeof offsets.end === 'undefined') {
+  if (offsets.end === undefined) {
     start = offsets.start;
     end = start;
   } else if (offsets.start > offsets.end) {
@@ -136,8 +136,7 @@ function setModernOffsets(node, offsets) {
 
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
-  var end = typeof offsets.end === 'undefined' ?
-            start : Math.min(offsets.end, length);
+  var end = offsets.end === undefined ? start : Math.min(offsets.end, length);
 
   // IE 11 uses modern selection, but doesn't support the extend method.
   // Flip backward selections, so we can set with a single range.
