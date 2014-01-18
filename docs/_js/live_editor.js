@@ -168,9 +168,9 @@ var ReactPlayground = React.createClass({
   componentWillUpdate: function(nextProps, nextState) {
     // execute code only when the state's not being updated by switching tab
     // this avoids re-displaying the error, which comes after a certain delay
-    if (this.state.mode === nextState.mode) {
+    if (this.state.code !== nextState.code) {
       this.executeCode();
-    };
+    }
   },
 
   executeCode: function() {
