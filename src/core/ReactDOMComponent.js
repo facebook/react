@@ -135,7 +135,7 @@ ReactDOMComponent.Mixin = {
     var ret = this._tagOpen;
 
     for (var propKey in props) {
-      if (!props.hasOwnProperty(propKey)) {
+      if (props[propKey] === undefined) {
         continue;
       }
       var propValue = props[propKey];
