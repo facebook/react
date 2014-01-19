@@ -52,8 +52,8 @@ describe('autobinding', function() {
       render: function() {
         return (
           <div
-            onMouseEnter={this.onMouseEnter.bind(this)}
-            onMouseLeave={this.onMouseLeave}
+            onMouseOver={this.onMouseEnter.bind(this)}
+            onMouseOut={this.onMouseLeave}
             onClick={this.onClick}
           />
         );

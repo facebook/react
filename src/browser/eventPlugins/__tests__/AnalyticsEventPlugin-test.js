@@ -99,14 +99,14 @@ describe('AnalyticsEventPlugin', function() {
 
     // Simulate some clicks
     for (var i = 0; i < numClickEvents; i++) {
-      ReactTestUtils.Simulate.click(renderedComponent.refs.testDiv);
+      ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);
     }
     // Simulate some double clicks
     for (i = 0; i < numDoubleClickEvents; i++) {
-      ReactTestUtils.Simulate.doubleClick(renderedComponent.refs.testDiv);
+      ReactTestUtils.SimulateNative.doubleClick(renderedComponent.refs.testDiv);
     }
     // Simulate some other events not being tracked for analytics
-    ReactTestUtils.Simulate.focus(renderedComponent.refs.testDiv);
+    ReactTestUtils.SimulateNative.focus(renderedComponent.refs.testDiv);
 
     window.mockRunTimersOnce();
     expect(cb).toBeCalled();
@@ -143,7 +143,7 @@ describe('AnalyticsEventPlugin', function() {
 
     var error = false;
     try {
-      ReactTestUtils.Simulate.click(renderedComponent.refs.testDiv);
+      ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);
     } catch(e) {
       error = true;
     }
