@@ -239,4 +239,35 @@ describe('traverseAllChildren', function() {
     );
   });
 
+  it('should coalesce adjacent strings', function() {
+    var traverseContext = [];
+    var traverseFn =
+      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+        context.push(kid);
+      });
+
+    traverseAllChildren([
+      /* 0: */ '',
+      [
+        /* 1: */ null,
+        /* 2: */ 'monkey'
+      ],
+      /* 3: */ 'gorilla',
+      /* 4: */ null,
+      /* 5: */ <div />,
+      /* 6: */ 'giraffe',
+      /* 7: */ 17
+    ], traverseFn, traverseContext);
+
+    expect(traverseContext.length).toEqual(8);
+    expect(traverseContext[0]).toBeNull();
+    expect(traverseContext[1]).toBeNull();
+    expect(traverseContext[2]).toBeNull();
+    expect(traverseContext[3]).toBeNull();
+    expect(traverseContext[4].props.text).toEqual('monkeygorilla');
+    expect(traverseContext[5].tagName).toEqual('DIV');
+    expect(traverseContext[6]).toBeNull();
+    expect(traverseContext[7].props.text).toEqual('giraffe17');
+  });
+
 });
