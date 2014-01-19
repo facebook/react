@@ -21,5 +21,8 @@ var React = require('react');
 
 // You can also access ReactWithAddons.
 var React = require('react/addons');
+
+// Optionally expose React globally in order to use the Chrome extension
+// window.React = React;
 ```
 
