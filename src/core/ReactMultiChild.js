@@ -191,7 +191,7 @@ var ReactMultiChild = {
       this._renderedChildren = children;
       for (var name in children) {
         var child = children[name];
-        if (children.hasOwnProperty(name)) {
+        if (children[name] !== undefined) {
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + '.' + name;
           var mountImage = child.mountComponent(
@@ -219,7 +219,7 @@ var ReactMultiChild = {
         var prevChildren = this._renderedChildren;
         // Remove any rendered children.
         for (var name in prevChildren) {
-          if (prevChildren.hasOwnProperty(name)) {
+          if (prevChildren[name] !== undefined) {
             this._unmountChildByName(prevChildren[name], name);
           }
         }
@@ -275,7 +275,7 @@ var ReactMultiChild = {
       var lastIndex = 0;
       var nextIndex = 0;
       for (name in nextChildren) {
-        if (!nextChildren.hasOwnProperty(name)) {
+        if (nextChildren[name] === undefined) {
           continue;
         }
         var prevChild = prevChildren && prevChildren[name];
@@ -299,7 +299,7 @@ var ReactMultiChild = {
       }
       // Remove children that are no longer present.
       for (name in prevChildren) {
-        if (prevChildren.hasOwnProperty(name) &&
+        if (prevChildren[name] !== undefined &&
             !(nextChildren && nextChildren[name])) {
           this._unmountChildByName(prevChildren[name], name);
         }
