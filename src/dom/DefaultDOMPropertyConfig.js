@@ -134,6 +134,7 @@ var DefaultDOMPropertyConfig = {
     gradientUnits: MUST_USE_ATTRIBUTE,
     offset: MUST_USE_ATTRIBUTE,
     points: MUST_USE_ATTRIBUTE,
+    preserveAspectRatio: MUST_USE_ATTRIBUTE,
     r: MUST_USE_ATTRIBUTE,
     rx: MUST_USE_ATTRIBUTE,
     ry: MUST_USE_ATTRIBUTE,
@@ -146,6 +147,8 @@ var DefaultDOMPropertyConfig = {
     transform: MUST_USE_ATTRIBUTE,
     version: MUST_USE_ATTRIBUTE,
     viewBox: MUST_USE_ATTRIBUTE,
+    xlinkNamespace: MUST_USE_ATTRIBUTE,
+    xlinkHref: MUST_USE_ATTRIBUTE,
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
@@ -163,7 +166,9 @@ var DefaultDOMPropertyConfig = {
     stopOpacity: 'stop-opacity',
     strokeLinecap: 'stroke-linecap',
     strokeWidth: 'stroke-width',
-    viewBox: 'viewBox'
+    viewBox: 'viewBox',
+    xlinkNamespace: 'xmlns:xlink',
+    xlinkHref: 'xlink:href'
   },
   DOMPropertyNames: {
     autoCapitalize: 'autocapitalize',

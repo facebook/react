@@ -46,7 +46,8 @@ var shouldWrap = {
   'radialGradient': true,
   'rect': true,
   'stop': true,
-  'text': true
+  'text': true,
+  'tspan': true
 };
 
 var selectWrap = [1, '<select multiple="true">', '</select>'];
@@ -79,6 +80,7 @@ var markupWrap = {
   'circle': svgWrap,
   'defs': svgWrap,
   'g': svgWrap,
+  'image': svgWrap,
   'line': svgWrap,
   'linearGradient': svgWrap,
   'path': svgWrap,
@@ -87,7 +89,8 @@ var markupWrap = {
   'radialGradient': svgWrap,
   'rect': svgWrap,
   'stop': svgWrap,
-  'text': svgWrap
+  'text': svgWrap,
+  'tspan': svgWrap
 };
 
 /**
