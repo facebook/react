@@ -247,14 +247,13 @@ ReactDOMComponent.Mixin = {
     var styleName;
     var styleUpdates;
     for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey)) {
+      if (nextProps[propKey] !== undefined || lastProps[propKey] === undefined) {
         continue;
       }
       if (propKey === STYLE) {
         var lastStyle = lastProps[propKey];
         for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
+          if (lastStyle[styleName] !== undefined) {
             styleUpdates = styleUpdates || {};
             styleUpdates[styleName] = '';
           }
@@ -273,7 +272,7 @@ ReactDOMComponent.Mixin = {
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
       var lastProp = lastProps[propKey];
-      if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
+      if (nextProps[propKey] === undefined || nextProp === lastProp) {
         continue;
       }
       if (propKey === STYLE) {
@@ -283,15 +282,15 @@ ReactDOMComponent.Mixin = {
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
           for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                !nextProp.hasOwnProperty(styleName)) {
+            if (lastProp[styleName] !== undefined &&
+                nextProp[styleName] === undefined) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
             }
           }
           // Update styles that changed since `lastProp`.
           for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
+            if (nextProp[styleName] !== undefined &&
                 lastProp[styleName] !== nextProp[styleName]) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = nextProp[styleName];
