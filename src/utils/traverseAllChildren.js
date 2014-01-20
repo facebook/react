@@ -18,9 +18,13 @@
 
 "use strict";
 
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactTextComponent = require('ReactTextComponent');
 
 var invariant = require('invariant');
+
+var SEPARATOR = ReactInstanceHandles.SEPARATOR;
+var SUBSEPARATOR = ':';
 
 /**
  * TODO: Test that:
@@ -31,12 +35,12 @@ var invariant = require('invariant');
  */
 
 var userProvidedKeyEscaperLookup = {
-  '^': '^X',
-  '.': '^D',
-  '}': '^C'
+  '=': '=0',
+  '.': '=1',
+  ':': '=2'
 };
 
-var userProvidedKeyEscapeRegex = /[.^}]/g;
+var userProvidedKeyEscapeRegex = /[=.:]/g;
 
 function userProvidedKeyEscaper(match) {
   return userProvidedKeyEscaperLookup[match];
@@ -55,7 +59,7 @@ function getComponentKey(component, index) {
     return wrapUserProvidedKey(component.props.key);
   }
   // Implicit key determined by the index in the set
-  return '[' + index + ']';
+  return index.toString(36);
 }
 
 /**
@@ -79,7 +83,7 @@ function escapeUserProvidedKey(text) {
  * @return {string}
  */
 function wrapUserProvidedKey(key) {
-  return '{' + escapeUserProvidedKey(key) + '}';
+  return '$' + escapeUserProvidedKey(key);
 }
 
 /**
@@ -97,7 +101,11 @@ var traverseAllChildrenImpl =
     if (Array.isArray(children)) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
-        var nextName = nameSoFar + getComponentKey(child, i);
+        var nextName = (
+          nameSoFar +
+          (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+          getComponentKey(child, i)
+        );
         var nextIndex = indexSoFar + subtreeCount;
         subtreeCount += traverseAllChildrenImpl(
           child,
@@ -112,8 +120,9 @@ var traverseAllChildrenImpl =
       var isOnlyChild = nameSoFar === '';
       // If it's the only child, treat the name as if it was wrapped in an array
       // so that it's consistent if the number of children grows
-      var storageName = isOnlyChild ? getComponentKey(children, 0) : nameSoFar;
-      if (children === null || children === undefined || type === 'boolean') {
+      var storageName =
+        isOnlyChild ? SEPARATOR + getComponentKey(children, 0) : nameSoFar;
+      if (children == null || type === 'boolean') {
         // All of the above are perceived as null.
         callback(traverseContext, null, storageName, indexSoFar);
         subtreeCount = 1;
@@ -132,8 +141,8 @@ var traverseAllChildrenImpl =
               subtreeCount += traverseAllChildrenImpl(
                 children[key],
                 (
-                  nameSoFar +
-                  wrapUserProvidedKey(key) +
+                  nameSoFar + (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+                  wrapUserProvidedKey(key) + SUBSEPARATOR +
                   getComponentKey(children[key], 0)
                 ),
                 indexSoFar + subtreeCount,

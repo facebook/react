@@ -92,7 +92,7 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(1);
     expect(mappedChildren[mappedKeys[0]]).not.toBe(simpleKid);
     expect(mappedChildren[mappedKeys[0]].props.children).toBe(simpleKid);
-    expect(mappedKeys[0]).toBe('{simple}');
+    expect(mappedKeys[0]).toBe('.$simple');
   });
 
   it('should invoke callback with the right context', function() {
@@ -162,7 +162,7 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(5);
     // Keys default to indices.
     expect(mappedKeys).toEqual(
-      ['{keyZero}', '[1]', '{keyTwo}', '[3]', '{keyFour}']
+      ['.$keyZero', '.1', '.$keyTwo', '.3', '.$keyFour']
     );
 
     expect(callback).toHaveBeenCalledWith(zero, 0);
@@ -235,12 +235,12 @@ describe('ReactChildren', function() {
     expect(mappedKeys.length).toBe(6);
     // Keys default to indices.
     expect(mappedKeys).toEqual([
-      '[0]{firstHalfKey}[0]{keyZero}',
-      '[0]{firstHalfKey}[0][1]',
-      '[0]{firstHalfKey}[0]{keyTwo}',
-      '[0]{secondHalfKey}[0][0]',
-      '[0]{secondHalfKey}[0]{keyFour}',
-      '[0]{keyFive}{keyFiveInner}'
+      '.0:$firstHalfKey:0:$keyZero',
+      '.0:$firstHalfKey:0:1',
+      '.0:$firstHalfKey:0:$keyTwo',
+      '.0:$secondHalfKey:0:0',
+      '.0:$secondHalfKey:0:$keyFour',
+      '.0:$keyFive:$keyFiveInner'
     ]);
 
     expect(callback).toHaveBeenCalledWith(zero, 0);
@@ -282,15 +282,15 @@ describe('ReactChildren', function() {
       </div>
     );
 
-    var expectedForcedKeys = ['{keyZero}', '{keyOne}'];
+    var expectedForcedKeys = ['.$keyZero', '.$keyOne'];
     var mappedChildrenForcedKeys =
       ReactChildren.map(forcedKeys.props.children, mapFn);
     var mappedForcedKeys = Object.keys(mappedChildrenForcedKeys);
     expect(mappedForcedKeys).toEqual(expectedForcedKeys);
 
     var expectedRemappedForcedKeys = [
-      '{{keyZero^C}{giraffe}',
-      '{{keyOne^C}[0]'
+      '.$=1$keyZero:$giraffe',
+      '.$=1$keyOne:0'
     ];
     var remappedChildrenForcedKeys =
       ReactChildren.map(mappedChildrenForcedKeys, mapFn);

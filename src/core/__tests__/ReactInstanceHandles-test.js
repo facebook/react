@@ -154,10 +154,22 @@ describe('ReactInstanceHandles', function() {
 
   describe('getReactRootIDFromNodeID', function() {
     it('should support strings', function() {
-      var test = '.r[s_0_1][0]..[1]';
-      var expected = '.r[s_0_1]';
+      var test = '.s_0_1.0..1';
+      var expected = '.s_0_1';
       var actual = ReactInstanceHandles.getReactRootIDFromNodeID(test);
       expect(actual).toEqual(expected);
+    });
+  });
+
+  describe('getReactRootIDFromNodeID', function() {
+    it('should return null for invalid IDs', function() {
+      var getReactRootIDFromNodeID = (
+        ReactInstanceHandles.getReactRootIDFromNodeID
+      );
+
+      expect(getReactRootIDFromNodeID(null)).toEqual(null);
+      expect(getReactRootIDFromNodeID('.')).toEqual(null);
+      expect(getReactRootIDFromNodeID('#')).toEqual(null);
     });
   });
 

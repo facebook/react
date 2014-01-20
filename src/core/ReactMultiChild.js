@@ -193,7 +193,7 @@ var ReactMultiChild = {
         var child = children[name];
         if (children.hasOwnProperty(name)) {
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
-          var rootID = this._rootNodeID + '.' + name;
+          var rootID = this._rootNodeID + name;
           var mountImage = child.mountComponent(
             rootID,
             transaction,
@@ -385,7 +385,7 @@ var ReactMultiChild = {
      */
     _mountChildByNameAtIndex: function(child, name, index, transaction) {
       // Inlined for performance, see `ReactInstanceHandles.createReactID`.
-      var rootID = this._rootNodeID + '.' + name;
+      var rootID = this._rootNodeID + name;
       var mountImage = child.mountComponent(
         rootID,
         transaction,

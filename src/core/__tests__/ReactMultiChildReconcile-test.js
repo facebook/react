@@ -46,7 +46,9 @@ var stripEmptyValues = function(obj) {
  * here. This relies on an implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {
-  return childName.slice('{'.length, childName.length - '}[0]'.length);
+  var match = childName.match(/^\.\$([^.]+)\:0$/);
+  expect(match).not.toBeNull();
+  return match[1];
 };
 
 /**

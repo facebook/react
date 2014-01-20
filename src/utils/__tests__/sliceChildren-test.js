@@ -68,9 +68,9 @@ describe('sliceChildren', function() {
     ];
     var children = renderAndSlice(fullSet, 0);
     expect(children).toEqual({
-      '{A}': fullSet[0],
-      '{B}': fullSet[1],
-      '{C}': fullSet[2]
+      '.$A': fullSet[0],
+      '.$B': fullSet[1],
+      '.$C': fullSet[2]
     });
   });
 
@@ -82,8 +82,8 @@ describe('sliceChildren', function() {
     ];
     var children = renderAndSlice(fullSet, 1);
     expect(children).toEqual({
-      '{B}': fullSet[1],
-      '{C}': fullSet[2]
+      '.$B': fullSet[1],
+      '.$C': fullSet[2]
     });
   });
 
@@ -96,7 +96,7 @@ describe('sliceChildren', function() {
     ];
     var children = renderAndSlice(fullSet, 1, 2);
     expect(children).toEqual({
-      '{B}': fullSet[1]
+      '.$B': fullSet[1]
     });
   });
 
@@ -112,7 +112,7 @@ describe('sliceChildren', function() {
       .instance();
 
     expect(rendered.props.children).toEqual({
-      '[1]': b
+      '.1': b
     });
   });
 
