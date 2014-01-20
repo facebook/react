@@ -233,6 +233,38 @@ var ReactTestUtils = {
   },
 
   /**
+   *
+   */
+
+  nextUpdate: function(component, callback) {
+    // TODO: deregister self
+    function createChainedFunction(one, two) {
+      return function chainedFunction() {
+        one.apply(this, arguments);
+        two.apply(this, arguments);
+      };
+    }
+
+    var oldFn = component.componentDidUpdate;
+    var newFn;
+
+    function wrappedCallback(cb) {
+      return function() {
+        cb.apply(this, arguments);
+        this.componentDidUpdate = oldFn;
+      };
+    }
+
+    if (oldFn) {
+      newFn = wrappedCallback(createChainedFunction(oldFn, callback));
+    } else {
+      newFn = wrappedCallback(callback);
+    }
+
+    component.componentDidUpdate = newFn;
+  },
+
+  /**
    * Simulates a top level event being dispatched from a raw event that occured
    * on an `Element` node.
    * @param topLevelType {Object} A type from `EventConstants.topLevelTypes`
