@@ -64,7 +64,23 @@ describe('ReactTestUtils', function() {
       ReactTestUtils.nextUpdate(root, function() {});
 
       component.forceUpdate(function() {
-        expect(component.componentDidUpdate === original).toBe(true);
+        expect(component.componentDidUpdate).toBe(original);
+      });
+    });
+
+    it("works without an initial componentDidUpdate", function() {
+      var root = ReactTestUtils.renderIntoDocument(<TestComponent />);
+      var component = ReactTestUtils.findRenderedComponentWithType(root, TestComponent);
+
+      component.componentDidUpdate = undefined;
+
+      ReactTestUtils.nextUpdate(root, function() {
+        newDidFire = true;
+      });
+
+      component.forceUpdate(function() {
+        expect(component.componentDidUpdate).toBe(undefined);
+        expect(newDidFire).toBe(true);
       });
     });
 

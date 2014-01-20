@@ -31,6 +31,13 @@ var topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
 
+function createChainedFunction(one, two) {
+  return function chainedFunction() {
+    one.apply(this, arguments);
+    two.apply(this, arguments);
+  };
+}
+
 /**
  * @class ReactTestUtils
  */
@@ -219,19 +226,7 @@ var ReactTestUtils = {
     return this;
   },
 
-  /**
-   *
-   */
-
   nextUpdate: function(component, callback) {
-    // TODO: deregister self
-    function createChainedFunction(one, two) {
-      return function chainedFunction() {
-        one.apply(this, arguments);
-        two.apply(this, arguments);
-      };
-    }
-
     var oldFn = component.componentDidUpdate;
     var newFn;
 
