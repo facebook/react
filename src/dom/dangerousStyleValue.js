@@ -47,7 +47,7 @@ function dangerousStyleValue(styleName, value) {
   }
 
   var isNonNumeric = isNaN(value);
-  if (isNonNumeric || value === 0 || CSSProperty.isUnitlessNumber[styleName]) {
+  if (isNonNumeric || value === 0 || CSSProperty.isUnitlessNumber(styleName)) {
     return '' + value; // cast to string
   }
 
