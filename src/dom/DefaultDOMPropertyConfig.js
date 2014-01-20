@@ -124,6 +124,7 @@ var DefaultDOMPropertyConfig = {
     /**
      * SVG Properties
      */
+    clipPath: MUST_USE_ATTRIBUTE,
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
@@ -149,12 +150,14 @@ var DefaultDOMPropertyConfig = {
     x1: MUST_USE_ATTRIBUTE,
     x2: MUST_USE_ATTRIBUTE,
     x: MUST_USE_ATTRIBUTE,
+    xlinkHref: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
     y: MUST_USE_ATTRIBUTE
   },
   DOMAttributeNames: {
     className: 'class',
+    clipPath: 'clip-path',
     gradientTransform: 'gradientTransform',
     gradientUnits: 'gradientUnits',
     htmlFor: 'for',
@@ -163,7 +166,8 @@ var DefaultDOMPropertyConfig = {
     stopOpacity: 'stop-opacity',
     strokeLinecap: 'stroke-linecap',
     strokeWidth: 'stroke-width',
-    viewBox: 'viewBox'
+    viewBox: 'viewBox',
+    xlinkHref: 'xlink:href'
   },
   DOMPropertyNames: {
     autoCapitalize: 'autocapitalize',

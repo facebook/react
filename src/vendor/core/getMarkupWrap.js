@@ -46,7 +46,10 @@ var shouldWrap = {
   'radialGradient': true,
   'rect': true,
   'stop': true,
-  'text': true
+  'text': true,
+  'symbol': true,
+  'use': true,
+  'clipPath': true
 };
 
 var selectWrap = [1, '<select multiple="true">', '</select>'];

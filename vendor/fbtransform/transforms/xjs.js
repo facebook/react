@@ -40,6 +40,7 @@ var knownTags = {
   caption: true,
   circle: true,
   cite: true,
+  clipPath: true,
   code: true,
   col: true,
   colgroup: true,
@@ -130,6 +131,7 @@ var knownTags = {
   summary: true,
   sup: true,
   svg: true,
+  symbol: true,
   table: true,
   tbody: true,
   td: true,
@@ -144,6 +146,7 @@ var knownTags = {
   track: true,
   u: true,
   ul: true,
+  use: true,
   'var': true,
   video: true,
   wbr: true

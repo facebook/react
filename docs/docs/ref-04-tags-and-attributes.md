@@ -31,8 +31,8 @@ title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs g line linearGradient path polygon polyline radialGradient rect stop 
-svg text   
+circle clipPath defs g line linearGradient path polygon polyline radialGradient rect stop
+svg symbol text use
 
 ```
 
@@ -69,7 +69,7 @@ In addition, there is the React-specific attribute `dangerouslySetInnerHTML` ([m
 ### SVG Attributes
 
 ```
-cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
+clipPath cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
 spreadMethod stopColor stopOpacity stroke strokeLinecap strokeWidth transform
-version viewBox x1 x2 x y1 y2 y
+version viewBox x1 x2 x xlinkHref y1 y2 y
 ```
