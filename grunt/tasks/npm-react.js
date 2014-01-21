@@ -14,9 +14,13 @@ function buildRelease() {
   // mkdir -p build/react-core/lib
   grunt.file.mkdir(lib);
 
-  // Copy everything over
-  // console.log(grunt.file.expandMapping(src + '**/*', dest, {flatten: true}));
-  grunt.file.expandMapping(src + '**/*', dest, {flatten: true}).forEach(function(mapping) {
+  // Copy npm-react/**/* to build/npm-react
+  // and build/modules/**/* to build/react-core/lib
+  var mappings = [].concat(
+    grunt.file.expandMapping('**/*', dest, {cwd: src}),
+    grunt.file.expandMapping('**/*', lib, {cwd: modSrc})
+  );
+  mappings.forEach(function(mapping) {
     var src = mapping.src[0];
     var dest = mapping.dest;
     if (grunt.file.isDir(src)) {
@@ -24,11 +28,6 @@ function buildRelease() {
     } else {
       grunt.file.copy(src, dest);
     }
-  });
-
-  // copy build/modules/*.js to build/react-core/lib
-  grunt.file.expandMapping(modSrc + '*.js', lib, { flatten: true }).forEach(function(mapping) {
-    grunt.file.copy(mapping.src[0], mapping.dest);
   });
 
   // modify build/react-core/package.json to set version ##
