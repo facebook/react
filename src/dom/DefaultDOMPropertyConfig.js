@@ -40,16 +40,18 @@ var DefaultDOMPropertyConfig = {
     accept: null,
     accessKey: null,
     action: null,
+    // `align` is deprecated by CSS `margin: 0 auto 0 auto`
     allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     allowTransparency: MUST_USE_ATTRIBUTE,
     alt: null,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: null,
-    // autoFocus is polyfilled/normalized by AutoFocusMixin
+    // `autoFocus` is polyfilled/normalized by AutoFocusMixin
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
-    cellPadding: null,
-    cellSpacing: null,
+    // `bgColor` is deprecated by CSS `background-color: #000000`
+    // `cellPadding` is deprecated by CSS `padding: 0`
+    // `cellSpacing` is deprecated by CSS `border-spacing: 0`
     charSet: MUST_USE_ATTRIBUTE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     className: MUST_USE_PROPERTY,
@@ -110,6 +112,7 @@ var DefaultDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
+    // `valign` is deprecated by CSS `vertical-align: top`
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
