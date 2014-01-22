@@ -12,7 +12,7 @@ When designing interfaces, break down the common design elements (buttons, form 
 
 ## Prop Validation
 
-As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, an error will be thrown. Here is an example documenting the different validators provided:
+As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
 
 ```javascript
 React.createClass({
@@ -41,14 +41,14 @@ React.createClass({
     // JS's instanceof operator.
     someClass: React.PropTypes.instanceOf(SomeClass),
 
-    // You can chain any of the above with isRequired to make sure an error is
-    // thrown if the prop isn't provided.
+    // You can chain any of the above with isRequired to make sure a warning is
+    // shown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired
 
     // You can also specify a custom validator.
     customProp: function(props, propName, componentName) {
       if (!/matchme/.test(props[propName])) {
-        throw new Error('Validation failed!')
+        console.warn('Validation failed!');
       }
     }
   },
