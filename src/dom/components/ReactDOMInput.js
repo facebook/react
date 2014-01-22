@@ -18,9 +18,9 @@
 
 "use strict";
 
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var LinkedValueMixin = require('LinkedValueMixin');
 var AutoFocusMixin = require('AutoFocusMixin');
+var DOMPropertyOperations = require('DOMPropertyOperations');
+var LinkedValueUtils = require('LinkedValueUtils');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
@@ -52,7 +52,7 @@ var instancesByReactID = {};
 var ReactDOMInput = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMInput',
 
-  mixins: [LinkedValueMixin, AutoFocusMixin],
+  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
@@ -76,7 +76,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     props.checked =
       this.props.checked != null ? this.props.checked : this.state.checked;
 
-    var value = this.getValue();
+    var value = LinkedValueUtils.getValue(this);
     props.value = value != null ? value : this.state.value;
 
     props.onChange = this._handleChange;
@@ -105,7 +105,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
       );
     }
 
-    var value = this.getValue();
+    var value = LinkedValueUtils.getValue(this);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
@@ -115,10 +115,10 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    var onChange = this.getOnChange();
+    var onChange = LinkedValueUtils.getOnChange(this);
     if (onChange) {
       this._isChanging = true;
-      returnValue = onChange(event);
+      returnValue = onChange.call(this, event);
       this._isChanging = false;
     }
     this.setState({

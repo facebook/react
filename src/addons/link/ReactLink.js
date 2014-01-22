@@ -39,7 +39,7 @@
  * });
  *
  * We have provided some sugary mixins to make the creation and
- * consumption of ReactLink easier; see LinkedValueMixin and LinkedStateMixin.
+ * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
 /**
