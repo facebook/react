@@ -188,7 +188,7 @@ describe('ReactDOMTextarea', function() {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <textarea>{'hello'}{'there'}</textarea>
+        <textarea>{'hello'}{'there'+'avoid jsx concat'}</textarea>
       );
     }).toThrow();
 

@@ -171,7 +171,7 @@ function trimWithSingleSpace(string) {
  *   "line "+
  *   "line"
  */
-function renderXJSLiteral(object, isLast, state, start, end) {
+function renderXJSLiteral(object, isLast, state, start, end, concat) {
   /** Added blank check filtering and triming*/
   var trimmedChildValue = safeTrim(object.value);
   var hasFinalNewLine = false;
@@ -253,7 +253,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
   // add comma before trailing whitespace
   if (!isLast) {
-    utils.append(',', state);
+    utils.append(concat ? '+' : ',', state);
   }
 
   // tail whitespace
@@ -264,14 +264,16 @@ function renderXJSLiteral(object, isLast, state, start, end) {
   utils.move(object.range[1], state);
 }
 
-function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
+function renderXJSExpressionContainer(
+  traverse, object, isLast, path, state, concat
+) {
   // Plus 1 to skip `{`.
   utils.move(object.range[0] + 1, state);
   traverse(object.expression, path, state);
   if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
     utils.catchup(object.expression.range[1], state);
-    utils.append(',', state);
+    utils.append(concat ? '+' : ',', state);
   }
 
   // Minus 1 to skip `}`.
