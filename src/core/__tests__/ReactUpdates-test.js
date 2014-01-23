@@ -338,6 +338,39 @@ describe('ReactUpdates', function() {
     expect(childRenderCount).toBe(2);
   });
 
+  it('should not reconcile children passed via props', function() {
+    var numMiddleRenders = 0;
+    var numBottomRenders = 0;
+
+    var Top = React.createClass({
+      render: function() {
+        return <Middle><Bottom /></Middle>;
+      }
+    });
+
+    var Middle = React.createClass({
+      componentDidMount: function() {
+        this.forceUpdate();
+      },
+
+      render: function() {
+        numMiddleRenders++;
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var Bottom = React.createClass({
+      render: function() {
+        numBottomRenders++;
+        return <span />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<Top />);
+    expect(numMiddleRenders).toBe(2);
+    expect(numBottomRenders).toBe(1);
+  });
+
   it('should flow updates correctly', function() {
     var willUpdates = [];
     var didUpdates = [];
@@ -406,11 +439,9 @@ describe('ReactUpdates', function() {
     var root = <App />;
     ReactTestUtils.renderIntoDocument(root);
 
-    function expectUpdates(sequence) {
-      // didUpdate() occurs in reverse order
-      didUpdates.reverse();
-      expect(willUpdates).toEqual(didUpdates);
-      expect(willUpdates).toEqual(sequence);
+    function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
+      expect(willUpdates).toEqual(desiredWillUpdates);
+      expect(didUpdates).toEqual(desiredDidUpdates);
       willUpdates.length = 0;
       didUpdates.length = 0;
     }
@@ -419,7 +450,7 @@ describe('ReactUpdates', function() {
       c.setState({x: 1});
     }
 
-    function testUpdates(components, expectation) {
+    function testUpdates(components, desiredWillUpdates, desiredDidUpdates) {
       var i;
 
       ReactUpdates.batchedUpdates(function() {
@@ -428,7 +459,7 @@ describe('ReactUpdates', function() {
         }
       });
 
-      expectUpdates(expectation);
+      expectUpdates(desiredWillUpdates, desiredDidUpdates);
 
       // Try them in reverse order
 
@@ -438,22 +469,28 @@ describe('ReactUpdates', function() {
         }
       });
 
-      expectUpdates(expectation);
+      expectUpdates(desiredWillUpdates, desiredDidUpdates);
     }
 
     testUpdates(
       [root.refs.switcher.refs.box, root.refs.switcher],
-      ['Switcher', 'Box', 'Child']
+      // Owner-child relationships have inverse will and did
+      ['Switcher', 'Box'],
+      ['Box', 'Switcher']
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher.refs.box],
+      // Not owner-child so reconcile independently
+      ['Box', 'Child'],
       ['Box', 'Child']
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher],
-      ['Switcher', 'Box', 'Child']
+      // Switcher owns Box and Child, Box does not own Child
+      ['Switcher', 'Box', 'Child'],
+      ['Box', 'Switcher', 'Child']
     );
   });
 });

@@ -1060,6 +1060,13 @@ var ReactCompositeComponentMixin = {
   },
 
   receiveComponent: function(nextComponent, transaction) {
+    if (nextComponent === this) {
+      // Since props and context are immutable after the component is
+      // mounted, we can do a cheap identity compare here to determine
+      // if this is a superfluous reconcile.
+      return;
+    }
+
     this._pendingContext = nextComponent._currentContext;
     ReactComponent.Mixin.receiveComponent.call(
       this,
