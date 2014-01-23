@@ -113,4 +113,17 @@ describe('cloneWithProps', function() {
       console.warn = _warn;
     }
   });
+
+  it('should transfer the key property', function() {
+    var Component = React.createClass({
+      render: function() {
+        expect(this.props.key).toBe('xyz');
+        return <div />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      cloneWithProps(<Component />, {key: 'xyz'})
+    );
+  });
 });

@@ -41,9 +41,12 @@ function cloneWithProps(child, props) {
     }
   }
 
-  return child.constructor.ConvenienceConstructor(
-    ReactPropTransferer.mergeProps(child.props, props)
-  );
+  var newProps = ReactPropTransferer.mergeProps(child.props, props);
+  // ReactPropTransferer does not transfer the `key` prop so do it manually.
+  if (props.key) {
+    newProps.key = props.key;
+  }
+  return child.constructor.ConvenienceConstructor(newProps);
 }
 
 module.exports = cloneWithProps;
