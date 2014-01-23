@@ -9,7 +9,7 @@ next: component-specs.html
 
 ## ReactComponent
 
-Component classses created by `createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
+Component classes created by `createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
 
 
 ### getDOMNode
