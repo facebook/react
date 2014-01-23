@@ -68,10 +68,6 @@ function visitReactTag(traverse, object, path, state) {
 
   utils.move(object.name.range[1], state);
 
-  var childrenToRender = object.children.filter(function(child) {
-    return !(child.type === Syntax.Literal && !child.value.match(/\S/));
-  });
-
   // if we don't have any attributes, pass in null
   if (object.attributes.length === 0) {
     utils.append('null', state);
@@ -131,16 +127,18 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   // filter out whitespace
+  var childrenToRender = object.children.filter(function(child) {
+    return !(child.type === Syntax.Literal &&
+             child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
+  });
+  
   if (childrenToRender.length > 0) {
     utils.append(', ', state);
 
-    object.children.forEach(function(child) {
-      if (child.type === Syntax.Literal && !child.value.match(/\S/)) {
-        return;
-      }
+    childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
 
-      var isLast = child === childrenToRender[childrenToRender.length - 1];
+      var isLast = index === childrenToRender.length - 1;
 
       if (child.type === Syntax.Literal) {
         renderXJSLiteral(child, isLast, state);
