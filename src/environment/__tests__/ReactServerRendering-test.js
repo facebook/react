@@ -27,7 +27,8 @@ require('mock-modules')
   .dontMock('ReactMount')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils')
-  .dontMock('ReactMarkupChecksum');
+  .dontMock('ReactMarkupChecksum')
+  .dontMock('EventPluginHub');
 
 var mocks = require('mocks');
 
@@ -37,6 +38,7 @@ var ReactTestUtils;
 var ReactServerRendering;
 var ReactMarkupChecksum;
 var ExecutionEnvironment;
+var EventPluginHub;
 
 var ID_ATTRIBUTE_NAME;
 
@@ -50,6 +52,7 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
+    EventPluginHub = require('EventPluginHub');
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
@@ -232,6 +235,43 @@ describe('ReactServerRendering', function() {
     expect(numClicks).toEqual(0);
     ReactTestUtils.Simulate.click(instance.refs.span.getDOMNode());
     expect(numClicks).toEqual(1);
+  });
+
+  it('should not register listeners', function() {
+    var Link = React.createClass({
+      handleClick: function() {},
+      render: function() {
+        return <a onClick={this.handleClick}>link</a>;
+      }
+    });
+    var link = <Link />;
+    ReactServerRendering.renderComponentToString(link, function(str) {
+      var listener = EventPluginHub.getListener(link._rootNodeID, 'onClick');
+      expect(listener).not.toEqual(link.handleClick);
+    });
+  });
+
+  // White box ReactServerRendering, black box EventPluginHub
+  describe('event listener registration', function() {
+    var cb;
+    beforeEach(function() {
+      cb = mocks.getMockFunction();
+    });
+    it('should preserve default', function() {
+      var def = EventPluginHub.isRegistrationEnabled();
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(def);
+    });
+    it('should preserve true', function() {
+      EventPluginHub.setRegistrationEnabled(false);
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(false);
+    });
+    it('should preserve false', function() {
+      EventPluginHub.setRegistrationEnabled(true);
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(true);
+    });
   });
 
   it('should throw with silly args', function() {

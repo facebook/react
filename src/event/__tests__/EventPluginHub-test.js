@@ -22,6 +22,9 @@ require('mock-modules')
   .dontMock('EventPluginHub')
   .mock('isEventSupported');
 
+var keyOf = require('keyOf');
+var mocks = require('mocks');
+
 describe('EventPluginHub', function() {
   var EventPluginHub;
   var isEventSupported;
@@ -31,6 +34,45 @@ describe('EventPluginHub', function() {
     EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
     isEventSupported.mockReturnValue(false);
+  });
+
+  describe('event registration', function() {
+    var id, key, listener;
+    beforeEach(function() {
+      id = '.reactRoot.[0].[0].[0]';
+      key = keyOf({onClick: null});
+      listener = mocks.getMockFunction();
+    });
+    it('should be enabled by default', function() {
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(true);
+    });
+    describe('disabled', function() {
+      beforeEach(function() {
+        EventPluginHub.setRegistrationEnabled(false);
+      });
+      it('should not register listeners', function() {
+        EventPluginHub.setRegistrationEnabled(false);
+        EventPluginHub.putListener(id, key, listener);
+        var registeredListener = EventPluginHub.getListener(id, key);
+        expect(registeredListener).not.toEqual(listener);
+      });
+      it('should report', function() {
+        expect(EventPluginHub.isRegistrationEnabled()).toEqual(false);
+      });
+    });
+    describe('enabled', function() {
+      beforeEach(function() {
+        EventPluginHub.setRegistrationEnabled(true);
+      });
+      it('should register listeners', function() {
+        EventPluginHub.putListener(id, key, listener);
+        var registeredListener = EventPluginHub.getListener(id, key);
+        expect(registeredListener).toEqual(listener);
+      });
+      it('should report', function() {
+        expect(EventPluginHub.isRegistrationEnabled()).toEqual(true);
+      });
+    });
   });
 
   it('should warn about the `onScroll` issue on IE8', function() {
