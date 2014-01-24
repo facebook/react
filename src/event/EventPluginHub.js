@@ -32,6 +32,11 @@ var isEventSupported = require('isEventSupported');
 var listenerBank = {};
 
 /**
+ *  Allow disabling listener registration
+ */
+var registrationEnabled = true;
+
+/**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
@@ -98,6 +103,14 @@ function validateInstanceHandle() {
  */
 var EventPluginHub = {
 
+  setRegistrationEnabled: function(enabled) {
+    registrationEnabled = enabled;
+  },
+
+  isRegistrationEnabled: function() {
+    return registrationEnabled;
+  },
+
   /**
    * Methods for injecting dependencies.
    */
@@ -158,9 +171,11 @@ var EventPluginHub = {
         console.warn('This browser doesn\'t support the `onScroll` event');
       }
     }
-    var bankForRegistrationName =
-      listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[id] = listener;
+    if(registrationEnabled) {
+      var bankForRegistrationName =
+        listenerBank[registrationName] || (listenerBank[registrationName] = {});
+      bankForRegistrationName[id] = listener;
+    }
   },
 
   /**

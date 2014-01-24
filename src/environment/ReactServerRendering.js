@@ -22,6 +22,8 @@ var ReactComponent = require('ReactComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var EventPluginHub = require('EventPluginHub');
 
 var invariant = require('invariant');
 
@@ -48,7 +50,10 @@ function renderComponentToString(component, callback) {
   transaction.reinitializeTransaction();
   try {
     transaction.perform(function() {
+      var registrationEnabled = EventPluginHub.isRegistrationEnabled();
+      EventPluginHub.setRegistrationEnabled(false);
       var markup = component.mountComponent(id, transaction, 0);
+      EventPluginHub.setRegistrationEnabled(registrationEnabled);
       markup = ReactMarkupChecksum.addChecksumToMarkup(markup);
       callback(markup);
     }, null);
