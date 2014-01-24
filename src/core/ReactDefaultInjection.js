@@ -93,10 +93,6 @@ function inject() {
 
   DOMProperty.injection.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 
-  if (__DEV__) {
-    ReactPerf.injection.injectMeasure(require('ReactDefaultPerf').measure);
-  }
-
   ReactUpdates.injection.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );

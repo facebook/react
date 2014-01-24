@@ -17,391 +17,219 @@
  * @typechecks static-only
  */
 
-"use strict";
+var ReactPerf = require('ReactPerf');
 
 var performanceNow = require('performanceNow');
 
-var ReactDefaultPerf = {};
+// Don't try to save users less than 1.2ms (a number I made up)
+var DONT_CARE_THRESHOLD = 1.2;
 
-if (__DEV__) {
-  ReactDefaultPerf = {
-    /**
-     * Gets the stored information for a given object's function.
-     *
-     * @param {string} objName
-     * @param {string} fnName
-     * @return {?object}
-     */
-    getInfo: function(objName, fnName) {
-      if (!this.info[objName] || !this.info[objName][fnName]) {
-        return null;
+function getCleanComponents(measurement) {
+  // For a given reconcile, look at which components did not actually
+  // render anything to the DOM and return a mapping of their ID to
+  // the amount of time it took to render the entire subtree.
+  var cleanComponents = {};
+  var dirtyLeafIDs = Object.keys(measurement.writes);
+  for (var id in measurement.inclusive) {
+    var isDirty = false;
+    // For each component that rendered, see if a component that triggerd
+    // a DOM op is in its subtree.
+    for (var i = 0; i < dirtyLeafIDs.length; i++) {
+      if (dirtyLeafIDs[i].indexOf(id) === 0) {
+        isDirty = true;
+        break;
       }
-      return this.info[objName][fnName];
-    },
+    }
+    if (!isDirty) {
+      cleanComponents[id] = measurement.inclusive[id];
+    }
+  }
+  return cleanComponents;
+}
 
-    /**
-     * Gets the logs pertaining to a given object's function.
-     *
-     * @param {string} objName
-     * @param {string} fnName
-     * @return {?array<object>}
-     */
-    getLogs: function(objName, fnName) {
-      if (!this.getInfo(objName, fnName)) {
-        return null;
-      }
-      return this.logs.filter(function(log) {
-        return log.objName === objName && log.fnName === fnName;
-      });
-    },
+function getSortedAdviceCandidates(measurements) {
+  var candidates = {};
 
-    /**
-     * Runs through the logs and builds an array of arrays, where each array
-     * walks through the mounting/updating of each component underneath.
-     *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
-     * @return {array<array>}
-     */
-    getRawRenderHistory: function(rootID) {
-      var history = [];
-      /**
-       * Since logs are added after the method returns, the logs are in a sense
-       * upside-down: the inner-most elements from mounting/updating are logged
-       * first, and the last addition to the log is the top renderComponent.
-       * Therefore, we flip the logs upside down for ease of processing, and
-       * reverse the history array at the end so the earliest event has index 0.
-       */
-      var logs = this.logs.filter(function(log) {
-        return log.reactID.indexOf(rootID) === 0;
-      }).reverse();
+  // First aggregate all measurements by class name
+  for (var i = 0; i < measurements.length; i++) {
+    var cleanComponents = getCleanComponents(measurements[i]);
+    for (var id in cleanComponents) {
+      var key = measurements[i].displayNames[id] || '(unknown)';
+      candidates[key] = (candidates[key] || 0) + cleanComponents[id];
+    }
+  }
 
-      var subHistory = [];
-      logs.forEach(function(log, i) {
-        if (i && log.reactID === rootID && logs[i - 1].reactID !== rootID) {
-          subHistory.length && history.push(subHistory);
-          subHistory = [];
-        }
-        subHistory.push(log);
-      });
-      if (subHistory.length) {
-        history.push(subHistory);
-      }
-      return history.reverse();
-    },
+  // Now make a sorted array with the results.
+  var arr = [];
+  for (key in candidates) {
+    if (candidates[key] < DONT_CARE_THRESHOLD) {
+      continue;
+    }
 
-    /**
-     * Runs through the logs and builds an array of strings, where each string
-     * is a multiline formatted way of walking through the mounting/updating
-     * underneath.
-     *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
-     * @return {array<string>}
-     */
-    getRenderHistory: function(rootID) {
-      var history = this.getRawRenderHistory(rootID);
+    arr.push({
+      componentName: key,
+      time: candidates[key]
+    });
+  }
 
-      return history.map(function(subHistory) {
-        var headerString = (
-          'log# Component (execution time) [bloat from logging]\n' +
-          '================================================================\n'
-        );
-        return headerString + subHistory.map(function(log) {
-          // Add two spaces for every layer in the reactID.
-          var indents = '\t' + Array(log.reactID.split('.[').length).join('  ');
-          var delta = _microTime(log.timing.delta);
-          var bloat = _microTime(log.timing.timeToLog);
+  arr.sort(function(a, b) {
+    return b.time - a.time;
+  });
 
-          return log.index + indents + log.name + ' (' + delta + 'ms)' +
-            ' [' + bloat + 'ms]';
-        }).join('\n');
-      });
-    },
+  return arr;
+}
 
-    /**
-     * Print the render history from `getRenderHistory` using console.log.
-     * This is currently the best way to display perf data from
-     * any React component; working on that.
-     *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
-     * @param {number} index
-     */
-    printRenderHistory: function(rootID, index) {
-      var history = this.getRenderHistory(rootID);
-      if (!history[index]) {
-        console.warn(
-          'Index', index, 'isn\'t available! ' +
-          'The render history is', history.length, 'long.'
-        );
-        return;
-      }
-      console.log(
-        'Loading render history #' + (index + 1) +
-        ' of ' + history.length + ':\n' + history[index]
-      );
-    },
+function getSortedRenderMethods(measurements) {
+  var candidates = {};
+  for (var i = 0; i < measurements.length; i++) {
+    var measurement = measurements[i];
+    for (var id in measurement.exclusive) {
+      var displayName = measurement.displayNames[id];
+      candidates[displayName] = candidates[displayName] || 0;
+      candidates[displayName] += measurement.exclusive[id];
+    }
+  }
 
-    /**
-     * Prints the heatmap legend to console, showing how the colors correspond
-     * with render times. This relies on console.log styles.
-     */
-    printHeatmapLegend: function() {
-      if (!this.options.heatmap.enabled) {
-        return;
-      }
-      var max = this.info.React
-        && this.info.React.renderComponent
-        && this.info.React.renderComponent.max;
-      if (max) {
-        var logStr = 'Heatmap: ';
-        for (var ii = 0; ii <= 10 * max; ii += max) {
-          logStr += '%c ' + (Math.round(ii) / 10) + 'ms ';
-        }
-        console.log(
-          logStr,
-          'background-color: hsla(100, 100%, 50%, 0.6);',
-          'background-color: hsla( 90, 100%, 50%, 0.6);',
-          'background-color: hsla( 80, 100%, 50%, 0.6);',
-          'background-color: hsla( 70, 100%, 50%, 0.6);',
-          'background-color: hsla( 60, 100%, 50%, 0.6);',
-          'background-color: hsla( 50, 100%, 50%, 0.6);',
-          'background-color: hsla( 40, 100%, 50%, 0.6);',
-          'background-color: hsla( 30, 100%, 50%, 0.6);',
-          'background-color: hsla( 20, 100%, 50%, 0.6);',
-          'background-color: hsla( 10, 100%, 50%, 0.6);',
-          'background-color: hsla(  0, 100%, 50%, 0.6);'
-        );
-      }
-    },
+  // Now make a sorted array with the results.
+  var arr = [];
+  for (var displayName in candidates) {
+    if (candidates[displayName] < DONT_CARE_THRESHOLD) {
+      continue;
+    }
+    arr.push({
+      componentName: displayName,
+      time: candidates[displayName]
+    });
+  }
 
-    /**
-     * Measure a given function with logging information, and calls a callback
-     * if there is one.
-     *
-     * @param {string} objName
-     * @param {string} fnName
-     * @param {function} func
-     * @return {function}
-     */
-    measure: function(objName, fnName, func) {
-      var info = _getNewInfo(objName, fnName);
+  arr.sort(function(a, b) {
+    return b.time - a.time;
+  });
 
-      var fnArgs = _getFnArguments(func);
+  return arr;
+}
 
-      return function(...args) {
-        var timeBeforeFn = performanceNow();
-        var fnReturn = func.apply(this, args);
-        var timeAfterFn = performanceNow();
+var ReactDefaultPerf = {
+  _allMeasurements: null, // last item in the list is the current one
+  _injected: false,
 
-        /**
-         * Hold onto arguments in a readable way: args[1] -> args.component.
-         * args is also passed to the callback, so if you want to save an
-         * argument in the log, do so in the callback.
-         */
-        var argsObject = {};
-        for (var i = 0; i < args.length; i++) {
-          argsObject[fnArgs[i]] = args[i];
-        }
+  start: function() {
+    if (!ReactDefaultPerf._injected) {
+      ReactPerf.injection.injectMeasure(ReactDefaultPerf.measure);
+    }
 
-        var log = {
-          index: ReactDefaultPerf.logs.length,
-          fnName: fnName,
-          objName: objName,
-          timing: {
-            before: timeBeforeFn,
-            after: timeAfterFn,
-            delta: timeAfterFn - timeBeforeFn
-          }
-        };
+    ReactDefaultPerf._allMeasurements = [];
+    ReactPerf.enableMeasure = true;
+  },
 
-        ReactDefaultPerf.logs.push(log);
+  end: function() {
+    // Find the component with the highest exclusive time
+    // that was not written to.
+    ReactPerf.enableMeasure = false;
+  },
 
-        /**
-         * The callback gets:
-         * - this (the component)
-         * - the original method's arguments
-         * - what the method returned
-         * - the log object, and
-         * - the wrapped method's info object.
-         */
-        var callback = _getCallback(objName, fnName);
-        callback && callback(this, argsObject, fnReturn, log, info);
+  getLastMeasurements: function() {
+    return ReactDefaultPerf._allMeasurements;
+  },
 
-        log.timing.timeToLog = performanceNow() - timeAfterFn;
-
-        return fnReturn;
+  printAdvice: function(measurements) {
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    var candidates = getSortedAdviceCandidates(measurements);
+    if (candidates.length === 0) {
+      console.log('I have no performance advice for you at this time.');
+      return;
+    }
+    console.log('I have identified', candidates.length, 'places where you could add shouldComponentUpdate():');
+    console.table(candidates.map(function(candidate) {
+      return {
+        'Component class name': candidate.componentName,
+        'Time you could save': candidate.time.toFixed(2) + 'ms'
       };
-    },
+    }));
+    console.log(
+      'tl;dr adding shouldComponentUpdate() to',
+      candidates[0].componentName,
+      'could save you up to',
+      candidates[0].time.toFixed(2),
+      'ms for the total interaction recorded.'
+    );
+    console.log('For more information see https://gist.github.com/petehunt/8595248');
+  },
 
-    /**
-     * Holds information on wrapped objects/methods.
-     * For instance, ReactDefaultPerf.info.React.renderComponent
-     */
-    info: {},
+  printExpensiveRenderMethods: function(measurements) {
+    // TODO: i'm not sure if this is the best way to help out the user.
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    var renderMethods = getSortedRenderMethods(measurements);
+    console.log('The top', renderMethods.length, 'render() methods are:');
+    console.table(renderMethods.map(function(renderMethod) {
+      return {
+        'Component class name': renderMethod.componentName,
+        'Time it took (exclusive)': renderMethod.time.toFixed(2) + 'ms'
+      };
+    }));
+    console.log('This data may or may not be actionable. Try ReactDefaultPerf.printAdvice() first before trying to optimize render() methods.');
+  },
 
-    /**
-     * Holds all of the logs. Filter this to pull desired information.
-     */
-    logs: [],
+  measure: function(objName, fnName, func) {
+    return function(...args) {
+      if (fnName === 'flushBatchedUpdates') {
+        ReactDefaultPerf._allMeasurements.push({
+          exclusive: {},
+          inclusive: {},
+          counts: {},
+          writes: {},
+          displayNames: {}
+        });
+        return func.apply(this, args);
+      } else if (objName === 'ReactDOMIDOperations') {
+        var start = performanceNow();
+        var rv = func.apply(this, args);
+        var totalTime = performanceNow() - start;
+        var writes =
+          ReactDefaultPerf._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1]
+          .writes;
 
-    /**
-     * Toggle settings for ReactDefaultPerf
-     */
-    options: {
-      /**
-       * The heatmap sets the background color of the React containers
-       * according to how much total time has been spent rendering them.
-       * The most temporally expensive component is set as pure red,
-       * and the others are colored from green to red as a fraction
-       * of that max component time.
-       */
-      heatmap: {
-        enabled: true
-      }
-    }
-  };
+        if (fnName === 'dangerouslyProcessChildrenUpdates') {
+          // special format
+          args[0].forEach(function(update) {
+            writes[update.parentID] = writes[update.parentID] || [];
+            writes[update.parentID].push({
+              type: fnName,
+              time: totalTime
+            });
+          });
+        } else {
+          // basic format
+          writes[args[0]] = writes[args[0]] || [];
+          writes[args[0]].push({
+            type: fnName,
+            time: totalTime
+          });
+        }
+        return rv;
+      } else if (fnName === 'updateComponent' || fnName === '_renderValidatedComponent') {
+        var entry = ReactDefaultPerf._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1];
+        if (fnName === 'updateComponent') {
+          // Don't double-count
+          entry.counts[this._rootNodeID] = entry.counts[this._rootNodeID] || 0;
+          entry.counts[this._rootNodeID] += 1;
+        }
+        var start = performanceNow();
+        var rv = func.apply(this, args);
+        var totalTime = performanceNow() - start;
 
-  /**
-   * Gets a info area for a given object's function, adding a new one if
-   * necessary.
-   *
-   * @param {string} objName
-   * @param {string} fnName
-   * @return {object}
-   */
-  var _getNewInfo = function(objName, fnName) {
-    var info = ReactDefaultPerf.getInfo(objName, fnName);
-    if (info) {
-      return info;
-    }
-    ReactDefaultPerf.info[objName] = ReactDefaultPerf.info[objName] || {};
+        var typeOfLog = fnName === 'updateComponent' ? entry.inclusive : entry.exclusive;
+        typeOfLog[this._rootNodeID] = typeOfLog[this._rootNodeID] || 0;
+        typeOfLog[this._rootNodeID] += totalTime;
 
-    return ReactDefaultPerf.info[objName][fnName] = {
-      getLogs: function() {
-        return ReactDefaultPerf.getLogs(objName, fnName);
+        entry.displayNames[this._rootNodeID] = this.constructor.displayName;
+
+        return rv;
+      } else {
+        return func.apply(this, args);
       }
     };
-  };
-
-  /**
-   * Gets a list of the argument names from a function's definition.
-   * This is useful for storing arguments by their names within wrapFn().
-   *
-   * @param {function} fn
-   * @return {array<string>}
-   */
-  var _getFnArguments = function(fn) {
-    var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
-    var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
-    fnStr = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')'));
-    return fnStr.match(/([^\s,]+)/g);
-  };
-
-  /**
-   * Store common callbacks within ReactDefaultPerf.
-   *
-   * @param {string} objName
-   * @param {string} fnName
-   * @return {?function}
-   */
-  var _getCallback = function(objName, fnName) {
-    switch (objName + '.' + fnName) {
-      case 'React.renderComponent':
-        return _renderComponentCallback;
-      case 'ReactDOMComponent.mountComponent':
-      case 'ReactDOMComponent.updateComponent':
-        return _nativeComponentCallback;
-      case 'ReactCompositeComponent.mountComponent':
-      case 'ReactCompositeComponent.updateComponent':
-        return _compositeComponentCallback;
-      default:
-        return null;
-    }
-  };
-
-  /**
-   * Callback function for React.renderComponent
-   *
-   * @param {object} component
-   * @param {object} args
-   * @param {?object} fnReturn
-   * @param {object} log
-   * @param {object} info
-   */
-  var _renderComponentCallback =
-    function(component, args, fnReturn, log, info) {
-    log.name = args.nextComponent.constructor.displayName || '[unknown]';
-    log.reactID = fnReturn._rootNodeID || null;
-
-    if (ReactDefaultPerf.options.heatmap.enabled) {
-      var container = args.container;
-      if (!container.loggedByReactDefaultPerf) {
-        container.loggedByReactDefaultPerf = true;
-        info.components = info.components || [];
-        info.components.push(container);
-      }
-
-      container.count = container.count || 0;
-      container.count += log.timing.delta;
-      info.max = info.max || 0;
-      if (container.count > info.max) {
-        info.max = container.count;
-        info.components.forEach(function(component) {
-          _setHue(component, 100 - 100 * component.count / info.max);
-        });
-      } else {
-        _setHue(container, 100 - 100 * container.count / info.max);
-      }
-    }
-  };
-
-  /**
-   * Callback function for ReactDOMComponent
-   *
-   * @param {object} component
-   * @param {object} args
-   * @param {?object} fnReturn
-   * @param {object} log
-   * @param {object} info
-   */
-  var _nativeComponentCallback =
-    function(component, args, fnReturn, log, info) {
-    log.name = component.tagName || '[unknown]';
-    log.reactID = component._rootNodeID;
-  };
-
-  /**
-   * Callback function for ReactCompositeComponent
-   *
-   * @param {object} component
-   * @param {object} args
-   * @param {?object} fnReturn
-   * @param {object} log
-   * @param {object} info
-   */
-  var _compositeComponentCallback =
-    function(component, args, fnReturn, log, info) {
-    log.name = component.constructor.displayName || '[unknown]';
-    log.reactID = component._rootNodeID;
-  };
-
-  /**
-   * Using the hsl() background-color attribute, colors an element.
-   *
-   * @param {DOMElement} el
-   * @param {number} hue [0 for red, 120 for green, 240 for blue]
-   */
-  var _setHue = function(el, hue) {
-    el.style.backgroundColor = 'hsla(' + hue + ', 100%, 50%, 0.6)';
-  };
-
-  /**
-   * Round to the thousandth place.
-   * @param {number} time
-   * @return {number}
-   */
-  var _microTime = function(time) {
-    return Math.round(time * 1000) / 1000;
-  };
+  }
 }
 
 module.exports = ReactDefaultPerf;
