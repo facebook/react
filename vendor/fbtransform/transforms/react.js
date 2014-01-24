@@ -25,6 +25,8 @@ var renderXJSExpressionContainer =
 var renderXJSLiteral = require('./xjs').renderXJSLiteral;
 var quoteAttrName = require('./xjs').quoteAttrName;
 
+var trimLeft = require('./xjs').trimLeft;
+
 /**
  * Customized desugar processor.
  *
@@ -53,7 +55,7 @@ function visitReactTag(traverse, object, path, state) {
   var nameObject = openingElement.name;
   var attributesObject = openingElement.attributes;
 
-  utils.catchup(openingElement.range[0], state);
+  utils.catchup(openingElement.range[0], state, trimLeft);
 
   if (nameObject.namespace) {
     throw new Error(
@@ -68,44 +70,43 @@ function visitReactTag(traverse, object, path, state) {
 
   utils.move(nameObject.range[1], state);
 
+  var hasAttributes = attributesObject.length;
+
   // if we don't have any attributes, pass in null
-  if (attributesObject.length === 0) {
+  if (hasAttributes) {
+    utils.append('{', state);
+  } else {
     utils.append('null', state);
   }
 
   // write attributes
   attributesObject.forEach(function(attr, index) {
-    utils.catchup(attr.range[0], state);
     if (attr.name.namespace) {
       throw new Error(
          'Namespace attributes are not supported. ReactJSX is not XML.');
     }
     var name = attr.name.name;
-    var isFirst = index === 0;
     var isLast = index === attributesObject.length - 1;
 
-    if (isFirst) {
-      utils.append('{', state);
-    }
-
+    utils.catchup(attr.range[0], state, trimLeft);
     utils.append(quoteAttrName(name), state);
-    utils.append(':', state);
+    utils.append(': ', state);
 
     if (!attr.value) {
       state.g.buffer += 'true';
       state.g.position = attr.name.range[1];
       if (!isLast) {
-        utils.append(',', state);
+        utils.append(', ', state);
       }
     } else {
       utils.move(attr.name.range[1], state);
-      // Use catchupWhiteSpace to skip over the '=' in the attribute
-      utils.catchupWhiteSpace(attr.value.range[0], state);
+      // Use catchupNewlines to skip over the '=' in the attribute
+      utils.catchupNewlines(attr.value.range[0], state);
       if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
         utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
         utils.move(attr.value.range[1], state);
         if (!isLast) {
-          utils.append(',', state);
+          utils.append(', ', state);
         }
       } else if (attr.value.type === Syntax.Literal) {
         renderXJSLiteral(attr.value, isLast, state);
@@ -114,16 +115,16 @@ function visitReactTag(traverse, object, path, state) {
       }
     }
 
-    if (isLast) {
-      utils.append('}', state);
-    }
-
-    utils.catchup(attr.range[1], state);
+    utils.catchup(attr.range[1], state, trimLeft);
   });
 
   if (!openingElement.selfClosing) {
-    utils.catchup(openingElement.range[1] - 1, state);
+    utils.catchup(openingElement.range[1] - 1, state, trimLeft);
     utils.move(openingElement.range[1], state);
+  }
+
+  if (hasAttributes) {
+    utils.append('}', state);
   }
 
   // filter out whitespace
@@ -147,7 +148,7 @@ function visitReactTag(traverse, object, path, state) {
     }
 
     childrenToRender.forEach(function(child, index) {
-      utils.catchup(child.range[0], state);
+      utils.catchup(child.range[0], state, trimLeft);
 
       var isLast = index >= lastRenderableIndex;
 
@@ -158,22 +159,21 @@ function visitReactTag(traverse, object, path, state) {
       } else {
         traverse(child, path, state);
         if (!isLast) {
-          utils.append(',', state);
-          state.g.buffer = state.g.buffer.replace(/(\s*),$/, ',$1');
+          utils.append(', ', state);
         }
       }
 
-      utils.catchup(child.range[1], state);
+      utils.catchup(child.range[1], state, trimLeft);
     });
   }
 
   if (openingElement.selfClosing) {
     // everything up to />
-    utils.catchup(openingElement.range[1] - 2, state);
+    utils.catchup(openingElement.range[1] - 2, state, trimLeft);
     utils.move(openingElement.range[1], state);
   } else {
     // everything up to </ sdflksjfd>
-    utils.catchup(object.closingElement.range[0], state);
+    utils.catchup(object.closingElement.range[0], state, trimLeft);
     utils.move(object.closingElement.range[1], state);
   }
 
