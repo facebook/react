@@ -251,6 +251,29 @@ describe('ReactServerRendering', function() {
     });
   });
 
+  // White box ReactServerRendering, black box EventPluginHub
+  describe('event listener registration', function() {
+    var cb;
+    beforeEach(function() {
+      cb = mocks.getMockFunction();
+    });
+    it('should preserve default', function() {
+      var def = EventPluginHub.isRegistrationEnabled();
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(def);
+    });
+    it('should preserve true', function() {
+      EventPluginHub.setRegistrationEnabled(false);
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(false);
+    });
+    it('should preserve false', function() {
+      EventPluginHub.setRegistrationEnabled(true);
+      ReactServerRendering.renderComponentToString(<span />, cb);
+      expect(EventPluginHub.isRegistrationEnabled()).toEqual(true);
+    });
+  });
+
   it('should throw with silly args', function() {
     expect(
       ReactServerRendering.renderComponentToString.bind(
