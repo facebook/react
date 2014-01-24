@@ -1001,8 +1001,6 @@ var ReactCompositeComponentMixin = {
         this._currentContext = nextFullContext;
         this.context = nextContext;
       }
-    } catch (e) {
-      throw e;
     } finally {
       this._compositeLifeCycleState = null;
     }
@@ -1164,9 +1162,6 @@ var ReactCompositeComponentMixin = {
     ReactCurrentOwner.current = this;
     try {
       renderedComponent = this.render();
-    } catch (error) {
-      // IE8 requires `catch` in order to use `finally`.
-      throw error;
     } finally {
       ReactContext.current = previousContext;
       ReactCurrentOwner.current = null;

@@ -79,9 +79,6 @@ function flushBatchedUpdates() {
   // Run these in separate functions so the JIT can optimize
   try {
     runBatchedUpdates();
-  } catch (e) {
-    // IE 8 requires catch to use finally.
-    throw e;
   } finally {
     clearDirtyComponents();
   }

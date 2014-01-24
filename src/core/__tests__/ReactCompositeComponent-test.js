@@ -737,8 +737,6 @@ describe('ReactCompositeComponent', function() {
       );
 
       NamedComponent(); // Shut up lint
-    } catch (e) {
-      throw e;
     } finally {
       console.warn = warn;
     }
@@ -780,8 +778,6 @@ describe('ReactCompositeComponent', function() {
         'createClass(...): `childContextTypes` is now a static property and ' +
         'should be defined inside "statics".'
       );
-    } catch (e) {
-      throw e;
     } finally {
       console.warn = warn;
     }
