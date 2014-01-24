@@ -103,10 +103,20 @@ function validateInstanceHandle() {
  */
 var EventPluginHub = {
 
+  /**
+   * `setRegistrationEnabled` allows temporary disabling of event registration
+   *
+   * @param {boolean} enabled Enable or disable the registration of listeners
+   * @public
+   */
   setRegistrationEnabled: function(enabled) {
     registrationEnabled = enabled;
   },
 
+  /**
+   * @return {boolean} Returns whether or not registering listeners is enabled
+   * @public
+   */
   isRegistrationEnabled: function() {
     return registrationEnabled;
   },
