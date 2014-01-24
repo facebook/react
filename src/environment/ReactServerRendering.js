@@ -22,7 +22,6 @@ var ReactComponent = require('ReactComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var EventPluginHub = require('EventPluginHub');
 
 var invariant = require('invariant');
