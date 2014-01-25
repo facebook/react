@@ -24,6 +24,7 @@ var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactMountReady = require('ReactMountReady');
+var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
 var mixInto = require('mixInto');
@@ -88,12 +89,23 @@ var ON_DOM_READY_QUEUEING = {
   }
 };
 
+var PUT_LISTENER_QUEUEING = {
+  initialize: function() {
+    this.putListenerQueue.reset();
+  },
+
+  close: function() {
+    this.putListenerQueue.putListeners();
+  }
+};
+
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
 var TRANSACTION_WRAPPERS = [
+  PUT_LISTENER_QUEUEING,
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
   ON_DOM_READY_QUEUEING
@@ -116,6 +128,7 @@ var TRANSACTION_WRAPPERS = [
 function ReactReconcileTransaction() {
   this.reinitializeTransaction();
   this.reactMountReady = ReactMountReady.getPooled(null);
+  this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }
 
 var Mixin = {
@@ -142,6 +155,10 @@ var Mixin = {
     return this.reactMountReady;
   },
 
+  getPutListenerQueue: function() {
+    return this.putListenerQueue;
+  },
+
   /**
    * `PooledClass` looks for this, and will invoke this before allowing this
    * instance to be resused.
@@ -149,6 +166,9 @@ var Mixin = {
   destructor: function() {
     ReactMountReady.release(this.reactMountReady);
     this.reactMountReady = null;
+
+    ReactPutListenerQueue.release(this.putListenerQueue);
+    this.putListenerQueue = null;
   }
 };
 

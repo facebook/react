@@ -229,7 +229,7 @@ describe('ReactDOMComponent', function() {
       mixInto(NodeStub, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
-        return (new NodeStub(props))._createOpenTagMarkup();
+        return (new NodeStub(props))._createOpenTagMarkupAndPutListeners();
       };
 
       this.addMatchers({

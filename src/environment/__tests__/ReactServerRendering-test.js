@@ -69,6 +69,18 @@ describe('ReactServerRendering', function() {
     );
   });
 
+  it('should not register event listeners', function() {
+    var EventPluginHub = require('EventPluginHub');
+    var cb = mocks.getMockFunction();
+
+    ReactServerRendering.renderComponentToString(
+      <span onClick={cb}>hello world</span>,
+      function() {
+        expect(EventPluginHub.__getListenerBank()).toEqual({});
+      }
+    );
+  });
+
   it('should render composite components', function() {
     var Parent = React.createClass({
       render: function() {

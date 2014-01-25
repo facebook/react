@@ -20,6 +20,7 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
@@ -150,6 +151,11 @@ var EventPluginHub = {
    * @param {?function} listener The callback to store.
    */
   putListener: function(id, registrationName, listener) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'Cannot call putListener() in a non-DOM environment.'
+    );
+
     if (__DEV__) {
       // IE8 has no API for event capturing and the `onScroll` event doesn't
       // bubble.
@@ -265,10 +271,14 @@ var EventPluginHub = {
   },
 
   /**
-   * This is needed for tests only. Do not use!
+   * These are needed for tests only. Do not use!
    */
   __purge: function() {
     listenerBank = {};
+  },
+
+  __getListenerBank: function() {
+    return listenerBank;
   }
 
 };

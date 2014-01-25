@@ -64,7 +64,7 @@ function assertValidProps(props) {
   );
 }
 
-function putListener(id, registrationName, listener) {
+function putListener(id, registrationName, listener, transaction) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
@@ -72,8 +72,11 @@ function putListener(id, registrationName, listener) {
       container;
     listenTo(registrationName, doc);
   }
-
-  ReactEventEmitter.putListener(id, registrationName, listener);
+  transaction.getPutListenerQueue().enqueuePutListener(
+    id,
+    registrationName,
+    listener
+  );
 }
 
 
@@ -112,7 +115,7 @@ ReactDOMComponent.Mixin = {
       );
       assertValidProps(this.props);
       return (
-        this._createOpenTagMarkup() +
+        this._createOpenTagMarkupAndPutListeners(transaction) +
         this._createContentMarkup(transaction) +
         this._tagClose
       );
@@ -128,9 +131,10 @@ ReactDOMComponent.Mixin = {
    * @see http://jsperf.com/obj-vs-arr-iteration
    *
    * @private
+   * @param {ReactReconcileTransaction} transaction
    * @return {string} Markup of opening tag.
    */
-  _createOpenTagMarkup: function() {
+  _createOpenTagMarkupAndPutListeners: function(transaction) {
     var props = this.props;
     var ret = this._tagOpen;
 
@@ -143,7 +147,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNameModules[propKey]) {
-        putListener(this._rootNodeID, propKey, propValue);
+        putListener(this._rootNodeID, propKey, propValue, transaction);
       } else {
         if (propKey === STYLE) {
           if (propValue) {
@@ -222,7 +226,7 @@ ReactDOMComponent.Mixin = {
         prevProps,
         prevOwner
       );
-      this._updateDOMProperties(prevProps);
+      this._updateDOMProperties(prevProps, transaction);
       this._updateDOMChildren(prevProps, transaction);
     }
   ),
@@ -240,8 +244,9 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {object} lastProps
+   * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMProperties: function(lastProps) {
+  _updateDOMProperties: function(lastProps, transaction) {
     var nextProps = this.props;
     var propKey;
     var styleName;
@@ -302,7 +307,7 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules[propKey]) {
-        putListener(this._rootNodeID, propKey, nextProp);
+        putListener(this._rootNodeID, propKey, nextProp, transaction);
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
