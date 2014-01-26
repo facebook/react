@@ -59,7 +59,7 @@ if (__DEV__) {
      * Runs through the logs and builds an array of arrays, where each array
      * walks through the mounting/updating of each component underneath.
      *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
+     * @param {string} rootID The reactID of the root node, e.g. '.0'
      * @return {array<array>}
      */
     getRawRenderHistory: function(rootID) {
@@ -94,7 +94,7 @@ if (__DEV__) {
      * is a multiline formatted way of walking through the mounting/updating
      * underneath.
      *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
+     * @param {string} rootID The reactID of the root node, e.g. '.0'
      * @return {array<string>}
      */
     getRenderHistory: function(rootID) {
@@ -107,7 +107,7 @@ if (__DEV__) {
         );
         return headerString + subHistory.map(function(log) {
           // Add two spaces for every layer in the reactID.
-          var indents = '\t' + Array(log.reactID.split('.[').length).join('  ');
+          var indents = '\t' + Array(log.reactID.split('.').length).join('  ');
           var delta = _microTime(log.timing.delta);
           var bloat = _microTime(log.timing.timeToLog);
 
@@ -122,7 +122,7 @@ if (__DEV__) {
      * This is currently the best way to display perf data from
      * any React component; working on that.
      *
-     * @param {string} rootID The reactID of the root node, e.g. '.r[2cpyq]'
+     * @param {string} rootID The reactID of the root node, e.g. '.0'
      * @param {number} index
      */
     printRenderHistory: function(rootID, index) {

@@ -78,9 +78,9 @@ var ON_CHANGE_KEY = keyOf({onChange: null});
 var CHILD = document.createElement('div');
 var PARENT = document.createElement('div');
 var GRANDPARENT = document.createElement('div');
-setID(CHILD, '.reactRoot.[0].[0].[0]');
-setID(PARENT, '.reactRoot.[0].[0]');
-setID(GRANDPARENT, '.reactRoot.[0]');
+setID(CHILD, '.0.0.0.0');
+setID(PARENT, '.0.0.0');
+setID(GRANDPARENT, '.0.0');
 
 function registerSimpleTestHandler() {
   ReactEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);

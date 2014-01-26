@@ -303,8 +303,8 @@ var ReactInstanceHandles = {
 
   /**
    * Traverse a node ID, calling the supplied `cb` for each ancestor ID. For
-   * example, passing `.r[0].{row-0}.[1]` would result in `cb` getting called
-   * with `.r[0]`, `.r[0].{row-0}`, and `.r[0].{row-0}.[1]`.
+   * example, passing `.0.$row-0.1` would result in `cb` getting called
+   * with `.0`, `.0.$row-0`, and `.0.$row-0.1`.
    *
    * NOTE: This traversal happens on IDs without touching the DOM.
    *
