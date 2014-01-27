@@ -42,6 +42,12 @@ module.exports = function(grunt) {
 
   grunt.registerTask('download-previous-version', require('./grunt/tasks/download-previous-version.js'));
 
+  grunt.registerTask('delete-build-modules', function() {
+    if (grunt.file.exists('build/modules')) {
+      grunt.file.delete('build/modules');
+    }
+  });
+
   // Register jsx:debug and :release tasks.
   grunt.registerMultiTask('jsx', jsxTask);
 
@@ -81,6 +87,7 @@ module.exports = function(grunt) {
     'download-previous-version'
   ]);
   grunt.registerTask('build:test', [
+    'delete-build-modules',
     'jsx:test',
     'version-check',
     'populist:test'
@@ -176,6 +183,7 @@ module.exports = function(grunt) {
   // Optimized build task that does all of our builds. The subtasks will be run
   // in order so we can take advantage of that and only run jsx:debug once.
   grunt.registerTask('build', [
+    'delete-build-modules',
     'jsx:debug',
     'version-check',
     'browserify:basic',
