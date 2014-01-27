@@ -17,7 +17,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     copy: require('./grunt/config/copy'),
-    jsx: require('./grunt/config/jsx/jsx'),
+    jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
     populist: require('./grunt/config/populist'),
     connect: require('./grunt/config/server')(grunt),
