@@ -73,11 +73,12 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
     props.defaultChecked = null;
     props.defaultValue = null;
-    props.checked =
-      this.props.checked != null ? this.props.checked : this.state.checked;
 
     var value = LinkedValueUtils.getValue(this);
     props.value = value != null ? value : this.state.value;
+
+    var checked = LinkedValueUtils.getChecked(this);
+    props.checked = checked != null ? checked : this.state.checked;
 
     props.onChange = this._handleChange;
 
