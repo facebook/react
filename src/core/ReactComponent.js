@@ -347,7 +347,8 @@ var ReactComponent = {
      * `ReactComponent.Mixin.mountComponent.call(this, ...)`.
      *
      * @param {string} rootID DOM ID of the root node.
-     * @param {ReactReconcileTransaction} transaction
+     * @param {ReactReconcileTransaction|ReactServerRenderingTransaction|
+     * ReactServerRenderingNoChecksumNoIDTransaction} transaction
      * @param {number} mountDepth number of components in the owner hierarchy.
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
@@ -418,7 +419,6 @@ var ReactComponent = {
     /**
      * Call `_performUpdateIfNecessary` within a new transaction.
      *
-     * @param {ReactReconcileTransaction} transaction
      * @internal
      */
     performUpdateIfNecessary: function() {

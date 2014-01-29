@@ -21,6 +21,8 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
+var ReactServerRenderingNoChecksumNoIDTransaction =
+  require('ReactServerRenderingNoChecksumNoIDTransaction');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -52,7 +54,8 @@ mixInto(ReactTextComponent, {
    * any features besides containing text content.
    *
    * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction|
+   * ReactServerRenderingNoChecksumNoIDTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} Markup for this text node.
    * @internal
@@ -64,9 +67,16 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
+
+    var escapedText = escapeTextForBrowser(this.props.text);
+
+    if (transaction instanceof ReactServerRenderingNoChecksumNoIDTransaction) {
+      return '<span>' + escapedText + '</span>';
+    }
+
     return (
       '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
-        escapeTextForBrowser(this.props.text) +
+        escapedText +
       '</span>'
     );
   },

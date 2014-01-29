@@ -27,6 +27,8 @@ var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactServerRenderingNoChecksumNoIDTransaction =
+  require('ReactServerRenderingNoChecksumNoIDTransaction');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
@@ -99,7 +101,8 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    * @param {string} rootID The root DOM ID for this node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction|
+   * ReactServerRenderingNoChecksumNoIDTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} The computed markup.
    */
@@ -131,7 +134,8 @@ ReactDOMComponent.Mixin = {
    * @see http://jsperf.com/obj-vs-arr-iteration
    *
    * @private
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction|
+   * ReactServerRenderingNoChecksumNoIDTransaction} transaction
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction) {
@@ -163,15 +167,20 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var idMarkup = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + idMarkup + '>';
+    if (transaction instanceof ReactServerRenderingNoChecksumNoIDTransaction) {
+      return ret + '>';
+    }
+
+    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
+    return ret + ' ' + markupForID + '>';
   },
 
   /**
    * Creates markup for the content between the tags.
    *
    * @private
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction|
+   * ReactServerRenderingNoChecksumNoIDTransaction} transaction
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction) {

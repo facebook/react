@@ -252,4 +252,48 @@ describe('ReactServerRendering', function() {
       'second parameter.'
     );
   });
+
+  it('should not put checksum and React ID on components if specified so',
+    function() {
+      var lifecycle = [];
+      var NestedComponent = React.createClass({
+        render: function() {
+          return <div>inner text</div>;
+        }
+      });
+
+      var TestComponent = React.createClass({
+        render: function() {
+          lifecycle.push('render');
+          return <span><NestedComponent /></span>;
+        }
+      });
+
+      var response = ReactServerRendering.renderComponentToString(
+        <TestComponent />,
+        {noChecksumNoID: true}
+      );
+
+      expect(response).toBe('<span><div>inner text</div></span>');
+    }
+  );
+
+  it('should not put checksum and React ID on text components if specified so',
+    function() {
+      var TestComponent = React.createClass({
+        render: function() {
+          return <span>{'hello'} {'world'}</span>;
+        }
+      });
+
+      var response = ReactServerRendering.renderComponentToString(
+        <TestComponent />,
+        {noChecksumNoID: true}
+      );
+
+      expect(response).toBe(
+        '<span><span>hello</span><span> </span><span>world</span></span>'
+      );
+    }
+  );
 });
