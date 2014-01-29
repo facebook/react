@@ -19,6 +19,7 @@
 
 "use strict";
 
+var ReactMount = require('ReactMount');
 var DOMProperty = require('DOMProperty');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -79,7 +80,7 @@ var DOMPropertyOperations = {
    */
   createMarkupForID: function(id) {
     return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
-      escapeTextForBrowser(id) + '"';
+      escapeTextForBrowser(ReactMount.createMountID(id)) + '"';
   },
 
   /**

@@ -58,6 +58,37 @@ function getReactRootID(container) {
   return rootElement && ReactMount.getID(rootElement);
 }
 
+var nextMountID = {};
+var mountIDtoReactID = {};
+var reactIDtoMountID = {};
+
+function toBase62(value) {
+  var table = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  if (value < 62) {
+    return table.charAt(value);
+  } else {
+    var index = value % 62;
+    return toBase62((value - index) / 62) + table.charAt(index);
+  }
+}
+
+function createMountID(id) {
+  var rootID = ReactInstanceHandles.getReactRootIDFromNodeID(id).substr(1);
+
+  nextMountID[rootID] = nextMountID[rootID] || 0;
+
+  var mountID = rootID + ':' + toBase62(nextMountID[rootID]++);
+  mountIDtoReactID[mountID] = id;
+  reactIDtoMountID[id] = mountID;
+  return mountID;
+}
+
+function purgeMountID(id) {
+  var mountID = reactIDtoMountID[id];
+  delete mountIDtoReactID[mountID];
+  delete reactIDtoMountID[id];
+}
+
 /**
  * Accessing node[ATTR_NAME] or calling getAttribute(ATTR_NAME) on a form
  * element can return its control whose name or ID equals ATTR_NAME. All
@@ -94,7 +125,8 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  var id = node && node.getAttribute && node.getAttribute(ATTR_NAME);
+  return mountIDtoReactID[id] || '';
 }
 
 /**
@@ -106,9 +138,9 @@ function internalGetID(node) {
 function setID(node, id) {
   var oldID = internalGetID(node);
   if (oldID !== id) {
-    delete nodeCache[oldID];
+    purgeID(oldID);
   }
-  node.setAttribute(ATTR_NAME, id);
+  node.setAttribute(ATTR_NAME, createMountID(id));
   nodeCache[id] = node;
 }
 
@@ -159,6 +191,7 @@ function isValid(node, id) {
  * @param {string} id The ID to forget.
  */
 function purgeID(id) {
+  purgeMountID(id);
   delete nodeCache[id];
 }
 
@@ -616,6 +649,8 @@ var ReactMount = {
   /**
    * React ID utilities.
    */
+
+  createMountID: createMountID,
 
   getReactRootID: getReactRootID,
 
