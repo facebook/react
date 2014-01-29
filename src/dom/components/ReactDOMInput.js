@@ -130,17 +130,24 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var name = this.props.name;
     if (this.props.type === 'radio' && name != null) {
       var rootNode = this.getDOMNode();
+      var queryRoot = rootNode;
+
+      while (queryRoot.parentNode) {
+        queryRoot = queryRoot.parentNode;
+      }
+
       // If `rootNode.form` was non-null, then we could try `form.elements`,
       // but that sometimes behaves strangely in IE8. We could also try using
       // `form.getElementsByName`, but that will only return direct children
       // and won't include inputs that use the HTML5 `form=` attribute. Since
       // the input might not even be in a form, let's just use the global
-      // `getElementsByName` to ensure we don't miss anything.
-      var group = document.getElementsByName(name);
+      // `querySelectorAll` to ensure we don't miss anything.
+      var group = queryRoot.querySelectorAll(
+        'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
+
       for (var i = 0, groupLen = group.length; i < groupLen; i++) {
         var otherNode = group[i];
         if (otherNode === rootNode ||
-            otherNode.nodeName !== 'INPUT' || otherNode.type !== 'radio' ||
             otherNode.form !== rootNode.form) {
           continue;
         }
