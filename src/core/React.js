@@ -52,6 +52,8 @@ var React = {
     ReactMount.renderComponent
   ),
   renderComponentToString: ReactServerRendering.renderComponentToString,
+  renderComponentToUnmountableString:
+    ReactServerRendering.renderComponentToUnmountableString,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   isValidClass: ReactCompositeComponent.isValidClass,
   isValidComponent: ReactComponent.isValidComponent,

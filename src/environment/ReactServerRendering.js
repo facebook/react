@@ -22,8 +22,24 @@ var ReactComponent = require('ReactComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
+var ReactServerRenderingUnmountableTransaction =
+  require('ReactServerRenderingUnmountableTransaction');
 
 var invariant = require('invariant');
+
+function validateRenderParameters(methodName, component, callback) {
+  invariant(
+    ReactComponent.isValidComponent(component),
+    '%s(): You must pass a valid ReactComponent.',
+    methodName
+  );
+
+  invariant(
+    typeof callback === 'function',
+    '%s(): You must pass a function as a callback.',
+    methodName
+  );
+}
 
 /**
  * @param {ReactComponent} component
@@ -32,17 +48,7 @@ var invariant = require('invariant');
 function renderComponentToString(component, callback) {
   // We use a callback API to keep the API async in case in the future we ever
   // need it, but in reality this is a synchronous operation.
-
-  invariant(
-    ReactComponent.isValidComponent(component),
-    'renderComponentToString(): You must pass a valid ReactComponent.'
-  );
-
-  invariant(
-    typeof callback === 'function',
-    'renderComponentToString(): You must pass a function as a callback.'
-  );
-
+  validateRenderParameters('renderComponentToString', component, callback);
   var id = ReactInstanceHandles.createReactRootID();
   var transaction = ReactReconcileTransaction.getPooled();
   transaction.reinitializeTransaction();
@@ -57,6 +63,32 @@ function renderComponentToString(component, callback) {
   }
 }
 
+/**
+ * @param {ReactComponent} component
+ * @param {function} callback
+ */
+function renderComponentToUnmountableString(component, callback) {
+  // We use a callback API to keep the API async in case in the future we ever
+  // need it, but in reality this is a synchronous operation.
+  validateRenderParameters(
+    'renderComponentToUnmountableString',
+    component,
+    callback
+  );
+  var id = ReactInstanceHandles.createReactRootID();
+  var transaction = ReactServerRenderingUnmountableTransaction.getPooled();
+  transaction.reinitializeTransaction();
+  try {
+    transaction.perform(function() {
+      var markup = component.mountComponent(id, transaction, 0);
+      callback(markup);
+    }, null);
+  } finally {
+    ReactServerRenderingUnmountableTransaction.release(transaction);
+  }
+}
+
 module.exports = {
-  renderComponentToString: renderComponentToString
+  renderComponentToString: renderComponentToString,
+  renderComponentToUnmountableString: renderComponentToUnmountableString,
 };

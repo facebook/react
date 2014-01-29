@@ -269,4 +269,15 @@ describe('ReactServerRendering', function() {
       'a function as a callback.'
     );
   });
+
+  it('should not put checksum and React ID if specified so', function() {
+    var response;
+    ReactServerRendering.renderComponentToUnmountableString(
+      <div><span /></div>,
+      function(response_) {
+        response = response_;
+      }
+    )
+    expect(response).toBe('<div><span></span></div>');
+  });
 });
