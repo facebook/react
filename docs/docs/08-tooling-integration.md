@@ -55,7 +55,3 @@ The open-source community has built tools that integrate JSX with several build 
     that support `*.tmLanguage`.
 * Linting provides accurate line numbers after compiling without sourcemaps.
 * Elements use standard scoping so linters can find usage of out-of-scope components.
-
-## React Page
-
-To get started on a new project, you can use [react-page](https://github.com/facebook/react-page/), a complete React project creator. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.
