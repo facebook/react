@@ -43,11 +43,13 @@ var ComponentLifeCycle = keyMirror({
 });
 
 /**
- * Warn if there's no key explicitly set on dynamic arrays of children.
- * This allows us to keep track of children between updates.
+ * Warn if there's no key explicitly set on dynamic arrays of children or
+ * object keys are not valid. This allows us to keep track of children between
+ * updates.
  */
 
-var ownerHasWarned = {};
+var ownerHasExplicitKeyWarning = {};
+var ownerHasPropertyWarning = {};
 
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
@@ -71,10 +73,10 @@ function validateExplicitKey(component) {
 
   // Name of the component whose render method tried to pass children.
   var currentName = ReactCurrentOwner.current.constructor.displayName;
-  if (ownerHasWarned.hasOwnProperty(currentName)) {
+  if (ownerHasExplicitKeyWarning.hasOwnProperty(currentName)) {
     return;
   }
-  ownerHasWarned[currentName] = true;
+  ownerHasExplicitKeyWarning[currentName] = true;
 
   var message = 'Each child in an array should have a unique "key" prop. ' +
                 'Check the render method of ' + currentName + '.';
@@ -95,8 +97,34 @@ function validateExplicitKey(component) {
 }
 
 /**
- * Ensure that every component either is passed in a static location or, if
- * if it's passed in an array, has an explicit key property defined.
+ * Warn if the key is being defined as an object property but has an incorrect
+ * value.
+ *
+ * @internal
+ * @param {string} name Property name of the key.
+ * @param {ReactComponent} component Component that requires a key.
+ */
+function validatePropertyKey(name) {
+  if (!isNaN(Number(name))) {
+    // Name of the component whose render method tried to pass children.
+    var currentName = ReactCurrentOwner.current.constructor.displayName;
+    if (ownerHasPropertyWarning.hasOwnProperty(currentName)) {
+      return;
+    }
+    ownerHasPropertyWarning[currentName] = true;
+
+    console.warn(
+      'Child objects should have non-numeric keys so ordering is preserved. ' +
+      'Check the render method of ' + currentName + '. ' +
+      'See http://fb.me/react-warning-keys for more information.'
+    );
+  }
+}
+
+/**
+ * Ensure that every component either is passed in a static location, in an
+ * array with an explicit keys property defined, or in an object literal
+ * with valid key property.
  *
  * @internal
  * @param {*} component Statically passed child of any type.
@@ -113,6 +141,10 @@ function validateChildKeys(component) {
   } else if (ReactComponent.isValidComponent(component)) {
     // This component was passed in a valid location.
     component.__keyValidated__ = true;
+  } else if (component && typeof component === 'object') {
+    for (var name in component) {
+      validatePropertyKey(name, component);
+    }
   }
 }
 
