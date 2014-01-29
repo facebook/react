@@ -94,6 +94,9 @@ var DOMPropertyOperations = {
       if (shouldIgnoreValue(name, value)) {
         return '';
       }
+      if (value === true && DOMProperty.hasBooleanValue[name]) {
+        return escapeTextForBrowser(name);
+      }
       var attributeName = DOMProperty.getAttributeName[name];
       return processAttributeNameAndPrefix(attributeName) +
         escapeTextForBrowser(value) + '"';
