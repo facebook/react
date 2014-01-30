@@ -42,6 +42,8 @@ function createTransferStrategy(mergeStrategy) {
 
 /**
  * Transfer strategies dictate how props are transferred by `transferPropsTo`.
+ * NOTE: if you add any more exceptions to this list you should be sure to
+ * update `cloneWithProps()` accordingly.
  */
 var TransferStrategies = {
   /**

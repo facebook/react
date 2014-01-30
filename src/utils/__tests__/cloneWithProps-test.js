@@ -126,4 +126,56 @@ describe('cloneWithProps', function() {
       cloneWithProps(<Component />, {key: 'xyz'})
     );
   });
+
+  it('should transfer children', function() {
+    var Component = React.createClass({
+      render: function() {
+        expect(this.props.children).toBe('xyz');
+        return <div />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      cloneWithProps(<Component />, {children: 'xyz'})
+    );
+  });
+
+  it('should shallow clone children', function() {
+    var Component = React.createClass({
+      render: function() {
+        expect(this.props.children).toBe('xyz');
+        return <div />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      cloneWithProps(<Component>xyz</Component>, {})
+    );
+  });
+
+  it('should support keys and refs', function() {
+    var Component = React.createClass({
+      render: function() {
+        expect(this.props.key).toBe('xyz');
+        expect(this.props.ref).toBe('xyz');
+        return <div />;
+      }
+    });
+
+    var Parent = React.createClass({
+      render: function() {
+        var clone =
+          cloneWithProps(this.props.children, {key: 'xyz', ref: 'xyz'});
+        return <div>{clone}</div>;
+      }
+    });
+
+    var Grandparent = React.createClass({
+      render: function() {
+        return <Parent><Component key="abc" ref="abc" /></Parent>;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<Grandparent />);
+  });
 });
