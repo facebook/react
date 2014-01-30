@@ -51,6 +51,8 @@ var ComponentLifeCycle = keyMirror({
 var ownerHasExplicitKeyWarning = {};
 var ownerHasPropertyWarning = {};
 
+var NUMERIC_PROPERTY_REGEX = /^\d+$/;
+
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
  * This component is in an array. The array could grow and shrink or be
@@ -105,7 +107,7 @@ function validateExplicitKey(component) {
  * @param {ReactComponent} component Component that requires a key.
  */
 function validatePropertyKey(name) {
-  if (!isNaN(Number(name))) {
+  if (NUMERIC_PROPERTY_REGEX.test(name)) {
     // Name of the component whose render method tried to pass children.
     var currentName = ReactCurrentOwner.current.constructor.displayName;
     if (ownerHasPropertyWarning.hasOwnProperty(currentName)) {
