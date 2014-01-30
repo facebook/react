@@ -103,7 +103,7 @@ renderB: <div><span>second</span><span>first</span></div>
 => [replaceAttribute textContent 'second'], [insertNode <span>first</span>]
 ```
 
-There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when a node has moved into another position and algorithms to do that have a much worst complexity.
+There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. [Levenshtein distance](http://en.wikipedia.org/wiki/Levenshtein_distance) can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn't find when a node has moved into another position and algorithms to do that have much worse complexity.
 
 ### Keys
 
