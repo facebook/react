@@ -95,6 +95,9 @@ var DOMPropertyOperations = {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName[name];
+      if (DOMProperty.hasBooleanValue[name]) {
+        return escapeTextForBrowser(attributeName);
+      }
       return processAttributeNameAndPrefix(attributeName) +
         escapeTextForBrowser(value) + '"';
     } else if (DOMProperty.isCustomAttribute(name)) {
