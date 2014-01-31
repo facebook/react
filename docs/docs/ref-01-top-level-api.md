@@ -46,7 +46,7 @@ ReactComponent renderComponent(
 )
 ```
 
-Render a React component into the DOM in the supplied `container`.
+Render a React component into the DOM in the supplied `container` and return a reference to the component.
 
 If the React component was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
 
