@@ -42,7 +42,7 @@ var stripEmptyValues = function(obj) {
 };
 
 /**
- * Child key names are wrapped like '{key}[0]'. We strip the extra chars out
+ * Child key names are wrapped like '.$key:0'. We strip the extra chars out
  * here. This relies on an implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {

@@ -91,9 +91,9 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       parentNode.appendChild(childNodeB);
 
-      ReactMount.setID(parentNode, '.react[0]');
-      ReactMount.setID(childNodeA, '.react[0].0');
-      ReactMount.setID(childNodeB, '.react[0].0:1');
+      ReactMount.setID(parentNode, '.0');
+      ReactMount.setID(childNodeA, '.0.0');
+      ReactMount.setID(childNodeB, '.0.0:1');
 
       expect(
         ReactMount.findComponentRoot(
@@ -110,9 +110,9 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       parentNode.appendChild(childNodeB);
 
-      ReactMount.setID(parentNode, '.react[0]');
+      ReactMount.setID(parentNode, '.0');
       // No ID on `childNodeA`.
-      ReactMount.setID(childNodeB, '.react[0].0:1');
+      ReactMount.setID(childNodeB, '.0.0:1');
 
       expect(
         ReactMount.findComponentRoot(
@@ -129,9 +129,9 @@ describe('ReactInstanceHandles', function() {
       parentNode.appendChild(childNodeA);
       childNodeA.appendChild(childNodeB);
 
-      ReactMount.setID(parentNode, '.react[0]');
+      ReactMount.setID(parentNode, '.0');
       // No ID on `childNodeA`, it was "rendered by the browser".
-      ReactMount.setID(childNodeB, '.react[0].1:0');
+      ReactMount.setID(childNodeB, '.0.1:0');
 
       expect(ReactMount.findComponentRoot(
         parentNode,
@@ -144,10 +144,10 @@ describe('ReactInstanceHandles', function() {
           ReactMount.getID(childNodeB) + ":junk"
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., .react[0].1:0:junk): ' +
+        'Invariant Violation: findComponentRoot(..., .0.1:0:junk): ' +
         'Unable to find element. This probably means the DOM was ' +
         'unexpectedly mutated (e.g., by the browser). Try inspecting the ' +
-        'child nodes of the element with React ID `.react[0]`.'
+        'child nodes of the element with React ID `.0`.'
       );
     });
   });

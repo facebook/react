@@ -200,7 +200,7 @@ function findDeepestCachedAncestor(targetID) {
  *   );
  *
  *   <div id="container">                   <-- Supplied `container`.
- *     <div data-reactid=".r[3]">           <-- Rendered reactRoot of React
+ *     <div data-reactid=".3">              <-- Rendered reactRoot of React
  *       // ...                                 component.
  *     </div>
  *   </div>
