@@ -94,10 +94,11 @@ var DOMPropertyOperations = {
       if (shouldIgnoreValue(name, value)) {
         return '';
       }
-      if (value === true && DOMProperty.hasBooleanValue[name]) {
-        return escapeTextForBrowser(name);
-      }
       var attributeName = DOMProperty.getAttributeName[name];
+      console.log(attributeName);
+      if (value && DOMProperty.hasBooleanValue[name]) {
+        return escapeTextForBrowser(attributeName);
+      }
       return processAttributeNameAndPrefix(attributeName) +
         escapeTextForBrowser(value) + '"';
     } else if (DOMProperty.isCustomAttribute(name)) {
