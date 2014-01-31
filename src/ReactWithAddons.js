@@ -37,5 +37,9 @@ React.addons = {
   TransitionGroup: ReactTransitionGroup
 };
 
+if (__DEV__) {
+  React.addons.Perf = require('ReactDefaultPerf');
+}
+
 module.exports = React;
 
