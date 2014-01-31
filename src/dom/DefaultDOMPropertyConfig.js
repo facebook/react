@@ -40,6 +40,7 @@ var DefaultDOMPropertyConfig = {
     accept: null,
     accessKey: null,
     action: null,
+    align: null,
     allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     allowTransparency: MUST_USE_ATTRIBUTE,
     alt: null,
@@ -48,6 +49,7 @@ var DefaultDOMPropertyConfig = {
     // autoFocus is polyfilled/normalized by AutoFocusMixin
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
+    bgColor: null,
     cellPadding: null,
     cellSpacing: null,
     charSet: MUST_USE_ATTRIBUTE,
@@ -110,6 +112,7 @@ var DefaultDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
+    valign: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
