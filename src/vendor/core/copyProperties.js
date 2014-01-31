@@ -43,7 +43,7 @@ function copyProperties(obj, a, b, c, d, e, f) {
     // IE ignores toString in object iteration.. See:
     // webreflection.blogspot.com/2007/07/quick-fix-internet-explorer-and.html
     if (v.hasOwnProperty && v.hasOwnProperty('toString') &&
-        (typeof v.toString != 'undefined') && (obj.toString !== v.toString)) {
+        v.toString !== undefined && obj.toString !== v.toString) {
       obj.toString = v.toString;
     }
   }

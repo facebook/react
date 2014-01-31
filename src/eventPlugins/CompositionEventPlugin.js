@@ -32,8 +32,7 @@ var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
 
 var useCompositionEvent = (
-  ExecutionEnvironment.canUseDOM &&
-  'CompositionEvent' in window
+  ExecutionEnvironment.canUseDOM && window.CompositionEvent
 );
 
 // In IE9+, we have access to composition events, but the data supplied
@@ -43,8 +42,7 @@ var useCompositionEvent = (
 // We therefore use the fallback data while still using the native
 // events as triggers.
 var useFallbackData = (
-  !useCompositionEvent ||
-  'documentMode' in document && document.documentMode > 8
+  !useCompositionEvent || document.documentMode && document.documentMode > 8
 );
 
 var topLevelTypes = EventConstants.topLevelTypes;

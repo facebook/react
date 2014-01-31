@@ -82,7 +82,7 @@ function makeComponent(metadata) {
             // Copy prototype methods to the instance to make
             // it easier to interact with mock instance call and
             // return values
-            if (prototype[slot].type == 'function') {
+            if (prototype[slot].type === 'function') {
               var protoImpl = this[slot];
               this[slot] = generateFromMetadata(prototype[slot]);
               this[slot]._protoImpl = protoImpl;
@@ -226,10 +226,10 @@ function _getMetadata(component, _refs) {
   }
 
   var metadata = {type : type};
-  if (type == 'constant') {
+  if (type === 'constant') {
     metadata.value = component;
     return metadata;
-  } else if (type == 'function') {
+  } else if (type === 'function') {
     if (component._isMockFunction) {
       metadata.mockImpl = component._getMockImplementation();
     }
@@ -251,22 +251,22 @@ function _getMetadata(component, _refs) {
   }
 
   // Leave arrays alone
-  if (type != 'array') {
+  if (type !== 'array') {
     for (var slot in component) {
-      if (slot.charAt(0) == '_' ||
-          (type == 'function' && component._isMockFunction &&
-           slot.match(/^mock/))) {
+      if (slot.charAt(0) === '_' ||
+          type === 'function' && component._isMockFunction &&
+          slot.match(/^mock/)) {
         continue;
       }
 
       if (component.hasOwnProperty(slot) ||
-          (type == 'object' && component[slot] != Object.prototype[slot])) {
+          type === 'object' && component[slot] !== Object.prototype[slot]) {
         addMember(slot, _getMetadata(component[slot], refs));
       }
     }
 
     // If component is native code function, prototype might be undefined
-    if (type == 'function' && component.prototype) {
+    if (type === 'function' && component.prototype) {
       var prototype = _getMetadata(component.prototype, refs);
       if (prototype && prototype.members) {
         addMember('prototype', prototype);

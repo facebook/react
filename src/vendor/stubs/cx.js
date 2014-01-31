@@ -32,7 +32,7 @@
  * @return string       Renderable space-separated CSS className.
  */
 function cx(classNames) {
-  if (typeof classNames == 'object') {
+  if (typeof classNames === 'object') {
     return Object.keys(classNames).map(function(className) {
       return classNames[className] ? className : '';
     }).join(' ');

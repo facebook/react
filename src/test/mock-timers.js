@@ -16,7 +16,7 @@ function _setTimer(type, callback, delay) {
     callback: callback,
     // Add some random msecs to the delay to mimic code execution time.
     time: now + delay + Math.floor(Math.random() * 5),
-    interval: (type == 'interval' ? delay : 0)
+    interval: type === 'interval' ? delay : 0
   };
   return token;
 }
@@ -48,12 +48,12 @@ function _clearInterval(token) {
 function _runTimer(token) {
   // Skip non-existing token
   if (timers[token]) {
-    if (timers[token].type == 'timeout') {
+    if (timers[token].type === 'timeout') {
       // for 'timeout', run callback and delete the timer
       var callback = timers[token].callback;
       delete timers[token];
       callback();
-    } else if (timers[token].type == 'interval') {
+    } else if (timers[token].type === 'interval') {
       // for 'interval', run callback and set the next invoke time
       // Add some random msecs to the delay to mimic code execution time.
       timers[token].time =
