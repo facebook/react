@@ -54,7 +54,13 @@ var ReactUpdates = require('ReactUpdates');
 
 var createFullPageComponent = require('createFullPageComponent');
 
+var ReactComponent = require('ReactComponent');
+var ReactComponentBrowserEnvironment =
+  require('ReactComponentBrowserEnvironment');
+
 function inject() {
+  ReactComponent.injection.injectEnvironment(ReactComponentBrowserEnvironment);
+
   ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
   /**
    * Inject modules for resolving DOM hierarchy and plugin ordering.

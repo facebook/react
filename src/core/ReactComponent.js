@@ -18,7 +18,6 @@
 
 "use strict";
 
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactOwner = require('ReactOwner');
 var ReactUpdates = require('ReactUpdates');
@@ -26,6 +25,28 @@ var ReactUpdates = require('ReactUpdates');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
+var mergeInto = require('mergeInto');
+
+// Default environment which is expected to be overridden.
+var noEnvMsg = 'ReactCompositeComponent: No environment was injected.';
+var ComponentEnvironment = {
+  Mixin: {
+    getDOMNode: function() {
+      invariant(false, noEnvMsg);
+    }
+  },
+  // We'll stub these with invariants in case they are called before injection.
+  unmountIDFromEnvironment: function() {
+    invariant(false, noEnvMsg);
+  },
+  mountImageIntoNode: function() {
+    invariant(false, noEnvMsg);
+  },
+  // These are objects so doing a catch-all is impractical and won't work
+  // cross-browser (requires proxies) - we'll just leave as null.
+  DOMIDOperations: null,
+  ReactReconcileTransaction: null
+};
 
 /**
  * Every React component is in one of these life cycles.
@@ -202,7 +223,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  DOMIDOperations: ReactComponentEnvironment.DOMIDOperations,
+  DOMIDOperations: ComponentEnvironment.DOMIDOperations,
 
   /**
    * Optionally injectable environment dependent cleanup hook. (server vs.
@@ -211,7 +232,7 @@ var ReactComponent = {
    *
    * @private
    */
-  unmountIDFromEnvironment: ReactComponentEnvironment.unmountIDFromEnvironment,
+  unmountIDFromEnvironment: ComponentEnvironment.unmountIDFromEnvironment,
 
   /**
    * The "image" of a component tree, is the platform specific (typically
@@ -222,7 +243,7 @@ var ReactComponent = {
    *
    * @private
    */
-  mountImageIntoNode: ReactComponentEnvironment.mountImageIntoNode,
+  mountImageIntoNode: ComponentEnvironment.mountImageIntoNode,
 
   /**
    * React references `ReactReconcileTransaction` using this property in order
@@ -230,8 +251,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  ReactReconcileTransaction:
-    ReactComponentEnvironment.ReactReconcileTransaction,
+  ReactReconcileTransaction: ComponentEnvironment.ReactReconcileTransaction,
 
   /**
    * Base functionality for every ReactComponent constructor. Mixed into the
@@ -239,7 +259,17 @@ var ReactComponent = {
    *
    * @lends {ReactComponent.prototype}
    */
-  Mixin: merge(ReactComponentEnvironment.Mixin, {
+  Mixin: {
+    /**
+     * Returns the DOM node representing this component. This method is mixed in
+     * by the environment.
+     *
+     * TODO: deprecate in favor of more generic name (getNode, getBackingNode?)
+     *
+     */
+    getDOMNode: function() {
+      return ComponentEnvironment.Mixin.getDOMNode.call(this);
+    },
 
     /**
      * Checks whether or not this component is mounted.
@@ -537,7 +567,20 @@ var ReactComponent = {
       }
       return owner.refs[ref];
     }
-  })
+  }
 };
 
+var injection = {
+  injectEnvironment: function(environment) {
+    ComponentEnvironment.Mixin = environment.Mixin;
+    // We delete the Mixin so it doesn't get merged in and override the other
+    // parts of the Mixin that we expect to exist. We currently inject directly
+    // into ReactComponent so we can keep property lookups as lookups instead of
+    // function call getters.
+    delete environment.Mixin;
+    mergeInto(ReactComponent, environment);
+  }
+};
+
+ReactComponent.injection = injection;
 module.exports = ReactComponent;
