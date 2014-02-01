@@ -21,6 +21,7 @@ var CodeMirrorEditor = React.createClass({
       mode: 'javascript',
       lineNumbers: false,
       lineWrapping: true,
+      smartIndent: false,  // javascript mode does bad things with jsx indents
       matchBrackets: true,
       theme: 'solarized-light',
       readOnly: this.props.readOnly
