@@ -90,7 +90,7 @@ React.renderComponent(
 
 > Note:
 >
-> The comment parser is very strict right now, in order for it to pick up the `@jsx` modifier, two conditions are required. The `@jsx` comment block must be the first comment on the file. The comment must start with `/**` (`/*` and `//` will not work). If the parser can't find the `@jsx` comment, it will output the file without transforming it.
+> The comment parser is very strict right now; in order for it to pick up the `@jsx` modifier, two conditions are required. The `@jsx` comment block must be the first comment on the file. The comment must start with `/**` (`/*` and `//` will not work). If the parser can't find the `@jsx` comment, it will output the file without transforming it.
 
 Update your HTML file as below:
 
