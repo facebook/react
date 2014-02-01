@@ -33,6 +33,7 @@ var DOMPropertyInjection = {
   HAS_SIDE_EFFECTS: 0x4,
   HAS_BOOLEAN_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10,
+  MUST_USE_NAMESPACED_ATTRIBUTE: 0x20,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -57,6 +58,9 @@ var DOMPropertyInjection = {
    * DOMMutationMethods: Properties that require special mutation methods. If
    * `value` is undefined, the mutation method should unset the property.
    *
+   * DOMAttributeNamespaces: attribute name to namespace mapping for attributes 
+   * that require setAttributeNS()
+   * 
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
@@ -64,6 +68,7 @@ var DOMPropertyInjection = {
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
 
     if (domPropertyConfig.isCustomAttribute) {
       DOMProperty._isCustomAttributeFunctions.push(
@@ -101,6 +106,11 @@ var DOMPropertyInjection = {
         DOMProperty.getMutationMethod[propName] = mutationMethod;
       }
 
+      var attributeNamespace = DOMAttributeNamespaces[propName];
+      if (attributeNamespace) {
+        DOMProperty.getAttributeNamespace[propName] = attributeNamespace;
+      }
+
       var propConfig = Properties[propName];
       DOMProperty.mustUseAttribute[propName] =
         propConfig & DOMPropertyInjection.MUST_USE_ATTRIBUTE;
@@ -112,6 +122,8 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
+      DOMProperty.mustUseNamespacedAttribute[propName] =
+        propConfig & DOMPropertyInjection.MUST_USE_NAMESPACED_ATTRIBUTE;
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
@@ -129,6 +141,18 @@ var DOMPropertyInjection = {
         !DOMProperty.hasBooleanValue[propName] ||
           !DOMProperty.hasPositiveNumericValue[propName],
         'DOMProperty: Cannot have both boolean and positive numeric value: %s',
+        propName
+      );
+      invariant(
+        !DOMProperty.mustUseAttribute[propName] ||
+          !DOMProperty.mustUseNamespacedAttribute[propName],
+        'DOMProperty: Cannot use both attribute and namespaced attribute: %s',
+        propName
+      );
+      invariant(
+        !DOMProperty.mustUseNamespacedAttribute[propName] ||
+          !DOMProperty.mustUseProperty[propName],
+        'DOMProperty: Cannot use both namespaced attribute and property: %s',
         propName
       );
     }

@@ -123,6 +123,9 @@ var DOMPropertyOperations = {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(name, value)) {
         this.deleteValueForProperty(node, name);
+      } else if (DOMProperty.mustUseNamespacedAttribute[name]) {
+        var ns = DOMProperty.getAttributeNamespace[name];
+        node.setAttributeNS(ns, DOMProperty.getAttributeName[name], '' + value);
       } else if (DOMProperty.mustUseAttribute[name]) {
         node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
       } else {

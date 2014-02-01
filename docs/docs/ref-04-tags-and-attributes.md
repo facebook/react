@@ -31,8 +31,7 @@ title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs g line linearGradient path polygon polyline radialGradient rect stop 
-svg text   
+altGlyph altGlyphDef altGlyphItem animate animateColor animateMotion animateTransform circle clipPath color-profile cursor defs desc feBlend feColorMatrix feComponentTransfer feComposite feConvolveMatrix feDiffuseLighting feDisplacementMap feDistantLight feFlood feFuncA feFuncB feFuncG feFuncR feGaussianBlur feImage feMerge feMergeNode feMorphology feOffset fePointLight feSpecularLighting feSpotLight feTile feTurbulence filter font font-face font-face-format font-face-name font-face-src font-face-uri foreignObject g glyph glyphRef hkern image line linearGradient marker mask metadata missing-glyph mpath path pattern polygon polyline radialGradient rect set stop switch symbol svg text textPath tref tspan use view vkern
 
 ```
 
@@ -68,8 +67,10 @@ In addition, there is the React-specific attribute `dangerouslySetInnerHTML` ([m
 
 ### SVG Attributes
 
+> Note:
+>
+> The `svgIn` attribute corresponds to the `in` attribute.
+
 ```
-cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
-spreadMethod stopColor stopOpacity stroke strokeLinecap strokeWidth transform
-version viewBox x1 x2 x y1 y2 y
+accentHeight accumulate additive alphabetic amplitude arabicForm ascent attributeName attributeType azimuth baseFrequency baseProfile bbox begin bias by calcMode capHeight clipPathUnits contentScriptType contentStyleType cursor cx cy d descent diffuseConstant divisor dur dx dy edgeMode elevation end exponent externalResourcesRequired filterRes filterUnits format from fx fy g1 g2 glyphName glyphRef gradientTransform gradientUnits hanging horizAdvX horizOriginX horixOriginY ideographic in2 intercept k k1 k2 k3 k4 kernelMatrix kernelUnitLength keyPoints keySplines keyTimes lengthAdjust limitingConeAngle local markerHeight markerUnits markerWidth maskContentUnits maskUnits mathematical media mode numOctaves offset operator order orient orientation origin overlinePosition overlineThcikness panose1 path pathLength patternContentUnits patternTransform patternUnits points pointsAtX pointsAtY pointsAtZ preserveAlpha preserveAspectRatio primitiveUnits r radius refX refY renderingIntent repeatCount repeatDur repeatExtensions requiredExtensions requiredFeatures restart result rotate rx ry scale seed slope spacing specularConstant specularExponent spreadMethod startOffset stdDeviation stemh stemv stitchTiles strikethroughPosition strikethroughThickness string surfaceScale svgIn systemLanguage tableValues targetX targetY textLength to transform u1 u2 underlinePosition underlineThickness unicode unicodeRange unitsPerEm vAlphabetic vHanging vIdeographic vMathematical values version vertAdvY vertOriginX vertOriginY viewBox viewTarget widths x1 x2 x xHeight xChannelSelector xlinkActuate xlinkArcrole xlinkHref xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace y1 y2 y yChannelSelector z zoomAndPan
 ```
