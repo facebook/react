@@ -16,9 +16,9 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
-  <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
 
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -387,7 +387,7 @@
 <p>Various methods are executed at specific points in a component&#39;s lifecycle.</p>
 <h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked immediately before rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
+<p>Invoked once, immediately before the initial rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
 <h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via the <code>rootNode</code> argument or by calling <code>this.getDOMNode()</code>.</p>

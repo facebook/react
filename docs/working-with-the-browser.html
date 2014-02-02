@@ -16,9 +16,9 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
-  <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
 
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -354,7 +354,7 @@
     <h1>Working With the Browser</h1>
     <div class="subHeader"></div>
     <p>React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.</p>
-<h2><a class="anchor" name="the-mock-dom"></a>The Mock DOM <a class="hash-link" href="#the-mock-dom">#</a></h2>
+<h2><a class="anchor" name="the-virtual-dom"></a>The Virtual DOM <a class="hash-link" href="#the-virtual-dom">#</a></h2>
 <p>React is so fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods return a <em>description</em> of the DOM, and React can diff this description with the in-memory representation to compute the fastest way to update the browser.</p>
 
 <p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and in a performant way cross-browser. You can even use some HTML5 events in IE8!</p>

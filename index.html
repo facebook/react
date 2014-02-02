@@ -16,9 +16,9 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
-  <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
 
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -107,8 +107,12 @@
         React components implement a <code>render()</code> method that takes input data and
         returns what to display. This example uses an XML-like syntax called
         JSX. Input data that is passed into the component can be accessed by
-        <code>render()</code> via <code>this.props</code>.<br />
-        <strong>JSX is optional and not required to use React.</strong>
+        <code>render()</code> via <code>this.props</code>.
+      </p>
+      <p>
+        <strong>JSX is optional and not required to use React.</strong> Try
+        clicking on &quot;Compiled JS&quot; to see the raw JavaScript code produced by
+        the JSX compiler.
       </p>
       <div id="helloExample"></div>
     </div>
@@ -118,8 +122,7 @@
         In addition to taking input data (accessed via <code>this.props</code>), a
         component can maintain internal state data (accessed via <code>this.state</code>).
         When a component&#39;s state data changes, the rendered markup will be
-        updated by re-invoking <code>render()</code>.<br />
-        <strong>This example demonstrates use of React without JSX.</strong>
+        updated by re-invoking <code>render()</code>.
       </p>
       <div id="timerExample"></div>
     </div>

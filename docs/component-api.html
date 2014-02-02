@@ -16,9 +16,9 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
-  <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
 
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -354,7 +354,7 @@
     <h1>Component API</h1>
     <div class="subHeader"></div>
     <h2><a class="anchor" name="reactcomponent"></a>ReactComponent <a class="hash-link" href="#reactcomponent">#</a></h2>
-<p>Component classses created by <code>createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
+<p>Component classes created by <code>createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
 <h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
 </code></pre></div>
 <p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.</p>
@@ -413,6 +413,9 @@
 <p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component and its children, but React will still only update the DOM if the markup changes.</p>
 
 <p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your application much simpler and more efficient.</p>
+<h3><a class="anchor" name="ismounted"></a>isMounted() <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
+</code></pre></div>
+<p><code>isMounted()</code> returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>
 
 
     <div class="docs-prevnext">

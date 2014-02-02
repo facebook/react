@@ -16,9 +16,9 @@
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
 
-  <link rel="stylesheet" href="/react/css/react.css">
   <link rel="stylesheet" href="/react/css/syntax.css">
   <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
 
   <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
   <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
@@ -414,7 +414,7 @@ renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&l
 renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 =&gt; [replaceAttribute textContent &#39;second&#39;], [insertNode <span class="nt">&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;</span>]
 </code></pre></div>
-<p>There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. <a href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn&#39;t find when a node has moved into another position and algorithms to do that have a much worst complexity.</p>
+<p>There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. <a href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn&#39;t find when a node has moved into another position and algorithms to do that have much worse complexity.</p>
 <h3><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h3>
 <p>In order to solve this seemingly intractable issue, an optional attribute has been introduced. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.</p>
 <div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>

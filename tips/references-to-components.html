@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Tooling Integration</title>
+  <title>React | References to Components</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Tooling Integration" />
+  <meta property="og:title" content="React | References to Components" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/tooling-integration.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/tips/references-to-components.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -46,7 +46,7 @@
           React
         </a>
         <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
@@ -169,7 +169,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/tooling-integration.html" class="active">
+            <a href="/react/docs/tooling-integration.html">
               Tooling Integration
             </a>
             
@@ -351,57 +351,37 @@
 
 
   <div class="inner-content">
-    <h1>Tooling Integration</h1>
+    <h1>References to Components</h1>
     <div class="subHeader"></div>
-    <p>Every project uses a different system for building and deploying JavaScript. We&#39;ve tried to make React as environment-agnostic as possible.</p>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2><h3><a class="anchor" name="cdn-hosted-react"></a>CDN-hosted React <a class="hash-link" href="#cdn-hosted-react">#</a></h3>
-<p>We provide CDN-hosted versions of React <a href="/react/downloads.html">on our download page</a>. These prebuilt files use the UMD module format. Dropping them in with a simple <code>&lt;script&gt;</code> tag will inject a <code>React</code> global into your environment. It should also work out-of-the-box in CommonJS and AMD environments.</p>
-<h3><a class="anchor" name="using-master"></a>Using master <a class="hash-link" href="#using-master">#</a></h3>
-<p>We have instructions for building from <code>master</code> <a href="https://github.com/facebook/react">in our GitHub repository</a>. We build a tree of CommonJS modules under <code>build/modules</code> which you can drop into any environment or packaging tool that supports CommonJS.</p>
-<h2><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h2><h3><a class="anchor" name="in-browser-jsx-transform"></a>In-browser JSX Transform <a class="hash-link" href="#in-browser-jsx-transform">#</a></h3>
-<p>If you like using JSX, we provide an in-browser JSX transformer for development <a href="/react/downloads.html">on our download page</a>. Simply include a <code>&lt;script type=&quot;text/jsx&quot;&gt;</code> tag to engage the JSX transformer. Be sure to include the <code>/** @jsx React.DOM */</code> comment as well, otherwise the transformer will not run the transforms.</p>
+    <p>If you&#39;re using React components in a larger non-React application or transitioning your code to React, you may need to keep references to components. <code>React.renderComponent</code> returns a reference to the mounted component:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
+<span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
+</code></pre></div>
+<p>If you pass a variable to &#39;React.renderComponent`, it&#39;s not guaranteed that the component passed in will be the one that&#39;s mounted. In cases where you construct a component before mounting it, be sure to reassign your variable:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+
+<span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
+
+<span class="c1">// Some code here...</span>
+
+<span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">myComponent</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
+</code></pre></div>
 <blockquote>
 <p>Note:</p>
 
-<p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
+<p>This should only ever be used at the top level. Inside components, let your <code>props</code> and <code>state</code> handle communication with child components, and only reference components via <code>ref</code>s.</p>
 </blockquote>
-<h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>. Run <code>jsx --help</code> for more information on how to use this tool.</p>
-<h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
-<p>The open-source community has built tools that integrate JSX with several build systems.</p>
-
-<ul>
-<li><a href="https://github.com/andreypopp/reactify">reactify</a> - use JSX with <a href="http://browserify.org/">browserify</a></li>
-<li><a href="https://github.com/ericclemmons/grunt-react">grunt-react</a> - <a href="http://gruntjs.com/">grunt</a> task for JSX</li>
-<li><a href="https://github.com/sindresorhus/gulp-react">gulp-react</a> - <a href="http://gulpjs.com/">gulp</a> task for JSX</li>
-<li><a href="https://github.com/philix/jsx-requirejs-plugin">jsx-requirejs-plugin</a> - use JSX with <a href="http://requirejs.org/">require.js</a> and precompile JSX files with r.js</li>
-<li><a href="https://github.com/facebook/react-python">pyReact</a> - use JSX with <a href="http://www.python.org/">Python</a></li>
-<li><a href="https://github.com/facebook/react-rails">react-rails</a> - use JSX with <a href="http://rubyonrails.org/">Ruby on Rails</a></li>
-</ul>
-<h3><a class="anchor" name="syntax-highlighting-amp-linting"></a>Syntax Highlighting &amp; Linting <a class="hash-link" href="#syntax-highlighting-amp-linting">#</a></h3>
-<ul>
-<li>Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
-
-<ul>
-<li><a href="https://github.com/yungsters/sublime/blob/master/tmLanguage/JavaScript%20(JSX).tmLanguage">JSX syntax highlighting</a> is available for Sublime Text and other editors
-that support <code>*.tmLanguage</code>.</li>
-</ul></li>
-<li>Linting provides accurate line numbers after compiling without sourcemaps.</li>
-<li>Elements use standard scoping so linters can find usage of out-of-scope components.</li>
-</ul>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/more-about-refs.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/tips/expose-component-functions.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/docs/addons.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/tooling-integration.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/references-to-components.html"></div>
   </div>
 </section>
 

@@ -6,7 +6,7 @@ var HELLO_COMPONENT = "\
 /** @jsx React.DOM */\n\
 var HelloMessage = React.createClass({\n\
   render: function() {\n\
-    return <div>{'Hello ' + this.props.name}</div>;\n\
+    return <div>Hello {this.props.name}</div>;\n\
   }\n\
 });\n\
 \n\
