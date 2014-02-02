@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Type of the Children props</title>
+  <title>React | Example apps</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Type of the Children props" />
+  <meta property="og:title" content="React | Example apps" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/children-props-type.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/example-apps.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -46,7 +46,7 @@
           React
         </a>
         <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
@@ -94,7 +94,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/example-apps.html">
+            <a href="/react/docs/example-apps.html" class="active">
               Example apps
             </a>
             
@@ -323,7 +323,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/children-props-type.html" class="active">Type of the Children props</a>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
           </li>
         
           <li>
@@ -365,56 +365,26 @@
 
 
   <div class="inner-content">
-    <h1>Type of the Children props</h1>
+    <h1>Example apps</h1>
     <div class="subHeader"></div>
-    <p>Usually, a component&#39;s children (<code>this.props.children</code>) is an array of components:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+    <p>Here is a selection of open-source apps built with React.</p>
 
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; true</span>
-  <span class="p">},</span>
+<ul>
+<li><strong><a href="https://github.com/tastejs/todomvc/tree/gh-pages/architecture-examples/react/js">TodoMVC</a></strong></li>
+<li><strong><a href="https://github.com/khan/perseus">Khan Academy question editor</a></strong> (browse their GitHub account for many more production apps!)</li>
+<li><strong><a href="https://github.com/jaredly/github-issues-viewer">github-issues-viewer</a></strong></li>
+<li><strong><a href="https://github.com/prabirshrestha/hn-react">hn-react</a></strong> Dead-simple Hacker News client in React</li>
+</ul>
 
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="err">/GenericWrapper&gt;,</span>
-  <span class="nx">mountNode</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>However, when there is only a single child, <code>this.props.children</code> will be the single child component itself <em>without the array wrapper</em>. This saves an array allocation.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; false</span>
-
-    <span class="c1">// warning: yields 5 for length of the string &#39;hello&#39;, not 1 for the</span>
-    <span class="c1">// length of the non-existant array wrapper!</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;</span><span class="nx">hello</span><span class="o">&lt;</span><span class="err">/GenericWrapper&gt;, mountNode);</span>
-</code></pre></div>
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/style-props-value-px.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/complementary-tools.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/tips/controlled-input-null-value.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/children-props-type.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/example-apps.html"></div>
   </div>
 </section>
 

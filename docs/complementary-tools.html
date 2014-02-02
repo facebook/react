@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Type of the Children props</title>
+  <title>React | Complementary Tools</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Type of the Children props" />
+  <meta property="og:title" content="React | Complementary Tools" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/children-props-type.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/complementary-tools.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -46,7 +46,7 @@
           React
         </a>
         <ul class="nav-site">
-          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
@@ -87,7 +87,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/complementary-tools.html">
+            <a href="/react/docs/complementary-tools.html" class="active">
               Complementary tools
             </a>
             
@@ -323,7 +323,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/children-props-type.html" class="active">Type of the Children props</a>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
           </li>
         
           <li>
@@ -365,56 +365,57 @@
 
 
   <div class="inner-content">
-    <h1>Type of the Children props</h1>
+    <h1>Complementary Tools</h1>
     <div class="subHeader"></div>
-    <p>Usually, a component&#39;s children (<code>this.props.children</code>) is an array of components:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+    <p>React is a small library that does one thing well. Here&#39;s a list of tools we&#39;ve found that work really well with React when building applications.</p>
 
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; true</span>
-  <span class="p">},</span>
+<p>If you want your project on this list, or think one of these projects should be removed, <a href="https://github.com/facebook/react/issues/new">open an issue on GitHub</a>.</p>
+<h3><a class="anchor" name="jsx-integrations"></a>JSX integrations <a class="hash-link" href="#jsx-integrations">#</a></h3>
+<ul>
+<li><strong><a href="https://npmjs.org/package/jsxhint">jsxhint</a></strong> <a href="http://jshint.com/">JSHint</a> (linting) support</li>
+<li><strong><a href="https://npmjs.org/package/reactify">reactify</a></strong> <a href="http://browserify.org/">Browserify</a> transform</li>
+<li><strong><a href="https://npmjs.org/package/node-jsx">node-jsx</a></strong> Native <a href="http://nodejs.org/">Node</a> support</li>
+<li><strong><a href="https://npmjs.org/package/jsx-loader">jsx-loader</a></strong> Loader for <a href="http://webpack.github.io/">webpack</a></li>
+<li><strong><a href="https://npmjs.org/package/grunt-react">grunt-react</a></strong> <a href="http://gruntjs.com/">GruntJS</a> task</li>
+<li><strong><a href="https://npmjs.org/package/gulp-react">gulp-react</a></strong> <a href="http://gulpjs.com/">GulpJS</a> plugin</li>
+<li><strong><a href="https://github.com/philix/jsx-requirejs-plugin">jsx-requirejs-plugin</a></strong> <a href="http://requirejs.org/">RequireJS</a> plugin</li>
+</ul>
+<h3><a class="anchor" name="full-stack-starter-kits"></a>Full-stack starter kits <a class="hash-link" href="#full-stack-starter-kits">#</a></h3>
+<ul>
+<li><strong><a href="https://github.com/andreypopp/react-app">react-app</a></strong> Rapid appliaction development with React with server rendering</li>
+<li><strong><a href="https://github.com/newtriks/generator-react-webpack">generator-react-webpack</a></strong> <a href="http://yeoman.io/">Yeoman</a> generator for React and Webpack</li>
+<li><strong><a href="http://genesis-skeleton.com/">Genesis Skeleton</a></strong> Modern, opinionated, full-stack starter kit for rapid, streamlined application development (supports React)</li>
+<li><strong><a href="https://github.com/johnthethird/react-starter-template">react-starter-template</a></strong> Starter template with Gulp, Webpack and Bootstrap</li>
+<li><strong><a href="https://npmjs.org/package/react-brunch">react-brunch</a></strong> <a href="http://brunch.io/">Brunch</a> plugin</li>
+<li><strong><a href="https://github.com/petehunt/react-browserify-template">react-browserify-template</a></strong> Quick-start with Browserify</li>
+</ul>
+<h3><a class="anchor" name="routing"></a>Routing <a class="hash-link" href="#routing">#</a></h3>
+<ul>
+<li><strong><a href="https://github.com/flatiron/director">director</a></strong> (for an example see <a href="https://github.com/tastejs/todomvc/blob/gh-pages/architecture-examples/react/js/app.jsx#L29">TodoMVC</a>)</li>
+<li><strong><a href="https://backbonejs.org/">Backbone</a></strong> (for an example see <a href="https://github.com/jaredly/github-issues-viewer">github-issues-viewer</a>)</li>
+</ul>
+<h3><a class="anchor" name="model-management"></a>Model management <a class="hash-link" href="#model-management">#</a></h3>
+<ul>
+<li><strong><a href="https://github.com/usepropeller/react.backbone">react.backbone</a></strong> Use <a href="http://backbonejs.org">Backbone</a> models with React</li>
+<li><strong><a href="https://github.com/mquan/cortex/">cortex</a></strong> A JavaScript library for centrally managing data with React</li>
+</ul>
+<h3><a class="anchor" name="ui-components"></a>UI components <a class="hash-link" href="#ui-components">#</a></h3>
+<ul>
+<li><strong><a href="https://github.com/stevoland/react-bootstrap">react-bootstrap</a></strong> Bootstrap 3 components built with React</li>
+<li><strong><a href="https://github.com/plaxdan/react-topcoat">react-topcoat</a></strong> Topcoat components built with React</li>
+</ul>
 
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="err">/GenericWrapper&gt;,</span>
-  <span class="nx">mountNode</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>However, when there is only a single child, <code>this.props.children</code> will be the single child component itself <em>without the array wrapper</em>. This saves an array allocation.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; false</span>
-
-    <span class="c1">// warning: yields 5 for length of the string &#39;hello&#39;, not 1 for the</span>
-    <span class="c1">// length of the non-existant array wrapper!</span>
-    <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">.</span><span class="nx">length</span><span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;</span><span class="nx">hello</span><span class="o">&lt;</span><span class="err">/GenericWrapper&gt;, mountNode);</span>
-</code></pre></div>
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/style-props-value-px.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/videos.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/tips/controlled-input-null-value.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/example-apps.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/children-props-type.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/complementary-tools.html"></div>
   </div>
 </section>
 
