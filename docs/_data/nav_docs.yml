@@ -8,6 +8,8 @@
     title: Videos
   - id: complementary-tools
     title: Complementary tools
+  - id: example-apps
+    title: Example apps
 - title: Guides
   items:
   - id: why-react

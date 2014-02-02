@@ -4,6 +4,7 @@ title: Complementary Tools
 layout: docs
 permalink: complementary-tools.html
 prev: videos.html
+next: example-apps.html
 ---
 
 React is a small library that does one thing well. Here's a list of tools we've found that work really well with React when building applications.
@@ -42,3 +43,4 @@ If you want your project on this list, or think one of these projects should be 
 ### UI components
 
   * **[react-bootstrap](https://github.com/stevoland/react-bootstrap)** Bootstrap 3 components built with React
+  * **[react-topcoat](https://github.com/plaxdan/react-topcoat)** Topcoat components built with React
