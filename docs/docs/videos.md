@@ -61,3 +61,7 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 <iframe width="650" height="315" src="//www.youtube.com/embed/R2CGKiNnPFo" frameborder="0" allowfullscreen></iframe>
 
 **In Russian** by [Alexander Solovyov](http://solovyov.net/)
+
+### -Functional DOM programming" - Meteor DevShop 11
+
+<iframe width="650" height="315" src="//www.youtube.com/embed/Lqcs6hPOcFw?t=49m23s" frameborder="0" allowfullscreen></iframe>
