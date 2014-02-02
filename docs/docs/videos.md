@@ -4,6 +4,7 @@ title: Videos
 layout: docs
 permalink: videos.html
 prev: tutorial.html
+next: complementary-tools.html
 ---
 
 ### Rethinking best practices - JSConf.eu

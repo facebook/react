@@ -6,6 +6,8 @@
     title: Tutorial
   - id: videos
     title: Videos
+  - id: complementary-tools
+    title: Complementary tools
 - title: Guides
   items:
   - id: why-react
