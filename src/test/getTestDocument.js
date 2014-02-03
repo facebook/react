@@ -16,6 +16,8 @@
  * @providesModule getTestDocument
  */
 
+"use strict";
+
 function getTestDocument(markup) {
   var iframe = document.createElement('iframe');
   iframe.style.display = 'none';
