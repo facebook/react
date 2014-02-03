@@ -16,6 +16,7 @@
  * @jsx React.DOM
  * @emails react-core
  */
+"use strict";
 
 /*jslint evil: true */
 
