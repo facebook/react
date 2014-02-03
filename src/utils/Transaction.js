@@ -67,7 +67,7 @@ var invariant = require('invariant');
  *   while guaranteeing that afterwards, the event system is reactivated.
  * - Flushing a queue of collected DOM mutations to the main UI thread after a
  *   reconciliation takes place in a worker thread.
- * - Invoking any collected `componentDidRender` callbacks after rendering new
+ * - Invoking any collected `componentDidUpdate` callbacks after rendering new
  *   content.
  * - (Future use case): Wrapping particular flushes of the `ReactWorker` queue
  *   to preserve the `scrollTop` (an automatic scroll aware DOM).
