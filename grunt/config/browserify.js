@@ -7,7 +7,6 @@ var deamdify = require('deamdify');
 var envify = require('envify/custom');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
-var uglifyify = require('uglifyify');
 var _ = require('lodash');
 
 var SIMPLE_TEMPLATE =
@@ -70,7 +69,7 @@ var basic = {
 var min = _.merge({}, basic, {
   outfile: './build/react.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  transforms: [envify({NODE_ENV: 'production'})],
   after: [minify, bannerify]
 });
 
@@ -100,7 +99,7 @@ var addons = {
 var addonsMin = _.merge({}, addons, {
   outfile: './build/react-with-addons.min.js',
   debug: false,
-  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  transforms: [envify({NODE_ENV: 'production'})],
   after: [minify, bannerify]
 });
 
