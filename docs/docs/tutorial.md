@@ -386,13 +386,13 @@ var CommentBox = React.createClass({
   },
   componentWillMount: function() {
     $.ajax({
-      url: 'comments.json',
+      url: this.props.url,
       dataType: 'json',
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
       error: function(xhr, status, err) {
-        console.error("comments.json", status, err.toString());
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
