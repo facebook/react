@@ -215,6 +215,7 @@ var ReactMultiChild = {
      */
     updateTextContent: function(nextContent) {
       updateDepth++;
+      var errorThrown = true;
       try {
         var prevChildren = this._renderedChildren;
         // Remove any rendered children.
@@ -225,13 +226,13 @@ var ReactMultiChild = {
         }
         // Set new text content.
         this.setTextContent(nextContent);
-      } catch (error) {
+        errorThrown = false;
+      } finally {
         updateDepth--;
-        updateDepth || clearQueue();
-        throw error;
+        if (!updateDepth) {
+          errorThrown ? clearQueue() : processQueue();
+        }
       }
-      updateDepth--;
-      updateDepth || processQueue();
     },
 
     /**
@@ -243,15 +244,16 @@ var ReactMultiChild = {
      */
     updateChildren: function(nextNestedChildren, transaction) {
       updateDepth++;
+      var errorThrown = true;
       try {
         this._updateChildren(nextNestedChildren, transaction);
-      } catch (error) {
+        errorThrown = false;
+      } finally {
         updateDepth--;
-        updateDepth || clearQueue();
-        throw error;
+        if (!updateDepth) {
+          errorThrown ? clearQueue() : processQueue();
+        }
       }
-      updateDepth--;
-      updateDepth || processQueue();
     },
 
     /**
