@@ -27,6 +27,8 @@ var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
+var ReactServerRenderingUnmountableTransaction =
+  require('ReactServerRenderingUnmountableTransaction');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
@@ -163,8 +165,11 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var idMarkup = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + idMarkup + '>';
+    var idMarkup;
+    if (!(transaction instanceof ReactServerRenderingUnmountableTransaction)) {
+      idMarkup = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
+    }
+    return ret + (idMarkup ? ' ' + idMarkup : '') + '>';
   },
 
   /**
