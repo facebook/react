@@ -20,6 +20,7 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
+var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
@@ -35,9 +36,16 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
 
+var onlyChild = require('onlyChild');
+
 ReactDefaultInjection.inject();
 
 var React = {
+  Children: {
+    map: ReactChildren.map,
+    forEach: ReactChildren.forEach,
+    only: onlyChild
+  },
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
