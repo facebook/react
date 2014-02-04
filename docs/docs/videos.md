@@ -51,7 +51,7 @@ By [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/j
 
 By [Steven Luscher](https://github.com/steveluscher)
 
-### Introduction to React - Joe Dev on Tech
+### Introduction to React - LAWebSpeed meetup
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
