@@ -18,7 +18,7 @@ var LICENSE_TEMPLATE =
 '/**\n\
  * @PACKAGE@ v@VERSION@\n\
  *\n\
- * Copyright 2013 Facebook, Inc.\n\
+ * Copyright 2013-2014 Facebook, Inc.\n\
  *\n\
  * Licensed under the Apache License, Version 2.0 (the "License");\n\
  * you may not use this file except in compliance with the License.\n\

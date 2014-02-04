@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+
+# Updates the copyright headers in the appropriate files. This is very naive but
+# that currently works in our favor and updates headers in templates.
+
+git grep -l 'Copyright 2013 Facebook' \
+  | xargs perl -pi -w -e 's/Copyright 2013 Facebook/Copyright 2013-2014 Facebook/g;'
