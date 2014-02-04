@@ -73,7 +73,7 @@ When you create a React component instance, you can include additional React com
 <Parent><Child /></Parent>
 ```
 
-`Parent` can read its children by accessing the special `this.props.children` prop.
+`Parent` can read its children by accessing the special `this.props.children` prop. **`this.props.children` is an opaque data structure:** use the [React.Children utilities](/react/docs/top-level-api.html#react.children) to manipulate them.
 
 
 ### Child Reconciliation
