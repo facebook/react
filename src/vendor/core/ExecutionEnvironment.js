@@ -34,6 +34,9 @@ var ExecutionEnvironment = {
 
   canUseWorkers: typeof Worker !== 'undefined',
 
+  canUseEventListeners:
+    canUseDOM && (window.addEventListener || window.attachEvent),
+
   isInWorker: !canUseDOM // For now, this is true - might change in the future.
 
 };
