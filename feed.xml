@@ -380,7 +380,7 @@ componentDidUpdate: function() {
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;140-characters-textarea&quot;&gt;&lt;/a&gt;140-characters textarea &lt;a class=&quot;hash-link&quot; href=&quot;#140-characters-textarea&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/brainkim&quot;&gt;Brian Kim&lt;/a&gt; wrote a small textarea component that gradually turns red as you reach the 140-characters limit. Because he only changes the background color, React is smart enough not to mess with the text selection.&lt;/p&gt;
 
-&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class='codepen'&gt;See the Pen &lt;a href='http://codepen.io/brainkim/pen/FECGb'&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href='http://codepen.io/brainkim'&gt;@brainkim&lt;/a&gt;) on &lt;a href='http://codepen.io'&gt;CodePen&lt;/a&gt;&lt;/p&gt;
+&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class=&#39;codepen&#39;&gt;See the Pen &lt;a href=&#39;http://codepen.io/brainkim/pen/FECGb&#39;&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href=&#39;http://codepen.io/brainkim&#39;&gt;@brainkim&lt;/a&gt;) on &lt;a href=&#39;http://codepen.io&#39;&gt;CodePen&lt;/a&gt;&lt;/p&gt;
 
 &lt;script async src=&quot;//codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;genesis-skeleton&quot;&gt;&lt;/a&gt;Genesis Skeleton &lt;a class=&quot;hash-link&quot; href=&quot;#genesis-skeleton&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
