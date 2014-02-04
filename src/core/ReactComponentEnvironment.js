@@ -15,6 +15,7 @@
  *
  * @providesModule ReactComponentEnvironment
  */
+
 "use strict";
 
 var ReactComponentBrowserEnvironment =
