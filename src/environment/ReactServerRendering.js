@@ -27,7 +27,7 @@ var invariant = require('invariant');
 
 /**
  * @param {ReactComponent} component
- * @return {String} the markup
+ * @return {string} the markup
  */
 function renderComponentToString(component) {
   invariant(
