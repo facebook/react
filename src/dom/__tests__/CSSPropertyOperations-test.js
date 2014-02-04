@@ -96,6 +96,21 @@ describe('CSSPropertyOperations', function() {
     });
   });
 
+  it('should recognize vendor-prefixed styles that don\'t take unit',
+    function() {
+      var unitlessProperties = [
+        'webkitFlex',
+        'MozColumnCount',
+        'msFlexGrow'
+      ];
+      unitlessProperties.forEach(function(property) {
+        var styles = {};
+        styles[property] = 1;
+        expect(CSSPropertyOperations.createMarkupForStyles(styles))
+          .toMatch(/:1;$/);
+      });
+    })
+
   it('should set style attribute when styles exist', function() {
     var styles = {
       backgroundColor: '#000',

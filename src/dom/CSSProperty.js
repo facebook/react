@@ -21,7 +21,7 @@
 /**
  * CSS properties which accept numbers but are not in units of "px".
  */
-var isUnitlessNumber = {
+var unitlessProperties = {
   columnCount: true,
   fillOpacity: true,
   flex: true,
@@ -40,6 +40,27 @@ var isUnitlessNumber = {
   zIndex: true,
   zoom: true
 };
+
+var vendorPrefixes = ['webkit', 'Moz', 'ms', 'O'];
+
+function stripVendorPrefix(vendorPrefix, styleName) {
+  var strippedStyleName = styleName.slice(vendorPrefix.length);
+  return strippedStyleName.charAt(0).toLowerCase() + strippedStyleName.slice(1);
+}
+
+function isUnitlessNumber(styleName) {
+  // `opacity` passes through fine and won't be treated as the Opera prefix
+  if (unitlessProperties[styleName]) return true;
+
+  for (var i = 0; i < vendorPrefixes.length; i++) {
+    var vendorPrefix = vendorPrefixes[i];
+    if (styleName.slice(0, vendorPrefix.length) === vendorPrefix) {
+      var unprefixedName = stripVendorPrefix(vendorPrefix, styleName);
+      return !!unitlessProperties[unprefixedName];
+    }
+  };
+  return false;
+}
 
 /**
  * Most style properties can be unset by doing .style[prop] = '' but IE8
