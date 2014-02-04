@@ -55,7 +55,7 @@ describe('cloneWithProps', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.getDOMNode().childNodes[0].className)
-      .toBe('child xyz');
+      .toBe('xyz child');
   });
 
   it('should clone a composite component with new props', function() {
@@ -82,7 +82,7 @@ describe('cloneWithProps', function() {
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.getDOMNode().childNodes[0].className)
-      .toBe('child xyz');
+      .toBe('xyz child');
   });
 
   it('should warn when cloning with refs', function() {
@@ -177,5 +177,18 @@ describe('cloneWithProps', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Grandparent />);
+  });
+
+  it('should overwrite props', function() {
+    var Component = React.createClass({
+      render: function() {
+        expect(this.props.myprop).toBe('xyz');
+        return <div />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(
+      cloneWithProps(<Component myprop="abc" />, {myprop: 'xyz'})
+    );
   });
 });
