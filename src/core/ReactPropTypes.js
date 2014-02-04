@@ -84,6 +84,7 @@ var Props = {
   shape: createShapeTypeChecker,
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
+  arrayOf: createArrayOfTypeChecker,
 
   instanceOf: createInstanceTypeChecker,
 
@@ -95,16 +96,6 @@ var Props = {
 };
 
 var ANONYMOUS = '<<anonymous>>';
-
-function createAnyTypeChecker() {
-  function validateAnyType(
-    shouldThrow, propValue, propName, componentName, location
-  ) {
-    // always is valid
-    return true;
-  }
-  return createChainableTypeChecker(validateAnyType);
-}
 
 function isRenderable(propValue) {
   switch(typeof propValue) {
@@ -138,24 +129,33 @@ function getPropType(propValue) {
   return propType;
 }
 
+function createAnyTypeChecker() {
+  function validateAnyType(
+    shouldWarn, propValue, propName, componentName, location
+  ) {
+    return true; // is always valid
+  }
+  return createChainableTypeChecker(validateAnyType);
+}
+
 function createPrimitiveTypeChecker(expectedType) {
   function validatePrimitiveType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var propType = getPropType(propValue);
     var isValid = propType === expectedType;
-    if (!shouldThrow) {
-      return isValid;
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` of type `%s` supplied to `%s`, expected `%s`.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        propType,
+        componentName,
+        expectedType
+      );
     }
-    warning(
-      isValid,
-      'Invalid %s `%s` of type `%s` supplied to `%s`, expected `%s`.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      propType,
-      componentName,
-      expectedType
-    );
+    return isValid;
   }
   return createChainableTypeChecker(validatePrimitiveType);
 }
@@ -163,148 +163,135 @@ function createPrimitiveTypeChecker(expectedType) {
 function createEnumTypeChecker(expectedValues) {
   var expectedEnum = createObjectFrom(expectedValues);
   function validateEnumType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var isValid = expectedEnum[propValue];
-    if (!shouldThrow) {
-      return isValid;
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` supplied to `%s`, expected one of %s.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        componentName,
+        JSON.stringify(Object.keys(expectedEnum))
+      );
     }
-    warning(
-      isValid,
-      'Invalid %s `%s` supplied to `%s`, expected one of %s.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      componentName,
-      JSON.stringify(Object.keys(expectedEnum))
-    );
+    return isValid;
   }
   return createChainableTypeChecker(validateEnumType);
 }
 
 function createShapeTypeChecker(shapeTypes) {
   function validateShapeType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var propType = getPropType(propValue);
     var isValid = propType === 'object';
     if (isValid) {
       for (var key in shapeTypes) {
         var checker = shapeTypes[key];
-        if (checker) {
-          // It's going to throw an exception if it doesn't pass
-          checker(propValue, key, componentName, location);
+        if (checker && !checker(propValue, key, componentName, location)) {
+          return false;
         }
       }
     }
-    if (!shouldThrow) {
-      return isValid;
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` of type `%s` supplied to `%s`, expected `object`.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        propType,
+        componentName
+      );
     }
-    warning(
-      isValid,
-      'Invalid %s `%s` of type `%s` supplied to `%s`, expected `object`.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      propType,
-      componentName
-    );
+    return isValid;
   }
   return createChainableTypeChecker(validateShapeType);
 }
 
 function createInstanceTypeChecker(expectedClass) {
   function validateInstanceType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var isValid = propValue instanceof expectedClass;
-    if (!shouldThrow) {
-      return isValid;
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` supplied to `%s`, expected instance of `%s`.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        componentName,
+        expectedClass.name || ANONYMOUS
+      );
     }
-    warning(
-      isValid,
-      'Invalid %s `%s` supplied to `%s`, expected instance of `%s`.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      componentName,
-      expectedClass.name || ANONYMOUS
-    );
+    return isValid;
   }
   return createChainableTypeChecker(validateInstanceType);
 }
 
+function createArrayOfTypeChecker(propTypeChecker) {
+  function validateArrayType(
+    shouldWarn, propValue, propName, componentName, location
+  ) {
+    var isValid = Array.isArray(propValue);
+    if (isValid) {
+      for (var i = 0; i < propValue.length; i++) {
+        if (!propTypeChecker(propValue, i, componentName, location)) {
+          return false;
+        }
+      }
+    }
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` supplied to `%s`, expected an array.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        componentName
+      );
+    }
+    return isValid;
+  }
+  return createChainableTypeChecker(validateArrayType);
+}
+
 function createRenderableTypeChecker() {
   function validateRenderableType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var isValid = isRenderable(propValue);
-    if (!shouldThrow) {
-      return isValid;
+    if (shouldWarn) {
+      warning(
+        isValid,
+        'Invalid %s `%s` supplied to `%s`, expected a renderable prop.',
+        ReactPropTypeLocationNames[location],
+        propName,
+        componentName
+      );
     }
-    warning(
-      isValid,
-      'Invalid %s `%s` supplied to `%s`, expected a renderable prop.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      componentName
-    );
+    return isValid;
   }
   return createChainableTypeChecker(validateRenderableType);
 }
 
 function createComponentTypeChecker() {
   function validateComponentType(
-    shouldThrow, propValue, propName, componentName, location
+    shouldWarn, propValue, propName, componentName, location
   ) {
     var isValid = ReactComponent.isValidComponent(propValue);
-    if (!shouldThrow) {
-      return isValid;
-    }
-    warning(
-      isValid,
-      'Invalid %s `%s` supplied to `%s`, expected a React component.',
-      ReactPropTypeLocationNames[location],
-      propName,
-      componentName
-    );
-  }
-  return createChainableTypeChecker(validateComponentType);
-}
-
-function createChainableTypeChecker(validate) {
-  function checkType(
-    isRequired, shouldThrow, props, propName, componentName, location
-  ) {
-    var propValue = props[propName];
-    if (propValue != null) {
-      // Only validate if there is a value to check.
-      return validate(
-        shouldThrow,
-        propValue,
-        propName,
-        componentName || ANONYMOUS,
-        location
-      );
-    } else {
-      var isValid = !isRequired;
-      if (!shouldThrow) {
-        return isValid;
-      }
+    if (shouldWarn) {
       warning(
         isValid,
-        'Required %s `%s` was not specified in `%s`.',
+        'Invalid %s `%s` supplied to `%s`, expected a React component.',
         ReactPropTypeLocationNames[location],
         propName,
-        componentName || ANONYMOUS
+        componentName
       );
     }
+    return isValid;
   }
-
-  var checker = checkType.bind(null, false, true);
-  checker.weak = checkType.bind(null, false, false);
-  checker.isRequired = checkType.bind(null, true, true);
-  checker.weak.isRequired = checkType.bind(null, true, false);
-  checker.isRequired.weak = checker.weak.isRequired;
-
-  return checker;
+  return createChainableTypeChecker(validateComponentType);
 }
 
 function createUnionTypeChecker(arrayOfValidators) {
@@ -327,7 +314,46 @@ function createUnionTypeChecker(arrayOfValidators) {
       propName,
       componentName || ANONYMOUS
     );
+    return isValid;
   };
+}
+
+function createChainableTypeChecker(validate) {
+  function checkType(
+    isRequired, shouldWarn, props, propName, componentName, location
+  ) {
+    var propValue = props[propName];
+    if (propValue != null) {
+      // Only validate if there is a value to check.
+      return validate(
+        shouldWarn,
+        propValue,
+        propName,
+        componentName || ANONYMOUS,
+        location
+      );
+    } else {
+      var isValid = !isRequired;
+      if (shouldWarn) {
+        warning(
+          isValid,
+          'Required %s `%s` was not specified in `%s`.',
+          ReactPropTypeLocationNames[location],
+          propName,
+          componentName || ANONYMOUS
+        );
+      }
+      return isValid;
+    }
+  }
+
+  var checker = checkType.bind(null, false, true);
+  checker.weak = checkType.bind(null, false, false);
+  checker.isRequired = checkType.bind(null, true, true);
+  checker.weak.isRequired = checkType.bind(null, true, false);
+  checker.isRequired.weak = checker.weak.isRequired;
+
+  return checker;
 }
 
 module.exports = Props;

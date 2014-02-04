@@ -37,6 +37,9 @@ React.createClass({
     // it as an enum.
     optionalEnum: React.PropTypes.oneOf(['News','Photos']),
 
+    // Expect an array of a certain propType
+    optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number)
+
     // You can also declare that a prop is an instance of a class. This uses
     // JS's instanceof operator.
     someClass: React.PropTypes.instanceOf(SomeClass),

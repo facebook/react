@@ -287,6 +287,87 @@ describe('Shape Types', function() {
   });
 });
 
+describe('ArrayOf Type', function() {
+  beforeEach(function() {
+    require('mock-modules').dumpCache();
+    mocks = require('mocks');
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
+  });
+
+  afterEach(function() {
+    console.warn = warn;
+  });
+
+  it('should support the arrayOf propType', function() {
+    typeCheck(Props.arrayOf(Props.number), [1, 2, 3]);
+    typeCheck(Props.arrayOf(Props.string), ['a', 'b', 'c']);
+    typeCheck(Props.arrayOf(Props.oneOf(['a', 'b'])), ['a', 'b']);
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
+  });
+
+  it('should support arrayOf with complex types', function() {
+    typeCheck(Props.arrayOf(Props.shape({
+      a: Props.number.isRequired
+    })), [{a: 1}, {a: 2}]);
+
+    function Thing() {}
+    typeCheck(
+      Props.arrayOf(Props.instanceOf(Thing)),
+      [new Thing(), new Thing()]
+    );
+
+    // No warnings should have been logged.
+    expect(console.warn.mock.calls.length).toBe(0);
+  });
+
+  it('should warn with invalid items in the array', function() {
+    typeCheck(Props.arrayOf(Props.number), [1, 2, 'b']);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `2` of type `string` supplied to ' +
+      '`testComponent`, expected `number`.'
+    );
+  });
+
+  it('should warn with invalid complex types', function() {
+    function Thing() {}
+    var name = Thing.name || '<<anonymous>>';
+
+    typeCheck(
+      Props.arrayOf(Props.instanceOf(Thing)),
+      [new Thing(), 'xyz']
+    );
+
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Invalid prop `1` supplied to ' +
+      '`testComponent`, expected instance of `' + name + '`.'
+    );
+  });
+
+  it('should warn when passed something other than an array', function() {
+    typeCheck(Props.arrayOf(Props.number), {'0': 'maybe-array', length: 1});
+    typeCheck(Props.arrayOf(Props.number), 123);
+    typeCheck(Props.arrayOf(Props.number), 'string');
+
+    expect(console.warn.mock.calls.length).toBe(3);
+
+    var message = 'Warning: Invalid prop `testProp` supplied to ' +
+      '`testComponent`, expected an array.';
+
+    expect(console.warn.mock.calls[0][0]).toBe(message);
+    expect(console.warn.mock.calls[1][0]).toBe(message);
+    expect(console.warn.mock.calls[2][0]).toBe(message);
+  });
+
+});
+
 describe('Instance Types', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
