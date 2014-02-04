@@ -27,7 +27,7 @@ var invariant = require('invariant');
  * instantiates a transaction can provide enforcers of the invariants at
  * creation time. The `Transaction` class itself will supply one additional
  * automatic invariant for you - the invariant that any transaction instance
- * should not be ran while it is already being ran. You would typically create a
+ * should not be run while it is already being run. You would typically create a
  * single instance of a `Transaction` for reuse multiple times, that potentially
  * is used to wrap several different methods. Wrappers are extremely simple -
  * they only require implementing two methods.
@@ -146,55 +146,68 @@ var Mixin = {
       'is already an outstanding transaction.'
     );
     var memberStart = Date.now();
-    var errorToThrow = null;
+    var errorThrown;
     var ret;
     try {
-      this.initializeAll();
+      this._isInTransaction = true;
+      // Catching errors makes debugging more difficult, so we start with
+      // errorThrown set to true before setting it to false after calling
+      // close -- if it's still set to true in the finally block, it means
+      // one of these calls threw.
+      errorThrown = true;
+      this.initializeAll(0);
       ret = method.call(scope, a, b, c, d, e, f);
-    } catch (error) {
-      // IE8 requires `catch` in order to use `finally`.
-      errorToThrow = error;
+      errorThrown = false;
     } finally {
       var memberEnd = Date.now();
       this.methodInvocationTime += (memberEnd - memberStart);
-      try {
-        this.closeAll();
-      } catch (closeError) {
+      if (errorThrown) {
         // If `method` throws, prefer to show that stack trace over any thrown
         // by invoking `closeAll`.
-        errorToThrow = errorToThrow || closeError;
+        try {
+          this.closeAll(0);
+        } catch (err) {
+        }
+      } else {
+        // Since `method` didn't throw, we don't want to silence the exception
+        // here.
+        this.closeAll(0);
       }
-    }
-    if (errorToThrow) {
-      throw errorToThrow;
+      this._isInTransaction = false;
     }
     return ret;
   },
 
-  initializeAll: function() {
-    this._isInTransaction = true;
+  initializeAll: function(startIndex) {
     var transactionWrappers = this.transactionWrappers;
     var wrapperInitTimes = this.timingMetrics.wrapperInitTimes;
-    var errorToThrow = null;
-    for (var i = 0; i < transactionWrappers.length; i++) {
+    for (var i = startIndex; i < transactionWrappers.length; i++) {
       var initStart = Date.now();
       var wrapper = transactionWrappers[i];
       try {
+        // Catching errors makes debugging more difficult, so we start with the
+        // OBSERVED_ERROR state before overwriting it with the real return value
+        // of initialize -- if it's still set to OBSERVED_ERROR in the finally
+        // block, it means wrapper.initialize threw.
+        this.wrapperInitData[i] = Transaction.OBSERVED_ERROR;
         this.wrapperInitData[i] = wrapper.initialize ?
           wrapper.initialize.call(this) :
           null;
-      } catch (initError) {
-        // Prefer to show the stack trace of the first error.
-        errorToThrow = errorToThrow || initError;
-        this.wrapperInitData[i] = Transaction.OBSERVED_ERROR;
       } finally {
         var curInitTime = wrapperInitTimes[i];
         var initEnd = Date.now();
         wrapperInitTimes[i] = (curInitTime || 0) + (initEnd - initStart);
+
+        if (this.wrapperInitData[i] === Transaction.OBSERVED_ERROR) {
+          // The initializer for wrapper i threw an error; initialize the
+          // remaining wrappers but silence any exceptions from them to ensure
+          // that the first error is the one to bubble up.
+          try {
+            this.initializeAll(i + 1);
+          } catch (err) {
+          }
+        }
       }
-    }
-    if (errorToThrow) {
-      throw errorToThrow;
     }
   },
 
@@ -204,36 +217,45 @@ var Mixin = {
    * (`close`rs that correspond to initializers that failed will not be
    * invoked).
    */
-  closeAll: function() {
+  closeAll: function(startIndex) {
     invariant(
       this.isInTransaction(),
       'Transaction.closeAll(): Cannot close transaction when none are open.'
     );
     var transactionWrappers = this.transactionWrappers;
     var wrapperCloseTimes = this.timingMetrics.wrapperCloseTimes;
-    var errorToThrow = null;
-    for (var i = 0; i < transactionWrappers.length; i++) {
+    for (var i = startIndex; i < transactionWrappers.length; i++) {
       var wrapper = transactionWrappers[i];
       var closeStart = Date.now();
       var initData = this.wrapperInitData[i];
+      var errorThrown;
       try {
+        // Catching errors makes debugging more difficult, so we start with
+        // errorThrown set to true before setting it to false after calling
+        // close -- if it's still set to true in the finally block, it means
+        // wrapper.close threw.
+        errorThrown = true;
         if (initData !== Transaction.OBSERVED_ERROR) {
           wrapper.close && wrapper.close.call(this, initData);
         }
-      } catch (closeError) {
-        // Prefer to show the stack trace of the first error.
-        errorToThrow = errorToThrow || closeError;
+        errorThrown = false;
       } finally {
         var closeEnd = Date.now();
         var curCloseTime = wrapperCloseTimes[i];
         wrapperCloseTimes[i] = (curCloseTime || 0) + (closeEnd - closeStart);
+
+        if (errorThrown) {
+          // The closer for wrapper i threw an error; close the remaining
+          // wrappers but silence any exceptions from them to ensure that the
+          // first error is the one to bubble up.
+          try {
+            this.closeAll(i + 1);
+          } catch (e) {
+          }
+        }
       }
     }
     this.wrapperInitData.length = 0;
-    this._isInTransaction = false;
-    if (errorToThrow) {
-      throw errorToThrow;
-    }
   }
 };
 
