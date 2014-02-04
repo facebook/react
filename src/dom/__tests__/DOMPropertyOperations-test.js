@@ -82,12 +82,12 @@ describe('DOMPropertyOperations', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
         'simple'
-      )).toBe('checked="simple"');
+      )).toBe('checked');
 
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
         true
-      )).toBe('checked="true"');
+      )).toBe('checked');
 
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
