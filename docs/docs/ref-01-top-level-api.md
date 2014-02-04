@@ -11,6 +11,35 @@ next: component-api.html
 `React` is the entry point to the React framework. If you're using one of the prebuilt packages it's available as a global; if you're using CommonJS modules you can `require()` it.
 
 
+### React.Children
+
+`React.Children` provides utilities for dealing with the `this.props.children` opaque data structure.
+
+#### React.Children.map
+
+```javascript
+array React.Children.map(object children, function fn [, object context])
+```
+
+Invoke `fn` on every immediate child contained within `children` with `this` set to `context`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects.
+
+#### React.Children.forEach
+
+```javascript
+React.Children.forEach(object children, function fn [, object context])
+```
+
+Like `React.Children.map()` but does not return an array.
+
+#### React.children.only()
+
+```javascript
+object React.Children.only(object children)
+```
+
+Return the only child in `children`. If `children` is a nested object or array it will be traversed.
+
+
 ### React.DOM
 
 `React.DOM` provides all of the standard HTML tags needed to build a React app. You generally don't use it directly; instead, just include it as part of the `/** @jsx React.DOM */` docblock.
