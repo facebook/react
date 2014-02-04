@@ -56,9 +56,6 @@ var ReactContext = {
     ReactContext.current = merge(previousContext, newContext);
     try {
       result = scopedCallback();
-    } catch (error) {
-      // IE8 requires `catch` in order to use `finally`.
-      throw error;
     } finally {
       ReactContext.current = previousContext;
     }
