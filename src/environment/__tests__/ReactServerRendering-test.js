@@ -56,12 +56,8 @@ describe('ReactServerRendering', function() {
   });
 
   it('should generate simple markup', function() {
-    var response;
-    ReactServerRendering.renderComponentToString(
-      <span>hello world</span>,
-      function(response_) {
-        response = response_;
-      }
+    var response = ReactServerRendering.renderComponentToString(
+      <span>hello world</span>
     );
     expect(response).toMatch(
       '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
@@ -73,12 +69,10 @@ describe('ReactServerRendering', function() {
     var EventPluginHub = require('EventPluginHub');
     var cb = mocks.getMockFunction();
 
-    ReactServerRendering.renderComponentToString(
-      <span onClick={cb}>hello world</span>,
-      function() {
-        expect(EventPluginHub.__getListenerBank()).toEqual({});
-      }
+    var response = ReactServerRendering.renderComponentToString(
+      <span onClick={cb}>hello world</span>
     );
+    expect(EventPluginHub.__getListenerBank()).toEqual({});
   });
 
   it('should render composite components', function() {
@@ -92,12 +86,8 @@ describe('ReactServerRendering', function() {
         return <span>My name is {this.props.name}</span>;
       }
     });
-    var response;
-    ReactServerRendering.renderComponentToString(
-      <Parent />,
-      function(response_) {
-        response = response_;
-      }
+    var response = ReactServerRendering.renderComponentToString(
+      <Parent />
     );
     expect(response).toMatch(
       '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
@@ -144,13 +134,8 @@ describe('ReactServerRendering', function() {
       }
     });
 
-    var response;
-
-    ReactServerRendering.renderComponentToString(
-      <TestComponent />,
-      function (_response) {
-        response = _response;
-      }
+    var response = ReactServerRendering.renderComponentToString(
+      <TestComponent />
     );
 
     expect(response).toMatch(
@@ -212,14 +197,10 @@ describe('ReactServerRendering', function() {
     expect(element.innerHTML).toEqual('');
 
     ExecutionEnvironment.canUseDOM = false;
-    ReactServerRendering.renderComponentToString(
-      <TestComponent name="x" />,
-      function(markup) {
-        lastMarkup = markup;
-      }
+    lastMarkup = ReactServerRendering.renderComponentToString(
+      <TestComponent name="x" />
     );
     ExecutionEnvironment.canUseDOM = true;
-
     element.innerHTML = lastMarkup + ' __sentinel__';
 
     React.renderComponent(<TestComponent name="x" />, element);
@@ -250,23 +231,25 @@ describe('ReactServerRendering', function() {
     expect(
       ReactServerRendering.renderComponentToString.bind(
         ReactServerRendering,
-        'not a component',
-        function() {}
+        'not a component'
       )
     ).toThrow(
       'Invariant Violation: renderComponentToString(): You must pass ' +
       'a valid ReactComponent.'
     );
+  });
 
+  it('should provide guidance for breaking API changes', function() {
     expect(
       ReactServerRendering.renderComponentToString.bind(
         ReactServerRendering,
-        React.DOM.div(),
-        'not a function'
+        <div />,
+        function(){}
       )
     ).toThrow(
-      'Invariant Violation: renderComponentToString(): You must pass ' +
-      'a function as a callback.'
+      'Invariant Violation: renderComponentToString(): This function became ' +
+      'synchronous and now returns the generated markup. Please remove the ' +
+      'second parameter.'
     );
   });
 });

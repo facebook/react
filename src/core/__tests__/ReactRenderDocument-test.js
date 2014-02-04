@@ -64,14 +64,13 @@ describe('rendering React components at document', function() {
       }
     });
 
-    React.renderComponentToString(<Root />, function(markup) {
-      testDocument = getTestDocument(markup);
-      var component = React.renderComponent(<Root />, testDocument);
-      expect(testDocument.body.innerHTML).toBe('Hello world');
+    var markup = React.renderComponentToString(<Root />);
+    testDocument = getTestDocument(markup);
+    var component = React.renderComponent(<Root />, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
-      var componentID = ReactMount.getReactRootID(testDocument);
-      expect(componentID).toBe(component._rootNodeID);
-    });
+    var componentID = ReactMount.getReactRootID(testDocument);
+    expect(componentID).toBe(component._rootNodeID);
   });
 
   it('should not be able to unmount component from document node', function() {
@@ -92,17 +91,16 @@ describe('rendering React components at document', function() {
       }
     });
 
-    React.renderComponentToString(<Root />, function(markup) {
-      testDocument = getTestDocument(markup);
-      React.renderComponent(<Root />, testDocument);
-      expect(testDocument.body.innerHTML).toBe('Hello world');
+    var markup = React.renderComponentToString(<Root />);
+    testDocument = getTestDocument(markup);
+    React.renderComponent(<Root />, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
-      expect(function() {
-        React.unmountComponentAtNode(testDocument);
-      }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    expect(function() {
+      React.unmountComponentAtNode(testDocument);
+    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
-      expect(testDocument.body.innerHTML).toBe('Hello world');
-    });
+    expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
   it('should not be able to switch root constructors', function() {
@@ -138,20 +136,19 @@ describe('rendering React components at document', function() {
       }
     });
 
-    React.renderComponentToString(<Component />, function(markup) {
-      testDocument = getTestDocument(markup);
+    var markup = React.renderComponentToString(<Component />);
+    testDocument = getTestDocument(markup);
 
-      React.renderComponent(<Component />, testDocument);
+    React.renderComponent(<Component />, testDocument);
 
-      expect(testDocument.body.innerHTML).toBe('Hello world');
+    expect(testDocument.body.innerHTML).toBe('Hello world');
 
-      // Reactive update
-      expect(function() {
-        React.renderComponent(<Component2 />, testDocument);
-      }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
+    // Reactive update
+    expect(function() {
+      React.renderComponent(<Component2 />, testDocument);
+    }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
-      expect(testDocument.body.innerHTML).toBe('Hello world');
-    });
+    expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
   it('should be able to mount into document', function() {
@@ -172,16 +169,14 @@ describe('rendering React components at document', function() {
       }
     });
 
-    React.renderComponentToString(
-      <Component text="Hello world" />,
-      function(markup) {
-        testDocument = getTestDocument(markup);
-
-        React.renderComponent(<Component text="Hello world" />, testDocument);
-
-        expect(testDocument.body.innerHTML).toBe('Hello world');
-      }
+    var markup = React.renderComponentToString(
+      <Component text="Hello world" />
     );
+    testDocument = getTestDocument(markup);
+
+    React.renderComponent(<Component text="Hello world" />, testDocument);
+
+    expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
   it('should give helpful errors on state desync', function() {
@@ -202,26 +197,24 @@ describe('rendering React components at document', function() {
       }
     });
 
-    React.renderComponentToString(
-      <Component text="Goodbye world" />,
-      function(markup) {
-        testDocument = getTestDocument(markup);
+    var markup = React.renderComponentToString(
+      <Component text="Goodbye world" />
+    );
+    testDocument = getTestDocument(markup);
 
-        expect(function() {
-          // Notice the text is different!
-          React.renderComponent(<Component text="Hello world" />, testDocument);
-        }).toThrow(
-          'Invariant Violation: ' +
-          'You\'re trying to render a component to the document using ' +
-          'server rendering but the checksum was invalid. This usually ' +
-          'means you rendered a different component type or props on ' +
-          'the client from the one on the server, or your render() methods ' +
-          'are impure. React cannot handle this case due to cross-browser ' +
-          'quirks by rendering at the document root. You should look for ' +
-          'environment dependent code in your components and ensure ' +
-          'the props are the same client and server side.'
-        );
-      }
+    expect(function() {
+      // Notice the text is different!
+      React.renderComponent(<Component text="Hello world" />, testDocument);
+    }).toThrow(
+      'Invariant Violation: ' +
+      'You\'re trying to render a component to the document using ' +
+      'server rendering but the checksum was invalid. This usually ' +
+      'means you rendered a different component type or props on ' +
+      'the client from the one on the server, or your render() methods ' +
+      'are impure. React cannot handle this case due to cross-browser ' +
+      'quirks by rendering at the document root. You should look for ' +
+      'environment dependent code in your components and ensure ' +
+      'the props are the same client and server side.'
     );
   });
 

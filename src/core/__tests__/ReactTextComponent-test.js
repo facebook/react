@@ -30,9 +30,8 @@ describe('ReactTextComponent', function() {
     var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
     var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
     var thing = React.DOM.div(null, React.DOM.span({key:ThisThingShouldBeEscaped}, ["LULZ"]));
-    React.renderComponentToString(thing, function(html){
-      expect(html).not.toContain(ThisThingShouldBeEscaped);
-      expect(html).toContain(ThisThingWasBeEscaped);
-    });
+    var html = React.renderComponentToString(thing);
+    expect(html).not.toContain(ThisThingShouldBeEscaped);
+    expect(html).toContain(ThisThingWasBeEscaped);
   })
 });
