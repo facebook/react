@@ -16,6 +16,8 @@
  * @providesModule ReactMultiChildUpdateTypes
  */
 
+"use strict";
+
 var keyMirror = require('keyMirror');
 
 /**

@@ -16,6 +16,8 @@
  * @providesModule ReactComponentEnvironment
  */
 
+"use strict";
+
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 
