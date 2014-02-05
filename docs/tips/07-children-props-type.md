@@ -49,3 +49,5 @@ var GenericWrapper = React.createClass({
 
 React.renderComponent(<GenericWrapper>hello</GenericWrapper>, mountNode);
 ```
+
+To make `this.props.children` easy to deal with, we've provided the [React.Children utilities](/react/docs/top-level-api.html#react.children).
