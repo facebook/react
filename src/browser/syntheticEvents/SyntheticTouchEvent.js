@@ -23,7 +23,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 
 /**
  * @interface TouchEvent
- * @see http://www.w3.org/TR/touch-events/
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var TouchEventInterface = {
   touches: null,
