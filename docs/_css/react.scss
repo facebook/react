@@ -744,3 +744,9 @@ p code {
     float: right;
   }
 }
+
+// Twitter embeds
+div[data-twttr-id] {
+  margin: auto;
+  display: table;
+}
