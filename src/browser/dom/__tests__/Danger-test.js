@@ -16,9 +16,8 @@
  * @jsx React.DOM
  * @emails react-core
  */
-/*jslint evil: true */
 
-"use strict";
+/*jslint evil: true */
 
 var React = require('React');
 
