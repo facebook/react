@@ -58,6 +58,23 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('giraffe');
   });
 
+  it('should not control when using `defaultValue`', function() {
+    var stub =
+      <select defaultValue="giraffe">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    var node = renderSelect(stub);
+
+    expect(node.value).toBe('giraffe');
+
+    node.value = 'monkey';
+    stub.forceUpdate();
+    // Uncontrolled selects shouldn't change the value after first mounting
+    expect(node.value).toEqual('monkey');
+  });
+
   it('should allow setting `defaultValue` with multiple', function() {
     var stub =
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>

@@ -56,14 +56,15 @@ function selectValueType(props, propName, componentName) {
 
 /**
  * If `value` is supplied, updates <option> elements on mount and update.
+ * @param {ReactComponent} component Instance of ReactDOMSelect
+ * @param {?*} propValue For uncontrolled components, null/undefined. For
+ * controlled components, a string (or with `multiple`, a list of strings).
  * @private
  */
-function updateOptions() {
-  /*jshint validthis:true */
-  var multiple = this.props.multiple;
-  var propValue = LinkedValueUtils.getValue(this);
-  var value = propValue != null ? propValue : this.state.value;
-  var options = this.getDOMNode().options;
+function updateOptions(component, propValue) {
+  var multiple = component.props.multiple;
+  var value = propValue != null ? propValue : component.state.value;
+  var options = component.getDOMNode().options;
   var selectedValue, i, l;
   if (multiple) {
     selectedValue = {};
@@ -136,9 +137,16 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     return select(props, this.props.children);
   },
 
-  componentDidMount: updateOptions,
+  componentDidMount: function() {
+    updateOptions(this, LinkedValueUtils.getValue(this));
+  },
 
-  componentDidUpdate: updateOptions,
+  componentDidUpdate: function() {
+    var value = LinkedValueUtils.getValue(this);
+    if (value != null) {
+      updateOptions(this, value);
+    }
+  },
 
   _handleChange: function(event) {
     var returnValue;
