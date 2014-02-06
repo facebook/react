@@ -1,5 +1,6 @@
 'use strict';
 
+var fs = require('fs');
 var grunt = require('grunt');
 
 var src = 'npm-react/';
@@ -36,11 +37,23 @@ function buildRelease() {
   grunt.file.write(dest + 'package.json', JSON.stringify(pkg, null, 2));
 }
 
-function buildDev() {
-  // TODO: same as above except different destination
+function packRelease() {
+  var done = this.async();
+  var spawnCmd = {
+    cmd: 'npm',
+    args: ['pack', 'npm-react'],
+    opts: {
+      cwd: 'build/'
+    }
+  };
+  grunt.util.spawn(spawnCmd, function() {
+    var src = 'build/react-' + grunt.config.data.pkg.version + '.tgz'
+    var dest = 'build/react.tgz';
+    fs.rename(src, dest, done);
+  });
 }
 
 module.exports = {
   buildRelease: buildRelease,
-  buildDev: buildDev
+  packRelease: packRelease
 };
