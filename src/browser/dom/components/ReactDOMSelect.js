@@ -138,8 +138,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function() {
-    var value = LinkedValueUtils.getValue(this);
-    updateOptions(this, value);
+    updateOptions(this, LinkedValueUtils.getValue(this));
   },
 
   componentDidUpdate: function() {
