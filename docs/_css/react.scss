@@ -745,8 +745,7 @@ p code {
   }
 }
 
-// Twitter embeds
-div[data-twttr-id] {
-  margin: auto;
-  display: table;
+// Twitter embeds. Need to !important because they inline margin on the iframe.
+div[data-twttr-id] iframe {
+  margin: 10px auto !important;
 }
