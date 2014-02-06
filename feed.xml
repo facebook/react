@@ -7,6 +7,117 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #15</title>
+				<description>&lt;p&gt;Interest in React seems to have surged ever since David Nolen (&lt;a href=&quot;https://twitter.com/swannodette&quot;&gt;@swannodette&lt;/a&gt;)&amp;#39;s introduction of &lt;a href=&quot;https://github.com/swannodette/om&quot;&gt;Om&lt;/a&gt; in his post &lt;a href=&quot;http://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/&quot;&gt;&amp;quot;The Future of Javascript MVC Frameworks&amp;quot;&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-another-level-of-indirection&quot;&gt;&lt;/a&gt;&amp;quot;React: Another Level of Indirection&amp;quot; &lt;a class=&quot;hash-link&quot; href=&quot;#react-another-level-of-indirection&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;To start things off, Eric Normand (&lt;a href=&quot;https://twitter.com/ericnormand&quot;&gt;@ericnormand&lt;/a&gt;) of &lt;a href=&quot;http://lispcast.com&quot;&gt;LispCast&lt;/a&gt; makes the case for &lt;a href=&quot;http://www.lispcast.com/react-another-level-of-indirection&quot;&gt;React from a general functional programming standpoint&lt;/a&gt; and explains how React&amp;#39;s &amp;quot;Virtual DOM provides the last piece of the Web Frontend Puzzle for ClojureScript&amp;quot;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The Virtual DOM is an indirection mechanism that solves the difficult problem of DOM programming: how to deal with incremental changes to a stateful tree structure. By abstracting away the statefulness, the Virtual DOM turns the real DOM into an immediate mode GUI, which is perfect for functional programming.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.lispcast.com/react-another-level-of-indirection&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reagent-minimalistic-react-for-clojurescript&quot;&gt;&lt;/a&gt;Reagent: Minimalistic React for ClojureScript &lt;a class=&quot;hash-link&quot; href=&quot;#reagent-minimalistic-react-for-clojurescript&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Dan Holmsand (&lt;a href=&quot;https://twitter.com/holmsand&quot;&gt;@holmsand&lt;/a&gt;) created &lt;a href=&quot;http://holmsand.github.io/reagent/&quot;&gt;Reagent&lt;/a&gt;, a simplistic ClojureScript API to React.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;It allows you to define efficient React components using nothing but plain ClojureScript functions and data, that describe your UI using a Hiccup-like syntax.&lt;/p&gt;
+
+&lt;p&gt;The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://holmsand.github.io/reagent/&quot;&gt;Check it out on Github...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;functional-dom-programming&quot;&gt;&lt;/a&gt;Functional DOM programming &lt;a class=&quot;hash-link&quot; href=&quot;#functional-dom-programming&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;React&amp;#39;s one-way data-binding naturally lends itself to a functional programming approach. Facebook&amp;#39;s Pete Hunt (&lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;@floydophone&lt;/a&gt;) explores how one would go about &lt;a href=&quot;https://medium.com/p/67d81637d43&quot;&gt;writing web apps in a functional manner&lt;/a&gt;. Spoiler alert:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This is React. It’s not about templates, or data binding, or DOM manipulation. It’s about using functional programming with a virtual DOM representation to build ambitious, high-performance apps with JavaScript.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://medium.com/p/67d81637d43&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/Lqcs6hPOcFw?start=2963&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;kioo-separating-markup-and-logic&quot;&gt;&lt;/a&gt;Kioo: Separating markup and logic &lt;a class=&quot;hash-link&quot; href=&quot;#kioo-separating-markup-and-logic&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/ckirkendall&quot;&gt;Creighton Kirkendall&lt;/a&gt; created &lt;a href=&quot;https://github.com/ckirkendall/kioo&quot;&gt;Kioo&lt;/a&gt;, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.&lt;/p&gt;
+
+&lt;p&gt;A basic example from github:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;!DOCTYPE html&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;html&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;lang=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;en&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;body&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;header&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;h1&amp;gt;&lt;/span&gt;Header placeholder&lt;span class=&quot;nt&quot;&gt;&amp;lt;/h1&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;ul&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;navigation&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;&amp;lt;li&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;nav-item&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;a&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;href=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;#&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;Placeholder&lt;span class=&quot;nt&quot;&gt;&amp;lt;/a&amp;gt;&amp;lt;/li&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;nt&quot;&gt;&amp;lt;/ul&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;/header&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;div&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;class=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;content&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;place holder&lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;nt&quot;&gt;&amp;lt;/body&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/html&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;clojure language-clojure&quot; data-lang=&quot;clojure&quot;&gt;&lt;span class=&quot;nv&quot;&gt;...&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;my-nav-item&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;caption&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;kioo/component&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;main.html&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:.nav-item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:a&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;do-&amp;gt;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;caption&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;set-attr&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;:onClick&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;func&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;my-header&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;heading&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nav-elms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;kioo/component&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;main.html&amp;quot;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:header&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:h1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;heading&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:ul&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;map &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;my-nav-item&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;nav-elms&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;defn &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;my-page&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;kioo/component&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;quot;main.html&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;{[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:header&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;substitute&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;my-header&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:heading&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                                      &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:navigation&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)))&lt;/span&gt;
+     &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:.content&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;content&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:content&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;def &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;app-state&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;atom&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;:heading&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&amp;quot;main&amp;quot;&lt;/span&gt;
+                      &lt;span class=&quot;ss&quot;&gt;:content&lt;/span&gt;    &lt;span class=&quot;s&quot;&gt;&amp;quot;Hello World&amp;quot;&lt;/span&gt;
+                      &lt;span class=&quot;ss&quot;&gt;:navigation&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;home&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/alert&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]&lt;/span&gt;
+                                   &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;next&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;#&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js/alert&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]]}))&lt;/span&gt;
+
+&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;om/root&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;app-state&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;my-page&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;.-body&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;js/document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;om&quot;&gt;&lt;/a&gt;Om &lt;a class=&quot;hash-link&quot; href=&quot;#om&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In an interview with David Nolen, Tom Coupland (&lt;a href=&quot;https://twitter.com/tcoupland&quot;&gt;@tcoupland&lt;/a&gt;) of InfoQ provides a nice summary of recent developments around Om (&amp;quot;&lt;a href=&quot;http://www.infoq.com/news/2014/01/om-react&quot;&gt;Om: Enhancing Facebook&amp;#39;s React with Immutability&lt;/a&gt;&amp;quot;).&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;David [Nolen]: I think people are starting to see the limitations of just JavaScript and jQuery and even more structured solutions like Backbone, Angular, Ember, etc. React is a fresh approach to the DOM problem that seems obvious in hindsight.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.infoq.com/news/2014/01/om-react&quot;&gt;Read the full interview...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-slice-of-react-clojurescript-and-om&quot;&gt;&lt;/a&gt;A slice of React, ClojureScript and Om &lt;a class=&quot;hash-link&quot; href=&quot;#a-slice-of-react-clojurescript-and-om&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Fredrik Dyrkell (&lt;a href=&quot;https://twitter.com/lexicallyscoped&quot;&gt;@lexicallyscoped&lt;/a&gt;) rewrote part of the &lt;a href=&quot;http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html&quot;&gt;React tutorial in both ClojureScript and Om&lt;/a&gt;, along with short, helpful explanations.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;React has sparked a lot of interest in the Clojure community lately [...]. At the very core, React lets you build up your DOM representation in a functional fashion by composing pure functions and you have a simple building block for everything: React components.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;In a separate post, Dyrkell breaks down &lt;a href=&quot;http://www.lexicallyscoped.com/2014/01/23/ClojureScript-react-om-binary-clock.html&quot;&gt;how to build a binary clock component&lt;/a&gt; in Om.&lt;/p&gt;
+
+&lt;p&gt;[&lt;a href=&quot;http://www.lexicallyscoped.com/demo/binclock/&quot;&gt;Demo&lt;/a&gt;] [&lt;a href=&quot;https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs&quot;&gt;Code&lt;/a&gt;]&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;time-travel-implementing-undo-in-om&quot;&gt;&lt;/a&gt;Time Travel: Implementing undo in Om &lt;a class=&quot;hash-link&quot; href=&quot;#time-travel-implementing-undo-in-om&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;David Nolen shows how to leverage immutable data structures to &lt;a href=&quot;http://swannodette.github.io/2013/12/31/time-travel/&quot;&gt;add global undo&lt;/a&gt; functionality to an app – using just 13 lines of ClojureScript.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-step-by-step-om-walkthrough&quot;&gt;&lt;/a&gt;A Step-by-Step Om Walkthrough &lt;a class=&quot;hash-link&quot; href=&quot;#a-step-by-step-om-walkthrough&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.joshlehman.me&quot;&gt;Josh Lehman&lt;/a&gt; took the time to create an extensive &lt;a href=&quot;http://www.joshlehman.me/rewriting-the-react-tutorial-in-om/&quot;&gt;step-by-step walkthrough&lt;/a&gt; of the React tutorial in Om. The well-documented source is on &lt;a href=&quot;https://github.com/jalehman/omtut-starter&quot;&gt;github&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;omkara&quot;&gt;&lt;/a&gt;Omkara &lt;a class=&quot;hash-link&quot; href=&quot;#omkara&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/brendanyounger&quot;&gt;brendanyounger&lt;/a&gt; created &lt;a href=&quot;https://github.com/brendanyounger/omkara&quot;&gt;omkara&lt;/a&gt;, a starting point for ClojureScript web apps based on Om/React. It aims to take advantage of server-side rendering and comes with a few tips on getting started with Om/React projects.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-experience-report&quot;&gt;&lt;/a&gt;Om Experience Report &lt;a class=&quot;hash-link&quot; href=&quot;#om-experience-report&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Adam Solove (&lt;a href=&quot;https://twitter.com/asolove/&quot;&gt;@asolove&lt;/a&gt;) &lt;a href=&quot;http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html&quot;&gt;dives a little deeper into Om, React and ClojureScript&lt;/a&gt;. He shares some helpful tips he gathered while building his &lt;a href=&quot;https://github.com/asolove/carto-crayon&quot;&gt;CartoCrayon&lt;/a&gt; prototype.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;not-so-random-tweet&quot;&gt;&lt;/a&gt;Not-so-random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#not-so-random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+</description>
+				<pubDate>2014-02-05T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #14</title>
 				<description>&lt;p&gt;The theme of this first round-up of 2014 is integration. I&amp;#39;ve tried to assemble a list of articles and projects that use React in various environments.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-baseline&quot;&gt;&lt;/a&gt;React Baseline &lt;a class=&quot;hash-link&quot; href=&quot;#react-baseline&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -72,7 +183,7 @@ rails s
 &lt;p&gt;&lt;a href=&quot;http://skulbuny.com/2013/10/31/react-vs-angular/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;figure&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Really intrigued by React.js. I&amp;#39;ve looked at all JS frameworks, and excepting &lt;a href=&quot;https://twitter.com/serenadejs&quot;&gt;@serenadejs&lt;/a&gt; this is the first one which makes sense to me.&lt;/p&gt;&amp;mdash; Jonas Nicklas (@jonicklas) &lt;a href=&quot;https://twitter.com/jonicklas/statuses/412640708755869696&quot;&gt;December 16, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/figure&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Really intrigued by React.js. I&amp;#39;ve looked at all JS frameworks, and excepting &lt;a href=&quot;https://twitter.com/serenadejs&quot;&gt;@serenadejs&lt;/a&gt; this is the first one which makes sense to me.&lt;/p&gt;&amp;mdash; Jonas Nicklas (@jonicklas) &lt;a href=&quot;https://twitter.com/jonicklas/statuses/412640708755869696&quot;&gt;December 16, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 </description>
 				<pubDate>2014-01-06T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</link>
@@ -380,7 +491,7 @@ componentDidUpdate: function() {
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;140-characters-textarea&quot;&gt;&lt;/a&gt;140-characters textarea &lt;a class=&quot;hash-link&quot; href=&quot;#140-characters-textarea&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/brainkim&quot;&gt;Brian Kim&lt;/a&gt; wrote a small textarea component that gradually turns red as you reach the 140-characters limit. Because he only changes the background color, React is smart enough not to mess with the text selection.&lt;/p&gt;
 
-&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class=&#39;codepen&#39;&gt;See the Pen &lt;a href=&#39;http://codepen.io/brainkim/pen/FECGb&#39;&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href=&#39;http://codepen.io/brainkim&#39;&gt;@brainkim&lt;/a&gt;) on &lt;a href=&#39;http://codepen.io&#39;&gt;CodePen&lt;/a&gt;&lt;/p&gt;
+&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class='codepen'&gt;See the Pen &lt;a href='http://codepen.io/brainkim/pen/FECGb'&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href='http://codepen.io/brainkim'&gt;@brainkim&lt;/a&gt;) on &lt;a href='http://codepen.io'&gt;CodePen&lt;/a&gt;&lt;/p&gt;
 
 &lt;script async src=&quot;//codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;genesis-skeleton&quot;&gt;&lt;/a&gt;Genesis Skeleton &lt;a class=&quot;hash-link&quot; href=&quot;#genesis-skeleton&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -681,26 +792,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-11-05T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/05/thinking-in-react.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.5.1</title>
-				<description>&lt;p&gt;This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to &lt;a href=&quot;https://github.com/spicyj&quot;&gt;Ben Alpert&lt;/a&gt;, &lt;a href=&quot;https://github.com/andreypopp&quot;&gt;Andrey Popp&lt;/a&gt;, and &lt;a href=&quot;https://github.com/lrowe&quot;&gt;Laurence Rowe&lt;/a&gt; for their contributions!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed bug with &lt;code&gt;&amp;lt;input type=&amp;quot;range&amp;quot;&amp;gt;&lt;/code&gt; and selection events.&lt;/li&gt;
-&lt;li&gt;Fixed bug with selection and focus.&lt;/li&gt;
-&lt;li&gt;Made it possible to unmount components from the document root.&lt;/li&gt;
-&lt;li&gt;Fixed bug for &lt;code&gt;disabled&lt;/code&gt; attribute handling on non-&lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; elements.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React with Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed bug with transition and animation event detection.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2013-10-29T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html</guid>
 			</item>
 		
 	</channel>
