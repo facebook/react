@@ -15,6 +15,7 @@ after_script:
         -F "transformer=@build/JSXTransformer.js" \
         -F "react-with-addons=@build/react-with-addons.js" \
         -F "react-with-addons.min=@build/react-with-addons.min.js" \
+        -f "npm-react=@build/react.tgz" \
         -F "commit=$TRAVIS_COMMIT" \
         -F "date=`git log --format='%ct' -1`" \
         -F "pull_request=$TRAVIS_PULL_REQUEST" \
