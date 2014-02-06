@@ -48,7 +48,7 @@ module.exports = function(grunt) {
     }
   });
 
-  // Register jsx:debug and :release tasks.
+  // Register jsx:normal and :release tasks.
   grunt.registerMultiTask('jsx', jsxTask);
 
   // Our own browserify-based tasks to build a single JS file build
@@ -69,18 +69,18 @@ module.exports = function(grunt) {
 
   grunt.registerTask('version-check', versionCheckTask);
 
-  grunt.registerTask('build:basic', ['jsx:debug', 'version-check', 'browserify:basic']);
-  grunt.registerTask('build:addons', ['jsx:debug', 'browserify:addons']);
-  grunt.registerTask('build:transformer', ['jsx:debug', 'browserify:transformer']);
-  grunt.registerTask('build:min', ['jsx:release', 'version-check', 'browserify:min']);
-  grunt.registerTask('build:addons-min', ['jsx:debug', 'browserify:addonsMin']);
+  grunt.registerTask('build:basic', ['jsx:normal', 'version-check', 'browserify:basic']);
+  grunt.registerTask('build:addons', ['jsx:normal', 'browserify:addons']);
+  grunt.registerTask('build:transformer', ['jsx:normal', 'browserify:transformer']);
+  grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'browserify:min']);
+  grunt.registerTask('build:addons-min', ['jsx:normal', 'browserify:addonsMin']);
   grunt.registerTask('build:withCodeCoverageLogging', [
-    'jsx:debug',
+    'jsx:normal',
     'version-check',
     'browserify:withCodeCoverageLogging'
   ]);
   grunt.registerTask('build:perf', [
-    'jsx:release',
+    'jsx:normal',
     'version-check',
     'browserify:transformer',
     'browserify:basic',
@@ -93,7 +93,7 @@ module.exports = function(grunt) {
     'version-check',
     'populist:test'
   ]);
-  grunt.registerTask('build:npm-react', ['version-check', 'jsx:release', 'npm-react:release']);
+  grunt.registerTask('build:npm-react', ['version-check', 'jsx:normal', 'npm-react:release']);
 
   grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
 
@@ -182,15 +182,14 @@ module.exports = function(grunt) {
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 
   // Optimized build task that does all of our builds. The subtasks will be run
-  // in order so we can take advantage of that and only run jsx:debug once.
+  // in order so we can take advantage of that and only run jsx:normal once.
   grunt.registerTask('build', [
     'delete-build-modules',
-    'jsx:debug',
+    'jsx:normal',
     'version-check',
     'browserify:basic',
     'browserify:transformer',
     'browserify:addons',
-    'jsx:release',
     'browserify:min',
     'browserify:addonsMin',
     'npm-react:release',
