@@ -303,7 +303,7 @@ React.renderComponent(
 
 Now that the data is available in the `CommentList`, let's render the comments dynamically:
 
-```javascript{4-6}
+```javascript{4-6,9}
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
