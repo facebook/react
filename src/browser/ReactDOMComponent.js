@@ -269,7 +269,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.DOMIDOperations.deletePropertyByID(
+        ReactComponent.BackendIDOperations.deletePropertyByID(
           this._rootNodeID,
           propKey
         );
@@ -311,7 +311,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.DOMIDOperations.updatePropertyByID(
+        ReactComponent.BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
           nextProp
@@ -319,7 +319,7 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      ReactComponent.DOMIDOperations.updateStylesByID(
+      ReactComponent.BackendIDOperations.updateStylesByID(
         this._rootNodeID,
         styleUpdates
       );
@@ -368,7 +368,7 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.DOMIDOperations.updateInnerHTMLByID(
+        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
           this._rootNodeID,
           nextHtml
         );

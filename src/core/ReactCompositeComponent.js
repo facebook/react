@@ -1112,7 +1112,7 @@ var ReactCompositeComponentMixin = {
           transaction,
           this._mountDepth + 1
         );
-        ReactComponent.DOMIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+        ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
           nextMarkup
         );

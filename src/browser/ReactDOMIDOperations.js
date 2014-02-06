@@ -53,7 +53,7 @@ var useWhitespaceWorkaround;
 
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
- * `ReactComponent.DOMIDOperations`.
+ * `ReactComponent.BackendIDOperations`.
  */
 var ReactDOMIDOperations = {
 

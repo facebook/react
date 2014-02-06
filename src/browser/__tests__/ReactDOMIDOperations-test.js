@@ -52,7 +52,7 @@ describe('ReactDOMIDOperations', function() {
     spyOn(ReactMount, "getNode").andReturn(stubNode);
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
-    
+
     ReactDOMIDOperations.updateInnerHTMLByID(
       'testID',
       html

@@ -202,7 +202,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  DOMIDOperations: ReactComponentEnvironment.DOMIDOperations,
+  BackendIDOperations: ReactComponentEnvironment.BackendIDOperations,
 
   /**
    * Optionally injectable environment dependent cleanup hook. (server vs.

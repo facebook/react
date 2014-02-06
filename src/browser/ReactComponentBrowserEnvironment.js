@@ -60,7 +60,7 @@ var ReactComponentBrowserEnvironment = {
 
   ReactReconcileTransaction: ReactReconcileTransaction,
 
-  DOMIDOperations: ReactDOMIDOperations,
+  BackendIDOperations: ReactDOMIDOperations,
 
   /**
    * If a particular environment requires that some resources be cleaned up,
