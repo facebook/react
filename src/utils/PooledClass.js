@@ -18,6 +18,8 @@
 
 "use strict";
 
+var invariant = require('invariant');
+
 /**
  * Static poolers. Several custom versions for each potential number of
  * arguments. A completely generic pooler is easy to implement, but would
@@ -71,6 +73,10 @@ var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
 
 var standardReleaser = function(instance) {
   var Klass = this;
+  invariant(
+    instance instanceof Klass,
+    'Trying to release an instance into a pool of a different type.'
+  );
   if (instance.destructor) {
     instance.destructor();
   }
