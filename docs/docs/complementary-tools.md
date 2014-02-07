@@ -33,7 +33,7 @@ If you want your project on this list, or think one of these projects should be 
 ### Routing
 
   * **[director](https://github.com/flatiron/director)** (for an example see [TodoMVC](https://github.com/tastejs/todomvc/blob/gh-pages/architecture-examples/react/js/app.jsx#L29))
-  * **[Backbone](https://backbonejs.org/)** (for an example see [github-issues-viewer](https://github.com/jaredly/github-issues-viewer))
+  * **[Backbone](http://backbonejs.org/)** (for an example see [github-issues-viewer](https://github.com/jaredly/github-issues-viewer))
   * **[react-router](https://github.com/jaredly/react-router)** (example coming soon)
 
 ### Model management
