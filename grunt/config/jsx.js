@@ -1,27 +1,28 @@
 'use strict';
 
 var grunt = require('grunt');
+var _ = require('lodash');
 
 var rootIDs = [
   "React",
   "ReactWithAddons"
 ];
 
-var getDebugConfig = function() {
-  return {
-    "commonerConfig": grunt.config.data.pkg.commonerConfig,
-    "constants": {
-      "__VERSION__": grunt.config.data.pkg.version
-    }
-  };
-};
 
-var debug = {
+var normal = {
   rootIDs: rootIDs,
-  getConfig: getDebugConfig,
+  getConfig: function() {
+    return {
+      commonerConfig: grunt.config.data.pkg.commonerConfig,
+      constants: {
+        __VERSION__: grunt.config.data.pkg.version
+      }
+    };
+  },
   sourceDir: "src",
   outputDir: "build/modules"
 };
+
 
 var test = {
   rootIDs: rootIDs.concat([
@@ -29,28 +30,9 @@ var test = {
     "**/__tests__/*.js"
   ]),
   getConfig: function() {
-    return {
-      "mocking": true,
-      "commonerConfig": grunt.config.data.pkg.commonerConfig,
-      "constants": {
-        "__VERSION__": grunt.config.data.pkg.version
-      }
-    };
-  },
-  sourceDir: "src",
-  outputDir: "build/modules"
-};
-
-
-var release = {
-  rootIDs: rootIDs,
-  getConfig: function() {
-    return {
-      "commonerConfig": grunt.config.data.pkg.commonerConfig,
-      "constants": {
-        "__VERSION__": grunt.config.data.pkg.version
-      }
-    };
+    return _.merge({}, normal.getConfig(), {
+      mocking: true
+    });
   },
   sourceDir: "src",
   outputDir: "build/modules"
@@ -58,7 +40,6 @@ var release = {
 
 
 module.exports = {
-  debug: debug,
-  test: test,
-  release: release
+  normal: normal,
+  test: test
 };
