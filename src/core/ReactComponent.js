@@ -155,9 +155,21 @@ function validatePropertyKey(name) {
  */
 function validateChildKeys(component) {
   if (Array.isArray(component)) {
+    var keys = {};
     for (var i = 0; i < component.length; i++) {
       var child = component[i];
       if (ReactComponent.isValidComponent(child)) {
+        if (child.props.key != null) {
+          if (keys[child.props.key]) {
+            var currentName = ReactCurrentOwner.current.constructor.displayName;
+            console.warn(
+              'Key collision detected for key "' + child.props.key + '". ' +
+              'Check the render method of ' + currentName + '.'
+            );
+          }
+
+          keys[child.props.key] = true;
+        }
         validateExplicitKey(child);
       }
     }

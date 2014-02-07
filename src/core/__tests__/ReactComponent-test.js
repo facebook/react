@@ -22,13 +22,23 @@
 var React;
 var ReactTestUtils;
 
+var mocks;
 var reactComponentExpect;
+var warn;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
+    mocks = require('mocks');
+
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
+  });
+
+  afterEach(function() {
+    console.warn = warn;
   });
 
   it('should throw on invalid render targets', function() {
@@ -206,5 +216,31 @@ describe('ReactComponent', function() {
     expect(root.refs.child._mountDepth).toBe(5);
     expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
     expect(root.refs.child.refs.span._mountDepth).toBe(6);
+  });
+
+  it('should render even with key collisions', function() {
+    var Component = React.createClass({
+      render: function() {
+        var array = [
+          <span key="1"></span>,
+          <span key="2"></span>,
+          <span key="3"></span>,
+          <span key="4"></span>,
+          <span key="1"></span>
+        ];
+
+        return <div>{array}</div>;
+      }
+    });
+
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Key collision detected for key "1". ' +
+      'Check the render method of Component.'
+    );
   });
 });

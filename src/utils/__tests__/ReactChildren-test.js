@@ -319,18 +319,4 @@ describe('ReactChildren', function() {
       ReactChildren.map(instance.props.children, mapFn);
     }).not.toThrow();
   });
-
-  it('should throw if key provided is a dupe with explicit key', function() {
-    var zero = <div key="something"/>;
-    var one = <div key="something" />;
-
-    var mapFn = function() {return null;};
-    var instance = (
-      <div>{zero}{one}</div>
-    );
-
-    expect(function() {
-      ReactChildren.map(instance.props.children, mapFn);
-    }).toThrow();
-  });
 });
