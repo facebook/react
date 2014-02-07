@@ -19,7 +19,6 @@
     "README.md",
     "main.js",
     "bin/jsx",
-    "build/modules/",
     "src/",
     "vendor/fbtransform/",
     "vendor/constants.js"

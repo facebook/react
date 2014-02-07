@@ -16,6 +16,7 @@ after_script:
         -F "react-with-addons=@build/react-with-addons.js" \
         -F "react-with-addons.min=@build/react-with-addons.min.js" \
         -F "npm-react=@build/react.tgz" \
+        -F "npm-react-tools=@build/react-tools.tgz" \
         -F "commit=$TRAVIS_COMMIT" \
         -F "date=`git log --format='%ct' -1`" \
         -F "pull_request=$TRAVIS_PULL_REQUEST" \

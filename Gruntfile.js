@@ -10,6 +10,7 @@ var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 var npmReactTasks = require('./grunt/tasks/npm-react');
+var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
 var versionCheckTask = require('./grunt/tasks/version-check');
 
 module.exports = function(grunt) {
@@ -66,6 +67,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
+  grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.pack);
 
   grunt.registerTask('version-check', versionCheckTask);
 
@@ -194,6 +196,7 @@ module.exports = function(grunt) {
     'browserify:addonsMin',
     'npm-react:release',
     'npm-react:pack',
+    'npm-react-tools:pack',
     'copy:react_docs',
     'compare_size'
   ]);
