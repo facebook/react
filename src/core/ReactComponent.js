@@ -56,7 +56,7 @@ var NUMERIC_PROPERTY_REGEX = /^\d+$/;
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
  * This component is in an array. The array could grow and shrink or be
- * reordered. All children that haven't already been validated, are required to
+ * reordered. All children that haven't already been validated are required to
  * have a "key" property assigned to it.
  *
  * @internal
