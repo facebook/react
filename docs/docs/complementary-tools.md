@@ -24,6 +24,7 @@ If you want your project on this list, or think one of these projects should be 
 ### Full-stack starter kits
 
   * **[react-app](https://github.com/andreypopp/react-app)** Rapid appliaction development with React with server rendering
+  * **[react-quickstart](https://github.com/andreypopp/react-quickstart)** Quick-start template for `express`, `browserify`, `react-router-component` and `react-async`.
   * **[generator-react-webpack](https://github.com/newtriks/generator-react-webpack)** [Yeoman](http://yeoman.io/) generator for React and Webpack
   * **[Genesis Skeleton](http://genesis-skeleton.com/)** Modern, opinionated, full-stack starter kit for rapid, streamlined application development (supports React)
   * **[react-starter-template](https://github.com/johnthethird/react-starter-template)** Starter template with Gulp, Webpack and Bootstrap
@@ -35,6 +36,7 @@ If you want your project on this list, or think one of these projects should be 
   * **[director](https://github.com/flatiron/director)** (for an example see [TodoMVC](https://github.com/tastejs/todomvc/blob/gh-pages/architecture-examples/react/js/app.jsx#L29))
   * **[Backbone](http://backbonejs.org/)** (for an example see [github-issues-viewer](https://github.com/jaredly/github-issues-viewer))
   * **[react-router](https://github.com/jaredly/react-router)** (example coming soon)
+  * **[react-router-component](https://github.com/andreypopp/react-router-component)**
 
 ### Model management
 
