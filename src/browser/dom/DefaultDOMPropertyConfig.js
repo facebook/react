@@ -104,6 +104,7 @@ var DefaultDOMPropertyConfig = {
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
     src: null,
+    srcDoc: MUST_USE_PROPERTY,
     step: null,
     style: null,
     tabIndex: null,
@@ -173,7 +174,8 @@ var DefaultDOMPropertyConfig = {
     autoPlay: 'autoplay',
     encType: 'enctype',
     radioGroup: 'radiogroup',
-    spellCheck: 'spellcheck'
+    spellCheck: 'spellcheck',
+    srcDoc: 'srcdoc'
   },
   DOMMutationMethods: {
     /**
