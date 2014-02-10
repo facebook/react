@@ -16,7 +16,6 @@
     "README.md",
     "addons.js",
     "react.js",
-    "ReactJSErrors.js",
     "lib/"
   ],
   "main": "react.js",
