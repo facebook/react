@@ -21,6 +21,7 @@ React.renderComponent(
     codeText={HELLO_COMPONENT}
     renderCode={true}
     transformer={transformer}
-    />,
+    showCompiledJSTab={false}
+  />,
   document.getElementById('jsxCompiler')
 );
