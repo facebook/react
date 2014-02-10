@@ -17,29 +17,20 @@
  * @typechecks
  */
 
+"use strict";
+
 var ReactErrorUtils = {
   /**
    * Creates a guarded version of a function. This is supposed to make debugging
-   * of event handlers easier. This implementation provides only basic error
-   * logging and re-throws the error.
+   * of event handlers easier. To aid debugging with the browser's debugger,
+   * this currently simply returns the original function.
    *
    * @param {function} func Function to be executed
    * @param {string} name The name of the guard
    * @return {function}
    */
   guard: function(func, name) {
-    if (__DEV__) {
-      return function guarded() {
-        try {
-          return func.apply(this, arguments);
-        } catch(ex) {
-          console.error(name + ': ' + ex.message);
-          throw ex;
-        }
-      };
-    } else {
-      return func;
-    }
+    return func;
   }
 };
 
