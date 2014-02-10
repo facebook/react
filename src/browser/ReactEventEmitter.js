@@ -16,7 +16,7 @@
  * @providesModule ReactEventEmitter
  * @typechecks static-only
  */
-
+/* jshint maxlen: 90 */
 "use strict";
 
 var EventConstants = require('EventConstants');
@@ -227,7 +227,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * top-level listeners to the document object only, at least for these
    * movement types of events and possibly all events.
    *
-   * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+   * @see http://quirksmode.org/blog/archives/2010/09/click_event_del.html
    *
    * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
    * they bubble to document.
@@ -275,7 +275,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
             trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
-            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            // @see http://quirksmode.org/blog/archives/2008/04/delegating_the.html
             trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
             trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
           }

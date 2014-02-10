@@ -15,11 +15,12 @@
  *
  * @providesModule isTextInputElement
  */
+/* jshint maxlen: 120 */
 
 "use strict";
 
 /**
- * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
+ * @see http://whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
 var supportedInputTypes = {
   'color': true,
