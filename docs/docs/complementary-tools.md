@@ -23,8 +23,7 @@ If you want your project on this list, or think one of these projects should be 
 
 ### Full-stack starter kits
 
-  * **[react-app](https://github.com/andreypopp/react-app)** Rapid appliaction development with React with server rendering
-  * **[react-quickstart](https://github.com/andreypopp/react-quickstart)** Quick-start template for `express`, `browserify`, `react-router-component` and `react-async`.
+  * **[react-quickstart](https://github.com/andreypopp/react-quickstart)** Quick-start template for `express`, `browserify`, `react-router-component` and `react-async` (**includes "isomorphic" server rendering**)
   * **[generator-react-webpack](https://github.com/newtriks/generator-react-webpack)** [Yeoman](http://yeoman.io/) generator for React and Webpack
   * **[Genesis Skeleton](http://genesis-skeleton.com/)** Modern, opinionated, full-stack starter kit for rapid, streamlined application development (supports React)
   * **[react-starter-template](https://github.com/johnthethird/react-starter-template)** Starter template with Gulp, Webpack and Bootstrap
@@ -42,6 +41,12 @@ If you want your project on this list, or think one of these projects should be 
 
   * **[react.backbone](https://github.com/usepropeller/react.backbone)** Use [Backbone](http://backbonejs.org) models with React
   * **[cortex](https://github.com/mquan/cortex/)** A JavaScript library for centrally managing data with React
+  * **[avers](https://github.com/wereHamster/avers)** A modern client-side model abstraction library
+
+### Data fetching
+
+  * **[react-async](https://github.com/andreypopp/react-async)** Adds a `getInitialStateAsync(cb)` method suitable for data fetching on both the client and the server.
+  * **[superagent](http://visionmedia.github.io/superagent/)** A lightweight "isomorphic" library for AJAX requests.
 
 ### UI components
 
