@@ -625,9 +625,7 @@ var ReactMount = {
 
   getNode: getNode,
 
-  purgeID: purgeID,
-
-  injection: {}
+  purgeID: purgeID
 };
 
 module.exports = ReactMount;
