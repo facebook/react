@@ -85,7 +85,8 @@ var ReactPlayground = React.createClass({
     return {
       transformer: function(code) {
         return JSXTransformer.transform(code).code;
-      }
+      },
+      showCompiledJSTab: true
     };
   },
 
@@ -116,7 +117,7 @@ var ReactPlayground = React.createClass({
       compiledCode = this.compileCode();
     } catch (err) {}
 
-    var jsContent =
+    var JSContent =
       <CodeMirrorEditor
         key="js"
         className="playgroundStage CodeMirror-readonly"
@@ -125,7 +126,7 @@ var ReactPlayground = React.createClass({
         readOnly={true}
       />;
 
-    var jsxContent =
+    var JSXContent =
       <CodeMirrorEditor
         key="jsx"
         onChange={this.handleCodeChange}
@@ -138,22 +139,28 @@ var ReactPlayground = React.createClass({
     var JSTabClassName =
       'playground-tab' + (isJS ? ' playground-tab-active' : '');
 
+    var JSTab =
+      <div
+        className={JSTabClassName}
+        onClick={this.handleCodeModeSwitch.bind(this, this.MODES.JS)}>
+          Compiled JS
+      </div>;
+
+    var JSXTab =
+      <div
+        className={JSXTabClassName}
+        onClick={this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}>
+          Live JSX Editor
+      </div>
+
     return (
       <div className="playground">
         <div>
-          <div
-            className={JSXTabClassName}
-            onClick={this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}>
-              Live JSX Editor
-          </div>
-          <div
-            className={JSTabClassName}
-            onClick={this.handleCodeModeSwitch.bind(this, this.MODES.JS)}>
-              Compiled JS
-          </div>
+          {JSXTab}
+          {this.props.showCompiledJSTab && JSTab}
         </div>
         <div className="playgroundCode">
-          {isJS ? jsContent : jsxContent}
+          {isJS ? JSContent : JSXContent}
         </div>
         <div className="playgroundPreview">
           <div ref="mount" />
