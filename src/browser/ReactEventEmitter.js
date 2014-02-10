@@ -188,6 +188,15 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   TopLevelCallbackCreator: null,
 
+  injection: {
+    /**
+     * @param {function} TopLevelCallbackCreator
+     */
+    injectTopLevelCallbackCreator: function(TopLevelCallbackCreator) {
+      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
+    }
+  },
+
   /**
    * Sets whether or not any created callbacks should be enabled.
    *

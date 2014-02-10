@@ -18,8 +18,19 @@
 
 "use strict";
 
+var ReactInjection = require('ReactInjection');
+
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
+var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
+
+var ChangeEventPlugin = require('ChangeEventPlugin');
+var ClientReactRootIndex = require('ClientReactRootIndex');
+var CompositionEventPlugin = require('CompositionEventPlugin');
+var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
+var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
+var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
@@ -28,46 +39,33 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
-var ReactEventEmitter = require('ReactEventEmitter');
-var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
-var ReactMount = require('ReactMount');
-var ReactPerf = require('ReactPerf');
-var ReactRootIndex = require('ReactRootIndex');
-
-var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
-var DOMProperty = require('DOMProperty');
-
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var ClientReactRootIndex = require('ClientReactRootIndex');
-var CompositionEventPlugin = require('CompositionEventPlugin');
-var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var EventPluginHub = require('EventPluginHub');
-var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactMount = require('ReactMount');
 var SelectEventPlugin = require('SelectEventPlugin');
 var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactUpdates = require('ReactUpdates');
 
 var createFullPageComponent = require('createFullPageComponent');
 
 function inject() {
-  ReactEventEmitter.TopLevelCallbackCreator = ReactEventTopLevelCallback;
+  ReactInjection.EventEmitter.injectTopLevelCallbackCreator(
+    ReactEventTopLevelCallback
+  );
+
   /**
    * Inject modules for resolving DOM hierarchy and plugin ordering.
    */
-  EventPluginHub.injection.injectEventPluginOrder(DefaultEventPluginOrder);
-  EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
-  EventPluginHub.injection.injectMount(ReactMount);
+  ReactInjection.EventPluginHub.injectEventPluginOrder(DefaultEventPluginOrder);
+  ReactInjection.EventPluginHub.injectInstanceHandle(ReactInstanceHandles);
+  ReactInjection.EventPluginHub.injectMount(ReactMount);
 
   /**
    * Some important event plugins included by default (without having to require
    * them).
    */
-  EventPluginHub.injection.injectEventPluginsByName({
+  ReactInjection.EventPluginHub.injectEventPluginsByName({
     SimpleEventPlugin: SimpleEventPlugin,
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
     ChangeEventPlugin: ChangeEventPlugin,
@@ -76,7 +74,7 @@ function inject() {
     SelectEventPlugin: SelectEventPlugin
   });
 
-  ReactDOM.injection.injectComponentClasses({
+  ReactInjection.DOM.injectComponentClasses({
     button: ReactDOMButton,
     form: ReactDOMForm,
     img: ReactDOMImg,
@@ -91,17 +89,17 @@ function inject() {
     body: createFullPageComponent(ReactDOM.body)
   });
 
-  DOMProperty.injection.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
+  ReactInjection.DOMProperty.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 
   if (__DEV__) {
-    ReactPerf.injection.injectMeasure(require('ReactDefaultPerf').measure);
+    ReactInjection.Perf.injectMeasure(require('ReactDefaultPerf').measure);
   }
 
-  ReactUpdates.injection.injectBatchingStrategy(
+  ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );
 
-  ReactRootIndex.injection.injectCreateReactRootIndex(
+  ReactInjection.RootIndex.injectCreateReactRootIndex(
     ExecutionEnvironment.canUseDOM ?
       ClientReactRootIndex.createReactRootIndex :
       ServerReactRootIndex.createReactRootIndex
