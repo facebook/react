@@ -44,6 +44,11 @@ var ReactDOMForm = ReactCompositeComponent.createClass({
 
   componentDidMount: function() {
     ReactEventEmitter.trapBubbledEvent(
+      EventConstants.topLevelTypes.topReset,
+      'reset',
+      this.getDOMNode()
+    );
+    ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topSubmit,
       'submit',
       this.getDOMNode()
