@@ -584,6 +584,118 @@ function createChainedFunction(one, two) {
   };
 }
 
+if (__DEV__) {
+
+  var unmountedPropertyWhitelist = {
+    constructor: true,
+    construct: true,
+    isOwnedBy: true, // should be deprecated but can have code mod (internal)
+    mountComponent: true,
+    mountComponentIntoNode: true,
+    props: true,
+    type: true,
+    _checkPropTypes: true,
+    _mountComponentIntoNode: true,
+    _processContext: true
+  };
+
+  var hasWarnedOnComponentType = {};
+
+  var warnIfUnmounted = function(instance, key) {
+    if (instance.__hasBeenMounted) {
+      return;
+    }
+    var name = instance.constructor.displayName || 'Unknown';
+    var owner = ReactCurrentOwner.current;
+    var ownerName = (owner && owner.constructor.displayName) || 'Unknown';
+    var warningKey = key + '|' + name + '|' + ownerName;
+    if (hasWarnedOnComponentType.hasOwnProperty(warningKey)) {
+      // We have already warned for this combination. Skip it this time.
+      return;
+    }
+    hasWarnedOnComponentType[warningKey] = true;
+
+    var context = owner ? ' in ' + ownerName + '.' : ' at the top level.';
+    var staticMethodExample = '<' + name + ' />.type.' + key + '(...)';
+
+    console.warn(
+      'Invalid access to component property "' + key + '" on ' + name +
+      context + ' See http://fb.me/react-warning-descriptors .' +
+      ' Use a static method instead: ' + staticMethodExample
+    );
+  };
+
+  var defineMembraneProperty = function(membrane, prototype, key) {
+    Object.defineProperty(membrane, key, {
+
+      configurable: false,
+      enumerable: true,
+
+      get: function() {
+        if (this !== membrane) {
+          // When this is accessed through a prototype chain we need to check if
+          // this component was mounted.
+          warnIfUnmounted(this, key);
+        }
+        return prototype[key];
+      },
+
+      set: function(value) {
+        if (this !== membrane) {
+          // When this is accessed through a prototype chain, we first check if
+          // this component was mounted. Then we define a value on "this"
+          // instance, effectively disabling the membrane on that prototype
+          // chain.
+          warnIfUnmounted(this, key);
+          Object.defineProperty(this, key, {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: value
+          });
+        } else {
+          // Otherwise, this should modify the prototype
+          prototype[key] = value;
+        }
+      }
+
+    });
+  };
+
+  /**
+   * Creates a membrane prototype which wraps the original prototype. If any
+   * property is accessed in an unmounted state, a warning is issued.
+   *
+   * @param {object} prototype Original prototype.
+   * @return {object} The membrane prototype.
+   * @private
+   */
+  var createMountWarningMembrane = function(prototype) {
+    try {
+      var membrane = Object.create(prototype);
+      for (var key in prototype) {
+        if (unmountedPropertyWhitelist.hasOwnProperty(key)) {
+          continue;
+        }
+        defineMembraneProperty(membrane, prototype, key);
+      }
+
+      membrane.mountComponent = function() {
+        this.__hasBeenMounted = true;
+        return prototype.mountComponent.apply(this, arguments);
+      };
+
+      return membrane;
+    } catch(x) {
+      // In IE8 define property will fail on non-DOM objects. If anything in
+      // the membrane creation fails, we'll bail out and just use the prototype
+      // without warnings.
+      return prototype;
+    }
+  };
+
+}
+
 /**
  * `ReactCompositeComponent` maintains an auxiliary life cycle state in
  * `this._compositeLifeCycleState` (which can be null).
@@ -1307,11 +1419,23 @@ var ReactCompositeComponent = {
       }
     }
 
+    // Expose the convience constructor on the prototype so that it can be
+    // easily accessed on descriptors. E.g. <Foo />.type === Foo.type and for
+    // static methods like <Foo />.type.staticMethod();
+    // This should not be named constructor since this may not be the function
+    // that created the descriptor, and it may not even be a constructor.
+    ConvenienceConstructor.type = Constructor;
+    Constructor.prototype.type = Constructor;
+
     // Reduce time spent doing lookups by setting these on the prototype.
     for (var methodName in ReactCompositeComponentInterface) {
       if (!Constructor.prototype[methodName]) {
         Constructor.prototype[methodName] = null;
       }
+    }
+
+    if (__DEV__) {
+      Constructor.prototype = createMountWarningMembrane(Constructor.prototype);
     }
 
     return ConvenienceConstructor;

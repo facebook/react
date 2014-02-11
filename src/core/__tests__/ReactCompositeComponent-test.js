@@ -170,6 +170,7 @@ describe('ReactCompositeComponent', function() {
 
     // These are controversial assertions for now, they just exist
     // because existing code depends on these assumptions.
+    // These are expected to log a warning. This use case will be deprecated.
     expect(function() {
       instance.methodToBeExplicitlyBound.bind(instance)();
     }).not.toThrow();
@@ -183,9 +184,9 @@ describe('ReactCompositeComponent', function() {
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
     ReactTestUtils.renderIntoDocument(instance);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.warn.argsForCall.length).toBe(3);
     var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall.length).toBe(4);
     var autoBound = instance.methodAutoBound;
     var explicitlyNotBound = instance.methodExplicitlyNotBound;
 
@@ -1105,4 +1106,61 @@ describe('ReactCompositeComponent', function() {
       'use a component class as a mixin. Instead, just use a regular object.'
     );
   });
+
+  it('should warn if an umounted component is touched', function() {
+    spyOn(console, 'warn');
+
+    var ComponentClass = React.createClass({
+      getInitialState: function() {
+        return {valueToReturn: 'hi'};
+      },
+      someMethod: function() {
+        return this;
+      },
+      someOtherMethod: function() {
+        return this;
+      },
+      render: function() {
+        return <div></div>;
+      }
+    });
+
+    var descriptor = <ComponentClass />;
+    var instance = ReactTestUtils.renderIntoDocument(descriptor);
+    instance.someMethod();
+    expect(console.warn.argsForCall.length).toBe(0);
+
+    var unmountedInstance = <ComponentClass />;
+    var result = unmountedInstance.someMethod();
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(result).toBe(unmountedInstance);
+
+    var unmountedInstance2 = <ComponentClass />;
+    unmountedInstance2.someOtherMethod = 'override';
+    expect(console.warn.argsForCall.length).toBe(2);
+    expect(unmountedInstance2.someOtherMethod).toBe('override');
+  });
+
+  it('should allow static methods called using type property', function() {
+    spyOn(console, 'warn');
+
+    var ComponentClass = React.createClass({
+      statics: {
+        someStaticMethod: function() {
+          return 'someReturnValue';
+        }
+      },
+      getInitialState: function() {
+        return {valueToReturn: 'hi'};
+      },
+      render: function() {
+        return <div></div>;
+      }
+    });
+
+    var descriptor = <ComponentClass />;
+    expect(descriptor.type.someStaticMethod()).toBe('someReturnValue');
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
 });

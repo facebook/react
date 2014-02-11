@@ -126,10 +126,9 @@ describe('ReactComponent', function() {
       }
     });
 
-    var instance = <Component />;
+    var descriptor = <Component />;
 
-    expect(instance.isMounted()).toBeFalsy();
-    ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(descriptor);
     expect(instance.isMounted()).toBeTruthy();
   });
 

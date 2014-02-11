@@ -91,4 +91,9 @@ mixInto(ReactTextComponent, {
 
 });
 
+// Expose the constructor on itself and the prototype for consistency with other
+// descriptors.
+ReactTextComponent.type = ReactTextComponent;
+ReactTextComponent.prototype.type = ReactTextComponent;
+
 module.exports = ReactTextComponent;

@@ -183,10 +183,17 @@ var ReactComponent = {
    * @final
    */
   isValidComponent: function(object) {
-    return !!(
-      object &&
-      typeof object.mountComponentIntoNode === 'function' &&
-      typeof object.receiveComponent === 'function'
+    if (!object || !object.type || !object.type.prototype) {
+      return false;
+    }
+    // This is the safer way of duck checking the type of instance this is.
+    // The object can be a generic descriptor but the type property refers to
+    // the constructor and it's prototype can be used to inspect the type that
+    // will actually get mounted.
+    var prototype = object.type.prototype;
+    return (
+      typeof prototype.mountComponentIntoNode === 'function' &&
+      typeof prototype.receiveComponent === 'function'
     );
   },
 

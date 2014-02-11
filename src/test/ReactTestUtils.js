@@ -51,11 +51,10 @@ var ReactTestUtils = {
     return React.renderComponent(instance, div);
   },
 
-  isComponentOfType: function(inst, type) {
-    return !!(
-      inst &&
+  isComponentOfType: function(inst, convenienceConstructor) {
+    return (
       ReactComponent.isValidComponent(inst) &&
-      inst.constructor === type.componentConstructor
+      inst.type === convenienceConstructor.type
     );
   },
 
@@ -66,12 +65,16 @@ var ReactTestUtils = {
   },
 
   isCompositeComponent: function(inst) {
-    return !!(
-      inst &&
-      ReactComponent.isValidComponent(inst) &&
-      typeof inst.render === 'function' &&
-      typeof inst.setState === 'function' &&
-      typeof inst.updateComponent === 'function'
+    if (!ReactComponent.isValidComponent(inst)) {
+      return false;
+    }
+    // We check the prototype of the type that will get mounted, not the
+    // instance itself. This is a future proof way of duck typing.
+    var prototype = inst.type.prototype;
+    return (
+      typeof prototype.render === 'function' &&
+      typeof prototype.setState === 'function' &&
+      typeof prototype.updateComponent === 'function'
     );
   },
 

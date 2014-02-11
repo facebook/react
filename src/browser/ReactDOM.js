@@ -51,6 +51,12 @@ function createDOMComponentClass(tag, omitClose) {
     return instance;
   };
 
+  // Expose the constructor on the ConvenienceConstructor and prototype so that
+  // it can be easily easily accessed on descriptors.
+  // E.g. <div />.type === div.type
+  ConvenienceConstructor.type = Constructor;
+  Constructor.prototype.type = Constructor;
+
   Constructor.ConvenienceConstructor = ConvenienceConstructor;
   ConvenienceConstructor.componentConstructor = Constructor;
   return ConvenienceConstructor;
