@@ -214,8 +214,7 @@ describe('ReactDOMComponent', function() {
 
       expect(console.warn.argsForCall.length).toBe(1);
       expect(console.warn.argsForCall[0][0]).toBe(
-        'validateNodeNesting(...): Node of type div cannot contain node of ' +
-        'type tr.'
+        'validateNodeNesting(...): <div> cannot contain a <tr> node.'
       );
     });
   });
