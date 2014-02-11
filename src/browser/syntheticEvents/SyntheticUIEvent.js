@@ -38,7 +38,12 @@ var UIEventInterface = {
         return target;
       } else {
         var doc = target.ownerDocument;
-        return doc.defaultView || doc.parentWindow;
+        // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
+        if (doc) {
+          return doc.defaultView || doc.parentWindow;
+        } else {
+          return window;
+        }
       }
     }
   },
