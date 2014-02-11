@@ -25,8 +25,16 @@ var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
 var docblock = require('jstransform/src/docblock');
 
+// The source-map library relies on Object.defineProperty, but IE8 doesn't
+// support it fully even with es5-sham. Indeed, es5-sham's defineProperty
+// throws when Object.prototype.__defineGetter__ is missing, so we skip building
+// the source map in that case.
+var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
+
 function transformReact(source) {
-  return transform(visitors.react, source, {sourceMap: true});
+  return transform(visitors.react, source, {
+    sourceMap: supportsAccessors
+  });
 }
 
 exports.transform = transformReact;
@@ -95,6 +103,10 @@ var transformCode = function(code, source) {
       }
       e.message += createSourceCodeErrorMessage(code, e);
       throw e;
+    }
+
+    if (!transformed.sourceMap) {
+      return transformed.code;
     }
 
     var map = transformed.sourceMap.toJSON();
