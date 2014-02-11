@@ -161,19 +161,22 @@ var Mixin = {
     } finally {
       var memberEnd = Date.now();
       this.methodInvocationTime += (memberEnd - memberStart);
-      if (errorThrown) {
-        // If `method` throws, prefer to show that stack trace over any thrown
-        // by invoking `closeAll`.
-        try {
+      try {
+        if (errorThrown) {
+          // If `method` throws, prefer to show that stack trace over any thrown
+          // by invoking `closeAll`.
+          try {
+            this.closeAll(0);
+          } catch (err) {
+          }
+        } else {
+          // Since `method` didn't throw, we don't want to silence the exception
+          // here.
           this.closeAll(0);
-        } catch (err) {
         }
-      } else {
-        // Since `method` didn't throw, we don't want to silence the exception
-        // here.
-        this.closeAll(0);
+      } finally {
+        this._isInTransaction = false;
       }
-      this._isInTransaction = false;
     }
     return ret;
   },

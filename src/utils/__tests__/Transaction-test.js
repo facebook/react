@@ -243,6 +243,7 @@ describe('Transaction', function() {
     expect(function() {
       transaction.perform(function() {});
     }).toThrow(exceptionMsg);
+    expect(transaction.isInTransaction()).toBe(false);
   });
 
   it('should allow nesting of transactions', function() {
