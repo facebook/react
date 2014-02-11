@@ -195,6 +195,12 @@ var eventTypes = {
       captured: keyOf({onPasteCapture: true})
     }
   },
+  reset: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onReset: true}),
+      captured: keyOf({onResetCapture: true})
+    }
+  },
   scroll: {
     phasedRegistrationNames: {
       bubbled: keyOf({onScroll: true}),
@@ -266,6 +272,7 @@ var topLevelEventsToDispatchConfig = {
   topMouseOver:   eventTypes.mouseOver,
   topMouseUp:     eventTypes.mouseUp,
   topPaste:       eventTypes.paste,
+  topReset:       eventTypes.reset,
   topScroll:      eventTypes.scroll,
   topSubmit:      eventTypes.submit,
   topTouchCancel: eventTypes.touchCancel,
@@ -320,6 +327,7 @@ var SimpleEventPlugin = {
     switch (topLevelType) {
       case topLevelTypes.topInput:
       case topLevelTypes.topLoad:
+      case topLevelTypes.topReset:
       case topLevelTypes.topSubmit:
         // HTML Events
         // @see http://www.w3.org/TR/html5/index.html#events-0
