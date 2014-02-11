@@ -20,6 +20,7 @@ If you want your project on this list, or think one of these projects should be 
   * **[grunt-react](https://npmjs.org/package/grunt-react)** [GruntJS](http://gruntjs.com/) task
   * **[gulp-react](https://npmjs.org/package/gulp-react)** [GulpJS](http://gulpjs.com/) plugin
   * **[jsx-requirejs-plugin](https://github.com/philix/jsx-requirejs-plugin)** [RequireJS](http://requirejs.org/) plugin
+  * **[react-meteor](https://github.com/benjamn/react-meteor)** [Meteor](http://www.meteor.com/) plugin
 
 ### Full-stack starter kits
 
