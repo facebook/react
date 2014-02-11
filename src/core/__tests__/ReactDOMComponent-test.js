@@ -276,7 +276,6 @@ describe('ReactDOMComponent', function() {
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var joinAccumulated = require('joinAccumulated');
       var mixInto = require('mixInto');
 
       var NodeStub = function(initialProps) {
@@ -288,7 +287,7 @@ describe('ReactDOMComponent', function() {
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
         var markup = (new NodeStub(props))._createContentMarkup(transaction);
-        return joinAccumulated(markup, '');
+        return markup.join('');
       };
 
       this.addMatchers({
