@@ -29,6 +29,7 @@ var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactTransitionGroup = require('ReactTransitionGroup');
+var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
