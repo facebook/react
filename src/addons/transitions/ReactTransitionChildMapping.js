@@ -14,14 +14,14 @@
  * limitations under the License.
  *
  * @typechecks static-only
- * @providesModule ReactTransitionKeySet
+ * @providesModule ReactTransitionChildMapping
  */
 
 "use strict";
 
 var ReactChildren = require('ReactChildren');
 
-var ReactTransitionKeySet = {
+var ReactTransitionChildMapping = {
   /**
    * Given `this.props.children`, return an object mapping key to child. Just
    * simple syntactic sugar around ReactChildren.map().
@@ -36,21 +36,8 @@ var ReactTransitionKeySet = {
   },
 
   /**
-   * Simple syntactic sugar to get an object with keys of all of `children`.
-   * Does not have references to the children themselves.
-   *
-   * @param {*} children `this.props.children`
-   * @return {object} Mapping of key to the value "true"
-   */
-  getKeySet: function(children) {
-    return ReactChildren.map(children, function() {
-      return true;
-    });
-  },
-
-  /**
    * When you're adding or removing children some may be added or removed in the
-   * same render pass. We want to show *both* since we want to simultaneously
+   * same render pass. We want ot show *both* since we want to simultaneously
    * animate elements in and out. This function takes a previous set of keys
    * and a new set of keys and merges them with its best guess of the correct
    * ordering. In the future we may expose some of the utilities in
@@ -58,16 +45,24 @@ var ReactTransitionKeySet = {
    * directly have this concept of the union of prevChildren and nextChildren
    * so we implement it here.
    *
-   * @param {object} prev prev child keys as returned from
-   * `ReactTransitionKeySet.getKeySet()`.
-   * @param {object} next next child keys as returned from
-   * `ReactTransitionKeySet.getKeySet()`.
+   * @param {object} prev prev children as returned from
+   * `ReactTransitionChildMapping.getChildMapping()`.
+   * @param {object} next next children as returned from
+   * `ReactTransitionChildMapping.getChildMapping()`.
    * @return {object} a key set that contains all keys in `prev` and all keys
    * in `next` in a reasonable order.
    */
-  mergeKeySets: function(prev, next) {
+  mergeChildMappings: function(prev, next) {
     prev = prev || {};
     next = next || {};
+
+    function getValueForKey(key) {
+      if (next.hasOwnProperty(key)) {
+        return next[key];
+      } else {
+        return prev[key];
+      }
+    }
 
     // For each key of `next`, the list of keys to insert before that key in
     // the combined list
@@ -86,23 +81,26 @@ var ReactTransitionKeySet = {
     }
 
     var i;
-    var keySet = {};
+    var childMapping = {};
     for (var nextKey in next) {
       if (nextKeysPending[nextKey]) {
         for (i = 0; i < nextKeysPending[nextKey].length; i++) {
-          keySet[nextKeysPending[nextKey][i]] = true;
+          var pendingNextKey = nextKeysPending[nextKey][i];
+          childMapping[nextKeysPending[nextKey][i]] = getValueForKey(
+            pendingNextKey
+          );
         }
       }
-      keySet[nextKey] = true;
+      childMapping[nextKey] = getValueForKey(nextKey);
     }
 
     // Finally, add the keys which didn't appear before any key in `next`
     for (i = 0; i < pendingKeys.length; i++) {
-      keySet[pendingKeys[i]] = true;
+      childMapping[pendingKeys[i]] = getValueForKey(pendingKeys[i]);
     }
 
-    return keySet;
+    return childMapping;
   }
 };
 
-module.exports = ReactTransitionKeySet;
+module.exports = ReactTransitionChildMapping;

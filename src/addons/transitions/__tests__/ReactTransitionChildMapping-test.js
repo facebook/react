@@ -20,12 +20,12 @@
 "use strict";
 
 var React;
-var ReactTransitionKeySet;
+var ReactTransitionChildMapping;
 
-describe('ReactTransitionKeySet', function() {
+describe('ReactTransitionChildMapping', function() {
   beforeEach(function() {
     React = require('React');
-    ReactTransitionKeySet = require('ReactTransitionKeySet');
+    ReactTransitionChildMapping = require('ReactTransitionChildMapping');
   });
 
   it('should support getChildMapping', function() {
@@ -34,26 +34,15 @@ describe('ReactTransitionKeySet', function() {
     var one = <div key="one">{oneone}{onetwo}</div>;
     var two = <div key="two" />;
     var component = <div>{one}{two}</div>;
-    expect(ReactTransitionKeySet.getChildMapping(component.props.children))
-      .toEqual({
-        '.$one': one,
-        '.$two': two
-      });
-  });
-
-  it('should support getKeySet', function() {
-    var oneone = <div key="oneone" />;
-    var onetwo = <div key="onetwo" />;
-    var one = <div key="one">{oneone}{onetwo}</div>;
-    var two = <div key="two" />;
-    var component = <div>{one}{two}</div>;
-    expect(ReactTransitionKeySet.getKeySet(component.props.children)).toEqual({
-      '.$one': true,
-      '.$two': true
+    expect(
+      ReactTransitionChildMapping.getChildMapping(component.props.children)
+    ).toEqual({
+      '.$one': one,
+      '.$two': two
     });
   });
 
-  it('should support mergeKeySets for adding keys', function() {
+  it('should support mergeChildMappings for adding keys', function() {
     var prev = {
       one: true,
       two: true
@@ -63,14 +52,14 @@ describe('ReactTransitionKeySet', function() {
       two: true,
       three: true
     };
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true
     });
   });
 
-  it('should support mergeKeySets for removing keys', function() {
+  it('should support mergeChildMappings for removing keys', function() {
     var prev = {
       one: true,
       two: true,
@@ -80,14 +69,14 @@ describe('ReactTransitionKeySet', function() {
       one: true,
       two: true
     };
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true
     });
   });
 
-  it('should support mergeKeySets for adding and removing', function() {
+  it('should support mergeChildMappings for adding and removing', function() {
     var prev = {
       one: true,
       two: true,
@@ -98,7 +87,7 @@ describe('ReactTransitionKeySet', function() {
       two: true,
       four: true
     };
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true,
@@ -119,7 +108,7 @@ describe('ReactTransitionKeySet', function() {
       three: true,
       five: true
     };
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true,
       three: true,
@@ -128,7 +117,7 @@ describe('ReactTransitionKeySet', function() {
     });
   });
 
-  it('should support mergeKeySets with undefined input', function () {
+  it('should support mergeChildMappings with undefined input', function () {
     var prev = {
       one: true,
       two: true
@@ -136,7 +125,7 @@ describe('ReactTransitionKeySet', function() {
 
     var next = undefined;
 
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       one: true,
       two: true
     });
@@ -148,7 +137,7 @@ describe('ReactTransitionKeySet', function() {
       four: true
     };
 
-    expect(ReactTransitionKeySet.mergeKeySets(prev, next)).toEqual({
+    expect(ReactTransitionChildMapping.mergeChildMappings(prev, next)).toEqual({
       three: true,
       four: true
     });

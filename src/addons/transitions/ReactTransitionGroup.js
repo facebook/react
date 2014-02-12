@@ -19,103 +19,168 @@
 "use strict";
 
 var React = require('React');
-var ReactTransitionableChild = require('ReactTransitionableChild');
-var ReactTransitionKeySet = require('ReactTransitionKeySet');
+var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
+
+var cloneWithProps = require('cloneWithProps');
+var emptyFunction = require('emptyFunction');
+var merge = require('merge');
 
 var ReactTransitionGroup = React.createClass({
 
   propTypes: {
-    transitionName: React.PropTypes.string.isRequired,
-    transitionEnter: React.PropTypes.bool,
-    transitionLeave: React.PropTypes.bool,
-    onTransition: React.PropTypes.func,
-    component: React.PropTypes.func
+    component: React.PropTypes.func,
+    childFactory: React.PropTypes.func
   },
 
   getDefaultProps: function() {
     return {
-      transitionEnter: true,
-      transitionLeave: true,
-      component: React.DOM.span
+      component: React.DOM.span,
+      childFactory: emptyFunction.thatReturnsArgument
     };
   },
 
-  componentWillMount: function() {
-    // _transitionGroupCurrentKeys stores the union of previous *and* next keys.
-    // If this were a component we'd store it as state, however, since this must
-    // be a mixin, we need to keep the result of the union of keys in each
-    // call to animateChildren() which happens in render(), so we can't
-    // call setState() in there.
-    this._transitionGroupCurrentKeys = {};
+  getInitialState: function() {
+    return {
+      children: ReactTransitionChildMapping.getChildMapping(this.props.children)
+    };
   },
 
-  componentDidUpdate: function() {
-    if (this.props.onTransition) {
-      this.props.onTransition();
-    }
-  },
-
-  /**
-   * Render some children in a transitionable way.
-   */
-  renderTransitionableChildren: function(sourceChildren) {
-    var children = {};
-    var childMapping = ReactTransitionKeySet.getChildMapping(sourceChildren);
-
-    var prevKeys = this._transitionGroupCurrentKeys;
-    var currentKeys = ReactTransitionKeySet.mergeKeySets(
-      prevKeys,
-      ReactTransitionKeySet.getKeySet(sourceChildren)
+  componentWillReceiveProps: function(nextProps) {
+    var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
+      nextProps.children
     );
+    var prevChildMapping = this.state.children;
 
-    for (var key in currentKeys) {
-      // Here is how we keep the nodes in the DOM. ReactTransitionableChild
-      // knows how to hold onto its child if it changes to undefined. Here, we
-      // may look up an old key in the new children, and it may switch to
-      // undefined. React's reconciler will keep the ReactTransitionableChild
-      // instance alive such that we can animate it.
-      if (childMapping[key] || (this.props.transitionLeave && prevKeys[key])) {
-        children[key] = ReactTransitionableChild({
-          name: this.props.transitionName,
-          enter: this.props.transitionEnter,
-          onDoneLeaving: this._handleDoneLeaving.bind(this, key)
-        }, childMapping[key]);
-      } else {
-        // If there's no leave transition and the child has been removed from
-        // the source children list, we want to remove it immediately from the
-        // _transitionGroupCurrentKeys cache because _handleDoneLeaving won't
-        // be called. In normal cases, this prevents a small memory leak; in
-        // the case of switching transitionLeave from false to true, it
-        // prevents a confusing bug where ReactTransitionableChild.render()
-        // returns nothing, throwing an error.
-        delete currentKeys[key];
+    this.setState({
+      children: ReactTransitionChildMapping.mergeChildMappings(
+        prevChildMapping,
+        nextChildMapping
+      )
+    });
+
+    var key;
+
+    for (key in nextChildMapping) {
+      if (!prevChildMapping.hasOwnProperty(key) &&
+        !this.currentlyTransitioningKeys[key]) {
+        this.keysToEnter.push(key);
       }
     }
 
-    this._transitionGroupCurrentKeys = currentKeys;
+    for (key in prevChildMapping) {
+      if (!nextChildMapping.hasOwnProperty(key) &&
+        !this.currentlyTransitioningKeys[key]) {
+        this.keysToLeave.push(key);
+      }
+    }
 
-    return children;
+    // If we want to someday check for reordering, we could do it here.
+  },
+
+  componentWillMount: function() {
+    this.currentlyTransitioningKeys = {};
+    this.keysToEnter = [];
+    this.keysToLeave = [];
+  },
+
+  componentDidUpdate: function() {
+    var keysToEnter = this.keysToEnter;
+    this.keysToEnter = [];
+    keysToEnter.forEach(this.performEnter);
+
+    var keysToLeave = this.keysToLeave;
+    this.keysToLeave = [];
+    keysToLeave.forEach(this.performLeave);
+  },
+
+  performEnter: function(key) {
+    this.currentlyTransitioningKeys[key] = true;
+
+    var component = this.refs[key];
+
+    if (component.componentWillEnter) {
+      component.componentWillEnter(
+        this._handleDoneEntering.bind(this, key)
+      );
+    } else {
+      this._handleDoneEntering(key);
+    }
+  },
+
+  _handleDoneEntering: function(key) {
+    var component = this.refs[key];
+    if (component.componentDidEnter) {
+      component.componentDidEnter();
+    }
+
+    delete this.currentlyTransitioningKeys[key];
+
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
+
+    if (!currentChildMapping.hasOwnProperty(key)) {
+      // This was removed before it had fully entered. Remove it.
+      this.performLeave(key);
+    }
+  },
+
+  performLeave: function(key) {
+    this.currentlyTransitioningKeys[key] = true;
+
+    var component = this.refs[key];
+    if (component.componentWillLeave) {
+      component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
+    } else {
+      // Note that this is somewhat dangerous b/c it calls setState()
+      // again, effectively mutating the component before all the work
+      // is done.
+      this._handleDoneLeaving(key);
+    }
   },
 
   _handleDoneLeaving: function(key) {
-    // When the leave animation finishes, we should blow away the actual DOM
-    // node.
-    delete this._transitionGroupCurrentKeys[key];
-    this.forceUpdate();
+    var component = this.refs[key];
+
+    if (component.componentDidLeave) {
+      component.componentDidLeave();
+    }
+
+    delete this.currentlyTransitioningKeys[key];
+
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
+
+    if (currentChildMapping.hasOwnProperty(key)) {
+      // This entered again before it fully left. Add it again.
+      this.performEnter(key);
+    } else {
+      var newChildren = merge(this.state.children);
+      delete newChildren[key];
+      this.setState({children: newChildren});
+    }
   },
 
   render: function() {
-    return this.transferPropsTo(
-      this.props.component(
-        {
-          transitionName: null,
-          transitionEnter: null,
-          transitionLeave: null,
-          component: null
-        },
-        this.renderTransitionableChildren(this.props.children)
-      )
-    );
+    // TODO: we could get rid of the need for the wrapper node
+    // by cloning a single child
+    var childrenToRender = {};
+    for (var key in this.state.children) {
+      var child = this.state.children[key];
+      if (child) {
+        // You may need to apply reactive updates to a child as it is leaving.
+        // The normal React way to do it won't work since the child will have
+        // already been removed. In case you need this behavior you can provide
+        // a childFactory function to wrap every child, even the ones that are
+        // leaving.
+        childrenToRender[key] = cloneWithProps(
+          this.props.childFactory(child),
+          {ref: key}
+        );
+      }
+    }
+    return this.transferPropsTo(this.props.component(null, childrenToRender));
   }
 });
 

@@ -36,102 +36,177 @@ describe('ReactTransitionGroup', function() {
     container = document.createElement('div');
   });
 
-  it('should warn after time with no transitionend', function() {
-    var a = React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        <span key="one" id="one" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
 
-    setTimeout.mock.calls.length = 0;
+  it('should handle willEnter correctly', function() {
+    var log = [];
 
-    React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        <span key="two" id="two" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('two');
-    expect(a.getDOMNode().childNodes[1].id).toBe('one');
+    var Child = React.createClass({
+      componentDidMount: function() {
+        log.push('didMount');
+      },
+      componentWillEnter: function(cb) {
+        log.push('willEnter');
+        cb();
+      },
+      componentDidEnter: function() {
+        log.push('didEnter');
+      },
+      componentWillLeave: function(cb) {
+        log.push('willLeave');
+        cb();
+      },
+      componentDidLeave: function() {
+        log.push('didLeave');
+      },
+      componentWillUnmount: function() {
+        log.push('willUnmount');
+      },
+      render: function() {
+        return <span />;
+      }
+    });
 
-    console.warn = mocks.getMockFunction();
-    setTimeout.mock.calls[2][0]();
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} />);
+        }
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      }
+    });
 
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(console.warn.mock.calls.length).toBe(1);
+    var instance = React.renderComponent(<Component />, container);
+    expect(log).toEqual(['didMount']);
+
+    instance.setState({count: 2}, function() {
+      expect(log).toEqual(['didMount', 'didMount', 'willEnter', 'didEnter']);
+      instance.setState({count: 1}, function() {
+        expect(log).toEqual([
+          "didMount", "didMount", "willEnter", "didEnter",
+          "willLeave", "didLeave", "willUnmount"
+        ]);
+      });
+    });
   });
 
-  it('should keep both sets of DOM nodes around', function() {
-    var a = React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        <span key="one" id="one" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        <span key="two" id="two" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('two');
-    expect(a.getDOMNode().childNodes[1].id).toBe('one');
+  it('should handle enter/leave/enter/leave correctly', function() {
+    var log = [];
+    var cb;
+
+    var Child = React.createClass({
+      componentDidMount: function() {
+        log.push('didMount');
+      },
+      componentWillEnter: function(_cb) {
+        log.push('willEnter');
+        cb = _cb;
+      },
+      componentDidEnter: function() {
+        log.push('didEnter');
+      },
+      componentWillLeave: function(cb) {
+        log.push('willLeave');
+        cb();
+      },
+      componentDidLeave: function() {
+        log.push('didLeave');
+      },
+      componentWillUnmount: function() {
+        log.push('willUnmount');
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} />);
+        }
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      }
+    });
+
+    var instance = React.renderComponent(<Component />, container);
+    expect(log).toEqual(['didMount']);
+    instance.setState({count: 2});
+    expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
+    for (var i = 0; i < 5; i++) {
+      instance.setState({count: 2});
+      expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
+      instance.setState({count: 1});
+    }
+    cb();
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter',
+      'didEnter', 'willLeave', 'didLeave', 'willUnmount'
+    ]);
   });
 
-  it('should switch transitionLeave from false to true', function() {
-    var a = React.renderComponent(
-      <ReactTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={false}>
-        <span key="one" id="one" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
-      <ReactTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={false}>
-        <span key="two" id="two" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
-      <ReactTransitionGroup
-          transitionName="yolo"
-          transitionEnter={false}
-          transitionLeave={true}>
-        <span key="three" id="three" />
-      </ReactTransitionGroup>,
-      container
-    );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('three');
-    expect(a.getDOMNode().childNodes[1].id).toBe('two');
-  });
+  it('should handle enter/leave/enter correctly', function() {
+    var log = [];
+    var cb;
 
-  it('should work with no children', function () {
-    React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-      </ReactTransitionGroup>,
-      container
-    );
-  });
+    var Child = React.createClass({
+      componentDidMount: function() {
+        log.push('didMount');
+      },
+      componentWillEnter: function(_cb) {
+        log.push('willEnter');
+        cb = _cb;
+      },
+      componentDidEnter: function() {
+        log.push('didEnter');
+      },
+      componentWillLeave: function(cb) {
+        log.push('willLeave');
+        cb();
+      },
+      componentDidLeave: function() {
+        log.push('didLeave');
+      },
+      componentWillUnmount: function() {
+        log.push('willUnmount');
+      },
+      render: function() {
+        return <span />;
+      }
+    });
 
-  it('should work with a null child', function () {
-    React.renderComponent(
-      <ReactTransitionGroup transitionName="yolo">
-        {[null]}
-      </ReactTransitionGroup>,
-      container
-    );
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} />);
+        }
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      }
+    });
+
+    var instance = React.renderComponent(<Component />, container);
+    expect(log).toEqual(['didMount']);
+    instance.setState({count: 2});
+    expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
+    for (var i = 0; i < 5; i++) {
+      instance.setState({count: 1});
+      expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
+      instance.setState({count: 2});
+    }
+    cb();
+    expect(log).toEqual([
+      'didMount', 'didMount', 'willEnter', 'didEnter'
+    ]);
   });
 });

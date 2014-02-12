@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactTransitionableChild
+ * @typechecks
+ * @providesModule ReactCSSTransitionGroupChild
  */
 
 "use strict";
 
 var React = require('React');
+
 var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
+
+var onlyChild = require('onlyChild');
 
 // We don't remove the element from the DOM until we receive an animationend or
 // transitionend event. If the user screws up and forgets to add an animation
@@ -30,6 +34,7 @@ var TICK = 17;
 var NO_EVENT_TIMEOUT = 5000;
 
 var noEventListener = null;
+
 
 if (__DEV__) {
   noEventListener = function() {
@@ -42,20 +47,8 @@ if (__DEV__) {
   };
 }
 
-/**
- * This component is simply responsible for watching when its single child
- * changes to undefined and animating the old child out. It does this by
- * recording its old child in savedChildren when it detects this event is about
- * to occur.
- */
-var ReactTransitionableChild = React.createClass({
-  /**
-   * Perform an actual DOM transition. This takes care of a few things:
-   * - Adding the second CSS class to trigger the transition
-   * - Listening for the finish event
-   * - Cleaning up the css (unless noReset is true)
-   */
-  transition: function(animationType, noReset, finishCallback) {
+var ReactCSSTransitionGroupChild = React.createClass({
+  transition: function(animationType, finishCallback) {
     var node = this.getDOMNode();
     var className = this.props.name + '-' + animationType;
     var activeClassName = className + '-active';
@@ -66,13 +59,8 @@ var ReactTransitionableChild = React.createClass({
         clearTimeout(noEventTimeout);
       }
 
-      // If this gets invoked after the component is unmounted it's OK.
-      if (!noReset) {
-        // Usually this means you're about to remove the node if you want to
-        // leave it in its animated state.
-        CSSCore.removeClass(node, className);
-        CSSCore.removeClass(node, activeClassName);
-      }
+      CSSCore.removeClass(node, className);
+      CSSCore.removeClass(node, activeClassName);
 
       ReactTransitionEvents.removeEndEventListener(node, endListener);
 
@@ -126,39 +114,25 @@ var ReactTransitionableChild = React.createClass({
     }
   },
 
-  componentWillReceiveProps: function(nextProps) {
-    if (!nextProps.children && this.props.children) {
-      this.savedChildren = this.props.children;
-    } else if (nextProps.children && !this.props.children) {
-      // We're being told to re-add the child.  Let's stop leaving!
-      if (this.isMounted()) {
-        var node = this.getDOMNode();
-        var className = this.props.name;
-        CSSCore.removeClass(node, className + '-leave');
-        CSSCore.removeClass(node, className + '-leave-active');
-        if (this.props.enter) {
-          CSSCore.addClass(node, className + '-enter');
-          CSSCore.addClass(node, className + '-enter-active');
-        }
-      }
-    }
-  },
-
-  componentDidMount: function() {
+  componentWillEnter: function(done) {
     if (this.props.enter) {
-      this.transition('enter');
+      this.transition('enter', done);
+    } else {
+      done();
     }
   },
 
-  componentDidUpdate: function(prevProps, prevState, prevContext) {
-    if (prevProps.children && !this.props.children) {
-      this.transition('leave', true, this.props.onDoneLeaving);
+  componentWillLeave: function(done) {
+    if (this.props.leave) {
+      this.transition('leave', done);
+    } else {
+      done();
     }
   },
 
   render: function() {
-    return this.props.children || this.savedChildren;
+    return onlyChild(this.props.children);
   }
 });
 
-module.exports = ReactTransitionableChild;
+module.exports = ReactCSSTransitionGroupChild;
