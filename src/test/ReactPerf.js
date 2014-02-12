@@ -19,6 +19,10 @@
 
 "use strict";
 
+/**
+ * ReactPerf is a general AOP system designed to measure performance. This
+ * module only has the hooks: see ReactDefaultPerf for the analysis tool.
+ */
 var ReactPerf = {
   /**
    * Boolean to enable/disable measurement. Set to false by default to prevent
@@ -33,7 +37,7 @@ var ReactPerf = {
   storedMeasure: _noMeasure,
 
   /**
-   * Use this to wrap methods you want to measure.
+   * Use this to wrap methods you want to measure. Zero overhead in production.
    *
    * @param {string} objName
    * @param {string} fnName
@@ -65,13 +69,6 @@ var ReactPerf = {
     }
   }
 };
-
-if (__DEV__) {
-  var ExecutionEnvironment = require('ExecutionEnvironment');
-  var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
-  ReactPerf.enableMeasure = ReactPerf.enableMeasure ||
-    (/[?&]react_perf\b/).test(url);
-}
 
 /**
  * Simply passes through the measured function, without measuring it.

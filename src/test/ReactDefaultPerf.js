@@ -19,12 +19,27 @@
 
 "use strict";
 
+var ReactPerf = require('ReactPerf');
+
 var performanceNow = require('performanceNow');
 
 var ReactDefaultPerf = {};
 
 if (__DEV__) {
   ReactDefaultPerf = {
+    _injected: false,
+
+    start: function() {
+      if (!ReactDefaultPerf._injected) {
+        ReactPerf.injection.injectMeasure(ReactDefaultPerf.measure);
+      }
+      ReactPerf.enableMeasure = true;
+    },
+
+    stop: function() {
+      ReactPerf.enableMeasure = false;
+    },
+
     /**
      * Gets the stored information for a given object's function.
      *
@@ -293,7 +308,7 @@ if (__DEV__) {
     var STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg;
     var fnStr = fn.toString().replace(STRIP_COMMENTS, '');
     fnStr = fnStr.slice(fnStr.indexOf('(') + 1, fnStr.indexOf(')'));
-    return fnStr.match(/([^\s,]+)/g);
+    return fnStr.match(/([^\s,]+)/g) || [];
   };
 
   /**

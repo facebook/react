@@ -91,10 +91,6 @@ function inject() {
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 
-  if (__DEV__) {
-    ReactInjection.Perf.injectMeasure(require('ReactDefaultPerf').measure);
-  }
-
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );
@@ -104,6 +100,14 @@ function inject() {
       ClientReactRootIndex.createReactRootIndex :
       ServerReactRootIndex.createReactRootIndex
   );
+
+  if (__DEV__) {
+    var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+    if ((/[?&]react_perf\b/).test(url)) {
+      var ReactDefaultPerf = require('ReactDefaultPerf');
+      ReactDefaultPerf.start();
+    }
+  }
 }
 
 module.exports = {
