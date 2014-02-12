@@ -36,6 +36,7 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
+var ReactUpdates = require('ReactUpdates');
 
 var onlyChild = require('onlyChild');
 
@@ -52,6 +53,7 @@ var React = {
   initializeTouchEvents: function(shouldUseTouch) {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
+  batchedUpdates: ReactUpdates.batchedUpdates,
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
