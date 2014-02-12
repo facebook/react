@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ReactPerf = require('ReactPerf');
+
 var invariant = require('invariant');
 
 var dirtyComponents = [];
@@ -75,14 +77,18 @@ function clearDirtyComponents() {
   dirtyComponents.length = 0;
 }
 
-function flushBatchedUpdates() {
-  // Run these in separate functions so the JIT can optimize
-  try {
-    runBatchedUpdates();
-  } finally {
-    clearDirtyComponents();
+var flushBatchedUpdates = ReactPerf.measure(
+  'ReactUpdates',
+  'flushBatchedUpdates',
+  function() {
+    // Run these in separate functions so the JIT can optimize
+    try {
+      runBatchedUpdates();
+    } finally {
+      clearDirtyComponents();
+    }
   }
-}
+);
 
 /**
  * Mark a component as needing a rerender, adding an optional callback to a
