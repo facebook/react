@@ -1267,25 +1267,29 @@ var ReactCompositeComponentMixin = {
   /**
    * @private
    */
-  _renderValidatedComponent: function() {
-    var renderedComponent;
-    var previousContext = ReactContext.current;
-    ReactContext.current = this._processChildContext(this._currentContext);
-    ReactCurrentOwner.current = this;
-    try {
-      renderedComponent = this.render();
-    } finally {
-      ReactContext.current = previousContext;
-      ReactCurrentOwner.current = null;
+  _renderValidatedComponent: ReactPerf.measure(
+    'ReactCompositeComponent',
+    '_renderValidatedComponent',
+    function() {
+      var renderedComponent;
+      var previousContext = ReactContext.current;
+      ReactContext.current = this._processChildContext(this._currentContext);
+      ReactCurrentOwner.current = this;
+      try {
+        renderedComponent = this.render();
+      } finally {
+        ReactContext.current = previousContext;
+        ReactCurrentOwner.current = null;
+      }
+      invariant(
+        ReactComponent.isValidComponent(renderedComponent),
+        '%s.render(): A valid ReactComponent must be returned. You may have ' +
+          'returned null, undefined, an array, or some other invalid object.',
+        this.constructor.displayName || 'ReactCompositeComponent'
+      );
+      return renderedComponent;
     }
-    invariant(
-      ReactComponent.isValidComponent(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned. You may have ' +
-      'returned null, undefined, an array, or some other invalid object.',
-      this.constructor.displayName || 'ReactCompositeComponent'
-    );
-    return renderedComponent;
-  },
+  ),
 
   /**
    * @private
