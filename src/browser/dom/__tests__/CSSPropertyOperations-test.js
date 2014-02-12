@@ -69,25 +69,8 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should not append `px` to styles that might need a number', function() {
-    var unitlessProperties = [
-      'columnCount',
-      'fillOpacity',
-      'flex',
-      'flexGrow',
-      'flexShrink',
-      'fontWeight',
-      'lineHeight',
-      'opacity',
-      'order',
-      'orphans',
-      'pitchRange',
-      'richness',
-      'stress',
-      'volume',
-      'widows',
-      'zIndex',
-      'zoom'
-    ];
+    var CSSProperty = require('CSSProperty');
+    var unitlessProperties = Object.keys(CSSProperty.isUnitlessNumber);
     unitlessProperties.forEach(function(property) {
       var styles = {};
       styles[property] = 1;

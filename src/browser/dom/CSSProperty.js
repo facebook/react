@@ -28,6 +28,7 @@ var isUnitlessNumber = {
   flexGrow: true,
   flexShrink: true,
   fontWeight: true,
+  lineClamp: true,
   lineHeight: true,
   opacity: true,
   order: true,
@@ -40,6 +41,27 @@ var isUnitlessNumber = {
   zIndex: true,
   zoom: true
 };
+
+/**
+ * @param {string} prefix vendor-specific prefix, eg: Webkit
+ * @param {string} key style name, eg: transitionDuration
+ * @return {string} style name prefixed with `prefix`, properly camelCased, eg:
+ * WebkitTransitionDuration
+ */
+function prefixKey(prefix, key) {
+  return prefix + key.charAt(0).toUpperCase() + key.substring(1);
+}
+
+/**
+ * Support style names that may come passed in prefixed by adding permutations
+ * of vendor prefixes.
+ */
+var prefixes = ['Webkit', 'ms', 'Moz', 'O'];
+for (var k in isUnitlessNumber) {
+  prefixes.forEach(function(prefix) {
+    isUnitlessNumber[prefixKey(prefix, k)] = isUnitlessNumber[k];
+  });
+}
 
 /**
  * Most style properties can be unset by doing .style[prop] = '' but IE8
