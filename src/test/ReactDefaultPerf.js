@@ -17,150 +17,12 @@
  * @typechecks static-only
  */
 
+var DOMProperty = require('DOMProperty');
+var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
-var merge = require('merge');
 var performanceNow = require('performanceNow');
-
-// Don't try to save users less than 1.2ms (a number I made up)
-var DONT_CARE_THRESHOLD = 1.2;
-
-function getTotalDOMTime(measurements) {
-  var totalDOMTime = 0;
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var id;
-
-    for (id in measurement.writes) {
-      measurement.writes[id].forEach(function(write) {
-        totalDOMTime += write.time;
-      });
-    }
-  }
-  return totalDOMTime;
-}
-
-function getExclusiveSummary(measurements) {
-  var candidates = {};
-  var displayName;
-
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var allIDs = merge(measurement.exclusive, measurement.inclusive);
-
-    for (var id in allIDs) {
-      displayName = measurement.displayNames[id].current;
-
-      candidates[displayName] = candidates[displayName] || {
-        inclusive: 0,
-        exclusive: 0
-      };
-      if (measurement.exclusive[id]) {
-        candidates[displayName].exclusive += measurement.exclusive[id];
-      }
-      if (measurement.inclusive[id]) {
-        candidates[displayName].inclusive += measurement.inclusive[id];
-      }
-    }
-  }
-
-  // Now make a sorted array with the results.
-  var arr = [];
-  for (displayName in candidates) {
-    if (candidates[displayName].exclusiveTime < DONT_CARE_THRESHOLD) {
-      continue;
-    }
-    arr.push({
-      componentName: displayName,
-      exclusiveTime: candidates[displayName].exclusive,
-      inclusiveTime: candidates[displayName].inclusive
-    });
-  }
-
-  arr.sort(function(a, b) {
-    return b.exclusiveTime - a.exclusiveTime;
-  });
-
-  return arr;
-}
-
-function getInclusiveSummary(measurements, onlyClean) {
-  var inclusiveTimes = {};
-  var displayName;
-
-  for (var i = 0; i < measurements.length; i++) {
-    var measurement = measurements[i];
-    var allIDs = merge(measurement.exclusive, measurement.inclusive);
-    var cleanComponents;
-
-    if (onlyClean) {
-      cleanComponents = getCleanComponents(measurement);
-    }
-
-    for (var id in allIDs) {
-      if (onlyClean && !cleanComponents[id]) {
-        continue;
-      }
-
-      displayName = measurement.displayNames[id];
-
-      // Inclusive time is not useful for many components without knowing where
-      // they are instantiated. So we aggregate inclusive time with both the
-      // owner and current displayName as the key.
-      var inclusiveKey = displayName.owner + ' > ' + displayName.current;
-
-      inclusiveTimes[inclusiveKey] = inclusiveTimes[inclusiveKey] || 0;
-
-      if (measurement.inclusive[id]) {
-        inclusiveTimes[inclusiveKey] += measurement.inclusive[id];
-      }
-    }
-  }
-
-  // Now make a sorted array with the results.
-  var arr = [];
-  for (displayName in inclusiveTimes) {
-    if (inclusiveTimes[displayName] < DONT_CARE_THRESHOLD) {
-      continue;
-    }
-    arr.push({
-      componentName: displayName,
-      inclusiveTime: inclusiveTimes[displayName]
-    });
-  }
-
-  arr.sort(function(a, b) {
-    return b.inclusiveTime - a.inclusiveTime;
-  });
-
-  return arr;
-}
-
-function getCleanComponents(measurement) {
-  // For a given reconcile, look at which components did not actually
-  // render anything to the DOM and return a mapping of their ID to
-  // the amount of time it took to render the entire subtree.
-  var cleanComponents = {};
-  var dirtyLeafIDs = Object.keys(measurement.writes);
-  var allIDs = merge(measurement.exclusive, measurement.inclusive);
-
-  for (var id in allIDs) {
-    var isDirty = false;
-    // For each component that rendered, see if a component that triggerd
-    // a DOM op is in its subtree.
-    for (var i = 0; i < dirtyLeafIDs.length; i++) {
-      if (dirtyLeafIDs[i].indexOf(id) === 0) {
-        isDirty = true;
-        break;
-      }
-    }
-    if (!isDirty && measurement.counts[id] > 0) {
-      cleanComponents[id] = true;
-    }
-  }
-  return cleanComponents;
-}
 
 var ReactDefaultPerf = {
   _allMeasurements: null, // last item in the list is the current one
@@ -183,9 +45,9 @@ var ReactDefaultPerf = {
     return ReactDefaultPerf._allMeasurements;
   },
 
-  printByExclusive: function(measurements) {
+  printExclusive: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = getExclusiveSummary(measurements);
+    var summary = ReactDefaultPerfAnalysis.getExclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
         'Component class name': item.componentName,
@@ -194,14 +56,14 @@ var ReactDefaultPerf = {
       };
     }));
     console.log(
-      'Total DOM time:',
-      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+      'Total time:',
+      ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
     );
   },
 
-  printByInclusive: function(measurements) {
+  printInclusive: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = getInclusiveSummary(measurements);
+    var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(measurements);
     console.table(summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
@@ -209,14 +71,17 @@ var ReactDefaultPerf = {
       };
     }));
     console.log(
-      'Total DOM time:',
-      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+      'Total time:',
+      ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
     );
   },
 
-  printByWasted: function(measurements) {
+  printWasted: function(measurements) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = getInclusiveSummary(measurements, true);
+    var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
+      measurements,
+      true
+    );
     console.table(summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
@@ -224,12 +89,29 @@ var ReactDefaultPerf = {
       };
     }));
     console.log(
-      'Total DOM time:',
-      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+      'Total time:',
+      ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
     );
   },
 
-  _recordWrite: function(id, fnName, totalTime) {
+  printDOM: function(measurements) {
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    var summary = ReactDefaultPerfAnalysis.getDOMSummary(measurements);
+    console.table(summary.map(function(item) {
+      var result = {};
+      result[DOMProperty.ID_ATTRIBUTE_NAME] = item.id;
+      result['type'] = item.type;
+      result['args'] = JSON.stringify(item.args);
+      return result;
+    }));
+    console.log(
+      'Total time:',
+      ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
+    );
+  },
+
+  _recordWrite: function(id, fnName, totalTime, args) {
+    // TODO: totalTime isn't that useful since it doesn't count paints/reflows
     var writes =
       ReactDefaultPerf
         ._allMeasurements[ReactDefaultPerf._allMeasurements.length - 1]
@@ -237,7 +119,8 @@ var ReactDefaultPerf = {
     writes[id] = writes[id] || [];
     writes[id].push({
       type: fnName,
-      time: totalTime
+      time: totalTime,
+      args: args
     });
   },
 
@@ -257,9 +140,15 @@ var ReactDefaultPerf = {
           inclusive: {},
           counts: {},
           writes: {},
-          displayNames: {}
+          displayNames: {},
+          totalTime: 0
         });
-        return func.apply(this, args);
+        start = performanceNow();
+        rv = func.apply(this, args);
+        ReactDefaultPerf._allMeasurements[
+          ReactDefaultPerf._allMeasurements.length - 1
+        ].totalTime = performanceNow() - start;
+        return rv;
       } else if (moduleName === 'ReactDOMIDOperations' ||
         moduleName === 'ReactComponentBrowserEnvironment') {
         start = performanceNow();
@@ -268,19 +157,42 @@ var ReactDefaultPerf = {
 
         if (fnName === 'mountImageIntoNode') {
           var mountID = ReactMount.getID(args[1]);
-          ReactDefaultPerf._recordWrite(mountID, fnName, totalTime);
+          ReactDefaultPerf._recordWrite(mountID, fnName, totalTime, args[0]);
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format
           args[0].forEach(function(update) {
-            ReactDefaultPerf._recordWrite(update.parentID, fnName, totalTime);
+            var writeArgs = {};
+            if (update.fromIndex !== null) {
+              writeArgs.fromIndex = update.fromIndex;
+            }
+            if (update.toIndex !== null) {
+              writeArgs.toIndex = update.toIndex;
+            }
+            if (update.textContent !== null) {
+              writeArgs.textContent = update.textContent;
+            }
+            if (update.markupIndex !== null) {
+              writeArgs.markup = args[1][update.markupIndex];
+            }
+            ReactDefaultPerf._recordWrite(
+              update.parentID,
+              update.type,
+              totalTime,
+              writeArgs
+            );
           });
         } else {
           // basic format
-          ReactDefaultPerf._recordWrite(args[0], fnName, totalTime);
+          ReactDefaultPerf._recordWrite(
+            args[0],
+            fnName,
+            totalTime,
+            Array.prototype.slice.call(args, 1)
+          );
         }
         return rv;
       } else if (moduleName === 'ReactCompositeComponent' && (
-        fnName === 'updateComponent' ||
+        fnName === 'updateComponent' || // TODO: receiveComponent()?
         fnName === '_renderValidatedComponent')) {
         var isInclusive = fnName === 'updateComponent';
         var entry = ReactDefaultPerf._allMeasurements[
