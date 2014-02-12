@@ -85,16 +85,24 @@ function getExclusiveSummary(measurements) {
   return arr;
 }
 
-function getInclusiveSummary(measurements) {
+function getInclusiveSummary(measurements, onlyClean) {
   var inclusiveTimes = {};
   var displayName;
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
     var allIDs = merge(measurement.exclusive, measurement.inclusive);
+    var cleanComponents;
 
+    if (onlyClean) {
+      cleanComponents = getCleanComponents(measurement);
+    }
 
     for (var id in allIDs) {
+      if (onlyClean && !cleanComponents[id]) {
+        continue;
+      }
+
       displayName = measurement.displayNames[id];
 
       // Inclusive time is not useful for many components without knowing where
@@ -127,6 +135,31 @@ function getInclusiveSummary(measurements) {
   });
 
   return arr;
+}
+
+function getCleanComponents(measurement) {
+  // For a given reconcile, look at which components did not actually
+  // render anything to the DOM and return a mapping of their ID to
+  // the amount of time it took to render the entire subtree.
+  var cleanComponents = {};
+  var dirtyLeafIDs = Object.keys(measurement.writes);
+  var allIDs = merge(measurement.exclusive, measurement.inclusive);
+
+  for (var id in allIDs) {
+    var isDirty = false;
+    // For each component that rendered, see if a component that triggerd
+    // a DOM op is in its subtree.
+    for (var i = 0; i < dirtyLeafIDs.length; i++) {
+      if (dirtyLeafIDs[i].indexOf(id) === 0) {
+        isDirty = true;
+        break;
+      }
+    }
+    if (!isDirty && measurement.counts[id] > 0) {
+      cleanComponents[id] = true;
+    }
+  }
+  return cleanComponents;
 }
 
 var ReactDefaultPerf = {
@@ -173,6 +206,21 @@ var ReactDefaultPerf = {
       return {
         'Owner > component': item.componentName,
         'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms'
+      };
+    }));
+    console.log(
+      'Total DOM time:',
+      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+    );
+  },
+
+  printByWasted: function(measurements) {
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    var summary = getInclusiveSummary(measurements, true);
+    console.table(summary.map(function(item) {
+      return {
+        'Owner > component': item.componentName,
+        'Wasted time': item.inclusiveTime.toFixed(2) + ' ms'
       };
     }));
     console.log(
