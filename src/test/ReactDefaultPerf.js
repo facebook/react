@@ -26,11 +26,8 @@ var performanceNow = require('performanceNow');
 // Don't try to save users less than 1.2ms (a number I made up)
 var DONT_CARE_THRESHOLD = 1.2;
 
-function getSummary(measurements, sortInclusive) {
-  var candidates = {};
+function getTotalDOMTime(measurements) {
   var totalDOMTime = 0;
-  var displayName;
-
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
     var id;
@@ -40,11 +37,21 @@ function getSummary(measurements, sortInclusive) {
         totalDOMTime += write.time;
       });
     }
+  }
+  return totalDOMTime;
+}
 
+function getExclusiveSummary(measurements) {
+  var candidates = {};
+  var displayName;
+
+  for (var i = 0; i < measurements.length; i++) {
+    var measurement = measurements[i];
     var allIDs = merge(measurement.exclusive, measurement.inclusive);
 
-    for (id in allIDs) {
-      displayName = measurement.displayNames[id];
+    for (var id in allIDs) {
+      displayName = measurement.displayNames[id].current;
+
       candidates[displayName] = candidates[displayName] || {
         inclusive: 0,
         exclusive: 0
@@ -61,7 +68,7 @@ function getSummary(measurements, sortInclusive) {
   // Now make a sorted array with the results.
   var arr = [];
   for (displayName in candidates) {
-    if (candidates[displayName] < DONT_CARE_THRESHOLD) {
+    if (candidates[displayName].exclusiveTime < DONT_CARE_THRESHOLD) {
       continue;
     }
     arr.push({
@@ -71,17 +78,55 @@ function getSummary(measurements, sortInclusive) {
     });
   }
 
-  if (sortInclusive) {
-    arr.sort(function(a, b) {
-      return b.inclusiveTime - a.inclusiveTime;
-    });
-  } else {
-    arr.sort(function(a, b) {
-      return b.exclusiveTime - a.exclusiveTime;
+  arr.sort(function(a, b) {
+    return b.exclusiveTime - a.exclusiveTime;
+  });
+
+  return arr;
+}
+
+function getInclusiveSummary(measurements) {
+  var inclusiveTimes = {};
+  var displayName;
+
+  for (var i = 0; i < measurements.length; i++) {
+    var measurement = measurements[i];
+    var allIDs = merge(measurement.exclusive, measurement.inclusive);
+
+
+    for (var id in allIDs) {
+      displayName = measurement.displayNames[id];
+
+      // Inclusive time is not useful for many components without knowing where
+      // they are instantiated. So we aggregate inclusive time with both the
+      // owner and current displayName as the key.
+      var inclusiveKey = displayName.owner + ' > ' + displayName.current;
+
+      inclusiveTimes[inclusiveKey] = inclusiveTimes[inclusiveKey] || 0;
+
+      if (measurement.inclusive[id]) {
+        inclusiveTimes[inclusiveKey] += measurement.inclusive[id];
+      }
+    }
+  }
+
+  // Now make a sorted array with the results.
+  var arr = [];
+  for (displayName in inclusiveTimes) {
+    if (inclusiveTimes[displayName] < DONT_CARE_THRESHOLD) {
+      continue;
+    }
+    arr.push({
+      componentName: displayName,
+      inclusiveTime: inclusiveTimes[displayName]
     });
   }
 
-  return {componentClasses: arr, totalDOMTime: totalDOMTime};
+  arr.sort(function(a, b) {
+    return b.inclusiveTime - a.inclusiveTime;
+  });
+
+  return arr;
 }
 
 var ReactDefaultPerf = {
@@ -106,24 +151,34 @@ var ReactDefaultPerf = {
   },
 
   printByExclusive: function(measurements) {
-    ReactDefaultPerf.print(measurements, false);
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    var summary = getExclusiveSummary(measurements);
+    console.table(summary.map(function(item) {
+      return {
+        'Component class name': item.componentName,
+        'Exclusive time': item.exclusiveTime.toFixed(2) + ' ms',
+        'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms'
+      };
+    }));
+    console.log(
+      'Total DOM time:',
+      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+    );
   },
 
   printByInclusive: function(measurements) {
-    ReactDefaultPerf.print(measurements, true);
-  },
-
-  print: function(measurements, sortInclusive) {
     measurements = measurements || ReactDefaultPerf._allMeasurements;
-    var summary = getSummary(measurements, sortInclusive);
-    console.table(summary.componentClasses.map(function(item) {
+    var summary = getInclusiveSummary(measurements);
+    console.table(summary.map(function(item) {
       return {
-        'Component class name': item.componentName,
-        'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms',
-        'Exclusive time': item.exclusiveTime.toFixed(2) + ' ms'
+        'Owner > component': item.componentName,
+        'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms'
       };
     }));
-    console.log('Total DOM time:', summary.totalDOMTime.toFixed(2) + ' ms');
+    console.log(
+      'Total DOM time:',
+      getTotalDOMTime(measurements).toFixed(2) + ' ms'
+    );
   },
 
   _recordWrite: function(id, fnName, totalTime) {
@@ -176,8 +231,9 @@ var ReactDefaultPerf = {
           ReactDefaultPerf._recordWrite(args[0], fnName, totalTime);
         }
         return rv;
-      } else if (fnName === 'updateComponent' ||
-        fnName === '_renderValidatedComponent') {
+      } else if (moduleName === 'ReactCompositeComponent' && (
+        fnName === 'updateComponent' ||
+        fnName === '_renderValidatedComponent')) {
         var isInclusive = fnName === 'updateComponent';
         var entry = ReactDefaultPerf._allMeasurements[
           ReactDefaultPerf._allMeasurements.length - 1
@@ -196,7 +252,10 @@ var ReactDefaultPerf = {
         typeOfLog[this._rootNodeID] = typeOfLog[this._rootNodeID] || 0;
         typeOfLog[this._rootNodeID] += totalTime;
 
-        entry.displayNames[this._rootNodeID] = this.constructor.displayName;
+        entry.displayNames[this._rootNodeID] = {
+          current: this.constructor.displayName,
+          owner: this._owner ? this._owner.constructor.displayName : '<root>'
+        };
 
         return rv;
       } else {
