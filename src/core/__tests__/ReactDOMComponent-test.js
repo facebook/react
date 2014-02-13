@@ -224,7 +224,7 @@ describe('ReactDOMComponent', function() {
 
       var NodeStub = function(initialProps) {
         this.props = initialProps || {};
-        this._rootNodeID = 'test';
+        this._rootNodeID = '.0';
       };
       mixInto(NodeStub, ReactDOMComponent.Mixin);
 

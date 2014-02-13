@@ -33,21 +33,17 @@ require('mock-modules')
 var keyOf = require('keyOf');
 var mocks = require('mocks');
 
-var ReactMount = require('ReactMount');
 var idToNode = {};
-var getID = ReactMount.getID;
-var setID = function(el, id) {
-  ReactMount.setID(el, id);
-  idToNode[id] = el;
-};
-var oldGetNode = ReactMount.getNode;
 
+var ReactMount;
 var EventPluginHub;
 var ReactEventEmitter;
 var ReactTestUtils;
 var TapEventPlugin;
 var EventListener;
 
+var getID;
+var setID;
 var tapMoveThreshold;
 var idCallOrder = [];
 var recordID = function(id) {
@@ -75,12 +71,9 @@ var ON_CHANGE_KEY = keyOf({onChange: null});
  * feed them into `ReactEventEmitter` (through `ReactTestUtils`), the event
  * handlers may receive a DOM node to inspect.
  */
-var CHILD = document.createElement('div');
-var PARENT = document.createElement('div');
-var GRANDPARENT = document.createElement('div');
-setID(CHILD, '.reactRoot.[0].[0].[0]');
-setID(PARENT, '.reactRoot.[0].[0]');
-setID(GRANDPARENT, '.reactRoot.[0]');
+var CHILD;
+var PARENT;
+var GRANDPARENT;
 
 function registerSimpleTestHandler() {
   ReactEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
@@ -108,10 +101,17 @@ describe('ReactEventEmitter', function() {
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
-  });
-
-  afterEach(function() {
-    ReactMount.getNode = oldGetNode;
+    getID = ReactMount.getID;
+    setID = function(el, id) {
+      ReactMount.setID(el, id);
+      idToNode[id] = el;
+    };
+    CHILD = document.createElement('div');
+    PARENT = document.createElement('div');
+    GRANDPARENT = document.createElement('div');
+    setID(CHILD, '.reactRoot.[0].[0].[0]');
+    setID(PARENT, '.reactRoot.[0].[0]');
+    setID(GRANDPARENT, '.reactRoot.[0]');
   });
 
   it('should store a listener correctly', function() {

@@ -72,6 +72,12 @@ function toBase62(value) {
   }
 }
 
+function resetMountIDs() {
+  nextMountID = {};
+  mountIDtoReactID = {};
+  reactIDtoMountID = {};
+}
+
 function createMountID(id) {
   var rootID = ReactInstanceHandles.getReactRootIDFromNodeID(id).substr(1);
 
@@ -85,8 +91,8 @@ function createMountID(id) {
 
 function purgeMountID(id) {
   var mountID = reactIDtoMountID[id];
-  delete mountIDtoReactID[mountID];
-  delete reactIDtoMountID[id];
+  //delete mountIDtoReactID[mountID];
+  //delete reactIDtoMountID[id];
 }
 
 /**
@@ -126,6 +132,9 @@ function internalGetID(node) {
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
   var id = node && node.getAttribute && node.getAttribute(ATTR_NAME);
+  if (id && !(id in mountIDtoReactID)) {
+    throw 'err ' + id;
+  }
   return mountIDtoReactID[id] || '';
 }
 
@@ -651,6 +660,8 @@ var ReactMount = {
    */
 
   createMountID: createMountID,
+
+  resetMountIDs: resetMountIDs,
 
   getReactRootID: getReactRootID,
 
