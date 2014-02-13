@@ -157,6 +157,12 @@ var eventTypes = {
       captured: keyOf({onLoadCapture: true})
     }
   },
+  error: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onError: true}),
+      captured: keyOf({onErrorCapture: true})
+    }
+  },
   // Note: We do not allow listening to mouseOver events. Instead, use the
   // onMouseEnter/onMouseLeave created by `EnterLeaveEventPlugin`.
   mouseDown: {
@@ -260,6 +266,7 @@ var topLevelEventsToDispatchConfig = {
   topDragOver:    eventTypes.dragOver,
   topDragStart:   eventTypes.dragStart,
   topDrop:        eventTypes.drop,
+  topError:       eventTypes.error,
   topFocus:       eventTypes.focus,
   topInput:       eventTypes.input,
   topKeyDown:     eventTypes.keyDown,
@@ -327,6 +334,7 @@ var SimpleEventPlugin = {
     switch (topLevelType) {
       case topLevelTypes.topInput:
       case topLevelTypes.topLoad:
+      case topLevelTypes.topError:
       case topLevelTypes.topReset:
       case topLevelTypes.topSubmit:
         // HTML Events
