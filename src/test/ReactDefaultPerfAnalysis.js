@@ -65,6 +65,26 @@ function getDOMSummary(measurements) {
   return items;
 }
 
+function getSortedResults(candidates) {
+  var arr = [];
+
+  for (displayName in candidates) {
+    if (candidates[displayName].exclusiveTime >= DONT_CARE_THRESHOLD) {
+      arr.push({
+        componentName: displayName,
+        exclusiveTime: candidates[displayName].exclusive,
+        inclusiveTime: candidates[displayName].inclusive
+      });
+    }
+  }
+
+  arr.sort(function(a, b) {
+    return b.exclusiveTime - a.exclusiveTime;
+  });
+
+  return arr;
+}
+
 function getExclusiveSummary(measurements) {
   var candidates = {};
   var displayName;
@@ -89,24 +109,7 @@ function getExclusiveSummary(measurements) {
     }
   }
 
-  // Now make a sorted array with the results.
-  var arr = [];
-  for (displayName in candidates) {
-    if (candidates[displayName].exclusiveTime < DONT_CARE_THRESHOLD) {
-      continue;
-    }
-    arr.push({
-      componentName: displayName,
-      exclusiveTime: candidates[displayName].exclusive,
-      inclusiveTime: candidates[displayName].inclusive
-    });
-  }
-
-  arr.sort(function(a, b) {
-    return b.exclusiveTime - a.exclusiveTime;
-  });
-
-  return arr;
+  return getSortedResults(candidates);
 }
 
 function getInclusiveSummary(measurements, onlyClean) {
@@ -142,23 +145,7 @@ function getInclusiveSummary(measurements, onlyClean) {
     }
   }
 
-  // Now make a sorted array with the results.
-  var arr = [];
-  for (displayName in inclusiveTimes) {
-    if (inclusiveTimes[displayName] < DONT_CARE_THRESHOLD) {
-      continue;
-    }
-    arr.push({
-      componentName: displayName,
-      inclusiveTime: inclusiveTimes[displayName]
-    });
-  }
-
-  arr.sort(function(a, b) {
-    return b.inclusiveTime - a.inclusiveTime;
-  });
-
-  return arr;
+  return getSortedResults(candidates);
 }
 
 function getUnchangedComponents(measurement) {
