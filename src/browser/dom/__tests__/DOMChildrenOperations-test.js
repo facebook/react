@@ -121,10 +121,16 @@ describe('DOMChildrenOperations', function() {
       }
     });
 
+    afterEach(function() {
+      document.documentElement.removeChild(
+        document.documentElement.lastChild
+      );
+    });
+
     var iterations = 100;
 
     it('should mutate 100 nodes without fault', function() {
-      var component = ReactTestUtils.renderIntoDocument(
+      var component = ReactTestUtils.renderAttachedIntoDocument(
         <TestComponent items={[]} />
       );
       for (var i = 0; i < iterations; i++) {
@@ -133,7 +139,7 @@ describe('DOMChildrenOperations', function() {
     });
 
     it('should mutate and not reload the immovable object', function() {
-      var component = ReactTestUtils.renderIntoDocument(
+      var component = ReactTestUtils.renderAttachedIntoDocument(
         <TestComponent items={[iframeItem1]} />
       );
       for (var i = 0; i < iterations; i++) {
@@ -142,7 +148,7 @@ describe('DOMChildrenOperations', function() {
     });
 
     it('should mutate and not reload any immovable object', function() {
-      var component = ReactTestUtils.renderIntoDocument(
+      var component = ReactTestUtils.renderAttachedIntoDocument(
         <TestComponent items={[iframeItem1, iframeItem2]} />
       );
       for (var i = 0; i < iterations; i++) {
@@ -151,7 +157,7 @@ describe('DOMChildrenOperations', function() {
     });
 
     it('should mutate and reload the immovable objects', function() {
-      var component = ReactTestUtils.renderIntoDocument(
+      var component = ReactTestUtils.renderAttachedIntoDocument(
         <TestComponent items={[iframeItem1, iframeItem2]} reload={true} />
       );
       for (var i = 0; i < iterations; i++) {

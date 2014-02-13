@@ -57,6 +57,12 @@ var ReactTestUtils = {
     return React.renderComponent(instance, div);
   },
 
+  renderAttachedIntoDocument: function(instance) {
+    var div = document.createElement('div');
+    document.documentElement.appendChild(div);
+    return React.renderComponent(instance, div);
+  },
+
   isDescriptor: function(descriptor) {
     return ReactDescriptor.isValidDescriptor(descriptor);
   },
