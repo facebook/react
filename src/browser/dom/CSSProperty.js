@@ -22,20 +22,20 @@
  * CSS properties which accept numbers but are not in units of "px".
  */
 var isUnitlessNumber = {
-  columnCount: true,
-  fillOpacity: true,
-  flex: true,
-  flexGrow: true,
-  flexShrink: true,
-  fontWeight: true,
-  lineClamp: true,
-  lineHeight: true,
-  opacity: true,
-  order: true,
-  orphans: true,
-  widows: true,
-  zIndex: true,
-  zoom: true
+  'columnCount': true,
+  'fillOpacity': true,
+  'flex': true,
+  'flexGrow': true,
+  'flexShrink': true,
+  'fontWeight': true,
+  'lineClamp': true,
+  'lineHeight': true,
+  'opacity': true,
+  'order': true,
+  'orphans': true,
+  'widows': true,
+  'zIndex': true,
+  'zoom': true
 };
 
 /**
@@ -69,44 +69,44 @@ for (var k in isUnitlessNumber) {
  * special prodding.
  */
 var shorthandPropertyExpansions = {
-  background: {
-    backgroundImage: true,
-    backgroundPosition: true,
-    backgroundRepeat: true,
-    backgroundColor: true
+  'background': {
+    'backgroundImage': true,
+    'backgroundPosition': true,
+    'backgroundRepeat': true,
+    'backgroundColor': true
   },
-  border: {
-    borderWidth: true,
-    borderStyle: true,
-    borderColor: true
+  'border': {
+    'borderWidth': true,
+    'borderStyle': true,
+    'borderColor': true
   },
-  borderBottom: {
-    borderBottomWidth: true,
-    borderBottomStyle: true,
-    borderBottomColor: true
+  'borderBottom': {
+    'borderBottomWidth': true,
+    'borderBottomStyle': true,
+    'borderBottomColor': true
   },
-  borderLeft: {
-    borderLeftWidth: true,
-    borderLeftStyle: true,
-    borderLeftColor: true
+  'borderLeft': {
+    'borderLeftWidth': true,
+    'borderLeftStyle': true,
+    'borderLeftColor': true
   },
-  borderRight: {
-    borderRightWidth: true,
-    borderRightStyle: true,
-    borderRightColor: true
+  'borderRight': {
+    'borderRightWidth': true,
+    'borderRightStyle': true,
+    'borderRightColor': true
   },
-  borderTop: {
-    borderTopWidth: true,
-    borderTopStyle: true,
-    borderTopColor: true
+  'borderTop': {
+    'borderTopWidth': true,
+    'borderTopStyle': true,
+    'borderTopColor': true
   },
-  font: {
-    fontStyle: true,
-    fontVariant: true,
-    fontWeight: true,
-    fontSize: true,
-    lineHeight: true,
-    fontFamily: true
+  'font': {
+    'fontStyle': true,
+    'fontVariant': true,
+    'fontWeight': true,
+    'fontSize': true,
+    'lineHeight': true,
+    'fontFamily': true
   }
 };
 
