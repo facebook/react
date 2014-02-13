@@ -29,12 +29,15 @@ var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
+var cloneWithProps = require('cloneWithProps');
 var cx = require('cx');
 
 React.addons = {
-  classSet: cx,
   LinkedStateMixin: LinkedStateMixin,
-  TransitionGroup: ReactTransitionGroup
+  TransitionGroup: ReactTransitionGroup,
+
+  classSet: cx,
+  cloneWithProps: cloneWithProps
 };
 
 module.exports = React;
