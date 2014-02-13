@@ -21,6 +21,7 @@
 var DOMProperty = require('DOMProperty');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactPerf = require('ReactPerf');
 
 var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
@@ -288,25 +289,29 @@ var ReactMount = {
    * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
    * @return {ReactComponent} nextComponent
    */
-  _renderNewRootComponent: function(
-      nextComponent,
-      container,
-      shouldReuseMarkup) {
-    var reactRootID = ReactMount._registerComponent(nextComponent, container);
-    nextComponent.mountComponentIntoNode(
-      reactRootID,
-      container,
-      shouldReuseMarkup
-    );
+  _renderNewRootComponent: ReactPerf.measure(
+    'ReactMount',
+    '_renderNewRootComponent',
+    function(
+        nextComponent,
+        container,
+        shouldReuseMarkup) {
+      var reactRootID = ReactMount._registerComponent(nextComponent, container);
+      nextComponent.mountComponentIntoNode(
+        reactRootID,
+        container,
+        shouldReuseMarkup
+      );
 
-    if (__DEV__) {
-      // Record the root element in case it later gets transplanted.
-      rootElementsByReactRootID[reactRootID] =
-        getReactRootElementInContainer(container);
+      if (__DEV__) {
+        // Record the root element in case it later gets transplanted.
+        rootElementsByReactRootID[reactRootID] =
+          getReactRootElementInContainer(container);
+      }
+
+      return nextComponent;
     }
-
-    return nextComponent;
-  },
+  ),
 
   /**
    * Renders a React component into the DOM in the supplied `container`.
