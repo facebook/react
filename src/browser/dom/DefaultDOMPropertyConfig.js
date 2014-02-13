@@ -187,7 +187,7 @@ var DefaultDOMPropertyConfig = {
      * @param {*} value
      */
     className: function(node, value) {
-      node.className = value || '';
+      node.setAttribute('class', value || '');
     }
   }
 };
