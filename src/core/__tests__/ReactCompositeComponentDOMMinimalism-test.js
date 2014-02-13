@@ -95,9 +95,9 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
   it('should not render extra nodes for non-interpolated text', function() {
     var instance = (
       <MyCompositeComponent>
-        <ul>
-          This text causes no children in ul, just innerHTML
-        </ul>
+        <span>
+          This text causes no children in span, just innerHTML
+        </span>
       </MyCompositeComponent>
     );
     ReactTestUtils.renderIntoDocument(instance);
@@ -108,7 +108,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
         .toBeDOMComponentWithTag('div')
         .toBeDOMComponentWithChildCount(1)
         .expectRenderedChildAt(0)
-          .toBeDOMComponentWithTag('ul')
+          .toBeDOMComponentWithTag('span')
           .toBeDOMComponentWithNoChildren();
   });
 

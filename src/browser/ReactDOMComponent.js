@@ -34,6 +34,11 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 
+if (__DEV__) {
+  var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
+  var validateNodeNesting = require('validateNodeNesting');
+}
+
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
 var registrationNameModules = ReactEventEmitter.registrationNameModules;
@@ -114,9 +119,20 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
+      var contentMarkup = this._createContentMarkup(transaction);
+      if (__DEV__) {
+        if (contentMarkup) {
+          var tagName = this.tagName;
+          for (var i = 0, l = contentMarkup.length; i < l; i++) {
+            var markup = contentMarkup[i];
+            var nodeName = getNodeNameFromReactMarkup(markup);
+            validateNodeNesting(tagName, nodeName);
+          }
+        }
+      }
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
-        this._createContentMarkup(transaction) +
+        (contentMarkup ? contentMarkup.join('') : '') +
         this._tagClose
       );
     }
@@ -172,30 +188,30 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction} transaction
-   * @return {string} Content markup.
+   * @return {array<string>} Content markup or list of content markup.
    */
   _createContentMarkup: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = this.props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return innerHTML.__html;
+        return [innerHTML.__html];
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
       if (contentToUse != null) {
-        return escapeTextForBrowser(contentToUse);
+        return [escapeTextForBrowser(contentToUse)];
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction
         );
-        return mountImages.join('');
+        return mountImages;
       }
     }
-    return '';
+    return null;
   },
 
   receiveComponent: function(nextComponent, transaction) {

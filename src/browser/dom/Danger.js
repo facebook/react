@@ -26,25 +26,15 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var createNodesFromMarkup = require('createNodesFromMarkup');
 var emptyFunction = require('emptyFunction');
 var getMarkupWrap = require('getMarkupWrap');
+var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
 var invariant = require('invariant');
+
+if (__DEV__) {
+  var validateNodeNesting = require('validateNodeNesting');
+}
 
 var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
 var RESULT_INDEX_ATTR = 'data-danger-index';
-
-/**
- * Extracts the `nodeName` from a string of markup.
- *
- * NOTE: Extracting the `nodeName` does not require a regular expression match
- * because we make assumptions about React-generated markup (i.e. there are no
- * spaces surrounding the opening tag and there is at least one attribute).
- *
- * @param {string} markup String of markup.
- * @return {string} Node name of the supplied markup.
- * @see http://jsperf.com/extract-nodename
- */
-function getNodeName(markup) {
-  return markup.substring(1, markup.indexOf(' '));
-}
 
 var Danger = {
 
@@ -72,7 +62,7 @@ var Danger = {
         markupList[i],
         'dangerouslyRenderMarkup(...): Missing markup.'
       );
-      nodeName = getNodeName(markupList[i]);
+      nodeName = getNodeNameFromReactMarkup(markupList[i]);
       nodeName = getMarkupWrap(nodeName) ? nodeName : '*';
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
       markupByNodeName[nodeName][i] = markupList[i];
@@ -179,6 +169,9 @@ var Danger = {
     );
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
+    if (__DEV__) {
+      validateNodeNesting(oldChild.parentNode.nodeName, newChild.nodeName);
+    }
     oldChild.parentNode.replaceChild(newChild, oldChild);
   }
 

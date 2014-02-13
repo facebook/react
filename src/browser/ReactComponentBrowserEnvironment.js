@@ -29,6 +29,11 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
 
+if (__DEV__) {
+  var getNodeNameFromReactMarkup = require('getNodeNameFromReactMarkup');
+  var validateNodeNesting = require('validateNodeNesting');
+}
+
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
@@ -132,6 +137,11 @@ var ReactComponentBrowserEnvironment = {
           'without using server rendering due to cross-browser quirks. ' +
           'See renderComponentToString() for server rendering.'
       );
+
+      if (__DEV__) {
+        var nodeName = getNodeNameFromReactMarkup(markup);
+        validateNodeNesting(container.nodeName, nodeName);
+      }
 
       // Asynchronously inject markup by ensuring that the container is not in
       // the document when settings its `innerHTML`.
