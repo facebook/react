@@ -22,9 +22,13 @@
 var invariant = require('invariant');
 
 var hasReadOnlyValue = {
+  'button': true,
   'checkbox': true,
+  'image': true,
   'hidden': true,
-  'radio': true
+  'radio': true,
+  'reset': true,
+  'submit': true
 };
 
 function _assertSingleLink(input) {
