@@ -42,4 +42,12 @@ describe('EventPluginHub', function() {
     );
   });
 
+  it("should prevent non-function listeners", function() {
+    expect(function() {
+      EventPluginHub.putListener(1, 'onClick', 'not a function');
+    }).toThrow(
+      'Invariant Violation: Expected onClick listener to be a function, ' +
+      'instead got type string'
+    );
+  });
 });

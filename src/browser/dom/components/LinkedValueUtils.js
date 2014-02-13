@@ -19,6 +19,8 @@
 
 "use strict";
 
+var ReactPropTypes = require('ReactPropTypes');
+
 var invariant = require('invariant');
 
 var hasReadOnlyValue = {
@@ -110,7 +112,8 @@ var LinkedValueUtils = {
             );
           }
         }
-      }
+      },
+      onChange: ReactPropTypes.func
     }
   },
 
