@@ -17,6 +17,8 @@
  * @typechecks static-only
  */
 
+"use strict";
+
 var DOMProperty = require('DOMProperty');
 var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
 var ReactMount = require('ReactMount');
@@ -130,7 +132,8 @@ var ReactDefaultPerf = {
       var rv;
       var start;
 
-      if (fnName === 'flushBatchedUpdates') {
+      if (fnName === '_renderNewRootComponent' ||
+          fnName === 'flushBatchedUpdates') {
         // A "measurement" is a set of metrics recorded for each flush. We want
         // to group the metrics for a given flush together so we can look at the
         // components that rendered and the DOM operations that actually
@@ -223,6 +226,6 @@ var ReactDefaultPerf = {
       }
     };
   }
-}
+};
 
 module.exports = ReactDefaultPerf;
