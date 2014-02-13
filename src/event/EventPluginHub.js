@@ -155,6 +155,11 @@ var EventPluginHub = {
       ExecutionEnvironment.canUseDOM,
       'Cannot call putListener() in a non-DOM environment.'
     );
+    invariant(
+      !listener || typeof listener === 'function',
+      'Expected %s listener to be a function, instead got type %s',
+      registrationName, typeof listener
+    );
 
     if (__DEV__) {
       // IE8 has no API for event capturing and the `onScroll` event doesn't
