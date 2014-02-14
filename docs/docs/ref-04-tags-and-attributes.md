@@ -54,11 +54,12 @@ For a list of events, see [Supported Events](/react/docs/events.html).
 accept accessKey action allowFullScreen allowTransparency alt autoCapitalize
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan content contentEditable contextMenu controls data dateTime
-dir disabled draggable encType form frameBorder height hidden href htmlFor
-httpEquiv icon id label lang list loop max maxLength method min multiple name
-pattern placeholder poster preload radioGroup readOnly rel required role
-rowSpan sandbox scope scrollLeft scrollTop seamless selected size span
-spellCheck src step style tabIndex target title type value width wmode
+dir disabled draggable encType form formNoValidate frameBorder height hidden
+href htmlFor httpEquiv icon id label lang list loop max maxLength method min
+multiple name noValidate pattern placeholder poster preload radioGroup
+readOnly rel required role rowSpan sandbox scope scrollLeft scrollTop seamless
+selected size span spellCheck src step style tabIndex target title type value
+width wmode
 ```
 
 The non-standard `autoCapitalize` attribute is supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
