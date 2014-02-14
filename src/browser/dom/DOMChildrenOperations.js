@@ -58,11 +58,38 @@ function insertChildAt(parentNode, childNode, index) {
 }
 
 /**
+ * Sets the text content of `node` to `text`.
+ *
+ * @param {DOMElement} node Node to change
+ * @param {string} text New text content
+ */
+var updateTextContent;
+if (textContentAccessor === 'textContent') {
+  updateTextContent = function(node, text) {
+    node.textContent = text;
+  };
+} else {
+  updateTextContent = function(node, text) {
+    // In order to preserve newlines correctly, we can't use .innerText to set
+    // the contents (see #1080), so we empty the element then append a text node
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
+    if (text) {
+      var doc = node.ownerDocument || document;
+      node.appendChild(doc.createTextNode(text));
+    }
+  };
+}
+
+/**
  * Operations for updating with DOM children.
  */
 var DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
+
+  updateTextContent: updateTextContent,
 
   /**
    * Updates a component's children by processing a series of updates. The
@@ -121,7 +148,10 @@ var DOMChildrenOperations = {
           );
           break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
-          update.parentNode[textContentAccessor] = update.textContent;
+          updateTextContent(
+            update.parentNode,
+            update.textContent
+          );
           break;
         case ReactMultiChildUpdateTypes.REMOVE_NODE:
           // Already removed by the for-loop above.

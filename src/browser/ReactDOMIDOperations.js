@@ -27,7 +27,6 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
-var getTextContentAccessor = require('getTextContentAccessor');
 var invariant = require('invariant');
 
 /**
@@ -41,14 +40,6 @@ var INVALID_PROPERTY_ERRORS = {
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
 };
-
-/**
- * The DOM property to use when setting text content.
- *
- * @type {string}
- * @private
- */
-var textContentAccessor = getTextContentAccessor();
 
 var useWhitespaceWorkaround;
 
@@ -184,7 +175,7 @@ var ReactDOMIDOperations = {
     'updateTextContentByID',
     function(id, content) {
       var node = ReactMount.getNode(id);
-      node[textContentAccessor] = content;
+      DOMChildrenOperations.updateTextContent(node, content);
     }
   ),
 
