@@ -58,7 +58,15 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
 
     console.warn = mocks.getMockFunction();
-    setTimeout.mock.calls[2][0]();
+
+    // For some reason jst is adding extra setTimeout()s and grunt test isn't,
+    // so we need to do this disgusting hack.
+    for (var i = 0 ; i < setTimeout.mock.calls.length; i++) {
+      if (setTimeout.mock.calls[i][1] === 5000) {
+        setTimeout.mock.calls[i][0]();
+        break;
+      }
+    }
 
     expect(a.getDOMNode().childNodes.length).toBe(2);
     expect(console.warn.mock.calls.length).toBe(1);
