@@ -146,7 +146,7 @@ if (require.main === module) {
     );
   }
 
-  var absPath = path.resolve(__dirname, argv._[0]);
+  var absPath = path.resolve(argv._[0]);
 
   fs.stat(absPath, function(err, stat) {
     if (err) throw err;
