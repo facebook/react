@@ -19,11 +19,11 @@ The following HTML elements are supported:
 a abbr address area article aside audio b base bdi bdo big blockquote body br
 button canvas caption cite code col colgroup data datalist dd del details dfn
 div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6
-head header hr html i iframe img input ins kbd keygen label legend li link main
-map mark menu menuitem meta meter nav noscript object ol optgroup option output
-p param pre progress q rp rt ruby s samp script section select small source
-span strong style sub summary sup table tbody td textarea tfoot th thead time
-title tr track u ul var video wbr
+head header hr html i iframe img input ins kbd keygen label legend li link
+main map mark menu menuitem meta meter nav noscript object ol optgroup option
+output p param pre progress q rp rt ruby s samp script section select small
+source span strong style sub summary sup table tbody td textarea tfoot th
+thead time title tr track u ul var video wbr
 ```
 
 ### SVG elements
@@ -31,9 +31,8 @@ title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs g line linearGradient path polygon polyline radialGradient rect stop 
-svg text   
-
+circle defs g line linearGradient path polygon polyline radialGradient rect
+stop svg text
 ```
 
 You may also be interested in [react-art](https://github.com/facebook/react-art), a drawing library for React that can render to Canvas, SVG, or VML (for IE8).
@@ -58,11 +57,11 @@ className colSpan content contentEditable contextMenu controls data dateTime
 dir disabled draggable encType form frameBorder height hidden href htmlFor
 httpEquiv icon id label lang list loop max maxLength method min multiple name
 pattern placeholder poster preload radioGroup readOnly rel required role
-rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
-target title type value width wmode
+rowSpan sandbox scope scrollLeft scrollTop seamless selected size span
+spellCheck src step style tabIndex target title type value width wmode
 ```
 
-The non-standard `autoCapitalize` attribute is supported for Mobile Safari.
+The non-standard `autoCapitalize` attribute is supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
 
 In addition, there is the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting DOM strings into a component.
 
