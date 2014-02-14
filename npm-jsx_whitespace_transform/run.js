@@ -35,7 +35,7 @@ function transformDir(dirPath, exclude) {
   var finder = new FileFinder({
     rootFolder: dirPath,
     filterFunction: function(path, stat) {
-      return /\.js$/.test(path) && (!exclude || !exclude.test(path));
+      return /\.jsx?$/.test(path) && (!exclude || !exclude.test(path));
     }
   });
 
