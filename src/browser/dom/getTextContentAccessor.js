@@ -30,9 +30,11 @@ var contentKey = null;
  */
 function getTextContentAccessor() {
   if (!contentKey && ExecutionEnvironment.canUseDOM) {
-    contentKey = 'innerText' in document.createElement('div') ?
-      'innerText' :
-      'textContent';
+    // Prefer textContent to innerText because many browsers support both but
+    // SVG <text> elements don't support innerText even when <div> does.
+    contentKey = 'textContent' in document.createElement('div') ?
+      'textContent' :
+      'innerText';
   }
   return contentKey;
 }
