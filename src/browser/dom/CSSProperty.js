@@ -53,11 +53,14 @@ function prefixKey(prefix, key) {
  * of vendor prefixes.
  */
 var prefixes = ['Webkit', 'ms', 'Moz', 'O'];
-for (var k in isUnitlessNumber) {
+
+// Using Object.keys here, or else the vanilla for-in loop makes IE8 go into an
+// infinite loop, because it iterates over the newly added props too.
+Object.keys(isUnitlessNumber).forEach(function(prop) {
   prefixes.forEach(function(prefix) {
-    isUnitlessNumber[prefixKey(prefix, k)] = isUnitlessNumber[k];
+    isUnitlessNumber[prefixKey(prefix, prop)] = isUnitlessNumber[prop];
   });
-}
+});
 
 /**
  * Most style properties can be unset by doing .style[prop] = '' but IE8
