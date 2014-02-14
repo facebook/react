@@ -50,21 +50,23 @@ For a list of events, see [Supported Events](/react/docs/events.html).
 
 ### HTML Attributes
 
+These standard attributes are supported:
+
 ```
-accept accessKey action allowFullScreen allowTransparency alt autoCapitalize
+accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
-className colSpan content contentEditable contextMenu controls data dateTime
-dir disabled draggable encType form formNoValidate frameBorder height hidden
-href htmlFor httpEquiv icon id label lang list loop max maxLength method min
-multiple name noValidate pattern placeholder poster preload radioGroup
-readOnly rel required role rowSpan sandbox scope scrollLeft scrollTop seamless
-selected size span spellCheck src step style tabIndex target title type value
-width wmode
+className colSpan cols content contentEditable contextMenu controls data
+dateTime defer dir disabled draggable encType form formNoValidate frameBorder
+height hidden href htmlFor httpEquiv icon id label lang list loop max
+maxLength method min multiple name noValidate pattern placeholder poster
+preload radioGroup readOnly rel required role rowSpan rows sandbox scope
+scrollLeft scrollTop seamless selected size span spellCheck src srcDoc step
+style tabIndex target title type value width wmode
 ```
 
-The non-standard `autoCapitalize` attribute is supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
+In addition, the non-standard `autoCapitalize` and `autoCorrect` attributes are supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
 
-In addition, there is the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting DOM strings into a component.
+There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting HTML strings into a component.
 
 ### SVG Attributes
 
