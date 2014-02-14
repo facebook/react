@@ -26,8 +26,12 @@ var ReactPerf = require('ReactPerf');
 
 var performanceNow = require('performanceNow');
 
+function roundFloat(val) {
+  return Math.floor(val * 100) / 100;
+}
+
 var ReactDefaultPerf = {
-  _allMeasurements: null, // last item in the list is the current one
+  _allMeasurements: [], // last item in the list is the current one
   _injected: false,
 
   start: function() {
@@ -35,7 +39,7 @@ var ReactDefaultPerf = {
       ReactPerf.injection.injectMeasure(ReactDefaultPerf.measure);
     }
 
-    ReactDefaultPerf._allMeasurements = [];
+    ReactDefaultPerf._allMeasurements.length = 0;
     ReactPerf.enableMeasure = true;
   },
 
@@ -53,8 +57,10 @@ var ReactDefaultPerf = {
     console.table(summary.map(function(item) {
       return {
         'Component class name': item.componentName,
-        'Exclusive time': item.exclusiveTime.toFixed(2) + ' ms',
-        'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms'
+        'Total inclusive time (ms)': roundFloat(item.inclusive),
+        'Total exclusive time (ms)': roundFloat(item.exclusive),
+        'Exclusive time per instance (ms)': roundFloat(item.exclusive / item.count),
+        'Instances': item.count
       };
     }));
     console.log(
@@ -69,7 +75,8 @@ var ReactDefaultPerf = {
     console.table(summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
-        'Inclusive time': item.inclusiveTime.toFixed(2) + ' ms'
+        'Inclusive time (ms)': roundFloat(item.time),
+        'Instances': item.count
       };
     }));
     console.log(
@@ -87,7 +94,8 @@ var ReactDefaultPerf = {
     console.table(summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
-        'Wasted time': item.inclusiveTime.toFixed(2) + ' ms'
+        'Wasted time (ms)': item.time,
+        'Instances': item.count
       };
     }));
     console.log(
@@ -195,27 +203,32 @@ var ReactDefaultPerf = {
         }
         return rv;
       } else if (moduleName === 'ReactCompositeComponent' && (
+        fnName === 'mountComponent' ||
         fnName === 'updateComponent' || // TODO: receiveComponent()?
         fnName === '_renderValidatedComponent')) {
-        var isInclusive = fnName === 'updateComponent';
+
+        var rootNodeID = fnName === 'mountComponent' ?
+          args[0] :
+          this._rootNodeID;
+        var isRender = fnName === '_renderValidatedComponent';
         var entry = ReactDefaultPerf._allMeasurements[
           ReactDefaultPerf._allMeasurements.length - 1
         ];
-        if (isInclusive) {
-          // Since both updateComponent() and _renderValidatedComponent() are
-          // called for each render, only record the count for one of them.
-          entry.counts[this._rootNodeID] = entry.counts[this._rootNodeID] || 0;
-          entry.counts[this._rootNodeID] += 1;
+
+        if (isRender) {
+          entry.counts[rootNodeID] = entry.counts[rootNodeID] || 0;
+          entry.counts[rootNodeID] += 1;
         }
+
         start = performanceNow();
         rv = func.apply(this, args);
         totalTime = performanceNow() - start;
 
-        var typeOfLog = isInclusive ? entry.inclusive : entry.exclusive;
-        typeOfLog[this._rootNodeID] = typeOfLog[this._rootNodeID] || 0;
-        typeOfLog[this._rootNodeID] += totalTime;
+        var typeOfLog = isRender ? entry.exclusive : entry.inclusive;
+        typeOfLog[rootNodeID] = typeOfLog[rootNodeID] || 0;
+        typeOfLog[rootNodeID] += totalTime;
 
-        entry.displayNames[this._rootNodeID] = {
+        entry.displayNames[rootNodeID] = {
           current: this.constructor.displayName,
           owner: this._owner ? this._owner.constructor.displayName : '<root>'
         };

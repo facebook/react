@@ -77,8 +77,10 @@ function getExclusiveSummary(measurements) {
       displayName = measurement.displayNames[id].current;
 
       candidates[displayName] = candidates[displayName] || {
+        componentName: displayName,
         inclusive: 0,
-        exclusive: 0
+        exclusive: 0,
+        count: 0
       };
       if (measurement.exclusive[id]) {
         candidates[displayName].exclusive += measurement.exclusive[id];
@@ -86,32 +88,30 @@ function getExclusiveSummary(measurements) {
       if (measurement.inclusive[id]) {
         candidates[displayName].inclusive += measurement.inclusive[id];
       }
+      if (measurement.counts[id]) {
+        candidates[displayName].count += measurement.counts[id];
+      }
     }
   }
 
   // Now make a sorted array with the results.
   var arr = [];
   for (displayName in candidates) {
-    if (candidates[displayName].exclusiveTime < DONT_CARE_THRESHOLD) {
-      continue;
+    if (candidates[displayName].exclusive >= DONT_CARE_THRESHOLD) {
+      arr.push(candidates[displayName]);
     }
-    arr.push({
-      componentName: displayName,
-      exclusiveTime: candidates[displayName].exclusive,
-      inclusiveTime: candidates[displayName].inclusive
-    });
   }
 
   arr.sort(function(a, b) {
-    return b.exclusiveTime - a.exclusiveTime;
+    return b.exclusive - a.exclusive;
   });
 
   return arr;
 }
 
 function getInclusiveSummary(measurements, onlyClean) {
-  var inclusiveTimes = {};
-  var displayName;
+  var candidates = {};
+  var inclusiveKey;
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
@@ -127,35 +127,38 @@ function getInclusiveSummary(measurements, onlyClean) {
         continue;
       }
 
-      displayName = measurement.displayNames[id];
+      var displayName = measurement.displayNames[id];
 
       // Inclusive time is not useful for many components without knowing where
       // they are instantiated. So we aggregate inclusive time with both the
       // owner and current displayName as the key.
-      var inclusiveKey = displayName.owner + ' > ' + displayName.current;
+      inclusiveKey = displayName.owner + ' > ' + displayName.current;
 
-      inclusiveTimes[inclusiveKey] = inclusiveTimes[inclusiveKey] || 0;
+      candidates[inclusiveKey] = candidates[inclusiveKey] || {
+        componentName: inclusiveKey,
+        time: 0,
+        count: 0
+      };
 
       if (measurement.inclusive[id]) {
-        inclusiveTimes[inclusiveKey] += measurement.inclusive[id];
+        candidates[inclusiveKey].time += measurement.inclusive[id];
+      }
+      if (measurement.counts[id]) {
+        candidates[inclusiveKey].count += measurement.counts[id];
       }
     }
   }
 
   // Now make a sorted array with the results.
   var arr = [];
-  for (displayName in inclusiveTimes) {
-    if (inclusiveTimes[displayName] < DONT_CARE_THRESHOLD) {
-      continue;
+  for (inclusiveKey in candidates) {
+    if (candidates[inclusiveKey].time >= DONT_CARE_THRESHOLD) {
+      arr.push(candidates[inclusiveKey]);
     }
-    arr.push({
-      componentName: displayName,
-      inclusiveTime: inclusiveTimes[displayName]
-    });
   }
 
   arr.sort(function(a, b) {
-    return b.inclusiveTime - a.inclusiveTime;
+    return b.time - a.time;
   });
 
   return arr;
