@@ -1107,6 +1107,45 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should have bound the mixin methods to the component', function() {
+    var mixin = {
+      mixinFunc: function() {return this;}
+    };
+
+    var Component = React.createClass({
+      mixins: [mixin],
+      componentDidMount: function() {
+        expect(this.mixinFunc()).toBe(this);
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    ReactTestUtils.renderIntoDocument(instance);
+  });
+
+  it('should include the mixin keys in even if their values are falsy',
+    function() {
+      var mixin = {
+        keyWithNullValue: null,
+        randomCounter: 0
+      };
+
+      var Component = React.createClass({
+        mixins: [mixin],
+        componentDidMount: function() {
+          expect(this.randomCounter).toBe(0);
+          expect(this.keyWithNullValue).toBeNull();
+        },
+        render: function() {
+          return <span />;
+        }
+      });
+      var instance = <Component />;
+      ReactTestUtils.renderIntoDocument(instance);
+  });
+
   it('should warn if an umounted component is touched', function() {
     spyOn(console, 'warn');
 
