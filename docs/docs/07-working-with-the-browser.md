@@ -121,6 +121,7 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 * `Array.prototype.some`
 * `Date.now`
 * `Function.prototype.bind`
+* `Object.keys`
 
 `es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim), provides the following that React needs:
 
