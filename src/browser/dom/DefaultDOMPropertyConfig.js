@@ -186,17 +186,6 @@ var DefaultDOMPropertyConfig = {
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc'
-  },
-  DOMMutationMethods: {
-    /**
-     * Setting `className` to null may cause it to be set to the string "null".
-     *
-     * @param {DOMElement} node
-     * @param {*} value
-     */
-    className: function(node, value) {
-      node.className = value || '';
-    }
   }
 };
 

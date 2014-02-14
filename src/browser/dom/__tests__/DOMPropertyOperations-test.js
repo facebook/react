@@ -23,6 +23,8 @@ describe('DOMPropertyOperations', function() {
   var DOMPropertyOperations;
   var DOMProperty;
 
+  var mocks;
+
   beforeEach(function() {
     require('mock-modules').dumpCache();
     var ReactDefaultInjection = require('ReactDefaultInjection');
@@ -30,6 +32,8 @@ describe('DOMPropertyOperations', function() {
 
     DOMPropertyOperations = require('DOMPropertyOperations');
     DOMProperty = require('DOMProperty');
+
+    mocks = require('mocks');
   });
 
   describe('createMarkupForProperty', function() {
@@ -150,6 +154,27 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should use mutation method where applicable', function() {
+      var foobarSetter = mocks.getMockFunction();
+      // inject foobar DOM property
+      DOMProperty.injection.injectDOMPropertyConfig({
+        Properties: {foobar: null},
+        DOMMutationMethods: {
+          foobar: foobarSetter
+        }
+      });
+
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'foobar',
+        'cows say moo'
+      );
+
+      expect(foobarSetter.mock.calls.length).toBe(1);
+      expect(foobarSetter.mock.calls[0][0]).toBe(stubNode);
+      expect(foobarSetter.mock.calls[0][1]).toBe('cows say moo');
+    });
+
+    it('should set className to empty string instead of null', function() {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'className',
@@ -162,6 +187,8 @@ describe('DOMPropertyOperations', function() {
         'className',
         null
       );
+      // className should be '', not 'null' or null (which becomes 'null' in
+      // some browsers)
       expect(stubNode.className).toBe('');
     });
 
