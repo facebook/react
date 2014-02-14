@@ -7,9 +7,9 @@
   - id: videos
     title: Videos
   - id: complementary-tools
-    title: Complementary tools
+    title: Complementary Tools
   - id: example-apps
-    title: Example apps
+    title: Example Apps
 - title: Guides
   items:
   - id: why-react
@@ -62,6 +62,6 @@
   - id: dom-differences
     title: DOM Differences
   - id: special-non-dom-attributes
-    title: Special Non-DOM attributes
+    title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
