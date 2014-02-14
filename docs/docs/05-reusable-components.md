@@ -41,10 +41,10 @@ React.createClass({
     optionalUnion: React.PropTypes.oneOfType([
       React.PropTypes.string,
       React.PropTypes.number
-    ])
+    ]),
 
     // An array of a certain type
-    optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number)
+    optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
 
     // An object taking on a particular shape
     optionalObjectWithShape: React.PropTypes.shape({
@@ -58,10 +58,10 @@ React.createClass({
 
     // You can chain any of the above with isRequired to make sure a warning is
     // shown if the prop isn't provided.
-    requiredFunc: React.PropTypes.func.isRequired
+    requiredFunc: React.PropTypes.func.isRequired,
 
     // An object of any kind
-    requiredAny: React.PropTypes.any.isRequired
+    requiredAny: React.PropTypes.any.isRequired,
 
     // You can also specify a custom validator.
     customProp: function(props, propName, componentName) {
