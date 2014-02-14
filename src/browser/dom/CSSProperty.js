@@ -33,10 +33,6 @@ var isUnitlessNumber = {
   opacity: true,
   order: true,
   orphans: true,
-  pitchRange: true,
-  richness: true,
-  stress: true,
-  volume: true,
   widows: true,
   zIndex: true,
   zoom: true
