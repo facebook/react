@@ -35,10 +35,22 @@ React.createClass({
 
     // You can ensure that your prop is limited to specific values by treating
     // it as an enum.
-    optionalEnum: React.PropTypes.oneOf(['News','Photos']),
+    optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
 
-    // Expect an array of a certain propType
+    // An object that could be one of many types
+    optionalUnion: React.PropTypes.oneOfType([
+      React.PropTypes.string,
+      React.PropTypes.number
+    ])
+
+    // An array of a certain type
     optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number)
+
+    // An object taking on a particular shape
+    optionalObjectWithShape: React.PropTypes.shape({
+      color: React.PropTypes.string,
+      fontSize: React.PropTypes.number
+    }),
 
     // You can also declare that a prop is an instance of a class. This uses
     // JS's instanceof operator.
@@ -47,6 +59,9 @@ React.createClass({
     // You can chain any of the above with isRequired to make sure a warning is
     // shown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired
+
+    // An object of any kind
+    requiredAny: React.PropTypes.any.isRequired
 
     // You can also specify a custom validator.
     customProp: function(props, propName, componentName) {
