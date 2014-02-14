@@ -67,6 +67,31 @@ The `mixins` array allows you to use mixins to share behavior among multiple com
 <!-- TODO: Document mixins here directly. -->
 
 
+### statics
+
+```javascript
+object statics
+```
+
+The `statics` object allows you to define static methods that can be called on the component class. For example:
+
+```javascript
+var MyComponent = React.createClass({
+  statics: {
+    customMethod: function(foo) {
+      return foo === 'bar';
+    }
+  },
+  render: function() {
+  }
+});
+
+MyComponent.customMethod('bar');  // true
+```
+
+Methods defined within this block are _static_, meaning that you can run them before any component instances are created, and the methods do not have access to the props or state of your components. If you want to check the value of props in a static method, have the caller pass in the props as an argument to the static method.
+
+
 ### displayName
 
 ```javascript
