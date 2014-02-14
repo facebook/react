@@ -28,6 +28,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
@@ -54,6 +55,7 @@ var React = {
   createClass: ReactCompositeComponent.createClass,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
+  EmptyComponent: ReactEmptyComponent,
   renderComponent: ReactPerf.measure(
     'React',
     'renderComponent',
