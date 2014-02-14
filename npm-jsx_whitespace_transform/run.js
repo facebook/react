@@ -146,22 +146,24 @@ if (require.main === module) {
     );
   }
 
-  var absPath = path.resolve(argv._[0]);
+  argv._.forEach(function(arg) {
+    var absPath = path.resolve(arg);
 
-  fs.stat(absPath, function(err, stat) {
-    if (err) throw err;
+    fs.stat(absPath, function(err, stat) {
+      if (err) throw err;
 
-    if (stat.isFile()) {
-      transformFile(absPath);
-    } else if (stat.isDirectory()) {
-      var exclude = null;
-      if (argv.exclude) {
-        exclude = new RegExp(argv.exclude);
+      if (stat.isFile()) {
+        transformFile(absPath);
+      } else if (stat.isDirectory()) {
+        var exclude = null;
+        if (argv.exclude) {
+          exclude = new RegExp(argv.exclude);
+        }
+        transformDir(absPath, exclude);
+      } else {
+        throw new Error('Unknown filesystem node type: ' + absPath);
       }
-      transformDir(absPath, exclude);
-    } else {
-      throw new Error('Unknown filesystem node type: ' + absPath);
-    }
+    });
   });
 }
 
