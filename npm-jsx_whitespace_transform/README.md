@@ -7,7 +7,7 @@ Take this example block:
 ```js
 <div>
   Monkeys:
-  <input type="text" />
+  <input type="text" /> <button />
 </div>
 ```
 
@@ -16,7 +16,7 @@ In 0.8 and below, this would be transformed to the following:
 ```js
 React.DOM.div(null,
   " Monkeys: ",
-  React.DOM.input( {type:"text"} )
+  React.DOM.input( {type:"text"} ), React.DOM.button(null )
 )
 ```
 
@@ -25,7 +25,7 @@ In 0.9, this will instead be transformed the following:
 ```js
 React.DOM.div(null,
   "Monkeys:",
-  React.DOM.input( {type:"text"} )
+  React.DOM.input( {type:"text"} ), " ", React.DOM.button(null )
 )
 ```
 
