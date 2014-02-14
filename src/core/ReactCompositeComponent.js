@@ -445,7 +445,7 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
   var proto = Constructor.prototype;
   for (var name in spec) {
     var property = spec[name];
-    if (!spec.hasOwnProperty(name) || !property) {
+    if (!spec.hasOwnProperty(name)) {
       continue;
     }
 
@@ -460,7 +460,7 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
       // 2. Overridden methods (that were mixed in).
       var isCompositeComponentMethod = name in ReactCompositeComponentInterface;
       var isInherited = name in proto;
-      var markedDontBind = property.__reactDontBind;
+      var markedDontBind = property && property.__reactDontBind;
       var isFunction = typeof property === 'function';
       var shouldAutoBind =
         isFunction &&
