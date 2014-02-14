@@ -2,7 +2,7 @@
 
 var esprima = require('esprima-fb');
 var FileFinder = require('node-find-files');
-var fs = require('fs');
+var fs = require('graceful-fs');
 var jstransform = require('jstransform');
 var path = require('path');
 var visitReactTag = require('./transforms/react').visitReactTag;
@@ -35,7 +35,7 @@ function transformDir(dirPath, exclude) {
   var finder = new FileFinder({
     rootFolder: dirPath,
     filterFunction: function(path, stat) {
-      return /\.js$/.test(path) && (!exclude || !exclude.test(path));
+      return /\.jsx?$/.test(path) && (!exclude || !exclude.test(path));
     }
   });
 
@@ -146,22 +146,24 @@ if (require.main === module) {
     );
   }
 
-  var absPath = path.resolve(__dirname, argv._[0]);
+  argv._.forEach(function(arg) {
+    var absPath = path.resolve(arg);
 
-  fs.stat(absPath, function(err, stat) {
-    if (err) throw err;
+    fs.stat(absPath, function(err, stat) {
+      if (err) throw err;
 
-    if (stat.isFile()) {
-      transformFile(absPath);
-    } else if (stat.isDirectory()) {
-      var exclude = null;
-      if (argv.exclude) {
-        exclude = new RegExp(argv.exclude);
+      if (stat.isFile()) {
+        transformFile(absPath);
+      } else if (stat.isDirectory()) {
+        var exclude = null;
+        if (argv.exclude) {
+          exclude = new RegExp(argv.exclude);
+        }
+        transformDir(absPath, exclude);
+      } else {
+        throw new Error('Unknown filesystem node type: ' + absPath);
       }
-      transformDir(absPath, exclude);
-    } else {
-      throw new Error('Unknown filesystem node type: ' + absPath);
-    }
+    });
   });
 }
 
