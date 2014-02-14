@@ -2,7 +2,7 @@
 
 var esprima = require('esprima-fb');
 var FileFinder = require('node-find-files');
-var fs = require('fs');
+var fs = require('graceful-fs');
 var jstransform = require('jstransform');
 var path = require('path');
 var visitReactTag = require('./transforms/react').visitReactTag;
