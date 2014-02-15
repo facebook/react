@@ -102,4 +102,6 @@ visitReactDisplayName.test = function(object, path, state) {
   }
 };
 
-exports.visitReactDisplayName = visitReactDisplayName;
+exports.visitorList = [
+  visitReactDisplayName
+];

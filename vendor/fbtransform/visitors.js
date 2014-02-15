@@ -16,10 +16,7 @@ var transformVisitors = {
   'es6-object-short-notation': es6ObjectShortNotation.visitorList,
   'es6-rest-params': es6RestParameters.visitorList,
   'es6-templates': es6Templates.visitorList,
-  'react': [
-    react.visitReactTag,
-    reactDisplayName.visitReactDisplayName
-  ]
+  'react': react.visitorList.concat(reactDisplayName.visitorList)
 };
 
 /**
