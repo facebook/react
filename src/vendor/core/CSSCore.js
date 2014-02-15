@@ -22,28 +22,10 @@ var invariant = require('invariant');
 /**
  * The CSSCore module specifies the API (and implements most of the methods)
  * that should be used when dealing with the display of elements (via their
- * CSS classes and visibility on screeni. It is an API focused on mutating the
+ * CSS classes and visibility on screen. It is an API focused on mutating the
  * display and not reading it as no logical state should be encoded in the
  * display of elements.
  */
-
-/**
- * Tests whether the element has the class specified.
- *
- * Note: This function is not exported in CSSCore because CSS classNames should
- * not store any logical information about the element. Use DataStore to store
- * information on an element.
- *
- * @param {DOMElement} element the element to set the class on
- * @param {string} className the CSS className
- * @returns {boolean} true if the element has the class, false if not
- */
-function hasClass(element, className) {
-  if (element.classList) {
-    return !!className && element.classList.contains(className);
-  }
-  return (' ' + element.className + ' ').indexOf(' ' + className + ' ') > -1;
-}
 
 var CSSCore = {
 
@@ -64,7 +46,7 @@ var CSSCore = {
     if (className) {
       if (element.classList) {
         element.classList.add(className);
-      } else if (!hasClass(element, className)) {
+      } else if (!CSSCore.hasClass(element, className)) {
         element.className = element.className + ' ' + className;
       }
     }
@@ -88,7 +70,7 @@ var CSSCore = {
     if (className) {
       if (element.classList) {
         element.classList.remove(className);
-      } else if (hasClass(element, className)) {
+      } else if (CSSCore.hasClass(element, className)) {
         element.className = element.className
           .replace(new RegExp('(^|\\s)' + className + '(?:\\s|$)', 'g'), '$1')
           .replace(/\s+/g, ' ') // multiple spaces to one
@@ -108,7 +90,26 @@ var CSSCore = {
    */
   conditionClass: function(element, className, bool) {
     return (bool ? CSSCore.addClass : CSSCore.removeClass)(element, className);
+  },
+
+  /**
+   * Tests whether the element has the class specified.
+   *
+   * @param {DOMNode|DOMWindow} element the element to set the class on
+   * @param {string} className the CSS className
+   * @returns {boolean} true if the element has the class, false if not
+   */
+  hasClass: function(element, className) {
+    invariant(
+      !/\s/.test(className),
+      'CSS.hasClass takes only a single class name.'
+    );
+    if (element.classList) {
+      return !!className && element.classList.contains(className);
+    }
+    return (' ' + element.className + ' ').indexOf(' ' + className + ' ') > -1;
   }
+
 };
 
 module.exports = CSSCore;

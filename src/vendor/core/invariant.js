@@ -29,7 +29,10 @@
 
 function invariant(condition) {
   if (!condition) {
-    var error = new Error('Invariant Violation');
+    var error = new Error(
+      'Minified exception occured, use the non-minified dev environment for ' +
+      'the full error message and additional helpful warnings.'
+    );
     error.framesToPop = 1;
     throw error;
   }
