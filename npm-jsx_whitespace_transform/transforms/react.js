@@ -18,35 +18,31 @@
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
-var renderXJSExpressionContainer =
-  require('./xjs').renderXJSExpressionContainer;
-var renderXJSLiteral = require('./xjs').renderXJSLiteral;
-
 function visitReactTag(traverse, object, path, state) {
-  if (object.name.namespace) {
-    throw new Error(
-       'Namespace tags are not supported. ReactJSX is not XML.');
-  }
-  
-  object.children.forEach(function(child, ii) {
+  object.attributes.forEach(function(attr, index) {
+    traverse(attr.value, path, state);
+  });
+
+  object.children.forEach(function(child, index) {
     if (child.type === Syntax.Literal) {
-      renderXJSLiteral(child, state);
+      codemodXJSLiteral(child, state);
     } else if (child.type === Syntax.XJSExpressionContainer) {
-    
       var isNotAfterLiteral =
-        ii == 0 ||
-        object.children[ii - 1].type !== Syntax.Literal;
-        
+        index == 0 ||
+        object.children[index - 1].type !== Syntax.Literal;
+
       var isNotBeforeLiteral =
-        ii == object.children.length - 1 ||
-        object.children[ii + 1].type !== Syntax.Literal;
-      
-      renderXJSExpressionContainer(
-        traverse, child,
+        index == object.children.length - 1 ||
+        object.children[index + 1].type !== Syntax.Literal;
+
+      codemodXJSExpressionContainer(
+        traverse,
+        child,
         isNotAfterLiteral,
         isNotBeforeLiteral,
-        path, state);
-        
+        path,
+        state
+      );
     } else {
       traverse(child, path, state);
     }
@@ -60,5 +56,86 @@ visitReactTag.test = function(object, path, state) {
   var jsx = utils.getDocblock(state).jsx;
   return object.type === Syntax.XJSElement && jsx && jsx.length;
 };
+
+function codemodXJSLiteral(object, state) {
+  var value = object.raw;
+
+  utils.catchup(object.range[0], state);
+
+  /*
+    This can be used to "annotate spaces" inserted by this transformation,
+    so that they can be more easily recognized as such in the final code
+
+    {' '}
+    {'\\x20'}
+    {(' ')}
+    {' '||0}
+    {' '||AnyTextYouLike}
+    {' '||'AnyTextYouLike'}
+    {GlobalVariableWithASpace}
+  */
+
+  var space = "{' '}";
+
+  /*
+    · space
+    ¬ newline
+    {expr} = <tag>
+
+    Old whitespace rules:
+    {1}··Aaa··Bbb··{2}··{3}  →  {1}·Aaa··Bbb·{2}{3}
+    {1}¬¬Aaa¬¬Bbb¬¬{2}¬¬{3}  →  {1}·Aaa·Bbb·{2}{3}
+
+    New whitespace rules:
+    {1}··Aaa··Bbb··{2}··{3}  →  {1}··Aaa··Bbb··{2}··{3}
+    {1}¬¬Aaa¬¬Bbb¬¬{2}¬¬{3}  →  {1}Aaa·Bbb{2}{3}
+
+    Required transformation:
+    {1}··{2}       =  {1}··{2}       →  {1}{2}
+    {1}··Aaa··{2}  =  {1}··Aaa··{2}  →  {1}·Aaa·{2}
+    {1}¬¬Aaa¬¬{2}  =  {1}Aaa{2}      →  {1}·Aaa·{2}
+  */
+
+  // {1}··{2}  =  {1}··{2}  →  {1}{2}
+  value = value.replace(/^[ \t]+$/, '');
+
+  // {1}··Aaa··{2}  =  {1}··Aaa··{2}  →  {1}·Aaa·{2}
+  value = value.replace(/^[ \t]+([^ \t\r\n])/, " $1");
+  value = value.replace(/([^ \t\r\n])[ \t]+$/, "$1 ");
+
+  // {1}¬¬Aaa¬¬{2}  =  {1}Aaa{2}  →  {1}·Aaa·{2}
+  value = value.replace(/^([ \t]*[\r\n][ \t\r\n]*)([^ \t\r\n].*)/, "$1" + space + "$2");
+  value = value.replace(/([^ \t\r\n])([ \t]*[\r\n][ \t\r\n]*)$/, "$1" + space + "$2");
+
+  // Rendered whitespace tabs are replaced with spaces
+  value = value.replace(/[^ \t\r\n][ ]*[\t][ \t]*[^ \t\r\n]/, function(match) {
+    return match.replace(/\t/g, ' ');
+  });
+
+  utils.append(value, state);
+  utils.move(object.range[1], state);
+}
+
+function codemodXJSExpressionContainer(
+    traverse,
+    object,
+    isNotAfterLiteral,
+    isNotBeforeLiteral,
+    path,
+    state) {
+  utils.catchup(object.range[0], state);
+  traverse(object.expression, path, state);
+
+  // Unbox the previously required {' '}-workaround
+  var raw = object.expression.raw;
+  var isSpace = raw === "' '" || raw === '" "';
+
+  if (isNotAfterLiteral && isNotBeforeLiteral && isSpace) {
+    utils.append(' ', state);
+    utils.move(object.range[1], state);
+  } else {
+    utils.catchup(object.range[1], state);
+  }
+}
 
 exports.visitReactTag = visitReactTag;
