@@ -30,7 +30,7 @@
       /**
        * @jsx React.DOM
        */
-      var TransitionGroup = React.addons.TransitionGroup;
+      var CSSTransitionGroup = React.addons.CSSTransitionGroup;
       var INTERVAL = 2000;
 
       var AnimateDemo = React.createClass({
@@ -63,11 +63,11 @@
             children.push(<div key={i} className="animateItem" style={style}>{i}</div>);
           }
           return (
-            <TransitionGroup
+            <CSSTransitionGroup
               className="animateExample"
               transitionName="example">
               {children}
-            </TransitionGroup>
+            </CSSTransitionGroup>
           );
         }
       });
