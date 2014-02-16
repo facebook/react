@@ -27,6 +27,7 @@
 
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
+var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
 var cx = require('cx');
@@ -34,6 +35,7 @@ var cx = require('cx');
 React.addons = {
   classSet: cx,
   LinkedStateMixin: LinkedStateMixin,
+  CSSTransitionGroup: ReactCSSTransitionGroup,
   TransitionGroup: ReactTransitionGroup
 };
 
