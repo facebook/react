@@ -31,6 +31,7 @@ describe('ReactWebWorker', function() {
       var data = JSON.parse(e.data);
       if (data.type == 'error') {
         error = data.message + "\n" + data.stack;
+        done = true;
       } else if (data.type == 'log') {
         console.log(data.message);
       } else {
@@ -41,7 +42,8 @@ describe('ReactWebWorker', function() {
 
     waitsFor(function() {
       return done;
-    });
+    }, "the final message to arrive from the worker", 2e4);
+
     runs(function() {
       if (error) {
         console.error(error);
