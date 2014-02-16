@@ -31,12 +31,15 @@ var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactTransitionGroup = require('ReactTransitionGroup');
 
 var cx = require('cx');
+var cloneWithProps = require('cloneWithProps');
 
 React.addons = {
-  classSet: cx,
   LinkedStateMixin: LinkedStateMixin,
   CSSTransitionGroup: ReactCSSTransitionGroup,
-  TransitionGroup: ReactTransitionGroup
+  TransitionGroup: ReactTransitionGroup,
+
+  classSet: cx,
+  cloneWithProps: cloneWithProps
 };
 
 module.exports = React;
