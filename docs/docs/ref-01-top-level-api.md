@@ -18,10 +18,10 @@ next: component-api.html
 #### React.Children.map
 
 ```javascript
-array React.Children.map(object children, function fn [, object context])
+object React.Children.map(object children, function fn [, object context])
 ```
 
-Invoke `fn` on every immediate child contained within `children` with `this` set to `context`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects.
+Invoke `fn` on every immediate child contained within `children` with `this` set to `context`. If `children` is a nested object or array it will be traversed: `fn` will never be passed the container objects. If children is `null` or `undefined` returns `null` or `undefined` rather than an empty object.
 
 #### React.Children.forEach
 
@@ -29,15 +29,15 @@ Invoke `fn` on every immediate child contained within `children` with `this` set
 React.Children.forEach(object children, function fn [, object context])
 ```
 
-Like `React.Children.map()` but does not return an array.
+Like `React.Children.map()` but does not return an object.
 
-#### React.children.only()
+#### React.Children.only
 
 ```javascript
 object React.Children.only(object children)
 ```
 
-Return the only child in `children`. If `children` is a nested object or array it will be traversed.
+Return the only child in `children`. Throws otherwise.
 
 
 ### React.DOM
