@@ -4,6 +4,7 @@
 'use strict';
 
 var envify = require('envify/custom');
+var es3ify = require('es3ify');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
@@ -63,7 +64,7 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
-  after: [simpleBannerify]
+  after: [es3ify.transform, simpleBannerify]
 };
 
 var min = _.merge({}, basic, {
@@ -80,7 +81,7 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [simpleBannerify]
+  after: [es3ify.transform, simpleBannerify]
 };
 
 var addons = {
@@ -92,7 +93,7 @@ var addons = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [simpleBannerify]
+  after: [es3ify.transform, simpleBannerify]
 };
 
 var addonsMin = _.merge({}, addons, {
