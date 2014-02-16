@@ -47,7 +47,7 @@ It's great to see the React community expand internationally. [This site](http:/
 
 ### React tutorial series
 
-[Christopher Pitt](https://medium.com/@followchrisp) explains [React Components](https://medium.com/react-tutorials/828c397e3dc8) and [React Properties](https://medium.com/react-tutorials/ef11cd55caa0)The former includes a nice introduction to using JSX, while the latter focuses on adding interactivity and linking multiple components together. Also check out the [other posts in his React Tutorial series](https://medium.com/react-tutorials), e.g. on using [React + Backbone Model](https://medium.com/react-tutorials/8aaec65a546c) and [React + Backbone Router](https://medium.com/react-tutorials/c00be0cf1592).
+[Christopher Pitt](https://medium.com/@followchrisp) explains [React Components](https://medium.com/react-tutorials/828c397e3dc8) and [React Properties](https://medium.com/react-tutorials/ef11cd55caa0). The former includes a nice introduction to using JSX, while the latter focuses on adding interactivity and linking multiple components together. Also check out the [other posts in his React Tutorial series](https://medium.com/react-tutorials), e.g. on using [React + Backbone Model](https://medium.com/react-tutorials/8aaec65a546c) and [React + Backbone Router](https://medium.com/react-tutorials/c00be0cf1592).
 
 ### Beginner tutorial: Implementing the board game Go
 
