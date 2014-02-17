@@ -3,8 +3,10 @@
 @import '_typography';
 @import '_solarized';
 
+$codeFont: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+
 @mixin code-typography {
-  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+  font-family: $codeFont;
   font-size: 13px;
   line-height: 20px;
 }
@@ -72,6 +74,11 @@ hr {
 ul,
 li {
   margin-left: 20px;
+}
+
+code {
+  font-family: $codeFont;
+  font-size: 0.8125em;
 }
 
 // Make header navigation linkable and on the screen. Used in documentation and
@@ -568,7 +575,7 @@ figure {
 
 /* CodeMirror */
 
-div.CodeMirror pre, div.CodeMirror-linenumber, code {
+div.CodeMirror pre, div.CodeMirror-linenumber {
   @include code-typography;
 }
 
@@ -680,10 +687,6 @@ p code {
   margin-bottom: 0;
   background-color: transparent;
   border: 0;
-}
-
-.highlight pre code {
-  font-size: inherit;
 }
 
 .highlight pre .lineno {
