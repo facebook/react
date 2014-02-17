@@ -19,11 +19,13 @@
 
 "use strict";
 
+var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 
 var getEventTarget = require('getEventTarget');
+var mixInto = require('mixInto');
 
 /**
  * @type {boolean}
@@ -49,8 +51,52 @@ function findParent(node) {
   return parent;
 }
 
+/**
+ * Calls ReactEventEmitter.handleTopLevel for each node stored in bookKeeping's
+ * ancestor list. Separated from createTopLevelCallback to avoid try/finally
+ * deoptimization.
+ *
+ * @param {string} topLevelType
+ * @param {DOMEvent} nativeEvent
+ * @param {TopLevelCallbackBookKeeping} bookKeeping
+ */
+function handleTopLevelImpl(topLevelType, nativeEvent, bookKeeping) {
+  var topLevelTarget = ReactMount.getFirstReactDOM(
+    getEventTarget(nativeEvent)
+  ) || window;
+
+  // Loop through the hierarchy, in case there's any nested components.
+  // It's important that we build the array of ancestors before calling any
+  // event handlers, because event handlers can modify the DOM, leading to
+  // inconsistencies with ReactMount's node cache. See #1105.
+  var ancestor = topLevelTarget;
+  while (ancestor) {
+    bookKeeping.ancestors.push(ancestor);
+    ancestor = findParent(ancestor);
+  }
+
+  for (var i = 0, l = bookKeeping.ancestors.length; i < l; i++) {
+    topLevelTarget = bookKeeping.ancestors[i];
+    var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
+    ReactEventEmitter.handleTopLevel(
+      topLevelType,
+      topLevelTarget,
+      topLevelTargetID,
+      nativeEvent
+    );
+  }
+}
+
 // Used to store ancestor hierarchy in top level callback
-var topLevelCallbackReusableArray = [];
+function TopLevelCallbackBookKeeping() {
+  this.ancestors = [];
+}
+mixInto(TopLevelCallbackBookKeeping, {
+  destructor: function() {
+    this.ancestors.length = 0;
+  }
+});
+PooledClass.addPoolingTo(TopLevelCallbackBookKeeping);
 
 /**
  * Top-level callback creator used to implement event handling using delegation.
@@ -88,38 +134,13 @@ var ReactEventTopLevelCallback = {
       if (!_topLevelListenersEnabled) {
         return;
       }
-      var topLevelTarget = ReactMount.getFirstReactDOM(
-        getEventTarget(nativeEvent)
-      ) || window;
 
-      var ancestors = topLevelCallbackReusableArray;
-      ancestors.length = 0;
-
-      // Loop through the hierarchy, in case there's any nested components.
-      // It's important that we build the array of ancestors before calling any
-      // event handlers, because event handlers can modify the DOM, leading to
-      // inconsistencies with ReactMount's node cache. See #1105.
-      var ancestor = topLevelTarget;
-      while (ancestor) {
-        ancestors.push(ancestor);
-        ancestor = findParent(ancestor);
+      var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
+      try {
+        handleTopLevelImpl(topLevelType, nativeEvent, bookKeeping);
+      } finally {
+        TopLevelCallbackBookKeeping.release(bookKeeping);
       }
-
-      for (var i = 0, l = ancestors.length; i < l; i++) {
-        topLevelTarget = ancestors[i];
-        var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
-        ReactEventEmitter.handleTopLevel(
-          topLevelType,
-          topLevelTarget,
-          topLevelTargetID,
-          nativeEvent
-        );
-      }
-
-      // Emptying ancestors/topLevelCallbackReusableArray is
-      // not necessary for correctness, but it helps the GC reclaim
-      // any nodes that were left at the end of the search.
-      ancestors.length = 0;
     };
   }
 
