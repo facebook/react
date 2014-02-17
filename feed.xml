@@ -7,6 +7,130 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.9 RC</title>
+				<description>&lt;p&gt;We&amp;#39;re almost ready to release React v0.9! We&amp;#39;re posting a release candidate so that you can test your apps on it; we&amp;#39;d much prefer to find show-stopping bugs now rather than after we release.&lt;/p&gt;
+
+&lt;p&gt;The release candidate is available for download from the CDN:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.9.0-rc1.js&quot;&gt;http://fb.me/react-0.9.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.9.0-rc1.min.js&quot;&gt;http://fb.me/react-0.9.0-rc1.min.js&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.9.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.9.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.9.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.9.0-rc1.min.js&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.9.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.9.0-rc1.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.9.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-notes&quot;&gt;&lt;/a&gt;Upgrade Notes &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-notes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In addition to the changes to React core listed below, we&amp;#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&amp;gt;&lt;/span&gt;
+  Monkeys:
+  {listOfMonkeys} {submitButton}
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In v0.8 and below, it was transformed to the following:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;s2&quot;&gt;&amp;quot; Monkeys: &amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;listOfMonkeys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;submitButton&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In v0.9, it will be transformed to this JS instead:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;s2&quot;&gt;&amp;quot;Monkeys:&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;nx&quot;&gt;listOfMonkeys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;submitButton&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We believe this new behavior is more helpful and elimates cases where unwanted whitespace was previously added.&lt;/p&gt;
+
+&lt;p&gt;In cases where you want to preserve the space adjacent to a newline, you can write a JS string like &lt;code&gt;{&amp;quot;Monkeys: &amp;quot;}&lt;/code&gt; in your JSX source. We&amp;#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can &lt;a href=&quot;https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md&quot;&gt;install jsx_whitespace_transformer from npm&lt;/a&gt; and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&amp;#39;s existing whitespace behavior.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;The lifecycle methods &lt;code&gt;componentDidMount&lt;/code&gt; and &lt;code&gt;componentDidUpdate&lt;/code&gt; no longer receive the root node as a parameter; use &lt;code&gt;this.getDOMNode()&lt;/code&gt; instead&lt;/li&gt;
+&lt;li&gt;Whenever a prop is equal to &lt;code&gt;undefined&lt;/code&gt;, the default value returned by &lt;code&gt;getDefaultProps&lt;/code&gt; will now be used instead&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.unmountAndReleaseReactRootNode&lt;/code&gt; was previously deprecated and has now been removed&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; is now synchronous and returns the generated HTML string&lt;/li&gt;
+&lt;li&gt;Full-page rendering (that is, rendering the &lt;code&gt;&amp;lt;html&amp;gt;&lt;/code&gt; tag using React) is now supported only when starting with server-rendered markup&lt;/li&gt;
+&lt;li&gt;On mouse wheel events, &lt;code&gt;deltaY&lt;/code&gt; is no longer negated&lt;/li&gt;
+&lt;li&gt;When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, the type checks are now skipped for performance)&lt;/li&gt;
+&lt;li&gt;On &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt; elements, &lt;code&gt;.getValue()&lt;/code&gt; is no longer supported; use &lt;code&gt;.getDOMNode().value&lt;/code&gt; instead&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;React now never rethrows errors, so stack traces are more accurate and Chrome&amp;#39;s purple break-on-error stop sign now works properly&lt;/li&gt;
+&lt;li&gt;Added a new tool for profiling React components and identifying places where defining &lt;code&gt;shouldComponentUpdate&lt;/code&gt; can give performance improvements&lt;/li&gt;
+&lt;li&gt;Added support for SVG tags &lt;code&gt;defs&lt;/code&gt;, &lt;code&gt;linearGradient&lt;/code&gt;, &lt;code&gt;polygon&lt;/code&gt;, &lt;code&gt;radialGradient&lt;/code&gt;, &lt;code&gt;stop&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Added support for more attributes:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;noValidate&lt;/code&gt; and &lt;code&gt;formNoValidate&lt;/code&gt; for forms&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;property&lt;/code&gt; for Open Graph &lt;code&gt;&amp;lt;meta&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sandbox&lt;/code&gt;, &lt;code&gt;seamless&lt;/code&gt;, and &lt;code&gt;srcDoc&lt;/code&gt; for &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;scope&lt;/code&gt; for screen readers&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;span&lt;/code&gt; for &lt;code&gt;&amp;lt;colgroup&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Added support for defining &lt;code&gt;propTypes&lt;/code&gt; in mixins&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;any&lt;/code&gt;, &lt;code&gt;arrayOf&lt;/code&gt;, &lt;code&gt;component&lt;/code&gt;, &lt;code&gt;oneOfType&lt;/code&gt;, &lt;code&gt;renderable&lt;/code&gt;, &lt;code&gt;shape&lt;/code&gt; to &lt;code&gt;React.PropTypes&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;statics&lt;/code&gt; on component spec for static component methods&lt;/li&gt;
+&lt;li&gt;On all events, &lt;code&gt;.currentTarget&lt;/code&gt; is now properly set&lt;/li&gt;
+&lt;li&gt;On keyboard events, &lt;code&gt;.key&lt;/code&gt; is now polyfilled in all browsers for special (non-printable) keys&lt;/li&gt;
+&lt;li&gt;On clipboard events, &lt;code&gt;.clipboardData&lt;/code&gt; is now polyfilled in IE&lt;/li&gt;
+&lt;li&gt;On drag events, &lt;code&gt;.dragTransfer&lt;/code&gt; is now present&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;onMouseOver&lt;/code&gt; and &lt;code&gt;onMouseOut&lt;/code&gt; in addition to the existing &lt;code&gt;onMouseEnter&lt;/code&gt; and &lt;code&gt;onMouseLeave&lt;/code&gt; events&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;onLoad&lt;/code&gt; and &lt;code&gt;onError&lt;/code&gt; on &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;onReset&lt;/code&gt; on &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;autoFocus&lt;/code&gt; attribute is now polyfilled consistently on &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;React no longer adds an &lt;code&gt;__owner__&lt;/code&gt; property to each component&amp;#39;s &lt;code&gt;props&lt;/code&gt; object; passed-in props are now never mutated&lt;/li&gt;
+&lt;li&gt;When nesting top-level components (e.g., calling &lt;code&gt;React.renderComponent&lt;/code&gt; within &lt;code&gt;componentDidMount&lt;/code&gt;), events now properly bubble to the parent component&lt;/li&gt;
+&lt;li&gt;Fixed a case where nesting top-level components would throw an error when updating&lt;/li&gt;
+&lt;li&gt;Passing an invalid or misspelled propTypes type now throws an error&lt;/li&gt;
+&lt;li&gt;On mouse enter/leave events, &lt;code&gt;.target&lt;/code&gt;, &lt;code&gt;.relatedTarget&lt;/code&gt;, and &lt;code&gt;.type&lt;/code&gt; are now set properly&lt;/li&gt;
+&lt;li&gt;On composition events, &lt;code&gt;.data&lt;/code&gt; is now properly normalized in IE9 and IE10&lt;/li&gt;
+&lt;li&gt;CSS property values no longer have &lt;code&gt;px&lt;/code&gt; appended for the unitless properties &lt;code&gt;columnCount&lt;/code&gt;, &lt;code&gt;flex&lt;/code&gt;, &lt;code&gt;flexGrow&lt;/code&gt;, &lt;code&gt;flexShrink&lt;/code&gt;, &lt;code&gt;lineClamp&lt;/code&gt;, &lt;code&gt;order&lt;/code&gt;, &lt;code&gt;widows&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Fixed a memory leak when unmounting children with a &lt;code&gt;componentWillUnmount&lt;/code&gt; handler&lt;/li&gt;
+&lt;li&gt;Fixed a memory leak when &lt;code&gt;renderComponentToString&lt;/code&gt; would store event handlers&lt;/li&gt;
+&lt;li&gt;Fixed an error that could be thrown when removing form elements during a click handler&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;key&lt;/code&gt; values containing &lt;code&gt;.&lt;/code&gt; are now supported&lt;/li&gt;
+&lt;li&gt;Shortened &lt;code&gt;data-reactid&lt;/code&gt; values for performance&lt;/li&gt;
+&lt;li&gt;Components now always remount when the &lt;code&gt;key&lt;/code&gt; property changes&lt;/li&gt;
+&lt;li&gt;Event handlers are attached to &lt;code&gt;document&lt;/code&gt; only when necessary, improving performance in some cases&lt;/li&gt;
+&lt;li&gt;Events no longer use &lt;code&gt;.returnValue&lt;/code&gt; in modern browsers, eliminating a warning in Chrome&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;scrollLeft&lt;/code&gt; and &lt;code&gt;scrollTop&lt;/code&gt; are no longer accessed on document.body, eliminating a warning in Chrome&lt;/li&gt;
+&lt;li&gt;General performance fixes, memory optimizations, improvements to warnings and error messages&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React with Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.addons.TransitionGroup&lt;/code&gt; was renamed to &lt;code&gt;React.addons.CSSTransitionGroup&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.addons.TransitionGroup&lt;/code&gt; was added as a more general animation wrapper&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; was added for cloning components and modifying their props&lt;/li&gt;
+&lt;li&gt;Bug fix for adding back nodes during an exit transition for CSSTransitionGroup&lt;/li&gt;
+&lt;li&gt;Bug fix for changing &lt;code&gt;transitionLeave&lt;/code&gt; in CSSTransitionGroup&lt;/li&gt;
+&lt;li&gt;Performance optimizations for CSSTransitionGroup&lt;/li&gt;
+&lt;li&gt;On checkbox &lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; elements, &lt;code&gt;checkedLink&lt;/code&gt; is now supported for two-way binding&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-compiler-and-react-tools-package&quot;&gt;&lt;/a&gt;JSX Compiler and react-tools Package &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-compiler-and-react-tools-package&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Whitespace normalization has changed; now space between two tags on the same line will be preserved, while newlines between two tags will be removed&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;react-tools&lt;/code&gt; npm package no longer includes the React core libraries; use the &lt;code&gt;react&lt;/code&gt; package instead.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;displayName&lt;/code&gt; is now added in more cases, improving error messages and names in the React Dev Tools&lt;/li&gt;
+&lt;li&gt;Fixed an issue where an invalid token error was thrown after a JSX closing tag&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; now uses source maps automatically in modern browsers&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; error messages now include the filename and problematic line contents when a file fails to parse&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-02-16T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #16</title>
 				<description>&lt;p&gt;There have been many posts recently covering the &lt;i&gt;why&lt;/i&gt; and &lt;i&gt;how&lt;/i&gt; of React. This week&amp;#39;s community round-up includes a collection of recent articles to help you get started with React, along with a few posts that explain some of the inner workings.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-a-nutshell&quot;&gt;&lt;/a&gt;React in a nutshell &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-a-nutshell&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -56,7 +180,7 @@
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-a-complex-react-component&quot;&gt;&lt;/a&gt;Building a complex React component &lt;a class=&quot;hash-link&quot; href=&quot;#building-a-complex-react-component&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://matt-harrison.com/&quot;&gt;Matt Harrison&lt;/a&gt; walks through the process of &lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;creating an SVG-based Resistance Calculator&lt;/a&gt; using React. &lt;figure&gt;&lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;&lt;img src=&quot;/react/img/blog/resistance-calculator.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it&#39;s amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
 &lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs]((https://twitter.com/search?q=%23reactjs&amp;src=hash) makes refactoring your HTML as easy &amp; natural as refactoring your javascript [@react_js](https://twitter.com/react_js)&lt;/p&gt;&amp;mdash; Jared Forsyth (@jaredforsyth) &lt;a href=&quot;https://twitter.com/jaredforsyth/status/420304083010854912&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
@@ -176,7 +300,7 @@
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-experience-report&quot;&gt;&lt;/a&gt;Om Experience Report &lt;a class=&quot;hash-link&quot; href=&quot;#om-experience-report&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Adam Solove (&lt;a href=&quot;https://twitter.com/asolove/&quot;&gt;@asolove&lt;/a&gt;) &lt;a href=&quot;http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html&quot;&gt;dives a little deeper into Om, React and ClojureScript&lt;/a&gt;. He shares some helpful tips he gathered while building his &lt;a href=&quot;https://github.com/asolove/carto-crayon&quot;&gt;CartoCrayon&lt;/a&gt; prototype.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;not-so-random-tweet&quot;&gt;&lt;/a&gt;Not-so-random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#not-so-random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It&#39;s honestly a bit weird because Om is exactly what I didn&#39;t know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 </description>
 				<pubDate>2014-02-05T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</link>
@@ -557,7 +681,7 @@ componentDidUpdate: function() {
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;140-characters-textarea&quot;&gt;&lt;/a&gt;140-characters textarea &lt;a class=&quot;hash-link&quot; href=&quot;#140-characters-textarea&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;https://github.com/brainkim&quot;&gt;Brian Kim&lt;/a&gt; wrote a small textarea component that gradually turns red as you reach the 140-characters limit. Because he only changes the background color, React is smart enough not to mess with the text selection.&lt;/p&gt;
 
-&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class=&#39;codepen&#39;&gt;See the Pen &lt;a href=&#39;http://codepen.io/brainkim/pen/FECGb&#39;&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href=&#39;http://codepen.io/brainkim&#39;&gt;@brainkim&lt;/a&gt;) on &lt;a href=&#39;http://codepen.io&#39;&gt;CodePen&lt;/a&gt;&lt;/p&gt;
+&lt;p data-height=&quot;178&quot; data-theme-id=&quot;0&quot; data-slug-hash=&quot;FECGb&quot; data-user=&quot;brainkim&quot; data-default-tab=&quot;result&quot; class='codepen'&gt;See the Pen &lt;a href='http://codepen.io/brainkim/pen/FECGb'&gt;FECGb&lt;/a&gt; by Brian Kim (&lt;a href='http://codepen.io/brainkim'&gt;@brainkim&lt;/a&gt;) on &lt;a href='http://codepen.io'&gt;CodePen&lt;/a&gt;&lt;/p&gt;
 
 &lt;script async src=&quot;//codepen.io/assets/embed/ei.js&quot;&gt;&lt;/script&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;genesis-skeleton&quot;&gt;&lt;/a&gt;Genesis Skeleton &lt;a class=&quot;hash-link&quot; href=&quot;#genesis-skeleton&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -596,122 +720,6 @@ Is this some sort of template language? Specifically no. This might have been th
 				<pubDate>2013-11-18T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/11/18/community-roundup-11.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/18/community-roundup-11.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #10</title>
-				<description>&lt;p&gt;This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.&lt;/p&gt;
-
-&lt;p&gt;The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;khan-academy---officially-moving-to-react&quot;&gt;&lt;/a&gt;Khan Academy - Officially moving to React &lt;a class=&quot;hash-link&quot; href=&quot;#khan-academy---officially-moving-to-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://joelburget.com/&quot;&gt;Joel Burget&lt;/a&gt; announced at Hack Reactor that new front-end code at Khan Academy should be written in React!&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;How did we get the rest of the team to adopt React? Using interns as an attack vector! Most full-time devs had already been working on their existing projects for a while and weren&amp;#39;t looking to try something new at the time, but our class of summer interns was just arriving. For whatever reason, a lot of them decided to try React for their projects. Then mentors became exposed through code reviews or otherwise touching the new code. In this way React knowledge diffused to almost the whole team over the summer.&lt;/p&gt;
-
-&lt;p&gt;Since the first React checkin on June 5, we&amp;#39;ve somehow managed to accumulate 23500 lines of jsx (React-flavored js) code. Which is terrifying in a way - that&amp;#39;s a lot of code - but also really exciting that it was picked up so quickly.&lt;/p&gt;
-
-&lt;p&gt;We held three meetings about how we should proceed with React. At the first two we decided to continue experimenting with React and deferred a final decision on whether to adopt it. At the third we adopted the policy that new code should be written in React.&lt;/p&gt;
-
-&lt;p&gt;I&amp;#39;m excited that we were able to start nudging code quality forward. However, we still have a lot of work to do! One of the selling points of this transition is adopting a uniform frontend style. We&amp;#39;re trying to upgrade all the code from (really old) pure jQuery and (regular old) Backbone views / Handlebars to shiny React. At the moment all we&amp;#39;ve done is introduce more fragmentation. We won&amp;#39;t be gratuitously updating working code (if it ain&amp;#39;t broke, don&amp;#39;t fix it), but are seeking out parts of the codebase where we can shoot two birds with one stone by rewriting in React while fixing bugs or adding functionality.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://joelburget.com/backbone-to-react/&quot;&gt;Read the full article&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-rethinking-best-practices&quot;&gt;&lt;/a&gt;React: Rethinking best practices &lt;a class=&quot;hash-link&quot; href=&quot;#react-rethinking-best-practices&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/&quot;&gt;Pete Hunt&lt;/a&gt;&amp;#39;s talk at JSConf EU 2013 is now available in video.&lt;/p&gt;
-
-&lt;figure&gt;&lt;iframe width=&quot;600&quot; height=&quot;370&quot; src=&quot;//www.youtube.com/embed/x7cQ3mrcKaY&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;server-side-react-with-php&quot;&gt;&lt;/a&gt;Server-side React with PHP &lt;a class=&quot;hash-link&quot; href=&quot;#server-side-react-with-php&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/&quot;&gt;Stoyan Stefanov&lt;/a&gt;&amp;#39;s series of articles on React has two new entries on how to execute React on the server to generate the initial page load.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;This post is an initial hack to have React components render server-side in PHP.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Problem: Build web UIs&lt;/li&gt;
-&lt;li&gt;Solution: React&lt;/li&gt;
-&lt;li&gt;Problem: UI built in JS is anti-SEO (assuming search engines are still noscript) and bad for perceived performance (blank page till JS arrives)&lt;/li&gt;
-&lt;li&gt;Solution: &lt;a href=&quot;https://github.com/facebook/react-page&quot;&gt;React page&lt;/a&gt; to render the first view&lt;/li&gt;
-&lt;li&gt;Problem: Can&amp;#39;t host node.js apps / I have tons of PHP code&lt;/li&gt;
-&lt;li&gt;Solution: Use PHP then!&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php/&quot;&gt;&lt;strong&gt;Read part 1 ...&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php-part-2/&quot;&gt;&lt;strong&gt;Read part 2 ...&lt;/strong&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Rendered markup on the server:
-&lt;figure&gt;&lt;a href=&quot;http://www.phpied.com/server-side-react-with-php-part-2/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-php.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;todomvc-benchmarks&quot;&gt;&lt;/a&gt;TodoMVC Benchmarks &lt;a class=&quot;hash-link&quot; href=&quot;#todomvc-benchmarks&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Webkit has a &lt;a href=&quot;https://github.com/WebKit/webkit/tree/master/PerformanceTests/DoYouEvenBench&quot;&gt;TodoMVC Benchmark&lt;/a&gt; that compares different frameworks. They recently included React and here are the results (average of 10 runs in Chrome 30):&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;AngularJS:&lt;/strong&gt; 4043ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;AngularJSPerf:&lt;/strong&gt; 3227ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;BackboneJS:&lt;/strong&gt; 1874ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;EmberJS:&lt;/strong&gt; 6822ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;jQuery:&lt;/strong&gt; 14628ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React:&lt;/strong&gt; 2864ms&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;VanillaJS:&lt;/strong&gt; 5567ms&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/react/tastejs/benchmark.html&quot;&gt;Try it yourself!&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;Please don&amp;#39;t take those numbers too seriously, they only reflect one very specific use case and are testing code that wasn&amp;#39;t written with performance in mind.&lt;/p&gt;
-
-&lt;p&gt;Even though React scores as one of the fastest frameworks in the benchmark, the React code is simple and idiomatic. The only performance tweak used is the following function:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/**&lt;/span&gt;
-&lt;span class=&quot;cm&quot;&gt; * This is a completely optional performance enhancement that you can implement&lt;/span&gt;
-&lt;span class=&quot;cm&quot;&gt; * on any React component. If you were to delete this method the app would still&lt;/span&gt;
-&lt;span class=&quot;cm&quot;&gt; * work correctly (and still be very performant!), we just use it as an example&lt;/span&gt;
-&lt;span class=&quot;cm&quot;&gt; * of how little code it takes to get an order of magnitude performance improvement.&lt;/span&gt;
-&lt;span class=&quot;cm&quot;&gt; */&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;shouldComponentUpdate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;nextState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;nextProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editing&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editing&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;nextState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editText&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;!==&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;editText&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;By default, React &amp;quot;re-renders&amp;quot; all the components when anything changes. This is usually fast enough that you don&amp;#39;t need to care. However, you can provide a function that can tell whether there will be any change based on the previous and next states and props. If it is faster than re-rendering the component, then you get a performance improvement.&lt;/p&gt;
-
-&lt;p&gt;The fact that you can control when components are rendered is a very important characteristic of React as it gives you control over its performance. We are going to talk more about performance in the future, stay tuned.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;guess-the-filter&quot;&gt;&lt;/a&gt;Guess the filter &lt;a class=&quot;hash-link&quot; href=&quot;#guess-the-filter&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://conr.me&quot;&gt;Connor McSheffrey&lt;/a&gt; implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
-&lt;figure&gt;&lt;a href=&quot;http://guessthefilter.com/&quot;&gt;&lt;img src=&quot;/react/img/blog/guess_filter.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs-fruitmachine&quot;&gt;&lt;/a&gt;React vs FruitMachine &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs-fruitmachine&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://trib.tv/&quot;&gt;Andrew Betts&lt;/a&gt;, director of the &lt;a href=&quot;http://labs.ft.com/&quot;&gt;Financial Times Labs&lt;/a&gt;, posted an article comparing &lt;a href=&quot;https://github.com/ftlabs/fruitmachine&quot;&gt;FruitMachine&lt;/a&gt; and React.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Eerily similar, no? Maybe Facebook was inspired by Fruit Machine (after all, we got there first), but more likely, it just shows that this is a pretty decent way to solve the problem, and great minds think alike. We&amp;#39;re graduating to a third phase in the evolution of web best practice - from intermingling of markup, style and behaviour, through a phase in which those concerns became ever more separated and encapsulated, and finally to a model where we can do that separation at a component level. Developments like Web Components show the direction the web community is moving, and frameworks like React and Fruit Machine are in fact not a lot more than polyfills for that promised behaviour to come.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://labs.ft.com/2013/10/client-side-layout-engines-react-vs-fruitmachine/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Even though we weren&amp;#39;t inspired by FruitMachine (React has been used in production since before FruitMachine was open sourced), it&amp;#39;s great to see similar technologies emerging and becoming popular.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-brunch&quot;&gt;&lt;/a&gt;React Brunch &lt;a class=&quot;hash-link&quot; href=&quot;#react-brunch&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://elucidata.net/&quot;&gt;Matthew McCray&lt;/a&gt; implemented &lt;a href=&quot;https://npmjs.org/package/react-brunch&quot;&gt;react-brunch&lt;/a&gt;, a JSX compilation step for &lt;a href=&quot;http://brunch.io/&quot;&gt;Brunch&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Adds React support to brunch by automatically compiling &lt;code&gt;*.jsx&lt;/code&gt; files.&lt;/p&gt;
-
-&lt;p&gt;You can configure react-brunch to automatically insert a react header (&lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;) into all &lt;code&gt;*.jsx&lt;/code&gt; files. Disabled by default.&lt;/p&gt;
-
-&lt;p&gt;Install the plugin via npm with &lt;code&gt;npm install --save react-brunch&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://npmjs.org/package/react-brunch&quot;&gt;Read more...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;I&amp;#39;m going to start adding a tweet at the end of each round-up. We&amp;#39;ll start with this one:&lt;/p&gt;
-
-&lt;blockquote class=&quot;twitter-tweet&quot;&gt;&lt;p&gt;This weekend &lt;a href=&quot;https://twitter.com/search?q=%23angular&amp;amp;src=hash&quot;&gt;#angular&lt;/a&gt; died for me. Meet new king &lt;a href=&quot;https://twitter.com/search?q=%23reactjs&amp;amp;src=hash&quot;&gt;#reactjs&lt;/a&gt;&lt;/p&gt;&amp;mdash; Eldar Djafarov &amp;#x30C3; (@edjafarov) &lt;a href=&quot;https://twitter.com/edjafarov/statuses/397033796710961152&quot;&gt;November 3, 2013&lt;/a&gt;&lt;/blockquote&gt;
-</description>
-				<pubDate>2013-11-06T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/11/06/community-roundup-10.html</guid>
 			</item>
 		
 	</channel>
