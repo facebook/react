@@ -42,5 +42,9 @@ React.addons = {
   cloneWithProps: cloneWithProps
 };
 
+if (__DEV__) {
+  React.addons.TestUtils = require('ReactTestUtils');
+}
+
 module.exports = React;
 
