@@ -49,6 +49,9 @@ function findParent(node) {
   return parent;
 }
 
+// Used to store ancestor hierarchy in top level callback
+var topLevelCallbackReusableArray = [];
+
 /**
  * Top-level callback creator used to implement event handling using delegation.
  * This is used via dependency injection.
@@ -89,8 +92,21 @@ var ReactEventTopLevelCallback = {
         getEventTarget(nativeEvent)
       ) || window;
 
+      var ancestors = topLevelCallbackReusableArray;
+      ancestors.length = 0;
+
       // Loop through the hierarchy, in case there's any nested components.
-      while (topLevelTarget) {
+      // It's important that we build the array of ancestors before calling any
+      // event handlers, because event handlers can modify the DOM, leading to
+      // inconsistencies with ReactMount's node cache. See #1105.
+      var ancestor = topLevelTarget;
+      while (ancestor) {
+        ancestors.push(ancestor);
+        ancestor = findParent(ancestor);
+      }
+
+      for (var i = 0, l = ancestors.length; i < l; i++) {
+        topLevelTarget = ancestors[i];
         var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
         ReactEventEmitter.handleTopLevel(
           topLevelType,
@@ -98,9 +114,12 @@ var ReactEventTopLevelCallback = {
           topLevelTargetID,
           nativeEvent
         );
-
-        topLevelTarget = findParent(topLevelTarget);
       }
+
+      // Emptying ancestors/topLevelCallbackReusableArray is
+      // not necessary for correctness, but it helps the GC reclaim
+      // any nodes that were left at the end of the search.
+      ancestors.length = 0;
     };
   }
 

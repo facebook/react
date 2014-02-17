@@ -84,6 +84,39 @@ describe('ReactEventTopLevelCallback', function() {
       expect(calls[2][EVENT_TARGET_PARAM])
         .toBe(grandParentControl.getDOMNode());
     });
+
+    it('should not get confused by disappearing elements', function() {
+      var childContainer = document.createElement('div');
+      var childControl = <div>Child</div>;
+      var parentContainer = document.createElement('div');
+      var parentControl = <div>Parent</div>;
+      ReactMount.renderComponent(childControl, childContainer);
+      ReactMount.renderComponent(parentControl, parentContainer);
+      parentControl.getDOMNode().appendChild(childContainer);
+
+      // ReactEventEmitter.handleTopLevel might remove the target from the DOM.
+      // Here, we have handleTopLevel remove the node when the first event
+      // handlers are called; we'll still expect to receive a second call for
+      // the parent control.
+      var childNode = childControl.getDOMNode();
+      ReactEventEmitter.handleTopLevel.mockImplementation(
+        function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
+          if (topLevelTarget === childNode) {
+            ReactMount.unmountComponentAtNode(childContainer);
+          }
+        }
+      );
+
+      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      callback({
+        target: childNode
+      });
+
+      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      expect(calls.length).toBe(2);
+      expect(calls[0][EVENT_TARGET_PARAM]).toBe(childNode);
+      expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
+    });
   });
 
   it('should not fire duplicate events for a React DOM tree', function() {
