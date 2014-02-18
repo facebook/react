@@ -16,6 +16,9 @@
  * @providesModule warning
  */
 
+"use strict";
+
+var emptyFunction = require('emptyFunction');
 
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
@@ -23,18 +26,23 @@
  * paths. Removing the logging code for production environments will keep the
  * same logic and follow the same code paths.
  */
-function warning(condition, format, ...args) {
-  if (format === undefined) {
-    throw new Error(
-      '`warning(condition, format, ...args)` requires a warning ' +
-      'message argument'
-    );
-  }
 
-  if (!condition) {
-    var argIndex = 0;
-    console.warn('Warning: ' + format.replace(/%s/g, () => args[argIndex++]));
-  }
+var warning = emptyFunction;
+
+if (__DEV__) {
+  warning = function(condition, format, ...args) {
+    if (format === undefined) {
+      throw new Error(
+        '`warning(condition, format, ...args)` requires a warning ' +
+        'message argument'
+      );
+    }
+
+    if (!condition) {
+      var argIndex = 0;
+      console.warn('Warning: ' + format.replace(/%s/g, () => args[argIndex++]));
+    }
+  };
 }
 
 module.exports = warning;
