@@ -16,6 +16,8 @@
  * @providesModule invariant
  */
 
+"use strict";
+
 /**
  * Use invariant() to assert state which your program assumes to be true.
  *
@@ -27,7 +29,7 @@
  * will remain to ensure logic does not differ in production.
  */
 
-function invariant(condition) {
+var invariant = function(condition) {
   if (!condition) {
     var error = new Error(
       'Minified exception occured; use the non-minified dev environment for ' +
@@ -36,12 +38,10 @@ function invariant(condition) {
     error.framesToPop = 1;
     throw error;
   }
-}
-
-module.exports = invariant;
+};
 
 if (__DEV__) {
-  var invariantDev = function(condition, format, a, b, c, d, e, f) {
+  invariant = function(condition, format, a, b, c, d, e, f) {
     if (format === undefined) {
       throw new Error('invariant requires an error message argument');
     }
@@ -57,6 +57,6 @@ if (__DEV__) {
       throw error;
     }
   };
-
-  module.exports = invariantDev;
 }
+
+module.exports = invariant;
