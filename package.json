@@ -40,7 +40,7 @@
     "benchmark": "~1.0.0",
     "browserify": "~3.20.0",
     "coverify": "~1.0.4",
-    "envify": "~1.0.1",
+    "envify": "~1.2.0",
     "es3ify": "~0.1.2",
     "es5-shim": "~2.3.0",
     "grunt": "~0.4.2",
