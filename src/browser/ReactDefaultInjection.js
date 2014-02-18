@@ -91,6 +91,8 @@ function inject() {
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 
+  ReactInjection.EmptyComponent.injectEmptyComponent(ReactDOM.noscript);
+
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );

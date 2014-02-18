@@ -48,6 +48,24 @@ describe('ReactMount', function() {
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
+  it('should render null to noscript under the hood', function() {
+    var container = document.createElement('container');
+    document.documentElement.appendChild(container);
+    var node = ReactMount.renderComponent(null, container).getDOMNode();
+    expect(node.tagName).toBe('NOSCRIPT');
+  });
+
+  it('should be able to switch between rendering a normal tag and null',
+    function() {
+      var container = document.createElement('container');
+      document.documentElement.appendChild(container);
+      var instance = ReactMount.renderComponent(<div></div>, container);
+      expect(function() {
+        instance = ReactMount.renderComponent(null, container);
+      }).not.toThrow();
+    }
+  );
+
   it('should unmount and remount if the key changes', function() {
     var container = document.createElement('container');
 

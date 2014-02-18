@@ -19,6 +19,7 @@
 "use strict";
 
 var DOMProperty = require('DOMProperty');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
@@ -296,6 +297,9 @@ var ReactMount = {
         nextComponent,
         container,
         shouldReuseMarkup) {
+      nextComponent = ReactEmptyComponent.
+        returnSameComponentOrEmptyComponent(nextComponent);
+
       var reactRootID = ReactMount._registerComponent(nextComponent, container);
       nextComponent.mountComponentIntoNode(
         reactRootID,
