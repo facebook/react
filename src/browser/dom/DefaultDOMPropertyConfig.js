@@ -64,6 +64,7 @@ var DefaultDOMPropertyConfig = {
     defer: HAS_BOOLEAN_VALUE,
     dir: null,
     disabled: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
+    download: null,
     draggable: null,
     encType: null,
     form: MUST_USE_ATTRIBUTE,
@@ -72,6 +73,7 @@ var DefaultDOMPropertyConfig = {
     height: MUST_USE_ATTRIBUTE,
     hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     href: null,
+    hrefLang: null,
     htmlFor: null,
     httpEquiv: null,
     icon: null,
@@ -177,6 +179,7 @@ var DefaultDOMPropertyConfig = {
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
     encType: 'enctype',
+    hrefLang: 'hreflang',
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc'
