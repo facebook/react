@@ -52,7 +52,7 @@ function forEachSingleChild(traverseContext, child, name, i) {
  * The provided forEachFunc(child, index) will be called for each
  * leaf child.
  *
- * @param {array} children
+ * @param {?*} children Children tree container.
  * @param {function(*, int)} forEachFunc.
  * @param {*} forEachContext Context for forEachContext.
  */
@@ -107,10 +107,10 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
  * TODO: This may likely break any calls to `ReactChildren.map` that were
  * previously relying on the fact that we guarded against null children.
  *
- * @param {array} children
+ * @param {?*} children Children tree container.
  * @param {function(*, int)} mapFunction.
  * @param {*} mapContext Context for mapFunction.
- * @return {array} mirrored array with mapped children.
+ * @return {object} Object containing the ordered map of results.
  */
 function mapChildren(children, func, context) {
   if (children == null) {
