@@ -142,10 +142,10 @@ describe('ReactEventEmitter', function() {
   it('should not invoke handlers if ReactEventEmitter is disabled', function() {
     registerSimpleTestHandler();
     ReactEventEmitter.setEnabled(false);
-    ReactTestUtils.Simulate.click(CHILD);
+    ReactTestUtils.SimulateNative.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(0);
     ReactEventEmitter.setEnabled(true);
-    ReactTestUtils.Simulate.click(CHILD);
+    ReactTestUtils.SimulateNative.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -312,11 +312,11 @@ describe('ReactEventEmitter', function() {
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactTestUtils.Simulate.touchStart(
+    ReactTestUtils.SimulateNative.touchStart(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );
-    ReactTestUtils.Simulate.touchEnd(
+    ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );
@@ -330,11 +330,11 @@ describe('ReactEventEmitter', function() {
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactTestUtils.Simulate.touchStart(
+    ReactTestUtils.SimulateNative.touchStart(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );
-    ReactTestUtils.Simulate.touchEnd(
+    ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
       ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
     );
@@ -348,11 +348,11 @@ describe('ReactEventEmitter', function() {
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(CHILD))
     );
-    ReactTestUtils.Simulate.touchStart(
+    ReactTestUtils.SimulateNative.touchStart(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );
-    ReactTestUtils.Simulate.touchEnd(
+    ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
       ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
     );
@@ -415,11 +415,11 @@ describe('ReactEventEmitter', function() {
       ON_TOUCH_TAP_KEY,
       recordID.bind(null, getID(GRANDPARENT))
     );
-    ReactTestUtils.Simulate.touchStart(
+    ReactTestUtils.SimulateNative.touchStart(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );
-    ReactTestUtils.Simulate.touchEnd(
+    ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
       ReactTestUtils.nativeTouchData(0, 0)
     );

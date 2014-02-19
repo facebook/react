@@ -318,6 +318,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     }
   },
 
+  eventNameDispatchConfigs: EventPluginHub.eventNameDispatchConfigs,
+
   registrationNameModules: EventPluginHub.registrationNameModules,
 
   putListener: EventPluginHub.putListener,

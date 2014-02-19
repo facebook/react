@@ -139,7 +139,7 @@ describe('ReactDOMTextarea', function() {
     var node = renderTextarea(stub);
 
     node.value = 'giraffe';
-    ReactTestUtils.Simulate.input(node);
+    ReactTestUtils.Simulate.change(node);
     expect(node.value).toBe('0');
   });
 
@@ -216,7 +216,7 @@ describe('ReactDOMTextarea', function() {
     expect(link.requestChange.mock.calls.length).toBe(0);
 
     instance.getDOMNode().value = 'test';
-    ReactTestUtils.Simulate.input(instance.getDOMNode());
+    ReactTestUtils.Simulate.change(instance.getDOMNode());
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');

@@ -141,6 +141,8 @@ var EventPluginHub = {
 
   },
 
+  eventNameDispatchConfigs: EventPluginRegistry.eventNameDispatchConfigs,
+
   registrationNameModules: EventPluginRegistry.registrationNameModules,
 
   /**
