@@ -47,6 +47,8 @@
       title: Class Name Manipulation
     - id: test-utils
       title: Test Utilities
+    - id: clone-with-props
+      title: Cloning Components
   - id: examples
     title: Examples
 - title: Reference
