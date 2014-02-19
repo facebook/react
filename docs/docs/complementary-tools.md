@@ -53,5 +53,5 @@ If you want your project on this list, or think one of these projects should be 
 
   * **[react-bootstrap](https://github.com/stevoland/react-bootstrap)** Bootstrap 3 components built with React
   * **[react-topcoat](https://github.com/plaxdan/react-topcoat)** Topcoat components built with React
-  * **[react-lorem-component](https://github.com/natekross/react-lorem-component)** Lorem Ipsum placeholder component
+  * **[react-lorem-component](https://github.com/martinandert/react-lorem-component)** Lorem Ipsum placeholder component
   * **[wingspan-forms](https://github.com/wingspan/wingspan-forms)** React library for dynamic forms & grids; widgets provided by KendoUI
