@@ -274,7 +274,7 @@ var ReactTestUtils = {
     };
   },
 
-  Simulate: {},
+  Simulate: null,
   SimulateNative: {}
 };
 
@@ -314,14 +314,32 @@ function makeSimulator(eventType) {
   };
 }
 
-var eventType;
-for (eventType in ReactEventEmitter.eventNameDispatchConfigs) {
-  /**
-   * @param {!Element || ReactDOMComponent} domComponentOrNode
-   * @param {?object} eventData Fake event data to use in SyntheticEvent.
-   */
-  ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
+function buildSimulators() {
+  ReactTestUtils.Simulate = {};
+
+  var eventType;
+  for (eventType in ReactEventEmitter.eventNameDispatchConfigs) {
+    /**
+     * @param {!Element || ReactDOMComponent} domComponentOrNode
+     * @param {?object} eventData Fake event data to use in SyntheticEvent.
+     */
+    ReactTestUtils.Simulate[eventType] = makeSimulator(eventType);
+  }
 }
+
+// Rebuild ReactTestUtils.Simulate whenever event plugins are injected
+var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+EventPluginHub.injection.injectEventPluginOrder = function() {
+  oldInjectEventPluginOrder.apply(this, arguments);
+  buildSimulators();
+};
+var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
+EventPluginHub.injection.injectEventPluginsByName = function() {
+  oldInjectEventPlugins.apply(this, arguments);
+  buildSimulators();
+};
+
+buildSimulators();
 
 /**
  * Exports:
