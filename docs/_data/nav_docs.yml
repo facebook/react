@@ -45,6 +45,8 @@
       title: Two-Way Binding Helpers
     - id: class-name-manipulation
       title: Class Name Manipulation
+    - id: test-utils
+      title: Test Utilities
   - id: examples
     title: Examples
 - title: Reference
