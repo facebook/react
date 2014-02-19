@@ -1,7 +1,7 @@
 {
   "name": "jsx_whitespace_transformer",
   "description": "A utility to update your JSX to behave identically in React 0.8 and React 0.9.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "run.js",
   "dependencies": {
     "esprima-fb": "~2001.1001.0-dev-harmony-fb",

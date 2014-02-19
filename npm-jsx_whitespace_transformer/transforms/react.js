@@ -20,7 +20,9 @@ var utils = require('jstransform/src/utils');
 
 function visitReactTag(traverse, object, path, state) {
   object.attributes.forEach(function(attr, index) {
-    traverse(attr.value, path, state);
+    if (attr.value) {
+      traverse(attr.value, path, state);
+    }
   });
 
   object.children.forEach(function(child, index) {
