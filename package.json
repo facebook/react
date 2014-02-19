@@ -1,5 +1,6 @@
 {
   "name": "react-tools",
+  "description": "A set of complementary tools to React, including the JSX transformer.",
   "version": "0.9.0-rc1",
   "keywords": [
     "react",
