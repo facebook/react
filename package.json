@@ -75,5 +75,8 @@
   "preferGlobal": true,
   "commonerConfig": {
     "version": 4
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/grunt test"
   }
 }
