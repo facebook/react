@@ -64,6 +64,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;li&gt;On mouse wheel events, &lt;code&gt;deltaY&lt;/code&gt; is no longer negated&lt;/li&gt;
 &lt;li&gt;When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, type checks are now skipped for performance)&lt;/li&gt;
 &lt;li&gt;On &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt; elements, &lt;code&gt;.getValue()&lt;/code&gt; is no longer supported; use &lt;code&gt;.getDOMNode().value&lt;/code&gt; instead&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;this.context&lt;/code&gt; on components is now reserved for internal use by React&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
@@ -192,6 +193,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;li&gt;On mouse wheel events, &lt;code&gt;deltaY&lt;/code&gt; is no longer negated&lt;/li&gt;
 &lt;li&gt;When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, the type checks are now skipped for performance)&lt;/li&gt;
 &lt;li&gt;On &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt; elements, &lt;code&gt;.getValue()&lt;/code&gt; is no longer supported; use &lt;code&gt;.getDOMNode().value&lt;/code&gt; instead&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;this.context&lt;/code&gt; on components is now reserved for internal use by React&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
