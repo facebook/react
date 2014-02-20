@@ -1,3 +1,84 @@
+## 0.9.0 (February 20, 2014)
+
+### React Core
+
+#### Breaking Changes
+
+- The lifecycle methods `componentDidMount` and `componentDidUpdate` no longer receive the root node as a parameter; use `this.getDOMNode()` instead
+- Whenever a prop is equal to `undefined`, the default value returned by `getDefaultProps` will now be used instead
+- `React.unmountAndReleaseReactRootNode` was previously deprecated and has now been removed
+- `React.renderComponentToString` is now synchronous and returns the generated HTML string
+- Full-page rendering (that is, rendering the `<html>` tag using React) is now supported only when starting with server-rendered markup
+- On mouse wheel events, `deltaY` is no longer negated
+- When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, type checks are now skipped for performance)
+- On `input`, `select`, and `textarea` elements, `.getValue()` is no longer supported; use `.getDOMNode().value` instead
+
+#### New Features
+
+- React now never rethrows errors, so stack traces are more accurate and Chrome's purple break-on-error stop sign now works properly
+- Added support for SVG tags `defs`, `linearGradient`, `polygon`, `radialGradient`, `stop`
+- Added support for more attributes:
+  - `crossOrigin` for CORS requests
+  - `download` and `hrefLang` for `<a>` tags
+  - `mediaGroup` and `muted` for `<audio>` and `<video>` tags
+  - `noValidate` and `formNoValidate` for forms
+  - `property` for Open Graph `<meta>` tags
+  - `sandbox`, `seamless`, and `srcDoc` for `<iframe>` tags
+  - `scope` for screen readers
+  - `span` for `<colgroup>` tags
+- Added support for defining `propTypes` in mixins
+- Added `any`, `arrayOf`, `component`, `oneOfType`, `renderable`, `shape` to `React.PropTypes`
+- Added support for `statics` on component spec for static component methods
+- On all events, `.currentTarget` is now properly set
+- On keyboard events, `.key` is now polyfilled in all browsers for special (non-printable) keys
+- On clipboard events, `.clipboardData` is now polyfilled in IE
+- On drag events, `.dragTransfer` is now present
+- Added support for `onMouseOver` and `onMouseOut` in addition to the existing `onMouseEnter` and `onMouseLeave` events
+- Added support for `onLoad` and `onError` on `<img>` elements
+- Added support for `onReset` on `<form>` elements
+- The `autoFocus` attribute is now polyfilled consistently on `input`, `select`, and `textarea`
+
+#### Bug Fixes
+
+- React no longer adds an `__owner__` property to each component's `props` object; passed-in props are now never mutated
+- When nesting top-level components (e.g., calling `React.renderComponent` within `componentDidMount`), events now properly bubble to the parent component
+- Fixed a case where nesting top-level components would throw an error when updating
+- Passing an invalid or misspelled propTypes type now throws an error
+- On mouse enter/leave events, `.target`, `.relatedTarget`, and `.type` are now set properly
+- On composition events, `.data` is now properly normalized in IE9 and IE10
+- CSS property values no longer have `px` appended for the unitless properties `columnCount`, `flex`, `flexGrow`, `flexShrink`, `lineClamp`, `order`, `widows`
+- Fixed a memory leak when unmounting children with a `componentWillUnmount` handler
+- Fixed a memory leak when `renderComponentToString` would store event handlers
+- Fixed an error that could be thrown when removing form elements during a click handler
+- Boolean attributes such as `disabled` are rendered without a value (previously `disabled="true"`, now simply `disabled`)
+- `key` values containing `.` are now supported
+- Shortened `data-reactid` values for performance
+- Components now always remount when the `key` property changes
+- Event handlers are attached to `document` only when necessary, improving performance in some cases
+- Events no longer use `.returnValue` in modern browsers, eliminating a warning in Chrome
+- `scrollLeft` and `scrollTop` are no longer accessed on document.body, eliminating a warning in Chrome
+- General performance fixes, memory optimizations, improvements to warnings and error messages
+
+### React with Addons
+
+- `React.addons.TestUtils` was added to help write unit tests
+- `React.addons.TransitionGroup` was renamed to `React.addons.CSSTransitionGroup`
+- `React.addons.TransitionGroup` was added as a more general animation wrapper
+- `React.addons.cloneWithProps` was added for cloning components and modifying their props
+- Bug fix for adding back nodes during an exit transition for CSSTransitionGroup
+- Bug fix for changing `transitionLeave` in CSSTransitionGroup
+- Performance optimizations for CSSTransitionGroup
+- On checkbox `<input>` elements, `checkedLink` is now supported for two-way binding
+
+### JSX Compiler and react-tools Package
+
+- Whitespace normalization has changed; now space between two tags on the same line will be preserved, while newlines between two tags will be removed
+- The `react-tools` npm package no longer includes the React core libraries; use the `react` package instead.
+- `displayName` is now added in more cases, improving error messages and names in the React Dev Tools
+- Fixed an issue where an invalid token error was thrown after a JSX closing tag
+- `JSXTransformer` now uses source maps automatically in modern browsers
+- `JSXTransformer` error messages now include the filename and problematic line contents when a file fails to parse
+
 ## 0.8.0 (December 19, 2013)
 
 ### React
