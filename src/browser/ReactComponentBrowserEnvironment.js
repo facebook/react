@@ -133,21 +133,7 @@ var ReactComponentBrowserEnvironment = {
           'See renderComponentToString() for server rendering.'
       );
 
-      // Asynchronously inject markup by ensuring that the container is not in
-      // the document when settings its `innerHTML`.
-      var parent = container.parentNode;
-      if (parent) {
-        var next = container.nextSibling;
-        parent.removeChild(container);
-        container.innerHTML = markup;
-        if (next) {
-          parent.insertBefore(container, next);
-        } else {
-          parent.appendChild(container);
-        }
-      } else {
-        container.innerHTML = markup;
-      }
+      container.innerHTML = markup;
     }
   )
 };
