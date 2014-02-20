@@ -21,15 +21,17 @@
 var ReactComponent = require('ReactComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
+var ReactServerRenderingTransaction =
+  require('ReactServerRenderingTransaction');
+
 
 var invariant = require('invariant');
 
 /**
  * @param {ReactComponent} component
- * @return {string} the markup
+ * @param {?object} options pass a boolean for the key `noChecksumNoID`
  */
-function renderComponentToString(component) {
+function renderComponentToString(component, options) {
   invariant(
     ReactComponent.isValidComponent(component),
     'renderComponentToString(): You must pass a valid ReactComponent.'
@@ -41,16 +43,27 @@ function renderComponentToString(component) {
     'returns the generated markup. Please remove the second parameter.'
   );
 
-  var id = ReactInstanceHandles.createReactRootID();
-  var transaction = ReactReconcileTransaction.getPooled();
-  transaction.reinitializeTransaction();
+  options = options || {};
+
+  var transaction;
   try {
-    return transaction.perform(function() {
-      var markup = component.mountComponent(id, transaction, 0);
-      return ReactMarkupChecksum.addChecksumToMarkup(markup);
-    }, null);
+    if (options.noChecksumNoID) {
+      transaction = ReactServerRenderingTransaction.getPooled(false);
+
+      return transaction.perform(function() {
+        return component.mountComponent(id, transaction, 0);
+      }, null);
+    } else {
+      var id = ReactInstanceHandles.createReactRootID();
+      transaction = ReactServerRenderingTransaction.getPooled(true);
+
+      return transaction.perform(function() {
+        var markup = component.mountComponent(id, transaction, 0);
+        return ReactMarkupChecksum.addChecksumToMarkup(markup);
+      }, null);
+    }
   } finally {
-    ReactReconcileTransaction.release(transaction);
+    ReactServerRenderingTransaction.release(transaction);
   }
 }
 

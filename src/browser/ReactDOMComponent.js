@@ -99,7 +99,7 @@ ReactDOMComponent.Mixin = {
    *
    * @internal
    * @param {string} rootID The root DOM ID for this node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} The computed markup.
    */
@@ -131,7 +131,7 @@ ReactDOMComponent.Mixin = {
    * @see http://jsperf.com/obj-vs-arr-iteration
    *
    * @private
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup of opening tag.
    */
   _createOpenTagMarkupAndPutListeners: function(transaction) {
@@ -163,15 +163,19 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    var idMarkup = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + idMarkup + '>';
+    if (!transaction.renderChecksumAndReactID) {
+      return ret + '>';
+    }
+
+    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
+    return ret + ' ' + markupForID + '>';
   },
 
   /**
    * Creates markup for the content between the tags.
    *
    * @private
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction) {

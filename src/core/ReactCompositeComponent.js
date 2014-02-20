@@ -787,7 +787,7 @@ var ReactCompositeComponentMixin = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final

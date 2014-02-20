@@ -52,7 +52,7 @@ mixInto(ReactTextComponent, {
    * any features besides containing text content.
    *
    * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} Markup for this text node.
    * @internal
@@ -64,9 +64,19 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
+
+    var escapedText = escapeTextForBrowser(this.props.text);
+
+    if (!transaction.renderChecksumAndReactID) {
+      // Normally we'd wrap this in a `span` for the reasons stated above, but
+      // since this is a situation where React won't take over (static pages),
+      // we can simply return the text as it is.
+      return escapedText;
+    }
+
     return (
       '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
-        escapeTextForBrowser(this.props.text) +
+        escapedText +
       '</span>'
     );
   },

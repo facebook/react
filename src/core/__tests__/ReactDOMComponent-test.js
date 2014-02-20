@@ -221,6 +221,7 @@ describe('ReactDOMComponent', function() {
 
       var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
+      var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
         this.props = initialProps || {};
@@ -229,7 +230,10 @@ describe('ReactDOMComponent', function() {
       mixInto(NodeStub, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
-        return (new NodeStub(props))._createOpenTagMarkupAndPutListeners();
+        var transaction = new ReactReconcileTransaction();
+        return (new NodeStub(props))._createOpenTagMarkupAndPutListeners(
+          transaction
+        );
       };
 
       this.addMatchers({

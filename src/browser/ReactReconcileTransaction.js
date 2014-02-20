@@ -19,7 +19,6 @@
 
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
@@ -127,6 +126,12 @@ var TRANSACTION_WRAPPERS = [
  */
 function ReactReconcileTransaction() {
   this.reinitializeTransaction();
+  // Only server-side rendering really needs this option (see
+  // `ReactServerRendering`), but server-side uses
+  // `ReactServerRenderingTransaction` instead. This option is here so that it's
+  // accessible and defaults to true when `ReactDOMComponent` and
+  // `ReactTextComponent` checks it in `mountComponent`.`
+  this.renderChecksumAndReactID = true;
   this.reactMountReady = ReactMountReady.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }
@@ -140,11 +145,7 @@ var Mixin = {
    *   TODO: convert to array<TransactionWrapper>
    */
   getTransactionWrappers: function() {
-    if (ExecutionEnvironment.canUseDOM) {
-      return TRANSACTION_WRAPPERS;
-    } else {
-      return [];
-    }
+    return TRANSACTION_WRAPPERS;
   },
 
   /**

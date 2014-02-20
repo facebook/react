@@ -101,53 +101,61 @@ describe('ReactServerRendering', function() {
   });
 
   it('should only execute certain lifecycle methods', function() {
-    var lifecycle = [];
-    var TestComponent = React.createClass({
-      componentWillMount: function() {
-        lifecycle.push('componentWillMount');
-      },
-      componentDidMount: function() {
-        lifecycle.push('componentDidMount');
-      },
-      getInitialState: function() {
-        lifecycle.push('getInitialState');
-        return {name: 'TestComponent'};
-      },
-      render: function() {
-        lifecycle.push('render');
-        return <span>Component name: {this.state.name}</span>;
-      },
-      componentWillUpdate: function() {
-        lifecycle.push('componentWillUpdate');
-      },
-      componentDidUpdate: function() {
-        lifecycle.push('componentDidUpdate');
-      },
-      shouldComponentUpdate: function() {
-        lifecycle.push('shouldComponentUpdate');
-      },
-      componentWillReceiveProps: function() {
-        lifecycle.push('componentWillReceiveProps');
-      },
-      componentWillUnmount: function() {
-        lifecycle.push('componentWillUnmount');
-      }
-    });
+    function runTest() {
+      var lifecycle = [];
+      var TestComponent = React.createClass({
+        componentWillMount: function() {
+          lifecycle.push('componentWillMount');
+        },
+        componentDidMount: function() {
+          lifecycle.push('componentDidMount');
+        },
+        getInitialState: function() {
+          lifecycle.push('getInitialState');
+          return {name: 'TestComponent'};
+        },
+        render: function() {
+          lifecycle.push('render');
+          return <span>Component name: {this.state.name}</span>;
+        },
+        componentWillUpdate: function() {
+          lifecycle.push('componentWillUpdate');
+        },
+        componentDidUpdate: function() {
+          lifecycle.push('componentDidUpdate');
+        },
+        shouldComponentUpdate: function() {
+          lifecycle.push('shouldComponentUpdate');
+        },
+        componentWillReceiveProps: function() {
+          lifecycle.push('componentWillReceiveProps');
+        },
+        componentWillUnmount: function() {
+          lifecycle.push('componentWillUnmount');
+        }
+      });
 
-    var response = ReactServerRendering.renderComponentToString(
-      <TestComponent />
-    );
+      var response = ReactServerRendering.renderComponentToString(
+        <TestComponent />
+      );
 
-    expect(response).toMatch(
-      '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-        ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
-      '</span>'
-    );
-    expect(lifecycle).toEqual(
-      ['getInitialState', 'componentWillMount', 'render']
-    );
+      expect(response).toMatch(
+        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
+          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
+          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
+          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
+        '</span>'
+      );
+      expect(lifecycle).toEqual(
+        ['getInitialState', 'componentWillMount', 'render']
+      );
+    }
+
+    runTest();
+
+    // This should work the same regardless of whether you can use DOM or not.
+    ExecutionEnvironment.canUseDOM = true;
+    runTest();
   });
 
   it('should have the correct mounting behavior', function() {
@@ -252,4 +260,46 @@ describe('ReactServerRendering', function() {
       'second parameter.'
     );
   });
+
+  it('should not put checksum and React ID on components if specified so',
+    function() {
+      var lifecycle = [];
+      var NestedComponent = React.createClass({
+        render: function() {
+          return <div>inner text</div>;
+        }
+      });
+
+      var TestComponent = React.createClass({
+        render: function() {
+          lifecycle.push('render');
+          return <span><NestedComponent /></span>;
+        }
+      });
+
+      var response = ReactServerRendering.renderComponentToString(
+        <TestComponent />,
+        {noChecksumNoID: true}
+      );
+
+      expect(response).toBe('<span><div>inner text</div></span>');
+    }
+  );
+
+  it('should not put checksum and React ID on text components if specified so',
+    function() {
+      var TestComponent = React.createClass({
+        render: function() {
+          return <span>{'hello'} {'world'}</span>;
+        }
+      });
+
+      var response = ReactServerRendering.renderComponentToString(
+        <TestComponent />,
+        {noChecksumNoID: true}
+      );
+
+      expect(response).toBe('<span>hello world</span>');
+    }
+  );
 });
