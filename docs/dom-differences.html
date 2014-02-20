@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -370,7 +382,7 @@
     <p>React has implemented a browser-independent events and DOM system for performance and cross-browser compatibility reasons. We took the opportunity to clean up a few rough edges in browser DOM implementations.</p>
 
 <ul>
-<li>All DOM properties and attributes (including event handlers) should be camelCased to be consistent with standard JavaScript style. We intentionally break with the spec here since the spec is inconsistent.</li>
+<li>All DOM properties and attributes (including event handlers) should be camelCased to be consistent with standard JavaScript style. We intentionally break with the spec here since the spec is inconsistent. <strong>However</strong>, <code>data-*</code> and <code>aria-*</code> attributes <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes#data-*">conform to the specs</a> and should be lower-cased only.</li>
 <li>The <code>style</code> attribute accepts a JavaScript object with camelCased properties rather than a CSS string. This is consistent with the DOM <code>style</code> JavaScript property, is more efficient, and prevents XSS security holes.</li>
 <li>All event objects conform to the W3C spec, and all events (including submit) bubble correctly per the W3C spec. See <a href="/react/docs/events.html">Event System</a> for more details.</li>
 <li>The <code>onChange</code> event behaves as you would expect it to: whenever a form field is changed this event is fired rather than inconsistently on blur. We intentionally break from existing browser behavior because <code>onChange</code> is a misnomer for its behavior and React relies on this event to react to user input in real time. See <a href="/react/docs/forms.html">Forms</a> for more details.</li>

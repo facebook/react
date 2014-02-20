@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Add-ons</title>
+  <title>React | Cloning Components</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Add-ons" />
+  <meta property="og:title" content="React | Cloning Components" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/addons.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/clone-with-props.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -190,7 +190,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/addons.html" class="active">
+            <a href="/react/docs/addons.html">
               Add-Ons
             </a>
             
@@ -221,7 +221,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html">
+                    <a href="/react/docs/clone-with-props.html" class="active">
                       Cloning Components
                     </a>
                   </li>
@@ -377,30 +377,23 @@
 
 
   <div class="inner-content">
-    <h1>Add-ons</h1>
+    <h1>Cloning Components</h1>
     <div class="subHeader"></div>
-    <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library:</p>
-
-<ul>
-<li><a href="animation.html"><code>ReactTransitions</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
-<li><a href="two-way-binding-helpers.html"><code>ReactLink</code></a>, to simplify the coordination between user&#39;s form input data and and the component&#39;s state.</li>
-<li><a href="class-name-manipulation.html"><code>classSet</code></a>, for manipulating the DOM <code>class</code> string a bit more cleanly.</li>
-<li><a href="test-utils.html"><code>ReactTestUtils</code></a>, simple helpers for writing test cases (unminified build only).</li>
-</ul>
-
-<p>To get the add-ons, use <code>react-with-addons.js</code> (and its minified counterpart) rather than the common <code>react.js</code>.</p>
+    <p>In rare situations a component may want to change the props of a component that it doesn&#39;t own (like changing the <code>className</code> of a component passed as <code>this.props.children</code>). Other times it may want to make multiple copies of a component passed to it. <code>cloneWithProps()</code> makes this possible.</p>
+<h4><a class="anchor" name="reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops"></a><code>ReactComponent React.addons.cloneWithProps(ReactComponent component, object? extraProps)</code> <a class="hash-link" href="#reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops">#</a></h4>
+<p>Do a shallow copy of <code>component</code> and merge any props provided by <code>extraProps</code>. Props are merged in the same manner as <a href="/react/docs/component-api.html#transferpropsto"><code>transferPropsTo()</code></a>, so props like <code>className</code> will be merged intelligently.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/tooling-integration.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/test-utils.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/animation.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/examples.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/addons.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/clone-with-props.html"></div>
   </div>
 </section>
 

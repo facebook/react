@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -421,6 +433,8 @@
 <p><code>LinkedStateMixin</code> adds a method to your React component called <code>linkState()</code>. <code>linkState()</code> returns a <code>ReactLink</code> object which contains the current value of the React state and a callback to change it.</p>
 
 <p><code>ReactLink</code> objects can be passed up and down the tree as props, so it&#39;s easy (and explicit) to set up two-way binding between a component deep in the hierarchy and state that lives higher in the hierarchy.</p>
+
+<p>Note that <code>&lt;input&gt;</code> supports ReactLink for both <code>value</code> and <code>checked</code>.</p>
 <h2><a class="anchor" name="under-the-hood"></a>Under the Hood <a class="hash-link" href="#under-the-hood">#</a></h2>
 <p>There are two sides to <code>ReactLink</code>: the place where you create the <code>ReactLink</code> instance and the place where you use it. To prove how simple <code>ReactLink</code> is, let&#39;s rewrite each side separately to be more explicit.</p>
 <h3><a class="anchor" name="reactlink-without-linkedstatemixin"></a>ReactLink Without LinkedStateMixin <a class="hash-link" href="#reactlink-without-linkedstatemixin">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>

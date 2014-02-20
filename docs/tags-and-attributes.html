@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -374,14 +386,15 @@
 <div class="highlight"><pre><code class="text language-text" data-lang="text">a abbr address area article aside audio b base bdi bdo big blockquote body br
 button canvas caption cite code col colgroup data datalist dd del details dfn
 div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6
-head header hr html i iframe img input ins kbd keygen label legend li link main
-map mark menu menuitem meta meter nav noscript object ol optgroup option output
-p param pre progress q rp rt ruby s samp script section select small source
-span strong style sub summary sup table tbody td textarea tfoot th thead time
-title tr track u ul var video wbr
+head header hr html i iframe img input ins kbd keygen label legend li link
+main map mark menu menuitem meta meter nav noscript object ol optgroup option
+output p param pre progress q rp rt ruby s samp script section select small
+source span strong style sub summary sup table tbody td textarea tfoot th
+thead time title tr track u ul var video wbr
 </code></pre></div><h3><a class="anchor" name="svg-elements"></a>SVG elements <a class="hash-link" href="#svg-elements">#</a></h3>
 <p>The following SVG elements are supported:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">circle g line path polygon polyline rect svg text
+<div class="highlight"><pre><code class="text language-text" data-lang="text">circle defs g line linearGradient path polygon polyline radialGradient rect
+stop svg text
 </code></pre></div>
 <p>You may also be interested in <a href="https://github.com/facebook/react-art">react-art</a>, a drawing library for React that can render to Canvas, SVG, or VML (for IE8).</p>
 <h2><a class="anchor" name="supported-attributes"></a>Supported Attributes <a class="hash-link" href="#supported-attributes">#</a></h2>
@@ -394,18 +407,21 @@ title tr track u ul var video wbr
 </blockquote>
 
 <p>For a list of events, see <a href="/react/docs/events.html">Supported Events</a>.</p>
-<h3><a class="anchor" name="html-attributes"></a>HTML Attributes <a class="hash-link" href="#html-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">accept accessKey action allowFullScreen allowTransparency alt autoCapitalize
+<h3><a class="anchor" name="html-attributes"></a>HTML Attributes <a class="hash-link" href="#html-attributes">#</a></h3>
+<p>These standard attributes are supported:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
-className colSpan content contentEditable contextMenu controls data dateTime
-dir disabled draggable encType form frameBorder height hidden href htmlFor
-httpEquiv icon id label lang list loop max maxLength method min multiple name
-pattern placeholder poster preload radioGroup readOnly rel required role
-rowSpan scrollLeft scrollTop selected size spellCheck src step style tabIndex
-target title type value width wmode
+className colSpan cols content contentEditable contextMenu controls data
+dateTime defer dir disabled draggable encType form formNoValidate frameBorder
+height hidden href htmlFor httpEquiv icon id label lang list loop max
+maxLength method min multiple name noValidate pattern placeholder poster
+preload radioGroup readOnly rel required role rowSpan rows sandbox scope
+scrollLeft scrollTop seamless selected size span spellCheck src srcDoc step
+style tabIndex target title type value width wmode
 </code></pre></div>
-<p>The non-standard <code>autoCapitalize</code> attribute is supported for Mobile Safari.</p>
+<p>In addition, the non-standard <code>autoCapitalize</code> and <code>autoCorrect</code> attributes are supported for Mobile Safari, and the <code>property</code> attribute is supported for Open Graph <code>&lt;meta&gt;</code> tags.</p>
 
-<p>In addition, there is the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting DOM strings into a component.</p>
+<p>There is also the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting HTML strings into a component.</p>
 <h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
 spreadMethod stopColor stopOpacity stroke strokeLinecap strokeWidth transform
 version viewBox x1 x2 x y1 y2 y

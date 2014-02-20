@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.9 RC</title>
+  <title>React | React v0.9</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.9 RC" />
+  <meta property="og:title" content="React | React v0.9" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -63,9 +63,9 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2014/02/20/react-v0.9.html">React v0.9</a></li>
+        <li><a href="/react/blog/2014/02/20/react-v0.9.html" class="active">React v0.9</a></li>
       
-        <li><a href="/react/blog/2014/02/16/react-v0.9-rc1.html" class="active">React v0.9 RC</a></li>
+        <li><a href="/react/blog/2014/02/16/react-v0.9-rc1.html">React v0.9 RC</a></li>
       
         <li><a href="/react/blog/2014/02/15/community-roundup-16.html">Community Round-up #16</a></li>
       
@@ -89,31 +89,37 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.9 RC</h1>
-    <p class="meta">February 16, 2014 by Ben Alpert</p>
+    <h1>React v0.9</h1>
+    <p class="meta">February 20, 2014 by Ben Alpert</p>
 
     <hr>
 
     <div class="post">
-      <p>We&#39;re almost ready to release React v0.9! We&#39;re posting a release candidate so that you can test your apps on it; we&#39;d much prefer to find show-stopping bugs now rather than after we release.</p>
+      <p>I&#39;m excited to announce that today we&#39;re releasing React v0.9, which incorporates many bug fixes and several new features since the last release. This release contains almost four months of work, including over 800 commits from over 70 committers!</p>
 
-<p>The release candidate is available for download from the CDN:</p>
+<p>Thanks to everyone who tested the release candidate; we were able to find and fix an error in the event handling code, we upgraded envify to make running browserify on React faster, and we added support for five new attributes.</p>
+
+<p>As always, the release is available for download from the CDN:</p>
 
 <ul>
 <li><strong>React</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-0.9.0-rc1.js">http://fb.me/react-0.9.0-rc1.js</a><br>
-Minified build for production: <a href="http://fb.me/react-0.9.0-rc1.min.js">http://fb.me/react-0.9.0-rc1.min.js</a></li>
+Dev build with warnings: <a href="http://fb.me/react-0.9.0.js">http://fb.me/react-0.9.0.js</a><br>
+Minified build for production: <a href="http://fb.me/react-0.9.0.min.js">http://fb.me/react-0.9.0.min.js</a></li>
 <li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-with-addons-0.9.0-rc1.js">http://fb.me/react-with-addons-0.9.0-rc1.js</a><br>
-Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1.min.js">http://fb.me/react-with-addons-0.9.0-rc1.min.js</a></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="http://fb.me/JSXTransformer-0.9.0-rc1.js">http://fb.me/JSXTransformer-0.9.0-rc1.js</a></li>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.9.0.js">http://fb.me/react-with-addons-0.9.0.js</a><br>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0.min.js">http://fb.me/react-with-addons-0.9.0.min.js</a></li>
+<li><strong>In-Browser JSX Transformer</strong><br>
+<a href="http://fb.me/JSXTransformer-0.9.0.js">http://fb.me/JSXTransformer-0.9.0.js</a></li>
 </ul>
 
-<p>We&#39;ve also published version <code>0.9.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+<p>We&#39;ve also published version <code>0.9.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+<h2><a class="anchor" name="whats-new"></a>What’s New? <a class="hash-link" href="#whats-new">#</a></h2>
+<p>This version includes better support for normalizing event properties across all supported browsers so that you need to worry even less about cross-browser differences. We&#39;ve also made many improvements to error messages and have refactored the core to never rethrow errors, so stack traces are more accurate and Chrome&#39;s purple break-on-error stop sign now works properly.</p>
 
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h2><a class="anchor" name="upgrade-notes"></a>Upgrade Notes <a class="hash-link" href="#upgrade-notes">#</a></h2>
+<p>We&#39;ve also added to the add-ons build <a href="/react/docs/test-utils.html">React.addons.TestUtils</a>, a set of new utilities to help you write unit tests for React components. You can now simulate events on your components, and several helpers are provided to help make assertions about the rendered DOM tree.</p>
+
+<p>We&#39;ve also made several other improvements and a few breaking changes; the full changelog is provided below.</p>
+<h2><a class="anchor" name="jsx-whitespace"></a>JSX Whitespace <a class="hash-link" href="#jsx-whitespace">#</a></h2>
 <p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
   Monkeys:
@@ -134,7 +140,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 </code></pre></div>
 <p>We believe this new behavior is more helpful and elimates cases where unwanted whitespace was previously added.</p>
 
-<p>In cases where you want to preserve the space adjacent to a newline, you can write a JS string like <code>{&quot;Monkeys: &quot;}</code> in your JSX source. We&#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can <a href="https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md">install jsx_whitespace_transformer from npm</a> and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&#39;s existing whitespace behavior.</p>
+<p>In cases where you want to preserve the space adjacent to a newline, you can write <code>{&#39;Monkeys: &#39;}</code> or <code>Monkeys:{&#39; &#39;}</code> in your JSX source. We&#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can <a href="https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md">install jsx_whitespace_transformer from npm</a> and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&#39;s existing whitespace behavior.</p>
 <h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
 <ul>
 <li>The lifecycle methods <code>componentDidMount</code> and <code>componentDidUpdate</code> no longer receive the root node as a parameter; use <code>this.getDOMNode()</code> instead</li>
@@ -143,17 +149,19 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <li><code>React.renderComponentToString</code> is now synchronous and returns the generated HTML string</li>
 <li>Full-page rendering (that is, rendering the <code>&lt;html&gt;</code> tag using React) is now supported only when starting with server-rendered markup</li>
 <li>On mouse wheel events, <code>deltaY</code> is no longer negated</li>
-<li>When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, the type checks are now skipped for performance)</li>
+<li>When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, type checks are now skipped for performance)</li>
 <li>On <code>input</code>, <code>select</code>, and <code>textarea</code> elements, <code>.getValue()</code> is no longer supported; use <code>.getDOMNode().value</code> instead</li>
 </ul>
 <h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
 <ul>
 <li>React now never rethrows errors, so stack traces are more accurate and Chrome&#39;s purple break-on-error stop sign now works properly</li>
-<li>Added a new tool for profiling React components and identifying places where defining <code>shouldComponentUpdate</code> can give performance improvements</li>
 <li>Added support for SVG tags <code>defs</code>, <code>linearGradient</code>, <code>polygon</code>, <code>radialGradient</code>, <code>stop</code></li>
 <li>Added support for more attributes:
 
 <ul>
+<li><code>crossOrigin</code> for CORS requests</li>
+<li><code>download</code> and <code>hrefLang</code> for <code>&lt;a&gt;</code> tags</li>
+<li><code>mediaGroup</code> and <code>muted</code> for <code>&lt;audio&gt;</code> and <code>&lt;video&gt;</code> tags</li>
 <li><code>noValidate</code> and <code>formNoValidate</code> for forms</li>
 <li><code>property</code> for Open Graph <code>&lt;meta&gt;</code> tags</li>
 <li><code>sandbox</code>, <code>seamless</code>, and <code>srcDoc</code> for <code>&lt;iframe&gt;</code> tags</li>
@@ -184,6 +192,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <li>Fixed a memory leak when unmounting children with a <code>componentWillUnmount</code> handler</li>
 <li>Fixed a memory leak when <code>renderComponentToString</code> would store event handlers</li>
 <li>Fixed an error that could be thrown when removing form elements during a click handler</li>
+<li>Boolean attributes such as <code>disabled</code> are rendered without a value (previously <code>disabled=&quot;true&quot;</code>, now simply <code>disabled</code>)</li>
 <li><code>key</code> values containing <code>.</code> are now supported</li>
 <li>Shortened <code>data-reactid</code> values for performance</li>
 <li>Components now always remount when the <code>key</code> property changes</li>
@@ -194,6 +203,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 </ul>
 <h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
 <ul>
+<li><code>React.addons.TestUtils</code> was added to help write unit tests</li>
 <li><code>React.addons.TransitionGroup</code> was renamed to <code>React.addons.CSSTransitionGroup</code></li>
 <li><code>React.addons.TransitionGroup</code> was added as a more general animation wrapper</li>
 <li><code>React.addons.cloneWithProps</code> was added for cloning components and modifying their props</li>
@@ -215,7 +225,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
     </div>
 
     <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html"></div>
   </div>
 </section>
 

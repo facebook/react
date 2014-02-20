@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -367,12 +379,14 @@
   <div class="inner-content">
     <h1>Animation</h1>
     <div class="subHeader"></div>
-    <p><code>ReactTransitions</code> is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
-<p><code>ReactTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
+    <p>React provides a <code>ReactTransitionGroup</code> addon component as a low-level API for animation, and a <code>ReactCSSTransitionGroup</code> for easily implementing basic CSS animations and transitions.</p>
+<h2><a class="anchor" name="high-level-api-reactcsstransitiongroup"></a>High-level API: <code>ReactCSSTransitionGroup</code> <a class="hash-link" href="#high-level-api-reactcsstransitiongroup">#</a></h2>
+<p><code>ReactCSSTransitionGroup</code> is based on <code>ReactTransitionGroup</code> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
+<h3><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h3>
+<p><code>ReactCSSTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
-<span class="kd">var</span> <span class="nx">ReactTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TransitionGroup</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">TransitionGroup</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -399,15 +413,15 @@
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span> <span class="o">/&gt;&lt;</span><span class="err">/div&gt;</span>
-        <span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
           <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-        <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
+        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>In this component, when a new item is added to <code>ReactTransitionGroup</code> it will get the <code>example-enter</code> CSS class and the <code>example-enter-active</code> CSS class added in the next tick. This is a convention based on the <code>transitionName</code> prop.</p>
+<p>In this component, when a new item is added to <code>ReactCSSTransitionGroup</code> it will get the <code>example-enter</code> CSS class and the <code>example-enter-active</code> CSS class added in the next tick. This is a convention based on the <code>transitionName</code> prop.</p>
 
 <p>You can use these classes to trigger a CSS animation or transition. For example, try adding this CSS and adding a new list item:</p>
 <div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.example-enter</span> <span class="p">{</span>
@@ -419,7 +433,7 @@
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>You&#39;ll notice that when you try to remove an item <code>ReactTransitionGroup</code> keeps it in the DOM. If you&#39;re using an unminified build of React with add-ons you&#39;ll see a warning that React was expecting an animation or transition to occur. That&#39;s because <code>ReactTransitionGroup</code> keeps your DOM elements on the page until the animation completes. Try adding this CSS:</p>
+<p>You&#39;ll notice that when you try to remove an item <code>ReactCSSTransitionGroup</code> keeps it in the DOM. If you&#39;re using an unminified build of React with add-ons you&#39;ll see a warning that React was expecting an animation or transition to occur. That&#39;s because <code>ReactCSSTransitionGroup</code> keeps your DOM elements on the page until the animation completes. Try adding this CSS:</p>
 <div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.example-leave</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">1</span><span class="p">;</span>
   <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.5s</span> <span class="n">ease</span><span class="o">-</span><span class="n">in</span><span class="p">;</span>
@@ -428,13 +442,21 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h2><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h2>
-<p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactTransitionGroup</code> to disable these animations.</p>
-<h2><a class="anchor" name="rendering-a-different-component"></a>Rendering a Different Component <a class="hash-link" href="#rendering-a-different-component">#</a></h2>
+</code></pre></div><h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
+<p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactCSSTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactCSSTransitionGroup</code> to disable these animations.</p>
+<h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
+<p><code>ReactTransitionGroup</code> is the basis for animations. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
+<h3><a class="anchor" name="componentwillentercallback"></a><code>componentWillEnter(callback)</code> <a class="hash-link" href="#componentwillentercallback">#</a></h3>
+<p>This is called at the same time as <code>componentDidMount()</code> for components added to an existing <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It will not be called on the initial render of a <code>TransitionGroup</code>.</p>
+<h3><a class="anchor" name="componentdidenter"></a><code>componentDidEnter()</code> <a class="hash-link" href="#componentdidenter">#</a></h3>
+<p>This is called after the <code>callback</code> function that was passed to <code>componentWillEnter</code> is called.</p>
+<h3><a class="anchor" name="componentwillleavecallback"></a><code>componentWillLeave(callback)</code> <a class="hash-link" href="#componentwillleavecallback">#</a></h3>
+<p>This is called when the child has been removed from the <code>ReactTransitionGroup</code>. Though the child has been removed, <code>ReactTransitionGroup</code> will keep it in the DOM until <code>callback</code> is called.</p>
+<h3><a class="anchor" name="componentdidleave"></a><code>componentDidLeave()</code> <a class="hash-link" href="#componentdidleave">#</a></h3>
+<p>This is called when the <code>willLeave</code> <code>callback</code> is called (at the same time as <code>componentWillUnmount</code>).</p>
+<h3><a class="anchor" name="rendering-a-different-component"></a>Rendering a Different Component <a class="hash-link" href="#rendering-a-different-component">#</a></h3>
 <p>By default <code>ReactTransitionGroup</code> renders as a <code>span</code>. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span>
-  <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span>
-<span class="hll">  <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span><span class="o">&gt;</span>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span><span class="o">&gt;</span>
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>

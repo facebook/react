@@ -20,7 +20,8 @@ React.renderComponent(
   ReactPlayground(
     {codeText:HELLO_COMPONENT,
     renderCode:true,
-    transformer:transformer}
-    ),
+    transformer:transformer,
+    showCompiledJSTab:false}
+  ),
   document.getElementById('jsxCompiler')
 );

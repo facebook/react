@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -369,6 +381,17 @@
     <div class="subHeader"></div>
     <h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
 <p><code>React</code> is the entry point to the React framework. If you&#39;re using one of the prebuilt packages it&#39;s available as a global; if you&#39;re using CommonJS modules you can <code>require()</code> it.</p>
+<h3><a class="anchor" name="react.children"></a>React.Children <a class="hash-link" href="#react.children">#</a></h3>
+<p><code>React.Children</code> provides utilities for dealing with the <code>this.props.children</code> opaque data structure.</p>
+<h4><a class="anchor" name="react.children.map"></a>React.Children.map <a class="hash-link" href="#react.children.map">#</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">context</span><span class="p">])</span>
+</code></pre></div>
+<p>Invoke <code>fn</code> on every immediate child contained within <code>children</code> with <code>this</code> set to <code>context</code>. If <code>children</code> is a nested object or array it will be traversed: <code>fn</code> will never be passed the container objects. If children is <code>null</code> or <code>undefined</code> returns <code>null</code> or <code>undefined</code> rather than an empty object.</p>
+<h4><a class="anchor" name="react.children.foreach"></a>React.Children.forEach <a class="hash-link" href="#react.children.foreach">#</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">fn</span> <span class="p">[,</span> <span class="nx">object</span> <span class="nx">context</span><span class="p">])</span>
+</code></pre></div>
+<p>Like <code>React.Children.map()</code> but does not return an object.</p>
+<h4><a class="anchor" name="react.children.only"></a>React.Children.only <a class="hash-link" href="#react.children.only">#</a></h4><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">only</span><span class="p">(</span><span class="nx">object</span> <span class="nx">children</span><span class="p">)</span>
+</code></pre></div>
+<p>Return the only child in <code>children</code>. Throws otherwise.</p>
 <h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
 <p><code>React.DOM</code> provides all of the standard HTML tags needed to build a React app. You generally don&#39;t use it directly; instead, just include it as part of the <code>/** @jsx React.DOM */</code> docblock.</p>
 <h3><a class="anchor" name="react.initializetouchevents"></a>React.initializeTouchEvents <a class="hash-link" href="#react.initializetouchevents">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">initializeTouchEvents</span><span class="p">(</span><span class="kr">boolean</span> <span class="nx">shouldUseTouch</span><span class="p">)</span>
@@ -399,9 +422,9 @@
 
 <p>This method was called <code>React.unmountAndReleaseReactRootNode</code> until v0.5. It still works in v0.5 but will be removed in future versions.</p>
 </blockquote>
-<h3><a class="anchor" name="react.rendercomponenttostring"></a>React.renderComponentToString <a class="hash-link" href="#react.rendercomponenttostring">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">renderComponentToString</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">)</span>
+<h3><a class="anchor" name="react.rendercomponenttostring"></a>React.renderComponentToString <a class="hash-link" href="#react.rendercomponenttostring">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderComponentToString</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
 </code></pre></div>
-<p>Render a component to its initial HTML. This should only be used on the server. React will call <code>callback</code> with an HTML string when the markup is ready. You can use this method to can generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
+<p>Render a component to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
 
 <p>If you call <code>React.renderComponent()</code> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
 

@@ -1,5 +1,5 @@
 /**
- * Copyright 2013 Facebook, Inc.
+ * Copyright 2013-2014 Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,11 +64,11 @@ var HELLO_COMPONENT = "\
                 {type:"checkbox",
                 checked:this.state.createClass,
                 onChange:this.onCreateClassChange} ),
-                " Create class "
+                "Create class"
             ),
             React.DOM.label( {style:{display: this.state.createClass ? '' : 'none'}}, 
-              " · "+
-              "Class name: ",
+              "·"+' '+
+              "Class name:",
               React.DOM.input(
                 {type:"text",
                 value:this.state.outputClassName,

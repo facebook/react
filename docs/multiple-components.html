@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -415,7 +427,7 @@
 <p>When you create a React component instance, you can include additional React components or JavaScript expressions between the opening and closing tags like this:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
-<p><code>Parent</code> can read its children by accessing the special <code>this.props.children</code> prop.</p>
+<p><code>Parent</code> can read its children by accessing the special <code>this.props.children</code> prop. <strong><code>this.props.children</code> is an opaque data structure:</strong> use the <a href="/react/docs/top-level-api.html#react.children">React.Children utilities</a> to manipulate them.</p>
 <h3><a class="anchor" name="child-reconciliation"></a>Child Reconciliation <a class="hash-link" href="#child-reconciliation">#</a></h3>
 <p><strong>Reconciliation is the process by which React updates the DOM with each new render pass.</strong> In general, children are reconciled according to the order in which they are rendered. For example, suppose two render passes generate the following respective markup:</p>
 <div class="highlight"><pre><code class="html language-html" data-lang="html">// Render Pass 1
@@ -449,7 +461,7 @@
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">{</span><span class="nx">results</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
           <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
         <span class="p">})}</span>
       <span class="o">&lt;</span><span class="err">/ol&gt;</span>
@@ -457,7 +469,25 @@
   <span class="p">}</span>
 </code></pre></div>
 <p>When React reconciles the keyed children, it will ensure that any child with <code>key</code> will be reordered (instead of clobbered) or destroyed (instead of reused).</p>
-<h2><a class="anchor" name="data-flow"></a>Data Flow <a class="hash-link" href="#data-flow">#</a></h2>
+
+<p>You can also key children by passing an object. The object keys will be used as <code>key</code> for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order <strong>except</strong> for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">{};</span>
+
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// If result.id can look like a number (consider short hashes), then</span>
+      <span class="c1">// object iteration order is not guaranteed. In this case, we add a prefix</span>
+      <span class="c1">// to ensure the keys are strings.</span>
+      <span class="nx">items</span><span class="p">[</span><span class="s1">&#39;result-&#39;</span> <span class="o">+</span> <span class="nx">result</span><span class="p">.</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">result</span><span class="p">.</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;;</span>
+    <span class="p">});</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span>
+        <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/ol&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div><h2><a class="anchor" name="data-flow"></a>Data Flow <a class="hash-link" href="#data-flow">#</a></h2>
 <p>In React, data flows from owner to owned component through <code>props</code> as discussed above. This is effectively one-way data binding: owners bind their owned component&#39;s props to some value the owner has computed based on its <code>props</code> or <code>state</code>. Since this process happens recursively, data changes are automatically reflected everywhere they are used.</p>
 <h2><a class="anchor" name="a-note-on-performance"></a>A Note on Performance <a class="hash-link" href="#a-note-on-performance">#</a></h2>
 <p>You may be thinking that it&#39;s expensive to react to changing data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and <code>render()</code> methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution and React will optimize this for you using batching and change detection.</p>

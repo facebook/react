@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -427,14 +439,14 @@
 <ul>
 <li><code>getInitialState(): object</code> is invoked before a component is mounted. Stateful components should implement this and return the initial state data.</li>
 <li><code>componentWillMount()</code> is invoked immediately before mounting occurs.</li>
-<li><code>componentDidMount(DOMElement rootNode)</code> is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.</li>
+<li><code>componentDidMount()</code> is invoked immediately after mounting occurs. Initialization that requires DOM nodes should go here.</li>
 </ul>
 <h3><a class="anchor" name="updating"></a>Updating <a class="hash-link" href="#updating">#</a></h3>
 <ul>
 <li><code>componentWillReceiveProps(object nextProps)</code> is invoked when a mounted component receives new props. This method should be used to compare <code>this.props</code> and <code>nextProps</code> to perform state transitions using <code>this.setState()</code>.</li>
 <li><code>shouldComponentUpdate(object nextProps, object nextState): boolean</code> is invoked when a component decides whether any changes warrant an update to the DOM. Implement this as an optimization to compare <code>this.props</code> with <code>nextProps</code> and <code>this.state</code> with <code>nextState</code> and return false if React should skip updating.</li>
 <li><code>componentWillUpdate(object nextProps, object nextState)</code> is invoked immediately before updating occurs. You cannot call <code>this.setState()</code> here.</li>
-<li><code>componentDidUpdate(object prevProps, object prevState, DOMElement rootNode)</code> is invoked immediately after updating occurs.</li>
+<li><code>componentDidUpdate(object prevProps, object prevState)</code> is invoked immediately after updating occurs.</li>
 </ul>
 <h3><a class="anchor" name="unmounting"></a>Unmounting <a class="hash-link" href="#unmounting">#</a></h3>
 <ul>
@@ -447,14 +459,6 @@
 <li><code>getDOMNode(): DOMElement</code> can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.</li>
 <li><code>forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
 </ul>
-
-<blockquote>
-<p>Note:</p>
-
-<p>The <code>DOMElement rootNode</code> argument of <code>componentDidMount()</code> and
-<code>componentDidUpdate()</code> is a convenience. The same node can be obtained by
-calling <code>this.getDOMNode()</code>.</p>
-</blockquote>
 <h2><a class="anchor" name="browser-support-and-polyfills"></a>Browser Support and Polyfills <a class="hash-link" href="#browser-support-and-polyfills">#</a></h2>
 <p>At Facebook, we support older browsers, including IE8. We&#39;ve had polyfills in place for a long time to allow us to write forward-thinking JS. This means we don&#39;t have a bunch of hacks scattered throughout our codebase and we can still expect our code to &quot;just work&quot;. For example, instead of seeing <code>+new Date()</code>, we can just write <code>Date.now()</code>. Since the open source React is the same as what we use internally, we&#39;ve carried over this philosophy of using forward thinking JS.</p>
 
@@ -469,6 +473,7 @@ calling <code>this.getDOMNode()</code>.</p>
 <li><code>Array.prototype.some</code></li>
 <li><code>Date.now</code></li>
 <li><code>Function.prototype.bind</code></li>
+<li><code>Object.keys</code></li>
 </ul>
 
 <p><code>es5-sham.js</code>, also from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>, provides the following that React needs:</p>

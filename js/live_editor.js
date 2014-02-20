@@ -85,7 +85,8 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     return {
       transformer: function(code) {
         return JSXTransformer.transform(code).code;
-      }
+      },
+      showCompiledJSTab: true
     };
   },
 
@@ -116,7 +117,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       compiledCode = this.compileCode();
     } catch (err) {}
 
-    var jsContent =
+    var JSContent =
       CodeMirrorEditor(
         {key:"js",
         className:"playgroundStage CodeMirror-readonly",
@@ -125,7 +126,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
         readOnly:true}
       );
 
-    var jsxContent =
+    var JSXContent =
       CodeMirrorEditor(
         {key:"jsx",
         onChange:this.handleCodeChange,
@@ -138,22 +139,28 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     var JSTabClassName =
       'playground-tab' + (isJS ? ' playground-tab-active' : '');
 
+    var JSTab =
+      React.DOM.div(
+        {className:JSTabClassName,
+        onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JS)}, 
+          "Compiled JS"
+      );
+
+    var JSXTab =
+      React.DOM.div(
+        {className:JSXTabClassName,
+        onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}, 
+          "Live JSX Editor"
+      )
+
     return (
       React.DOM.div( {className:"playground"}, 
         React.DOM.div(null, 
-          React.DOM.div(
-            {className:JSXTabClassName,
-            onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}, 
-              " Live JSX Editor "
-          ),
-          React.DOM.div(
-            {className:JSTabClassName,
-            onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JS)}, 
-              " Compiled JS "
-          )
+          JSXTab,
+          this.props.showCompiledJSTab && JSTab
         ),
         React.DOM.div( {className:"playgroundCode"}, 
-          isJS ? jsContent : jsxContent
+          isJS ? JSContent : JSXContent
         ),
         React.DOM.div( {className:"playgroundPreview"}, 
           React.DOM.div( {ref:"mount"} )

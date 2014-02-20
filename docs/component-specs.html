@@ -88,14 +88,14 @@
         
           <li>
             <a href="/react/docs/complementary-tools.html">
-              Complementary tools
+              Complementary Tools
             </a>
             
           </li>
         
           <li>
             <a href="/react/docs/example-apps.html">
-              Example apps
+              Example Apps
             </a>
             
           </li>
@@ -214,6 +214,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -276,7 +288,7 @@
         
           <li>
             <a href="/react/docs/special-non-dom-attributes.html">
-              Special Non-DOM attributes
+              Special Non-DOM Attributes
             </a>
             
           </li>
@@ -394,6 +406,22 @@
 <p>The <code>mixins</code> array allows you to use mixins to share behavior among multiple components. For more information about mixins, see <a href="/react/docs/reusable-components.html">Reusable Components</a>.</p>
 
 <!-- TODO: Document mixins here directly. -->
+<h3><a class="anchor" name="statics"></a>statics <a class="hash-link" href="#statics">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">statics</span>
+</code></pre></div>
+<p>The <code>statics</code> object allows you to define static methods that can be called on the component class. For example:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">statics</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">customMethod</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">foo</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">foo</span> <span class="o">===</span> <span class="s1">&#39;bar&#39;</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">MyComponent</span><span class="p">.</span><span class="nx">customMethod</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">);</span>  <span class="c1">// true</span>
+</code></pre></div>
+<p>Methods defined within this block are <em>static</em>, meaning that you can run them before any component instances are created, and the methods do not have access to the props or state of your components. If you want to check the value of props in a static method, have the caller pass in the props as an argument to the static method.</p>
 <h3><a class="anchor" name="displayname"></a>displayName <a class="hash-link" href="#displayname">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">displayName</span>
 </code></pre></div>
 <p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically, see <a href="/react/docs/jsx-in-depth.html#react-composite-components">JSX in Depth</a>.</p>
@@ -402,11 +430,17 @@
 <h3><a class="anchor" name="mounting-componentwillmount"></a>Mounting: componentWillMount <a class="hash-link" href="#mounting-componentwillmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillMount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked once, immediately before the initial rendering occurs. If you call <code>setState</code> within this method, <code>render()</code> will see the updated state and will be executed only once despite the state change.</p>
-<h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">(</span><span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
+<h3><a class="anchor" name="mounting-componentdidmount"></a>Mounting: componentDidMount <a class="hash-link" href="#mounting-componentdidmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidMount</span><span class="p">()</span>
 </code></pre></div>
-<p>Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via the <code>rootNode</code> argument or by calling <code>this.getDOMNode()</code>.</p>
+<p>Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via <code>this.getDOMNode()</code>.</p>
 
 <p>If you want to integrate with other JavaScript frameworks, set timers using <code>setTimeout</code> or <code>setInterval</code>, or send AJAX requests, perform those operations in this method.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling <code>this.getDOMNode()</code>.</p>
+</blockquote>
 <h3><a class="anchor" name="updating-componentwillreceiveprops"></a>Updating: componentWillReceiveProps <a class="hash-link" href="#updating-componentwillreceiveprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillReceiveProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked when a component is receiving new props. This method is not called for the initial render.</p>
@@ -449,11 +483,17 @@ transition to the new props and state will not require a component update.</p>
 
 <p>You <em>cannot</em> use <code>this.setState()</code> in this method. If you need to update state in response to a prop change, use <code>componentWillReceiveProps</code> instead.</p>
 </blockquote>
-<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">,</span> <span class="nx">DOMElement</span> <span class="nx">rootNode</span><span class="p">)</span>
+<h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">)</span>
 </code></pre></div>
 <p>Invoked immediately after updating occurs. This method is not called for the initial render.</p>
 
 <p>Use this as an opportunity to operate on the DOM when the component has been updated.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling <code>this.getDOMNode()</code>.</p>
+</blockquote>
 <h3><a class="anchor" name="unmounting-componentwillunmount"></a>Unmounting: componentWillUnmount <a class="hash-link" href="#unmounting-componentwillunmount">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">componentWillUnmount</span><span class="p">()</span>
 </code></pre></div>
 <p>Invoked immediately before a component is unmounted from the DOM.</p>
