@@ -12,6 +12,7 @@
 - On mouse wheel events, `deltaY` is no longer negated
 - When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, type checks are now skipped for performance)
 - On `input`, `select`, and `textarea` elements, `.getValue()` is no longer supported; use `.getDOMNode().value` instead
+- `this.context` on components is now reserved for internal use by React
 
 #### New Features
 
