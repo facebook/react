@@ -131,10 +131,12 @@ The unminified build of React needs the following from [paulmillr's console-poly
 
 * `console.*`
 
+When using HTML5 elements in IE8 including `<section>`, `<article>`, `<nav>`, `<header>`, and `<footer>`, it's also necessary to include [html5shiv](https://github.com/aFarkas/html5shiv) or a similar script.
+
 
 ### Cross-browser Issues
 
-Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn't find a workaround.
+Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn't find a workaround for.
 
 
 #### onScroll event on IE8
