@@ -46,7 +46,7 @@ If you want your project on this list, or think one of these projects should be 
 
 ### Data fetching
 
-  * **[react-async](https://github.com/andreypopp/react-async)** Adds a `getInitialStateAsync(cb)` method suitable for data fetching on both the client and the server.
+  * **[react-async](http://andreypopp.viewdocs.io/react-async)** Adds a `getInitialStateAsync(cb)` method suitable for data fetching on both the client and the server.
   * **[superagent](http://visionmedia.github.io/superagent/)** A lightweight "isomorphic" library for AJAX requests.
 
 ### UI components
