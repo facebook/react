@@ -157,6 +157,7 @@ describe('ReactDOMComponent', function() {
 
       expect(stub.getDOMNode().innerHTML).toEqual(':)');
       stub.receiveComponent({props: {}}, transaction);
+      transaction.getMultiChildUpdateQueue().processUpdates();
       expect(stub.getDOMNode().innerHTML).toEqual('');
     });
 
@@ -180,6 +181,7 @@ describe('ReactDOMComponent', function() {
 
       expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
       stub.receiveComponent({props: {children: 'adieu'}}, transaction);
+      transaction.getMultiChildUpdateQueue().processUpdates();
       expect(stub.getDOMNode().innerHTML).toEqual('adieu');
     });
 

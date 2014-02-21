@@ -748,4 +748,40 @@ describe('ReactUpdates', function() {
     React.renderComponent(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
+
+  it('calls componentDidUpdate after DOM mutations in any root', function() {
+    var updateCount = 0;
+    var A = React.createClass({
+      getInitialState: function() {
+        return {x: 1};
+      },
+      render: function() {
+        if (this.state.x === 1) {
+          return <div>1</div>;
+        } else if (this.state.x == 2) {
+          // Add <span> so that ReactMultiChild gets involved -- currently
+          // attribute and text content updates aren't batched in the same way
+          return <div><span>2</span></div>;
+        }
+      },
+      componentWillUpdate: function() {
+        // In both component's componentWillUpdate methods, none of the
+        // ReactMultiChild DOM mutations will have happened yet because we queue
+        // them and apply them all at the end of the reconcile transaction
+        expect(a.getDOMNode().innerHTML).toBe('1');
+        expect(b.getDOMNode().innerHTML).toBe('1');
+        updateCount++;
+      }
+    });
+
+    var a = ReactTestUtils.renderIntoDocument(<A />);
+    var b = ReactTestUtils.renderIntoDocument(<A />);
+
+    ReactUpdates.batchedUpdates(function() {
+      a.setState({x: 2});
+      b.setState({x: 2});
+    });
+
+    expect(updateCount).toBe(2);
+  });
 });

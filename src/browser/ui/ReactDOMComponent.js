@@ -377,12 +377,12 @@ ReactDOMComponent.Mixin = {
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
-      this.updateTextContent('');
+      this.updateTextContent('', transaction);
     }
 
     if (nextContent != null) {
       if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent);
+        this.updateTextContent('' + nextContent, transaction);
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {

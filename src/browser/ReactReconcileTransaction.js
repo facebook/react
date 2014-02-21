@@ -23,6 +23,7 @@ var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInputSelection = require('ReactInputSelection');
+var ReactMultiChildUpdateQueue = require('ReactMultiChildUpdateQueue');
 var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
@@ -98,12 +99,23 @@ var PUT_LISTENER_QUEUEING = {
   }
 };
 
+var MULTI_CHILD_UPDATE_QUEUEING = {
+  initialize: function() {
+    this.multiChildUpdateQueue.reset();
+  },
+
+  close: function() {
+    this.multiChildUpdateQueue.processUpdates();
+  }
+};
+
 /**
  * Executed within the scope of the `Transaction` instance. Consider these as
  * being member methods, but with an implied ordering while being isolated from
  * each other.
  */
 var TRANSACTION_WRAPPERS = [
+  MULTI_CHILD_UPDATE_QUEUEING,
   PUT_LISTENER_QUEUEING,
   SELECTION_RESTORATION,
   EVENT_SUPPRESSION,
@@ -134,6 +146,7 @@ function ReactReconcileTransaction() {
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
+  this.multiChildUpdateQueue = ReactMultiChildUpdateQueue.getPooled();
 }
 
 var Mixin = {
@@ -157,6 +170,10 @@ var Mixin = {
 
   getPutListenerQueue: function() {
     return this.putListenerQueue;
+  },
+
+  getMultiChildUpdateQueue: function() {
+    return this.multiChildUpdateQueue;
   },
 
   /**
