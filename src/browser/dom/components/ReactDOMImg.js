@@ -18,6 +18,7 @@
 
 "use strict";
 
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactEventEmitter = require('ReactEventEmitter');
@@ -35,6 +36,8 @@ var img = ReactDOM.img;
 var ReactDOMImg = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMImg',
   tagName: 'IMG',
+
+  mixins: [ReactBrowserComponentMixin],
 
   render: function() {
     return img(this.props);

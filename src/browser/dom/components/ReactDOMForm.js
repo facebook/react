@@ -18,6 +18,7 @@
 
 "use strict";
 
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactEventEmitter = require('ReactEventEmitter');
@@ -34,6 +35,8 @@ var form = ReactDOM.form;
  */
 var ReactDOMForm = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMForm',
+
+  mixins: [ReactBrowserComponentMixin],
 
   render: function() {
     // TODO: Instead of using `ReactDOM` directly, we should use JSX. However,

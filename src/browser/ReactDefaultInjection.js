@@ -30,6 +30,9 @@ var CompositionEventPlugin = require('CompositionEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
+var ReactComponentBrowserEnvironment =
+  require('ReactComponentBrowserEnvironment');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
@@ -89,6 +92,11 @@ function inject() {
     body: createFullPageComponent(ReactDOM.body)
   });
 
+
+  // This needs to happen after createFullPageComponent() otherwise the mixin
+  // gets double injected.
+  ReactInjection.CompositeComponent.injectMixin(ReactBrowserComponentMixin);
+
   ReactInjection.DOMProperty.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
 
   ReactInjection.Updates.injectBatchingStrategy(
@@ -100,6 +108,8 @@ function inject() {
       ClientReactRootIndex.createReactRootIndex :
       ServerReactRootIndex.createReactRootIndex
   );
+
+  ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';

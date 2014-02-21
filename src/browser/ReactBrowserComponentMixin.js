@@ -13,14 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactComponentEnvironment
+ * @providesModule ReactBrowserComponentMixin
  */
 
 "use strict";
 
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
+var ReactMount = require('ReactMount');
 
-var ReactComponentEnvironment = ReactComponentBrowserEnvironment;
+var invariant = require('invariant');
 
-module.exports = ReactComponentEnvironment;
+var ReactBrowserComponentMixin = {
+  /**
+   * Returns the DOM node rendered by this component.
+   *
+   * @return {DOMElement} The root node of this component.
+   * @final
+   * @protected
+   */
+  getDOMNode: function() {
+    invariant(
+      this.isMounted(),
+      'getDOMNode(): A component must be mounted to have a DOM node.'
+    );
+    return ReactMount.getNode(this._rootNodeID);
+  }
+};
+
+module.exports = ReactBrowserComponentMixin;

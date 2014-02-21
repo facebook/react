@@ -18,7 +18,6 @@
 
 "use strict";
 
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactOwner = require('ReactOwner');
 var ReactUpdates = require('ReactUpdates');
@@ -52,6 +51,28 @@ var ownerHasExplicitKeyWarning = {};
 var ownerHasPropertyWarning = {};
 
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
+
+var injected = false;
+
+/**
+ * Optionally injectable environment dependent cleanup hook. (server vs.
+ * browser etc). Example: A browser system caches DOM nodes based on component
+ * ID and must remove that cache entry when this instance is unmounted.
+ *
+ * @private
+ */
+var unmountIDFromEnvironment = null;
+
+/**
+ * The "image" of a component tree, is the platform specific (typically
+ * serialized) data that represents a tree of lower level UI building blocks.
+ * On the web, this "image" is HTML markup which describes a construction of
+ * low level `div` and `span` nodes. Other platforms may have different
+ * encoding of this "image". This must be injected.
+ *
+ * @private
+ */
+var mountImageIntoNode = null;
 
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
@@ -177,6 +198,23 @@ function validateChildKeys(component) {
  */
 var ReactComponent = {
 
+  injection: {
+    injectEnvironment: function(ReactComponentEnvironment) {
+      invariant(
+        !injected,
+        'ReactComponent: injectEnvironment() can only be called once.'
+      );
+      mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
+      unmountIDFromEnvironment =
+        ReactComponentEnvironment.unmountIDFromEnvironment;
+      ReactComponent.BackendIDOperations =
+        ReactComponentEnvironment.BackendIDOperations;
+      ReactComponent.ReactReconcileTransaction =
+        ReactComponentEnvironment.ReactReconcileTransaction;
+      injected = true;
+    }
+  },
+
   /**
    * @param {?object} object
    * @return {boolean} True if `object` is a valid component.
@@ -209,27 +247,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  BackendIDOperations: ReactComponentEnvironment.BackendIDOperations,
-
-  /**
-   * Optionally injectable environment dependent cleanup hook. (server vs.
-   * browser etc). Example: A browser system caches DOM nodes based on component
-   * ID and must remove that cache entry when this instance is unmounted.
-   *
-   * @private
-   */
-  unmountIDFromEnvironment: ReactComponentEnvironment.unmountIDFromEnvironment,
-
-  /**
-   * The "image" of a component tree, is the platform specific (typically
-   * serialized) data that represents a tree of lower level UI building blocks.
-   * On the web, this "image" is HTML markup which describes a construction of
-   * low level `div` and `span` nodes. Other platforms may have different
-   * encoding of this "image". This must be injected.
-   *
-   * @private
-   */
-  mountImageIntoNode: ReactComponentEnvironment.mountImageIntoNode,
+  BackendIDOperations: null,
 
   /**
    * React references `ReactReconcileTransaction` using this property in order
@@ -237,8 +255,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  ReactReconcileTransaction:
-    ReactComponentEnvironment.ReactReconcileTransaction,
+  ReactReconcileTransaction: null,
 
   /**
    * Base functionality for every ReactComponent constructor. Mixed into the
@@ -246,7 +263,7 @@ var ReactComponent = {
    *
    * @lends {ReactComponent.prototype}
    */
-  Mixin: merge(ReactComponentEnvironment.Mixin, {
+  Mixin: {
 
     /**
      * Checks whether or not this component is mounted.
@@ -396,7 +413,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, this._owner);
       }
-      ReactComponent.unmountIDFromEnvironment(this._rootNodeID);
+      unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -513,7 +530,7 @@ var ReactComponent = {
         transaction,
         shouldReuseMarkup) {
       var markup = this.mountComponent(rootID, transaction, 0);
-      ReactComponent.mountImageIntoNode(markup, container, shouldReuseMarkup);
+      mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 
     /**
@@ -543,7 +560,7 @@ var ReactComponent = {
       }
       return owner.refs[ref];
     }
-  })
+  }
 };
 
 module.exports = ReactComponent;

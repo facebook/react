@@ -20,6 +20,7 @@
 
 var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -103,7 +104,7 @@ function updateOptions(component, propValue) {
 var ReactDOMSelect = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMSelect',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin],
+  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   propTypes: {
     defaultValue: selectValueType,

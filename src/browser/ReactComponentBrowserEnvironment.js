@@ -39,26 +39,6 @@ var DOC_NODE_TYPE = 9;
  * the browser context.
  */
 var ReactComponentBrowserEnvironment = {
-  /**
-   * Mixed into every component instance.
-   */
-  Mixin: {
-    /**
-     * Returns the DOM node rendered by this component.
-     *
-     * @return {DOMElement} The root node of this component.
-     * @final
-     * @protected
-     */
-    getDOMNode: function() {
-      invariant(
-        this.isMounted(),
-        'getDOMNode(): A component must be mounted to have a DOM node.'
-      );
-      return ReactMount.getNode(this._rootNodeID);
-    }
-  },
-
   ReactReconcileTransaction: ReactReconcileTransaction,
 
   BackendIDOperations: ReactDOMIDOperations,

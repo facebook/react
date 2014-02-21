@@ -19,6 +19,7 @@
 "use strict";
 
 var AutoFocusMixin = require('AutoFocusMixin');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -47,7 +48,7 @@ var mouseListenerNames = keyMirror({
 var ReactDOMButton = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMButton',
 
-  mixins: [AutoFocusMixin],
+  mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
 
   render: function() {
     var props = {};

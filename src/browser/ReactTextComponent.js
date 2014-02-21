@@ -20,6 +20,7 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -45,6 +46,7 @@ var ReactTextComponent = function(initialText) {
 };
 
 mixInto(ReactTextComponent, ReactComponent.Mixin);
+mixInto(ReactTextComponent, ReactBrowserComponentMixin);
 mixInto(ReactTextComponent, {
 
   /**

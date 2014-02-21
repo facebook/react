@@ -22,6 +22,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
@@ -399,5 +400,6 @@ ReactDOMComponent.Mixin = {
 mixInto(ReactDOMComponent, ReactComponent.Mixin);
 mixInto(ReactDOMComponent, ReactDOMComponent.Mixin);
 mixInto(ReactDOMComponent, ReactMultiChild.Mixin);
+mixInto(ReactDOMComponent, ReactBrowserComponentMixin);
 
 module.exports = ReactDOMComponent;

@@ -61,6 +61,9 @@ var SpecPolicy = keyMirror({
   DEFINE_MANY_MERGED: null
 });
 
+
+var injectedMixins = [];
+
 /**
  * Composite components are higher-level components that compose other composite
  * or native components.
@@ -1405,6 +1408,10 @@ var ReactCompositeComponent = {
     Constructor.ConvenienceConstructor = ConvenienceConstructor;
     ConvenienceConstructor.originalSpec = spec;
 
+    injectedMixins.forEach(
+      mixSpecIntoComponent.bind(null, ConvenienceConstructor)
+    );
+
     mixSpecIntoComponent(ConvenienceConstructor, spec);
 
     invariant(
@@ -1445,7 +1452,13 @@ var ReactCompositeComponent = {
     return ConvenienceConstructor;
   },
 
-  isValidClass: isValidClass
+  isValidClass: isValidClass,
+
+  injection: {
+    injectMixin: function(mixin) {
+      injectedMixins.push(mixin);
+    }
+  }
 };
 
 module.exports = ReactCompositeComponent;

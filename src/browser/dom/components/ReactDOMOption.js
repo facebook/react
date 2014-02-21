@@ -18,6 +18,7 @@
 
 "use strict";
 
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
@@ -29,6 +30,8 @@ var option = ReactDOM.option;
  */
 var ReactDOMOption = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMOption',
+
+  mixins: [ReactBrowserComponentMixin],
 
   componentWillMount: function() {
     // TODO (yungsters): Remove support for `selected` in <option>.

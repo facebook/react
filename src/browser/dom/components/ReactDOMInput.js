@@ -21,6 +21,7 @@
 var AutoFocusMixin = require('AutoFocusMixin');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
@@ -52,7 +53,7 @@ var instancesByReactID = {};
 var ReactDOMInput = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMInput',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin],
+  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {
     var defaultValue = this.props.defaultValue;
