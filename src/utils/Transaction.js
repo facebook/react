@@ -159,8 +159,6 @@ var Mixin = {
       ret = method.call(scope, a, b, c, d, e, f);
       errorThrown = false;
     } finally {
-      var memberEnd = Date.now();
-      this.methodInvocationTime += (memberEnd - memberStart);
       try {
         if (errorThrown) {
           // If `method` throws, prefer to show that stack trace over any thrown
@@ -175,6 +173,8 @@ var Mixin = {
           this.closeAll(0);
         }
       } finally {
+        var memberEnd = Date.now();
+        this.methodInvocationTime = (memberEnd - memberStart);
         this._isInTransaction = false;
       }
     }
