@@ -36,7 +36,7 @@ If you want your project on this list, or think one of these projects should be 
   * **[director](https://github.com/flatiron/director)** (for an example see [TodoMVC](https://github.com/tastejs/todomvc/blob/gh-pages/architecture-examples/react/js/app.jsx#L29))
   * **[Backbone](http://backbonejs.org/)** (for an example see [github-issues-viewer](https://github.com/jaredly/github-issues-viewer))
   * **[react-router](https://github.com/jaredly/react-router)** (example coming soon)
-  * **[react-router-component](https://github.com/andreypopp/react-router-component)**
+  * **[react-router-component](http://andreypopp.viewdocs.io/react-router-component)**
 
 ### Model management
 
@@ -46,7 +46,7 @@ If you want your project on this list, or think one of these projects should be 
 
 ### Data fetching
 
-  * **[react-async](https://github.com/andreypopp/react-async)** Adds a `getInitialStateAsync(cb)` method suitable for data fetching on both the client and the server.
+  * **[react-async](http://andreypopp.viewdocs.io/react-async)** Adds a `getInitialStateAsync(cb)` method suitable for data fetching on both the client and the server.
   * **[superagent](http://visionmedia.github.io/superagent/)** A lightweight "isomorphic" library for AJAX requests.
 
 ### UI components
