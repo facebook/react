@@ -49,6 +49,8 @@
       title: Test Utilities
     - id: clone-with-props
       title: Cloning Components
+    - id: update
+      title: Immutability Helpers
   - id: examples
     title: Examples
 - title: Reference
