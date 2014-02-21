@@ -487,8 +487,10 @@
 <ul>
 <li><code>console.*</code></li>
 </ul>
+
+<p>When using HTML5 elements in IE8 including <code>&lt;section&gt;</code>, <code>&lt;article&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;header&gt;</code>, and <code>&lt;footer&gt;</code>, it&#39;s also necessary to include <a href="https://github.com/aFarkas/html5shiv">html5shiv</a> or a similar script.</p>
 <h3><a class="anchor" name="cross-browser-issues"></a>Cross-browser Issues <a class="hash-link" href="#cross-browser-issues">#</a></h3>
-<p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround.</p>
+<p>Although React is pretty good at abstracting browser differences, some browsers are limited or present quirky behaviors that we couldn&#39;t find a workaround for.</p>
 <h4><a class="anchor" name="onscroll-event-on-ie8"></a>onScroll event on IE8 <a class="hash-link" href="#onscroll-event-on-ie8">#</a></h4>
 <p>On IE8 the <code>onScroll</code> event doesn&#39;t bubble and IE8 doesn&#39;t have an API to define handlers to the capturing phase of an event, meaning there is no way for React to listen to these events.
 Currently a handler to this event is ignored on IE8.</p>

@@ -379,7 +379,7 @@
   <div class="inner-content">
     <h1>Tutorial</h1>
     <div class="subHeader"></div>
-    <p>We&#39;ll be building a simple, but realistic comments box that you can drop into a blog, similar to Disqus, LiveFyre or Facebook comments.</p>
+    <p>We&#39;ll be building a simple, but realistic comments box that you can drop into a blog, a basic version of the realtime comments offered by Disqus, LiveFyre or Facebook comments.</p>
 
 <p>We&#39;ll provide:</p>
 
@@ -707,7 +707,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Here, <code>componentWillMount</code> is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to <code>this.setState()</code>. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is trivial to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.</p>
+<p>Here, <code>componentWillMount</code> is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to <code>this.setState()</code>. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial14.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
