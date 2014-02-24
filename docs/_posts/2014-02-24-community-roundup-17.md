@@ -16,7 +16,7 @@ Large parts of Facebook's web frontend are already powered by React. The recentl
 Sberbank, Russia's largest bank, recently switched large parts of their site to use React, as detailed in [this post by Vyacheslav Slinko](https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg).
 
 ### Relato
-[Relato](http://bripkens.github.io/relato/) by [Ben Ripkens](https://github.com/bripkens) shows Open Source Statistics based on NPM data. It features a filterable and sortable table built in React. Check it out &ndash; it's super fast!
+[Relato](http://bripkens.github.io/relato/) by [Ben Ripkens](https://github.com/bripkens) shows Open Source Statistics based on npm data. It features a filterable and sortable table built in React. Check it out &ndash; it's super fast!
 
 ### Makona Editor
 
