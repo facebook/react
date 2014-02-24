@@ -35,6 +35,7 @@ var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
+var SHADOW_ROOT_NODE_TYPE = 11;
 
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
@@ -270,7 +271,8 @@ var ReactMount = {
     invariant(
       container && (
         container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
+        container.nodeType === DOC_NODE_TYPE ||
+        container.nodeType === SHADOW_ROOT_NODE_TYPE
       ),
       '_registerComponent(...): Target container is not a DOM element.'
     );

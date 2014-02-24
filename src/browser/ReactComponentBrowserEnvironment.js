@@ -32,6 +32,7 @@ var invariant = require('invariant');
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
+var SHADOW_ROOT_NODE_TYPE = 11;
 
 
 /**
@@ -67,7 +68,8 @@ var ReactComponentBrowserEnvironment = {
       invariant(
         container && (
           container.nodeType === ELEMENT_NODE_TYPE ||
-            container.nodeType === DOC_NODE_TYPE
+            container.nodeType === DOC_NODE_TYPE ||
+            container.nodeType === SHADOW_ROOT_NODE_TYPE
         ),
         'mountComponentIntoNode(...): Target container is not valid.'
       );
