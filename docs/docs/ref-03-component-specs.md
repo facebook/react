@@ -127,7 +127,7 @@ If you want to integrate with other JavaScript frameworks, set timers using `set
 
 > Note:
 >
-> Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
+> Prior to v0.9, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Updating: componentWillReceiveProps
@@ -204,7 +204,7 @@ Use this as an opportunity to operate on the DOM when the component has been upd
 
 > Note:
 >
-> Prior to v0.6, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
+> Prior to v0.9, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Unmounting: componentWillUnmount
