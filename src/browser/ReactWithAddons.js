@@ -25,11 +25,14 @@
 
 "use strict";
 
+var AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+var ReactInjection = require('ReactInjection');
 var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+var ResponderEventPlugin = require('ResponderEventPlugin');
+var TapEventPlugin = require('TapEventPlugin');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
@@ -40,7 +43,26 @@ React.addons = {
   TransitionGroup: ReactTransitionGroup,
 
   classSet: cx,
-  cloneWithProps: cloneWithProps
+  cloneWithProps: cloneWithProps,
+
+  injectTapEventPlugin: function() {
+    ReactInjection.EventPluginHub.injectEventPluginsByName({
+      TapEventPlugin: TapEventPlugin
+    });
+  },
+  injectResponderPlugin: function() {
+    ReactInjection.EventPluginHub.injectEventPluginsByName({
+      ResponderEventPlugin: ResponderEventPlugin
+    });
+  },
+  injectAnalyticsEventPlugin: function(cb, interval) {
+    ReactInjection.EventPluginHub.injectEventPluginsByName({
+      AnalyticsEventPlugin: AnalyticsEventPluginFactory.createAnalyticsPlugin(
+        cb,
+        interval
+      )
+    });
+  }
 };
 
 if (__DEV__) {
