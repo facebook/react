@@ -7,6 +7,59 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #17</title>
+				<description>&lt;p&gt;It&amp;#39;s exciting to see the number of real-world React applications and components skyrocket over the pasts months! This community round-up features a few examples of inspiring React applications and components.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-the-real-world&quot;&gt;&lt;/a&gt;React in the Real World &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-the-real-world&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;facebook-lookback-video-editor&quot;&gt;&lt;/a&gt;Facebook Lookback video editor &lt;a class=&quot;hash-link&quot; href=&quot;#facebook-lookback-video-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Large parts of Facebook&amp;#39;s web frontend are already powered by React. The recently released Facebook &lt;a href=&quot;https://www.facebook.com/lookback/edit/&quot;&gt;Lookback video and its corresponding editor&lt;/a&gt; are great examples of a complex, real-world React app.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;russias-largest-bank-is-now-powered-by-react&quot;&gt;&lt;/a&gt;Russia&amp;#39;s largest bank is now powered by React &lt;a class=&quot;hash-link&quot; href=&quot;#russias-largest-bank-is-now-powered-by-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Sberbank, Russia&amp;#39;s largest bank, recently switched large parts of their site to use React, as detailed in &lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg&quot;&gt;this post by Vyacheslav Slinko&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;relato&quot;&gt;&lt;/a&gt;Relato &lt;a class=&quot;hash-link&quot; href=&quot;#relato&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://bripkens.github.io/relato/&quot;&gt;Relato&lt;/a&gt; by &lt;a href=&quot;https://github.com/bripkens&quot;&gt;Ben Ripkens&lt;/a&gt; shows Open Source Statistics based on npm data. It features a filterable and sortable table built in React. Check it out &amp;ndash; it&amp;#39;s super fast!&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;makona-editor&quot;&gt;&lt;/a&gt;Makona Editor &lt;a class=&quot;hash-link&quot; href=&quot;#makona-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;John Lynch (&lt;a href=&quot;https://twitter.com/johnrlynch&quot;&gt;@johnrlynch&lt;/a&gt;) created Makona, a block-style document editor for the web. Blocks of different content types comprise documents, authored using plain markup. At the switch of a toggle, block contents are then rendered on the page. While not quite a WYSIWYG editor, Makona uses plain textareas for input. This makes it compatible with a wider range of platforms than traditional rich text editors.
+&lt;figure&gt;&lt;a href=&quot;http://johnthethird.github.io/makona-editor/&quot;&gt;&lt;img src=&quot;/react/img/blog/makona-editor.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;create-chrome-extensions-using-react&quot;&gt;&lt;/a&gt;Create Chrome extensions using React &lt;a class=&quot;hash-link&quot; href=&quot;#create-chrome-extensions-using-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;React is in no way limited to just web pages. Brandon Tilley (&lt;a href=&quot;https://twitter.com/BinaryMuse&quot;&gt;@BinaryMuse&lt;/a&gt;) just released a detailed walk-through of &lt;a href=&quot;http://brandontilley.com/2014/02/24/creating-chrome-extensions-with-react.html&quot;&gt;how he built his Chrome extension &amp;quot;Fast Tab Switcher&amp;quot; using React&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;twitter-streaming-client&quot;&gt;&lt;/a&gt;Twitter Streaming Client &lt;a class=&quot;hash-link&quot; href=&quot;#twitter-streaming-client&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Javier Aguirre (&lt;a href=&quot;https://twitter.com/javaguirre&quot;&gt;@javaguirre&lt;/a&gt;) put together a simple &lt;a href=&quot;http://javaguirre.net/2014/02/11/twitter-streaming-api-with-node-socket-io-and-reactjs/&quot;&gt;twitter streaming client using node, socket.io and React&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;sproutsheet&quot;&gt;&lt;/a&gt;Sproutsheet &lt;a class=&quot;hash-link&quot; href=&quot;#sproutsheet&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://sproutsheet.com/&quot;&gt;Sproutsheet&lt;/a&gt; is a gardening calendar. You can use it to track certain events that happen in the life of your plants. It&amp;#39;s currently in beta and supports localStorage, and data/image import and export.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;instant-domain-search&quot;&gt;&lt;/a&gt;Instant Domain Search &lt;a class=&quot;hash-link&quot; href=&quot;#instant-domain-search&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://instantdomainsearch.com/&quot;&gt;Instant Domain Search&lt;/a&gt; also uses React. It sure is instant!&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;svg-based-graphical-node-editor&quot;&gt;&lt;/a&gt;SVG-based graphical node editor &lt;a class=&quot;hash-link&quot; href=&quot;#svg-based-graphical-node-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://noflojs.org/&quot;&gt;NoFlo&lt;/a&gt; and &lt;a href=&quot;http://meemoo.org/&quot;&gt;Meemoo&lt;/a&gt; developer &lt;a href=&quot;http://www.forresto.com/&quot;&gt;Forresto Oliphant&lt;/a&gt; built an awesome SVG-based &lt;a href=&quot;http://forresto.github.io/prototyping/react/&quot;&gt;node editor&lt;/a&gt; in React.
+ &lt;figure&gt;&lt;a href=&quot;http://forresto.github.io/prototyping/react/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-svg-fbp.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;ultimate-tic-tac-toe-game-in-react&quot;&gt;&lt;/a&gt;Ultimate Tic-Tac-Toe Game in React &lt;a class=&quot;hash-link&quot; href=&quot;#ultimate-tic-tac-toe-game-in-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Rafał Cieślak (&lt;a href=&quot;https://twitter.com/Ravicious&quot;&gt;@Ravicious&lt;/a&gt;) wrote a &lt;a href=&quot;http://ravicious.github.io/ultimate-ttt/&quot;&gt;React version&lt;/a&gt; of &lt;a href=&quot;http://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/&quot;&gt;Ultimate Tic Tac Toe&lt;/a&gt;. Find the source &lt;a href=&quot;https://github.com/ravicious/ultimate-ttt&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactjs-gallery&quot;&gt;&lt;/a&gt;ReactJS Gallery &lt;a class=&quot;hash-link&quot; href=&quot;#reactjs-gallery&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/lele85&quot;&gt;Emanuele Rampichini&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/lele85/ReactGallery&quot;&gt;ReactJS Gallery&lt;/a&gt; is a cool demo app that shows fullscreen images from a folder on the server. If the folder content changes, the gallery app updates via websockets.&lt;/p&gt;
+
+&lt;p&gt;Emanuele shared this awesome demo video with us:&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/jYcpaemt90M&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-components&quot;&gt;&lt;/a&gt;React Components &lt;a class=&quot;hash-link&quot; href=&quot;#react-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;table-sorter&quot;&gt;&lt;/a&gt;Table Sorter &lt;a class=&quot;hash-link&quot; href=&quot;#table-sorter&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://bgerm.github.io/react-table-sorter-demo/&quot;&gt;Table Sorter&lt;/a&gt; by &lt;a href=&quot;https://github.com/bgerm&quot;&gt;bgerm&lt;/a&gt; [&lt;a href=&quot;https://github.com/bgerm/react-table-sorter-demo&quot;&gt;source&lt;/a&gt;] is another helpful React component.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;static-search&quot;&gt;&lt;/a&gt;Static-search &lt;a class=&quot;hash-link&quot; href=&quot;#static-search&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Dmitry Chestnykh &lt;a href=&quot;https://twitter.com/dchest&quot;&gt;@dchest&lt;/a&gt; wrote a &lt;a href=&quot;https://github.com/dchest/static-search&quot;&gt;static search indexer&lt;/a&gt; in Go, along with a &lt;a href=&quot;http://www.codingrobots.com/search/&quot;&gt;React-based web front-end&lt;/a&gt; that consumes search result via JSON.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;lorem-ipsum-component&quot;&gt;&lt;/a&gt;Lorem Ipsum component &lt;a class=&quot;hash-link&quot; href=&quot;#lorem-ipsum-component&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/martinandert&quot;&gt;Martin Andert&lt;/a&gt; created &lt;a href=&quot;https://github.com/martinandert/react-lorem-component&quot;&gt;react-lorem-component&lt;/a&gt;, a simple component for all your placeholding needs.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;input-with-placeholder-shim&quot;&gt;&lt;/a&gt;Input with placeholder shim &lt;a class=&quot;hash-link&quot; href=&quot;#input-with-placeholder-shim&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/enigma-io/react-input-placeholder&quot;&gt;react-input=placeholder&lt;/a&gt; by &lt;a href=&quot;https://github.com/enigma-io&quot;&gt;enigma-io&lt;/a&gt; is a small wrapper around React.DOM.input that shims in placeholder functionality for browsers that don&amp;#39;t natively support it.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;dicontainer&quot;&gt;&lt;/a&gt;diContainer &lt;a class=&quot;hash-link&quot; href=&quot;#dicontainer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/SpektrumFM/dicontainer&quot;&gt;dicontainer&lt;/a&gt; provides a dependency container that lets you inject Angular-style providers and services as simple React.js Mixins.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-server-rendering&quot;&gt;&lt;/a&gt;React server rendering &lt;a class=&quot;hash-link&quot; href=&quot;#react-server-rendering&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ever wonder how to pre-render React components on the server? &lt;a href=&quot;https://github.com/mhart/react-server-example&quot;&gt;react-server-example&lt;/a&gt; by Michael Hart (&lt;a href=&quot;http://twitter.com/hichaelmart&quot;&gt;@hichaelmart&lt;/a&gt;) walks through the necessary steps.&lt;/p&gt;
+
+&lt;p&gt;Similarly, Alan deLevie (&lt;a href=&quot;https://twitter.com/adelevie&quot;&gt;@adelevie&lt;/a&gt;) created &lt;a href=&quot;https://github.com/adelevie/react-client-server-starter&quot;&gt;react-client-server-starter&lt;/a&gt;, another detailed walk-through of how to server-render your app.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Recent changes: web ui is being upgraded to [#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash), HEAD~4 at [https://camlistore.googlesource.com/camlistore/](https://camlistore.googlesource.com/camlistore/)&lt;/p&gt;&amp;mdash; Camlistore (@Camlistore) &lt;a href=&quot;https://twitter.com/Camlistore/status/423925795820539904&quot;&gt;January 16, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+</description>
+				<pubDate>2014-02-24T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/02/24/community-roundup-17.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/24/community-roundup-17.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.9</title>
 				<description>&lt;p&gt;I&amp;#39;m excited to announce that today we&amp;#39;re releasing React v0.9, which incorporates many bug fixes and several new features since the last release. This release contains almost four months of work, including over 800 commits from over 70 committers!&lt;/p&gt;
 
@@ -760,25 +813,6 @@ componentDidUpdate: function() {
 				<pubDate>2013-12-19T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.5.2, v0.4.2</title>
-				<description>&lt;p&gt;Today we&amp;#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a &lt;code&gt;key&lt;/code&gt;. Typically &amp;quot;safe&amp;quot; data is used for a &lt;code&gt;key&lt;/code&gt;, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.&lt;/p&gt;
-
-&lt;p&gt;This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.&lt;/p&gt;
-
-&lt;p&gt;Updated versions are available for immediate download via npm, bower, and on our &lt;a href=&quot;http://facebook.github.io/react/downloads.html&quot;&gt;download page&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;We take security very seriously at Facebook. For most of our products, users don&amp;#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.&lt;/p&gt;
-
-&lt;p&gt;While we&amp;#39;ve encouraged responsible disclosure as part of &lt;a href=&quot;https://www.facebook.com/whitehat/&quot;&gt;Facebook&amp;#39;s whitehat bounty program&lt;/a&gt; since we launched, we don&amp;#39;t have a good process for notifying our users. Hopefully we don&amp;#39;t need to use it, but moving forward we&amp;#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has &lt;a href=&quot;http://emberjs.com/security/&quot;&gt;an excellent policy&lt;/a&gt; which we may use as our model.&lt;/p&gt;
-
-&lt;p&gt;You can learn more about the vulnerability discussed here: &lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU&quot;&gt;CVE-2013-7035&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>2013-12-18T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html</guid>
 			</item>
 		
 	</channel>
