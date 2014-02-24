@@ -5,7 +5,7 @@ author: Jonas Gebhardt
 ---
 
 
-It's exciting to see the number of real-world React applications and components skyrocket over the pasts months! This community round-up features a few examples of inspiring React applications and components.
+It's exciting to see the number of real-world React applications and components skyrocket over the past months! This community round-up features a few examples of inspiring React applications and components.
 
 ## React in the Real World
 
