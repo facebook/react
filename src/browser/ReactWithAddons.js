@@ -33,6 +33,7 @@ var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
+var update = require('update');
 
 React.addons = {
   LinkedStateMixin: LinkedStateMixin,
@@ -40,7 +41,8 @@ React.addons = {
   TransitionGroup: ReactTransitionGroup,
 
   classSet: cx,
-  cloneWithProps: cloneWithProps
+  cloneWithProps: cloneWithProps,
+  update: update
 };
 
 if (__DEV__) {
