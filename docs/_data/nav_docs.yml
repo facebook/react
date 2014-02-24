@@ -8,8 +8,8 @@
     title: Videos
   - id: complementary-tools
     title: Complementary Tools
-  - id: example-apps
-    title: Example Apps
+  - id: examples
+    title: Examples
 - title: Guides
   items:
   - id: why-react
@@ -51,8 +51,6 @@
       title: Cloning Components
     - id: update
       title: Immutability Helpers
-  - id: examples
-    title: Examples
 - title: Reference
   items:
   - id: top-level-api
