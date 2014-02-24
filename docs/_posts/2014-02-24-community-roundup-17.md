@@ -4,15 +4,16 @@ layout: post
 author: Jonas Gebhardt
 ---
 
-## React in the Real World
 
-It's exciting to see the number of real-world React applications and components skyrocket in the pasts months! This community round-up features a few examples of inspiring React applications and components.
+It's exciting to see the number of real-world React applications and components skyrocket over the pasts months! This community round-up features a few examples of inspiring React applications and components.
+
+## React in the Real World
 
 ### Facebook Lookback video editor
 Large parts of Facebook's web frontend are already powered by React. The recently released Facebook [Lookback video and its corresponding editor](https://www.facebook.com/lookback/edit/) are great examples of a complex, real-world React app.
 
 ### Russia's largest bank is now powered by React
-Sberbank, Russia's largest bank, recently switched their entire website to use React, as detailed in [this post by Vyacheslav Slinko](https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg).
+Sberbank, Russia's largest bank, recently switched large parts of their site to use React, as detailed in [this post by Vyacheslav Slinko](https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg).
 
 ### Relato
 [Relato](http://bripkens.github.io/relato/) by [Ben Ripkens](https://github.com/bripkens) shows Open Source Statistics based on NPM data. It features a filterable and sortable table built in React. Check it out &ndash; it's super fast!
