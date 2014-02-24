@@ -18,17 +18,16 @@
 
 "use strict";
 
+var DOMNodeTypes = require('DOMNodeTypes');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactMount = require('ReactMount');
 
 var listenTo = ReactEventEmitter.listenTo;
 
-var ELEMENT_NODE_TYPE = 1;
-
 function putDOMComponentListener(id, registrationName, listener) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+    var doc = container.nodeType === DOMNodeTypes.ELEMENT ?
       container.ownerDocument :
       container;
     listenTo(registrationName, doc);

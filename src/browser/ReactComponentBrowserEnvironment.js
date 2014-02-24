@@ -20,6 +20,7 @@
 
 "use strict";
 
+var DOMNodeTypes = require('DOMNodeTypes');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMount = require('ReactMount');
@@ -28,11 +29,6 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
-
-
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var SHADOW_ROOT_NODE_TYPE = 11;
 
 
 /**
@@ -67,9 +63,9 @@ var ReactComponentBrowserEnvironment = {
     function(markup, container, shouldReuseMarkup) {
       invariant(
         container && (
-          container.nodeType === ELEMENT_NODE_TYPE ||
-            container.nodeType === DOC_NODE_TYPE ||
-            container.nodeType === SHADOW_ROOT_NODE_TYPE
+          container.nodeType === DOMNodeTypes.ELEMENT ||
+            container.nodeType === DOMNodeTypes.DOC ||
+            container.nodeType === DOMNodeTypes.SHADOW_ROOT
         ),
         'mountComponentIntoNode(...): Target container is not valid.'
       );
@@ -81,7 +77,7 @@ var ReactComponentBrowserEnvironment = {
           return;
         } else {
           invariant(
-            container.nodeType !== DOC_NODE_TYPE,
+            container.nodeType !== DOMNodeTypes.DOC,
             'You\'re trying to render a component to the document using ' +
             'server rendering but the checksum was invalid. This usually ' +
             'means you rendered a different component type or props on ' +
@@ -108,7 +104,7 @@ var ReactComponentBrowserEnvironment = {
       }
 
       invariant(
-        container.nodeType !== DOC_NODE_TYPE,
+        container.nodeType !== DOMNodeTypes.DOC,
         'You\'re trying to render a component to the document but ' +
           'you didn\'t use server rendering. We can\'t do this ' +
           'without using server rendering due to cross-browser quirks. ' +
