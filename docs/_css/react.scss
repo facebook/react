@@ -749,3 +749,19 @@ p code {
 div[data-twttr-id] iframe {
   margin: 10px auto !important;
 }
+
+/* Acknowledgements */
+
+.three-column {
+  @include clearfix;
+}
+
+.three-column > ul {
+  float: left;
+  margin-left: 30px;
+  width: 190px;
+}
+
+.three-column > ul:first-child {
+  margin-left: 20px;
+}
