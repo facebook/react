@@ -60,7 +60,7 @@ function visitReactTag(traverse, object, path, state) {
        'Namespace tags are not supported. ReactJSX is not XML.');
   }
 
-  var isFallbackTag = FALLBACK_TAGS[nameObject.name];
+  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   utils.append(
     (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
     state
