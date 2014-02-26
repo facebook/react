@@ -55,3 +55,4 @@ If you want your project on this list, or think one of these projects should be 
   * **[react-topcoat](https://github.com/plaxdan/react-topcoat)** Topcoat components built with React.
   * **[react-lorem-component](https://github.com/martinandert/react-lorem-component)** Lorem Ipsum placeholder component.
   * **[wingspan-forms](https://github.com/wingspan/wingspan-forms)** React library for dynamic forms & grids; widgets provided by KendoUI.
+  * **[react-translate-component](https://github.com/martinandert/react-translate-component)** React component for i18n.
