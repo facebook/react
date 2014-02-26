@@ -175,6 +175,7 @@ var DefaultDOMPropertyConfig = {
     gradientTransform: 'gradientTransform',
     gradientUnits: 'gradientUnits',
     htmlFor: 'for',
+    httpEquiv: 'http-equiv',
     spreadMethod: 'spreadMethod',
     stopColor: 'stop-color',
     stopOpacity: 'stop-opacity',
