@@ -47,6 +47,7 @@ var ReactMount = require('ReactMount');
 var SelectEventPlugin = require('SelectEventPlugin');
 var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
+var TapEventPlugin = require('TapEventPlugin');
 
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 
@@ -74,7 +75,8 @@ function inject() {
     ChangeEventPlugin: ChangeEventPlugin,
     CompositionEventPlugin: CompositionEventPlugin,
     MobileSafariClickEventPlugin: MobileSafariClickEventPlugin,
-    SelectEventPlugin: SelectEventPlugin
+    SelectEventPlugin: SelectEventPlugin,
+    TapEventPlugin: TapEventPlugin
   });
 
   ReactInjection.DOM.injectComponentClasses({
