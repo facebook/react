@@ -33,6 +33,10 @@ React.createClass({
     // A React component.
     optionalComponent: React.PropTypes.component,
 
+    // You can also declare that a prop is an instance of a class. This uses
+    // JS's instanceof operator.
+    optionalMessage: React.PropTypes.instanceOf(Message),
+
     // You can ensure that your prop is limited to specific values by treating
     // it as an enum.
     optionalEnum: React.PropTypes.oneOf(['News', 'Photos']),
@@ -40,7 +44,8 @@ React.createClass({
     // An object that could be one of many types
     optionalUnion: React.PropTypes.oneOfType([
       React.PropTypes.string,
-      React.PropTypes.number
+      React.PropTypes.number,
+      React.PropTypes.instanceOf(Message)
     ]),
 
     // An array of a certain type
@@ -51,10 +56,6 @@ React.createClass({
       color: React.PropTypes.string,
       fontSize: React.PropTypes.number
     }),
-
-    // You can also declare that a prop is an instance of a class. This uses
-    // JS's instanceof operator.
-    someClass: React.PropTypes.instanceOf(SomeClass),
 
     // You can chain any of the above with isRequired to make sure a warning is
     // shown if the prop isn't provided.
