@@ -400,6 +400,10 @@
     <span class="c1">// A React component.</span>
     <span class="nx">optionalComponent</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">component</span><span class="p">,</span>
 
+    <span class="c1">// You can also declare that a prop is an instance of a class. This uses</span>
+    <span class="c1">// JS&#39;s instanceof operator.</span>
+    <span class="nx">optionalMessage</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">),</span>
+
     <span class="c1">// You can ensure that your prop is limited to specific values by treating</span>
     <span class="c1">// it as an enum.</span>
     <span class="nx">optionalEnum</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span> <span class="s1">&#39;Photos&#39;</span><span class="p">]),</span>
@@ -407,7 +411,8 @@
     <span class="c1">// An object that could be one of many types</span>
     <span class="nx">optionalUnion</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOfType</span><span class="p">([</span>
       <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-      <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">,</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Message</span><span class="p">)</span>
     <span class="p">]),</span>
 
     <span class="c1">// An array of a certain type</span>
@@ -418,10 +423,6 @@
       <span class="nx">color</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
       <span class="nx">fontSize</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
     <span class="p">}),</span>
-
-    <span class="c1">// You can also declare that a prop is an instance of a class. This uses</span>
-    <span class="c1">// JS&#39;s instanceof operator.</span>
-    <span class="nx">someClass</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">SomeClass</span><span class="p">),</span>
 
     <span class="c1">// You can chain any of the above with isRequired to make sure a warning is</span>
     <span class="c1">// shown if the prop isn&#39;t provided.</span>
