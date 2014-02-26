@@ -28,7 +28,7 @@ var TestComponent = React.createClass({
     return (
       <div>
         <div ref="theInnerDiv">
-          {' '}Lets try to destroy this.{' '}
+          Lets try to destroy this.
         </div>
       </div>
     );
