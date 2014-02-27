@@ -114,6 +114,7 @@ var DefaultDOMPropertyConfig = {
     spellCheck: null,
     src: null,
     srcDoc: MUST_USE_PROPERTY,
+    srcSet: null,
     step: null,
     style: null,
     tabIndex: null,
@@ -185,7 +186,8 @@ var DefaultDOMPropertyConfig = {
     hrefLang: 'hreflang',
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
-    srcDoc: 'srcdoc'
+    srcDoc: 'srcdoc',
+    srcSet: 'srcset'
   }
 };
 
