@@ -148,7 +148,7 @@ function update(value, spec) {
   }
 
   for (var k in spec) {
-    if (!ALL_DIRECTIVES_SET[k]) {
+    if (!(ALL_DIRECTIVES_SET.hasOwnProperty(k) && ALL_DIRECTIVES_SET[k])) {
       nextValue[k] = update(value[k], spec[k]);
     }
   }
