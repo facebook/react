@@ -15,5 +15,6 @@ next: animation.html
 - [`ReactTestUtils`](test-utils.html), simple helpers for writing test cases (unminified build only).
 - [`cloneWithProps()`](clone-with-props.html), to make shallow copies of React components and change their props.
 - [`update()`](update.html), a helper function that makes dealing with immutable data in JavaScript easier.
+- [`ReactRAFBatchingStrategy`](raf-batching.html), a plugin which improves performance by batching and coalescing all updates into a single render pass for each `requestAnimationFrame()`.
 
 To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`.

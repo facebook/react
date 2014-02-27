@@ -51,6 +51,8 @@
       title: Cloning Components
     - id: update
       title: Immutability Helpers
+    - id: raf-batching
+      title: requestAnimationFrame() Batching
 - title: Reference
   items:
   - id: top-level-api
