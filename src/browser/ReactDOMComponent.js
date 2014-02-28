@@ -31,6 +31,7 @@ var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
+var joinClasses = require('joinClasses');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
@@ -42,9 +43,29 @@ var registrationNameModules = ReactEventEmitter.registrationNameModules;
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
+var CLASSNAME = keyOf({className: null});
 var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
+
+/**
+ * @param {?object} className
+ * @return {boolean}
+ */
+function assertValidClassName(className) {
+  if (className == null || typeof className === 'string') {
+    return true;
+  }
+  if (!Array.isArray(className)) {
+    return false;
+  }
+  for (var i = 0; i < className.length; i++) {
+    if (className[i] != null && typeof className[i] !== 'string') {
+      return false;
+    }
+  }
+  return true;
+}
 
 /**
  * @param {?object} props
@@ -62,6 +83,10 @@ function assertValidProps(props) {
     props.style == null || typeof props.style === 'object',
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string.'
+  );
+  invariant(
+    assertValidClassName(props.className),
+    'The `className` prop expects either a string or an array of strings'
   );
 }
 
@@ -155,6 +180,10 @@ ReactDOMComponent.Mixin = {
             propValue = props.style = merge(props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
+        } else if (propKey === CLASSNAME) {
+          if (propValue && Array.isArray(propValue)) {
+            propValue = joinClasses.apply(this, propValue);
+          }
         }
         var markup =
           DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
@@ -316,6 +345,9 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
+        if (propKey === CLASSNAME && nextProp && Array.isArray(nextProp)) {
+          nextProp = joinClasses.apply(this, nextProp);
+        }
         ReactComponent.BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
