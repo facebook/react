@@ -21,6 +21,8 @@ If you want your project on this list, or think one of these projects should be 
   * **[gulp-react](https://npmjs.org/package/gulp-react)** [GulpJS](http://gulpjs.com/) plugin.
   * **[jsx-requirejs-plugin](https://github.com/philix/jsx-requirejs-plugin)** [RequireJS](http://requirejs.org/) plugin.
   * **[react-meteor](https://github.com/benjamn/react-meteor)** [Meteor](http://www.meteor.com/) plugin.
+  * **[pyReact](https://github.com/facebook/react-python)** [Python](http://www.python.org/) bridge to JSX.
+  * **[react-rails](https://github.com/facebook/react-rails)** Ruby gem for using JSX with [Ruby on Rails](http://rubyonrails.org/).
 
 ### Full-stack starter kits
 
