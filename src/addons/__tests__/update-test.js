@@ -78,6 +78,14 @@ describe('update', function() {
     expect(update({a: 'b'}, {$set: {c: 'd'}})).toEqual({c: 'd'});
   });
 
+  it('should support apply', function() {
+    expect(update(2, {$apply: function(x) { return x * 2; }})).toEqual(4);
+    expect(update.bind(null, 2, {$apply: 123})).toThrow(
+      'Invariant Violation: update(): expected spec of $apply to be a ' +
+      'function; got 123.'
+    );
+  });
+
   it('should support deep updates', function() {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
@@ -88,8 +96,8 @@ describe('update', function() {
   it('should require a command', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
-      'that did not contain one of $push, $unshift, $splice, $set, $merge. ' +
-      'Did you forget to include {$set: ...}?'
+      'that did not contain one of $push, $unshift, $splice, $set, $merge, ' +
+      '$apply. Did you forget to include {$set: ...}?'
     );
   });
 });
