@@ -26,7 +26,7 @@ If you want your project on this list, or think one of these projects should be 
 
 ### Full-stack starter kits
 
-  * **[react-quickstart](https://github.com/andreypopp/react-quickstart)** Quick-start template for `express`, `browserify`, `react-router-component and `react-async` (**includes "isomorphic" server rendering**).
+  * **[react-quickstart](https://github.com/andreypopp/react-quickstart)** Quick-start template for `express`, `browserify`, `react-router-component` and `react-async` (**includes "isomorphic" server rendering**).
   * **[generator-react-webpack](https://github.com/newtriks/generator-react-webpack)** [Yeoman](http://yeoman.io/) generator for React and Webpack.
   * **[Genesis Skeleton](http://genesis-skeleton.com/)** Modern, opinionated, full-stack starter kit for rapid, streamlined application development (supports React).
   * **[react-starter-template](https://github.com/johnthethird/react-starter-template)** Starter template with Gulp, Webpack and Bootstrap.
