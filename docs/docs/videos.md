@@ -3,7 +3,7 @@ id: videos
 title: Videos
 layout: docs
 permalink: videos.html
-prev: tutorial.html
+prev: thinking-in-react.html
 next: complementary-tools.html
 ---
 

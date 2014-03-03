@@ -4,6 +4,10 @@
     title: Getting Started
   - id: tutorial
     title: Tutorial
+  - id: thinking-in-react
+    title: Thinking in React
+- title: Community Resources
+  items:
   - id: videos
     title: Videos
   - id: complementary-tools
