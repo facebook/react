@@ -38,8 +38,8 @@ describe('ReactDOMComponent', function() {
       transaction = new ReactReconcileTransaction();
     });
 
-    it("should handle className", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
+    it("should handle various className value types", function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div/>);
 
       stub.receiveComponent({props: { className: 'foo' }}, transaction);
       expect(stub.getDOMNode().className).toEqual('foo');
@@ -47,6 +47,26 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().className).toEqual('bar');
       stub.receiveComponent({props: { className: null }}, transaction);
       expect(stub.getDOMNode().className).toEqual('');
+      stub.receiveComponent(
+        {props: { className: ['a', null, 'b', undefined] }}, transaction
+      );
+      expect(stub.getDOMNode().className).toEqual('a b');
+    });
+
+    it('should throw on bad className value types', function() {
+      var stub = ReactTestUtils.renderIntoDocument(<div/>);
+      expect(function() {
+        stub.receiveComponent({props: { className: ['a', 1] }}, transaction);
+      }).toThrow(
+        'Invariant Violation: The `className` prop expects either a string ' +
+        'or an array of strings'
+      );
+      expect(function() {
+        stub.receiveComponent({props: { className: 1 }}, transaction);
+      }).toThrow(
+        'Invariant Violation: The `className` prop expects either a string ' +
+        'or an array of strings'
+      );
     });
 
     it("should gracefully handle various style value types", function() {
