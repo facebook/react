@@ -21,6 +21,7 @@
 var ReactComponent = require('ReactComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
@@ -1279,7 +1280,8 @@ var ReactCompositeComponentMixin = {
       ReactContext.current = this._processChildContext(this._currentContext);
       ReactCurrentOwner.current = this;
       try {
-        renderedComponent = this.render();
+        renderedComponent = ReactEmptyComponent
+          .returnSameComponentOrEmptyComponent(this.render());
       } finally {
         ReactContext.current = previousContext;
         ReactCurrentOwner.current = null;
@@ -1287,7 +1289,7 @@ var ReactCompositeComponentMixin = {
       invariant(
         ReactComponent.isValidComponent(renderedComponent),
         '%s.render(): A valid ReactComponent must be returned. You may have ' +
-          'returned null, undefined, an array, or some other invalid object.',
+          'returned an array or some other invalid object.',
         this.constructor.displayName || 'ReactCompositeComponent'
       );
       return renderedComponent;
