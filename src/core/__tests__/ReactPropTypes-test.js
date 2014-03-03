@@ -445,36 +445,23 @@ describe('Component Type', function() {
 
   var Component = React.createClass({
     propTypes: {
-      children: Props.component.isRequired
+      label: Props.component.isRequired
     },
 
     render: function() {
-      return <div>{this.props.children}</div>;
+      return <div>{this.props.label}</div>;
     }
   });
 
-  it('should be able to define a single child as children', () => {
-    var instance =
-      <Component>
-        <div />
-      </Component>;
+  it('should be able to define a single child as label', () => {
+    var instance = <Component label={<div />} />;
     ReactTestUtils.renderIntoDocument(instance);
 
     // No warnings should have been logged.
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it('should warn when passing more than one child', () => {
-    var instance =
-      <Component>
-        <div />
-        <div />
-      </Component>;
-    ReactTestUtils.renderIntoDocument(instance);
-    expect(console.warn.mock.calls.length).toBe(1);
-  });
-
-  it('should warn when passing no children and isRequired is set', () => {
+  it('should warn when passing no label and isRequired is set', () => {
     var instance = <Component />;
     ReactTestUtils.renderIntoDocument(instance);
 
