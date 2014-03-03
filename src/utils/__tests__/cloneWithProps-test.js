@@ -24,6 +24,7 @@ require('mock-modules').dontMock('cloneWithProps');
 var mocks = require('mocks');
 
 var cloneWithProps = require('cloneWithProps');
+var emptyObject = require('emptyObject');
 
 var React;
 var ReactTestUtils;
@@ -107,7 +108,7 @@ describe('cloneWithProps', function() {
       console.warn = mocks.getMockFunction();
 
       var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-      expect(component.refs).toBe(undefined);
+      expect(component.refs).toBe(emptyObject);
       expect(console.warn.mock.calls.length).toBe(1);
     } finally {
       console.warn = _warn;

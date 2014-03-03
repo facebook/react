@@ -767,6 +767,7 @@ var ReactCompositeComponentMixin = {
   construct: function(initialProps, children) {
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+    ReactOwner.Mixin.construct.apply(this, arguments);
 
     this.state = null;
     this._pendingState = null;
@@ -873,10 +874,7 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = null;
 
     ReactComponent.Mixin.unmountComponent.call(this);
-
-    if (this.refs) {
-      this.refs = null;
-    }
+    ReactOwner.Mixin.unmountComponent.call(this);
 
     // Some existing components rely on this.props even after they've been
     // destroyed (in event handlers).
