@@ -8,18 +8,18 @@ prev: complementary-tools.html
 
 ### Production Apps
 
-* **[Instagram.com](http://instagram.com/)** Is 100% built on React.
-* **[Facebook.com](http://www.facebook.com/)** 's commenting interface, ads creation flows, and page insights.
-* **[Khan Academy](http://khanacademy.org/)** Uses React for most new JS development.
-* **[Shirtstarter](https://www.shirtstarter.com/)** Is 100% built on React.
-
+* **[Instagram.com](http://instagram.com/)** is 100% built on React, both public site and internal tools.
+* **[Facebook.com](http://www.facebook.com/)**'s commenting interface, business management tools, [Lookback video editor](http://facebook.com/lookback/edit), page insights, and most, if not all, new JS development.
+* **[Khan Academy](http://khanacademy.org/)** uses React for most new JS development.
+* **[Shirtstarter](https://www.shirtstarter.com/)** is 100% built on React.
+* **[Sberbank](http://sberbank.ru/moscow/ru/person/)**, Russia's number one bank, is built with React.
+* **[The New York Times's 2014 Red Carpet Project](http://www.nytimes.com/interactive/2014/02/02/fashion/red-carpet-project.html?_r=0)** is built with React.
 
 ### Sample Code
 
 * **[React starter kit](/react/downloads.html)** Includes several examples which you can [view online in our GitHub repository](https://github.com/facebook/react/tree/master/examples/).
 * **[React one-hour email](https://github.com/petehunt/react-one-hour-email/commits/master)** Goes step-by-step from a static HTML mock to an interactive email reader, written in just one hour!
-* **[Rendr + React app template](https://github.com/petehunt/rendr-react-template/)** Demonstrates how to use React's server rendering capabilities.
-
+* **[React server rendering example](https://github.com/mhart/react-server-example)** Demonstrates how to use React's server rendering capabilities.
 
 ### Open-Source Demos
 
