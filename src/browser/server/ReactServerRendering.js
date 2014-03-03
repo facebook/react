@@ -29,7 +29,8 @@ var invariant = require('invariant');
 
 /**
  * @param {ReactComponent} component
- * @param {?object} options pass a boolean for the key `noChecksumNoID`
+ * @param {?object} options pass a boolean for the key `staticMarkup`. If true,
+ * the React ID and checksum won't be rendered. Used for rendering static pages.
  */
 function renderComponentToString(component, options) {
   invariant(
@@ -47,15 +48,15 @@ function renderComponentToString(component, options) {
 
   var transaction;
   try {
-    if (options.noChecksumNoID) {
-      transaction = ReactServerRenderingTransaction.getPooled(false);
+    if (options.staticMarkup) {
+      transaction = ReactServerRenderingTransaction.getPooled(true);
 
       return transaction.perform(function() {
         return component.mountComponent(id, transaction, 0);
       }, null);
     } else {
       var id = ReactInstanceHandles.createReactRootID();
-      transaction = ReactServerRenderingTransaction.getPooled(true);
+      transaction = ReactServerRenderingTransaction.getPooled(false);
 
       return transaction.perform(function() {
         var markup = component.mountComponent(id, transaction, 0);

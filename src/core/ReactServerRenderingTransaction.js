@@ -62,11 +62,11 @@ var TRANSACTION_WRAPPERS = [
 
 /**
  * @class ReactServerRenderingTransaction
- * @param {boolean} renderChecksumAndReactID
+ * @param {boolean} renderToStaticMarkup
  */
-function ReactServerRenderingTransaction(renderChecksumAndReactID) {
+function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
-  this.renderChecksumAndReactID = renderChecksumAndReactID;
+  this.renderToStaticMarkup = renderToStaticMarkup;
   this.reactMountReady = ReactMountReady.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }

@@ -69,7 +69,7 @@ mixInto(ReactTextComponent, {
 
     var escapedText = escapeTextForBrowser(this.props.text);
 
-    if (!transaction.renderChecksumAndReactID) {
+    if (transaction.renderToStaticMarkup) {
       // Normally we'd wrap this in a `span` for the reasons stated above, but
       // since this is a situation where React won't take over (static pages),
       // we can simply return the text as it is.

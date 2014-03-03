@@ -279,7 +279,7 @@ describe('ReactServerRendering', function() {
 
       var response = ReactServerRendering.renderComponentToString(
         <TestComponent />,
-        {noChecksumNoID: true}
+        {staticMarkup: true}
       );
 
       expect(response).toBe('<span><div>inner text</div></span>');
@@ -296,7 +296,7 @@ describe('ReactServerRendering', function() {
 
       var response = ReactServerRendering.renderComponentToString(
         <TestComponent />,
-        {noChecksumNoID: true}
+        {staticMarkup: true}
       );
 
       expect(response).toBe('<span>hello world</span>');

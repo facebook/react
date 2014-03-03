@@ -164,7 +164,9 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    if (!transaction.renderChecksumAndReactID) {
+    // For static pages, no need to put React ID and checksum. Saves lots of
+    // bytes.
+    if (transaction.renderToStaticMarkup) {
       return ret + '>';
     }
 
