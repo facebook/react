@@ -14,14 +14,6 @@ var BOWER_FILES = [
 var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
 
-var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '/**/*.*'];
-
-var STARTER_PATH = 'starter/';
-var STARTER_GLOB = [STARTER_PATH  + '/**/*.*'];
-
-var STARTER_BUILD_PATH = 'build/starter/';
-
 var JS_PATH = 'build/';
 var JS_GLOB = [JS_PATH + '/*.js'];
 
@@ -150,36 +142,9 @@ function msg() {
   });
 }
 
-function starter() {
-  // Copy over examples/ to build/starter/examples/
-  // and starter/ to build/starter/
-
-  grunt.file.expand(EXAMPLES_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      STARTER_BUILD_PATH + file
-    );
-  });
-
-  grunt.file.expand(STARTER_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      'build/' + file
-    );
-  });
-
-  grunt.file.expand(JS_GLOB).forEach(function(file) {
-    grunt.file.copy(
-      file,
-      STARTER_BUILD_PATH + file
-    );
-  });
-}
-
 module.exports = {
   setup: setup,
   bower: bower,
   docs: docs,
-  msg: msg,
-  starter: starter
+  msg: msg
 };

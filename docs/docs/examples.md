@@ -17,7 +17,7 @@ prev: complementary-tools.html
 
 ### Sample Code
 
-* **[React starter kit](/react/downloads.html)** Includes several examples which you can [view online in our GitHub repository](https://github.com/facebook/react/tree/master/examples/).
+* **[Simple examples](https://github.com/facebook/react/tree/master/examples/) from the GitHub repository.
 * **[React one-hour email](https://github.com/petehunt/react-one-hour-email/commits/master)** Goes step-by-step from a static HTML mock to an interactive email reader, written in just one hour!
 * **[React server rendering example](https://github.com/mhart/react-server-example)** Demonstrates how to use React's server rendering capabilities.
 

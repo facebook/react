@@ -31,8 +31,6 @@ module.exports = function(grunt) {
     complexity: require('./grunt/config/complexity')
   });
 
-  grunt.config.set('compress', require('./grunt/config/compress'));
-
   Object.keys(grunt.file.readJSON('package.json').devDependencies)
     .filter(function(npmTaskName) { return npmTaskName.indexOf('grunt-') === 0; })
     .filter(function(npmTaskName) { return npmTaskName != 'grunt-cli'; })
@@ -206,7 +204,6 @@ module.exports = function(grunt) {
   grunt.registerTask('release:bower', releaseTasks.bower);
   grunt.registerTask('release:docs', releaseTasks.docs);
   grunt.registerTask('release:msg', releaseTasks.msg);
-  grunt.registerTask('release:starter', releaseTasks.starter);
 
   grunt.registerTask('release', [
     'release:setup',
@@ -214,8 +211,6 @@ module.exports = function(grunt) {
     'build',
     'gem:only',
     'release:bower',
-    'release:starter',
-    'compress',
     'release:docs',
     'release:msg'
   ]);
