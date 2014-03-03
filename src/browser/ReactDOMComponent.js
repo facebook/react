@@ -20,6 +20,7 @@
 "use strict";
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
+var DOMNodeTypes = require('DOMNodeTypes');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
@@ -44,8 +45,6 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
 
-var ELEMENT_NODE_TYPE = 1;
-
 /**
  * @param {?object} props
  */
@@ -68,7 +67,7 @@ function assertValidProps(props) {
 function putListener(id, registrationName, listener, transaction) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
+    var doc = container.nodeType === DOMNodeTypes.ELEMENT ?
       container.ownerDocument :
       container;
     listenTo(registrationName, doc);

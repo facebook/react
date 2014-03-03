@@ -18,6 +18,7 @@
 
 "use strict";
 
+var DOMNodeTypes = require('DOMNodeTypes');
 var DOMProperty = require('DOMProperty');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -32,9 +33,6 @@ var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var nodeCache = {};
-
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
 
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
@@ -269,8 +267,9 @@ var ReactMount = {
   _registerComponent: function(nextComponent, container) {
     invariant(
       container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
+        container.nodeType === DOMNodeTypes.ELEMENT ||
+        container.nodeType === DOMNodeTypes.DOC ||
+        container.nodeType === DOMNodeTypes.SHADOW_ROOT
       ),
       '_registerComponent(...): Target container is not a DOM element.'
     );
@@ -444,7 +443,7 @@ var ReactMount = {
   unmountComponentFromNode: function(instance, container) {
     instance.unmountComponent();
 
-    if (container.nodeType === DOC_NODE_TYPE) {
+    if (container.nodeType === DOMNodeTypes.DOC) {
       container = container.documentElement;
     }
 

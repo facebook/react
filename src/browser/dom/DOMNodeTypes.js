@@ -13,28 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule getReactRootElementInContainer
+ * @providesModule DOMNodeTypes
+ * @typechecks static-only
  */
+
+/*jslint evil: true */
 
 "use strict";
 
-var DOMNodeTypes = require('DOMNodeTypes');
-
 /**
- * @param {DOMElement|DOMDocument} container DOM element that may contain
- *                                           a React component
- * @return {?*} DOM element that may have the reactRoot ID, or null.
+ * A collection of `nodeType` values.
+ *
+ * @type {object}
+ * @internal
  */
-function getReactRootElementInContainer(container) {
-  if (!container) {
-    return null;
-  }
+var DOMNodeTypes = {
+  ELEMENT: 1,
+  DOC: 9,
+  SHADOW_ROOT: 11
+};
 
-  if (container.nodeType === DOMNodeTypes.DOC) {
-    return container.documentElement;
-  } else {
-    return container.firstChild;
-  }
-}
-
-module.exports = getReactRootElementInContainer;
+module.exports = DOMNodeTypes;
