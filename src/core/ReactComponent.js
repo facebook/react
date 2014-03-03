@@ -104,9 +104,11 @@ function validateExplicitKey(component) {
 
   var message = 'Each child in an array should have a unique "key" prop. ' +
                 'Check the render method of ' + currentName + '.';
+
+  var childOwnerName = null;
   if (!component.isOwnedBy(ReactCurrentOwner.current)) {
     // Name of the component that originally created this child.
-    var childOwnerName =
+    childOwnerName =
       component._owner &&
       component._owner.constructor.displayName;
 
@@ -117,7 +119,10 @@ function validateExplicitKey(component) {
   }
 
   message += ' See http://fb.me/react-warning-keys for more information.';
-  monitorCodeUse('react_key_warning');
+  monitorCodeUse('react_key_warning', {
+    component: currentName,
+    componentOwner: childOwnerName
+  });
   console.warn(message);
 }
 
