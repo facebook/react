@@ -28,6 +28,8 @@ var ReactDOM = require('ReactDOM');
 var invariant = require('invariant');
 var merge = require('merge');
 
+var warning = require('warning');
+
 // Store a reference to the <textarea> `ReactDOMComponent`.
 var textarea = ReactDOM.textarea;
 
@@ -57,7 +59,8 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     var children = this.props.children;
     if (children != null) {
       if (__DEV__) {
-        console.warn(
+        warning(
+          false,
           'Use the `defaultValue` or `value` props instead of setting ' +
           'children on <textarea>.'
         );

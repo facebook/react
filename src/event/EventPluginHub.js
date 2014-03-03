@@ -26,6 +26,7 @@ var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
+var monitorCodeUse = require('monitorCodeUse');
 
 /**
  * Internal store for event listeners
@@ -168,6 +169,7 @@ var EventPluginHub = {
       // bubble.
       if (registrationName === 'onScroll' &&
           !isEventSupported('scroll', true)) {
+        monitorCodeUse('react_no_scroll_event');
         console.warn('This browser doesn\'t support the `onScroll` event');
       }
     }

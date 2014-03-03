@@ -22,6 +22,8 @@ var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
+var warning = require('warning');
+
 // Store a reference to the <option> `ReactDOMComponent`.
 var option = ReactDOM.option;
 
@@ -35,13 +37,12 @@ var ReactDOMOption = ReactCompositeComponent.createClass({
 
   componentWillMount: function() {
     // TODO (yungsters): Remove support for `selected` in <option>.
-    if (this.props.selected != null) {
-      if (__DEV__) {
-        console.warn(
-          'Use the `defaultValue` or `value` props on <select> instead of ' +
-          'setting `selected` on <option>.'
-        );
-      }
+    if (__DEV__) {
+      warning(
+        this.props.selected == null,
+        'Use the `defaultValue` or `value` props on <select> instead of ' +
+        'setting `selected` on <option>.'
+      );
     }
   },
 

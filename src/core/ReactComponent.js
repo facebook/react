@@ -25,6 +25,7 @@ var ReactUpdates = require('ReactUpdates');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
+var monitorCodeUse = require('monitorCodeUse');
 
 /**
  * Every React component is in one of these life cycles.
@@ -116,6 +117,7 @@ function validateExplicitKey(component) {
   }
 
   message += ' See http://fb.me/react-warning-keys for more information.';
+  monitorCodeUse('react_key_warning');
   console.warn(message);
 }
 
@@ -136,6 +138,7 @@ function validatePropertyKey(name) {
     }
     ownerHasPropertyWarning[currentName] = true;
 
+    monitorCodeUse('react_numeric_key_warning');
     console.warn(
       'Child objects should have non-numeric keys so ordering is preserved. ' +
       'Check the render method of ' + currentName + '. ' +

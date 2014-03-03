@@ -22,6 +22,7 @@
 var ReactPropTypes = require('ReactPropTypes');
 
 var invariant = require('invariant');
+var warning = require('warning');
 
 var hasReadOnlyValue = {
   'button': true,
@@ -84,33 +85,31 @@ var LinkedValueUtils = {
     propTypes: {
       value: function(props, propName, componentName) {
         if (__DEV__) {
-          if (props[propName] &&
-              !hasReadOnlyValue[props.type] &&
-              !props.onChange &&
-              !props.readOnly &&
-              !props.disabled) {
-            console.warn(
-              'You provided a `value` prop to a form field without an ' +
-              '`onChange` handler. This will render a read-only field. If ' +
-              'the field should be mutable use `defaultValue`. Otherwise, ' +
-              'set either `onChange` or `readOnly`.'
-            );
-          }
+          warning(
+            !props[propName] ||
+            hasReadOnlyValue[props.type] ||
+            props.onChange ||
+            props.readOnly ||
+            props.disabled,
+            'You provided a `value` prop to a form field without an ' +
+            '`onChange` handler. This will render a read-only field. If ' +
+            'the field should be mutable use `defaultValue`. Otherwise, ' +
+            'set either `onChange` or `readOnly`.'
+          );
         }
       },
       checked: function(props, propName, componentName) {
         if (__DEV__) {
-          if (props[propName] &&
-              !props.onChange &&
-              !props.readOnly &&
-              !props.disabled) {
-            console.warn(
-              'You provided a `checked` prop to a form field without an ' +
-              '`onChange` handler. This will render a read-only field. If ' +
-              'the field should be mutable use `defaultChecked`. Otherwise, ' +
-              'set either `onChange` or `readOnly`.'
-            );
-          }
+          warning(
+            !props[propName] ||
+            props.onChange ||
+            props.readOnly ||
+            props.disabled,
+            'You provided a `checked` prop to a form field without an ' +
+            '`onChange` handler. This will render a read-only field. If ' +
+            'the field should be mutable use `defaultChecked`. Otherwise, ' +
+            'set either `onChange` or `readOnly`.'
+          );
         }
       },
       onChange: ReactPropTypes.func

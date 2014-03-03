@@ -33,8 +33,10 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var monitorCodeUse = require('monitorCodeUse');
 var objMap = require('objMap');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var warning = require('warning');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -621,6 +623,7 @@ if (__DEV__) {
     var context = owner ? ' in ' + ownerName + '.' : ' at the top level.';
     var staticMethodExample = '<' + name + ' />.type.' + key + '(...)';
 
+    monitorCodeUse('react_descriptor_property_access', { component: name });
     console.warn(
       'Invalid access to component property "' + key + '" on ' + name +
       context + ' See http://fb.me/react-warning-descriptors .' +
@@ -904,12 +907,11 @@ var ReactCompositeComponentMixin = {
       'setState(...): takes an object of state variables to update.'
     );
     if (__DEV__){
-      if (partialState == null) {
-        console.warn(
-          'setState(...): You passed an undefined or null state object; ' +
-          'instead, use forceUpdate().'
-        );
-      }
+      warning(
+        partialState != null,
+        'setState(...): You passed an undefined or null state object; ' +
+        'instead, use forceUpdate().'
+      );
     }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
@@ -1332,11 +1334,13 @@ var ReactCompositeComponentMixin = {
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
         if (newThis !== component && newThis !== null) {
+          monitorCodeUse('react_bind_warning', { component: componentName });
           console.warn(
             'bind(): React component methods may only be bound to the ' +
             'component instance. See ' + componentName
           );
         } else if (!args.length) {
+          monitorCodeUse('react_bind_warning', { component: componentName });
           console.warn(
             'bind(): You are binding a component method to the component. ' +
             'React does this for you automatically in a high-performance ' +
@@ -1421,6 +1425,10 @@ var ReactCompositeComponent = {
 
     if (__DEV__) {
       if (Constructor.prototype.componentShouldUpdate) {
+        monitorCodeUse(
+          'react_component_should_update_warning',
+          { component: spec.displayName }
+        );
         console.warn(
           (spec.displayName || 'A component') + ' has a method called ' +
           'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +

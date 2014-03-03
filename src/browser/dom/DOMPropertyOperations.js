@@ -23,6 +23,7 @@ var DOMProperty = require('DOMProperty');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var memoizeStringOnly = require('memoizeStringOnly');
+var warning = require('warning');
 
 function shouldIgnoreValue(name, value) {
   return value == null ||
@@ -57,11 +58,10 @@ if (__DEV__) {
 
     // For now, only warn when we have a suggested correction. This prevents
     // logging too much when using transferPropsTo.
-    if (standardName != null) {
-      console.warn(
-        'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
-      );
-    }
+    warning(
+      standardName == null,
+      'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
+    );
 
   };
 }
