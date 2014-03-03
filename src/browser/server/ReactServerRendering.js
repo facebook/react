@@ -29,10 +29,9 @@ var invariant = require('invariant');
 
 /**
  * @param {ReactComponent} component
- * @param {?object} options pass a boolean for the key `staticMarkup`. If true,
- * the React ID and checksum won't be rendered. Used for rendering static pages.
+ * @return {string} the HTML markup
  */
-function renderComponentToString(component, options) {
+function renderComponentToString(component) {
   invariant(
     ReactComponent.isValidComponent(component),
     'renderComponentToString(): You must pass a valid ReactComponent.'
@@ -44,30 +43,45 @@ function renderComponentToString(component, options) {
     'returns the generated markup. Please remove the second parameter.'
   );
 
-  options = options || {};
+  var transaction;
+  try {
+    var id = ReactInstanceHandles.createReactRootID();
+    transaction = ReactServerRenderingTransaction.getPooled(false);
+
+    return transaction.perform(function() {
+      var markup = component.mountComponent(id, transaction, 0);
+      return ReactMarkupChecksum.addChecksumToMarkup(markup);
+    }, null);
+  } finally {
+    ReactServerRenderingTransaction.release(transaction);
+  }
+}
+
+/**
+ * @param {ReactComponent} component
+ * @return {string} the HTML markup, without the extra React ID and checksum
+* (for generating static pages)
+ */
+function renderComponentToStaticMarkup(component) {
+  invariant(
+    ReactComponent.isValidComponent(component),
+    'renderComponentToStaticMarkup(): You must pass a valid ReactComponent.'
+  );
 
   var transaction;
   try {
-    if (options.staticMarkup) {
-      transaction = ReactServerRenderingTransaction.getPooled(true);
+    var id = ReactInstanceHandles.createReactRootID();
+    transaction = ReactServerRenderingTransaction.getPooled(true);
 
-      return transaction.perform(function() {
-        return component.mountComponent(id, transaction, 0);
-      }, null);
-    } else {
-      var id = ReactInstanceHandles.createReactRootID();
-      transaction = ReactServerRenderingTransaction.getPooled(false);
-
-      return transaction.perform(function() {
-        var markup = component.mountComponent(id, transaction, 0);
-        return ReactMarkupChecksum.addChecksumToMarkup(markup);
-      }, null);
-    }
+    return transaction.perform(function() {
+      return component.mountComponent(id, transaction, 0);
+    }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);
   }
 }
 
 module.exports = {
-  renderComponentToString: renderComponentToString
+  renderComponentToString: renderComponentToString,
+  renderComponentToStaticMarkup: renderComponentToStaticMarkup
 };
