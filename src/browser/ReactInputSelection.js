@@ -21,6 +21,7 @@
 var ReactDOMSelection = require('ReactDOMSelection');
 
 var containsNode = require('containsNode');
+var focusNode = require('focusNode');
 var getActiveElement = require('getActiveElement');
 
 function isInDocument(node) {
@@ -71,7 +72,7 @@ var ReactInputSelection = {
           priorSelectionRange
         );
       }
-      priorFocusedElem.focus();
+      focusNode(priorFocusedElem);
     }
   },
 

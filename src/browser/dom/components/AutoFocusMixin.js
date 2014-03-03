@@ -19,10 +19,12 @@
 
 "use strict";
 
+var focusNode = require('focusNode');
+
 var AutoFocusMixin = {
   componentDidMount: function() {
     if (this.props.autoFocus) {
-      this.getDOMNode().focus();
+      focusNode(this.getDOMNode());
     }
   }
 };
