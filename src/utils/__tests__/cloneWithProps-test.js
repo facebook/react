@@ -24,12 +24,12 @@ require('mock-modules').dontMock('cloneWithProps');
 var mocks = require('mocks');
 
 var cloneWithProps = require('cloneWithProps');
-var emptyObject = require('emptyObject');
 
 var React;
 var ReactTestUtils;
 
 var onlyChild;
+var emptyObject;
 
 describe('cloneWithProps', function() {
 
@@ -37,6 +37,7 @@ describe('cloneWithProps', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
+    emptyObject = require('emptyObject');
   });
 
   it('should clone a DOM component with new props', function() {
