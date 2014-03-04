@@ -26,6 +26,7 @@ var ReactMount = require('ReactMount');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
+var invariant = require('invariant');
 var mixInto = require('mixInto');
 
 /**
@@ -57,7 +58,7 @@ mixInto(TopLevelCallbackBookKeeping, {
 });
 PooledClass.addPoolingTo(TopLevelCallbackBookKeeping);
 
-function topLevelCallbackImpl(bookKeeping, cb, nativeEvent) {
+function topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent) {
   var topLevelTarget = ReactMount.getFirstReactDOM(
     getEventTarget(nativeEvent)
   ) || window;
@@ -75,7 +76,8 @@ function topLevelCallbackImpl(bookKeeping, cb, nativeEvent) {
   for (var i = 0, l = bookKeeping.ancestors.length; i < l; i++) {
     topLevelTarget = bookKeeping.ancestors[i];
     var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
-    cb(
+    ReactEventListener._handleTopLevel(
+      topLevelType,
       topLevelTarget,
       topLevelTargetID,
       nativeEvent
@@ -83,14 +85,14 @@ function topLevelCallbackImpl(bookKeeping, cb, nativeEvent) {
   }
 }
 
-function topLevelCallback(cb, nativeEvent) {
+function topLevelCallback(topLevelType, nativeEvent) {
   if (!ReactEventListener._enabled) {
     return;
   }
 
   var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
   try {
-    topLevelCallbackImpl(bookKeeping, cb, nativeEvent);
+    topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent);
   } finally {
     TopLevelCallbackBookKeeping.release(bookKeeping);
   }
@@ -103,6 +105,15 @@ function scrollValueMonitor(cb) {
 
 var ReactEventListener = {
   _enabled: true,
+  _handleTopLevel: null,
+
+  setHandleTopLevel: function(handleTopLevel) {
+    invariant(
+      ReactEventListener._handleTopLevel === null,
+      'ReactEventListener was already injected!'
+    );
+    ReactEventListener._handleTopLevel = handleTopLevel;
+  },
 
   setEnabled: function(enabled) {
     ReactEventListener._enabled = !!enabled;
@@ -120,11 +131,11 @@ var ReactEventListener = {
    * @param {DOMEventTarget} element Element on which to attach listener.
    * @internal
    */
-  trapBubbledEvent: function(handlerBaseName, element, cb) {
+  trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
     EventListener.listen(
       element,
       handlerBaseName,
-      topLevelCallback.bind(null, cb)
+      topLevelCallback.bind(null, topLevelType)
     );
   },
 
@@ -136,11 +147,11 @@ var ReactEventListener = {
    * @param {DOMEventTarget} element Element on which to attach listener.
    * @internal
    */
-  trapCapturedEvent: function(handlerBaseName, element, cb) {
+  trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
     EventListener.capture(
       element,
       handlerBaseName,
-      topLevelCallback.bind(null, cb)
+      topLevelCallback.bind(null, topLevelType)
     );
   },
 

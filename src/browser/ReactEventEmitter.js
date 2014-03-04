@@ -155,6 +155,9 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
      * @param {function} TopLevelCallbackCreator
      */
     injectReactEventListener: function(ReactEventListener) {
+      ReactEventListener.setHandleTopLevel(
+        ReactEventEmitter.handleTopLevel
+      );
       ReactEventEmitter.ReactEventListener = ReactEventListener;
     }
   },
@@ -265,17 +268,17 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
     ReactEventEmitter.ReactEventListener.trapBubbledEvent(
+      topLevelType,
       handlerBaseName,
-      element,
-      ReactEventEmitter.handleTopLevel.bind(ReactEventEmitter, topLevelType)
+      element
     );
   },
 
   trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
     ReactEventEmitter.ReactEventListener.trapCapturedEvent(
+      topLevelType,
       handlerBaseName,
-      element,
-      ReactEventEmitter.handleTopLevel.bind(ReactEventEmitter, topLevelType)
+      element
     );
   },
 
