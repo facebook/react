@@ -24,7 +24,6 @@ var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
-var ReactEventListener = require('ReactEventListener');
 var ViewportMetrics = require('ViewportMetrics');
 
 var invariant = require('invariant');
@@ -147,17 +146,16 @@ function getListeningForDocument(mountAt) {
 var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
   /**
-   * React references `ReactEventTopLevelCallback` using ReactEventEmitter property in order
-   * to allow dependency injection.
+   * Injectable event backend
    */
-  TopLevelCallbackCreator: null,
+  ReactEventListener: null,
 
   injection: {
     /**
      * @param {function} TopLevelCallbackCreator
      */
-    injectTopLevelCallbackCreator: function(TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
+    injectReactEventListener: function(ReactEventListener) {
+      ReactEventEmitter.ReactEventListener = ReactEventListener;
     }
   },
 
@@ -170,10 +168,10 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
-      'ReactEventEmitter is likely a bug in the framework. Please report immediately.'
+      'This is likely a bug in the framework. Please report immediately.'
     );
-    if (ReactEventEmitter.TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
+    if (ReactEventEmitter.ReactEventListener) {
+      ReactEventEmitter.ReactEventListener.setEnabled(enabled);
     }
   },
 
@@ -182,8 +180,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   isEnabled: function() {
     return !!(
-      ReactEventEmitter.TopLevelCallbackCreator &&
-      ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
+      ReactEventEmitter.ReactEventListener &&
+      ReactEventEmitter.ReactEventListener.isEnabled()
     );
   },
 
@@ -196,7 +194,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * contained within that mount point (for example on the background) the
    * top-level listeners for `onmousemove` won't be called. However, if you
    * register the `mousemove` on the document object, then it will of course
-   * catch all `mousemove`s. ReactEventEmitter along with iOS quirks, justifies restricting
+   * catch all `mousemove`s. This along with iOS quirks, justifies restricting
    * top-level listeners to the document object only, at least for these
    * movement types of events and possibly all events.
    *
@@ -266,7 +264,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   },
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
-    ReactEventListener.trapBubbledEvent(
+    ReactEventEmitter.ReactEventListener.trapBubbledEvent(
       handlerBaseName,
       element,
       ReactEventEmitter.handleTopLevel.bind(ReactEventEmitter, topLevelType)
@@ -274,7 +272,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   },
 
   trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
-    ReactEventListener.trapCapturedEvent(
+    ReactEventEmitter.ReactEventListener.trapCapturedEvent(
       handlerBaseName,
       element,
       ReactEventEmitter.handleTopLevel.bind(ReactEventEmitter, topLevelType)
@@ -292,7 +290,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   ensureScrollValueMonitoring: function(){
     if (!isMonitoringScrollValue) {
       var refresh = ViewportMetrics.refreshScrollValues;
-      ReactEventListener.monitorScrollValue(refresh);
+      ReactEventEmitter.ReactEventListener.monitorScrollValue(refresh);
       isMonitoringScrollValue = true;
     }
   },

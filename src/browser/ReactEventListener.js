@@ -57,7 +57,7 @@ mixInto(TopLevelCallbackBookKeeping, {
 });
 PooledClass.addPoolingTo(TopLevelCallbackBookKeeping);
 
-function topLevelCallback(cb, nativeEvent) {
+function topLevelCallbackImpl(bookKeeping, cb, nativeEvent) {
   var topLevelTarget = ReactMount.getFirstReactDOM(
     getEventTarget(nativeEvent)
   ) || window;
@@ -83,12 +83,35 @@ function topLevelCallback(cb, nativeEvent) {
   }
 }
 
+function topLevelCallback(cb, nativeEvent) {
+  if (!ReactEventListener._enabled) {
+    return;
+  }
+
+  var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
+  try {
+    topLevelCallbackImpl(bookKeeping, cb, nativeEvent);
+  } finally {
+    TopLevelCallbackBookKeeping.release(bookKeeping);
+  }
+}
+
 function scrollValueMonitor(cb) {
   var scrollPosition = getUnboundedScrollPosition(window);
   cb(scrollPosition);
 }
 
 var ReactEventListener = {
+  _enabled: true,
+
+  setEnabled: function(enabled) {
+    ReactEventListener._enabled = !!enabled;
+  },
+
+  isEnabled: function() {
+    return ReactEventListener._enabled;
+  },
+
   /**
    * Traps top-level events by using event bubbling.
    *
