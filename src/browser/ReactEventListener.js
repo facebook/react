@@ -85,19 +85,6 @@ function topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent) {
   }
 }
 
-function topLevelCallback(topLevelType, nativeEvent) {
-  if (!ReactEventListener._enabled) {
-    return;
-  }
-
-  var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
-  try {
-    topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent);
-  } finally {
-    TopLevelCallbackBookKeeping.release(bookKeeping);
-  }
-}
-
 function scrollValueMonitor(cb) {
   var scrollPosition = getUnboundedScrollPosition(window);
   cb(scrollPosition);
@@ -135,7 +122,7 @@ var ReactEventListener = {
     EventListener.listen(
       element,
       handlerBaseName,
-      topLevelCallback.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType)
     );
   },
 
@@ -151,7 +138,7 @@ var ReactEventListener = {
     EventListener.capture(
       element,
       handlerBaseName,
-      topLevelCallback.bind(null, topLevelType)
+      ReactEventListener.dispatchEvent.bind(null, topLevelType)
     );
   },
 
@@ -159,6 +146,19 @@ var ReactEventListener = {
     var callback = scrollValueMonitor.bind(null, refresh);
     EventListener.listen(window, 'scroll', callback);
     EventListener.listen(window, 'resize', callback);
+  },
+
+  dispatchEvent: function(topLevelType, nativeEvent) {
+    if (!ReactEventListener._enabled) {
+      return;
+    }
+
+    var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
+    try {
+      topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent);
+    } finally {
+      TopLevelCallbackBookKeeping.release(bookKeeping);
+    }
   }
 };
 
