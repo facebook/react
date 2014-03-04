@@ -26,7 +26,6 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
-var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var merge = require('merge');
 
@@ -78,6 +77,8 @@ var merge = require('merge');
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
+
+// TODO: can we make this module more generic (ie non browser)?
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
 // lower node than `document`), binding at `document` would cause duplicate
@@ -168,11 +169,6 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {boolean} enabled True if callbacks should be enabled.
    */
   setEnabled: function(enabled) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
-      'This is likely a bug in the framework. Please report immediately.'
-    );
     if (ReactEventEmitter.ReactEventListener) {
       ReactEventEmitter.ReactEventListener.setEnabled(enabled);
     }
@@ -188,6 +184,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     );
   },
 
+  // NOTE: this actually takes a handle.
   /**
    * We listen for bubbled touch events on the document object.
    *

@@ -21,6 +21,7 @@
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
+var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
 var ReactEventEmitter = require('ReactEventEmitter');
 var EventConstants = require('EventConstants');
 
@@ -48,12 +49,12 @@ var ReactDOMImg = ReactCompositeComponent.createClass({
     ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topLoad,
       'load',
-      node
+      ReactDOMNodeHandle.getHandleForReactID(this._rootNodeID)
     );
     ReactEventEmitter.trapBubbledEvent(
       EventConstants.topLevelTypes.topError,
       'error',
-      node
+      ReactDOMNodeHandle.getHandleForReactID(this._rootNodeID)
     );
   }
 });

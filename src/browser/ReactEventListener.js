@@ -21,6 +21,7 @@
 
 var EventListener = require('EventListener');
 var PooledClass = require('PooledClass');
+var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 
@@ -110,6 +111,12 @@ var ReactEventListener = {
     return ReactEventListener._enabled;
   },
 
+
+  // NOTE THAT THE FOLLOWING METHODS TAKE "backend handles",
+  // NOT DOM NODES!
+  //
+  // So for iOS this is a tag, DOM it's a DOM node, and worker
+  // it's a string.
   /**
    * Traps top-level events by using event bubbling.
    *
@@ -118,7 +125,11 @@ var ReactEventListener = {
    * @param {DOMEventTarget} element Element on which to attach listener.
    * @internal
    */
-  trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
+  trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
+    var element = ReactDOMNodeHandle.resolveHandle(handle);
+    if (!element) {
+      return;
+    }
     EventListener.listen(
       element,
       handlerBaseName,
@@ -134,7 +145,11 @@ var ReactEventListener = {
    * @param {DOMEventTarget} element Element on which to attach listener.
    * @internal
    */
-  trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
+  trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
+    var element = ReactDOMNodeHandle.resolveHandle(handle);
+    if (!element) {
+      return;
+    }
     EventListener.capture(
       element,
       handlerBaseName,
