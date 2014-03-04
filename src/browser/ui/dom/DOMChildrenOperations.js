@@ -145,10 +145,10 @@ var DOMChildrenOperations = {
 
     for (var k = 0; update = updates[k]; k++) {
       switch (update.type) {
-        case ReactMultiChildUpdateTypes.INSERT_MARKUP:
+        case ReactMultiChildUpdateTypes.INSERT_IMAGE:
           insertChildAt(
             update.parentNode,
-            renderedMarkup[update.markupIndex],
+            renderedMarkup[update.imageIndex],
             update.toIndex
           );
           break;

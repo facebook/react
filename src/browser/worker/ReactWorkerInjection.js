@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDefaultInjection
+ * @providesModule ReactWorkerInjection
  */
 
 "use strict";
@@ -31,20 +31,17 @@ var ReactUpdates = require('ReactUpdates');
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var ClientReactRootIndex = require('ClientReactRootIndex');
 var CompositionEventPlugin = require('CompositionEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactComponentBrowserEnvironment =
-  require('ReactComponentBrowserEnvironment');
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
-var ReactEventListener = require('ReactEventListener');
+var ReactComponentWorkerEnvironment =
+  require('ReactComponentWorkerEnvironment');
+var ReactEventListenerRemote = require('ReactEventListenerRemote');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
@@ -53,18 +50,27 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var SelectEventPlugin = require('SelectEventPlugin');
-var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
+var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
+
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var RemoteModuleServer = require('RemoteModuleServer');
 
 var createFullPageComponent = require('createFullPageComponent');
 
+var server;
+
 function inject() {
+  server = new RemoteModuleServer(ExecutionEnvironment.global, {
+    ReactEventEmitter: ReactEventEmitter
+  });
+
   ReactEventEmitter.injection.injectReactEventListener(
-    ReactEventListener
+    ReactEventListenerRemote
   );
 
   /**
@@ -72,12 +78,13 @@ function inject() {
    */
   EventPluginHub.injection.injectEventPluginOrder(DefaultEventPluginOrder);
   EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
-  EventPluginHub.injection.injectMount(ReactDOMNodeMapping);
+  EventPluginHub.injection.injectMount({getNode: function() {}});
 
   /**
    * Some important event plugins included by default (without having to require
    * them).
    */
+
   EventPluginHub.injection.injectEventPluginsByName({
     SimpleEventPlugin: SimpleEventPlugin,
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
@@ -103,6 +110,7 @@ function inject() {
     body: createFullPageComponent(ReactDOM.body)
   });
 
+
   // This needs to happen after createFullPageComponent() otherwise the mixin
   // gets double injected.
   ReactCompositeComponent.injection.injectMixin(ReactBrowserComponentMixin);
@@ -112,20 +120,15 @@ function inject() {
 
   ReactEmptyComponent.injection.injectEmptyComponent(ReactDOM.script);
 
-  ReactUpdates.injection.injectReconcileTransaction(
-    ReactComponentBrowserEnvironment.ReactReconcileTransaction
-  );
   ReactUpdates.injection.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );
 
   ReactRootIndex.injection.injectCreateReactRootIndex(
-    ExecutionEnvironment.canUseDOM ?
-      ClientReactRootIndex.createReactRootIndex :
-      ServerReactRootIndex.createReactRootIndex
+    ClientReactRootIndex.createReactRootIndex
   );
 
-  ReactComponent.injection.injectEnvironment(ReactComponentBrowserEnvironment);
+  ReactComponent.injection.injectEnvironment(ReactComponentWorkerEnvironment);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';

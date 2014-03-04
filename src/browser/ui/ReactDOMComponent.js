@@ -24,8 +24,8 @@ var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
+var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
 var ReactEventEmitter = require('ReactEventEmitter');
-var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
@@ -36,15 +36,12 @@ var merge = require('merge');
 var mixInto = require('mixInto');
 
 var deleteListener = ReactEventEmitter.deleteListener;
-var listenTo = ReactEventEmitter.listenTo;
 var registrationNameModules = ReactEventEmitter.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
-
-var ELEMENT_NODE_TYPE = 1;
 
 /**
  * @param {?object} props
@@ -66,14 +63,9 @@ function assertValidProps(props) {
 }
 
 function putListener(id, registrationName, listener, transaction) {
-  var container = ReactMount.findReactContainerForID(id);
-  if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    listenTo(registrationName, doc);
-  }
+  var handle = ReactDOMNodeHandle.getHandleForReactIDTopLevel(id);
   transaction.getPutListenerQueue().enqueuePutListener(
+    handle,
     id,
     registrationName,
     listener
@@ -386,7 +378,7 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
+        ReactComponent.BackendIDOperations.updateImageByID(
           this._rootNodeID,
           nextHtml
         );

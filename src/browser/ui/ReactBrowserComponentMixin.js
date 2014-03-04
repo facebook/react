@@ -19,7 +19,8 @@
 "use strict";
 
 var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
+
 
 var invariant = require('invariant');
 
@@ -39,7 +40,7 @@ var ReactBrowserComponentMixin = {
     if (ReactEmptyComponent.isNullComponentID(this._rootNodeID)) {
       return null;
     }
-    return ReactMount.getNode(this._rootNodeID);
+    return ReactDOMNodeMapping.getNode(this._rootNodeID);
   }
 };
 

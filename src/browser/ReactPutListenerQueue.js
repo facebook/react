@@ -28,8 +28,9 @@ function ReactPutListenerQueue() {
 }
 
 mixInto(ReactPutListenerQueue, {
-  enqueuePutListener: function(rootNodeID, propKey, propValue) {
+  enqueuePutListener: function(handle, rootNodeID, propKey, propValue) {
     this.listenersToPut.push({
+      handle: handle,
       rootNodeID: rootNodeID,
       propKey: propKey,
       propValue: propValue
@@ -39,6 +40,10 @@ mixInto(ReactPutListenerQueue, {
   putListeners: function() {
     for (var i = 0; i < this.listenersToPut.length; i++) {
       var listenerToPut = this.listenersToPut[i];
+      ReactEventEmitter.listenTo(
+        listenerToPut.propKey,
+        listenerToPut.handle
+      );
       ReactEventEmitter.putListener(
         listenerToPut.rootNodeID,
         listenerToPut.propKey,

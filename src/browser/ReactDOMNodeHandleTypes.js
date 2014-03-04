@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ViewportMetrics
+ * @providesModule ReactDOMNodeHandleTypes
  */
 
 "use strict";
 
-var ViewportMetrics = {
+var keyMirror = require('keyMirror');
 
-  currentScrollLeft: 0,
+var ReactDOMNodeHandleTypes = keyMirror({
+  REACT_ID: null,
+  REACT_ID_TOP_LEVEL: null,
+  CONTAINER: null
+});
 
-  currentScrollTop: 0,
-
-  refreshScrollValues: function(scrollPosition) {
-    ViewportMetrics.currentScrollLeft = scrollPosition.x;
-    ViewportMetrics.currentScrollTop = scrollPosition.y;
-  }
-
-};
-
-module.exports = ViewportMetrics;
+module.exports = ReactDOMNodeHandleTypes;

@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ViewportMetrics
+ * @providesModule ReactDOMNodeMappingRemote
  */
 
 "use strict";
 
-var ViewportMetrics = {
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var RemoteModule = require('RemoteModule');
 
-  currentScrollLeft: 0,
+var keyOf = require('keyOf');
 
-  currentScrollTop: 0,
-
-  refreshScrollValues: function(scrollPosition) {
-    ViewportMetrics.currentScrollLeft = scrollPosition.x;
-    ViewportMetrics.currentScrollTop = scrollPosition.y;
+var ReactDOMNodeMappingRemote = new RemoteModule(
+  ExecutionEnvironment.global,
+  keyOf({ReactDOMNodeMapping: null}),
+  // TODO: we should codegen this when we move to a better bridge
+  // so we can get type checking.
+  // TODO: should we move this out of ReactDOMNodeMapping?
+  {
+    registerContainerHandle: null,
+    unmountComponentAtHandle: null,
+    registerComponentInContainer: null
   }
+);
 
-};
-
-module.exports = ViewportMetrics;
+module.exports = ReactDOMNodeMappingRemote;

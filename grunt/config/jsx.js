@@ -5,7 +5,8 @@ var _ = require('lodash');
 
 var rootIDs = [
   "React",
-  "ReactWithAddons"
+  "ReactWithAddons",
+  "ReactWithWorkers"
 ];
 
 

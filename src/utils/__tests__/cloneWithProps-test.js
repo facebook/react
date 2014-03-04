@@ -28,6 +28,7 @@ var mocks = require('mocks');
 var React;
 var ReactTestUtils;
 
+var emptyObject;
 var onlyChild;
 var cloneWithProps;
 var emptyObject;
@@ -37,6 +38,7 @@ describe('cloneWithProps', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
+    emptyObject = require('emptyObject');
     onlyChild = require('onlyChild');
     cloneWithProps = require('cloneWithProps');
     emptyObject = require('emptyObject');

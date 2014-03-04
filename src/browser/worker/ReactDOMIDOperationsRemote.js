@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule getReactRootElementInContainer
+ * @providesModule ReactDOMIDOperationsRemote
  */
 
 "use strict";
 
-var DOC_NODE_TYPE = 9;
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var RemoteModule = require('RemoteModule');
 
-/**
- * @param {DOMElement|DOMDocument} container DOM element that may contain
- *                                           a React component
- * @return {?*} DOM element that may have the reactRoot ID, or null.
- */
-function getReactRootElementInContainer(container) {
-  if (!container) {
-    return null;
+var keyOf = require('keyOf');
+
+var ReactDOMIDOperationsRemote = new RemoteModule(
+  ExecutionEnvironment.global,
+  keyOf({ReactDOMIDOperations: null}),
+  {
+    updatePropertyByID: null,
+    deletePropertyByID: null,
+    updateStylesByID: null,
+    updateImageByID: null,
+    updateTextContentByID: null,
+    dangerouslyReplaceNodeWithMarkupByID: null,
+    dangerouslyProcessChildrenUpdates: null
   }
+);
 
-  if (container.nodeType === DOC_NODE_TYPE) {
-    return container.documentElement;
-  } else {
-    return container.firstChild;
-  }
-}
-
-module.exports = getReactRootElementInContainer;
+module.exports = ReactDOMIDOperationsRemote;

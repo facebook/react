@@ -21,7 +21,7 @@
 require('mock-modules')
     .dontMock('BrowserScroll')
     .dontMock('EventPluginHub')
-    .dontMock('ReactMount')
+    .dontMock('ReactDOMNodeMapping')
     .dontMock('ReactEventEmitter')
     .dontMock('ReactInstanceHandles')
     .dontMock('EventPluginHub')
@@ -33,14 +33,14 @@ require('mock-modules')
 var keyOf = require('keyOf');
 var mocks = require('mocks');
 
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var idToNode = {};
-var getID = ReactMount.getID;
+var getID = ReactDOMNodeMapping.getID;
 var setID = function(el, id) {
-  ReactMount.setID(el, id);
+  ReactDOMNodeMapping.setID(el, id);
   idToNode[id] = el;
 };
-var oldGetNode = ReactMount.getNode;
+var oldGetNode = ReactDOMNodeMapping.getNode;
 
 var EventPluginHub;
 var ReactEventEmitter;
@@ -82,6 +82,8 @@ setID(CHILD, '.0.0.0.0');
 setID(PARENT, '.0.0.0');
 setID(GRANDPARENT, '.0.0');
 
+var renderedHandle;
+
 function registerSimpleTestHandler() {
   ReactEventEmitter.putListener(getID(CHILD), ON_CLICK_KEY, LISTENER);
   var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
@@ -96,11 +98,11 @@ describe('ReactEventEmitter', function() {
     LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
     EventListener = require('EventListener');
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount.getNode = function(id) {
+    ReactDOMNodeMapping.getNode = function(id) {
       return idToNode[id];
     };
     idCallOrder = [];
@@ -108,10 +110,16 @@ describe('ReactEventEmitter', function() {
     EventPluginHub.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin
     });
+
+    var ReactDOM = require('ReactDOM');
+    var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
+    renderedHandle = ReactDOMNodeHandle.getHandleForReactIDTopLevel(
+      ReactTestUtils.renderIntoDocument(ReactDOM.div())._rootNodeID
+    );
   });
 
   afterEach(function() {
-    ReactMount.getNode = oldGetNode;
+    ReactDOMNodeMapping.getNode = oldGetNode;
   });
 
   it('should store a listener correctly', function() {
@@ -361,15 +369,15 @@ describe('ReactEventEmitter', function() {
 
   it('should listen to events only once', function() {
     spyOn(EventListener, 'listen');
-    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, renderedHandle);
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, renderedHandle);
     expect(EventListener.listen.callCount).toBe(1);
   });
 
   it('should work with event plugins without dependencies', function() {
     spyOn(EventListener, 'listen');
 
-    ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactEventEmitter.listenTo(ON_CLICK_KEY, renderedHandle);
 
     expect(EventListener.listen.argsForCall[0][1]).toBe('click');
   });
@@ -378,7 +386,7 @@ describe('ReactEventEmitter', function() {
     spyOn(EventListener, 'listen');
     spyOn(EventListener, 'capture');
 
-    ReactEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    ReactEventEmitter.listenTo(ON_CHANGE_KEY, renderedHandle);
 
     var setEventListeners = [];
     var listenCalls = EventListener.listen.argsForCall;

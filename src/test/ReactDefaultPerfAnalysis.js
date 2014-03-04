@@ -29,7 +29,7 @@ var DOM_OPERATION_TYPES = {
   'updatePropertyByID': 'update attribute',
   'deletePropertyByID': 'delete attribute',
   'updateStylesByID': 'update styles',
-  'updateInnerHTMLByID': 'set innerHTML',
+  'updateImageByID': 'set innerHTML',
   'dangerouslyReplaceNodeWithMarkupByID': 'replace'
 };
 

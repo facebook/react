@@ -25,7 +25,7 @@ var React = require('React');
 var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
 var ReactEventEmitter = require('ReactEventEmitter');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
@@ -259,12 +259,11 @@ var ReactTestUtils = {
    * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
    */
   simulateNativeEventOnNode: function(topLevelType, node, fakeNativeEvent) {
-    var virtualHandler =
-      ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-        topLevelType
-      );
     fakeNativeEvent.target = node;
-    virtualHandler(fakeNativeEvent);
+    ReactEventEmitter.ReactEventListener.dispatchEvent(
+      topLevelType,
+      fakeNativeEvent
+    );
   },
 
   /**
@@ -320,7 +319,7 @@ function makeSimulator(eventType) {
     // properly destroying any properties assigned from `eventData` upon release
     var event = new SyntheticEvent(
       ReactEventEmitter.eventNameDispatchConfigs[eventType],
-      ReactMount.getID(node),
+      ReactDOMNodeMapping.getID(node),
       fakeNativeEvent
     );
     mergeInto(event, eventData);

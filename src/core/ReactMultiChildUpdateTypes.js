@@ -29,7 +29,7 @@ var keyMirror = require('keyMirror');
  * @internal
  */
 var ReactMultiChildUpdateTypes = keyMirror({
-  INSERT_MARKUP: null,
+  INSERT_IMAGE: null,
   MOVE_EXISTING: null,
   REMOVE_NODE: null,
   TEXT_CONTENT: null
