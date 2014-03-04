@@ -33,7 +33,7 @@ var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactEventListener = require('ReactEventListener');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
@@ -53,8 +53,8 @@ var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var createFullPageComponent = require('createFullPageComponent');
 
 function inject() {
-  ReactInjection.EventEmitter.injectTopLevelCallbackCreator(
-    ReactEventTopLevelCallback
+  ReactInjection.EventEmitter.injectReactEventListener(
+    ReactEventListener
   );
 
   /**
