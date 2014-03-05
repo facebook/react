@@ -130,7 +130,9 @@ function visitReactTag(traverse, object, path, state) {
   var childrenToRender = object.children.filter(function(child) {
     return !(child.type === Syntax.Literal
              && typeof child.value === 'string'
-             && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
+             && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/)
+             || child.type === Syntax.XJSExpressionContainer
+             && child.expression.type === Syntax.XJSEmptyExpression);
   });
   if (childrenToRender.length > 0) {
     utils.append(', ', state);
