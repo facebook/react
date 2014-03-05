@@ -84,6 +84,6 @@ describe('jsxns', function() {
    it("Should fail for undefined namespace", function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<MyNamespace:ComponentC />);
-    }).toThrow(new Error("'undefined' is not a function (evaluating 'SampleNamespace.ComponentC(null )')"));
+    }).toThrow();
    });
 });
