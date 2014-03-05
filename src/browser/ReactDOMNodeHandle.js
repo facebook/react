@@ -19,25 +19,45 @@
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 
 var ELEMENT_NODE_TYPE = 1;
 
+var numContainerIDs = 0;
+var CONTAINER_ID_PREFIX = '.reactContainer.' + Date.now().toString(36) + '.';
+
+var ReactDOMNodeHandleTypes = keyMirror({
+  REACT_ID: null,
+  REACT_ID_TOP_LEVEL: null,
+  CONTAINER: null
+});
+
 var ReactDOMNodeHandle = {
   getHandleForReactID: function(reactID) {
     return {
-      reactID: reactID,
-      topLevel: false
+      type: ReactDOMNodeHandleTypes.REACT_ID,
+      reactID: reactID
     };
   },
 
   getHandleForReactIDTopLevel: function(reactID) {
     return {
-      reactID: reactID,
-      topLevel: true
+      type: ReactDOMNodeHandleTypes.REACT_ID_TOP_LEVEL,
+      reactID: reactID
+    };
+  },
+
+  getHandleForContainer: function(domNode) {
+    var id = domNode.id;
+    if (!id || id.length === 0) {
+      id = domNode.id = CONTAINER_ID_PREFIX + (numContainerIDs++);
+    }
+    return {
+      type: ReactDOMNodeHandleTypes.CONTAINER,
+      id: id
     };
   },
 
@@ -48,16 +68,19 @@ var ReactDOMNodeHandle = {
     );
 
 
-    if (handle.topLevel) {
-      var container = ReactMount.findReactContainerForID(handle.reactID);
+    if (handle.type === ReactDOMNodeHandleTypes.REACT_ID_TOP_LEVEL) {
+      var container = ReactDOMNodeMapping.findReactContainerForID(handle.reactID);
       if (container) {
         return container.nodeType === ELEMENT_NODE_TYPE ?
           container.ownerDocument :
           container;
       }
       return null;
+    } else if (handle.type === ReactDOMNodeHandleTypes.REACT_ID) {
+      return ReactDOMNodeMapping.getNode(handle.reactID);
+    } else {
+      return document.getElementById(handle.id);
     }
-    return ReactMount.getNode(handle.reactID);
   }
 };
 

@@ -24,7 +24,7 @@ var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
 var invariant = require('invariant');
 var merge = require('merge');
@@ -87,13 +87,13 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function() {
-    var id = ReactMount.getID(this.getDOMNode());
+    var id = ReactDOMNodeMapping.getID(this.getDOMNode());
     instancesByReactID[id] = this;
   },
 
   componentWillUnmount: function() {
     var rootNode = this.getDOMNode();
-    var id = ReactMount.getID(rootNode);
+    var id = ReactDOMNodeMapping.getID(rootNode);
     delete instancesByReactID[id];
   },
 
@@ -152,7 +152,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
             otherNode.form !== rootNode.form) {
           continue;
         }
-        var otherID = ReactMount.getID(otherNode);
+        var otherID = ReactDOMNodeMapping.getID(otherNode);
         invariant(
           otherID,
           'ReactDOMInput: Mixing React and non-React radio inputs with the ' +

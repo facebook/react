@@ -21,7 +21,7 @@
 require('mock-modules')
     .dontMock('BrowserScroll')
     .dontMock('EventPluginHub')
-    .dontMock('ReactMount')
+    .dontMock('ReactDOMNodeMapping')
     .dontMock('ReactEventEmitter')
     .dontMock('ReactInstanceHandles')
     .dontMock('EventPluginHub')
@@ -33,14 +33,14 @@ require('mock-modules')
 var keyOf = require('keyOf');
 var mocks = require('mocks');
 
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var idToNode = {};
-var getID = ReactMount.getID;
+var getID = ReactDOMNodeMapping.getID;
 var setID = function(el, id) {
-  ReactMount.setID(el, id);
+  ReactDOMNodeMapping.setID(el, id);
   idToNode[id] = el;
 };
-var oldGetNode = ReactMount.getNode;
+var oldGetNode = ReactDOMNodeMapping.getNode;
 
 var EventPluginHub;
 var ReactEventEmitter;
@@ -98,11 +98,11 @@ describe('ReactEventEmitter', function() {
     LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
     TapEventPlugin = require('TapEventPlugin');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
     EventListener = require('EventListener');
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount.getNode = function(id) {
+    ReactDOMNodeMapping.getNode = function(id) {
       return idToNode[id];
     };
     idCallOrder = [];
@@ -119,7 +119,7 @@ describe('ReactEventEmitter', function() {
   });
 
   afterEach(function() {
-    ReactMount.getNode = oldGetNode;
+    ReactDOMNodeMapping.getNode = oldGetNode;
   });
 
   it('should store a listener correctly', function() {

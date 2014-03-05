@@ -25,14 +25,14 @@ var EVENT_TARGET_PARAM = 1;
 
 describe('ReactEventListener', function() {
   var React;
-  var ReactMount;
+  var ReactDOMNodeMapping;
   var ReactEventListener;
   var handleTopLevel;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
     ReactEventListener = require('ReactEventListener');
 
     handleTopLevel = mocks.getMockFunction();
@@ -45,8 +45,8 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
+      ReactDOMNodeMapping.renderComponent(childControl, childContainer);
+      ReactDOMNodeMapping.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
@@ -67,9 +67,9 @@ describe('ReactEventListener', function() {
       var parentControl = <div>Parent</div>;
       var grandParentContainer = document.createElement('div');
       var grandParentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
-      ReactMount.renderComponent(grandParentControl, grandParentContainer);
+      ReactDOMNodeMapping.renderComponent(childControl, childContainer);
+      ReactDOMNodeMapping.renderComponent(parentControl, parentContainer);
+      ReactDOMNodeMapping.renderComponent(grandParentControl, grandParentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
       grandParentControl.getDOMNode().appendChild(parentContainer);
 
@@ -91,8 +91,8 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
+      ReactDOMNodeMapping.renderComponent(childControl, childContainer);
+      ReactDOMNodeMapping.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       // ReactEventEmitter.handleTopLevel might remove the target from the DOM.
@@ -103,7 +103,7 @@ describe('ReactEventListener', function() {
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           if (topLevelTarget === childNode) {
-            ReactMount.unmountComponentAtNode(childContainer);
+            ReactDOMNodeMapping.unmountComponentAtNode(childContainer);
           }
         }
       );
@@ -124,7 +124,7 @@ describe('ReactEventListener', function() {
     var container = document.createElement('div');
     var inner = <div>Inner</div>;
     var control = <div><div id="outer">{inner}</div></div>;
-    ReactMount.renderComponent(control, container);
+    ReactDOMNodeMapping.renderComponent(control, container);
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({

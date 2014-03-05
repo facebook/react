@@ -20,13 +20,13 @@
 
 "use strict";
 
+var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var ReactPerf = require('ReactPerf');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
 
 
@@ -51,9 +51,10 @@ var ReactComponentBrowserEnvironment = {
    * @private
    */
   unmountIDFromEnvironment: function(rootNodeID) {
-    ReactMount.purgeID(rootNodeID);
+    ReactDOMNodeMapping.purgeID(rootNodeID);
   },
 
+  // actually takes a handle
   /**
    * @param {string} markup Markup string to place into the DOM Element.
    * @param {DOMElement} container DOM Element to insert markup into.
@@ -63,7 +64,9 @@ var ReactComponentBrowserEnvironment = {
   mountImageIntoNode: ReactPerf.measure(
     'ReactComponentBrowserEnvironment',
     'mountImageIntoNode',
-    function(markup, container, shouldReuseMarkup) {
+    function(markup, handle, shouldReuseMarkup) {
+      var container = ReactDOMNodeHandle.resolveHandle(handle);
+
       invariant(
         container && (
           container.nodeType === ELEMENT_NODE_TYPE ||
@@ -75,7 +78,7 @@ var ReactComponentBrowserEnvironment = {
       if (shouldReuseMarkup) {
         if (ReactMarkupChecksum.canReuseMarkup(
           markup,
-          getReactRootElementInContainer(container))) {
+          ReactDOMNodeMapping.getReactRootElementInContainer(container))) {
           return;
         } else {
           invariant(

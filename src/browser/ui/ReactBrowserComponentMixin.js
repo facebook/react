@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
 var invariant = require('invariant');
 
@@ -35,7 +35,7 @@ var ReactBrowserComponentMixin = {
       this.isMounted(),
       'getDOMNode(): A component must be mounted to have a DOM node.'
     );
-    return ReactMount.getNode(this._rootNodeID);
+    return ReactDOMNodeMapping.getNode(this._rootNodeID);
   }
 };
 

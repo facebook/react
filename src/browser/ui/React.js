@@ -72,7 +72,7 @@ var React = {
     DOMComponent: ReactDOMComponent,
     DOMPropertyOperations: DOMPropertyOperations,
     InstanceHandles: ReactInstanceHandles,
-    Mount: ReactMount,
+    Mount: ReactMount, // xxx todo
     MultiChild: ReactMultiChild,
     TextComponent: ReactTextComponent
   }

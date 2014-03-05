@@ -23,7 +23,7 @@ var EventListener = require('EventListener');
 var PooledClass = require('PooledClass');
 var ReactDOMNodeHandle = require('ReactDOMNodeHandle');
 var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
@@ -41,10 +41,10 @@ function findParent(node) {
   // TODO: It may be a good idea to cache this to prevent unnecessary DOM
   // traversal, but caching is difficult to do correctly without using a
   // mutation observer to listen for all DOM changes.
-  var nodeID = ReactMount.getID(node);
+  var nodeID = ReactDOMNodeMapping.getID(node);
   var rootID = ReactInstanceHandles.getReactRootIDFromNodeID(nodeID);
-  var container = ReactMount.findReactContainerForID(rootID);
-  var parent = ReactMount.getFirstReactDOM(container);
+  var container = ReactDOMNodeMapping.findReactContainerForID(rootID);
+  var parent = ReactDOMNodeMapping.getFirstReactDOM(container);
   return parent;
 }
 
@@ -60,14 +60,14 @@ mixInto(TopLevelCallbackBookKeeping, {
 PooledClass.addPoolingTo(TopLevelCallbackBookKeeping);
 
 function topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent) {
-  var topLevelTarget = ReactMount.getFirstReactDOM(
+  var topLevelTarget = ReactDOMNodeMapping.getFirstReactDOM(
     getEventTarget(nativeEvent)
   ) || window;
 
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
   // event handlers, because event handlers can modify the DOM, leading to
-  // inconsistencies with ReactMount's node cache. See #1105.
+  // inconsistencies with ReactDOMNodeMapping's node cache. See #1105.
   var ancestor = topLevelTarget;
   while (ancestor) {
     bookKeeping.ancestors.push(ancestor);
@@ -76,7 +76,7 @@ function topLevelCallbackImpl(bookKeeping, topLevelType, nativeEvent) {
 
   for (var i = 0, l = bookKeeping.ancestors.length; i < l; i++) {
     topLevelTarget = bookKeeping.ancestors[i];
-    var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
+    var topLevelTargetID = ReactDOMNodeMapping.getID(topLevelTarget) || '';
     ReactEventListener._handleTopLevel(
       topLevelType,
       topLevelTarget,
