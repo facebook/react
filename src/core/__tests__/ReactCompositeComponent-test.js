@@ -1007,7 +1007,10 @@ describe('ReactCompositeComponent', function() {
   it('should support statics', function() {
     var Component = React.createClass({
       statics: {
-        abc: 'def'
+        abc: 'def',
+        def: 0,
+        ghi: null,
+        jkl: 'mno'
       },
 
       render: function() {
@@ -1018,6 +1021,12 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
+    expect(instance.constructor.def).toBe(0);
+    expect(Component.def).toBe(0);
+    expect(instance.constructor.ghi).toBe(null);
+    expect(Component.ghi).toBe(null);
+    expect(instance.constructor.jkl).toBe('mno');
+    expect(Component.jkl).toBe('mno');
   });
 
   it('should support statics in mixins', function() {

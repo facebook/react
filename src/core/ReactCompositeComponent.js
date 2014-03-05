@@ -503,7 +503,7 @@ function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
   }
   for (var name in statics) {
     var property = statics[name];
-    if (!statics.hasOwnProperty(name) || !property) {
+    if (!statics.hasOwnProperty(name)) {
       return;
     }
 
