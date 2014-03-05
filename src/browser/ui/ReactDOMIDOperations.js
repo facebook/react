@@ -24,7 +24,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMChildrenOperations = require('DOMChildrenOperations');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var ReactPerf = require('ReactPerf');
 
 var invariant = require('invariant');
@@ -62,7 +62,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'updatePropertyByID',
     function(id, name, value) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
       invariant(
         !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
         'updatePropertyByID(...): %s',
@@ -92,7 +92,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'deletePropertyByID',
     function(id, name, value) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
       invariant(
         !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
         'updatePropertyByID(...): %s',
@@ -114,7 +114,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'updateStylesByID',
     function(id, styles) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
       CSSPropertyOperations.setValueForStyles(node, styles);
     }
   ),
@@ -130,7 +130,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'updateInnerHTMLByID',
     function(id, html) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
 
       // IE8: When updating a just created node with innerHTML only leading
       // whitespace is removed. When updating an existing node with innerHTML
@@ -174,7 +174,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'updateTextContentByID',
     function(id, content) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
       DOMChildrenOperations.updateTextContent(node, content);
     }
   ),
@@ -191,7 +191,7 @@ var ReactDOMIDOperations = {
     'ReactDOMIDOperations',
     'dangerouslyReplaceNodeWithMarkupByID',
     function(id, markup) {
-      var node = ReactMount.getNode(id);
+      var node = ReactDOMNodeMapping.getNode(id);
       DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
     }
   ),
@@ -208,7 +208,7 @@ var ReactDOMIDOperations = {
     'dangerouslyProcessChildrenUpdates',
     function(updates, markup) {
       for (var i = 0; i < updates.length; i++) {
-        updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
+        updates[i].parentNode = ReactDOMNodeMapping.getNode(updates[i].parentID);
       }
       DOMChildrenOperations.processUpdates(updates, markup);
     }

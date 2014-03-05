@@ -24,7 +24,7 @@
 require('mock-modules')
   .dontMock('ExecutionEnvironment')
   .dontMock('React')
-  .dontMock('ReactMount')
+  .dontMock('ReactDOMNodeMapping')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils')
   .dontMock('ReactMarkupChecksum');
@@ -32,7 +32,7 @@ require('mock-modules')
 var mocks = require('mocks');
 
 var React;
-var ReactMount;
+var ReactDOMNodeMapping;
 var ReactTestUtils;
 var ReactServerRendering;
 var ReactMarkupChecksum;
@@ -44,7 +44,7 @@ describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
     ReactTestUtils = require('ReactTestUtils');
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;

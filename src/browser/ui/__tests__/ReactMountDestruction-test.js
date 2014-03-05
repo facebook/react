@@ -21,7 +21,7 @@
 
 var React = require('React');
 
-describe('ReactMount', function() {
+describe('ReactDOMNodeMapping', function() {
   it("should destroy a react root upon request", function() {
     var mainContainerDiv = document.createElement('div');
     document.documentElement.appendChild(mainContainerDiv);

@@ -20,14 +20,12 @@
 "use strict";
 
 var EventConstants = require('EventConstants');
-var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
-var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var merge = require('merge');
 
@@ -79,6 +77,8 @@ var merge = require('merge');
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
+
+// TODO: can we make this module more generic (ie non browser)?
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
 // lower node than `document`), binding at `document` would cause duplicate
@@ -136,64 +136,30 @@ function getListeningForDocument(mountAt) {
 }
 
 /**
- * Traps top-level events by using event bubbling.
- *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
- * @param {DOMEventTarget} element Element on which to attach listener.
- * @internal
- */
-function trapBubbledEvent(topLevelType, handlerBaseName, element) {
-  EventListener.listen(
-    element,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
- * Traps a top-level event by using event capturing.
- *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
- * @param {DOMEventTarget} element Element on which to attach listener.
- * @internal
- */
-function trapCapturedEvent(topLevelType, handlerBaseName, element) {
-  EventListener.capture(
-    element,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
  * `ReactEventEmitter` is used to attach top-level event listeners. For example:
  *
  *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
  *
- * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
+ * ReactEventEmitter would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  *
  * @internal
  */
 var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
   /**
-   * React references `ReactEventTopLevelCallback` using this property in order
-   * to allow dependency injection.
+   * Injectable event backend
    */
-  TopLevelCallbackCreator: null,
+  ReactEventListener: null,
 
   injection: {
     /**
      * @param {function} TopLevelCallbackCreator
      */
-    injectTopLevelCallbackCreator: function(TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
+    injectReactEventListener: function(ReactEventListener) {
+      ReactEventListener.setHandleTopLevel(
+        ReactEventEmitter.handleTopLevel
+      );
+      ReactEventEmitter.ReactEventListener = ReactEventListener;
     }
   },
 
@@ -203,13 +169,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {boolean} enabled True if callbacks should be enabled.
    */
   setEnabled: function(enabled) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
-      'This is likely a bug in the framework. Please report immediately.'
-    );
-    if (ReactEventEmitter.TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
+    if (ReactEventEmitter.ReactEventListener) {
+      ReactEventEmitter.ReactEventListener.setEnabled(enabled);
     }
   },
 
@@ -218,11 +179,12 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   isEnabled: function() {
     return !!(
-      ReactEventEmitter.TopLevelCallbackCreator &&
-      ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
+      ReactEventEmitter.ReactEventListener &&
+      ReactEventEmitter.ReactEventListener.isEnabled()
     );
   },
 
+  // NOTE: this actually takes a handle.
   /**
    * We listen for bubbled touch events on the document object.
    *
@@ -258,13 +220,13 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
         if (topLevelType === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
-            trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
+            ReactEventEmitter.trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
           } else if (isEventSupported('mousewheel')) {
-            trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
+            ReactEventEmitter.trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            trapBubbledEvent(
+            ReactEventEmitter.trapBubbledEvent(
               topLevelTypes.topWheel,
               'DOMMouseScroll',
               mountAt);
@@ -272,33 +234,49 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
         } else if (topLevelType === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
-            trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
+            ReactEventEmitter.trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
           } else {
-            trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
+            ReactEventEmitter.trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
           }
         } else if (topLevelType === topLevelTypes.topFocus ||
             topLevelType === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
-            trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
-            trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
+            ReactEventEmitter.trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
+            ReactEventEmitter.trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
-            trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
+            ReactEventEmitter.trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
+            ReactEventEmitter.trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
           }
 
           // to make sure blur and focus event listeners are only attached once
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
         } else if (topEventMapping[dependency]) {
-          trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
+          ReactEventEmitter.trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 
         isListening[dependency] = true;
       }
     }
+  },
+
+  trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
+    ReactEventEmitter.ReactEventListener.trapBubbledEvent(
+      topLevelType,
+      handlerBaseName,
+      element
+    );
+  },
+
+  trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
+    ReactEventEmitter.ReactEventListener.trapCapturedEvent(
+      topLevelType,
+      handlerBaseName,
+      element
+    );
   },
 
   /**
@@ -312,8 +290,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   ensureScrollValueMonitoring: function(){
     if (!isMonitoringScrollValue) {
       var refresh = ViewportMetrics.refreshScrollValues;
-      EventListener.listen(window, 'scroll', refresh);
-      EventListener.listen(window, 'resize', refresh);
+      ReactEventEmitter.ReactEventListener.monitorScrollValue(refresh);
       isMonitoringScrollValue = true;
     }
   },
@@ -328,12 +305,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
   deleteListener: EventPluginHub.deleteListener,
 
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
-
-  trapBubbledEvent: trapBubbledEvent,
-
-  trapCapturedEvent: trapCapturedEvent
-
+  deleteAllListeners: EventPluginHub.deleteAllListeners
 });
 
 module.exports = ReactEventEmitter;

@@ -26,7 +26,7 @@ var ReactComponent;
 var ReactCurrentOwner;
 var ReactPropTypes;
 var ReactTestUtils;
-var ReactMount;
+var ReactDOMNodeMapping;
 var ReactDoNotBindDeprecated;
 
 var cx;
@@ -47,7 +47,7 @@ describe('ReactCompositeComponent', function() {
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -142,7 +142,7 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchorID = instance.getAnchorID();
-    var actualDOMAnchorNode = ReactMount.getNode(anchorID);
+    var actualDOMAnchorNode = ReactDOMNodeMapping.getNode(anchorID);
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
@@ -643,7 +643,7 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
-    spyOn(ReactMount, 'purgeID').andCallThrough();
+    spyOn(ReactDOMNodeMapping, 'purgeID').andCallThrough();
 
     var Component = React.createClass({
       render: function() {
@@ -654,11 +654,11 @@ describe('ReactCompositeComponent', function() {
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
-        // It's important that ReactMount.purgeID be called after any component
+        // It's important that ReactDOMNodeMapping.purgeID be called after any component
         // lifecycle methods, because a componentWillMount implementation is
         // likely call this.getDOMNode(), which will repopulate the node cache
         // after it's been cleared, causing a memory leak.
-        expect(ReactMount.purgeID.callCount).toBe(0);
+        expect(ReactDOMNodeMapping.purgeID.callCount).toBe(0);
         innerUnmounted = true;
       },
       render: function() {
@@ -672,7 +672,7 @@ describe('ReactCompositeComponent', function() {
 
     // <Component />, <Inner />, and both <div /> elements each call
     // unmountIDFromEnvironment which calls purgeID, for a total of 4.
-    expect(ReactMount.purgeID.callCount).toBe(4);
+    expect(ReactDOMNodeMapping.purgeID.callCount).toBe(4);
   });
 
   it('should detect valid CompositeComponent classes', function() {

@@ -23,7 +23,7 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var ReactTestUtils = require('ReactTestUtils');
 
 describe('ReactDOM', function() {
@@ -60,7 +60,7 @@ describe('ReactDOM', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div(null, 'child')
     );
-    var argNode = ReactMount.getNode(argDiv._rootNodeID);
+    var argNode = ReactDOMNodeMapping.getNode(argDiv._rootNodeID);
     expect(argNode.innerHTML).toBe('child');
   });
 
@@ -68,7 +68,7 @@ describe('ReactDOM', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = ReactMount.getNode(conflictDiv._rootNodeID);
+    var conflictNode = ReactDOMNodeMapping.getNode(conflictDiv._rootNodeID);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -110,7 +110,7 @@ describe('ReactDOM', function() {
         theBird: <div className="bird" />
       }
     });
-    var root = ReactMount.getNode(myDiv._rootNodeID);
+    var root = ReactDOMNodeMapping.getNode(myDiv._rootNodeID);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

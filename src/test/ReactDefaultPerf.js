@@ -21,7 +21,7 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactDefaultPerfAnalysis = require('ReactDefaultPerfAnalysis');
-var ReactMount = require('ReactMount');
+var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 var ReactPerf = require('ReactPerf');
 
 var performanceNow = require('performanceNow');
@@ -167,7 +167,7 @@ var ReactDefaultPerf = {
         totalTime = performanceNow() - start;
 
         if (fnName === 'mountImageIntoNode') {
-          var mountID = ReactMount.getID(args[1]);
+          var mountID = ReactDOMNodeMapping.getID(args[1]);
           ReactDefaultPerf._recordWrite(mountID, fnName, totalTime, args[0]);
         } else if (fnName === 'dangerouslyProcessChildrenUpdates') {
           // special format

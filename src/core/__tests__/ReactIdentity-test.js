@@ -22,7 +22,7 @@
 var React;
 var ReactTestUtils;
 var reactComponentExpect;
-var ReactMount;
+var ReactDOMNodeMapping;
 
 describe('ReactIdentity', function() {
 
@@ -31,12 +31,12 @@ describe('ReactIdentity', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
   });
 
   var idExp = /^\.[^.]+(.*)$/;
   function checkId(child, expectedId) {
-    var actual = idExp.exec(ReactMount.getID(child));
+    var actual = idExp.exec(ReactDOMNodeMapping.getID(child));
     var expected = idExp.exec(expectedId);
     expect(actual).toBeTruthy();
     expect(expected).toBeTruthy();
@@ -284,11 +284,11 @@ describe('ReactIdentity', function() {
 
     React.renderComponent(wrapped, document.createElement('div'));
 
-    var beforeID = ReactMount.getID(wrapped.getDOMNode().firstChild);
+    var beforeID = ReactDOMNodeMapping.getID(wrapped.getDOMNode().firstChild);
 
     wrapped.swap();
 
-    var afterID = ReactMount.getID(wrapped.getDOMNode().firstChild);
+    var afterID = ReactDOMNodeMapping.getID(wrapped.getDOMNode().firstChild);
 
     expect(beforeID).not.toEqual(afterID);
 
