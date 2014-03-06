@@ -93,8 +93,13 @@ var DOMPropertyInjection = {
 
       DOMProperty.getAttributeName[propName] = attributeName || lowerCased;
 
-      DOMProperty.getPropertyName[propName] =
-        DOMPropertyNames[propName] || propName;
+      var propertyName = DOMPropertyNames[propName];
+      if (propertyName) {
+        DOMProperty.getPossibleStandardName[propertyName.toLowerCase()] =
+          propName;
+      }
+
+      DOMProperty.getPropertyName[propName] = propertyName || propName;
 
       var mutationMethod = DOMMutationMethods[propName];
       if (mutationMethod) {

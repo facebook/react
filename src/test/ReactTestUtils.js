@@ -120,12 +120,12 @@ var ReactTestUtils = {
 
   /**
    * Finds all instance of components in the rendered tree that are DOM
-   * components with the class name matching `className`.
+   * components with the class name matching `class`.
    * @return an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, className) {
     return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
-      var instClassName = inst.props.className;
+      var instClassName = inst.props.class;
       return ReactTestUtils.isDOMComponent(inst) && (
         instClassName &&
         (' ' + instClassName + ' ').indexOf(' ' + className + ' ') !== -1

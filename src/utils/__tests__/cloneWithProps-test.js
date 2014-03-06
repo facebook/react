@@ -45,14 +45,14 @@ describe('cloneWithProps', function() {
   it('should clone a DOM component with new props', function() {
     var Grandparent = React.createClass({
       render: function() {
-        return <Parent><div className="child" /></Parent>;
+        return <Parent><div class="child" /></Parent>;
       }
     });
     var Parent = React.createClass({
       render: function() {
         return (
-          <div className="parent">
-            {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
+          <div class="parent">
+            {cloneWithProps(onlyChild(this.props.children), {class: 'xyz'})}
           </div>
         );
       }
@@ -66,20 +66,20 @@ describe('cloneWithProps', function() {
 
     var Child = React.createClass({
       render: function() {
-        return <div className={this.props.className} />;
+        return <div class={this.props.class} />;
       }
     });
 
     var Grandparent = React.createClass({
       render: function() {
-        return <Parent><Child className="child" /></Parent>;
+        return <Parent><Child class="child" /></Parent>;
       }
     });
     var Parent = React.createClass({
       render: function() {
         return (
-          <div className="parent">
-            {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
+          <div class="parent">
+            {cloneWithProps(onlyChild(this.props.children), {class: 'xyz'})}
           </div>
         );
       }
@@ -99,7 +99,7 @@ describe('cloneWithProps', function() {
       render: function() {
         return (
           <div>
-            {cloneWithProps(onlyChild(this.props.children), {className: 'xyz'})}
+            {cloneWithProps(onlyChild(this.props.children), {class: 'xyz'})}
           </div>
         );
       }

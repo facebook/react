@@ -162,7 +162,7 @@ var DOMPropertyOperations = {
         var propName = DOMProperty.getPropertyName[name];
         var defaultValue = DOMProperty.getDefaultValueForProperty(
           node.nodeName,
-          name
+          propName
         );
         if (!DOMProperty.hasSideEffects[name] ||
             node[propName] !== defaultValue) {

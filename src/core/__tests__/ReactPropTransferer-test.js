@@ -36,7 +36,7 @@ describe('ReactPropTransferer', function() {
       render: function() {
         return this.transferPropsTo(
           <input
-            className="textinput"
+            class="textinput"
             style={{display: 'block'}}
             type="text"
             value=""
@@ -54,7 +54,7 @@ describe('ReactPropTransferer', function() {
       .expectRenderedChild()
         .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
-          className: 'textinput',
+          class: 'textinput',
           style: {display: 'block'},
           type: 'text',
           value: ''
@@ -74,7 +74,7 @@ describe('ReactPropTransferer', function() {
   it('should transfer using merge strategies', function() {
     var instance =
       <TestComponent
-        className="hidden_elem"
+        class="hidden_elem"
         style={{width: '100%'}}
       />;
     ReactTestUtils.renderIntoDocument(instance);
@@ -83,7 +83,7 @@ describe('ReactPropTransferer', function() {
       .expectRenderedChild()
         .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
-          className: 'textinput hidden_elem',
+          class: 'textinput hidden_elem',
           style: {
             display: 'block',
             width: '100%'

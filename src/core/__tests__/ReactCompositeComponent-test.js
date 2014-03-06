@@ -77,7 +77,7 @@ describe('ReactCompositeComponent', function() {
       render: function() {
         var className = cx({'anchorClass': this.props.anchorClassOn});
         return this.props.renderAnchor ?
-          <a ref="anch" className={className}></a> :
+          <a ref="anch" class={className}></a> :
           <b></b>;
       }
     });

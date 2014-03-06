@@ -51,9 +51,9 @@ var TransferStrategies = {
    */
   children: emptyFunction,
   /**
-   * Transfer the `className` prop by merging them.
+   * Transfer the `class` prop by merging them.
    */
-  className: createTransferStrategy(joinClasses),
+  class: createTransferStrategy(joinClasses),
   /**
    * Never transfer the `key` prop.
    */

@@ -30,7 +30,7 @@ var objMapKeyVal = require('objMapKeyVal');
  * valid according to `DOMProperty`.
  *
  *  - Event listeners: `onClick`, `onMouseDown`, etc.
- *  - DOM properties: `className`, `name`, `title`, etc.
+ *  - DOM properties: `class`, `name`, `title`, etc.
  *
  * The `style` property functions differently from the DOM API. It accepts an
  * object mapping of style properties to values.
