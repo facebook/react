@@ -29,7 +29,7 @@ var shallowEqual = require('shallowEqual');
  *
  * Example:
  *
- *   var ReactComponentWithPureRender =
+ *   var ReactComponentWithPureRenderMixin =
  *     require('ReactComponentWithPureRenderMixin');
  *   React.createClass({
  *     mixins: [ReactComponentWithPureRenderMixin],
