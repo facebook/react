@@ -57,15 +57,27 @@ The JSX transformer used to support [XML syntax](/react/docs/jsx-in-depth.html) 
 
 All scripts are also available via [CDNJS](http://cdnjs.com/libraries/react/).
 
-## Bower
+## npm
 
-```sh
-$ bower install --save react
-```
-
-## NPM
+To install the JSX transformer on your computer, run:
 
 ```sh
 $ npm install -g react-tools
 ```
 
+For more info about the `jsx` binary, see the [Getting Started](/react/docs/getting-started.html#offline-transform) guide.
+
+If you're using an npm-compatible packaging system like browserify or webpack, you can use the `react` package. After installing it using `npm install react` or adding `react` to `package.json`, you can use React:
+
+```js
+var React = require('react');
+React.renderComponent(...);
+```
+
+If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.
+
+## Bower
+
+```sh
+$ bower install --save react
+```
