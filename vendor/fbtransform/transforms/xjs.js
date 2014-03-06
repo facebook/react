@@ -15,6 +15,7 @@
  */
 /*global exports:true*/
 "use strict";
+var es3ify = require('es3ify');
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
@@ -229,8 +230,8 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
 
 function quoteAttrName(attr) {
   // Quote invalid JS identifiers.
-  if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
-    return "'" + attr + "'";
+  if (!/^[a-z_$][a-z\d_$]*$/i.test(attr) || es3ify.isReserved(attr)) {
+    return JSON.stringify(attr);
   }
   return attr;
 }
