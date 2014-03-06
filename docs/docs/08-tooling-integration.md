@@ -48,3 +48,7 @@ The open-source community has built tools that integrate JSX with several build 
     that support `*.tmLanguage`.
 * Linting provides accurate line numbers after compiling without sourcemaps.
 * Elements use standard scoping so linters can find usage of out-of-scope components.
+
+### Debugging
+
+[React Developer Tools](https://github.com/facebook/react-devtools) is a [Chrome extension](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) that allows you to inspect the React component hierarchy in the Chrome Developer Tools.
