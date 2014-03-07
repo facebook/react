@@ -87,6 +87,8 @@ We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete lis
 ```sh
 # Build and run tests with PhantomJS
 grunt test
+# Build and run tests in your browser
+grunt test --debug
 # Lint the code with JSHint
 grunt lint
 # Wipe out build directory
