@@ -55,6 +55,14 @@ var ReactComponentBrowserEnvironment = {
         this.isMounted(),
         'getDOMNode(): A component must be mounted to have a DOM node.'
       );
+      // ReactEmptyComponent will attach this prop onto the component to
+      // indicate that it's actually, say, a `noscript` representing `null`,
+      // rather than an actual, intentional `noscript` tag.
+      if ((!this._renderedComponent && this.props._isNullComponent) ||
+          (this._renderedComponent &&
+          this._renderedComponent.props._isNullComponent)) {
+        return null;
+      }
       return ReactMount.getNode(this._rootNodeID);
     }
   },

@@ -51,7 +51,7 @@ describe('ReactMount', function() {
   it('should render null to noscript under the hood', function() {
     var container = document.createElement('container');
     document.documentElement.appendChild(container);
-    var node = ReactMount.renderComponent(null, container).getDOMNode();
+    var node = ReactMount.renderComponent(null, container);
     expect(node.tagName).toBe('NOSCRIPT');
   });
 

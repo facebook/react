@@ -109,7 +109,7 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('a');
   });
 
-  it('should support rendering null to noscript under the hood', function() {
+  it('should support rendering null', function() {
     var Component = React.createClass({
       render: function() {
         return null;
@@ -117,7 +117,7 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <Component />;
     var node = ReactTestUtils.renderIntoDocument(instance).getDOMNode();
-    expect(node.tagName).toBe('NOSCRIPT');
+    expect(node).toBe(null);
   });
 
   it('should be able to switch between rendering a normal tag and null',
@@ -127,7 +127,11 @@ describe('ReactCompositeComponent', function() {
           return {renderNothing: false};
         },
         componentDidMount: function() {
+          expect(this.getDOMNode().tagName).toBe('DIV');
           this.setState({renderNothing: true});
+        },
+        componentDidUpdate: function() {
+          expect(this.getDOMNode()).toBe(null);
         },
         render: function() {
           return this.state.renderNothing ? null : <div></div>;
@@ -137,9 +141,8 @@ describe('ReactCompositeComponent', function() {
       var instance = <Component />;
       var node;
       expect(function() {
-        node = ReactTestUtils.renderIntoDocument(instance).getDOMNode();
+        node = ReactTestUtils.renderIntoDocument(instance);
       }).not.toThrow();
-      expect(node.tagName).toBe('NOSCRIPT');
     }
   );
 

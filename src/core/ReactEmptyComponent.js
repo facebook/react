@@ -34,7 +34,7 @@ function returnSameComponentOrEmptyComponent(component) {
   if (component) {
     return component;
   }
-  return ReactEmptyComponent._component();
+  return ReactEmptyComponent._component({_isNullComponent: true});
 }
 
 var ReactEmptyComponent = {
