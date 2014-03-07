@@ -117,6 +117,43 @@ describe('ReactEventTopLevelCallback', function() {
       expect(calls[0][EVENT_TARGET_PARAM]).toBe(childNode);
       expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
     });
+
+    it('should batch between handlers from different roots', function() {
+      var childContainer = document.createElement('div');
+      var parentContainer = document.createElement('div');
+      var childControl = ReactMount.renderComponent(
+        <div>Child</div>,
+        childContainer
+      );
+      var parentControl = ReactMount.renderComponent(
+        <div>Parent</div>,
+        parentContainer
+      );
+      parentControl.getDOMNode().appendChild(childContainer);
+
+      // Suppose an event handler in each root enqueues an update to the
+      // childControl element -- the two updates should get batched together.
+      var childNode = childControl.getDOMNode();
+      ReactEventEmitter.handleTopLevel.mockImplementation(
+        function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
+          ReactMount.renderComponent(
+            <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
+            childContainer
+          );
+          // Since we're batching, neither update should yet have gone through.
+          expect(childNode.textContent).toBe('Child');
+        }
+      );
+
+      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      callback({
+        target: childNode
+      });
+
+      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      expect(calls.length).toBe(2);
+      expect(childNode.textContent).toBe('2');
+    });
   });
 
   it('should not fire duplicate events for a React DOM tree', function() {

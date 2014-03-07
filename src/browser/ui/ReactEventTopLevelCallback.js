@@ -23,6 +23,7 @@ var PooledClass = require('PooledClass');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
+var ReactUpdates = require('ReactUpdates');
 
 var getEventTarget = require('getEventTarget');
 var mixInto = require('mixInto');
@@ -56,13 +57,11 @@ function findParent(node) {
  * ancestor list. Separated from createTopLevelCallback to avoid try/finally
  * deoptimization.
  *
- * @param {string} topLevelType
- * @param {DOMEvent} nativeEvent
  * @param {TopLevelCallbackBookKeeping} bookKeeping
  */
-function handleTopLevelImpl(topLevelType, nativeEvent, bookKeeping) {
+function handleTopLevelImpl(bookKeeping) {
   var topLevelTarget = ReactMount.getFirstReactDOM(
-    getEventTarget(nativeEvent)
+    getEventTarget(bookKeeping.nativeEvent)
   ) || window;
 
   // Loop through the hierarchy, in case there's any nested components.
@@ -79,24 +78,31 @@ function handleTopLevelImpl(topLevelType, nativeEvent, bookKeeping) {
     topLevelTarget = bookKeeping.ancestors[i];
     var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
     ReactEventEmitter.handleTopLevel(
-      topLevelType,
+      bookKeeping.topLevelType,
       topLevelTarget,
       topLevelTargetID,
-      nativeEvent
+      bookKeeping.nativeEvent
     );
   }
 }
 
 // Used to store ancestor hierarchy in top level callback
-function TopLevelCallbackBookKeeping() {
+function TopLevelCallbackBookKeeping(topLevelType, nativeEvent) {
+  this.topLevelType = topLevelType;
+  this.nativeEvent = nativeEvent;
   this.ancestors = [];
 }
 mixInto(TopLevelCallbackBookKeeping, {
   destructor: function() {
+    this.topLevelType = null;
+    this.nativeEvent = null;
     this.ancestors.length = 0;
   }
 });
-PooledClass.addPoolingTo(TopLevelCallbackBookKeeping);
+PooledClass.addPoolingTo(
+  TopLevelCallbackBookKeeping,
+  PooledClass.twoArgumentPooler
+);
 
 /**
  * Top-level callback creator used to implement event handling using delegation.
@@ -135,9 +141,14 @@ var ReactEventTopLevelCallback = {
         return;
       }
 
-      var bookKeeping = TopLevelCallbackBookKeeping.getPooled();
+      var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
+        topLevelType,
+        nativeEvent
+      );
       try {
-        handleTopLevelImpl(topLevelType, nativeEvent, bookKeeping);
+        // Event queue being processed in the same cycle allows
+        // `preventDefault`.
+        ReactUpdates.batchedUpdates(handleTopLevelImpl, bookKeeping);
       } finally {
         TopLevelCallbackBookKeeping.release(bookKeeping);
       }
