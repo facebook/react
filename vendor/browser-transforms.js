@@ -20,7 +20,6 @@
 var runScripts;
 var headEl;
 
-var buffer = require('buffer');
 var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors').transformVisitors;
 var docblock = require('jstransform/src/docblock');
@@ -123,7 +122,7 @@ var transformCode = function(code, source) {
     return (
       transformed.code +
       '//# sourceMappingURL=data:application/json;base64,' +
-      buffer.Buffer(JSON.stringify(map)).toString('base64')
+      btoa(unescape(encodeURIComponent(JSON.stringify(map))))
     );
   } else {
     return code;

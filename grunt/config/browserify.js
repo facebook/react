@@ -3,6 +3,7 @@
 
 'use strict';
 
+var deamdify = require('deamdify');
 var envify = require('envify/custom');
 var es3ify = require('es3ify');
 var grunt = require('grunt');
@@ -81,6 +82,7 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
+  transforms: [deamdify],
   after: [es3ify.transform, simpleBannerify]
 };
 
