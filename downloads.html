@@ -90,8 +90,18 @@
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.9.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>All scripts are also available via <a href="http://cdnjs.com/libraries/react/">CDNJS</a>.</p>
+<h2><a class="anchor" name="npm"></a>npm <a class="hash-link" href="#npm">#</a></h2>
+<p>To install the JSX transformer on your computer, run:</p>
+<div class="highlight"><pre><code class="sh language-sh" data-lang="sh"><span class="nv">$ </span>npm install -g react-tools
+</code></pre></div>
+<p>For more info about the <code>jsx</code> binary, see the <a href="/react/docs/getting-started.html#offline-transform">Getting Started</a> guide.</p>
+
+<p>If you&#39;re using an npm-compatible packaging system like browserify or webpack, you can use the <code>react</code> package. After installing it using <code>npm install react</code> or adding <code>react</code> to <code>package.json</code>, you can use React:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(...);</span>
+</code></pre></div>
+<p>If you&#39;d like to use any <a href="/react/docs/addons.html">add-ons</a>, use <code>var React = require(&#39;react/addons&#39;);</code> instead.</p>
 <h2><a class="anchor" name="bower"></a>Bower <a class="hash-link" href="#bower">#</a></h2><div class="highlight"><pre><code class="sh language-sh" data-lang="sh"><span class="nv">$ </span>bower install --save react
-</code></pre></div><h2><a class="anchor" name="npm"></a>NPM <a class="hash-link" href="#npm">#</a></h2><div class="highlight"><pre><code class="sh language-sh" data-lang="sh"><span class="nv">$ </span>npm install -g react-tools
 </code></pre></div>
 
     <div class="docs-prevnext">
