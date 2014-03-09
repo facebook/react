@@ -46,5 +46,6 @@ The open-source community has built tools that integrate JSX with several build 
 * Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
   * [JSX syntax highlighting](https://github.com/yungsters/sublime/blob/master/tmLanguage/JavaScript%20(JSX\).tmLanguage) is available for Sublime Text and other editors
     that support `*.tmLanguage`.
+  * [web-mode.el](http://web-mode.org) is an autonomous emacs major mode that indents and highlights JSX
 * Linting provides accurate line numbers after compiling without sourcemaps.
 * Elements use standard scoping so linters can find usage of out-of-scope components.
