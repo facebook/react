@@ -61,10 +61,13 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
-  utils.append(
-    (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
-    state
-  );
+  var tagOpening;
+  if (isFallbackTag) {
+    tagOpening = jsxObjIdent + '["' + (nameObject.name) + '"]' + '('
+  } else {
+    tagOpening = nameObject.name + '('
+  }
+  utils.append(tagOpening, state);
 
   utils.move(nameObject.range[1], state);
 
