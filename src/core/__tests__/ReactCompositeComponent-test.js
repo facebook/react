@@ -183,21 +183,23 @@ describe('ReactCompositeComponent', function() {
 
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
-    ReactTestUtils.renderIntoDocument(instance);
+    var mountedInstance = ReactTestUtils.renderIntoDocument(instance);
     expect(console.warn.argsForCall.length).toBe(3);
+    // This will result in a warning that has already been issued before.
     var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
-    expect(console.warn.argsForCall.length).toBe(4);
+    expect(console.warn.argsForCall.length).toBe(3);
     var autoBound = instance.methodAutoBound;
     var explicitlyNotBound = instance.methodExplicitlyNotBound;
 
     var context = {};
-    expect(explicitlyBound.call(context)).toBe(instance);
-    expect(autoBound.call(context)).toBe(instance);
+    expect(explicitlyBound.call(context)).toBe(mountedInstance);
+    expect(autoBound.call(context)).toBe(mountedInstance);
     expect(explicitlyNotBound.call(context)).toBe(context);
 
-    expect(explicitlyBound.call(instance)).toBe(instance);
-    expect(autoBound.call(instance)).toBe(instance);
-    expect(explicitlyNotBound.call(instance)).toBe(instance);
+    expect(explicitlyBound.call(instance)).toBe(mountedInstance);
+    expect(autoBound.call(instance)).toBe(mountedInstance);
+    // This one is the weird one
+    expect(explicitlyNotBound.call(instance)).toBe(mountedInstance);
 
   });
 
@@ -279,8 +281,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
     reactComponentExpect(instance).scalarPropsEqual({key: 'testKey'});
     reactComponentExpect(instance).scalarStateEqual({key: 'testKeyState'});
 
@@ -1179,9 +1180,8 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.argsForCall.length).toBe(0);
 
     var unmountedInstance = <ComponentClass />;
-    var result = unmountedInstance.someMethod();
+    unmountedInstance.someMethod();
     expect(console.warn.argsForCall.length).toBe(1);
-    expect(result).toBe(unmountedInstance);
 
     var unmountedInstance2 = <ComponentClass />;
     unmountedInstance2.someOtherMethod = 'override';

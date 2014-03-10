@@ -20,33 +20,36 @@
 "use strict";
 
 /**
- * Given a `prevComponent` and `nextComponent`, determines if `prevComponent`
- * should be updated as opposed to being destroyed or replaced.
+ * Given a `prevComponentInstance` and `nextComponent`, determines if
+ * `prevComponentInstance` should be updated as opposed to being destroyed or
+ * replaced by a new instance. The second argument is a descriptor. Future
+ * versions of the reconciler should only compare descriptors to other
+ * descriptors.
  *
- * @param {?object} prevComponent
- * @param {?object} nextComponent
- * @return {boolean} True if `prevComponent` should be updated.
+ * @param {?object} prevComponentInstance
+ * @param {?object} nextDescriptor
+ * @return {boolean} True if `prevComponentInstance` should be updated.
  * @protected
  */
-function shouldUpdateReactComponent(prevComponent, nextComponent) {
+function shouldUpdateReactComponent(prevComponentInstance, nextDescriptor) {
   // TODO: Remove warning after a release.
-  if (prevComponent && nextComponent &&
-      prevComponent.constructor === nextComponent.constructor && (
-        (prevComponent.props && prevComponent.props.key) ===
-        (nextComponent.props && nextComponent.props.key)
+  if (prevComponentInstance && nextDescriptor &&
+      prevComponentInstance.constructor === nextDescriptor.constructor && (
+        (prevComponentInstance.props && prevComponentInstance.props.key) ===
+        (nextDescriptor.props && nextDescriptor.props.key)
       )) {
-    if (prevComponent._owner === nextComponent._owner) {
+    if (prevComponentInstance._owner === nextDescriptor._owner) {
       return true;
     } else {
       if (__DEV__) {
-        if (prevComponent.state) {
+        if (prevComponentInstance.state) {
           console.warn(
             'A recent change to React has been found to impact your code. ' +
             'A mounted component will now be unmounted and replaced by a ' +
             'component (of the same class) if their owners are different. ' +
             'Previously, ownership was not considered when updating.',
-            prevComponent,
-            nextComponent
+            prevComponentInstance,
+            nextDescriptor
           );
         }
       }

@@ -24,7 +24,7 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 
-
+var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
 /**
@@ -49,7 +49,8 @@ function renderComponentToString(component) {
     transaction = ReactServerRenderingTransaction.getPooled(false);
 
     return transaction.perform(function() {
-      var markup = component.mountComponent(id, transaction, 0);
+      var componentInstance = instantiateReactComponent(component);
+      var markup = componentInstance.mountComponent(id, transaction, 0);
       return ReactMarkupChecksum.addChecksumToMarkup(markup);
     }, null);
   } finally {

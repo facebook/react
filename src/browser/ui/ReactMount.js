@@ -25,6 +25,7 @@ var ReactPerf = require('ReactPerf');
 
 var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
+var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
@@ -296,8 +297,13 @@ var ReactMount = {
         nextComponent,
         container,
         shouldReuseMarkup) {
-      var reactRootID = ReactMount._registerComponent(nextComponent, container);
-      nextComponent.mountComponentIntoNode(
+
+      var componentInstance = instantiateReactComponent(nextComponent);
+      var reactRootID = ReactMount._registerComponent(
+        componentInstance,
+        container
+      );
+      componentInstance.mountComponentIntoNode(
         reactRootID,
         container,
         shouldReuseMarkup
@@ -309,7 +315,7 @@ var ReactMount = {
           getReactRootElementInContainer(container);
       }
 
-      return nextComponent;
+      return componentInstance;
     }
   ),
 

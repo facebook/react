@@ -45,6 +45,16 @@ var ReactTextComponent = function(initialText) {
   this.construct({text: initialText});
 };
 
+/**
+ * Used to clone the text descriptor object before it's mounted.
+ *
+ * @param {object} props
+ * @return {object} A new ReactTextComponent instance
+ */
+ReactTextComponent.ConvenienceConstructor = function(props) {
+  return new ReactTextComponent(props.text);
+};
+
 mixInto(ReactTextComponent, ReactComponent.Mixin);
 mixInto(ReactTextComponent, ReactBrowserComponentMixin);
 mixInto(ReactTextComponent, {

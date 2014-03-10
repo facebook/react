@@ -312,9 +312,7 @@ describe('ReactComponentLifeCycle', function() {
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
     //
-    var instance = <LifeCycleComponent />;
-    expect(instance._lifeCycleState).toBe(ComponentLifeCycle.UNMOUNTED);
-    ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<LifeCycleComponent />);
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
