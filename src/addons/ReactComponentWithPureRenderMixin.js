@@ -35,7 +35,7 @@ var shallowEqual = require('shallowEqual');
  *     mixins: [ReactComponentWithPureRenderMixin],
  *
  *     render: function() {
- *       return <div className={this.props.className}>foo</div>;
+ *       return <div class={this.props.class}>foo</div>;
  *     }
  *   });
  *

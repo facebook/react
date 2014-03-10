@@ -44,7 +44,7 @@ describe('Danger', function() {
     });
 
     it('should render markup with props', function() {
-      var markup = (<div className="foo" />).mountComponent(
+      var markup = (<div class="foo" />).mountComponent(
         '.rX',
         transaction,
         0

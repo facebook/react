@@ -38,14 +38,14 @@ describe('ReactDOMComponent', function() {
       transaction = new ReactReconcileTransaction();
     });
 
-    it("should handle className", function() {
+    it("should handle class", function() {
       var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
 
-      stub.receiveComponent({props: { className: 'foo' }}, transaction);
+      stub.receiveComponent({props: { class: 'foo' }}, transaction);
       expect(stub.getDOMNode().className).toEqual('foo');
-      stub.receiveComponent({props: { className: 'bar' }}, transaction);
+      stub.receiveComponent({props: { class: 'bar' }}, transaction);
       expect(stub.getDOMNode().className).toEqual('bar');
-      stub.receiveComponent({props: { className: null }}, transaction);
+      stub.receiveComponent({props: { class: null }}, transaction);
       expect(stub.getDOMNode().className).toEqual('');
     });
 
@@ -120,7 +120,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should remove properties", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
+      var stub = ReactTestUtils.renderIntoDocument(<div class='monkey' />);
 
       expect(stub.getDOMNode().className).toEqual('monkey');
       stub.receiveComponent({props: {}}, transaction);
@@ -247,10 +247,10 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should generate the correct markup with className", function() {
-      expect(genMarkup({ className: 'a' })).toHaveAttribute('class', 'a');
-      expect(genMarkup({ className: 'a b' })).toHaveAttribute('class', 'a b');
-      expect(genMarkup({ className: '' })).toHaveAttribute('class', '');
+    it("should generate the correct markup with class", function() {
+      expect(genMarkup({ class: 'a' })).toHaveAttribute('class', 'a');
+      expect(genMarkup({ class: 'a b' })).toHaveAttribute('class', 'a b');
+      expect(genMarkup({ class: '' })).toHaveAttribute('class', '');
     });
   });
 

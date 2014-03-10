@@ -72,14 +72,14 @@ describe('DOMPropertyOperations', function() {
       expect(console.warn.argsForCall[0][0]).toContain('tabIndex');
     });
 
-    it('should warn about class', function() {
+    it('should warn about className', function() {
       spyOn(console, 'warn');
       expect(DOMPropertyOperations.createMarkupForProperty(
-        'class',
+        'className',
         'muffins'
       )).toBe(null);
       expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('className');
+      expect(console.warn.argsForCall[0][0]).toContain('you mean class?');
     });
 
     it('should create markup for boolean properties', function() {
@@ -174,17 +174,17 @@ describe('DOMPropertyOperations', function() {
       expect(foobarSetter.mock.calls[0][1]).toBe('cows say moo');
     });
 
-    it('should set className to empty string instead of null', function() {
+    it('should set class to empty string instead of null', function() {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
-        'className',
+        'class',
         'selected'
       );
       expect(stubNode.className).toBe('selected');
 
       DOMPropertyOperations.setValueForProperty(
         stubNode,
-        'className',
+        'class',
         null
       );
       // className should be '', not 'null' or null (which becomes 'null' in

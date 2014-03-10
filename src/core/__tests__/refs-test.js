@@ -45,14 +45,14 @@ var ClickCounter = React.createClass({
     for (i=0; i < this.state.count; i++) {
       children.push(
         <div
-          className="clickLogDiv"
+          class="clickLogDiv"
           key={"clickLog" + i}
           ref={"clickLog" + i}
         />
       );
     }
     return (
-      <span className="clickIncrementer" onClick={this.handleClick}>
+      <span class="clickIncrementer" onClick={this.handleClick}>
         {children}
       </span>
     );
@@ -187,15 +187,15 @@ describe('ref swapping', function() {
       return (
         <div>
           <div
-            className="first"
+            class="first"
             ref={count % 3 === 0 ? 'hopRef' : 'divOneRef'}
           />
           <div
-            className="second"
+            class="second"
             ref={count % 3 === 1 ? 'hopRef' : 'divTwoRef'}
           />
           <div
-            className="third"
+            class="third"
             ref={count % 3 === 2 ? 'hopRef' : 'divThreeRef'}
           />
         </div>
