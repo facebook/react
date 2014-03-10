@@ -192,6 +192,33 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.className).toBe('');
     });
 
+    it('should remove property properly even with different name', function() {
+      // Suppose 'foobar' is a property that corresponds to the underlying
+      // 'className' property:
+      DOMProperty.injection.injectDOMPropertyConfig({
+        Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
+        DOMPropertyNames: {
+          foobar: 'className'
+        }
+      });
+
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'foobar',
+        'selected'
+      );
+      expect(stubNode.className).toBe('selected');
+
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'foobar',
+        null
+      );
+      // className should be '', not 'null' or null (which becomes 'null' in
+      // some browsers)
+      expect(stubNode.className).toBe('');
+    });
+
   });
 
   describe('injectDOMPropertyConfig', function() {
