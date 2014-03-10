@@ -206,6 +206,15 @@ ReactDOMComponent.Mixin = {
   },
 
   receiveComponent: function(nextComponent, transaction) {
+    if (nextComponent === this) {
+      // Since props and context are immutable after the component is
+      // mounted, we can do a cheap identity compare here to determine
+      // if this is a superfluous reconcile.
+
+      // TODO: compare the descriptor
+      return;
+    }
+
     assertValidProps(nextComponent.props);
     ReactComponent.Mixin.receiveComponent.call(
       this,
