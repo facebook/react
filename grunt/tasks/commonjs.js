@@ -4,24 +4,18 @@ var cjs = require('pure-cjs');
 var grunt = require('grunt');
 
 module.exports = function() {
-  var config = this.data;
+  var config = this.options({
+    transforms: [],
+    after: []
+  });
 
   // This task is async...
   var done = this.async();
 
-  // More/better assertions
-  // grunt.config.requires('outfile');
-  // grunt.config.requires('entries');
-  config.transforms = config.transforms || [];
-  config.after = config.after || [];
-  if (typeof config.after === 'function') {
-    config.after = [config.after];
-  }
-
   // Extract options
   var options = {
-    input: config.entries[0],
-    output: config.outfile,
+    input: this.files[0].src[0],
+    output: this.files[0].dest,
     map: config.debug, // sourcemaps
     exports: config.standalone, // global
     transform: config.transforms,
@@ -30,8 +24,9 @@ module.exports = function() {
 
   // Actually bundle it up
   var _this = this;
+
   cjs.transform(options).then(function(result) {
-    grunt.file.write(config.outfile, config.after.reduce(function(src, fn) {
+    grunt.file.write(_this.files[0].dest, config.after.reduce(function(src, fn) {
       return fn.call(_this, src);
     }, result.code));
 
