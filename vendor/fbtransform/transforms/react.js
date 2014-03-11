@@ -130,17 +130,26 @@ function visitReactTag(traverse, object, path, state) {
   var childrenToRender = object.children.filter(function(child) {
     return !(child.type === Syntax.Literal
              && typeof child.value === 'string'
-             && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/)
-             || child.type === Syntax.XJSExpressionContainer
-             && child.expression.type === Syntax.XJSEmptyExpression);
+             && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
   });
   if (childrenToRender.length > 0) {
-    utils.append(', ', state);
+    var lastRenderableIndex;
+
+    childrenToRender.forEach(function(child, index) {
+      if (child.type !== Syntax.XJSExpressionContainer ||
+          child.expression.type !== Syntax.XJSEmptyExpression) {
+        lastRenderableIndex = index;
+      }
+    });
+
+    if (lastRenderableIndex !== undefined) {
+      utils.append(', ', state);
+    }
 
     childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
 
-      var isLast = index === childrenToRender.length - 1;
+      var isLast = index >= lastRenderableIndex;
 
       if (child.type === Syntax.Literal) {
         renderXJSLiteral(child, isLast, state);
