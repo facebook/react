@@ -64,10 +64,11 @@ function visitReactTag(traverse, object, path, state) {
   var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   var tagOpening;
   if (isFallbackTag) {
+    tagOpening = jsxObjIdent;
     if (isValidIdentifier(nameObject.name)) {
-      tagOpening = jsxObjIdent + '.' + (nameObject.name);
+      tagOpening += '.' + nameObject.name;
     } else {
-      tagOpening = jsxObjIdent + '["' + (nameObject.name) + '"]';
+      tagOpening += '[' + JSON.stringify(nameObject.name) + ']';
     }
   } else {
     tagOpening = nameObject.name;
