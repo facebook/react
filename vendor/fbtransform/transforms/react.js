@@ -135,7 +135,7 @@ function visitReactTag(traverse, object, path, state) {
              && child.expression.type === Syntax.XJSEmptyExpression);
   });
   if (childrenToRender.length > 0) {
-    utils.append(', ', state);
+    utils.append(',', state);
 
     childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
