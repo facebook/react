@@ -11,7 +11,6 @@ prev: complementary-tools.html
 * **[Instagram.com](http://instagram.com/)** is 100% built on React, both public site and internal tools.
 * **[Facebook.com](http://www.facebook.com/)**'s commenting interface, business management tools, [Lookback video editor](http://facebook.com/lookback/edit), page insights, and most, if not all, new JS development.
 * **[Khan Academy](http://khanacademy.org/)** uses React for most new JS development.
-* **[Shirtstarter](https://www.shirtstarter.com/)** is 100% built on React.
 * **[Sberbank](http://sberbank.ru/moscow/ru/person/)**, Russia's number one bank, is built with React.
 * **[The New York Times's 2014 Red Carpet Project](http://www.nytimes.com/interactive/2014/02/02/fashion/red-carpet-project.html?_r=0)** is built with React.
 
