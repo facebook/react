@@ -61,8 +61,29 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
+
+  // Support for <custom-element> tags
+  var isCustomElement = nameObject.name.indexOf('-') > 0;
+  //transform `custom-element` to `CustomElement`
+  function toPascalCase(name){
+    var camelCased = name.replace(/-([a-z])/g, function (g) {
+      return g[1].toUpperCase();
+    });
+    return camelCased[0].toUpperCase() + camelCased.slice(1);
+  };
+
+  function startComponent(name){
+    if(isFallbackTag) {
+      return jsxObjIdent + '.' + name;
+    } else if(isCustomElement) {
+      return toPascalCase(name);
+    } else {
+      return name;
+    }
+  };
+
   utils.append(
-    (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
+    startComponent(nameObject.name) + '(',
     state
   );
 
