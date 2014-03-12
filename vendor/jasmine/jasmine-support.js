@@ -13,7 +13,7 @@ jasmine.getEnv().beforeEach(function() {
 
     lastCalledWith: function() {
       if (this.actual.mock === undefined) {
-        throw Error('toBeCalled() should be used on a mock function');
+        throw Error('lastCalledWith() should be used on a mock function');
       }
       var calls = this.actual.mock.calls;
       var args = Array.prototype.slice.call(arguments);
@@ -22,7 +22,7 @@ jasmine.getEnv().beforeEach(function() {
 
     toBeCalledWith: function() {
       if (this.actual.mock === undefined) {
-        throw Error('toBeCalled() should be used on a mock function');
+        throw Error('toBeCalledWith() should be used on a mock function');
       }
       var args = Array.prototype.slice.call(arguments);
       return this.actual.mock.calls.some(function(call) {
