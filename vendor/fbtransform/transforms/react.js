@@ -47,22 +47,54 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
   }
 };
 
-function visitReactTag(traverse, object, path, state) {
+function loadJSXNamespaces(state) {
+  var namespaces = {};
+  var jsxns = utils.getDocblock(state).jsxns;
+
+  if (jsxns) {
+    try {
+      namespaces = JSON.parse(jsxns);
+    } catch (e) {
+      throw new SyntaxError('Error parsing @jsxns docblock: ' + e.message);
+    }
+  }
+
+  return namespaces;
+}
+
+function normalizeTag(nameObject, state) {
   var jsxObjIdent = utils.getDocblock(state).jsx;
+  var jsxNamespaces = loadJSXNamespaces(state);
+  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
+  var namespace = nameObject.namespace;
+
+  if (isFallbackTag) {
+    namespace = jsxObjIdent;
+  } else if (jsxNamespaces.hasOwnProperty(namespace)) {
+    namespace = jsxNamespaces[namespace];
+  } else if (namespace) {
+    throw new Error(
+       'Undefined namespace used on tag: ' + namespace + ':' + nameObject.name
+       + '. Define any custom namespaces with @jsxns.');
+  }
+
+  if (namespace) {
+    return namespace + '.' + nameObject.name;
+  } else {
+    return nameObject.name;
+  }
+}
+
+function visitReactTag(traverse, object, path, state) {
   var openingElement = object.openingElement;
   var nameObject = openingElement.name;
   var attributesObject = openingElement.attributes;
+  var tagIdentifier = normalizeTag(nameObject, state);
 
   utils.catchup(openingElement.range[0], state);
 
-  if (nameObject.namespace) {
-    throw new Error(
-       'Namespace tags are not supported. ReactJSX is not XML.');
-  }
-
-  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   utils.append(
-    (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
+    tagIdentifier + '(',
     state
   );
 
