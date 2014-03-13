@@ -1,6 +1,6 @@
 ---
 id: getting-started-zh-CN
-title: 开始
+title: 入门教程
 layout: docs
 next: tutorial.html
 ---
@@ -12,17 +12,17 @@ next: tutorial.html
  * **[React JSFiddle](http://jsfiddle.net/vjeux/kb3gN/)**
  * [React JSFiddle without JSX](http://jsfiddle.net/vjeux/VkebS/)
 
-## 新手教程包 (Starter Kit)
+## 入门教程包 (Starter Kit)
 
-开始先下载新手教程包
+开始先下载入门教程包
 
 <div class="buttons-unit downloads">
   <a href="/react/downloads/react-{{site.react_version}}.zip" class="button">
-    下载新手教程包 {{site.react_version}}
+    下载入门教程 {{site.react_version}}
   </a>
 </div>
 
-在新手教程包的根目录，创建一个含有下面代码的`helloworld.html`
+在入门教程包的根目录，创建一个含有下面代码的 `helloworld.html`
 
 ```html
 <!DOCTYPE html>
