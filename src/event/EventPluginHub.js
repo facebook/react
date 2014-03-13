@@ -159,7 +159,7 @@ var EventPluginHub = {
       'Cannot call putListener() in a non-DOM environment.'
     );
     invariant(
-      !listener || typeof listener === 'function',
+      typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
       registrationName, typeof listener
     );

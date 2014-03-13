@@ -144,12 +144,9 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       var propValue = props[propKey];
-      if (propValue == null) {
-        continue;
-      }
       if (registrationNameModules[propKey]) {
         putListener(this._rootNodeID, propKey, propValue, transaction);
-      } else {
+      } else if (propValue != null) {
         if (propKey === STYLE) {
           if (propValue) {
             propValue = props.style = merge(props.style);
