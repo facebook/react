@@ -29,37 +29,32 @@ describe('ReactDOMInput', function() {
   var ReactLink;
   var ReactTestUtils;
 
-  var renderTextInput;
-
   beforeEach(function() {
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
-
-    renderTextInput = function(component) {
-      var stub = ReactTestUtils.renderIntoDocument(component);
-      var node = stub.getDOMNode();
-      return node;
-    };
   });
 
   it('should display `defaultValue` of number 0', function() {
     var stub = <input type="text" defaultValue={0} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('0');
   });
 
   it('should display "true" for `defaultValue` of `true`', function() {
     var stub = <input type="text" defaultValue={true} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('true');
   });
 
   it('should display "false" for `defaultValue` of `false`', function() {
     var stub = <input type="text" defaultValue={false} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('false');
   });
@@ -72,21 +67,24 @@ describe('ReactDOMInput', function() {
     };
 
     var stub = <input type="text" defaultValue={objToString} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('foobar');
   });
 
   it('should display `value` of number 0', function() {
     var stub = <input type="text" value={0} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('0');
   });
 
   it('should allow setting `value` to `true`', function() {
     var stub = <input type="text" value="yolo" />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('yolo');
 
@@ -96,7 +94,8 @@ describe('ReactDOMInput', function() {
 
   it("should allow setting `value` to `false`", function() {
     var stub = <input type="text" value="yolo" />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('yolo');
 
@@ -106,7 +105,8 @@ describe('ReactDOMInput', function() {
 
   it('should allow setting `value` to `objToString`', function() {
     var stub = <input type="text" value="foo" />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     expect(node.value).toBe('foo');
 
@@ -122,7 +122,8 @@ describe('ReactDOMInput', function() {
 
   it('should properly control a value of number `0`', function() {
     var stub = <input type="text" value={0} />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
@@ -131,7 +132,8 @@ describe('ReactDOMInput', function() {
 
   it('should not set a value for submit buttons unnecessarily', function() {
     var stub = <input type="submit" />;
-    var node = renderTextInput(stub);
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
 
     // The value shouldn't be '', or else the button will have no text; it
     // should have the default "Submit" or "Submit Query" label
@@ -184,7 +186,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    React.renderComponent(instance, container);
+    instance = React.renderComponent(instance, container);
 
     expect(instance.getDOMNode().value).toBe('yolo');
     expect(link.value).toBe('yolo');
@@ -257,7 +259,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    React.renderComponent(instance, container);
+    instance = React.renderComponent(instance, container);
 
     expect(instance.getDOMNode().checked).toBe(true);
     expect(link.value).toBe(true);

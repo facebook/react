@@ -75,7 +75,8 @@ function renderComponentToStaticMarkup(component) {
     transaction = ReactServerRenderingTransaction.getPooled(true);
 
     return transaction.perform(function() {
-      return component.mountComponent(id, transaction, 0);
+      var componentInstance = instantiateReactComponent(component);
+      return componentInstance.mountComponent(id, transaction, 0);
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);

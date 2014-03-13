@@ -108,11 +108,11 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     var instance = <StatefulComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     instance.addAnotherField();
     expect(instance.state.aField).toBe('asdf');
     instance.unmountComponent();
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(typeof instance.state.aField).toBe('undefined');
   });
 
@@ -157,7 +157,7 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var instance = <SwitcherParent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
       'SwitcherParent:onDOMReady',
@@ -180,11 +180,11 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     var instance = <StatefulComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     instance.addAnotherField();
     expect(instance.state.aField).toBe('asdf');
     instance.unmountComponent();
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toBe(null);
   });
 
@@ -203,7 +203,7 @@ describe('ReactComponentLifeCycle', function() {
     });
     var instance = <StatefulComponent />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
@@ -220,7 +220,7 @@ describe('ReactComponentLifeCycle', function() {
     });
     var instance = <StatefulComponent />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).not.toThrow();
   });
 
@@ -239,7 +239,7 @@ describe('ReactComponentLifeCycle', function() {
     });
     var instance = <StatefulComponent />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).not.toThrow();
 
     // The return value of getInitialState overrides anything from setState
@@ -403,7 +403,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInOnDOMReady="goodbye"
       />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: replaceProps(...): You called `setProps` or ' +
       '`replaceProps` on a component with a parent. This is an anti-pattern ' +
@@ -497,7 +497,7 @@ describe('ReactComponentLifeCycle', function() {
         valueToUseInitially="hello"
         valueToUseInOnDOMReady="goodbye"
       />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.stateField).toBe('goodbye');
   });
 

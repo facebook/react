@@ -62,13 +62,13 @@ describe('autobinding', function() {
 
     var instance1 = <TestBindComponent />;
     var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(instance1)
+    var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     var instance2 = <TestBindComponent />;
     var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(instance2)
+    var rendered2 = reactComponentExpect(mountedInstance2)
       .expectRenderedChild()
       .instance();
 
@@ -123,7 +123,7 @@ describe('autobinding', function() {
 
     var instance1 = <TestBindComponent />;
     var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(instance1)
+    var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
