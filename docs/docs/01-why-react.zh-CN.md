@@ -14,7 +14,7 @@ React 是一个 Facebook 和 Instagram 用来创建用户界面的 JavaScript �
 
 仅仅只要表达出你的应用程序在任一个时间点应该长的样子，然后当底层的数据变了，React 会自动更新所有UI的变化。
 
-### 表达能力(Declarative)
+### 表达能力 (Declarative)
 
 当数据变化了，React 概念上是类似点击了更新的按钮，但仅会更新变化的部分。
 
