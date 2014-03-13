@@ -109,7 +109,7 @@ describe('ReactCompositeComponent-state', function() {
   it('should support setting state', function() {
     var stateListener = mocks.getMockFunction();
     var instance = <TestComponent stateListener={stateListener} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     instance.setProps({nextColor: 'green'});
     instance.setFavoriteColor('blue');
     instance.forceUpdate();

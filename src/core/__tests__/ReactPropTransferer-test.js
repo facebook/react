@@ -48,7 +48,7 @@ describe('ReactPropTransferer', function() {
 
   it('should leave explicitly specified properties intact', function() {
     var instance = <TestComponent type="radio" />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -63,7 +63,7 @@ describe('ReactPropTransferer', function() {
 
   it('should transfer unspecified properties', function() {
     var instance = <TestComponent placeholder="Type here..." />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -77,7 +77,7 @@ describe('ReactPropTransferer', function() {
         className="hidden_elem"
         style={{width: '100%'}}
       />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -103,7 +103,7 @@ describe('ReactPropTransferer', function() {
         <span>Hello!</span>
       </ChildrenTestComponent>;
 
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     reactComponentExpect(instance)
       .expectRenderedChild()
         .toBeDOMComponentWithTag('div')

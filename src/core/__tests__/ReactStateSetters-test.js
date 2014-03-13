@@ -55,7 +55,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateSetter should update state', function() {
     var instance = <TestComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var setter = ReactStateSetters.createStateSetter(
@@ -78,7 +78,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateKeySetter should update state', function() {
     var instance = <TestComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var setter = ReactStateSetters.createStateKeySetter(instance, 'foo');
@@ -94,7 +94,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateKeySetter is memoized', function() {
     var instance = <TestComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var foo1 = ReactStateSetters.createStateKeySetter(instance, 'foo');
@@ -109,7 +109,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateSetter should update state from mixin', function() {
     var instance = <TestComponentWithMixin />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var setter = instance.createStateSetter(
@@ -131,7 +131,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateKeySetter should update state with mixin', function() {
     var instance = <TestComponentWithMixin />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var setter = instance.createStateKeySetter('foo');
@@ -147,7 +147,7 @@ describe('ReactStateSetters', function() {
 
   it('createStateKeySetter is memoized with mixin', function() {
     var instance = <TestComponentWithMixin />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'foo'});
 
     var foo1 = instance.createStateKeySetter('foo');

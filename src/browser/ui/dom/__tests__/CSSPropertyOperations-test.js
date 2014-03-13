@@ -86,7 +86,7 @@ describe('CSSPropertyOperations', function() {
     };
     var div = <div style={styles} />;
     var root = document.createElement('div');
-    React.renderComponent(div, root);
+    div = React.renderComponent(div, root);
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 

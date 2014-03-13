@@ -42,7 +42,7 @@ describe('ReactDOMButton', function() {
   }
 
   function mounted(button) {
-    ReactTestUtils.renderIntoDocument(button);
+    button = ReactTestUtils.renderIntoDocument(button);
     return button;
   }
 

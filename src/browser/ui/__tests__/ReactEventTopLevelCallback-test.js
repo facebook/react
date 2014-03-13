@@ -44,8 +44,8 @@ describe('ReactEventTopLevelCallback', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
+      childControl = ReactMount.renderComponent(childControl, childContainer);
+      parentControl = ReactMount.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
@@ -66,9 +66,9 @@ describe('ReactEventTopLevelCallback', function() {
       var parentControl = <div>Parent</div>;
       var grandParentContainer = document.createElement('div');
       var grandParentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
-      ReactMount.renderComponent(grandParentControl, grandParentContainer);
+      childControl = ReactMount.renderComponent(childControl, childContainer);
+      parentControl = ReactMount.renderComponent(parentControl, parentContainer);
+      grandParentControl = ReactMount.renderComponent(grandParentControl, grandParentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
       grandParentControl.getDOMNode().appendChild(parentContainer);
 
@@ -90,8 +90,8 @@ describe('ReactEventTopLevelCallback', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      ReactMount.renderComponent(childControl, childContainer);
-      ReactMount.renderComponent(parentControl, parentContainer);
+      childControl = ReactMount.renderComponent(childControl, childContainer);
+      parentControl = ReactMount.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       // ReactEventEmitter.handleTopLevel might remove the target from the DOM.

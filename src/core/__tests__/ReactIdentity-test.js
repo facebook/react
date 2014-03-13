@@ -52,7 +52,7 @@ describe('ReactIdentity', function() {
         }}
       </div>;
 
-    React.renderComponent(instance, document.createElement('div'));
+    instance = React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
     checkId(node.childNodes[0], '.0.$first:0');
@@ -68,7 +68,7 @@ describe('ReactIdentity', function() {
         <div key={123} />
       </div>;
 
-    React.renderComponent(instance, document.createElement('div'));
+    instance = React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
     checkId(node.childNodes[0], '.0.$apple');
@@ -92,7 +92,7 @@ describe('ReactIdentity', function() {
         <Wrapper><span key="chipmunk" /></Wrapper>
       </div>;
 
-    React.renderComponent(instance, document.createElement('div'));
+    instance = React.renderComponent(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
 
@@ -282,7 +282,7 @@ describe('ReactIdentity', function() {
 
     var wrapped = <TestContainer first={instance0} second={instance1} />;
 
-    React.renderComponent(wrapped, document.createElement('div'));
+    wrapped = React.renderComponent(wrapped, document.createElement('div'));
 
     var beforeID = ReactMount.getID(wrapped.getDOMNode().firstChild);
 

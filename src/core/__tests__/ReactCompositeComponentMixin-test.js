@@ -103,7 +103,7 @@ describe('ReactCompositeComponent-mixin', function() {
   it('should support merging propTypes and statics', function() {
     var listener = mocks.getMockFunction();
     var instance = <TestComponent listener={listener} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     var instancePropTypes = instance.constructor.propTypes;
 
@@ -118,7 +118,7 @@ describe('ReactCompositeComponent-mixin', function() {
   it('should support chaining delegate functions', function() {
     var listener = mocks.getMockFunction();
     var instance = <TestComponent listener={listener} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],

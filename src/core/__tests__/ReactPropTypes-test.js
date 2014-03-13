@@ -455,7 +455,7 @@ describe('Component Type', function() {
 
   it('should be able to define a single child as label', () => {
     var instance = <Component label={<div />} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     // No warnings should have been logged.
     expect(console.warn.mock.calls.length).toBe(0);
@@ -463,7 +463,7 @@ describe('Component Type', function() {
 
   it('should warn when passing no label and isRequired is set', () => {
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(console.warn.mock.calls.length).toBe(1);
   });

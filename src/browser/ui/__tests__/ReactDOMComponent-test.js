@@ -351,7 +351,7 @@ describe('ReactDOMComponent', function() {
 
       var callback = function() {};
       var instance = <div onClick={callback} />;
-      React.renderComponent(instance, container);
+      instance = React.renderComponent(instance, container);
 
       var rootNode = instance.getDOMNode();
       var rootNodeID = ReactMount.getID(rootNode);
