@@ -7,6 +7,88 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #18</title>
+				<description>&lt;p&gt;In this Round-up, we are taking a few closer looks at React&amp;#39;s interplay with different frameworks and architectures.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;little-framework-big-splash&quot;&gt;&lt;/a&gt;&amp;quot;Little framework BIG splash&amp;quot; &lt;a class=&quot;hash-link&quot; href=&quot;#little-framework-big-splash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Let&amp;#39;s start with yet another refreshing introduction to React: Craig Savolainen (&lt;a href=&quot;https://twitter.com/maedhr&quot;&gt;@maedhr&lt;/a&gt;) walks through some first steps, demonstrating &lt;a href=&quot;http://infinitemonkeys.influitive.com/little-framework-big-splash&quot;&gt;how to build a Google Maps component&lt;/a&gt; using React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;architecting-your-app-with-react&quot;&gt;&lt;/a&gt;Architecting your app with react &lt;a class=&quot;hash-link&quot; href=&quot;#architecting-your-app-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Brandon Konkle (&lt;a href=&quot;https://twitter.com/bkonkle&quot;&gt;@bkonkle&lt;/a&gt;)
+&lt;a href=&quot;http://lincolnloop.com/blog/architecting-your-app-react-part-1/&quot;&gt;Architecting your app with react&lt;/a&gt;
+We&amp;#39;re looking forward to part 2!&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;React is not a full MVC framework, and this is actually one of its strengths. Many who adopt React choose to do so alongside their favorite MVC framework, like Backbone. React has no opinions about routing or syncing data, so you can easily use your favorite tools to handle those aspects of your frontend application. You&amp;#39;ll often see React used to manage specific parts of an application&amp;#39;s UI and not others. React really shines, however, when you fully embrace its strategies and make it the core of your application&amp;#39;s interface.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://lincolnloop.com/blog/architecting-your-app-react-part-1/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs.-async-dom-manipulation&quot;&gt;&lt;/a&gt;React vs. async DOM manipulation &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs.-async-dom-manipulation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Eliseu Monar (&lt;a href=&quot;https://twitter.com/eliseumds&quot;&gt;@eliseumds&lt;/a&gt;)&amp;#39;s post &amp;quot;&lt;a href=&quot;http://eliseu.tk/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering&quot;&gt;ReactJS vs async concurrent rendering&lt;/a&gt;&amp;quot; is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-scala-and-the-play-framework&quot;&gt;&lt;/a&gt;React, Scala and the Play Framework &lt;a class=&quot;hash-link&quot; href=&quot;#react-scala-and-the-play-framework&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://matthiasnehlsen.com/&quot;&gt;Matthias Nehlsen&lt;/a&gt; wrote a detailed introductory piece on &lt;a href=&quot;http://matthiasnehlsen.com/blog/2014/01/05/play-framework-and-facebooks-react-library/&quot;&gt;React and the Play Framework&lt;/a&gt;, including a helpful architectural diagram of a typical React app.&lt;/p&gt;
+
+&lt;p&gt;Nehlsen&amp;#39;s React frontend is the second implementation of his chat application&amp;#39;s frontend, following an AngularJS version. Both implementations are functionally equivalent and offer some perspective on differences between the two frameworks.&lt;/p&gt;
+
+&lt;p&gt;In &lt;a href=&quot;http://matthiasnehlsen.com/blog/2014/01/24/scala-dot-js-and-reactjs/&quot;&gt;another article&lt;/a&gt;, he walks us through the process of using React with scala.js to implement app-wide undo functionality.&lt;/p&gt;
+
+&lt;p&gt;Also check out his &lt;a href=&quot;http://m.ustream.tv/recorded/42780242&quot;&gt;talk&lt;/a&gt; at Ping Conference 2014, in which he walks through a lot of the previously content in great detail.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-backbone&quot;&gt;&lt;/a&gt;React and Backbone &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-backbone&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The folks over at &lt;a href=&quot;https://venmo.com/&quot;&gt;Venmo&lt;/a&gt; are using React in conjunction with Backbone.
+Thomas Boyt (&lt;a href=&quot;https://twitter.com/thomasaboyt&quot;&gt;@thomasaboyt&lt;/a&gt;) wrote &lt;a href=&quot;http://www.thomasboyt.com/2013/12/17/using-reactjs-as-a-backbone-view.html&quot;&gt;this detailed piece&lt;/a&gt; about why React and Backbone are &amp;quot;a fantastic pairing&amp;quot;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs.-ember&quot;&gt;&lt;/a&gt;React vs. Ember &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs.-ember&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Eric Berry (&lt;a href=&quot;https://twitter.com/coderberry&quot;&gt;@coderberry&lt;/a&gt;) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: &lt;a href=&quot;http://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/&quot;&gt;&amp;quot;Facebook React vs. Ember&amp;quot;&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-plain-old-html&quot;&gt;&lt;/a&gt;React and plain old HTML &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-plain-old-html&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Daniel Lo Nigro (&lt;a href=&quot;https://twitter.com/Daniel15&quot;&gt;@Daniel15&lt;/a&gt;) created &lt;a href=&quot;https://github.com/reactjs/react-magic&quot;&gt;React-Magic&lt;/a&gt;, which leverages React to ajaxify plain old html pages and even &lt;a href=&quot;http://stuff.dan.cx/facebook/react-hacks/magic/red.php&quot;&gt;allows CSS transitions between pageloads&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;React-Magic intercepts all navigation (link clicks and form posts) and loads the requested page via an AJAX request. React is then used to &amp;quot;diff&amp;quot; the old HTML with the new HTML, and only update the parts of the DOM that have been changed.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/reactjs/react-magic&quot;&gt;Check out the project on GitHub...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;On a related note, &lt;a href=&quot;https://turbo-react.herokuapp.com/&quot;&gt;Reactize&lt;/a&gt; by Ross Allen (&lt;a href=&quot;https://twitter.com/ssorallen&quot;&gt;@ssorallen&lt;/a&gt;) is a similarly awesome project: A wrapper for Rails&amp;#39; &lt;a href=&quot;https://github.com/rails/turbolinks/&quot;&gt;Turbolinks&lt;/a&gt;, which seems to have inspired John Lynch (&lt;a href=&quot;https://twitter.com/johnrlynch&quot;&gt;@johnrlynch&lt;/a&gt;) to then create &lt;a href=&quot;http://www.rigelgroupllc.com/blog/2014/01/12/react-jsx-transformer-in-rails-middleware/&quot;&gt;a server-rendered version using the JSX transformer in Rails middleware&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-object.observe&quot;&gt;&lt;/a&gt;React and Object.observe &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-object.observe&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Check out &lt;a href=&quot;https://github.com/fdecampredon&quot;&gt;François de Campredon&lt;/a&gt;&amp;#39;s implementation of &lt;a href=&quot;https://github.com/fdecampredon/react-observe-todomvc/&quot;&gt;TodoMVC based on React and ES6&amp;#39;s Object.observe&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-angular&quot;&gt;&lt;/a&gt;React and Angular &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-angular&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ian Bicking (&lt;a href=&quot;https://twitter.com/ianbicking&quot;&gt;@ianbicking&lt;/a&gt;) of Mozilla Labs &lt;a href=&quot;https://plus.google.com/+IanBicking/posts/Qj8R5SWAsfE&quot;&gt;explains why he &amp;quot;decided to go with React instead of Angular.js&amp;quot;&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;ng-react-update&quot;&gt;&lt;/a&gt;ng-React Update &lt;a class=&quot;hash-link&quot; href=&quot;#ng-react-update&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/davidchang&quot;&gt;David Chang&lt;/a&gt; works through some performance improvements of his &lt;a href=&quot;https://github.com/davidchang/ngReact&quot;&gt;ngReact&lt;/a&gt; project. His post &lt;a href=&quot;http://davidandsuzi.com/ngreact-update/&quot;&gt;&amp;quot;ng-React Update - React 0.9 and Angular Track By&amp;quot;&lt;/a&gt; includes some helpful advice on boosting render performance for Angular components.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Angular gives you a ton of functionality out of the box - a full MV* framework - and I am a big fan, but I&amp;#39;ll admit that you need to know how to twist the right knobs to get performance.&lt;/p&gt;
+
+&lt;p&gt;That said, React gives you a very strong view component out of the box with the performance baked right in. Try as I did, I couldn&amp;#39;t actually get it any faster. So pretty impressive stuff.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://davidandsuzi.com/ngreact-update/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;React was also recently mentioned at ng-conf, where the Angular team commented on React&amp;#39;s concept of the virtual DOM:&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/srt3OBP2kGc?start=113&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-web-components&quot;&gt;&lt;/a&gt;React and Web Components &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-web-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Jonathan Krause (&lt;a href=&quot;https://twitter.com/jonykrause&quot;&gt;@jonykrause&lt;/a&gt;) offers his thoughts regarding &lt;a href=&quot;http://jonykrau.se/posts/the-value-of-react&quot;&gt;parallels between React and Web Components&lt;/a&gt;, highlighting the value of React&amp;#39;s ability to render pages on the server practically for free.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;immutable-react&quot;&gt;&lt;/a&gt;Immutable React &lt;a class=&quot;hash-link&quot; href=&quot;#immutable-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://pk11.kinja.com/&quot;&gt;Peter Hausel&lt;/a&gt; shows how to build a Wikipedia auto-complete demo based on immutable data structures (similar to &lt;a href=&quot;https://npmjs.org/package/mori&quot;&gt;mori&lt;/a&gt;), really taking advantage of the framework&amp;#39;s one-way reactive data binding:&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Its truly reactive design makes DOM updates finally sane and when combined with persistent data structures one can experience JavaScript development like it was never done before.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://tech.kinja.com/immutable-react-1495205675&quot;&gt;Read the full post&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;d3-and-react&quot;&gt;&lt;/a&gt;D3 and React &lt;a class=&quot;hash-link&quot; href=&quot;#d3-and-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://10consulting.com/&quot;&gt;Ben Smith&lt;/a&gt; built some great SVG-based charting components using a little less of D3 and a little more of React: &lt;a href=&quot;http://10consulting.com/2014/02/19/d3-plus-reactjs-for-charting/&quot;&gt;D3 and React - the future of charting components?&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-and-react&quot;&gt;&lt;/a&gt;Om and React &lt;a class=&quot;hash-link&quot; href=&quot;#om-and-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Josh Haberman (&lt;a href=&quot;https://twitter.com/JoshHaberman&quot;&gt;@joshhaberman&lt;/a&gt;) discusses performance differences between React, Om and traditional MVC frameworks in &amp;quot;&lt;a href=&quot;http://blog.reverberate.org/2014/02/on-future-of-javascript-mvc-frameworks.html&quot;&gt;A closer look at OM vs React performance&lt;/a&gt;&amp;quot;.&lt;/p&gt;
+
+&lt;p&gt;Speaking of Om: &lt;a href=&quot;https://github.com/sgrove/omchaya&quot;&gt;Omchaya&lt;/a&gt; by Sean Grove (&lt;a href=&quot;https://twitter.com/sgrove&quot;&gt;@sgrove&lt;/a&gt;) is a neat Cljs/Om example project.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Worked for 2 hours on a [@react_js](https://twitter.com/react_js) app sans internet. Love that I could get stuff done with it without googling every question.&lt;/p&gt;&amp;mdash; John Shimek (@varikin) &lt;a href=&quot;https://twitter.com/varikin/status/436606891657949185&quot;&gt;February 20, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+</description>
+				<pubDate>2014-03-14T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #17</title>
 				<description>&lt;p&gt;It&amp;#39;s exciting to see the number of real-world React applications and components skyrocket over the past months! This community round-up features a few examples of inspiring React applications and components.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-the-real-world&quot;&gt;&lt;/a&gt;React in the Real World &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-the-real-world&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;facebook-lookback-video-editor&quot;&gt;&lt;/a&gt;Facebook Lookback video editor &lt;a class=&quot;hash-link&quot; href=&quot;#facebook-lookback-video-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
@@ -369,7 +451,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-a-complex-react-component&quot;&gt;&lt;/a&gt;Building a complex React component &lt;a class=&quot;hash-link&quot; href=&quot;#building-a-complex-react-component&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://matt-harrison.com/&quot;&gt;Matt Harrison&lt;/a&gt; walks through the process of &lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;creating an SVG-based Resistance Calculator&lt;/a&gt; using React. &lt;figure&gt;&lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;&lt;img src=&quot;/react/img/blog/resistance-calculator.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it&#39;s amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
 &lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs]((https://twitter.com/search?q=%23reactjs&amp;src=hash) makes refactoring your HTML as easy &amp; natural as refactoring your javascript [@react_js](https://twitter.com/react_js)&lt;/p&gt;&amp;mdash; Jared Forsyth (@jaredforsyth) &lt;a href=&quot;https://twitter.com/jaredforsyth/status/420304083010854912&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
@@ -489,7 +571,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-experience-report&quot;&gt;&lt;/a&gt;Om Experience Report &lt;a class=&quot;hash-link&quot; href=&quot;#om-experience-report&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Adam Solove (&lt;a href=&quot;https://twitter.com/asolove/&quot;&gt;@asolove&lt;/a&gt;) &lt;a href=&quot;http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html&quot;&gt;dives a little deeper into Om, React and ClojureScript&lt;/a&gt;. He shares some helpful tips he gathered while building his &lt;a href=&quot;https://github.com/asolove/carto-crayon&quot;&gt;CartoCrayon&lt;/a&gt; prototype.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;not-so-random-tweet&quot;&gt;&lt;/a&gt;Not-so-random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#not-so-random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It&#39;s honestly a bit weird because Om is exactly what I didn&#39;t know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 </description>
 				<pubDate>2014-02-05T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</link>
@@ -764,55 +846,6 @@ componentDidUpdate: function() {
 				<pubDate>2013-12-23T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/23/community-roundup-12.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.8</title>
-				<description>&lt;p&gt;I&amp;#39;ll start by answering the obvious question:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;What happened to 0.6 and 0.7?&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;It&amp;#39;s become increasingly obvious since our launch in May that people want to use React on the server. With the server-side rendering abilities, that&amp;#39;s a perfect fit. However using the same copy of React on the server and then packaging it up for the client is surprisingly a harder problem. People have been using our &lt;code&gt;react-tools&lt;/code&gt; module which includes React, but when browserifying that ends up packaging all of &lt;code&gt;esprima&lt;/code&gt; and some other dependencies that aren&amp;#39;t needed on the client. So we wanted to make this whole experience better.&lt;/p&gt;
-
-&lt;p&gt;We talked with &lt;a href=&quot;https://github.com/jeffbski&quot;&gt;Jeff Barczewski&lt;/a&gt; who was the owner of the &lt;code&gt;react&lt;/code&gt; module on npm. He was kind enough to transition ownership to us and release his package under a different name: &lt;code&gt;autoflow&lt;/code&gt;. I encourage you to &lt;a href=&quot;https://github.com/jeffbski/autoflow&quot;&gt;check it out&lt;/a&gt; if you&amp;#39;re writing a lot of asynchronous code. In order to not break all of &lt;code&gt;react&lt;/code&gt;&amp;#39;s current users of 0.7.x, we decided to bump our version to 0.8 and skip the issue entirely. We&amp;#39;re also including a warning if you use our &lt;code&gt;react&lt;/code&gt; module like you would use the previous package.&lt;/p&gt;
-
-&lt;p&gt;In order to make the transition to 0.8 for our current users as painless as possible, we decided to make 0.8 primarily a bug fix release on top of 0.5. No public APIs were changed (even if they were already marked as deprecated). We haven&amp;#39;t added any of the new features we have in master, though we did take the opportunity to pull in some improvements to internals.&lt;/p&gt;
-
-&lt;p&gt;We hope that by releasing &lt;code&gt;react&lt;/code&gt; on npm, we will enable a new set of uses that have been otherwise difficult. All feedback is welcome!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react&quot;&gt;&lt;/a&gt;React &lt;a class=&quot;hash-link&quot; href=&quot;#react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for more attributes:
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;rows&lt;/code&gt; &amp;amp; &lt;code&gt;cols&lt;/code&gt; for &lt;code&gt;&amp;lt;textarea&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;defer&lt;/code&gt; &amp;amp; &lt;code&gt;async&lt;/code&gt; for &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;loop&lt;/code&gt; for &lt;code&gt;&amp;lt;audio&amp;gt;&lt;/code&gt; &amp;amp; &lt;code&gt;&amp;lt;video&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;autoCorrect&lt;/code&gt; for form fields (a non-standard attribute only supported by mobile WebKit)&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Improved error messages&lt;/li&gt;
-&lt;li&gt;Fixed Selection events in IE11&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;onContextMenu&lt;/code&gt; events&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React with Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed bugs with TransitionGroup when children were undefined&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;onTransition&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;react-tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Upgraded &lt;code&gt;jstransform&lt;/code&gt; and &lt;code&gt;esprima-fb&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsxtransformer&quot;&gt;&lt;/a&gt;JSXTransformer &lt;a class=&quot;hash-link&quot; href=&quot;#jsxtransformer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for use in IE8&lt;/li&gt;
-&lt;li&gt;Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2013-12-19T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2013/12/19/react-v0.8.0.html</guid>
 			</item>
 		
 	</channel>
