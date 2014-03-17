@@ -15,7 +15,6 @@
  *
  * @typechecks
  * @providesModule ReactCSSTransitionGroup
- * @jsx React.DOM
  */
 
 "use strict";
@@ -43,21 +42,22 @@ var ReactCSSTransitionGroup = React.createClass({
     // We need to provide this childFactory so that
     // ReactCSSTransitionGroupChild can receive updates to name, enter, and
     // leave while it is leaving.
-    return (
-      <ReactCSSTransitionGroupChild
-        name={this.props.transitionName}
-        enter={this.props.transitionEnter}
-        leave={this.props.transitionLeave}>
-        {child}
-      </ReactCSSTransitionGroupChild>
+    return ReactCSSTransitionGroupChild(
+      {
+        name: this.props.transitionName,
+        enter: this.props.transitionEnter,
+        leave: this.props.transitionLeave
+      },
+      child
     );
   },
 
   render: function() {
     return this.transferPropsTo(
-      <ReactTransitionGroup childFactory={this._wrapChild}>
-        {this.props.children}
-      </ReactTransitionGroup>
+      ReactTransitionGroup(
+        {childFactory: this._wrapChild},
+        this.props.children
+      )
     );
   }
 });
