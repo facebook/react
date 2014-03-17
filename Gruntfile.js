@@ -2,7 +2,7 @@
 
 var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
-var commonjsTask = require('./grunt/tasks/commonjs');
+var bundleTask = require('./grunt/tasks/bundle');
 var populistTask = require('./grunt/tasks/populist');
 var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
 var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
@@ -19,7 +19,7 @@ module.exports = function(grunt) {
     pkg: grunt.file.readJSON('package.json'),
     copy: require('./grunt/config/copy'),
     jsx: require('./grunt/config/jsx'),
-    commonjs: require('./grunt/config/commonjs'),
+    bundle: require('./grunt/config/bundle'),
     populist: require('./grunt/config/populist'),
     connect: require('./grunt/config/server')(grunt),
     "webdriver-jasmine": require('./grunt/config/webdriver-jasmine'),
@@ -52,8 +52,8 @@ module.exports = function(grunt) {
   // Register jsx:normal and :release tasks.
   grunt.registerMultiTask('jsx', jsxTask);
 
-  // Our own commonjs-based tasks to build a single JS file build
-  grunt.registerMultiTask('commonjs', commonjsTask);
+  // Our own bundle-based tasks to build a single JS file build
+  grunt.registerMultiTask('bundle', bundleTask);
 
   grunt.registerMultiTask('populist', populistTask);
 
@@ -71,22 +71,22 @@ module.exports = function(grunt) {
 
   grunt.registerTask('version-check', versionCheckTask);
 
-  grunt.registerTask('build:basic', ['jsx:normal', 'version-check', 'commonjs:basic']);
-  grunt.registerTask('build:addons', ['jsx:normal', 'commonjs:addons']);
-  grunt.registerTask('build:transformer', ['jsx:normal', 'commonjs:transformer']);
-  grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'commonjs:min']);
-  grunt.registerTask('build:addons-min', ['jsx:normal', 'commonjs:addonsMin']);
+  grunt.registerTask('build:basic', ['jsx:normal', 'version-check', 'bundle:basic']);
+  grunt.registerTask('build:addons', ['jsx:normal', 'bundle:addons']);
+  grunt.registerTask('build:transformer', ['jsx:normal', 'bundle:transformer']);
+  grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'bundle:min']);
+  grunt.registerTask('build:addons-min', ['jsx:normal', 'bundle:addonsMin']);
   grunt.registerTask('build:withCodeCoverageLogging', [
     'jsx:normal',
     'version-check',
-    'commonjs:withCodeCoverageLogging'
+    'bundle:withCodeCoverageLogging'
   ]);
   grunt.registerTask('build:perf', [
     'jsx:normal',
     'version-check',
-    'commonjs:transformer',
-    'commonjs:basic',
-    'commonjs:min',
+    'bundle:transformer',
+    'bundle:basic',
+    'bundle:min',
     'download-previous-version'
   ]);
   grunt.registerTask('build:test', [
@@ -195,11 +195,11 @@ module.exports = function(grunt) {
     'delete-build-modules',
     'jsx:normal',
     'version-check',
-    'commonjs:basic',
-    'commonjs:transformer',
-    'commonjs:addons',
-    'commonjs:min',
-    'commonjs:addonsMin',
+    'bundle:basic',
+    'bundle:transformer',
+    'bundle:addons',
+    'bundle:min',
+    'bundle:addonsMin',
     'npm-react:release',
     'npm-react:pack',
     'npm-react-tools:pack',

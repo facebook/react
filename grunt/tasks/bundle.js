@@ -26,13 +26,13 @@ module.exports = function() {
   var _this = this;
 
   cjs.transform(options).then(function(result) {
-    grunt.file.write(_this.files[0].dest, config.after.reduce(function(src, fn) {
+    grunt.file.write(result.options.output, config.after.reduce(function(src, fn) {
       return fn.call(_this, src);
     }, result.code));
 
     done();
   }, function(err) {
     grunt.log.error(err);
-    done();
+    done(false);
   });
 };
