@@ -193,6 +193,29 @@ var DefaultDOMPropertyConfig = {
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
     srcSet: 'srcset'
+  },
+  DOMMutationMethods: {
+    /**
+     * Setting `className` to null may cause it to be set to the string "null".
+     *
+     * @param {DOMElement} node
+     * @param {*} value
+     */
+    className: function (node, value) {
+      // The className property of SVG elements is not a string but an
+      // "SVGAnimatedString" object and can't be written directly.
+      // if the property is a string, we write the property.
+      if (typeof node.className === 'string') {
+        node.className = value != null ? value : '';
+      } else {
+        // If not, fall back to using setAttribute.
+        if (value != null) {
+          node.setAttribute('class', value);
+        } else {
+          node.removeAttribute('class');
+        }
+      }
+    }
   }
 };
 
