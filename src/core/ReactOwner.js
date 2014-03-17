@@ -150,10 +150,6 @@ var ReactOwner = {
      */
     detachRef: function(ref) {
       delete this.refs[ref];
-    },
-
-    unmountComponent: function() {
-      this.refs = null;
     }
 
   }

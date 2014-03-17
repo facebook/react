@@ -978,7 +978,6 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = null;
 
     ReactComponent.Mixin.unmountComponent.call(this);
-    ReactOwner.Mixin.unmountComponent.call(this);
 
     // Some existing components rely on this.props even after they've been
     // destroyed (in event handlers).
