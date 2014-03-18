@@ -41,7 +41,7 @@ function minify(src) {
 // TODO: move this out to another build step maybe.
 function bannerify(src) {
   var version = grunt.config.data.pkg.version;
-  var packageName = this.data.packageName || this.data.standalone;
+  var packageName = this.options().packageName || this.options().standalone;
   return LICENSE_TEMPLATE.replace('@PACKAGE@', packageName)
                          .replace('@VERSION@', version) +
          '\n' + src;
@@ -49,7 +49,7 @@ function bannerify(src) {
 
 function simpleBannerify(src) {
   var version = grunt.config.data.pkg.version;
-  var packageName = this.data.packageName || this.data.standalone;
+  var packageName = this.options().packageName || this.options().standalone;
   return SIMPLE_TEMPLATE.replace('@PACKAGE@', packageName)
                         .replace('@VERSION@', version) +
          '\n' + src;
