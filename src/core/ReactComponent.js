@@ -50,6 +50,7 @@ var ComponentLifeCycle = keyMirror({
 
 var ownerHasExplicitKeyWarning = {};
 var ownerHasPropertyWarning = {};
+var ownerHasMonitoredObjectMap = {};
 
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
 
@@ -153,6 +154,25 @@ function validatePropertyKey(name) {
 }
 
 /**
+ * Log that we're using an object map. We're considering deprecating this
+ * feature and replace it with proper Map and ImmutableMap data structures.
+ *
+ * @internal
+ */
+function monitorUseOfObjectMap() {
+  // Name of the component whose render method tried to pass children.
+  // We only use this to avoid spewing the logs. We lose additional
+  // owner stacks but hopefully one level is enough to trace the source.
+  var currentName = (ReactCurrentOwner.current &&
+                    ReactCurrentOwner.current.constructor.displayName) || '';
+  if (ownerHasMonitoredObjectMap.hasOwnProperty(currentName)) {
+    return;
+  }
+  ownerHasMonitoredObjectMap[currentName] = true;
+  monitorCodeUse('react_object_map_children');
+}
+
+/**
  * Ensure that every component either is passed in a static location, in an
  * array with an explicit keys property defined, or in an object literal
  * with valid key property.
@@ -173,6 +193,7 @@ function validateChildKeys(component) {
     // This component was passed in a valid location.
     component.__keyValidated__ = true;
   } else if (component && typeof component === 'object') {
+    monitorUseOfObjectMap();
     for (var name in component) {
       validatePropertyKey(name, component);
     }
