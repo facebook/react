@@ -3,11 +3,11 @@
 
 'use strict';
 
-var deamdify = require('deamdify');
 var envify = require('envify/custom');
 var es3ify = require('es3ify');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
+var uglifyify = require('uglifyify');
 var _ = require('lodash');
 
 var SIMPLE_TEMPLATE =
@@ -55,76 +55,66 @@ function simpleBannerify(src) {
          '\n' + src;
 }
 
-function override(obj1, obj2) {
-  return _.merge({}, obj1, obj2, function (a, b) {
-    if (_.isArray(a)) {
-      return b;
-    }
-  })
-}
-
+// Our basic config which we'll add to to make our other builds
 var basic = {
-  src: './build/modules/React.js',
-  dest: './build/react.js',
-  options: {
-    debug: false,
-    standalone: 'React',
-    transforms: [envify({NODE_ENV: 'development'})],
-    after: [es3ify.transform, simpleBannerify]
-  }
+  entries: [
+    './build/modules/React.js'
+  ],
+  outfile: './build/react.js',
+  debug: false,
+  standalone: 'React',
+  transforms: [envify({NODE_ENV: 'development'})],
+  after: [es3ify.transform, simpleBannerify]
 };
 
-var min = override(basic, {
-  dest: './build/react.min.js',
-  options: {
-    debug: false,
-    transforms: [envify({NODE_ENV: 'production'})],
-    after: [minify, bannerify]
-  }
+var min = _.merge({}, basic, {
+  outfile: './build/react.min.js',
+  debug: false,
+  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  after: [minify, bannerify]
 });
 
 var transformer = {
-  src: './vendor/browser-transforms.js',
-  dest: './build/JSXTransformer.js',
-  options: {
-    debug: false,
-    standalone: 'JSXTransformer',
-    transforms: [deamdify],
-    after: [es3ify.transform, simpleBannerify]
-  }
+  entries:[
+    './vendor/browser-transforms.js'
+  ],
+  outfile: './build/JSXTransformer.js',
+  debug: false,
+  standalone: 'JSXTransformer',
+  after: [es3ify.transform, simpleBannerify]
 };
 
 var addons = {
-  src: './build/modules/ReactWithAddons.js',
-  dest: './build/react-with-addons.js',
-  options: {
-    debug: false,
-    standalone: 'React',
-    transforms: [envify({NODE_ENV: 'development'})],
-    packageName: 'React (with addons)',
-    after: [es3ify.transform, simpleBannerify]
-  }
+  entries: [
+    './build/modules/ReactWithAddons.js'
+  ],
+  outfile: './build/react-with-addons.js',
+  debug: false,
+  standalone: 'React',
+  transforms: [envify({NODE_ENV: 'development'})],
+  packageName: 'React (with addons)',
+  after: [es3ify.transform, simpleBannerify]
 };
 
-var addonsMin = override(addons, {
-  dest: './build/react-with-addons.min.js',
-  options: {
-    debug: false,
-    transforms: [envify({NODE_ENV: 'production'})],
-    after: [minify, bannerify]
-  }
+var addonsMin = _.merge({}, addons, {
+  outfile: './build/react-with-addons.min.js',
+  debug: false,
+  transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  after: [minify, bannerify]
 });
 
-var withCodeCoverageLogging = override(basic, {
-  options: {
-    debug: true,
-    transforms: [
-      envify({NODE_ENV: 'development'}),
-      require('coverify')
-    ],
-    after: []
-  }
-});
+var withCodeCoverageLogging = {
+  entries: [
+    './build/modules/React.js'
+  ],
+  outfile: './build/react.js',
+  debug: true,
+  standalone: 'React',
+  transforms: [
+    envify({NODE_ENV: 'development'}),
+    require('coverify')
+  ]
+};
 
 module.exports = {
   basic: basic,
