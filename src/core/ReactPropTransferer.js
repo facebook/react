@@ -95,7 +95,7 @@ var ReactPropTransferer = {
 
       var transferStrategy = TransferStrategies[thisKey];
 
-      if (transferStrategy) {
+      if (transferStrategy && TransferStrategies.hasOwnProperty(thisKey)) {
         transferStrategy(props, thisKey, newProps[thisKey]);
       } else if (!props.hasOwnProperty(thisKey)) {
         props[thisKey] = newProps[thisKey];
