@@ -14,178 +14,145 @@
  * limitations under the License.
  *
  * @providesModule ImmutableObject
- * @typechecks
  */
 
 "use strict";
 
+var Immutable = require('Immutable');
+
 var invariant = require('invariant');
-var isNode = require('isNode');
-var merge = require('merge');
-var mergeInto = require('mergeInto');
+var keyOf = require('keyOf');
 var mergeHelpers = require('mergeHelpers');
 
 var checkMergeObjectArgs = mergeHelpers.checkMergeObjectArgs;
 var isTerminal = mergeHelpers.isTerminal;
 
-/**
- * Wrapper around JavaScript objects that provide a guarantee of immutability at
- * developer time when strict mode is used. The extra computations required to
- * enforce immutability is stripped out in production for performance reasons.
- */
-var ImmutableObject;
+var SECRET_KEY = keyOf({_DONT_EVER_TYPE_THIS_SECRET_KEY: null});
 
-function assertImmutableObject(immutableObject) {
+/**
+ * Static methods creating and operating on instances of `Immutable`.
+ */
+function assertImmutable(immutable) {
   invariant(
-    immutableObject instanceof ImmutableObject,
+    immutable instanceof Immutable,
     'ImmutableObject: Attempted to set fields on an object that is not an ' +
-    'instance of ImmutableObject.'
+    'instance of Immutable.'
   );
 }
 
-if (__DEV__) {
-  /**
-   * Constructs an instance of `ImmutableObject`.
-   *
-   * @param {?object} initialProperties The initial set of properties.
-   * @constructor
-   */
-  ImmutableObject = function ImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
-    deepFreeze(this);
-  };
-
-  /**
-   * Checks if an object should be deep frozen. Instances of `ImmutableObject`
-   * are assumed to have already been deep frozen.
-   *
-   * @param {*} object The object to check.
-   * @return {boolean} Whether or not deep freeze is needed.
-   */
-  var shouldRecurseFreeze = function(object) {
-    return (
-      typeof object === 'object' &&
-      !(object instanceof ImmutableObject) &&
-      object !== null
-    );
-  };
-
-  /**
-   * Freezes the supplied object deeply.
-   *
-   * @param {*} object The object to freeze.
-   */
-  var deepFreeze = function(object) {
-    if (isNode(object)) {
-      return; // Don't try to freeze DOM nodes.
-    }
-    Object.freeze(object); // First freeze the object.
-    for (var prop in object) {
-      var field = object[prop];
-      if (object.hasOwnProperty(prop) && shouldRecurseFreeze(field)) {
-        deepFreeze(field);
-      }
-    }
-  };
-
-  /**
-   * Returns a new ImmutableObject that is identical to the supplied object but
-   * with the supplied changes, `put`.
-   *
-   * @param {ImmutableObject} immutableObject Starting object.
-   * @param {?object} put Fields to merge into the object.
-   * @return {ImmutableObject} The result of merging in `put` fields.
-   */
-  ImmutableObject.set = function(immutableObject, put) {
-    assertImmutableObject(immutableObject);
-    var totalNewFields = merge(immutableObject, put);
-    return new ImmutableObject(totalNewFields);
-  };
-
-} else {
-  /**
-   * Constructs an instance of `ImmutableObject`.
-   *
-   * @param {?object} initialProperties The initial set of properties.
-   * @constructor
-   */
-  ImmutableObject = function ImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
-  };
-
-  /**
-   * Returns a new ImmutableObject that is identical to the supplied object but
-   * with the supplied changes, `put`.
-   *
-   * @param {ImmutableObject} immutableObject Starting object.
-   * @param {?object} put Fields to merge into the object.
-   * @return {ImmutableObject} The result of merging in `put` fields.
-   */
-  ImmutableObject.set = function(immutableObject, put) {
-    assertImmutableObject(immutableObject);
-    var newMap = new ImmutableObject(immutableObject);
-    mergeInto(newMap, put);
-    return newMap;
-  };
-}
-
 /**
- * Sugar for `ImmutableObject.set(ImmutableObject, {fieldName: putField})`.
- *
- * @param {ImmutableObject} immutableObject Object on which to set field.
- * @param {string} fieldName Name of the field to set.
- * @param {*} putField Value of the field to set.
- * @return {ImmutableObject} [description]
+ * Static methods for reasoning about instances of `ImmutableObject`. Execute
+ * the freeze commands in `__DEV__` mode to alert the programmer that something
+ * is attempting to mutate. Since freezing is very expensive, we avoid doing it
+ * at all in production.
  */
-ImmutableObject.setField = function(immutableObject, fieldName, putField) {
-  var put = {};
-  put[fieldName] = putField;
-  return ImmutableObject.set(immutableObject, put);
-};
-
-/**
- * Returns a new ImmutableObject that is identical to the supplied object but
- * with the supplied changes recursively applied.
- *
- * @param {ImmutableObject} immutableObject Object on which to set fields.
- * @param {object} put Fields to merge into the object.
- * @return {ImmutableObject} The result of merging in `put` fields.
- */
-ImmutableObject.setDeep = function(immutableObject, put) {
-  assertImmutableObject(immutableObject);
-  return _setDeep(immutableObject, put);
-};
-
-function _setDeep(object, put) {
-  checkMergeObjectArgs(object, put);
-  var totalNewFields = {};
-
-  // To maintain the order of the keys, copy the base object's entries first.
-  var keys = Object.keys(object);
-  for (var ii = 0; ii < keys.length; ii++) {
-    var key = keys[ii];
-    if (!put.hasOwnProperty(key)) {
-      totalNewFields[key] = object[key];
-    } else if (isTerminal(object[key]) || isTerminal(put[key])) {
-      totalNewFields[key] = put[key];
-    } else {
-      totalNewFields[key] = _setDeep(object[key], put[key]);
+class ImmutableObject extends Immutable {
+  /**
+   * @arguments {array<object>} The arguments is an array of objects that, when
+   * merged together, will form the immutable objects.
+   */
+  constructor() {
+    super(Immutable[SECRET_KEY]);
+    Immutable.mergeAllPropertiesInto(this, arguments);
+    if (__DEV__) {
+      Immutable.deepFreezeRootNode(this);
     }
   }
 
-  // Apply any new keys that the base object didn't have.
+  /**
+   * DEPRECATED - prefer to instantiate with new ImmutableObject().
+   *
+   * @arguments {array<object>} The arguments is an array of objects that, when
+   * merged together, will form the immutable objects.
+   */
+  static create() {
+    var obj = Object.create(ImmutableObject.prototype);
+    ImmutableObject.apply(obj, arguments);
+    return obj;
+  }
+
+  /**
+   * Returns a new `Immutable` that is identical to the supplied `Immutable`
+   * but with the specified changes, `put`. Any keys that are in the
+   * intersection of `immutable` and `put` retain the ordering of `immutable.
+   * New keys are placed after keys that exist in `immutable`.
+   *
+   * @param {Immutable} immutable Starting object.
+   * @param {?object} put Fields to merge into the object.
+   * @return {Immutable} The result of merging in `put` fields.
+   */
+  static set(immutable, put) {
+    assertImmutable(immutable);
+    invariant(
+      typeof put === 'object' && put !== undefined && !Array.isArray(put),
+      'Invalid ImmutableMap.set argument `put`'
+    );
+    return new ImmutableObject(immutable, put);
+  }
+
+  /**
+   * Sugar for `ImmutableObject.set(ImmutableObject, {fieldName: putField})`.
+   * Look out for key crushing: Use `keyOf()` to guard against it.
+   *
+   * @param {Immutable} immutable Object on which to set properties.
+   * @param {string} fieldName Name of the field to set.
+   * @param {*} putField Value of the field to set.
+   * @return {Immutable} new Immutable as described in `set`.
+   */
+  static setProperty(immutableObject, fieldName, putField) {
+    var put = {};
+    put[fieldName] = putField;
+    return ImmutableObject.set(immutableObject, put);
+  }
+
+  /**
+   * Returns a new `Immutable` that is identical to the supplied object but
+   * with the supplied changes recursively applied.
+   *
+   * Experimental. Likely does not handle `Arrays` correctly.
+   *
+   * @param {Immutable} immutable Object on which to set fields.
+   * @param {object} put Fields to merge into the object.
+   * @return {Immutable} The result of merging in `put` fields.
+   */
+  static setDeep(immutable, put) {
+    assertImmutable(immutable);
+    return _setDeep(immutable, put);
+  }
+}
+
+function _setDeep(obj, put) {
+  checkMergeObjectArgs(obj, put);
+  var totalNewFields = {};
+
+  // To maintain the order of the keys, copy the base object's entries first.
+  var keys = Object.keys(obj);
+  for (var ii = 0; ii < keys.length; ii++) {
+    var key = keys[ii];
+    if (!put.hasOwnProperty(key)) {
+      totalNewFields[key] = obj[key];
+    } else if (isTerminal(obj[key]) || isTerminal(put[key])) {
+      totalNewFields[key] = put[key];
+    } else {
+      totalNewFields[key] = _setDeep(obj[key], put[key]);
+    }
+  }
+
+  // Apply any new keys that the base obj didn't have.
   var newKeys = Object.keys(put);
   for (ii = 0; ii < newKeys.length; ii++) {
     var newKey = newKeys[ii];
-    if (object.hasOwnProperty(newKey)) {
+    if (obj.hasOwnProperty(newKey)) {
       continue;
     }
     totalNewFields[newKey] = put[newKey];
   }
 
-  return (object instanceof ImmutableObject || put instanceof ImmutableObject) ?
-    new ImmutableObject(totalNewFields) :
-    totalNewFields;
+  return (
+    obj instanceof Immutable ? new ImmutableObject(totalNewFields) :
+    put instanceof Immutable ? new ImmutableObject(totalNewFields) :
+    totalNewFields
+  );
 }
 
 module.exports = ImmutableObject;

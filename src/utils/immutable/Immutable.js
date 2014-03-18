@@ -1,5 +1,5 @@
 /**
- * Copyright 2014 Facebook, Inc.
+ * Copyright 2013-2014 Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ class Immutable {
   /**
    * Helper method for classes that make use of `Immutable`.
    * @param {Immutable} immutable Object to merge properties into.
-   * @param {Array<object>} propertyObjects List of objects to merge into
+   * @param {array<object>} propertyObjects List of objects to merge into
    * `destination`.
    */
   static mergeAllPropertiesInto(destination, propertyObjects) {
