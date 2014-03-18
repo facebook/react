@@ -39,8 +39,8 @@
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
-    "browserify": "~3.20.0",
     "coverify": "~1.0.4",
+    "deamdify": "~0.1.1",
     "envify": "~1.2.0",
     "es3ify": "~0.1.2",
     "es5-shim": "~2.3.0",
@@ -61,6 +61,7 @@
     "phantomjs": "~1.9",
     "platform": "~1.0.0",
     "populist": "~0.1.6",
+    "pure-cjs": "~1.9.0",
     "recast": "~0.5.6",
     "sauce-tunnel": "~1.1.0",
     "semver": "~2.2.1",
