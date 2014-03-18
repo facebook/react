@@ -133,7 +133,7 @@ describe('ImmutableObject', function() {
       var beforeIO =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});
       var afterIO = ImmutableObject.set(beforeIO, {});
-      expect(afterIO).toSeriallyEqual(beforeIO);
+      expect(afterIO).toEqual(beforeIO);
       expect(afterIO).not.toBe(beforeIO);
     }
   );
@@ -164,7 +164,7 @@ describe('ImmutableObject', function() {
 
       var beforeIO = new ImmutableObject(beforeStructure);
       var afterIO = ImmutableObject.set(beforeIO, delta);
-      expect(afterIO).toSeriallyEqual(expectedAfterStructure);
+      expect(afterIO).toEqual(expectedAfterStructure);
       expect(afterIO).not.toBe(beforeIO);
     }
   );
@@ -190,7 +190,7 @@ describe('ImmutableObject', function() {
 
       var beforeIO = new ImmutableObject(beforeStructure);
       var afterIO = ImmutableObject.set(beforeIO, delta);
-      expect(afterIO).toSeriallyEqual(expectedAfterStructure);
+      expect(afterIO).toEqual(expectedAfterStructure);
       expect(afterIO).not.toBe(beforeIO);
     }
   );
@@ -217,7 +217,7 @@ describe('ImmutableObject', function() {
 
     var beforeIO = new ImmutableObject(beforeStructure);
     var afterIO = ImmutableObject.set(beforeIO, delta);
-    expect(afterIO).toSeriallyEqual(expectedAfterStructure);
+    expect(afterIO).toEqual(expectedAfterStructure);
     expect(afterIO).not.toBe(beforeIO);
   });
 
@@ -247,7 +247,7 @@ describe('ImmutableObject', function() {
     var beforeIO = new ImmutableObject({initialField: null});
     var afterIO =
       ImmutableObject.setProperty(beforeIO, 'anotherField', 'anotherValue');
-    expect(afterIO).toSeriallyEqual({
+    expect(afterIO).toEqual({
       initialField: null,
       anotherField: 'anotherValue'
     });
@@ -262,7 +262,7 @@ describe('ImmutableObject', function() {
     var afterIO = ImmutableObject.setDeep(beforeIO, {
       a: {b: {}, c: 'C', e: {f: 'F', g: 'G'}, h: 'H'}
     });
-    expect(afterIO).toSeriallyEqual({
+    expect(afterIO).toEqual({
       a: {b: {}, c: 'C', d: 'd', e: {f: 'F', g: 'G'}, h: 'H'}
     });
     expect(afterIO).not.toBe(beforeIO);
@@ -277,7 +277,7 @@ describe('ImmutableObject', function() {
     var afterIO = ImmutableObject.setDeep(beforeIO, {
       a: {b: {d: 'D'}, e: new ImmutableObject({g: 'G'})}
     });
-    expect(afterIO).toSeriallyEqual({
+    expect(afterIO).toEqual({
       a: {b: {c: 'c', d: 'D'}, e: {f: 'f', g: 'G'}}
     });
     expect(afterIO instanceof Immutable).toBe(true);
