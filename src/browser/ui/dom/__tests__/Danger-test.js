@@ -22,13 +22,13 @@
 
 var React = require('React');
 
-describe('Danger', function() {
+describe('Danger', () => {
 
-  describe('dangerouslyRenderMarkup', function() {
+  describe('dangerouslyRenderMarkup', () => {
     var Danger;
     var transaction;
 
-    beforeEach(function() {
+    beforeEach(() => {
       require('mock-modules').dumpCache();
       Danger = require('Danger');
 
@@ -36,14 +36,14 @@ describe('Danger', function() {
       transaction = new ReactReconcileTransaction();
     });
 
-    it('should render markup', function() {
+    it('should render markup', () => {
       var markup = (<div />).mountComponent('.rX', transaction, 0);
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
     });
 
-    it('should render markup with props', function() {
+    it('should render markup with props', () => {
       var markup = (<div className="foo" />).mountComponent(
         '.rX',
         transaction,
@@ -55,14 +55,14 @@ describe('Danger', function() {
       expect(output.className).toBe('foo');
     });
 
-    it('should render wrapped markup', function() {
+    it('should render wrapped markup', () => {
       var markup = (<th />).mountComponent('.rX', transaction, 0);
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');
     });
 
-    it('should render lists of markup with similar `nodeName`', function() {
+    it('should render lists of markup with similar `nodeName`', () => {
       var renderedMarkup = Danger.dangerouslyRenderMarkup(
         ['<p id="A">1</p>', '<p id="B">2</p>', '<p id="C">3</p>']
       );
@@ -78,7 +78,7 @@ describe('Danger', function() {
       expect(renderedMarkup[2].innerHTML).toBe('3');
     });
 
-    it('should render lists of markup with different `nodeName`', function() {
+    it('should render lists of markup with different `nodeName`', () => {
       var renderedMarkup = Danger.dangerouslyRenderMarkup(
         ['<p id="A">1</p>', '<td id="B">2</td>', '<p id="C">3</p>']
       );
@@ -94,7 +94,7 @@ describe('Danger', function() {
       expect(renderedMarkup[2].innerHTML).toBe('3');
     });
 
-    it('should throw when rendering invalid markup', function() {
+    it('should throw when rendering invalid markup', () => {
       expect(function() {
         Danger.dangerouslyRenderMarkup(['']);
       }).toThrow(

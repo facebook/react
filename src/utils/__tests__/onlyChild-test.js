@@ -19,13 +19,13 @@
 
 "use strict";
 
-describe('onlyChild', function() {
+describe('onlyChild', () => {
 
   var React;
   var onlyChild;
   var WrapComponent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     onlyChild = require('onlyChild');
     WrapComponent = React.createClass({
@@ -39,8 +39,8 @@ describe('onlyChild', function() {
     });
   });
 
-  it('should fail when passed two children', function() {
-    expect(function() {
+  it('should fail when passed two children', () => {
+    expect(() => {
       var instance =
         <WrapComponent>
           <div />
@@ -50,8 +50,8 @@ describe('onlyChild', function() {
     }).toThrow();
   });
 
-  it('should fail when passed nully values', function() {
-    expect(function() {
+  it('should fail when passed nully values', () => {
+    expect(() => {
       var instance =
         <WrapComponent>
           {null}
@@ -59,7 +59,7 @@ describe('onlyChild', function() {
       onlyChild(instance.props.children);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       var instance =
         <WrapComponent>
           {undefined}
@@ -68,8 +68,8 @@ describe('onlyChild', function() {
     }).toThrow();
   });
 
-  it('should fail when key/value objects', function() {
-    expect(function() {
+  it('should fail when key/value objects', () => {
+    expect(() => {
       var instance =
         <WrapComponent>
           {{oneThing: <span />}}
@@ -79,8 +79,8 @@ describe('onlyChild', function() {
   });
 
 
-  it('should not fail when passed interpolated single child', function() {
-    expect(function() {
+  it('should not fail when passed interpolated single child', () => {
+    expect(() => {
       var instance =
         <WrapComponent>
           {<span />}
@@ -90,8 +90,8 @@ describe('onlyChild', function() {
   });
 
 
-  it('should return the only child', function() {
-    expect(function() {
+  it('should return the only child', () => {
+    expect(() => {
       var instance =
         <WrapComponent>
           <span />

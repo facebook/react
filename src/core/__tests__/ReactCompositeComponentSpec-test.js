@@ -25,15 +25,15 @@ var React;
 var ReactTestUtils;
 var reactComponentExpect;
 
-describe('ReactCompositeComponent-spec', function() {
+describe('ReactCompositeComponent-spec', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
   });
 
-  it('should throw when `render` is not specified', function() {
+  it('should throw when `render` is not specified', () => {
     expect(function() {
       React.createClass({});
     }).toThrow(
@@ -42,7 +42,7 @@ describe('ReactCompositeComponent-spec', function() {
     );
   });
 
-  it('should copy `displayName` onto the Constructor', function() {
+  it('should copy `displayName` onto the Constructor', () => {
     var TestComponent = React.createClass({
       render: function() {
         return <div />;
@@ -53,7 +53,7 @@ describe('ReactCompositeComponent-spec', function() {
       .toBe('TestComponent');
   });
 
-  it('should copy prop types onto the Constructor', function() {
+  it('should copy prop types onto the Constructor', () => {
     var propValidator = mocks.getMockFunction();
     var TestComponent = React.createClass({
       propTypes: {

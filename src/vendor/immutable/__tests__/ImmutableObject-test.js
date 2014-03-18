@@ -25,15 +25,15 @@ var Immutable;
  * To perform performance testing of using `ImmutableObject` vs. not using
  * `ImmutableObject`, such testing must be done with __DEV__ set to false.
  */
-describe('ImmutableObject', function() {
+describe('ImmutableObject', () => {
   var message;
-  beforeEach(function() {
+  beforeEach(() => {
     ImmutableObject = require('ImmutableObject');
     Immutable = require('Immutable');
   });
 
   var testDev = function(message, testFunc) {
-    it(message, function() {
+    it(message, () => {
       var old = window.__DEV__;
       window.__DEV__ = true;
       testFunc();
@@ -42,7 +42,7 @@ describe('ImmutableObject', function() {
   };
 
   var testProd = function(message, testFunc) {
-    it(message, function() {
+    it(message, () => {
       // Temporarily enter production mode
       var old = window.__DEV__;
       window.__DEV__ = false;
@@ -56,71 +56,71 @@ describe('ImmutableObject', function() {
     testProd(message + ':PROD', testFunc);
   };
 
-  testDev('should be running in DEV', function() {
+  testDev('should be running in DEV', () => {
     expect(window.__DEV__).toBe(true);
   });
 
-  testDev('should require initial map to be an object', function() {
-    expect(function() {
+  testDev('should require initial map to be an object', () => {
+    expect(() => {
       new ImmutableObject([1,2,3]);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       new ImmutableObject('asdf');
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       new ImmutableObject({oldField: 'asdf', fieldTwo: null});
     }).not.toThrow();
   });
 
-  testDevAndProd('should extend Immutable', function() {
+  testDevAndProd('should extend Immutable', () => {
     var object = new ImmutableObject({foo: 'bar'});
     expect (object instanceof Immutable).toBe(true);
     expect (object instanceof ImmutableObject).toBe(true);
   });
 
-  testDev('should not exceed maximum call stack size with nodes', function() {
+  testDev('should not exceed maximum call stack size with nodes', () => {
     var node = document.createElement('div');
     var object = new ImmutableObject({node: node});
     expect(object.node).toBe(node);
   });
 
-  testDevAndProd('should not throw when not mutating directly', function() {
+  testDevAndProd('should not throw when not mutating directly', () => {
     var io = new ImmutableObject({oldField: 'asdf'});
-    expect(function() {
+    expect(() => {
       ImmutableObject.set(io, {newField: null}); // not a mutation!
     }).not.toThrow();
   });
 
-  testDev('should prevent shallow field addition when strict', function() {
+  testDev('should prevent shallow field addition when strict', () => {
     if (window.callPhantom) return;
-    expect(function() {
+    expect(() => {
       var io = new ImmutableObject({oldField: 'asdf'});
       io.newField = 'this will not work';
     }).toThrow();
   });
 
-  testDev('should prevent shallow field mutation when strict', function() {
+  testDev('should prevent shallow field mutation when strict', () => {
     if (window.callPhantom) return;
-    expect(function() {
+    expect(() => {
       var io = new ImmutableObject({oldField: 'asdf'});
       io.oldField = 'this will not work!';
     }).toThrow();
   });
 
-  testDev('should prevent deep field addition when strict', function() {
+  testDev('should prevent deep field addition when strict', () => {
     if (window.callPhantom) return;
-    expect(function() {
+    expect(() => {
       var io =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});
       io.shallowField.deepField.oldField = 'this will not work!';
     }).toThrow();
   });
 
-  testDev('should prevent deep field mutation when strict', function() {
+  testDev('should prevent deep field mutation when strict', () => {
     if (window.callPhantom) return;
-    expect(function() {
+    expect(() => {
       var io =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});
       io.shallowField.deepField.newField = 'this will not work!';
@@ -129,7 +129,7 @@ describe('ImmutableObject', function() {
 
   testDevAndProd(
     'should create object with same structure when set with {}',
-    function() {
+    () => {
       var beforeIO =
         new ImmutableObject({shallowField: {deepField: {oldField: null}}});
       var afterIO = ImmutableObject.set(beforeIO, {});
@@ -140,7 +140,7 @@ describe('ImmutableObject', function() {
 
   testDevAndProd(
     'should create distinct object with shallow field insertion',
-    function() {
+    () => {
       if (window.callPhantom) return;
       var beforeStructure = {
         oldShallowField: {
@@ -172,7 +172,7 @@ describe('ImmutableObject', function() {
 
   testDevAndProd(
     'should create distinct object with shallow field mutation',
-      function() {
+      () => {
       if (window.callPhantom) return;
       var beforeStructure = {
         oldShallowField: {
@@ -198,7 +198,7 @@ describe('ImmutableObject', function() {
   );
 
   message = 'should create distinct object with deep field insertion';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     if (window.callPhantom) return;
     var beforeStructure = {
       oldShallowField: {
@@ -226,7 +226,7 @@ describe('ImmutableObject', function() {
 
   message =
     'should tolerate arrays at deeper levels and prevent mutation on them';
-  testDev(message, function() {
+  testDev(message, () => {
     if (window.callPhantom) {
       // PhantomJS has a bug with Object.freeze and Arrays.
       // https://github.com/ariya/phantomjs/issues/10817
@@ -236,17 +236,17 @@ describe('ImmutableObject', function() {
       shallowField: [1,'second field',3]
     };
     var io = new ImmutableObject(beforeStructure);
-    expect(function() {
+    expect(() => {
       io.newField = 'nope!';
     }).toThrow();
-    expect(function() {
+    expect(() => {
       io.shallowField[0] = 'nope!';
     }).toThrow();
     expect(io.shallowField[1]).toEqual('second field');
   });
 
   message = 'should provide a setProperty interface as sugar for set()';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({initialField: null});
     var afterIO =
@@ -259,7 +259,7 @@ describe('ImmutableObject', function() {
   });
 
   message = 'should recursively create distinct objects when deep copying';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({
       a: {b: 'b', c: {}, d: 'd', e: new ImmutableObject({f: 'f'}) }
@@ -275,7 +275,7 @@ describe('ImmutableObject', function() {
     expect(afterIO.a.e).not.toBe(beforeIO.a.e);
   });
 
-  testDevAndProd('should deep copy member immutability', function() {
+  testDevAndProd('should deep copy member immutability', () => {
     if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({
       a: {b: new ImmutableObject({c: 'c'}), e: {f: 'f'}}

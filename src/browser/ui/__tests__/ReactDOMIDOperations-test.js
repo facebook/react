@@ -20,13 +20,13 @@
 
 "use strict";
 
-describe('ReactDOMIDOperations', function() {
+describe('ReactDOMIDOperations', () => {
   var DOMPropertyOperations = require('DOMPropertyOperations');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
   var ReactMount = require('ReactMount');
   var keyOf = require('keyOf');
 
-  it('should disallow updating special properties', function() {
+  it('should disallow updating special properties', () => {
     spyOn(ReactMount, "getNode");
     spyOn(DOMPropertyOperations, "setValueForProperty");
 
@@ -47,7 +47,7 @@ describe('ReactDOMIDOperations', function() {
     ).toBe(0);
   });
 
-  it('should update innerHTML and preserve whitespace', function() {
+  it('should update innerHTML and preserve whitespace', () => {
     var stubNode = document.createElement('div');
     spyOn(ReactMount, "getNode").andReturn(stubNode);
 

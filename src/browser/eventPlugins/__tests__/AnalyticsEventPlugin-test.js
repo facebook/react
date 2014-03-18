@@ -21,7 +21,7 @@
 
 var mocks = require('mocks');
 
-describe('AnalyticsEventPlugin', function() {
+describe('AnalyticsEventPlugin', () => {
   var AnalyticsEventPluginFactory;
   var EventPluginHub;
   var EventPluginRegistry;
@@ -35,7 +35,7 @@ describe('AnalyticsEventPlugin', function() {
   var ReactInstanceHandles;
   var SimpleEventPlugin;
 
-  beforeEach(function() {
+  beforeEach(() => {
     AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
@@ -63,7 +63,7 @@ describe('AnalyticsEventPlugin', function() {
 
   });
 
-  it('should count events correctly', function() {
+  it('should count events correctly', () => {
     var numClickEvents = 5;
     var numDoubleClickEvents = 7;
     var TEST_ANALYTICS_ID = 'test_analytics_id';
@@ -112,13 +112,13 @@ describe('AnalyticsEventPlugin', function() {
     expect(cb).toBeCalled();
   });
 
-  it('error non no callback', function() {
+  it('error non no callback', () => {
     expect(function() {
       AnalyticsEventPluginFactory.createAnalyticsPlugin(null);
     }).toThrow();
   });
 
-  it('error on invalid analytics events', function() {
+  it('error on invalid analytics events', () => {
     var TestInvalidEvents = React.createClass({
       render: function() {
         return (

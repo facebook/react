@@ -40,8 +40,8 @@ var ExecutionEnvironment;
 
 var ID_ATTRIBUTE_NAME;
 
-describe('ReactServerRendering', function() {
-  beforeEach(function() {
+describe('ReactServerRendering', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactMount = require('ReactMount');
@@ -55,8 +55,8 @@ describe('ReactServerRendering', function() {
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
   });
 
-  describe('renderComponentToString', function() {
-    it('should generate simple markup', function() {
+  describe('renderComponentToString', () => {
+    it('should generate simple markup', () => {
       var response = ReactServerRendering.renderComponentToString(
         <span>hello world</span>
       );
@@ -66,7 +66,7 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('should not register event listeners', function() {
+    it('should not register event listeners', () => {
       var EventPluginHub = require('EventPluginHub');
       var cb = mocks.getMockFunction();
 
@@ -76,7 +76,7 @@ describe('ReactServerRendering', function() {
       expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
-    it('should render composite components', function() {
+    it('should render composite components', () => {
       var Parent = React.createClass({
         render: function() {
           return <div><Child name="child" /></div>;
@@ -101,7 +101,7 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('should only execute certain lifecycle methods', function() {
+    it('should only execute certain lifecycle methods', () => {
       function runTest() {
         var lifecycle = [];
         var TestComponent = React.createClass({
@@ -159,7 +159,7 @@ describe('ReactServerRendering', function() {
       runTest();
     });
 
-    it('should have the correct mounting behavior', function() {
+    it('should have the correct mounting behavior', () => {
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -236,7 +236,7 @@ describe('ReactServerRendering', function() {
       expect(numClicks).toEqual(1);
     });
 
-    it('should throw with silly args', function() {
+    it('should throw with silly args', () => {
       expect(
         ReactServerRendering.renderComponentToString.bind(
           ReactServerRendering,
@@ -248,7 +248,7 @@ describe('ReactServerRendering', function() {
       );
     });
 
-    it('should provide guidance for breaking API changes', function() {
+    it('should provide guidance for breaking API changes', () => {
       expect(
         ReactServerRendering.renderComponentToString.bind(
           ReactServerRendering,
@@ -263,8 +263,8 @@ describe('ReactServerRendering', function() {
     });
   });
 
-  describe('renderComponentToStaticMarkup', function() {
-    it('should not put checksum and React ID on components', function() {
+  describe('renderComponentToStaticMarkup', () => {
+    it('should not put checksum and React ID on components', () => {
       var lifecycle = [];
       var NestedComponent = React.createClass({
         render: function() {
@@ -286,7 +286,7 @@ describe('ReactServerRendering', function() {
       expect(response).toBe('<span><div>inner text</div></span>');
     });
 
-    it('should not put checksum and React ID on text components', function() {
+    it('should not put checksum and React ID on text components', () => {
       var TestComponent = React.createClass({
         render: function() {
           return <span>{'hello'} {'world'}</span>;
@@ -300,7 +300,7 @@ describe('ReactServerRendering', function() {
       expect(response).toBe('<span>hello world</span>');
     });
 
-    it('should not register event listeners', function() {
+    it('should not register event listeners', () => {
       var EventPluginHub = require('EventPluginHub');
       var cb = mocks.getMockFunction();
 
@@ -310,7 +310,7 @@ describe('ReactServerRendering', function() {
       expect(EventPluginHub.__getListenerBank()).toEqual({});
     });
 
-    it('should only execute certain lifecycle methods', function() {
+    it('should only execute certain lifecycle methods', () => {
       function runTest() {
         var lifecycle = [];
         var TestComponent = React.createClass({
@@ -362,7 +362,7 @@ describe('ReactServerRendering', function() {
       runTest();
     });
 
-    it('should throw with silly args', function() {
+    it('should throw with silly args', () => {
       expect(
         ReactServerRendering.renderComponentToStaticMarkup.bind(
           ReactServerRendering,

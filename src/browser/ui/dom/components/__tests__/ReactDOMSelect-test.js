@@ -23,18 +23,18 @@
 
 var mocks = require('mocks');
 
-describe('ReactDOMSelect', function() {
+describe('ReactDOMSelect', () => {
   var React;
   var ReactLink;
   var ReactTestUtils;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should allow setting `defaultValue`', function() {
+  it('should allow setting `defaultValue`', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -51,7 +51,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('giraffe');
   });
 
-  it('should not control when using `defaultValue`', function() {
+  it('should not control when using `defaultValue`', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -69,7 +69,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('monkey');
   });
 
-  it('should allow setting `defaultValue` with multiple', function() {
+  it('should allow setting `defaultValue` with multiple', () => {
     var stub =
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -91,7 +91,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // gorilla
   });
 
-  it('should allow setting `value`', function() {
+  it('should allow setting `value`', () => {
     var stub =
       <select value="giraffe">
         <option value="monkey">A monkey!</option>
@@ -108,7 +108,7 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('gorilla');
   });
 
-  it('should allow setting `value` with multiple', function() {
+  it('should allow setting `value` with multiple', () => {
     var stub =
       <select multiple={true} value={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -130,7 +130,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should not select other options automatically', function() {
+  it('should not select other options automatically', () => {
     var stub =
       <select multiple={true} value={['12']}>
         <option value="1">one</option>
@@ -145,7 +145,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // twelve
   });
 
-  it('should allow setting `value` with `objectToString`', function() {
+  it('should allow setting `value` with `objectToString`', () => {
     var objectToString = {
       animal: "giraffe",
       toString: function() {
@@ -175,7 +175,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should allow switching to multiple', function() {
+  it('should allow switching to multiple', () => {
     var stub =
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -197,7 +197,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should allow switching from multiple', function() {
+  it('should allow switching from multiple', () => {
     var stub =
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -220,7 +220,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
   });
 
-  it('should support ReactLink', function() {
+  it('should support ReactLink', () => {
     var link = new ReactLink('giraffe', mocks.getMockFunction());
     var stub =
       <select valueLink={link}>

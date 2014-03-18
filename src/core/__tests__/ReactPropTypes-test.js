@@ -44,8 +44,8 @@ var MyComponent = React.createClass({
   }
 });
 
-describe('Primitive Types', function() {
-  beforeEach(function() {
+describe('Primitive Types', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
 
     mocks = require('mocks');
@@ -55,11 +55,11 @@ describe('Primitive Types', function() {
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it("should warn for invalid strings", function() {
+  it("should warn for invalid strings", () => {
     typeCheck(Props.string, []);
     typeCheck(Props.string, false);
     typeCheck(Props.string, 1);
@@ -85,7 +85,7 @@ describe('Primitive Types', function() {
     );
   });
 
-  it("should not warn for valid values", function() {
+  it("should not warn for valid values", () => {
     typeCheck(Props.array, []);
     typeCheck(Props.bool, false);
     typeCheck(Props.func, function() {});
@@ -97,7 +97,7 @@ describe('Primitive Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should be implicitly optional and not warn without values", function() {
+  it("should be implicitly optional and not warn without values", () => {
     typeCheck(Props.string, null);
     typeCheck(Props.string, undefined);
 
@@ -105,7 +105,7 @@ describe('Primitive Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should warn for missing required values", function() {
+  it("should warn for missing required values", () => {
     typeCheck(Props.string.isRequired, null);
     typeCheck(Props.string.isRequired, undefined);
 
@@ -121,26 +121,26 @@ describe('Primitive Types', function() {
     );
   });
 
-  it("should have a weak version that returns true/false", function() {
+  it("should have a weak version that returns true/false", () => {
     expect(typeCheck(Props.string.weak, null)).toEqual(true);
     expect(typeCheck(Props.string.weak.isRequired, null)).toEqual(false);
     expect(typeCheck(Props.string.isRequired.weak, null)).toEqual(false);
   });
 });
 
-describe('Enum Types', function() {
-  beforeEach(function() {
+describe('Enum Types', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it("should warn for invalid strings", function() {
+  it("should warn for invalid strings", () => {
     typeCheck(Props.oneOf(['red', 'blue']), true);
     typeCheck(Props.oneOf(['red', 'blue']), []);
     typeCheck(Props.oneOf(['red', 'blue']), '');
@@ -163,7 +163,7 @@ describe('Enum Types', function() {
     );
   });
 
-  it("should not warn for valid values", function() {
+  it("should not warn for valid values", () => {
     typeCheck(Props.oneOf(['red', 'blue']), 'red');
     typeCheck(Props.oneOf(['red', 'blue']), 'blue');
 
@@ -171,7 +171,7 @@ describe('Enum Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should be implicitly optional and not warn without values", function() {
+  it("should be implicitly optional and not warn without values", () => {
     typeCheck(Props.oneOf(['red', 'blue']), null);
     typeCheck(Props.oneOf(['red', 'blue']), undefined);
 
@@ -179,7 +179,7 @@ describe('Enum Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should have a weak version that returns true/false", function() {
+  it("should have a weak version that returns true/false", () => {
     var checker = Props.oneOf(['red', 'blue']);
     expect(typeCheck(checker.weak, null)).toEqual(true);
     expect(typeCheck(checker.weak.isRequired, null)).toEqual(false);
@@ -187,19 +187,19 @@ describe('Enum Types', function() {
   });
 });
 
-describe('Shape Types', function() {
-  beforeEach(function() {
+describe('Shape Types', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it("should warn for non objects", function() {
+  it("should warn for non objects", () => {
     typeCheck(Props.shape({}), 'some string');
     typeCheck(Props.shape({}), ['array']);
 
@@ -215,7 +215,7 @@ describe('Shape Types', function() {
     );
   });
 
-  it("should not warn for empty values", function() {
+  it("should not warn for empty values", () => {
     typeCheck(Props.shape({}), undefined);
     typeCheck(Props.shape({}), null);
     typeCheck(Props.shape({}), {});
@@ -224,7 +224,7 @@ describe('Shape Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should warn for empty required value", function() {
+  it("should warn for empty required value", () => {
     typeCheck(Props.shape({}).isRequired, undefined);
     typeCheck(Props.shape({}).isRequired, null);
 
@@ -244,14 +244,14 @@ describe('Shape Types', function() {
     expect(console.warn.mock.calls.length).toBe(2);
   });
 
-  it("should not warn for non specified types", function() {
+  it("should not warn for non specified types", () => {
     typeCheck(Props.shape({}), {key: 1});
 
     // No warnings should have been logged.
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should not warn for valid types", function() {
+  it("should not warn for valid types", () => {
     typeCheck(Props.shape({
       key: Props.number
     }), {key: 1});
@@ -260,7 +260,7 @@ describe('Shape Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it("should warn for required valid types", function() {
+  it("should warn for required valid types", () => {
     typeCheck(Props.shape({
       key: Props.number.isRequired
     }), {});
@@ -273,7 +273,7 @@ describe('Shape Types', function() {
     );
   });
 
-  it("should warn for invalid key types", function() {
+  it("should warn for invalid key types", () => {
     typeCheck(Props.shape({
       key: Props.number
     }), {key: 'abc'});
@@ -287,19 +287,19 @@ describe('Shape Types', function() {
   });
 });
 
-describe('ArrayOf Type', function() {
-  beforeEach(function() {
+describe('ArrayOf Type', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it('should support the arrayOf propType', function() {
+  it('should support the arrayOf propType', () => {
     typeCheck(Props.arrayOf(Props.number), [1, 2, 3]);
     typeCheck(Props.arrayOf(Props.string), ['a', 'b', 'c']);
     typeCheck(Props.arrayOf(Props.oneOf(['a', 'b'])), ['a', 'b']);
@@ -308,7 +308,7 @@ describe('ArrayOf Type', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it('should support arrayOf with complex types', function() {
+  it('should support arrayOf with complex types', () => {
     typeCheck(Props.arrayOf(Props.shape({
       a: Props.number.isRequired
     })), [{a: 1}, {a: 2}]);
@@ -323,7 +323,7 @@ describe('ArrayOf Type', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  it('should warn with invalid items in the array', function() {
+  it('should warn with invalid items in the array', () => {
     typeCheck(Props.arrayOf(Props.number), [1, 2, 'b']);
 
     expect(console.warn.mock.calls.length).toBe(1);
@@ -334,7 +334,7 @@ describe('ArrayOf Type', function() {
     );
   });
 
-  it('should warn with invalid complex types', function() {
+  it('should warn with invalid complex types', () => {
     function Thing() {}
     var name = Thing.name || '<<anonymous>>';
 
@@ -351,7 +351,7 @@ describe('ArrayOf Type', function() {
     );
   });
 
-  it('should warn when passed something other than an array', function() {
+  it('should warn when passed something other than an array', () => {
     typeCheck(Props.arrayOf(Props.number), {'0': 'maybe-array', length: 1});
     typeCheck(Props.arrayOf(Props.number), 123);
     typeCheck(Props.arrayOf(Props.number), 'string');
@@ -368,19 +368,19 @@ describe('ArrayOf Type', function() {
 
 });
 
-describe('Instance Types', function() {
-  beforeEach(function() {
+describe('Instance Types', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it("should warn for invalid instances", function() {
+  it("should warn for invalid instances", () => {
     function Person() {}
     var name = Person.name || '<<anonymous>>';
     typeCheck(Props.instanceOf(Person), false);
@@ -405,7 +405,7 @@ describe('Instance Types', function() {
     );
   });
 
-  it("should not warn for valid values", function() {
+  it("should not warn for valid values", () => {
     function Person() {}
     function Engineer() {}
     Engineer.prototype = new Person();
@@ -418,15 +418,15 @@ describe('Instance Types', function() {
   });
 });
 
-describe('Component Type', function() {
-  beforeEach(function() {
+describe('Component Type', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
@@ -469,19 +469,19 @@ describe('Component Type', function() {
   });
 });
 
-describe('Union Types', function() {
-  beforeEach(function() {
+describe('Union Types', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     mocks = require('mocks');
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it('should warn if none of the types are valid', function() {
+  it('should warn if none of the types are valid', () => {
     var checker = Props.oneOfType([
       Props.string,
       Props.number
@@ -506,7 +506,7 @@ describe('Union Types', function() {
     );
   });
 
-  it('should not warn if one of the types are valid', function() {
+  it('should not warn if one of the types are valid', () => {
     var checker = Props.oneOfType([
       Props.string,
       Props.number
@@ -530,14 +530,14 @@ describe('Union Types', function() {
     expect(console.warn.mock.calls.length).toBe(0);
   });
 
-  describe('React Component Types', function() {
-    beforeEach(function() {
+  describe('React Component Types', () => {
+    beforeEach(() => {
       require('mock-modules').dumpCache();
     });
 
     var myFunc = function() {};
 
-    it('should warn for invalid values', function() {
+    it('should warn for invalid values', () => {
       typeCheck(Props.renderable, false);
       typeCheck(Props.renderable, myFunc);
       typeCheck(Props.renderable, {key: myFunc});
@@ -560,7 +560,7 @@ describe('Union Types', function() {
       );
     });
 
-    it('should not warn for valid values', function() {
+    it('should not warn for valid values', () => {
       // DOM component
       typeCheck(Props.renderable, <div />);
       expect(console.warn.mock.calls.length).toBe(0);
@@ -601,7 +601,7 @@ describe('Union Types', function() {
       expect(console.warn.mock.calls.length).toBe(0);
     });
 
-    it('should not warn for null/undefined if not required', function() {
+    it('should not warn for null/undefined if not required', () => {
       typeCheck(Props.renderable, null);
       typeCheck(Props.renderable, undefined);
 
@@ -609,7 +609,7 @@ describe('Union Types', function() {
       expect(console.warn.mock.calls.length).toBe(0);
     });
 
-    it('should warn for missing required values', function() {
+    it('should warn for missing required values', () => {
       typeCheck(Props.renderable.isRequired, null);
       typeCheck(Props.renderable.isRequired, undefined);
 
@@ -625,7 +625,7 @@ describe('Union Types', function() {
       );
     });
 
-    it('should accept empty array & object for required props', function() {
+    it('should accept empty array & object for required props', () => {
       typeCheck(Props.renderable.isRequired, []);
       typeCheck(Props.renderable.isRequired, {});
 
@@ -634,8 +634,8 @@ describe('Union Types', function() {
     });
   });
 
-  describe('Any type', function() {
-    it('should should accept any value', function() {
+  describe('Any type', () => {
+    it('should should accept any value', () => {
       typeCheck(Props.any, 1);
       expect(console.warn.mock.calls.length).toBe(0);
       typeCheck(Props.any, 'str');
@@ -665,7 +665,7 @@ describe('Union Types', function() {
       );
     });
 
-    it('should have a weak version that returns true/false', function() {
+    it('should have a weak version that returns true/false', () => {
       expect(typeCheck(Props.any.weak, null)).toEqual(true);
       expect(typeCheck(Props.any.weak.isRequired, null)).toEqual(false);
       expect(typeCheck(Props.any.isRequired.weak, null)).toEqual(false);

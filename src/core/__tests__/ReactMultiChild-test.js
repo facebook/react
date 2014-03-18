@@ -21,16 +21,16 @@
 
 var mocks = require('mocks');
 
-describe('ReactMultiChild', function() {
+describe('ReactMultiChild', () => {
   var React;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     React = require('React');
   });
 
-  describe('reconciliation', function() {
-    it('should update children when possible', function() {
+  describe('reconciliation', () => {
+    it('should update children when possible', () => {
       var container = document.createElement('div');
 
       var mockMount = mocks.getMockFunction();
@@ -63,7 +63,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(0);
     });
 
-    it('should replace children with different constructors', function() {
+    it('should replace children with different constructors', () => {
       var container = document.createElement('div');
 
       var mockMount = mocks.getMockFunction();
@@ -91,7 +91,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should replace children with different owners', function() {
+    it('should replace children with different owners', () => {
       var container = document.createElement('div');
 
       var mockMount = mocks.getMockFunction();
@@ -128,7 +128,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should replace children with different keys', function() {
+    it('should replace children with different keys', () => {
       var container = document.createElement('div');
 
       var mockMount = mocks.getMockFunction();
@@ -157,7 +157,7 @@ describe('ReactMultiChild', function() {
     });
   });
 
-  describe('innerHTML', function() {
+  describe('innerHTML', () => {
     var setInnerHTML;
 
     // Only run this suite if `Element.prototype.innerHTML` can be spied on.
@@ -169,7 +169,7 @@ describe('ReactMultiChild', function() {
       return;
     }
 
-    beforeEach(function() {
+    beforeEach(() => {
       Object.defineProperty(Element.prototype, 'innerHTML', {
         set: setInnerHTML = jasmine.createSpy().andCallFake(
           innerHTMLDescriptor.set
@@ -177,7 +177,7 @@ describe('ReactMultiChild', function() {
       });
     });
 
-    it('should only set `innerHTML` once on update', function() {
+    it('should only set `innerHTML` once on update', () => {
       var container = document.createElement('div');
 
       React.renderComponent(

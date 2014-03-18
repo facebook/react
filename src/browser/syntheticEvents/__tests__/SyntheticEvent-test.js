@@ -20,10 +20,10 @@
 
 var SyntheticEvent;
 
-describe('SyntheticEvent', function() {
+describe('SyntheticEvent', () => {
   var createEvent;
 
-  beforeEach(function() {
+  beforeEach(() => {
     SyntheticEvent = require('SyntheticEvent');
 
     createEvent = function(nativeEvent) {
@@ -31,7 +31,7 @@ describe('SyntheticEvent', function() {
     };
   });
 
-  it('should normalize `target` from the nativeEvent', function() {
+  it('should normalize `target` from the nativeEvent', () => {
     var target = document.createElement('div');
     var syntheticEvent = createEvent({srcElement: target});
 
@@ -39,7 +39,7 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.type).toBe(undefined);
   });
 
-  it('should be able to `preventDefault`', function() {
+  it('should be able to `preventDefault`', () => {
     var nativeEvent = {};
     var syntheticEvent = createEvent(nativeEvent);
 
@@ -52,14 +52,14 @@ describe('SyntheticEvent', function() {
     expect(nativeEvent.returnValue).toBe(false);
   });
 
-  it('should be prevented if nativeEvent is prevented', function() {
+  it('should be prevented if nativeEvent is prevented', () => {
     expect(
       createEvent({defaultPrevented: true}).isDefaultPrevented()
     ).toBe(true);
     expect(createEvent({returnValue: false}).isDefaultPrevented()).toBe(true);
   });
 
-  it('should be able to `stopPropagation`', function() {
+  it('should be able to `stopPropagation`', () => {
     var nativeEvent = {};
     var syntheticEvent = createEvent(nativeEvent);
 
@@ -70,7 +70,7 @@ describe('SyntheticEvent', function() {
     expect(nativeEvent.cancelBubble).toBe(true);
   });
 
-  it('should be able to `persist`', function() {
+  it('should be able to `persist`', () => {
     var syntheticEvent = createEvent({});
 
     expect(syntheticEvent.isPersistent()).toBe(false);

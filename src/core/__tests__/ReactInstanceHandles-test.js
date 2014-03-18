@@ -58,7 +58,7 @@ function renderParentIntoDocument() {
   return ReactTestUtils.renderIntoDocument(<ParentComponent />);
 }
 
-describe('ReactInstanceHandles', function() {
+describe('ReactInstanceHandles', () => {
   var ReactInstanceHandles;
 
   var aggregatedArgs;
@@ -70,21 +70,21 @@ describe('ReactInstanceHandles', function() {
     });
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     ReactInstanceHandles = require('ReactInstanceHandles');
     aggregatedArgs = [];
   });
 
-  describe('isRenderedByReact', function() {
-    it('should not crash on text nodes', function() {
+  describe('isRenderedByReact', () => {
+    it('should not crash on text nodes', () => {
       expect(function() {
         ReactMount.isRenderedByReact(document.createTextNode('yolo'));
       }).not.toThrow();
     });
   });
 
-  describe('findComponentRoot', function() {
-    it('should find the correct node with prefix sibling IDs', function() {
+  describe('findComponentRoot', () => {
+    it('should find the correct node with prefix sibling IDs', () => {
       var parentNode = document.createElement('div');
       var childNodeA = document.createElement('div');
       var childNodeB = document.createElement('div');
@@ -103,7 +103,7 @@ describe('ReactInstanceHandles', function() {
       ).toBe(childNodeB);
     });
 
-    it('should work around unidentified nodes', function() {
+    it('should work around unidentified nodes', () => {
       var parentNode = document.createElement('div');
       var childNodeA = document.createElement('div');
       var childNodeB = document.createElement('div');
@@ -122,7 +122,7 @@ describe('ReactInstanceHandles', function() {
       ).toBe(childNodeB);
     });
 
-    it('should throw if a rendered element cannot be found', function() {
+    it('should throw if a rendered element cannot be found', () => {
       var parentNode = document.createElement('table');
       var childNodeA = document.createElement('tbody');
       var childNodeB = document.createElement('tr');
@@ -154,8 +154,8 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('getReactRootIDFromNodeID', function() {
-    it('should support strings', function() {
+  describe('getReactRootIDFromNodeID', () => {
+    it('should support strings', () => {
       var test = '.s_0_1.0..1';
       var expected = '.s_0_1';
       var actual = ReactInstanceHandles.getReactRootIDFromNodeID(test);
@@ -163,8 +163,8 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('getReactRootIDFromNodeID', function() {
-    it('should return null for invalid IDs', function() {
+  describe('getReactRootIDFromNodeID', () => {
+    it('should return null for invalid IDs', () => {
       var getReactRootIDFromNodeID = (
         ReactInstanceHandles.getReactRootIDFromNodeID
       );
@@ -175,15 +175,15 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('traverseTwoPhase', function() {
-    it("should not traverse when traversing outside DOM", function() {
+  describe('traverseTwoPhase', () => {
+    it("should not traverse when traversing outside DOM", () => {
       var targetID = '';
       var expectedAggregation = [];
       ReactInstanceHandles.traverseTwoPhase(targetID, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should traverse two phase across component boundary", function() {
+    it("should traverse two phase across component boundary", () => {
       var parent = renderParentIntoDocument();
       var targetID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
       var expectedAggregation = [
@@ -201,7 +201,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should traverse two phase at shallowest node", function() {
+    it("should traverse two phase at shallowest node", () => {
       var parent = renderParentIntoDocument();
       var targetID = parent.refs.P._rootNodeID;
       var expectedAggregation = [
@@ -213,8 +213,8 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('traverseEnterLeave', function() {
-    it("should not traverse when enter/leaving outside DOM", function() {
+  describe('traverseEnterLeave', () => {
+    it("should not traverse when enter/leaving outside DOM", () => {
       var targetID = '';
       var expectedAggregation = [];
       ReactInstanceHandles.traverseEnterLeave(
@@ -223,7 +223,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should not traverse if enter/leave the same node", function() {
+    it("should not traverse if enter/leave the same node", () => {
       var parent = renderParentIntoDocument();
       var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
       var enterID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
@@ -234,7 +234,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should traverse enter/leave to sibling - avoids parent", function() {
+    it("should traverse enter/leave to sibling - avoids parent", () => {
       var parent = renderParentIntoDocument();
       var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
       var enterID = parent.refs.P_P1_C1.refs.DIV_2._rootNodeID;
@@ -249,7 +249,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should traverse enter/leave to parent - avoids parent", function() {
+    it("should traverse enter/leave to parent - avoids parent", () => {
       var parent = renderParentIntoDocument();
       var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
       var enterID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
@@ -262,7 +262,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should enter from the window", function() {
+    it("should enter from the window", () => {
       var parent = renderParentIntoDocument();
       var leaveID = ''; // From the window or outside of the React sandbox.
       var enterID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
@@ -277,7 +277,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should enter from the window to the shallowest", function() {
+    it("should enter from the window to the shallowest", () => {
       var parent = renderParentIntoDocument();
       var leaveID = ''; // From the window or outside of the React sandbox.
       var enterID = parent.refs.P._rootNodeID;
@@ -290,7 +290,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should leave to the window", function() {
+    it("should leave to the window", () => {
       var parent = renderParentIntoDocument();
       var enterID = ''; // From the window or outside of the React sandbox.
       var leaveID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
@@ -305,7 +305,7 @@ describe('ReactInstanceHandles', function() {
       expect(aggregatedArgs).toEqual(expectedAggregation);
     });
 
-    it("should leave to the window from the shallowest", function() {
+    it("should leave to the window from the shallowest", () => {
       var parent = renderParentIntoDocument();
       var enterID = ''; // From the window or outside of the React sandbox.
       var leaveID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
@@ -321,8 +321,8 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('getNextDescendantID', function() {
-    it("should return next descendent from window", function() {
+  describe('getNextDescendantID', () => {
+    it("should return next descendent from window", () => {
       var parent = renderParentIntoDocument();
       expect(
         ReactInstanceHandles._getNextDescendantID(
@@ -332,11 +332,11 @@ describe('ReactInstanceHandles', function() {
       ).toBe(parent.refs.P._rootNodeID);
     });
 
-    it("should return window for next descendent towards window", function() {
+    it("should return window for next descendent towards window", () => {
       expect(ReactInstanceHandles._getNextDescendantID('', '')).toBe('');
     });
 
-    it("should return self for next descendent towards self", function() {
+    it("should return self for next descendent towards self", () => {
       var parent = renderParentIntoDocument();
       expect(
         ReactInstanceHandles._getNextDescendantID(
@@ -347,8 +347,8 @@ describe('ReactInstanceHandles', function() {
     });
   });
 
-  describe('getFirstCommonAncestorID', function() {
-    it("should determine the first common ancestor correctly", function() {
+  describe('getFirstCommonAncestorID', () => {
+    it("should determine the first common ancestor correctly", () => {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor from window to deep element is ''.

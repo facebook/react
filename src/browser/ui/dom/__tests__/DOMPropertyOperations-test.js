@@ -19,13 +19,13 @@
 
 "use strict";
 
-describe('DOMPropertyOperations', function() {
+describe('DOMPropertyOperations', () => {
   var DOMPropertyOperations;
   var DOMProperty;
 
   var mocks;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     var ReactDefaultInjection = require('ReactDefaultInjection');
     ReactDefaultInjection.inject();
@@ -36,9 +36,9 @@ describe('DOMPropertyOperations', function() {
     mocks = require('mocks');
   });
 
-  describe('createMarkupForProperty', function() {
+  describe('createMarkupForProperty', () => {
 
-    it('should create markup for simple properties', function() {
+    it('should create markup for simple properties', () => {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'name',
         'simple'
@@ -55,14 +55,14 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
-    it('should work with the id attribute', function() {
+    it('should work with the id attribute', () => {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'id',
         'simple'
       )).toBe('id="simple"');
     });
 
-    it('should warn about incorrect casing', function() {
+    it('should warn about incorrect casing', () => {
       spyOn(console, 'warn');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'tabindex',
@@ -72,7 +72,7 @@ describe('DOMPropertyOperations', function() {
       expect(console.warn.argsForCall[0][0]).toContain('tabIndex');
     });
 
-    it('should warn about class', function() {
+    it('should warn about class', () => {
       spyOn(console, 'warn');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'class',
@@ -82,7 +82,7 @@ describe('DOMPropertyOperations', function() {
       expect(console.warn.argsForCall[0][0]).toContain('className');
     });
 
-    it('should create markup for boolean properties', function() {
+    it('should create markup for boolean properties', () => {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
         'simple'
@@ -99,7 +99,7 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
-    it('should create markup for custom attributes', function() {
+    it('should create markup for custom attributes', () => {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'aria-label',
         'simple'
@@ -118,25 +118,25 @@ describe('DOMPropertyOperations', function() {
 
   });
 
-  describe('setValueForProperty', function() {
+  describe('setValueForProperty', () => {
     var stubNode;
 
-    beforeEach(function() {
+    beforeEach(() => {
       stubNode = document.createElement('div');
     });
 
-    it('should set values as properties by default', function() {
+    it('should set values as properties by default', () => {
       DOMPropertyOperations.setValueForProperty(stubNode, 'title', 'Tip!');
       expect(stubNode.title).toBe('Tip!');
     });
 
-    it('should set values as attributes if necessary', function() {
+    it('should set values as attributes if necessary', () => {
       DOMPropertyOperations.setValueForProperty(stubNode, 'role', '#');
       expect(stubNode.getAttribute('role')).toBe('#');
       expect(stubNode.role).toBeUndefined();
     });
 
-    it('should convert attribute values to string first', function() {
+    it('should convert attribute values to string first', () => {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
       var obj = {toString: function() { return '<html>'; }};
@@ -144,7 +144,7 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.getAttribute('role')).toBe('<html>');
     });
 
-    it('should remove for falsey boolean properties', function() {
+    it('should remove for falsey boolean properties', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'allowFullScreen',
@@ -153,7 +153,7 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.hasAttribute('allowFullScreen')).toBe(false);
     });
 
-    it('should use mutation method where applicable', function() {
+    it('should use mutation method where applicable', () => {
       var foobarSetter = mocks.getMockFunction();
       // inject foobar DOM property
       DOMProperty.injection.injectDOMPropertyConfig({
@@ -174,7 +174,7 @@ describe('DOMPropertyOperations', function() {
       expect(foobarSetter.mock.calls[0][1]).toBe('cows say moo');
     });
 
-    it('should set className to empty string instead of null', function() {
+    it('should set className to empty string instead of null', () => {
       DOMPropertyOperations.setValueForProperty(
         stubNode,
         'className',
@@ -192,7 +192,7 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.className).toBe('');
     });
 
-    it('should remove property properly even with different name', function() {
+    it('should remove property properly even with different name', () => {
       // Suppose 'foobar' is a property that corresponds to the underlying
       // 'className' property:
       DOMProperty.injection.injectDOMPropertyConfig({
@@ -221,8 +221,8 @@ describe('DOMPropertyOperations', function() {
 
   });
 
-  describe('injectDOMPropertyConfig', function() {
-    it('should support custom attributes', function() {
+  describe('injectDOMPropertyConfig', () => {
+    it('should support custom attributes', () => {
       // foobar does not exist yet
       expect(DOMPropertyOperations.createMarkupForProperty(
         'foobar',

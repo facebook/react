@@ -19,17 +19,17 @@
 
 "use strict";
 
-describe('ReactChildren', function() {
+describe('ReactChildren', () => {
   var ReactChildren;
   var React;
 
-  beforeEach(function() {
+  beforeEach(() => {
     ReactChildren = require('ReactChildren');
     React = require('React');
   });
 
 
-  it('should support identity for simple', function() {
+  it('should support identity for simple', () => {
     var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
@@ -48,7 +48,7 @@ describe('ReactChildren', function() {
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
-  it('should treat single arrayless child as being in array', function() {
+  it('should treat single arrayless child as being in array', () => {
     var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
@@ -63,7 +63,7 @@ describe('ReactChildren', function() {
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
-  it('should treat single child in array as expected', function() {
+  it('should treat single child in array as expected', () => {
     var callback = jasmine.createSpy().andCallFake(function (kid, index) {
       return kid;
     });
@@ -78,7 +78,7 @@ describe('ReactChildren', function() {
     expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
   });
 
-  it('should pass key to returned component', function() {
+  it('should pass key to returned component', () => {
     var mapFn = function (kid, index) {
       return <div>{kid}</div>;
     };
@@ -95,7 +95,7 @@ describe('ReactChildren', function() {
     expect(mappedKeys[0]).toBe('.$simple');
   });
 
-  it('should invoke callback with the right context', function() {
+  it('should invoke callback with the right context', () => {
     var lastContext;
     var callback = function (kid, index) {
       lastContext = this;
@@ -117,7 +117,7 @@ describe('ReactChildren', function() {
     expect(mappedChildren[mappedKeys[0]]).toBe(scopeTester);
   });
 
-  it('should be called for each child', function() {
+  it('should be called for each child', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -182,7 +182,7 @@ describe('ReactChildren', function() {
   });
 
 
-  it('should be called for each child in nested structure', function() {
+  it('should be called for each child in nested structure', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -262,7 +262,7 @@ describe('ReactChildren', function() {
     expect(mappedChildren[mappedKeys[5]]).toBe(fiveMapped);
   });
 
-  it('should retain key across two mappings', function() {
+  it('should retain key across two mappings', () => {
     var zeroForceKey = <div key="keyZero" />;
     var oneForceKey = <div key="keyOne" />;
 
@@ -300,7 +300,7 @@ describe('ReactChildren', function() {
 
   });
 
-  it('should not throw if key provided is a dupe with array key', function() {
+  it('should not throw if key provided is a dupe with array key', () => {
     var zero = <div />;
     var one = <div key="0" />;
 
@@ -315,12 +315,12 @@ describe('ReactChildren', function() {
       </div>
     );
 
-    expect(function() {
+    expect(() => {
       ReactChildren.map(instance.props.children, mapFn);
     }).not.toThrow();
   });
 
-  it('should throw if key provided is a dupe with explicit key', function() {
+  it('should throw if key provided is a dupe with explicit key', () => {
     var zero = <div key="something"/>;
     var one = <div key="something" />;
 
@@ -329,7 +329,7 @@ describe('ReactChildren', function() {
       <div>{zero}{one}</div>
     );
 
-    expect(function() {
+    expect(() => {
       ReactChildren.map(instance.props.children, mapFn);
     }).toThrow();
   });

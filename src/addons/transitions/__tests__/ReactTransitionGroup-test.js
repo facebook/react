@@ -25,10 +25,10 @@ var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
-describe('ReactTransitionGroup', function() {
+describe('ReactTransitionGroup', () => {
   var container;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTransitionGroup = require('ReactTransitionGroup');
     mocks = require('mocks');
@@ -37,7 +37,7 @@ describe('ReactTransitionGroup', function() {
   });
 
 
-  it('should handle willEnter correctly', function() {
+  it('should handle willEnter correctly', () => {
     var log = [];
 
     var Child = React.createClass({
@@ -93,7 +93,7 @@ describe('ReactTransitionGroup', function() {
     });
   });
 
-  it('should handle enter/leave/enter/leave correctly', function() {
+  it('should handle enter/leave/enter/leave correctly', () => {
     var log = [];
     var cb;
 
@@ -152,7 +152,7 @@ describe('ReactTransitionGroup', function() {
     ]);
   });
 
-  it('should handle enter/leave/enter correctly', function() {
+  it('should handle enter/leave/enter correctly', () => {
     var log = [];
     var cb;
 

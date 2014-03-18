@@ -23,43 +23,43 @@
 
 var React = require('React');
 
-describe('CSSPropertyOperations', function() {
+describe('CSSPropertyOperations', () => {
   var CSSPropertyOperations;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     CSSPropertyOperations = require('CSSPropertyOperations');
   });
 
-  it('should create markup for simple styles', function() {
+  it('should create markup for simple styles', () => {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: '#3b5998',
       display: 'none'
     })).toBe('background-color:#3b5998;display:none;');
   });
 
-  it('should ignore undefined styles', function() {
+  it('should ignore undefined styles', () => {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: undefined,
       display: 'none'
     })).toBe('display:none;');
   });
 
-  it('should ignore null styles', function() {
+  it('should ignore null styles', () => {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
       display: 'none'
     })).toBe('display:none;');
   });
 
-  it('should return null for no styles', function() {
+  it('should return null for no styles', () => {
     expect(CSSPropertyOperations.createMarkupForStyles({
       backgroundColor: null,
       display: null
     })).toBe(null);
   });
 
-  it('should automatically append `px` to relevant styles', function() {
+  it('should automatically append `px` to relevant styles', () => {
     expect(CSSPropertyOperations.createMarkupForStyles({
       left: 0,
       margin: 16,
@@ -68,7 +68,7 @@ describe('CSSPropertyOperations', function() {
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
   });
 
-  it('should not append `px` to styles that might need a number', function() {
+  it('should not append `px` to styles that might need a number', () => {
     var CSSProperty = require('CSSProperty');
     var unitlessProperties = Object.keys(CSSProperty.isUnitlessNumber);
     unitlessProperties.forEach(function(property) {
@@ -79,7 +79,7 @@ describe('CSSPropertyOperations', function() {
     });
   });
 
-  it('should set style attribute when styles exist', function() {
+  it('should set style attribute when styles exist', () => {
     var styles = {
       backgroundColor: '#000',
       display: 'none'
@@ -90,7 +90,7 @@ describe('CSSPropertyOperations', function() {
     expect(/style=".*"/.test(root.innerHTML)).toBe(true);
   });
 
-  it('should not set style attribute when no styles exist', function() {
+  it('should not set style attribute when no styles exist', () => {
     var styles = {
       backgroundColor: null,
       display: null

@@ -24,13 +24,13 @@ require('mock-modules')
 
 var EVENT_TARGET_PARAM = 1;
 
-describe('ReactEventTopLevelCallback', function() {
+describe('ReactEventTopLevelCallback', () => {
   var React;
   var ReactEventTopLevelCallback;
   var ReactMount;
   var ReactEventEmitter; // mocked
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
@@ -38,8 +38,8 @@ describe('ReactEventTopLevelCallback', function() {
     ReactEventEmitter = require('ReactEventEmitter'); // mocked
   });
 
-  describe('Propagation', function() {
-    it('should propagate events one level down', function() {
+  describe('Propagation', () => {
+    it('should propagate events one level down', () => {
       var childContainer = document.createElement('div');
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
@@ -59,7 +59,7 @@ describe('ReactEventTopLevelCallback', function() {
       expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
     });
 
-    it('should propagate events two levels down', function() {
+    it('should propagate events two levels down', () => {
       var childContainer = document.createElement('div');
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
@@ -85,7 +85,7 @@ describe('ReactEventTopLevelCallback', function() {
         .toBe(grandParentControl.getDOMNode());
     });
 
-    it('should not get confused by disappearing elements', function() {
+    it('should not get confused by disappearing elements', () => {
       var childContainer = document.createElement('div');
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
@@ -119,7 +119,7 @@ describe('ReactEventTopLevelCallback', function() {
     });
   });
 
-  it('should not fire duplicate events for a React DOM tree', function() {
+  it('should not fire duplicate events for a React DOM tree', () => {
     var container = document.createElement('div');
     var inner = <div>Inner</div>;
     var control = <div><div id="outer">{inner}</div></div>;

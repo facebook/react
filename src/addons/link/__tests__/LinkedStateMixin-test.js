@@ -21,18 +21,18 @@
 
 /*jshint evil:true */
 
-describe('LinkedStateMixin', function() {
+describe('LinkedStateMixin', () => {
   var LinkedStateMixin;
   var React;
   var ReactLink;
 
-  beforeEach(function() {
+  beforeEach(() => {
     LinkedStateMixin = require('LinkedStateMixin');
     React = require('React');
     ReactLink = require('ReactLink');
   });
 
-  it('should create a ReactLink for state', function() {
+  it('should create a ReactLink for state', () => {
     var Component = React.createClass({
       mixins: [LinkedStateMixin],
 

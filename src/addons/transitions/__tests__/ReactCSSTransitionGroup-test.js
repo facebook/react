@@ -25,10 +25,10 @@ var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
-describe('ReactCSSTransitionGroup', function() {
+describe('ReactCSSTransitionGroup', () => {
   var container;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
     mocks = require('mocks');
@@ -36,7 +36,7 @@ describe('ReactCSSTransitionGroup', function() {
     container = document.createElement('div');
   });
 
-  it('should warn after time with no transitionend', function() {
+  it('should warn after time with no transitionend', () => {
     var a = React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
@@ -72,7 +72,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(console.warn.mock.calls.length).toBe(1);
   });
 
-  it('should keep both sets of DOM nodes around', function() {
+  it('should keep both sets of DOM nodes around', () => {
     var a = React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
@@ -91,7 +91,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
   });
 
-  it('should switch transitionLeave from false to true', function() {
+  it('should switch transitionLeave from false to true', () => {
     var a = React.renderComponent(
       <ReactCSSTransitionGroup
           transitionName="yolo"
@@ -126,7 +126,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[1].id).toBe('two');
   });
   return;
-  it('should work with no children', function () {
+  it('should work with no children', () => {
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
       </ReactCSSTransitionGroup>,
@@ -134,7 +134,7 @@ describe('ReactCSSTransitionGroup', function() {
     );
   });
 
-  it('should work with a null child', function () {
+  it('should work with a null child', () => {
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}

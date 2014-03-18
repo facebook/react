@@ -23,9 +23,9 @@ var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactErrorUtils = require('ReactErrorUtils');
 
-describe('ReactCompositeComponent-error', function() {
+describe('ReactCompositeComponent-error', () => {
 
-  it('should be passed the component and method name', function() {
+  it('should be passed the component and method name', () => {
     spyOn(ReactErrorUtils, 'guard');
     var Component = React.createClass({
       someHandler: function() {},

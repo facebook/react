@@ -23,14 +23,14 @@
 
 var mocks = require('mocks');
 
-describe('ReactDOMComponent', function() {
+describe('ReactDOMComponent', () => {
 
-  describe('updateDOM', function() {
+  describe('updateDOM', () => {
     var React;
     var ReactTestUtils;
     var transaction;
 
-    beforeEach(function() {
+    beforeEach(() => {
       React = require('React');
       ReactTestUtils = require('ReactTestUtils');
 
@@ -38,7 +38,7 @@ describe('ReactDOMComponent', function() {
       transaction = new ReactReconcileTransaction();
     });
 
-    it("should handle className", function() {
+    it("should handle className", () => {
       var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
 
       stub.receiveComponent({props: { className: 'foo' }}, transaction);
@@ -49,7 +49,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().className).toEqual('');
     });
 
-    it("should gracefully handle various style value types", function() {
+    it("should gracefully handle various style value types", () => {
       var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
       var stubStyle = stub.getDOMNode().style;
 
@@ -69,7 +69,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.fontFamily).toEqual('');
     });
 
-    it("should update styles when mutating style object", function() {
+    it("should update styles when mutating style object", () => {
       var styles = { display: 'none', fontFamily: 'Arial', opacity: 0 };
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
@@ -99,7 +99,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.opacity).toEqual('0.5');
     });
 
-    it("should update styles if initially null", function() {
+    it("should update styles if initially null", () => {
       var styles = null;
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
@@ -111,7 +111,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
-    it("should remove attributes", function() {
+    it("should remove attributes", () => {
       var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
 
       expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
@@ -119,7 +119,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
     });
 
-    it("should remove properties", function() {
+    it("should remove properties", () => {
       var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
 
       expect(stub.getDOMNode().className).toEqual('monkey');
@@ -127,7 +127,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().className).toEqual('');
     });
 
-    it("should clear a single style prop when changing 'style'", function() {
+    it("should clear a single style prop when changing 'style'", () => {
       var styles = {display: 'none', color: 'red'};
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
@@ -139,7 +139,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('green');
     });
 
-    it("should clear all the styles when removing 'style'", function() {
+    it("should clear all the styles when removing 'style'", () => {
       var styles = {display: 'none', color: 'red'};
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
 
@@ -150,7 +150,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
-    it("should empty element when removing innerHTML", function() {
+    it("should empty element when removing innerHTML", () => {
       var stub = ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{__html: ':)'}} />
       );
@@ -160,7 +160,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().innerHTML).toEqual('');
     });
 
-    it("should transition from string content to innerHTML", function() {
+    it("should transition from string content to innerHTML", () => {
       var stub = ReactTestUtils.renderIntoDocument(
         <div>hello</div>
       );
@@ -173,7 +173,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
     });
 
-    it("should transition from innerHTML to string content", function() {
+    it("should transition from innerHTML to string content", () => {
       var stub = ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
       );
@@ -183,7 +183,7 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().innerHTML).toEqual('adieu');
     });
 
-    it("should not incur unnecessary DOM mutations", function() {
+    it("should not incur unnecessary DOM mutations", () => {
       var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
 
       var node = stub.getDOMNode();
@@ -206,7 +206,7 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('createOpenTagMarkup', function() {
+  describe('createOpenTagMarkup', () => {
     var genMarkup;
 
     function quoteRegexp(str) {
@@ -247,14 +247,14 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should generate the correct markup with className", function() {
+    it("should generate the correct markup with className", () => {
       expect(genMarkup({ className: 'a' })).toHaveAttribute('class', 'a');
       expect(genMarkup({ className: 'a b' })).toHaveAttribute('class', 'a b');
       expect(genMarkup({ className: '' })).toHaveAttribute('class', '');
     });
   });
 
-  describe('createContentMarkup', function() {
+  describe('createContentMarkup', () => {
     var genMarkup;
 
     function quoteRegexp(str) {
@@ -287,7 +287,7 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should handle dangerouslySetInnerHTML", function() {
+    it("should handle dangerouslySetInnerHTML", () => {
       var innerHTML = {__html: 'testContent'};
       expect(
         genMarkup({ dangerouslySetInnerHTML: innerHTML })
@@ -295,10 +295,10 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('mountComponent', function() {
+  describe('mountComponent', () => {
     var mountComponent;
 
-    beforeEach(function() {
+    beforeEach(() => {
       require('mock-modules').dumpCache();
 
       var mixInto = require('mixInto');
@@ -321,7 +321,7 @@ describe('ReactDOMComponent', function() {
       };
     });
 
-    it("should validate against multiple children props", function() {
+    it("should validate against multiple children props", () => {
       expect(function() {
         mountComponent({ children: '', dangerouslySetInnerHTML: '' });
       }).toThrow(
@@ -330,7 +330,7 @@ describe('ReactDOMComponent', function() {
       );
     });
 
-    it("should validate against invalid styles", function() {
+    it("should validate against invalid styles", () => {
       expect(function() {
         mountComponent({ style: 'display: none' });
       }).toThrow(
@@ -375,8 +375,8 @@ describe('ReactDOMComponent', function() {
     });
   });
 
-  describe('unmountComponent', function() {
-    it("should clean up listeners", function() {
+  describe('unmountComponent', () => {
+    it("should clean up listeners", () => {
       var React = require('React');
       var ReactEventEmitter = require('ReactEventEmitter');
       var ReactMount = require('ReactMount');

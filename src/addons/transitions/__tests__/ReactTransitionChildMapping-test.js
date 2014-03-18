@@ -22,13 +22,13 @@
 var React;
 var ReactTransitionChildMapping;
 
-describe('ReactTransitionChildMapping', function() {
-  beforeEach(function() {
+describe('ReactTransitionChildMapping', () => {
+  beforeEach(() => {
     React = require('React');
     ReactTransitionChildMapping = require('ReactTransitionChildMapping');
   });
 
-  it('should support getChildMapping', function() {
+  it('should support getChildMapping', () => {
     var oneone = <div key="oneone" />;
     var onetwo = <div key="onetwo" />;
     var one = <div key="one">{oneone}{onetwo}</div>;
@@ -42,7 +42,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should support mergeChildMappings for adding keys', function() {
+  it('should support mergeChildMappings for adding keys', () => {
     var prev = {
       one: true,
       two: true
@@ -59,7 +59,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should support mergeChildMappings for removing keys', function() {
+  it('should support mergeChildMappings for removing keys', () => {
     var prev = {
       one: true,
       two: true,
@@ -76,7 +76,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should support mergeChildMappings for adding and removing', function() {
+  it('should support mergeChildMappings for adding and removing', () => {
     var prev = {
       one: true,
       two: true,
@@ -95,7 +95,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should reconcile overlapping insertions and deletions', function() {
+  it('should reconcile overlapping insertions and deletions', () => {
     var prev = {
       one: true,
       two: true,
@@ -117,7 +117,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should support mergeChildMappings with undefined input', function () {
+  it('should support mergeChildMappings with undefined input', () => {
     var prev = {
       one: true,
       two: true

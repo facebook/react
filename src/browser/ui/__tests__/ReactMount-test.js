@@ -21,12 +21,12 @@
 
 var mocks = require('mocks');
 
-describe('ReactMount', function() {
+describe('ReactMount', () => {
   var React = require('React');
   var ReactMount = require('ReactMount');
 
-  describe('constructAndRenderComponentByID', function() {
-    it('throws if given an id for a component that doesn\'t exist', function() {
+  describe('constructAndRenderComponentByID', () => {
+    it('throws if given an id for a component that doesn\'t exist', () => {
       expect(function() {
         ReactMount.constructAndRenderComponentByID(
           function dummyComponentConstructor() {},
@@ -37,7 +37,7 @@ describe('ReactMount', function() {
     });
   });
 
-  it('should render different components in same root', function() {
+  it('should render different components in same root', () => {
     var container = document.createElement('container');
     document.documentElement.appendChild(container);
 
@@ -48,7 +48,7 @@ describe('ReactMount', function() {
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
-  it('should unmount and remount if the key changes', function() {
+  it('should unmount and remount if the key changes', () => {
     var container = document.createElement('container');
 
     var mockMount = mocks.getMockFunction();

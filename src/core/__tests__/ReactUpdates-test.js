@@ -23,14 +23,14 @@ var React;
 var ReactTestUtils;
 var ReactUpdates;
 
-describe('ReactUpdates', function() {
-  beforeEach(function() {
+describe('ReactUpdates', () => {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });
 
-  it('should batch state when updating state twice', function() {
+  it('should batch state when updating state twice', () => {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -58,7 +58,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state when updating two different state keys', function() {
+  it('should batch state when updating two different state keys', () => {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -89,7 +89,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state and props together', function() {
+  it('should batch state and props together', () => {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -120,7 +120,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch parent/child state updates together', function() {
+  it('should batch parent/child state updates together', () => {
     var parentUpdateCount = 0;
     var Parent = React.createClass({
       getInitialState: function() {
@@ -166,7 +166,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should batch child/parent state updates together', function() {
+  it('should batch child/parent state updates together', () => {
     var parentUpdateCount = 0;
     var Parent = React.createClass({
       getInitialState: function() {
@@ -214,7 +214,7 @@ describe('ReactUpdates', function() {
     expect(childUpdateCount).toBe(1);
   });
 
-  it('should support chained state updates', function() {
+  it('should support chained state updates', () => {
     var updateCount = 0;
     var Component = React.createClass({
       getInitialState: function() {
@@ -252,7 +252,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(2);
   });
 
-  it('should batch forceUpdate together', function() {
+  it('should batch forceUpdate together', () => {
     var shouldUpdateCount = 0;
     var updateCount = 0;
     var Component = React.createClass({
@@ -292,7 +292,7 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(1);
   });
 
-  it('should update children even if parent blocks updates', function() {
+  it('should update children even if parent blocks updates', () => {
     var parentRenderCount = 0;
     var childRenderCount = 0;
 
@@ -338,7 +338,7 @@ describe('ReactUpdates', function() {
     expect(childRenderCount).toBe(2);
   });
 
-  it('should not reconcile children passed via props', function() {
+  it('should not reconcile children passed via props', () => {
     var numMiddleRenders = 0;
     var numBottomRenders = 0;
 
@@ -371,7 +371,7 @@ describe('ReactUpdates', function() {
     expect(numBottomRenders).toBe(1);
   });
 
-  it('should flow updates correctly', function() {
+  it('should flow updates correctly', () => {
     var willUpdates = [];
     var didUpdates = [];
 

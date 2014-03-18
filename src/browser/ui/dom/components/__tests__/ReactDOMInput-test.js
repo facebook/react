@@ -24,18 +24,18 @@
 var emptyFunction = require('emptyFunction');
 var mocks = require('mocks');
 
-describe('ReactDOMInput', function() {
+describe('ReactDOMInput', () => {
   var React;
   var ReactLink;
   var ReactTestUtils;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should display `defaultValue` of number 0', function() {
+  it('should display `defaultValue` of number 0', () => {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -43,7 +43,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should display "true" for `defaultValue` of `true`', function() {
+  it('should display "true" for `defaultValue` of `true`', () => {
     var stub = <input type="text" defaultValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -51,7 +51,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('true');
   });
 
-  it('should display "false" for `defaultValue` of `false`', function() {
+  it('should display "false" for `defaultValue` of `false`', () => {
     var stub = <input type="text" defaultValue={false} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -59,7 +59,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+  it('should display "foobar" for `defaultValue` of `objToString`', () => {
     var objToString = {
       toString: function() {
         return "foobar";
@@ -73,7 +73,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('foobar');
   });
 
-  it('should display `value` of number 0', function() {
+  it('should display `value` of number 0', () => {
     var stub = <input type="text" value={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -81,7 +81,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should allow setting `value` to `true`', function() {
+  it('should allow setting `value` to `true`', () => {
     var stub = <input type="text" value="yolo" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -92,7 +92,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('true');
   });
 
-  it("should allow setting `value` to `false`", function() {
+  it("should allow setting `value` to `false`", () => {
     var stub = <input type="text" value="yolo" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -103,7 +103,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('false');
   });
 
-  it('should allow setting `value` to `objToString`', function() {
+  it('should allow setting `value` to `objToString`', () => {
     var stub = <input type="text" value="foo" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -120,7 +120,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toEqual('foobar');
   });
 
-  it('should properly control a value of number `0`', function() {
+  it('should properly control a value of number `0`', () => {
     var stub = <input type="text" value={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -130,7 +130,7 @@ describe('ReactDOMInput', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should not set a value for submit buttons unnecessarily', function() {
+  it('should not set a value for submit buttons unnecessarily', () => {
     var stub = <input type="submit" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
@@ -140,7 +140,7 @@ describe('ReactDOMInput', function() {
     expect(node.hasAttribute('value')).toBe(false);
   });
 
-  it('should control radio buttons', function() {
+  it('should control radio buttons', () => {
     var RadioGroup = React.createClass({
       render: function() {
         return (
@@ -181,7 +181,7 @@ describe('ReactDOMInput', function() {
     expect(cNode.checked).toBe(true);
   });
 
-  it('should support ReactLink', function() {
+  it('should support ReactLink', () => {
     var container = document.createElement('div');
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
@@ -199,7 +199,7 @@ describe('ReactDOMInput', function() {
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
   });
 
-  it('should warn with value and no onChange handler', function() {
+  it('should warn with value and no onChange handler', () => {
     var oldWarn = console.warn;
     try {
       console.warn = mocks.getMockFunction();
@@ -234,7 +234,7 @@ describe('ReactDOMInput', function() {
     }
   });
 
-  it('should throw if both value and valueLink are provided', function() {
+  it('should throw if both value and valueLink are provided', () => {
     // Silences console.error messages
     // ReactErrorUtils.guard is applied to all methods of a React component
     // and calls console.error in __DEV__ (true for test environment)
@@ -254,7 +254,7 @@ describe('ReactDOMInput', function() {
 
   });
 
-  it('should support checkedLink', function() {
+  it('should support checkedLink', () => {
     var container = document.createElement('div');
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
@@ -272,7 +272,7 @@ describe('ReactDOMInput', function() {
     expect(link.requestChange.mock.calls[0][0]).toEqual(false);
   });
 
-  it('should warn with checked and no onChange handler', function() {
+  it('should warn with checked and no onChange handler', () => {
     var oldWarn = console.warn;
     try {
       console.warn = mocks.getMockFunction();
@@ -307,7 +307,7 @@ describe('ReactDOMInput', function() {
     }
   });
 
-  it('should throw if both checked and checkedLink are provided', function() {
+  it('should throw if both checked and checkedLink are provided', () => {
     // Silences console.error messages
     // ReactErrorUtils.guard is applied to all methods of a React component
     // and calls console.error in __DEV__ (true for test environment)
@@ -327,7 +327,7 @@ describe('ReactDOMInput', function() {
 
   });
 
-  it('should throw if both checkedLink and valueLink are provided', function() {
+  it('should throw if both checkedLink and valueLink are provided', () => {
     // Silences console.error messages
     // ReactErrorUtils.guard is applied to all methods of a React component
     // and calls console.error in __DEV__ (true for test environment)

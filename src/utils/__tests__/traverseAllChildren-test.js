@@ -19,16 +19,16 @@
 
 "use strict";
 
-describe('traverseAllChildren', function() {
+describe('traverseAllChildren', () => {
   var traverseAllChildren;
   var React;
-  beforeEach(function() {
+  beforeEach(() => {
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
   });
 
 
-  it('should support identity for simple', function() {
+  it('should support identity for simple', () => {
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().andCallFake(function (context, kid, key, index) {
@@ -49,7 +49,7 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(1);
   });
 
-  it('should treat single arrayless child as being in array', function() {
+  it('should treat single arrayless child as being in array', () => {
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().andCallFake(function (context, kid, key, index) {
@@ -68,7 +68,7 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(1);
   });
 
-  it('should treat single child in array as expected', function() {
+  it('should treat single child in array as expected', () => {
     var traverseContext = [];
     var traverseFn =
       jasmine.createSpy().andCallFake(function (context, kid, key, index) {
@@ -87,7 +87,7 @@ describe('traverseAllChildren', function() {
     expect(traverseContext.length).toEqual(1);
   });
 
-  it('should be called for each child', function() {
+  it('should be called for each child', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -135,7 +135,7 @@ describe('traverseAllChildren', function() {
 
   // Todo: test that nums/strings are converted to ReactComponents.
 
-  it('should be called for each child in nested structure', function() {
+  it('should be called for each child in nested structure', () => {
     var zero = <div key="keyZero" />;
     var one = null;
     var two = <div key="keyTwo" />;
@@ -207,7 +207,7 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should retain key across two mappings', function() {
+  it('should retain key across two mappings', () => {
     var zeroForceKey = <div key="keyZero" />;
     var oneForceKey = <div key="keyOne" />;
     var traverseContext = [];

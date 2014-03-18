@@ -93,20 +93,20 @@ var TestCompositeComponent = React.createClass({
  * that single children that are strings are treated as "content" which is much
  * faster to render and update.
  */
-describe('ReactMultiChildText', function() {
-  it('should render null as empty', function() {
+describe('ReactMultiChildText', () => {
+  it('should render null as empty', () => {
     var d = renderSingleTextChild(null);
     // false should act exactly as a null child
     assertEmptyNode(d);
   });
 
-  it('should render undefined as empty', function() {
+  it('should render undefined as empty', () => {
     var d = renderSingleTextChild(undefined);
     // false should act exactly as a null child
     assertEmptyNode(d);
   });
 
-  it('should render null as empty then switch to text node', function() {
+  it('should render null as empty then switch to text node', () => {
     var d = renderSingleTextChild(null);
     // false should act exactly as a null child
     assertEmptyNode(d);
@@ -114,7 +114,7 @@ describe('ReactMultiChildText', function() {
     assertNodeText(d, 'hello');
   });
 
-  it('should render undefined as empty then switch to text node', function() {
+  it('should render undefined as empty then switch to text node', () => {
     var d = renderSingleTextChild(undefined);
     // false should act exactly as a null child
     assertEmptyNode(d);
@@ -122,7 +122,7 @@ describe('ReactMultiChildText', function() {
     assertNodeText(d, 'hello');
   });
 
-  it('should render null as empty then switch to span children', function() {
+  it('should render null as empty then switch to span children', () => {
     var d = renderSingleTextChild(null);
     // false should act exactly as a null child
     assertEmptyNode(d);
@@ -130,7 +130,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render null as empty then switch to span children', function() {
+  it('should render null as empty then switch to span children', () => {
     var d = renderSingleTextChild(undefined);
     // false should act exactly as a null child
     assertEmptyNode(d);
@@ -138,7 +138,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero string as text node then switch to spans', function() {
+  it('should render zero string as text node then switch to spans', () => {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, '0');
@@ -146,7 +146,7 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render zero number as text node then switch to spans', function() {
+  it('should render zero number as text node then switch to spans', () => {
     var d = renderSingleTextChild(0);
     // false should act exactly as a null child
     assertNodeText(d, '0');
@@ -154,84 +154,84 @@ describe('ReactMultiChildText', function() {
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render a single text child to a single text node', function() {
+  it('should render a single text child to a single text node', () => {
     var d = renderSingleTextChild('hello');
     assertNodeText(d, 'hello');
   });
 
-  it('should render two string children to two spans', function() {
+  it('should render two string children to two spans', () => {
     var d = renderMultipleTextChildren('hello', 'goodbye');
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render false as a null child', function() {
+  it('should render false as a null child', () => {
     var d = renderMultipleTextChildren(false, 234.2);
     // false should act exactly as a null child
     assertSingleChild(d, '234.2');
   });
 
-  it('should render true as a null child', function() {
+  it('should render true as a null child', () => {
     var d = renderMultipleTextChildren(true, 234.2);
     // false should act exactly as a null child
     assertSingleChild(d, '234.2');
   });
 
-  it('should render true as a null child', function() {
+  it('should render true as a null child', () => {
     var d = renderMultipleTextChildren(true, 234.2);
     // false should act exactly as a null child
     assertSingleChild(d, '234.2');
   });
 
-  it('should render one true as no children', function() {
+  it('should render one true as no children', () => {
     var d = renderSingleTextChild(true);
     assertEmptyNode(d);
   });
 
-  it('should render one false as no children', function() {
+  it('should render one false as no children', () => {
     var d = renderSingleTextChild(false);
     assertEmptyNode(d);
   });
 
-  it('should render empty string as no children', function() {
+  it('should render empty string as no children', () => {
     var d = renderSingleTextChild('');
     assertEmptyNode(d);
   });
 
-  it('should render two empty strings as two empty spans', function() {
+  it('should render two empty strings as two empty spans', () => {
     var d = renderMultipleTextChildren('', '');
     assertMultiChild(d, '', '');
   });
 
-  it('should render empty string and string as two spans', function() {
+  it('should render empty string and string as two spans', () => {
     var d = renderMultipleTextChildren('', 'yo');
     assertMultiChild(d, '', 'yo');
   });
 
-  it('should render child string zero as text node', function() {
+  it('should render child string zero as text node', () => {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, '0');
   });
 
-  it('should render child number zero as text node', function() {
+  it('should render child number zero as text node', () => {
     var d = renderSingleTextChild(0);
     // false should act exactly as a null child
     assertNodeText(d, '0');
   });
 
-  it('should render content string zero as text node', function() {
+  it('should render content string zero as text node', () => {
     var d = renderSingleTextChild('0');
     // false should act exactly as a null child
     assertNodeText(d, '0');
   });
 
-  it('should render zero string as string child', function() {
+  it('should render zero string as string child', () => {
     var d = renderMultipleTextChildren('0', 234.2);
     // false should act exactly as a null child
     assertMultiChild(d, '0', '234.2');
   });
 
-  it('should render zero string as string child then text node', function() {
+  it('should render zero string as string child then text node', () => {
     var d = renderMultipleTextChildren('0', 234.2);
     // false should act exactly as a null child
     assertMultiChild(d, '0', '234.2');
@@ -239,7 +239,7 @@ describe('ReactMultiChildText', function() {
     assertNodeText(d, '0');
   });
 
- it('should render zero number as string child then text node', function() {
+ it('should render zero number as string child then text node', () => {
     var d = renderMultipleTextChildren(0, 234.2);
     // false should act exactly as a null child
     assertMultiChild(d, '0', '234.2');
@@ -248,14 +248,14 @@ describe('ReactMultiChildText', function() {
     // assertNodeText(d, '0');  // This works in the browser.
   });
 
-  it('should render multiple children then switch to inline', function() {
+  it('should render multiple children then switch to inline', () => {
     var d = renderMultipleTextChildren('hello', 'goodbye');
     assertMultiChild(d, 'hello', 'goodbye');
     d.replaceProps({children: 'hello'});
     assertNodeText(d, 'hello');
   });
 
-  it('should render multiple children then switch to inline child', function() {
+  it('should render multiple children then switch to inline child', () => {
     var d = renderMultipleTextChildren('hello', 'goodbye');
     assertMultiChild(d, 'hello', 'goodbye');
     // Even when switching from content to a single child, it should render
@@ -264,14 +264,14 @@ describe('ReactMultiChildText', function() {
     assertNodeText(d, 'hello');
   });
 
-  it('should render inline child, then switch to text components ', function() {
+  it('should render inline child, then switch to text components ', () => {
     var d = renderSingleTextChild('hello');
     assertNodeText(d, 'hello');
     d.replaceProps({children: ['hello', 'goodbye']});
     assertMultiChild(d, 'hello', 'goodbye');
   });
 
-  it('should render inline child, then switch to composite', function() {
+  it('should render inline child, then switch to composite', () => {
     var d = renderSingleTextChild('hello');
     assertNodeText(d, 'hello');
     d.replaceProps({children: <TestCompositeComponent />});
@@ -280,7 +280,7 @@ describe('ReactMultiChildText', function() {
       .toBeCompositeComponentWithType(TestCompositeComponent);
   });
 
-  it('should throw if rendering both HTML and children', function() {
+  it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{_html: 'abcdef'}}>ghjkl</div>
@@ -288,7 +288,7 @@ describe('ReactMultiChildText', function() {
     }).toThrow();
   });
 
-  it('should render between nested components and inline children', function() {
+  it('should render between nested components and inline children', () => {
     var container = document.createElement('div');
     React.renderComponent(<div><h1><span /><span /></h1></div>, container);
 

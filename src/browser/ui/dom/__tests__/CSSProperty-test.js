@@ -21,15 +21,15 @@
 
 "use strict";
 
-describe('CSSProperty', function() {
+describe('CSSProperty', () => {
   var CSSProperty;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     CSSProperty = require('CSSProperty');
   });
 
-  it('should generate browser prefixes for its `isUnitlessNumber`', function() {
+  it('should generate browser prefixes for its `isUnitlessNumber`', () => {
     expect(CSSProperty.isUnitlessNumber.lineClamp).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
     expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();

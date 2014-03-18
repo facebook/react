@@ -26,9 +26,9 @@ var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
 // TODO: Test render and all stock methods.
-describe('autobinding', function() {
+describe('autobinding', () => {
 
-  it('Holds reference to instance', function() {
+  it('Holds reference to instance', () => {
 
     var mouseDidEnter = mocks.getMockFunction();
     var mouseDidLeave = mocks.getMockFunction();
@@ -106,7 +106,7 @@ describe('autobinding', function() {
     expect(mouseDidLeave.mock.instances[1]).toBe(global);
   });
 
-  it('works with mixins', function() {
+  it('works with mixins', () => {
     var mouseDidClick = mocks.getMockFunction();
 
     var TestMixin = {
