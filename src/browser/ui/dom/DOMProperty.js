@@ -231,11 +231,13 @@ var DOMProperty = {
    * @method
    */
   isCustomAttribute: function(attributeName) {
-    return DOMProperty._isCustomAttributeFunctions.some(
-      function(isCustomAttributeFn) {
-        return isCustomAttributeFn.call(null, attributeName);
+    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
+      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
+      if (isCustomAttributeFn(attributeName)) {
+        return true;
       }
-    );
+    }
+    return false;
   },
 
   /**
