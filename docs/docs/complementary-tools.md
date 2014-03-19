@@ -32,6 +32,7 @@ If you want your project on this list, or think one of these projects should be 
   * **[react-starter-template](https://github.com/johnthethird/react-starter-template)** Starter template with Gulp, Webpack and Bootstrap.
   * **[react-brunch](https://npmjs.org/package/react-brunch)** [Brunch](http://brunch.io/) plugin.
   * **[react-browserify-template](https://github.com/petehunt/react-browserify-template)** Quick-start with Browserify.
+  * **[generator-react-gulp-browserify](https://github.com/randylien/generator-react-gulp-browserify)** [Yeoman](http://yeoman.io/) generator for React, Gulp, Browserify and Twitter Bootstrap Sass official.
 
 ### Routing
 
