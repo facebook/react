@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | React v0.10 RC</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | React v0.10 RC" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html" />
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
+  <meta property="og:description" content="A JavaScript library for building user interfaces" />
+  <meta property="fb:app_id" content="623268441017527" />
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.min.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2014/03/19/react-v0.10-rc1.html" class="active">React v0.10 RC</a></li>
+      
+        <li><a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a></li>
+      
+        <li><a href="/react/blog/2014/02/24/community-roundup-17.html">Community Round-up #17</a></li>
+      
+        <li><a href="/react/blog/2014/02/20/react-v0.9.html">React v0.9</a></li>
+      
+        <li><a href="/react/blog/2014/02/16/react-v0.9-rc1.html">React v0.9 RC</a></li>
+      
+        <li><a href="/react/blog/2014/02/15/community-roundup-16.html">Community Round-up #16</a></li>
+      
+        <li><a href="/react/blog/2014/02/05/community-roundup-15.html">Community Round-up #15</a></li>
+      
+        <li><a href="/react/blog/2014/01/06/community-roundup-14.html">Community Round-up #14</a></li>
+      
+        <li><a href="/react/blog/2014/01/02/react-chrome-developer-tools.html">React Chrome Developer Tools</a></li>
+      
+        <li><a href="/react/blog/2013/12/30/community-roundup-13.html">Community Round-up #13</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>React v0.10 RC</h1>
+    <p class="meta">March 19, 2014 by Paul O’Shannessy</p>
+
+    <hr>
+
+    <div class="post">
+      <p><a href="http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html">v0.9 has only been out for a month</a>, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&#39;t have a long list of changes to talk about.</p>
+
+<p>The release candidate is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong>
+Dev build with warnings: <a href="http://fb.me/react-0.10.0-rc1.js">http://fb.me/react-0.10.0-rc1.js</a>
+Minified build for production: <a href="http://fb.me/react-0.10.0-rc1.min.js">http://fb.me/react-0.10.0-rc1.min.js</a></li>
+<li><strong>React with Add-Ons</strong>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.10.0-rc1.js">http://fb.me/react-with-addons-0.10.0-rc1.js</a>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0-rc1.min.js">http://fb.me/react-with-addons-0.10.0-rc1.min.js</a></li>
+<li><strong>In-Browser JSX transformer</strong>
+<a href="http://fb.me/JSXTransformer-0.10.0-rc1.js">http://fb.me/JSXTransformer-0.10.0-rc1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.10.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+<h2><a class="anchor" name="clone-on-mount"></a>Clone On Mount <a class="hash-link" href="#clone-on-mount">#</a></h2>
+<p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
+
+<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="http://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
+
+<p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
+<span class="c1">// &quot;descriptor&quot;, not necessarily the mounted instance.</span>
+<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">;</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">);</span>
+<span class="c1">// ...</span>
+<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
+
+<span class="c1">// The change here is very simple. The return value of renderComponent will be</span>
+<span class="c1">// the mounted instance.</span>
+<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">)</span>
+<span class="c1">// ...</span>
+<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
+</code></pre></div>
+<p>These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.</p>
+
+<p>The plan for v0.11 is that we will go fully to &quot;descriptors&quot;. Method calls on the return value of <code>MyComponent()</code> will fail hard.</p>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+<ul>
+<li>Made it possible to server render without React-related markup (<code>data-reactid</code>, <code>data-react-checksum</code>) - <code>React.renderComponentToStaticMarkup</code></li>
+<li>Added support for more attributes:
+
+<ul>
+<li><code>srcSet</code> for <code>&lt;img&gt;</code> to images at different pixel ratios</li>
+<li><code>textAnchor</code> for SVG</li>
+</ul></li>
+</ul>
+<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li>Ensure all void elements don’t insert a closing tag into the markup.</li>
+<li>Ensure <code>className={false}</code> behaves consistently</li>
+<li>Ensure <code>this.refs</code> is defined, even if no refs are specified.</li>
+</ul>
+<h3><a class="anchor" name="addons"></a>Addons <a class="hash-link" href="#addons">#</a></h3>
+<ul>
+<li><code>update</code> function to deal with immutable data.</li>
+</ul>
+<h3><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h3>
+<ul>
+<li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
+</ul>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">&copy; 2014 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

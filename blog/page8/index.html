@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.3.3</title>
+  <title>React | Blog</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.3.3" />
+  <meta property="og:title" content="React | Blog" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/page8/index.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -89,32 +89,30 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.3.3</h1>
-    <p class="meta">June 21, 2013 by Paul O'Shannessy</p>
+    
+      <div class="post-list-item">
+        <h1><a href="/react/blog/2013/06/02/jsfiddle-integration.html">JSFiddle Integration</a></h1>
+        <p class="meta">June  2, 2013 by Christopher Chedeau</p>
+        <hr />
+        <div class="post">
+         <p><a href="http://jsfiddle.net">JSFiddle</a> just announced support for React. This is an exciting news as it makes collaboration on snippets of code a lot easier. You can play around this <strong><a href="http://jsfiddle.net/vjeux/kb3gN/">base React JSFiddle</a></strong>, fork it and share it! A <a href="http://jsfiddle.net/vjeux/VkebS/">fiddle without JSX</a> is also available.</p>
 
-    <hr>
+<blockquote class="twitter-tweet" align="center"><p>React (by Facebook) is now available on JSFiddle. <a href="http://t.co/wNQf9JPv5u" title="http://facebook.github.io/react/">facebook.github.io/react/</a></p>&mdash; JSFiddle (@jsfiddle) <a href="https://twitter.com/jsfiddle/status/341114115781177344">June 2, 2013</a></blockquote>
 
-    <div class="post">
-      <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
-<h2><a class="anchor" name="react-tools"></a>react-tools <a class="hash-link" href="#react-tools">#</a></h2>
-<ul>
-<li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
-<li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
-<li>Freeze our esprima dependency.</li>
-</ul>
-<h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
-<ul>
-<li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
-</ul>
-<h2><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h2>
-<ul>
-<li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
-</ul>
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
+        </div>
+      </div>
+    
+
+    <div class="pagination">
+      
+        <a href="/react//blog/page7/" class="previous">
+          &laquo; Previous Page
+        </a>
+      
+      
     </div>
-
-    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/blog/2013/06/21/react-v0-3-3.html"></div>
   </div>
 </section>
 
