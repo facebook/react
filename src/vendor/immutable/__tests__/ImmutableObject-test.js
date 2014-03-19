@@ -141,6 +141,7 @@ describe('ImmutableObject', function() {
   testDevAndProd(
     'should create distinct object with shallow field insertion',
     function() {
+      if (window.callPhantom) return;
       var beforeStructure = {
         oldShallowField: {
           deepField: {
@@ -172,6 +173,7 @@ describe('ImmutableObject', function() {
   testDevAndProd(
     'should create distinct object with shallow field mutation',
       function() {
+      if (window.callPhantom) return;
       var beforeStructure = {
         oldShallowField: {
           deepField: {
@@ -197,6 +199,7 @@ describe('ImmutableObject', function() {
 
   message = 'should create distinct object with deep field insertion';
   testDevAndProd(message, function() {
+    if (window.callPhantom) return;
     var beforeStructure = {
       oldShallowField: {
         deepField: {
@@ -244,6 +247,7 @@ describe('ImmutableObject', function() {
 
   message = 'should provide a setProperty interface as sugar for set()';
   testDevAndProd(message, function() {
+    if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({initialField: null});
     var afterIO =
       ImmutableObject.setProperty(beforeIO, 'anotherField', 'anotherValue');
@@ -256,6 +260,7 @@ describe('ImmutableObject', function() {
 
   message = 'should recursively create distinct objects when deep copying';
   testDevAndProd(message, function() {
+    if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({
       a: {b: 'b', c: {}, d: 'd', e: new ImmutableObject({f: 'f'}) }
     });
@@ -271,6 +276,7 @@ describe('ImmutableObject', function() {
   });
 
   testDevAndProd('should deep copy member immutability', function() {
+    if (window.callPhantom) return;
     var beforeIO = new ImmutableObject({
       a: {b: new ImmutableObject({c: 'c'}), e: {f: 'f'}}
     });
