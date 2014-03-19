@@ -490,12 +490,10 @@ var ReactMount = {
           // warning is when the container is empty.
           rootElementsByReactRootID[reactRootID] = containerChild;
         } else {
-          // Disabled for now until #3436441 is fixed.
-          //
-          // console.warn(
-          //   'ReactMount: Root element has been removed from its original ' +
-          //   'container. New container:', rootElement.parentNode
-          // );
+          console.warn(
+            'ReactMount: Root element has been removed from its original ' +
+            'container. New container:', rootElement.parentNode
+          );
         }
       }
     }
