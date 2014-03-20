@@ -1,4 +1,5 @@
 /*global exports:true*/
+var es3ify = require('es3ify');
 var es6ArrowFunctions = require('jstransform/visitors/es6-arrow-function-visitors');
 var es6Classes = require('jstransform/visitors/es6-class-visitors');
 var es6ObjectShortNotation = require('jstransform/visitors/es6-object-short-notation-visitors');
@@ -16,7 +17,11 @@ var transformVisitors = {
   'es6-object-short-notation': es6ObjectShortNotation.visitorList,
   'es6-rest-params': es6RestParameters.visitorList,
   'es6-templates': es6Templates.visitorList,
-  'react': react.visitorList.concat(reactDisplayName.visitorList)
+  'react': [].concat(
+    es3ify.visitorList,
+    react.visitorList,
+    reactDisplayName.visitorList
+  )
 };
 
 /**
