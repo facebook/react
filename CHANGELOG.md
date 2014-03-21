@@ -1,3 +1,27 @@
+## 0.10.0 (March 21, 2014)
+
+### React Core
+
+#### New Features
+* Added warnings to help migrate towards descriptors
+* Made it possible to server render without React-related markup (`data-reactid`, `data-react-checksum`). This DOM will not be mountable by React. [Read the docs for `React.renderComponentToStaticMarkup`](http://facebook.github.io/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup)
+* Added support for more attributes:
+  * `srcSet` for `<img>` to specify images at different pixel ratios
+  * `textAnchor` for SVG
+
+#### Bug Fixes
+* Ensure all void elements don’t insert a closing tag into the markup.
+* Ensure `className={false}` behaves consistently
+* Ensure `this.refs` is defined, even if no refs are specified.
+
+### Addons
+
+* `update` function to deal with immutable data. [Read the docs](http://facebook.github.io/react/docs/update.html)
+
+### react-tools
+* Added an option argument to `transform` function. The only option supported is `harmony`, which behaves the same as `jsx --harmony` on the command line. This uses the ES6 transforms from [jstransform](https://github.com/facebook/jstransform).
+
+
 ## 0.9.0 (February 20, 2014)
 
 ### React Core
