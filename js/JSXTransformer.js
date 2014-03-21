@@ -1,64 +1,18 @@
 /**
- * JSXTransformer v0.9.0
+ * JSXTransformer v0.10.0
  */
-!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.JSXTransformer=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-// shim for using process in browser
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.JSXTransformer=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+/**
+ * The buffer module from node.js, for the browser.
+ *
+ * Author:   Feross Aboukhadijeh <feross@feross.org> <http://feross.org>
+ * License:  MIT
+ *
+ * `npm install buffer`
+ */
 
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-}
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],2:[function(require,module,exports){
-var base64 = require('base64-js')
-var ieee754 = require('ieee754')
+var base64 = _dereq_('base64-js')
+var ieee754 = _dereq_('ieee754')
 
 exports.Buffer = Buffer
 exports.SlowBuffer = Buffer
@@ -73,13 +27,13 @@ Buffer.poolSize = 8192
 Buffer._useTypedArrays = (function () {
    // Detect if browser supports Typed Arrays. Supported browsers are IE 10+,
    // Firefox 4+, Chrome 7+, Safari 5.1+, Opera 11.6+, iOS 4.2+.
-   if (typeof Uint8Array === 'undefined' || typeof ArrayBuffer === 'undefined')
-      return false
+  if (typeof Uint8Array !== 'function' || typeof ArrayBuffer !== 'function')
+    return false
 
   // Does the browser support adding properties to `Uint8Array` instances? If
   // not, then that's the same as no `Uint8Array` support. We need to be able to
   // add all the node Buffer API methods.
-  // Relevant Firefox bug: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
+  // Bug in Firefox 4-29, now fixed: https://bugzilla.mozilla.org/show_bug.cgi?id=695438
   try {
     var arr = new Uint8Array(0)
     arr.foo = function () { return 42 }
@@ -301,6 +255,12 @@ function _base64Write (buf, string, offset, length) {
   return charsWritten
 }
 
+function _utf16leWrite (buf, string, offset, length) {
+  var charsWritten = Buffer._charsWritten =
+    blitBuffer(utf16leToBytes(string), buf, offset, length)
+  return charsWritten
+}
+
 Buffer.prototype.write = function (string, offset, length, encoding) {
   // Support both (string, offset, length, encoding)
   // and the legacy (string, encoding, offset, length)
@@ -328,25 +288,34 @@ Buffer.prototype.write = function (string, offset, length, encoding) {
   }
   encoding = String(encoding || 'utf8').toLowerCase()
 
+  var ret
   switch (encoding) {
     case 'hex':
-      return _hexWrite(this, string, offset, length)
+      ret = _hexWrite(this, string, offset, length)
+      break
     case 'utf8':
     case 'utf-8':
-    case 'ucs2': // TODO: No support for ucs2 or utf16le encodings yet
+      ret = _utf8Write(this, string, offset, length)
+      break
+    case 'ascii':
+      ret = _asciiWrite(this, string, offset, length)
+      break
+    case 'binary':
+      ret = _binaryWrite(this, string, offset, length)
+      break
+    case 'base64':
+      ret = _base64Write(this, string, offset, length)
+      break
+    case 'ucs2':
     case 'ucs-2':
     case 'utf16le':
     case 'utf-16le':
-      return _utf8Write(this, string, offset, length)
-    case 'ascii':
-      return _asciiWrite(this, string, offset, length)
-    case 'binary':
-      return _binaryWrite(this, string, offset, length)
-    case 'base64':
-      return _base64Write(this, string, offset, length)
+      ret = _utf16leWrite(this, string, offset, length)
+      break
     default:
       throw new Error('Unknown encoding')
   }
+  return ret
 }
 
 Buffer.prototype.toString = function (encoding, start, end) {
@@ -362,25 +331,34 @@ Buffer.prototype.toString = function (encoding, start, end) {
   if (end === start)
     return ''
 
+  var ret
   switch (encoding) {
     case 'hex':
-      return _hexSlice(self, start, end)
+      ret = _hexSlice(self, start, end)
+      break
     case 'utf8':
     case 'utf-8':
-    case 'ucs2': // TODO: No support for ucs2 or utf16le encodings yet
+      ret = _utf8Slice(self, start, end)
+      break
+    case 'ascii':
+      ret = _asciiSlice(self, start, end)
+      break
+    case 'binary':
+      ret = _binarySlice(self, start, end)
+      break
+    case 'base64':
+      ret = _base64Slice(self, start, end)
+      break
+    case 'ucs2':
     case 'ucs-2':
     case 'utf16le':
     case 'utf-16le':
-      return _utf8Slice(self, start, end)
-    case 'ascii':
-      return _asciiSlice(self, start, end)
-    case 'binary':
-      return _binarySlice(self, start, end)
-    case 'base64':
-      return _base64Slice(self, start, end)
+      ret = _utf16leSlice(self, start, end)
+      break
     default:
       throw new Error('Unknown encoding')
   }
+  return ret
 }
 
 Buffer.prototype.toJSON = function () {
@@ -471,7 +449,15 @@ function _hexSlice (buf, start, end) {
   return out
 }
 
-// http://nodejs.org/api/buffer.html#buffer_buf_slice_start_end
+function _utf16leSlice (buf, start, end) {
+  var bytes = buf.slice(start, end)
+  var res = ''
+  for (var i = 0; i < bytes.length; i += 2) {
+    res += String.fromCharCode(bytes[i] + bytes[i+1] * 256)
+  }
+  return res
+}
+
 Buffer.prototype.slice = function (start, end) {
   var len = this.length
   start = clamp(start, len, 0)
@@ -1062,6 +1048,20 @@ function asciiToBytes (str) {
   return byteArray
 }
 
+function utf16leToBytes (str) {
+  var c, hi, lo
+  var byteArray = []
+  for (var i = 0; i < str.length; i++) {
+    c = str.charCodeAt(i)
+    hi = c >> 8
+    lo = c % 256
+    byteArray.push(lo)
+    byteArray.push(hi)
+  }
+
+  return byteArray
+}
+
 function base64ToBytes (str) {
   return base64.toByteArray(str)
 }
@@ -1090,22 +1090,21 @@ function decodeUtf8Char (str) {
  * exceed the maximum allowed value.
  */
 function verifuint (value, max) {
-  assert(typeof value == 'number', 'cannot write a non-number as a number')
-  assert(value >= 0,
-      'specified a negative value for writing an unsigned value')
+  assert(typeof value === 'number', 'cannot write a non-number as a number')
+  assert(value >= 0, 'specified a negative value for writing an unsigned value')
   assert(value <= max, 'value is larger than maximum value for type')
   assert(Math.floor(value) === value, 'value has a fractional component')
 }
 
-function verifsint(value, max, min) {
-  assert(typeof value == 'number', 'cannot write a non-number as a number')
+function verifsint (value, max, min) {
+  assert(typeof value === 'number', 'cannot write a non-number as a number')
   assert(value <= max, 'value larger than maximum allowed value')
   assert(value >= min, 'value smaller than minimum allowed value')
   assert(Math.floor(value) === value, 'value has a fractional component')
 }
 
-function verifIEEE754(value, max, min) {
-  assert(typeof value == 'number', 'cannot write a non-number as a number')
+function verifIEEE754 (value, max, min) {
+  assert(typeof value === 'number', 'cannot write a non-number as a number')
   assert(value <= max, 'value larger than maximum allowed value')
   assert(value >= min, 'value smaller than minimum allowed value')
 }
@@ -1114,7 +1113,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":3,"ieee754":4}],3:[function(require,module,exports){
+},{"base64-js":2,"ieee754":3}],2:[function(_dereq_,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -1237,7 +1236,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	module.exports.fromByteArray = uint8ToBase64
 }())
 
-},{}],4:[function(require,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -1323,8 +1322,64 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],5:[function(require,module,exports){
-var process=require("__browserify_process");// Copyright Joyent, Inc. and other Node contributors.
+},{}],4:[function(_dereq_,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+
+process.nextTick = (function () {
+    var canSetImmediate = typeof window !== 'undefined'
+    && window.setImmediate;
+    var canPost = typeof window !== 'undefined'
+    && window.postMessage && window.addEventListener
+    ;
+
+    if (canSetImmediate) {
+        return function (f) { return window.setImmediate(f) };
+    }
+
+    if (canPost) {
+        var queue = [];
+        window.addEventListener('message', function (ev) {
+            var source = ev.source;
+            if ((source === window || source === null) && ev.data === 'process-tick') {
+                ev.stopPropagation();
+                if (queue.length > 0) {
+                    var fn = queue.shift();
+                    fn();
+                }
+            }
+        }, true);
+
+        return function nextTick(fn) {
+            queue.push(fn);
+            window.postMessage('process-tick', '*');
+        };
+    }
+
+    return function nextTick(fn) {
+        setTimeout(fn, 0);
+    };
+})();
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+}
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+
+},{}],5:[function(_dereq_,module,exports){
+(function (process){
+// Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
 // copy of this software and associated documentation files (the
@@ -1549,7 +1604,8 @@ var substr = 'ab'.substr(-1) === 'b'
     }
 ;
 
-},{"__browserify_process":1}],6:[function(require,module,exports){
+}).call(this,_dereq_("/Users/poshannessy/FB/code/react/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"))
+},{"/Users/poshannessy/FB/code/react/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4}],6:[function(_dereq_,module,exports){
 /*
   Copyright (C) 2013 Ariya Hidayat <ariya.hidayat@gmail.com>
   Copyright (C) 2013 Thaddee Tyl <thaddee.tyl@gmail.com>
@@ -7857,7 +7913,7 @@ parseYieldExpression: true
 }));
 /* vim: set sw=4 ts=4 et tw=80 : */
 
-},{}],7:[function(require,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 var Base62 = (function (my) {
   my.chars = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
 
@@ -7885,17 +7941,17 @@ var Base62 = (function (my) {
 }({}));
 
 module.exports = Base62
-},{}],8:[function(require,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 /*
  * Copyright 2009-2011 Mozilla Foundation and contributors
  * Licensed under the New BSD license. See LICENSE.txt or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-exports.SourceMapGenerator = require('./source-map/source-map-generator').SourceMapGenerator;
-exports.SourceMapConsumer = require('./source-map/source-map-consumer').SourceMapConsumer;
-exports.SourceNode = require('./source-map/source-node').SourceNode;
+exports.SourceMapGenerator = _dereq_('./source-map/source-map-generator').SourceMapGenerator;
+exports.SourceMapConsumer = _dereq_('./source-map/source-map-consumer').SourceMapConsumer;
+exports.SourceNode = _dereq_('./source-map/source-node').SourceNode;
 
-},{"./source-map/source-map-consumer":13,"./source-map/source-map-generator":14,"./source-map/source-node":15}],9:[function(require,module,exports){
+},{"./source-map/source-map-consumer":13,"./source-map/source-map-generator":14,"./source-map/source-node":15}],9:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -7903,11 +7959,11 @@ exports.SourceNode = require('./source-map/source-node').SourceNode;
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
-  var util = require('./util');
+  var util = _dereq_('./util');
 
   /**
    * A data structure which is a combination of an array and a set. Adding a new
@@ -7994,7 +8050,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./util":16,"amdefine":17}],10:[function(require,module,exports){
+},{"./util":16,"amdefine":17}],10:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8032,11 +8088,11 @@ define(function (require, exports, module) {
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
-  var base64 = require('./base64');
+  var base64 = _dereq_('./base64');
 
   // A single base 64 digit can contain 6 bits of data. For the base 64 variable
   // length quantities we use in the source map spec, the first bit is the sign,
@@ -8140,7 +8196,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./base64":11,"amdefine":17}],11:[function(require,module,exports){
+},{"./base64":11,"amdefine":17}],11:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8148,9 +8204,9 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
   var charToIntMap = {};
   var intToCharMap = {};
@@ -8184,7 +8240,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":17}],12:[function(require,module,exports){
+},{"amdefine":17}],12:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8192,9 +8248,9 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
   /**
    * Recursive implementation of binary search.
@@ -8267,7 +8323,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":17}],13:[function(require,module,exports){
+},{"amdefine":17}],13:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8275,14 +8331,14 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
-  var util = require('./util');
-  var binarySearch = require('./binary-search');
-  var ArraySet = require('./array-set').ArraySet;
-  var base64VLQ = require('./base64-vlq');
+  var util = _dereq_('./util');
+  var binarySearch = _dereq_('./binary-search');
+  var ArraySet = _dereq_('./array-set').ArraySet;
+  var base64VLQ = _dereq_('./base64-vlq');
 
   /**
    * A SourceMapConsumer instance represents a parsed source map which we can
@@ -8746,7 +8802,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":9,"./base64-vlq":10,"./binary-search":12,"./util":16,"amdefine":17}],14:[function(require,module,exports){
+},{"./array-set":9,"./base64-vlq":10,"./binary-search":12,"./util":16,"amdefine":17}],14:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -8754,13 +8810,13 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
-  var base64VLQ = require('./base64-vlq');
-  var util = require('./util');
-  var ArraySet = require('./array-set').ArraySet;
+  var base64VLQ = _dereq_('./base64-vlq');
+  var util = _dereq_('./util');
+  var ArraySet = _dereq_('./array-set').ArraySet;
 
   /**
    * An instance of the SourceMapGenerator represents a source map which is
@@ -9128,7 +9184,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./array-set":9,"./base64-vlq":10,"./util":16,"amdefine":17}],15:[function(require,module,exports){
+},{"./array-set":9,"./base64-vlq":10,"./util":16,"amdefine":17}],15:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9136,12 +9192,12 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
-  var SourceMapGenerator = require('./source-map-generator').SourceMapGenerator;
-  var util = require('./util');
+  var SourceMapGenerator = _dereq_('./source-map-generator').SourceMapGenerator;
+  var util = _dereq_('./util');
 
   /**
    * SourceNodes provide a way to abstract over interpolating/concatenating
@@ -9501,7 +9557,7 @@ define(function (require, exports, module) {
 
 });
 
-},{"./source-map-generator":14,"./util":16,"amdefine":17}],16:[function(require,module,exports){
+},{"./source-map-generator":14,"./util":16,"amdefine":17}],16:[function(_dereq_,module,exports){
 /* -*- Mode: js; js-indent-level: 2; -*- */
 /*
  * Copyright 2011 Mozilla Foundation and contributors
@@ -9509,9 +9565,9 @@ define(function (require, exports, module) {
  * http://opensource.org/licenses/BSD-3-Clause
  */
 if (typeof define !== 'function') {
-    var define = require('amdefine')(module, require);
+    var define = _dereq_('amdefine')(module, _dereq_);
 }
-define(function (require, exports, module) {
+define(function (_dereq_, exports, module) {
 
   /**
    * This is a helper function for getting values from parameter/options
@@ -9708,8 +9764,9 @@ define(function (require, exports, module) {
 
 });
 
-},{"amdefine":17}],17:[function(require,module,exports){
-var process=require("__browserify_process"),__filename="/../node_modules/jstransform/node_modules/source-map/node_modules/amdefine/amdefine.js";/** vim: et:ts=4:sw=4:sts=4
+},{"amdefine":17}],17:[function(_dereq_,module,exports){
+(function (process,__filename){
+/** vim: et:ts=4:sw=4:sts=4
  * @license amdefine 0.1.0 Copyright (c) 2011, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/amdefine for details
@@ -9734,7 +9791,7 @@ function amdefine(module, requireFn) {
     var defineCache = {},
         loaderCache = {},
         alreadyCalled = false,
-        path = require('path'),
+        path = _dereq_('path'),
         makeRequire, stringRequire;
 
     /**
@@ -10009,7 +10066,8 @@ function amdefine(module, requireFn) {
 
 module.exports = amdefine;
 
-},{"__browserify_process":1,"path":5}],18:[function(require,module,exports){
+}).call(this,_dereq_("/Users/poshannessy/FB/code/react/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js"),"/../node_modules/jstransform/node_modules/source-map/node_modules/amdefine/amdefine.js")
+},{"/Users/poshannessy/FB/code/react/node_modules/browserify/node_modules/insert-module-globals/node_modules/process/browser.js":4,"path":5}],18:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -10097,7 +10155,7 @@ exports.extract = extract;
 exports.parse = parse;
 exports.parseAsObject = parseAsObject;
 
-},{}],19:[function(require,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -10125,8 +10183,8 @@ exports.parseAsObject = parseAsObject;
  * Parses input source with esprima, applies the given list of visitors to the
  * AST tree, and returns the resulting output.
  */
-var esprima = require('esprima-fb');
-var utils = require('./utils');
+var esprima = _dereq_('esprima-fb');
+var utils = _dereq_('./utils');
 
 var Syntax = esprima.Syntax;
 
@@ -10325,7 +10383,7 @@ function transform(visitors, source, options) {
   state.g.visitors = visitors;
 
   if (options.sourceMap) {
-    var SourceMapGenerator = require('source-map').SourceMapGenerator;
+    var SourceMapGenerator = _dereq_('source-map').SourceMapGenerator;
     state.g.sourceMap = new SourceMapGenerator({file: 'transformed.js'});
   }
 
@@ -10342,7 +10400,7 @@ function transform(visitors, source, options) {
 
 exports.transform = transform;
 
-},{"./utils":20,"esprima-fb":6,"source-map":8}],20:[function(require,module,exports){
+},{"./utils":20,"esprima-fb":6,"source-map":8}],20:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -10711,7 +10769,7 @@ function indentBefore(start, state) {
 
 function getDocblock(state) {
   if (!state.g.docblock) {
-    var docblock = require('./docblock');
+    var docblock = _dereq_('./docblock');
     state.g.docblock =
       docblock.parseAsObject(docblock.extract(state.g.source));
   }
@@ -10823,7 +10881,7 @@ exports.updateIndent = updateIndent;
 exports.updateState = updateState;
 exports.analyzeAndTraverse = analyzeAndTraverse;
 
-},{"./docblock":18}],21:[function(require,module,exports){
+},{"./docblock":18}],21:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -10864,9 +10922,9 @@ exports.analyzeAndTraverse = analyzeAndTraverse;
  * }.bind(this));
  *
  */
-var restParamVisitors = require('./es6-rest-param-visitors');
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('../src/utils');
+var restParamVisitors = _dereq_('./es6-rest-param-visitors');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('../src/utils');
 
 /**
  * @public
@@ -10942,7 +11000,7 @@ exports.visitorList = [
 ];
 
 
-},{"../src/utils":20,"./es6-rest-param-visitors":24,"esprima-fb":6}],22:[function(require,module,exports){
+},{"../src/utils":20,"./es6-rest-param-visitors":24,"esprima-fb":6}],22:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -10966,9 +11024,9 @@ exports.visitorList = [
  */
 'use strict';
 
-var base62 = require('base62');
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('../src/utils');
+var base62 = _dereq_('base62');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('../src/utils');
 
 var SUPER_PROTO_IDENT_PREFIX = '____SuperProtoOf';
 
@@ -11422,7 +11480,7 @@ exports.visitorList = [
   visitSuperMemberExpression
 ];
 
-},{"../src/utils":20,"base62":7,"esprima-fb":6}],23:[function(require,module,exports){
+},{"../src/utils":20,"base62":7,"esprima-fb":6}],23:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -11453,8 +11511,8 @@ exports.visitorList = [
  * function init({port, ip, coords: {x, y}}) { ... }
  *
  */
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('../src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('../src/utils');
 
 /**
  * @public
@@ -11476,7 +11534,7 @@ exports.visitorList = [
 ];
 
 
-},{"../src/utils":20,"esprima-fb":6}],24:[function(require,module,exports){
+},{"../src/utils":20,"esprima-fb":6}],24:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -11508,8 +11566,8 @@ exports.visitorList = [
  * };
  *
  */
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('../src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('../src/utils');
 
 function _nodeIsFunctionWithRestParam(node) {
   return (node.type === Syntax.FunctionDeclaration
@@ -11559,7 +11617,7 @@ exports.visitorList = [
   visitFunctionBodyWithRestParam
 ];
 
-},{"../src/utils":20,"esprima-fb":6}],25:[function(require,module,exports){
+},{"../src/utils":20,"esprima-fb":6}],25:[function(_dereq_,module,exports){
 /**
  * Copyright 2013 Facebook, Inc.
  *
@@ -11583,8 +11641,8 @@ exports.visitorList = [
  */
 'use strict';
 
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('../src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('../src/utils');
 
 /**
  * http://people.mozilla.org/~jorendorff/es6-draft.html#sec-12.1.9
@@ -11708,7 +11766,7 @@ exports.visitorList = [
   visitTaggedTemplateExpression
 ];
 
-},{"../src/utils":20,"esprima-fb":6}],26:[function(require,module,exports){
+},{"../src/utils":20,"esprima-fb":6}],26:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -11731,10 +11789,10 @@ exports.visitorList = [
 var runScripts;
 var headEl;
 
-var buffer = require('buffer');
-var transform = require('jstransform').transform;
-var visitors = require('./fbtransform/visitors').transformVisitors;
-var docblock = require('jstransform/src/docblock');
+var buffer = _dereq_('buffer');
+var transform = _dereq_('jstransform').transform;
+var visitors = _dereq_('./fbtransform/visitors').transformVisitors;
+var docblock = _dereq_('jstransform/src/docblock');
 
 // The source-map library relies on Object.defineProperty, but IE8 doesn't
 // support it fully even with es5-sham. Indeed, es5-sham's defineProperty
@@ -11905,7 +11963,7 @@ if (typeof window !== "undefined" && window !== null) {
   }
 }
 
-},{"./fbtransform/visitors":30,"buffer":2,"jstransform":19,"jstransform/src/docblock":18}],27:[function(require,module,exports){
+},{"./fbtransform/visitors":30,"buffer":1,"jstransform":19,"jstransform/src/docblock":18}],27:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -11924,14 +11982,14 @@ if (typeof window !== "undefined" && window !== null) {
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('jstransform/src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('jstransform/src/utils');
 
-var FALLBACK_TAGS = require('./xjs').knownTags;
+var FALLBACK_TAGS = _dereq_('./xjs').knownTags;
 var renderXJSExpressionContainer =
-  require('./xjs').renderXJSExpressionContainer;
-var renderXJSLiteral = require('./xjs').renderXJSLiteral;
-var quoteAttrName = require('./xjs').quoteAttrName;
+  _dereq_('./xjs').renderXJSExpressionContainer;
+var renderXJSLiteral = _dereq_('./xjs').renderXJSLiteral;
+var quoteAttrName = _dereq_('./xjs').quoteAttrName;
 
 /**
  * Customized desugar processor.
@@ -11968,7 +12026,7 @@ function visitReactTag(traverse, object, path, state) {
        'Namespace tags are not supported. ReactJSX is not XML.');
   }
 
-  var isFallbackTag = FALLBACK_TAGS[nameObject.name];
+  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   utils.append(
     (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
     state
@@ -12009,7 +12067,7 @@ function visitReactTag(traverse, object, path, state) {
       utils.move(attr.name.range[1], state);
       // Use catchupWhiteSpace to skip over the '=' in the attribute
       utils.catchupWhiteSpace(attr.value.range[0], state);
-      if (JSX_ATTRIBUTE_TRANSFORMS[attr.name.name]) {
+      if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
         utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
         utils.move(attr.value.range[1], state);
         if (!isLast) {
@@ -12041,12 +12099,23 @@ function visitReactTag(traverse, object, path, state) {
              && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
   });
   if (childrenToRender.length > 0) {
-    utils.append(', ', state);
+    var lastRenderableIndex;
+
+    childrenToRender.forEach(function(child, index) {
+      if (child.type !== Syntax.XJSExpressionContainer ||
+          child.expression.type !== Syntax.XJSEmptyExpression) {
+        lastRenderableIndex = index;
+      }
+    });
+
+    if (lastRenderableIndex !== undefined) {
+      utils.append(', ', state);
+    }
 
     childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
 
-      var isLast = index === childrenToRender.length - 1;
+      var isLast = index >= lastRenderableIndex;
 
       if (child.type === Syntax.Literal) {
         renderXJSLiteral(child, isLast, state);
@@ -12088,7 +12157,7 @@ exports.visitorList = [
   visitReactTag
 ];
 
-},{"./xjs":29,"esprima-fb":6,"jstransform/src/utils":20}],28:[function(require,module,exports){
+},{"./xjs":29,"esprima-fb":6,"jstransform/src/utils":20}],28:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -12107,8 +12176,8 @@ exports.visitorList = [
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('jstransform/src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('jstransform/src/utils');
 
 function addDisplayName(displayName, object, state) {
   if (object &&
@@ -12197,7 +12266,7 @@ exports.visitorList = [
   visitReactDisplayName
 ];
 
-},{"esprima-fb":6,"jstransform/src/utils":20}],29:[function(require,module,exports){
+},{"esprima-fb":6,"jstransform/src/utils":20}],29:[function(_dereq_,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -12215,8 +12284,8 @@ exports.visitorList = [
  */
 /*global exports:true*/
 "use strict";
-var Syntax = require('esprima-fb').Syntax;
-var utils = require('jstransform/src/utils');
+var Syntax = _dereq_('esprima-fb').Syntax;
+var utils = _dereq_('jstransform/src/utils');
 
 var knownTags = {
   a: true,
@@ -12306,6 +12375,7 @@ var knownTags = {
   p: true,
   param: true,
   path: true,
+  polygon: true,
   polyline: true,
   pre: true,
   progress: true,
@@ -12440,15 +12510,15 @@ exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
 exports.renderXJSLiteral = renderXJSLiteral;
 exports.quoteAttrName = quoteAttrName;
 
-},{"esprima-fb":6,"jstransform/src/utils":20}],30:[function(require,module,exports){
+},{"esprima-fb":6,"jstransform/src/utils":20}],30:[function(_dereq_,module,exports){
 /*global exports:true*/
-var es6ArrowFunctions = require('jstransform/visitors/es6-arrow-function-visitors');
-var es6Classes = require('jstransform/visitors/es6-class-visitors');
-var es6ObjectShortNotation = require('jstransform/visitors/es6-object-short-notation-visitors');
-var es6RestParameters = require('jstransform/visitors/es6-rest-param-visitors');
-var es6Templates = require('jstransform/visitors/es6-template-visitors');
-var react = require('./transforms/react');
-var reactDisplayName = require('./transforms/reactDisplayName');
+var es6ArrowFunctions = _dereq_('jstransform/visitors/es6-arrow-function-visitors');
+var es6Classes = _dereq_('jstransform/visitors/es6-class-visitors');
+var es6ObjectShortNotation = _dereq_('jstransform/visitors/es6-object-short-notation-visitors');
+var es6RestParameters = _dereq_('jstransform/visitors/es6-rest-param-visitors');
+var es6Templates = _dereq_('jstransform/visitors/es6-template-visitors');
+var react = _dereq_('./transforms/react');
+var reactDisplayName = _dereq_('./transforms/reactDisplayName');
 
 /**
  * Map from transformName => orderedListOfVisitors.

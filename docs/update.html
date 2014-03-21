@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Load Initial Data via AJAX</title>
+  <title>React | Immutability Helpers</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Load Initial Data via AJAX" />
+  <meta property="og:title" content="React | Immutability Helpers" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/initial-ajax.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/docs/update.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -241,7 +241,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/update.html">
+                    <a href="/react/docs/update.html" class="active">
                       Immutability Helpers
                     </a>
                   </li>
@@ -368,7 +368,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/initial-ajax.html" class="active">Load Initial Data via AJAX</a>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
           </li>
         
           <li>
@@ -390,57 +390,58 @@
 
 
   <div class="inner-content">
-    <h1>Load Initial Data via AJAX</h1>
+    <h1>Immutability Helpers</h1>
     <div class="subHeader"></div>
-    <p>Fetch data in <code>componentDidMount</code>. When the response arrives, store the data in state, triggering a render to update your UI.</p>
+    <p>React lets you use whatever style of data management you want, including mutation. However, if you can use immutable data in performance-critical parts of your application it&#39;s easy to implement a fast <code>shouldComponentUpdate()</code> method to significantly speed up your app.</p>
 
-<p>This example fetches the desired Github user&#39;s latest gist:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">UserGist</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span>
-      <span class="nx">username</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-      <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
-    <span class="p">};</span>
-  <span class="p">},</span>
-
-  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">source</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
-      <span class="kd">var</span> <span class="nx">lastGist</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-        <span class="nx">username</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">login</span><span class="p">,</span>
-        <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">html_url</span>
-      <span class="p">});</span>
-    <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
-  <span class="p">},</span>
-
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">username</span><span class="p">}</span><span class="err">&#39;</span><span class="nx">s</span> <span class="nx">last</span> <span class="nx">gist</span> <span class="nx">is</span>
-        <span class="o">&lt;</span><span class="nx">a</span> <span class="nx">href</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">lastGistUrl</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">here</span><span class="o">&lt;</span><span class="err">/a&gt;.</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">UserGist</span> <span class="nx">source</span><span class="o">=</span><span class="s2">&quot;https://api.github.com/users/octocat/gists&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nx">mountNode</span>
-<span class="p">);</span>
+<p>Dealing with immutable data in JavaScript is more difficult than in languages designed for it, like <a href="http://clojure.org/">Clojure</a>. However, we&#39;ve provided a simple immutability helper, <code>update()</code>, that makes dealing with this type of data much easier, <em>without</em> fundamentally changing how your data is represented.</p>
+<h2><a class="anchor" name="the-main-idea"></a>The main idea <a class="hash-link" href="#the-main-idea">#</a></h2>
+<p>If you mutate data like this:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
 </code></pre></div>
+<p>you have no way of determining which data has changed since the previous copy is destroyed. Instead, you need to create a new copy of <code>myData</code> and change only the parts of it that need to be changed. Then you can compare the old copy of <code>myData</code> with the new one in <code>shouldComponentUpdate()</code> using triple-equals:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">deepCopy</span><span class="p">(</span><span class="nx">myData</span><span class="p">);</span>
+<span class="nx">newData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">.</span><span class="nx">z</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+<span class="nx">newData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>
+</code></pre></div>
+<p>Unfortunately, deep copies are expensive, and sometimes impossible. You can alleviate this by only copying objects that need to be changed and by reusing the objects that haven&#39;t changed. Unfortunately, in today&#39;s JavaScript this can be cumbersome:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">x</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">,</span> <span class="p">{</span>
+    <span class="nx">y</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">x</span><span class="p">.</span><span class="nx">y</span><span class="p">,</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="mi">7</span><span class="p">}),</span>
+  <span class="p">}),</span>
+  <span class="nx">a</span><span class="o">:</span> <span class="nx">extend</span><span class="p">(</span><span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">,</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="nx">myData</span><span class="p">.</span><span class="nx">a</span><span class="p">.</span><span class="nx">b</span><span class="p">.</span><span class="nx">concat</span><span class="p">(</span><span class="mi">9</span><span class="p">)})</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>While this is fairly performant (since it only shallow copies <code>log n</code> objects and reuses the rest), it&#39;s a big pain to write. Look at all the repetition! This is not only annoying, but also provides a large surface area for bugs.</p>
+
+<p><code>update()</code> provides simple syntactic sugar around this pattern to make writing this code easier. This code becomes:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">newData</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">update</span><span class="p">(</span><span class="nx">myData</span><span class="p">,</span> <span class="p">{</span>
+  <span class="nx">x</span><span class="o">:</span> <span class="p">{</span><span class="nx">y</span><span class="o">:</span> <span class="p">{</span><span class="nx">z</span><span class="o">:</span> <span class="p">{</span><span class="nx">$set</span><span class="o">:</span> <span class="mi">7</span><span class="p">}}},</span>
+  <span class="nx">a</span><span class="o">:</span> <span class="p">{</span><span class="nx">b</span><span class="o">:</span> <span class="p">{</span><span class="nx">$push</span><span class="o">:</span> <span class="p">[</span><span class="mi">7</span><span class="p">]}}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>While the syntax takes a little getting used to (though it&#39;s inspired by <a href="http://docs.mongodb.org/manual/core/crud-introduction/#query">MongoDB&#39;s query language</a>) there&#39;s no redundancy, it&#39;s statically analyzable and it&#39;s not much more typing than the mutative version.</p>
+
+<p>The <code>$</code>-prefixed keys are called <em>directives</em>. The data structure they are &quot;mutating&quot; is called the <em>target</em>.</p>
+<h2><a class="anchor" name="available-directives"></a>Available directives <a class="hash-link" href="#available-directives">#</a></h2>
+<ul>
+<li><code>{$push: array}</code> <code>push()</code> all the items in <code>array</code> on the target</li>
+<li><code>{$unshift: array}</code> <code>unshift()</code> all the items in <code>array</code> on the target</li>
+<li><code>{$splice: array of arrays}</code> for each item in <code>array()</code> call <code>splice()</code> on the target with the parameters provided by the item.</li>
+<li><code>{$set: any}</code> replace the target entirely</li>
+<li><code>{$merge: object}</code> merge the keys of <code>object</code> with the target</li>
+</ul>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/dom-event-listeners.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/clone-with-props.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/tips/false-in-jsx.html">Next &rarr;</a>
       
     </div>
 
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/initial-ajax.html"></div>
+    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/update.html"></div>
   </div>
 </section>
 

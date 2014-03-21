@@ -240,6 +240,12 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/update.html">
+                      Immutability Helpers
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -434,6 +440,9 @@
 <p>Render a component to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
 
 <p>If you call <code>React.renderComponent()</code> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
+<h3><a class="anchor" name="react.rendercomponenttostaticmarkup"></a>React.renderComponentToStaticMarkup <a class="hash-link" href="#react.rendercomponenttostaticmarkup">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderComponentToStaticMarkup</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
+</code></pre></div>
+<p>Similar to <code>renderComponentToString</code>, except this doesn&#39;t create extra DOM attributes such as <code>data-react-id</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
 
 
     <div class="docs-prevnext">
