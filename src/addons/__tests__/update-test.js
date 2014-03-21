@@ -85,7 +85,7 @@ describe('update', function() {
     });
   });
 
-  it('should require a directive', function() {
+  it('should require a command', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
       'that did not contain one of $push, $unshift, $splice, $set, $merge. ' +

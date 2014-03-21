@@ -32,39 +32,39 @@ function shallowCopy(x) {
   }
 }
 
-var DIRECTIVE_PUSH = keyOf({$push: null});
-var DIRECTIVE_UNSHIFT = keyOf({$unshift: null});
-var DIRECTIVE_SPLICE = keyOf({$splice: null});
-var DIRECTIVE_SET = keyOf({$set: null});
-var DIRECTIVE_MERGE = keyOf({$merge: null});
+var COMMAND_PUSH = keyOf({$push: null});
+var COMMAND_UNSHIFT = keyOf({$unshift: null});
+var COMMAND_SPLICE = keyOf({$splice: null});
+var COMMAND_SET = keyOf({$set: null});
+var COMMAND_MERGE = keyOf({$merge: null});
 
-var ALL_DIRECTIVES_LIST = [
-  DIRECTIVE_PUSH,
-  DIRECTIVE_UNSHIFT,
-  DIRECTIVE_SPLICE,
-  DIRECTIVE_SET,
-  DIRECTIVE_MERGE
+var ALL_COMMANDS_LIST = [
+  COMMAND_PUSH,
+  COMMAND_UNSHIFT,
+  COMMAND_SPLICE,
+  COMMAND_SET,
+  COMMAND_MERGE
 ];
 
-var ALL_DIRECTIVES_SET = {};
+var ALL_COMMANDS_SET = {};
 
-ALL_DIRECTIVES_LIST.forEach(function(directive) {
-  ALL_DIRECTIVES_SET[directive] = true;
+ALL_COMMANDS_LIST.forEach(function(command) {
+  ALL_COMMANDS_SET[command] = true;
 });
 
-function invariantArrayCase(value, spec, directive) {
+function invariantArrayCase(value, spec, command) {
   invariant(
     Array.isArray(value),
     'update(): expected target of %s to be an array; got %s.',
-    directive,
+    command,
     value
   );
-  var specValue = spec[directive];
+  var specValue = spec[command];
   invariant(
     Array.isArray(specValue),
     'update(): expected spec of %s to be an array; got %s. ' +
     'Did you forget to wrap your parameter in an array?',
-    directive,
+    command,
     specValue
   );
 }
@@ -74,81 +74,81 @@ function update(value, spec) {
     typeof spec === 'object',
     'update(): You provided a key path to update() that did not contain one ' +
     'of %s. Did you forget to include {%s: ...}?',
-    ALL_DIRECTIVES_LIST.join(', '),
-    DIRECTIVE_SET
+    ALL_COMMANDS_LIST.join(', '),
+    COMMAND_SET
   );
 
-  if (spec.hasOwnProperty(DIRECTIVE_SET)) {
+  if (spec.hasOwnProperty(COMMAND_SET)) {
     invariant(
       Object.keys(spec).length === 1,
       'Cannot have more than one key in an object with %s',
-      DIRECTIVE_SET
+      COMMAND_SET
     );
 
-    return spec[DIRECTIVE_SET];
+    return spec[COMMAND_SET];
   }
 
   var nextValue = shallowCopy(value);
 
-  if (spec.hasOwnProperty(DIRECTIVE_MERGE)) {
-    var mergeObj = spec[DIRECTIVE_MERGE];
+  if (spec.hasOwnProperty(COMMAND_MERGE)) {
+    var mergeObj = spec[COMMAND_MERGE];
     invariant(
       mergeObj && typeof mergeObj === 'object',
       'update(): %s expects a spec of type \'object\'; got %s',
-      DIRECTIVE_MERGE,
+      COMMAND_MERGE,
       mergeObj
     );
     invariant(
       nextValue && typeof nextValue === 'object',
       'update(): %s expects a target of type \'object\'; got %s',
-      DIRECTIVE_MERGE,
+      COMMAND_MERGE,
       nextValue
     );
-    copyProperties(nextValue, spec[DIRECTIVE_MERGE]);
+    copyProperties(nextValue, spec[COMMAND_MERGE]);
   }
 
-  if (spec.hasOwnProperty(DIRECTIVE_PUSH)) {
-    invariantArrayCase(value, spec, DIRECTIVE_PUSH);
-    spec[DIRECTIVE_PUSH].forEach(function(item) {
+  if (spec.hasOwnProperty(COMMAND_PUSH)) {
+    invariantArrayCase(value, spec, COMMAND_PUSH);
+    spec[COMMAND_PUSH].forEach(function(item) {
       nextValue.push(item);
     });
   }
 
-  if (spec.hasOwnProperty(DIRECTIVE_UNSHIFT)) {
-    invariantArrayCase(value, spec, DIRECTIVE_UNSHIFT);
-    spec[DIRECTIVE_UNSHIFT].forEach(function(item) {
+  if (spec.hasOwnProperty(COMMAND_UNSHIFT)) {
+    invariantArrayCase(value, spec, COMMAND_UNSHIFT);
+    spec[COMMAND_UNSHIFT].forEach(function(item) {
       nextValue.unshift(item);
     });
   }
 
-  if (spec.hasOwnProperty(DIRECTIVE_SPLICE)) {
+  if (spec.hasOwnProperty(COMMAND_SPLICE)) {
     invariant(
       Array.isArray(value),
       'Expected %s target to be an array; got %s',
-      DIRECTIVE_SPLICE,
+      COMMAND_SPLICE,
       value
     );
     invariant(
-      Array.isArray(spec[DIRECTIVE_SPLICE]),
+      Array.isArray(spec[COMMAND_SPLICE]),
       'update(): expected spec of %s to be an array of arrays; got %s. ' +
       'Did you forget to wrap your parameters in an array?',
-      DIRECTIVE_SPLICE,
-      spec[DIRECTIVE_SPLICE]
+      COMMAND_SPLICE,
+      spec[COMMAND_SPLICE]
     );
-    spec[DIRECTIVE_SPLICE].forEach(function(args) {
+    spec[COMMAND_SPLICE].forEach(function(args) {
       invariant(
         Array.isArray(args),
         'update(): expected spec of %s to be an array of arrays; got %s. ' +
         'Did you forget to wrap your parameters in an array?',
-        DIRECTIVE_SPLICE,
-        spec[DIRECTIVE_SPLICE]
+        COMMAND_SPLICE,
+        spec[COMMAND_SPLICE]
       );
       nextValue.splice.apply(nextValue, args);
     });
   }
 
   for (var k in spec) {
-    if (!ALL_DIRECTIVES_SET[k]) {
+    if (!ALL_COMMANDS_SET[k]) {
       nextValue[k] = update(value[k], spec[k]);
     }
   }
