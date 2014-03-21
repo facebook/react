@@ -13,6 +13,39 @@ next: complementary-tools.html
 
 "At Facebook and Instagram, we’re trying to push the limits of what’s possible on the web with React. My talk will start with a brief introduction to the framework, and then dive into three controversial topics: Throwing out the notion of templates and building views with JavaScript, “re-rendering” your entire application when your data changes, and a lightweight implementation of the DOM and events." -- [Pete Hunt](http://www.petehunt.net/)
 
+
+### CodeWinds
+
+[Pete Hunt](http://www.petehunt.net/) talked with [Jeff Barczewski](http://jeff.barczewski.com/) about React in CodeWinds Episode 4.
+<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+
+<table width="100%"><tr><td>
+02:08 - What is React and why use it?<br />
+03:08 - The symbiotic relationship of ClojureScript and React<br />
+04:54 - The history of React and why it was created<br />
+09:43 - Updating web page with React without using data binding<br />
+13:11 - Using the virtual DOM to change the browser DOM<br />
+13:57 - Programming with React, render targets HTML, canvas, other<br />
+16:45 - Working with designers. Contrasted with Ember and AngularJS<br />
+21:45 - JSX Compiler bridging HTML and React javascript<br />
+23:50 - Autobuilding JSX and in browser tools for React<br />
+24:50 - Tips and tricks to working with React, getting started<br />
+</td><td>
+27:17 - Rendering HTML on the server with Node.js. Rendering backends<br />
+29:20 - React evolved through survival of the fittest at Facebook<br />
+30:15 - Ideas for having state on server and client, using web sockets.<br />
+32:05 - React-multiuser - distributed shared mutable state using Firebase<br />
+33:03 - Better debugging with React using the state transitions, replaying events<br />
+34:08 - Differences from Web Components<br />
+34:25 - Notable companies using React<br />
+35:16 - Could a React backend plugin be created to target PDF?<br />
+36:30 - Future of React, what's next?<br />
+39:38 - Contributing and getting help<br />
+</td></tr></table>
+
+[Read the episode notes](http://codewinds.com/4)
+
+
 ### JavaScript Jabber
 
 [Pete Hunt](http://www.petehunt.net/) and [Jordan Walke](https://github.com/jordwalke) talked about React in JavaScript Jabber 73.
