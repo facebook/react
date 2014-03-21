@@ -13,7 +13,7 @@ redcarpet:
 pygments: true
 name: React
 markdown: redcarpet
-react_version: 0.10.0-alpha
+react_version: 0.10.0
 description: A JavaScript library for building user interfaces
 relative_permalinks: true
 paginate: 5
