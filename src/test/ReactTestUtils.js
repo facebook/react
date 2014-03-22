@@ -37,6 +37,13 @@ var topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
 
+function createChainedFunction(one, two) {
+  return function chainedFunction() {
+    one.apply(this, arguments);
+    two.apply(this, arguments);
+  };
+}
+
 /**
  * @class ReactTestUtils
  */
@@ -230,6 +237,26 @@ var ReactTestUtils = {
     module.mockImplementation(ConvenienceConstructor);
 
     return this;
+  },
+
+  nextUpdate: function(component, callback) {
+    var oldFn = component.componentDidUpdate;
+    var newFn;
+
+    function wrappedCallback(cb) {
+      return function() {
+        cb.apply(this, arguments);
+        this.componentDidUpdate = oldFn;
+      };
+    }
+
+    if (oldFn) {
+      newFn = wrappedCallback(createChainedFunction(oldFn, callback));
+    } else {
+      newFn = wrappedCallback(callback);
+    }
+
+    component.componentDidUpdate = newFn;
   },
 
   /**
