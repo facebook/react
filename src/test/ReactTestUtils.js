@@ -30,19 +30,13 @@ var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
+var createChainedFunction = require('createChainedFunction');
 var mergeInto = require('mergeInto');
 var copyProperties = require('copyProperties');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
-
-function createChainedFunction(one, two) {
-  return function chainedFunction() {
-    one.apply(this, arguments);
-    two.apply(this, arguments);
-  };
-}
 
 /**
  * @class ReactTestUtils
