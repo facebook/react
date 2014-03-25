@@ -22,7 +22,7 @@
 var ReactDOMComponent = require('ReactDOMComponent');
 
 var mergeInto = require('mergeInto');
-var objMapKeyVal = require('objMapKeyVal');
+var mapObject = require('mapObject');
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -39,7 +39,7 @@ var objMapKeyVal = require('objMapKeyVal');
  * @param {boolean} omitClose True if the close tag should be omitted.
  * @private
  */
-function createDOMComponentClass(tag, omitClose) {
+function createDOMComponentClass(omitClose, tag) {
   var Constructor = function() {};
   Constructor.prototype = new ReactDOMComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
@@ -68,7 +68,7 @@ function createDOMComponentClass(tag, omitClose) {
  *
  * @public
  */
-var ReactDOM = objMapKeyVal({
+var ReactDOM = mapObject({
   a: false,
   abbr: false,
   address: false,

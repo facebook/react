@@ -25,7 +25,7 @@ var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
-var objMapKeyVal = require('objMapKeyVal');
+var mapObject = require('mapObject');
 
 var stripEmptyValues = function(obj) {
   var ret = {};
@@ -126,7 +126,7 @@ var FriendsStatusDisplay = React.createClass({
 
 
 function getInteralStateByUserName(statusDisplays) {
-  return objMapKeyVal(statusDisplays, function(key, statusDisplay) {
+  return mapObject(statusDisplays, function(statusDisplay, key) {
     return statusDisplay.getInternalState();
   });
 }
