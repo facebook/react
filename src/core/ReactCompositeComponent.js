@@ -35,7 +35,7 @@ var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
-var objMap = require('objMap');
+var mapObject = require('mapObject');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -542,7 +542,7 @@ function mergeObjectsWithNoDuplicateKeys(one, two) {
     'mergeObjectsWithNoDuplicateKeys(): Cannot merge non-objects'
   );
 
-  objMap(two, function(value, key) {
+  mapObject(two, function(value, key) {
     invariant(
       one[key] === undefined,
       'mergeObjectsWithNoDuplicateKeys(): ' +

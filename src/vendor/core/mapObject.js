@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule objMap
+ * @providesModule mapObject
  */
 
 "use strict";
@@ -25,12 +25,17 @@
  *
  *   func(value, key, iteration)
  *
+ * Grepable names:
+ *
+ *   function objectMap()
+ *   function objMap()
+ *
  * @param {?object} obj Object to map keys over
  * @param {function} func Invoked for each key/val pair.
  * @param {?*} context
  * @return {?object} Result of mapping or null if obj is falsey
  */
-function objMap(obj, func, context) {
+function mapObject(obj, func, context) {
   if (!obj) {
     return null;
   }
@@ -44,4 +49,4 @@ function objMap(obj, func, context) {
   return ret;
 }
 
-module.exports = objMap;
+module.exports = mapObject;
