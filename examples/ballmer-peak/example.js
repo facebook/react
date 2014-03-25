@@ -30,9 +30,8 @@ var BallmerPeakCalculator = React.createClass({
         <p>Credit due to <a href="http://xkcd.com/323/">xkcd</a>.</p>
         <h4>Compute your Ballmer Peak:</h4>
         <p>
-          If your BAC is{' '}
-          <input type="text" onChange={this.handleChange} value={this.state.bac} />
-          {', '}then <b>{pct}</b> of your lines of code will have bugs.
+          If your BAC is <input onChange={this.handleChange} value={this.state.bac} />,
+          then <b>{pct}</b> of your lines of code will have bugs.
         </p>
       </div>
     );
