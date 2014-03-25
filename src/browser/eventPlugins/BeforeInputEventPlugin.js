@@ -26,11 +26,14 @@ var SyntheticInputEvent = require('SyntheticInputEvent');
 
 var keyOf = require('keyOf');
 
-var useBeforeInputEvent = (
+var canUseTextInputEvent = (
   ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !('documentMode' in document)
 );
+
+var SPACEBAR_CODE = 32;
+var SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -100,13 +103,48 @@ var BeforeInputEventPlugin = {
 
     var chars;
 
-    if (useBeforeInputEvent) {
-      // For browsers that support `textInput` events natively, don't do
-      // anything with keypress, composition, etc.
-      if (topLevelType !== topLevelTypes.topTextInput) {
-        return;
+    if (canUseTextInputEvent) {
+      switch (topLevelType) {
+        case topLevelTypes.topKeyPress:
+          /**
+           * If native `textInput` events are available, our goal is to make
+           * use of them. However, there is a special case: the spacebar key.
+           * In Webkit, preventing default on a spacebar `textInput` event
+           * cancels character insertion, but it *also* causes the browser
+           * to fall back to its default spacebar behavior of scrolling the
+           * page.
+           *
+           * Tracking at:
+           * https://code.google.com/p/chromium/issues/detail?id=355103
+           *
+           * To avoid this issue, use the keypress event as if no `textInput`
+           * event is available.
+           */
+          var which = nativeEvent.which;
+          if (which !== SPACEBAR_CODE) {
+            return;
+          }
+
+          chars = String.fromCharCode(which);
+          break;
+
+        case topLevelTypes.topTextInput:
+          // Record the characters to be added to the DOM.
+          chars = nativeEvent.data;
+
+          // If it's a spacebar character, assume that we have already handled
+          // it at the keypress level and bail immediately.
+          if (chars === SPACEBAR_CHAR) {
+            return;
+          }
+
+          // Otherwise, carry on.
+          break;
+
+        default:
+          // For other native event types, do nothing.
+          return;
       }
-      chars = nativeEvent.data;
     } else {
       switch (topLevelType) {
         case topLevelTypes.topPaste:
