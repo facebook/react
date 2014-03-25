@@ -145,8 +145,8 @@ describe('ReactDOMInput', function() {
       render: function() {
         return (
           <div>
-            <input ref="a" type="radio" name="fruit" checked={true} />A{' '}
-            <input ref="b" type="radio" name="fruit" />B{' '}
+            <input ref="a" type="radio" name="fruit" checked={true} />A
+            <input ref="b" type="radio" name="fruit" />B
 
             <form>
               <input ref="c" type="radio" name="fruit" defaultChecked={true} />
