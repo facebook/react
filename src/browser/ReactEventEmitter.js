@@ -115,6 +115,7 @@ var topEventMapping = {
   topPaste: 'paste',
   topScroll: 'scroll',
   topSelectionChange: 'selectionchange',
+  topTextInput: 'textInput',
   topTouchCancel: 'touchcancel',
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',

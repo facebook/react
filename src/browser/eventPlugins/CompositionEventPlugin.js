@@ -44,7 +44,11 @@ var useCompositionEvent = (
 // events as triggers.
 var useFallbackData = (
   !useCompositionEvent ||
-  'documentMode' in document && document.documentMode > 8
+  (
+    'documentMode' in document &&
+    document.documentMode > 8 &&
+    document.documentMode <= 11
+  )
 );
 
 var topLevelTypes = EventConstants.topLevelTypes;

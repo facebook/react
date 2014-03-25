@@ -61,6 +61,7 @@ var topLevelTypes = keyMirror({
   topScroll: null,
   topSelectionChange: null,
   topSubmit: null,
+  topTextInput: null,
   topTouchCancel: null,
   topTouchEnd: null,
   topTouchMove: null,
