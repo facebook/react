@@ -215,7 +215,6 @@ ReactDOMComponent.Mixin = {
       return;
     }
 
-    assertValidProps(nextComponent.props);
     ReactComponent.Mixin.receiveComponent.call(
       this,
       nextComponent,
@@ -236,6 +235,7 @@ ReactDOMComponent.Mixin = {
     'ReactDOMComponent',
     'updateComponent',
     function(transaction, prevProps, prevOwner) {
+      assertValidProps(this.props);
       ReactComponent.Mixin.updateComponent.call(
         this,
         transaction,
