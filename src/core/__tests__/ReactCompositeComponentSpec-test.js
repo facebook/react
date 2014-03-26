@@ -68,4 +68,19 @@ describe('ReactCompositeComponent-spec', function() {
     expect(TestComponent.type.propTypes.value)
       .toBe(propValidator);
   });
+
+  it('should throw when undefined value is provided as a mixin', function() {
+    expect(function() {
+      React.createClass({
+        mixins: [undefined],
+
+        render: function() {
+          return <div />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'use undefined as a mixin. Instead, just use a regular object.'
+    );
+  });
 });

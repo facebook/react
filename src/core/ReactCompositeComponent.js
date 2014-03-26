@@ -438,6 +438,11 @@ function validateLifeCycleOnReplaceState(instance) {
  */
 function mixSpecIntoComponent(ConvenienceConstructor, spec) {
   invariant(
+    spec !== undefined,
+    'ReactCompositeComponent: You\'re attempting to ' +
+    'use undefined as a mixin. Instead, just use a regular object.'
+  );
+  invariant(
     !ReactDescriptor.isValidFactory(spec),
     'ReactCompositeComponent: You\'re attempting to ' +
     'use a component class as a mixin. Instead, just use a regular object.'
