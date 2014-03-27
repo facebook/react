@@ -27,17 +27,19 @@
 
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');
+var ReactComponentWithPureRenderMixin =
+  require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
 var update = require('update');
 
 React.addons = {
-  LinkedStateMixin: LinkedStateMixin,
   CSSTransitionGroup: ReactCSSTransitionGroup,
+  LinkedStateMixin: LinkedStateMixin,
+  PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
   classSet: cx,
