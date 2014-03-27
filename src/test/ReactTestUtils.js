@@ -74,6 +74,10 @@ var ReactTestUtils = {
     if (!ReactComponent.isValidComponent(inst)) {
       return false;
     }
+    if (inst.__realComponentInstance) {
+      // This is a descriptor membrane
+      return false;
+    }
     // We check the prototype of the type that will get mounted, not the
     // instance itself. This is a future proof way of duck typing.
     var prototype = inst.type.prototype;
