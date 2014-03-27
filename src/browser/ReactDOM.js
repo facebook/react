@@ -35,8 +35,8 @@ var mapObject = require('mapObject');
  * The `style` property functions differently from the DOM API. It accepts an
  * object mapping of style properties to values.
  *
- * @param {string} tag Tag name (e.g. `div`).
  * @param {boolean} omitClose True if the close tag should be omitted.
+ * @param {string} tag Tag name (e.g. `div`).
  * @private
  */
 function createDOMComponentClass(omitClose, tag) {
