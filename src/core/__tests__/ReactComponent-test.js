@@ -207,4 +207,46 @@ describe('ReactComponent', function() {
     expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
     expect(root.refs.child.refs.span._mountDepth).toBe(6);
   });
+
+  it('should allow the initialProps to be optional', function() {
+    var Root = React.createClass({
+      render: function() {
+        var div = React.DOM.div;
+
+        var children = [
+          div({ key: 1, ref: 'child' }),
+          div({ key: 2 }),
+          div({ key: 3 })
+        ];
+
+        var array = [
+          div({ key: 1, ref: 'array' }),
+          div({ key: 2 }),
+          div({ key: 3 })
+        ];
+
+        return (
+          div(
+            div({ ref: 'children' }, children),
+            div(null, 'null', div({ ref: 'null' })),
+            div('string', 'string', div({ ref: 'string' })),
+            div(div({ ref: 'siblingA' }), div({ ref: 'siblingB' }), div({ ref: 'siblingC' })),
+            div(array)
+          )
+        )
+      }
+    });
+
+
+    var root = ReactTestUtils.renderIntoDocument(Root());
+    expect(root._mountDepth).toBe(0);
+    expect(root.refs.children._mountDepth).toBe(2);
+    expect(root.refs.child._mountDepth).toBe(3);
+    expect(root.refs.null._mountDepth).toBe(3);
+    expect(root.refs.string._mountDepth).toBe(3);
+    expect(root.refs.siblingA._mountDepth).toBe(3);
+    expect(root.refs.siblingB._mountDepth).toBe(3);
+    expect(root.refs.siblingC._mountDepth).toBe(3);
+    expect(root.refs.array._mountDepth).toBe(3);
+  });
 });
