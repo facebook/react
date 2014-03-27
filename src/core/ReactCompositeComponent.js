@@ -505,7 +505,7 @@ function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
   for (var name in statics) {
     var property = statics[name];
     if (!statics.hasOwnProperty(name)) {
-      return;
+      continue;
     }
 
     var isInherited = name in ConvenienceConstructor;
