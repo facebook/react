@@ -357,7 +357,12 @@ var ReactComponent = {
      * @internal
      */
     construct: function(initialProps, children) {
-      this.props = initialProps || {};
+      var firstChild = Number(!(ReactComponent.isValidComponent(initialProps) ||
+                              'string' === typeof initialProps ||
+                               Array.isArray(initialProps)));
+
+      this.props = initialProps && firstChild ? initialProps : {};
+
       // Record the component responsible for creating this component.
       this._owner = ReactCurrentOwner.current;
       // All components start unmounted.
@@ -373,19 +378,20 @@ var ReactComponent = {
       this._pendingOwner = this._owner;
 
       // Children can be more than one argument
-      var childrenLength = arguments.length - 1;
+      var childrenLength = arguments.length - firstChild;
+
       if (childrenLength === 1) {
         if (__DEV__) {
-          validateChildKeys(children);
+          validateChildKeys(arguments[firstChild]);
         }
-        this.props.children = children;
+        this.props.children = arguments[firstChild];
       } else if (childrenLength > 1) {
         var childArray = Array(childrenLength);
         for (var i = 0; i < childrenLength; i++) {
           if (__DEV__) {
-            validateChildKeys(arguments[i + 1]);
+            validateChildKeys(arguments[i + firstChild]);
           }
-          childArray[i] = arguments[i + 1];
+          childArray[i] = arguments[i + firstChild];
         }
         this.props.children = childArray;
       }
