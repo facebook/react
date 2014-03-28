@@ -30,6 +30,7 @@ var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
+var createChainedFunction = require('createChainedFunction');
 var mergeInto = require('mergeInto');
 var copyProperties = require('copyProperties');
 
@@ -234,6 +235,34 @@ var ReactTestUtils = {
     module.mockImplementation(ConvenienceConstructor);
 
     return this;
+  },
+
+  /**
+   * Register a callback on a component to be run when the component next
+   * updates
+   *
+   * @param {!ReactComponent} component The component to register the callback
+   *                                    on
+   * @param {function} callback The callback to register
+   */
+  nextUpdate: function(component, callback) {
+    var oldFn = component.componentDidUpdate;
+    var newFn;
+
+    function wrappedCallback(cb) {
+      return function() {
+        this.componentDidUpdate = oldFn;
+        cb.apply(this, arguments);
+      };
+    }
+
+    if (oldFn) {
+      newFn = wrappedCallback(createChainedFunction(oldFn, callback));
+    } else {
+      newFn = wrappedCallback(callback);
+    }
+
+    component.componentDidUpdate = newFn;
   },
 
   /**
