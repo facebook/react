@@ -7,6 +7,42 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>The Road to 1.0</title>
+				<description>&lt;p&gt;When we launched React last spring, we purposefully decided not to call it 1.0. It was production ready, but we had plans to evolve APIs and behavior as we saw how people were using React, both internally and externally. We&amp;#39;ve learned a lot over the past 9 months and we&amp;#39;ve thought a lot about what 1.0 will mean for React. A couple weeks ago, I outlined &lt;a href=&quot;https://github.com/facebook/react/wiki/Projects&quot;&gt;several projects&lt;/a&gt; that we have planned to take us to 1.0 and beyond. Today I&amp;#39;m writing a bit more about them to give our users a better insight into our plans.&lt;/p&gt;
+
+&lt;p&gt;Our primary goal with 1.0 is to clarify our messaging and converge on an API that is aligned with our goals. In order to do that, we want to clean up bad patterns we&amp;#39;ve seen in use and really help enable developers write good code.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;descriptors&quot;&gt;&lt;/a&gt;Descriptors &lt;a class=&quot;hash-link&quot; href=&quot;#descriptors&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The first part of this is what we&amp;#39;re calling &amp;quot;descriptors&amp;quot;. I talked about this briefly in our &lt;a href=&quot;http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html&quot;&gt;v0.10 announcements&lt;/a&gt;. The goal here is to separate our virtual DOM representation from our use of it. Simply, this means the return value of a component (e.g. &lt;code&gt;React.DOM.div()&lt;/code&gt;, &lt;code&gt;MyComponent()&lt;/code&gt;) will be a simple object containing the information React needs to render. Currently the object returned is actually linked to React&amp;#39;s internal representation of the component and even directly to the DOM element. This has enabled some bad patterns that are quite contrary to how we want people to use React. That&amp;#39;s our failure.&lt;/p&gt;
+
+&lt;p&gt;We added some warnings in v0.9 to start migrating some of these bad patterns. With v0.10 we&amp;#39;ll catch more. You&amp;#39;ll see more on this soon as we expect to ship v0.11 with descriptors.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;api-cleanup&quot;&gt;&lt;/a&gt;API Cleanup &lt;a class=&quot;hash-link&quot; href=&quot;#api-cleanup&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This is really connected to everything. We want to keep the API as simple as possible and help developers &lt;a href=&quot;pitofsuccess&quot;&gt;fall into the pit of success&lt;/a&gt;. Enabling bad patterns with bad APIs is not success.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;es6&quot;&gt;&lt;/a&gt;ES6 &lt;a class=&quot;hash-link&quot; href=&quot;#es6&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Before we even launched React publicly, members of the team were talking about how we could leverage ES6, namely classes&lt;code&gt;, to improve the experience of creating React components. Calling&lt;/code&gt;React.createClass(...)` isn&amp;#39;t great. We don&amp;#39;t quite have the right answer here yet, but we&amp;#39;re close. We want to make sure we make this as simple as possible. It could look like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;There are other features of ES6 we&amp;#39;re already using in core. I&amp;#39;m sure we&amp;#39;ll see more of that. The &lt;code&gt;jsx&lt;/code&gt; executable we ship with &lt;code&gt;react-tools&lt;/code&gt; already supports transforming many parts of ES6 into code that will run on older browsers.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;context&quot;&gt;&lt;/a&gt;Context &lt;a class=&quot;hash-link&quot; href=&quot;#context&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;While we haven&amp;#39;t documented &lt;code&gt;context&lt;/code&gt;, it exists in some form in React already. It exists as a way to pass values through a tree without having to use props at every single point. We&amp;#39;ve seen this need crop up time and time again, so we want to make this as easy as possible. It&amp;#39;s use has performance tradeoffs, and there are known weaknesses in our implementation, so we want to make sure this is a solid feature.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;addons&quot;&gt;&lt;/a&gt;Addons &lt;a class=&quot;hash-link&quot; href=&quot;#addons&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;As you may know, we ship a separate build of React with some extra features we called &amp;quot;addons&amp;quot;. While this has served us fine, it&amp;#39;s not great for our users. It&amp;#39;s made testing harder, but also results in more cache misses for people using a CDN. The problem we face is that many of these &amp;quot;addons&amp;quot; need access to parts of React that we don&amp;#39;t expose publicly. Our goal is to ship each addon on its own and let each hook into React as needed. This would also allow others to write and distribute &amp;quot;addons&amp;quot;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;browser-support&quot;&gt;&lt;/a&gt;Browser Support &lt;a class=&quot;hash-link&quot; href=&quot;#browser-support&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;As much as we&amp;#39;d all like to stop supporting older browsers, it&amp;#39;s not always possible. Facebook still supports IE8. While React won&amp;#39;t support IE8 forever, our goal is to have 1.0 support IE8. Hopefully we can continue to abstract some of these rough parts.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;animations&quot;&gt;&lt;/a&gt;Animations &lt;a class=&quot;hash-link&quot; href=&quot;#animations&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Finding a way to define animations in a declarative way is a hard problem. We&amp;#39;ve been exploring the space for a long time. We&amp;#39;ve introduced some half-measures to alleviate some use cases, but the larger problem remains. While we&amp;#39;d like to make this a part of 1.0, realistically we don&amp;#39;t think we&amp;#39;ll have a good solution in place.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;miscellaneous&quot;&gt;&lt;/a&gt;Miscellaneous &lt;a class=&quot;hash-link&quot; href=&quot;#miscellaneous&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;There are several other things I listed on &lt;a href=&quot;https://github.com/facebook/react/wiki/Projects&quot;&gt;our projects page&lt;/a&gt; that we&amp;#39;re tracking. Some of them are internals and have no obvious outward effect (improve tests, repo separation, updated test runner). I encourage you to take a look.&lt;/p&gt;
+</description>
+				<pubDate>2014-03-28T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.10</title>
 				<description>&lt;p&gt;Hot on the heels of the &lt;a href=&quot;/react/blog/2014/02/20/react-v0.10rc.html&quot;&gt;release candidate earlier this week&lt;/a&gt;, we&amp;#39;re ready to call v0.10 done. The only major issue we discovered had to do with the &lt;code&gt;react-tools&lt;/code&gt; package, which has been updated. We&amp;#39;ve copied over the changelog from the RC with some small clarifying changes.&lt;/p&gt;
 
@@ -795,26 +831,6 @@ rails s
 				<pubDate>2014-01-06T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</guid>
-			</item>
-		
-			<item>
-				<title>React Chrome Developer Tools</title>
-				<description>&lt;p&gt;With the new year, we thought you&amp;#39;d enjoy some new tools for debugging React code. Today we&amp;#39;re releasing the &lt;a href=&quot;https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi&quot;&gt;React Developer Tools&lt;/a&gt;, an extension to the Chrome Developer Tools. &lt;a href=&quot;https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi&quot;&gt;Download them from the Chrome Web Store&lt;/a&gt;.&lt;/p&gt;
-
-&lt;figure&gt;&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/Cey7BS6dE0M&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
-
-&lt;p&gt;You will get a new tab titled &amp;quot;React&amp;quot; in your Chrome DevTools. This tab shows you a list of the root React Components that are rendered on the page as well as the subcomponents that each root renders.&lt;/p&gt;
-
-&lt;p&gt;Selecting a Component in this tab allows you to view and edit its props and state in the panel on the right. In the breadcrumbs at the bottom, you can inspect the selected Component, the Component that created it, the Component that created that one, and so on.&lt;/p&gt;
-
-&lt;p&gt;When you inspect a DOM element using the regular Elements tab, you can switch over to the React tab and the corresponding Component will be automatically selected. The Component will also be automatically selected if you have a breakpoint within its render phase. This allows you to step through the render tree and see how one Component affects another one.
-&lt;figure&gt;&lt;a href=&quot;https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi&quot;&gt;&lt;img src=&quot;/react/img/blog/react-dev-tools.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-
-&lt;p&gt;We hope these tools will help your team better understand your component hierarchy and track down bugs. We&amp;#39;re very excited about this initial launch and appreciate any feedback you may have. As always, we also accept &lt;a href=&quot;https://github.com/facebook/react-devtools&quot;&gt;pull requests on GitHub&lt;/a&gt;.&lt;/p&gt;
-</description>
-				<pubDate>2014-01-02T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/02/react-chrome-developer-tools.html</guid>
 			</item>
 		
 	</channel>
