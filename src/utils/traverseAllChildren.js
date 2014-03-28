@@ -98,13 +98,18 @@ function wrapUserProvidedKey(key) {
 var traverseAllChildrenImpl =
   function(children, nameSoFar, indexSoFar, callback, traverseContext) {
     var subtreeCount = 0;  // Count of children found in the current subtree.
+    var key;
     if (Array.isArray(children)) {
       for (var i = 0; i < children.length; i++) {
         var child = children[i];
+        key = getComponentKey(child, i);
+        if (traverseContext && traverseContext.hasOwnProperty(key)) {
+          key = getComponentKey(null, i);
+        }
         var nextName = (
           nameSoFar +
           (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
-          getComponentKey(child, i)
+          key
         );
         var nextIndex = indexSoFar + subtreeCount;
         subtreeCount += traverseAllChildrenImpl(
@@ -137,7 +142,7 @@ var traverseAllChildrenImpl =
             'traverseAllChildren(...): Encountered an invalid child; DOM ' +
             'elements are not valid children of React components.'
           );
-          for (var key in children) {
+          for (key in children) {
             if (children.hasOwnProperty(key)) {
               subtreeCount += traverseAllChildrenImpl(
                 children[key],
