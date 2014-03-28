@@ -20,8 +20,8 @@
 
 var update = require('update');
 
-describe('update', function() {
-  it('should support push', function() {
+describe('update', () => {
+  it('should support push', () => {
     expect(update([1], {$push: [7]})).toEqual([1, 7]);
     expect(update.bind(null, [], {$push: 7})).toThrow(
       'Invariant Violation: update(): expected spec of $push to be an ' +
@@ -33,7 +33,7 @@ describe('update', function() {
     );
   });
 
-  it('should support unshift', function() {
+  it('should support unshift', () => {
     expect(update([1], {$unshift: [7]})).toEqual([7, 1]);
     expect(update.bind(null, [], {$unshift: 7})).toThrow(
       'Invariant Violation: update(): expected spec of $unshift to be an ' +
@@ -45,7 +45,7 @@ describe('update', function() {
     );
   });
 
-  it('should support splice', function() {
+  it('should support splice', () => {
     expect(update([1, 4, 3], {$splice: [[1, 1, 2]]})).toEqual([1, 2, 3]);
     expect(update.bind(null, [], {$splice: 1})).toThrow(
       'Invariant Violation: update(): expected spec of $splice to be an ' +
@@ -62,7 +62,7 @@ describe('update', function() {
     );
   });
 
-  it('should support merge', function() {
+  it('should support merge', () => {
     expect(update({a: 'b'}, {$merge: {c: 'd'}})).toEqual({a: 'b', c: 'd'});
     expect(update.bind(null, {}, {$merge: 7})).toThrow(
       'Invariant Violation: update(): $merge expects a spec of type ' +
@@ -74,18 +74,18 @@ describe('update', function() {
     );
   });
 
-  it('should support set', function() {
+  it('should support set', () => {
     expect(update({a: 'b'}, {$set: {c: 'd'}})).toEqual({c: 'd'});
   });
 
-  it('should support deep updates', function() {
+  it('should support deep updates', () => {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
       c: {d: 'f'}
     });
   });
 
-  it('should require a directive', function() {
+  it('should require a directive', () => {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
       'that did not contain one of $push, $unshift, $splice, $set, $merge. ' +

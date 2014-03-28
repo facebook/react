@@ -28,8 +28,8 @@ var ReactMount;
 
 var topLevelTypes;
 
-describe('EnterLeaveEventPlugin', function() {
-  beforeEach(function() {
+describe('EnterLeaveEventPlugin', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
@@ -40,7 +40,7 @@ describe('EnterLeaveEventPlugin', function() {
     topLevelTypes = EventConstants.topLevelTypes;
   });
 
-  it('should set relatedTarget properly in iframe', function() {
+  it('should set relatedTarget properly in iframe', () => {
     var iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
 

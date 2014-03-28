@@ -22,19 +22,19 @@ require('mock-modules').dontMock('joinClasses');
 
 var joinClasses = require('joinClasses');
 
-describe('joinClasses', function() {
+describe('joinClasses', () => {
 
-  it('should return a single className', function() {
+  it('should return a single className', () => {
     expect(joinClasses('aaa')).toEqual('aaa');
   });
 
-  it('should join two classes together', function() {
+  it('should join two classes together', () => {
     var aaa = 'aaa';
     var bbb = 'bbb';
     expect(joinClasses(aaa, bbb)).toEqual('aaa bbb');
   });
 
-  it('should join many classes together', function() {
+  it('should join many classes together', () => {
     var aaa = 'aaa';
     var bbb = 'bbb';
     var ccc = 'ccc';
@@ -43,7 +43,7 @@ describe('joinClasses', function() {
     expect(joinClasses(aaa, bbb, ccc, ddd, eee)).toEqual('aaa bbb ccc ddd eee');
   });
 
-  it('should omit undefined and empty classes', function() {
+  it('should omit undefined and empty classes', () => {
     var aaa = 'aaa';
     var bbb;
     var ccc = null;

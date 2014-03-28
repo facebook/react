@@ -19,7 +19,7 @@
 
 "use strict";
 
-describe('sliceChildren', function() {
+describe('sliceChildren', () => {
 
   var React;
   var ReactTestUtils;
@@ -29,7 +29,7 @@ describe('sliceChildren', function() {
 
   var Partial;
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
@@ -60,7 +60,7 @@ describe('sliceChildren', function() {
     return rendered.props.children;
   }
 
-  it('should render the whole set if start zero is supplied', function() {
+  it('should render the whole set if start zero is supplied', () => {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
@@ -74,7 +74,7 @@ describe('sliceChildren', function() {
     });
   });
 
-  it('should render the remaining set if no end index is supplied', function() {
+  it('should render the remaining set if no end index is supplied', () => {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
@@ -87,7 +87,7 @@ describe('sliceChildren', function() {
     });
   });
 
-  it('should exclude everything at or after the end index', function() {
+  it('should exclude everything at or after the end index', () => {
     var fullSet = [
       <div key="A" />,
       <div key="B" />,
@@ -100,7 +100,7 @@ describe('sliceChildren', function() {
     });
   });
 
-  it('should allow static children to be sliced', function() {
+  it('should allow static children to be sliced', () => {
     var a = <div />;
     var b = <div />;
     var c = <div />;

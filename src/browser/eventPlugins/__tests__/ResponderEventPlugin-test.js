@@ -218,8 +218,8 @@ function assertNothingExtracted(extracted) {
  * - Automate some of this testing by providing config data - generalize.
  */
 
-describe('ResponderEventPlugin', function() {
-  beforeEach(function() {
+describe('ResponderEventPlugin', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
 
     EventPluginHub = require('EventPluginHub');
@@ -252,14 +252,14 @@ describe('ResponderEventPlugin', function() {
     onGrantGrandParent = function() {};
   });
 
-  it('should not auto-set responder on touch start', function() {
+  it('should not auto-set responder on touch start', () => {
     // Notice we're not registering the startShould* handler.
     var extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted(extracted);
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
   });
 
-  it('should not auto-set responder on mouse down', function() {
+  it('should not auto-set responder on mouse down', () => {
     // Notice we're not registering the startShould* handler.
     var extracted = extractForMouseDown(CHILD_ID);
     assertNothingExtracted(extracted);
@@ -295,7 +295,7 @@ describe('ResponderEventPlugin', function() {
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
   });
 
-  it('should not extract a grant/release event if double start', function() {
+  it('should not extract a grant/release event if double start', () => {
     // Return true - we should become the responder.
     var extracted;
     spyOn(spies, 'onStartShouldSetResponderChild').andReturn(true);
@@ -315,7 +315,7 @@ describe('ResponderEventPlugin', function() {
     expect(spies.onStartShouldSetResponderChild.callCount).toBe(2);
   });
 
-  it('should bubble/capture responder on start', function() {
+  it('should bubble/capture responder on start', () => {
     // Return true - we should become the responder.
     var extracted;
     spyOn(spies, 'onStartShouldSetResponderParent').andReturn(true);
@@ -372,7 +372,7 @@ describe('ResponderEventPlugin', function() {
 
   });
 
-  it('should invoke callback to ask if responder is desired', function() {
+  it('should invoke callback to ask if responder is desired', () => {
     // Return true - we should become the responder.
     spyOn(spies, 'onStartShouldSetResponderChild').andReturn(true);
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
@@ -404,7 +404,7 @@ describe('ResponderEventPlugin', function() {
     assertRelease(CHILD_ID, extracted);
   });
 
-  it('should give up responder to parent on move iff allowed', function() {
+  it('should give up responder to parent on move iff allowed', () => {
     // Return true - we should become the responder.
     var extracted;
     spyOn(spies, 'onStartShouldSetResponderChild').andReturn(true);
@@ -430,7 +430,7 @@ describe('ResponderEventPlugin', function() {
     assertRelease(PARENT_ID, extracted);
   });
 
-  it('should responder move only on direct responder', function() {
+  it('should responder move only on direct responder', () => {
     // Return true - we should become the responder.
     spyOn(spies, 'onStartShouldSetResponderChild').andReturn(true);
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
@@ -462,7 +462,7 @@ describe('ResponderEventPlugin', function() {
     assertRelease(CHILD_ID, extracted);
   });
 
-  it('should give up responder to parent on scroll iff allowed', function() {
+  it('should give up responder to parent on scroll iff allowed', () => {
     // Return true - we should become the responder.
     var extracted;
     spyOn(spies, 'onStartShouldSetResponderChild').andReturn(true);

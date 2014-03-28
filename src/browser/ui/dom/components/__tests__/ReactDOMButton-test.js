@@ -23,7 +23,7 @@
 
 var mocks = require('mocks');
 
-describe('ReactDOMButton', function() {
+describe('ReactDOMButton', () => {
   var React;
   var ReactTestUtils;
 
@@ -46,34 +46,34 @@ describe('ReactDOMButton', function() {
     return button;
   }
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should forward clicks when it starts out not disabled', function() {
+  it('should forward clicks when it starts out not disabled', () => {
     expectClickThru(mounted(<button onClick={onClick} />));
   });
 
-  it('should not forward clicks when it starts out disabled', function() {
+  it('should not forward clicks when it starts out disabled', () => {
     expectNoClickThru(
       mounted(<button disabled={true} onClick={onClick} />)
     );
   });
 
-  it('should forward clicks when it becomes not disabled', function() {
+  it('should forward clicks when it becomes not disabled', () => {
     var btn = mounted(<button disabled={true} onClick={onClick} />);
     btn.setProps({disabled: false});
     expectClickThru(btn);
   });
 
-  it('should not forward clicks when it becomes disabled', function() {
+  it('should not forward clicks when it becomes disabled', () => {
     var btn = mounted(<button onClick={onClick} />);
     btn.setProps({disabled: true});
     expectNoClickThru(btn);
   });
 
-  it('should work correctly if the listener is changed', function() {
+  it('should work correctly if the listener is changed', () => {
     var btn = mounted(
       <button disabled={true} onClick={function() {}} />
     );

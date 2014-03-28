@@ -18,16 +18,16 @@
 
 "use strict";
 
-describe('escapeTextForBrowser', function() {
+describe('escapeTextForBrowser', () => {
 
   var escapeTextForBrowser = require('escapeTextForBrowser');
 
-  it('should escape boolean to string', function() {
+  it('should escape boolean to string', () => {
     expect(escapeTextForBrowser(true)).toBe('true');
     expect(escapeTextForBrowser(false)).toBe('false');
   });
 
-  it('should escape object to string', function() {
+  it('should escape object to string', () => {
     var escaped = escapeTextForBrowser({
       toString: function() {
         return 'ponys';
@@ -37,11 +37,11 @@ describe('escapeTextForBrowser', function() {
     expect(escaped).toBe('ponys');
   });
 
-  it('should escape number to string', function() {
+  it('should escape number to string', () => {
     expect(escapeTextForBrowser(42)).toBe('42');
   });
 
-  it('should escape string', function() {
+  it('should escape string', () => {
     var escaped = escapeTextForBrowser('<script type=\'\' src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');

@@ -34,9 +34,9 @@ var reactComponentExpect;
 var mocks;
 var warn;
 
-describe('ReactCompositeComponent', function() {
+describe('ReactCompositeComponent', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     cx = require('cx');
     mocks = require('mocks');
 
@@ -86,11 +86,11 @@ describe('ReactCompositeComponent', function() {
     console.warn = mocks.getMockFunction();
   });
 
-  afterEach(function() {
+  afterEach(() => {
     console.warn = warn;
   });
 
-  it('should support rendering to different child types over time', function() {
+  it('should support rendering to different child types over time', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -109,7 +109,7 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('a');
   });
 
-  it('should react to state changes from callbacks', function() {
+  it('should react to state changes from callbacks', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -123,7 +123,7 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('b');
   });
 
-  it('should rewire refs when rendering to different child types', function() {
+  it('should rewire refs when rendering to different child types', () => {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -134,7 +134,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
   });
 
-  it('should not cache old DOM nodes when switching constructors', function() {
+  it('should not cache old DOM nodes when switching constructors', () => {
     var instance = <ChildUpdates renderAnchor={true} anchorClassOn={false}/>;
     instance = ReactTestUtils.renderIntoDocument(instance);
     instance.setProps({anchorClassOn: true});  // Warm any cache
@@ -146,7 +146,7 @@ describe('ReactCompositeComponent', function() {
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
-  it('should auto bind methods and values correctly', function() {
+  it('should auto bind methods and values correctly', () => {
     spyOn(console, 'warn');
 
     var ComponentClass = React.createClass({
@@ -202,7 +202,7 @@ describe('ReactCompositeComponent', function() {
 
   });
 
-  it('should use default values for undefined props', function() {
+  it('should use default values for undefined props', () => {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {key: 'testKey'};
@@ -225,7 +225,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance3).scalarPropsEqual({key: null});
   });
 
-  it('should not mutate passed-in props object', function() {
+  it('should not mutate passed-in props object', () => {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {key: 'testKey'};
@@ -245,7 +245,7 @@ describe('ReactCompositeComponent', function() {
     expect(inputProps.key).not.toBeDefined();
   });
 
-  it('should use default prop value when removing a key', function() {
+  it('should use default prop value when removing a key', () => {
     var Component = React.createClass({
       getDefaultProps: function() {
         return {fruit: 'persimmon'};
@@ -266,7 +266,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should normalize props with default values', function() {
+  it('should normalize props with default values', () => {
     var Component = React.createClass({
       propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
@@ -292,7 +292,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should check default prop values', function() {
+  it('should check default prop values', () => {
     var Component = React.createClass({
       propTypes: {key: ReactPropTypes.string.isRequired},
       getDefaultProps: function() {
@@ -311,7 +311,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should check declared prop types', function() {
+  it('should check declared prop types', () => {
     var Component = React.createClass({
       propTypes: {
         key: ReactPropTypes.string.isRequired
@@ -340,7 +340,7 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.mock.calls.length).toBe(2);
   });
 
-  it('should throw on invalid prop types', function() {
+  it('should throw on invalid prop types', () => {
     expect(function() {
       React.createClass({
         displayName: 'Component',
@@ -357,7 +357,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should throw on invalid context types', function() {
+  it('should throw on invalid context types', () => {
     expect(function() {
       React.createClass({
         displayName: 'Component',
@@ -374,7 +374,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should throw on invalid child context types', function() {
+  it('should throw on invalid child context types', () => {
     expect(function() {
       React.createClass({
         displayName: 'Component',
@@ -391,7 +391,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should not allow `forceUpdate` on unmounted components', function() {
+  it('should not allow `forceUpdate` on unmounted components', () => {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
 
@@ -423,7 +423,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should cleanup even if render() fatals', function() {
+  it('should cleanup even if render() fatals', () => {
     var BadComponent = React.createClass({
       render: function() {
         throw new Error();
@@ -440,7 +440,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactCurrentOwner.current).toBe(null);
   });
 
-  it('should support mixins with getInitialState()', function() {
+  it('should support mixins with getInitialState()', () => {
     var Mixin = {
       getInitialState: function() {
         return {mixin: true};
@@ -461,7 +461,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state.mixin).toBe(true);
   });
 
-  it('should throw with conflicting getInitialState() methods', function() {
+  it('should throw with conflicting getInitialState() methods', () => {
     var Mixin = {
       getInitialState: function() {
         return {x: true};
@@ -485,7 +485,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should work with object getInitialState() return values', function() {
+  it('should work with object getInitialState() return values', () => {
     var Component = React.createClass({
       getInitialState: function() {
         return {
@@ -501,7 +501,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state.occupation).toEqual('clown');
   });
 
-  it('should throw with non-object getInitialState() return values', function() {
+  it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
       var Component = React.createClass({
         getInitialState: function() {
@@ -521,7 +521,7 @@ describe('ReactCompositeComponent', function() {
     });
   });
 
-  it('should work with a null getInitialState() return value', function() {
+  it('should work with a null getInitialState() return value', () => {
     var Component = React.createClass({
       getInitialState: function() {
         return null;
@@ -603,7 +603,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state).toEqual({foo: 'bar', x: true});
   });
 
-  it('should work with object getInitialState() return values', function() {
+  it('should work with object getInitialState() return values', () => {
     var Component = React.createClass({
       getInitialState: function() {
         return {
@@ -619,7 +619,7 @@ describe('ReactCompositeComponent', function() {
     expect(instance.state.occupation).toEqual('clown');
   });
 
-  it('should throw with non-object getInitialState() return values', function() {
+  it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
       var Component = React.createClass({
         getInitialState: function() {
@@ -639,7 +639,7 @@ describe('ReactCompositeComponent', function() {
     });
   });
 
-  it('should call componentWillUnmount before unmounting', function() {
+  it('should call componentWillUnmount before unmounting', () => {
     var container = document.createElement('div');
     var innerUnmounted = false;
 
@@ -675,7 +675,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactMount.purgeID.callCount).toBe(4);
   });
 
-  it('should detect valid CompositeComponent classes', function() {
+  it('should detect valid CompositeComponent classes', () => {
     var Component = React.createClass({
       render: function() {
         return <div/>;
@@ -685,7 +685,7 @@ describe('ReactCompositeComponent', function() {
     expect(React.isValidClass(Component)).toBe(true);
   });
 
-  it('should detect invalid CompositeComponent classes', function() {
+  it('should detect invalid CompositeComponent classes', () => {
     var FnComponent = function() {
       return false;
     };
@@ -702,7 +702,7 @@ describe('ReactCompositeComponent', function() {
     expect(React.isValidClass(TrickFnComponent)).toBe(false);
   });
 
-  it('should warn when mispelling shouldComponentUpdate', function() {
+  it('should warn when mispelling shouldComponentUpdate', () => {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
 
@@ -743,7 +743,7 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
-  xit('should warn when using deprecated non-static spec keys', function() {
+  xit('should warn when using deprecated non-static spec keys', () => {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
     try {
@@ -784,7 +784,7 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
-  it('should pass context', function() {
+  it('should pass context', () => {
     var childInstance = null;
     var grandchildInstance = null;
 
@@ -845,7 +845,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
 
-  it('should check context types', function() {
+  it('should check context types', () => {
     var Component = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string.isRequired
@@ -881,7 +881,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should check child context types', function() {
+  it('should check child context types', () => {
     var Component = React.createClass({
       childContextTypes: {
         foo: ReactPropTypes.string.isRequired,
@@ -924,7 +924,7 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.mock.calls.length).toBe(2);
   });
 
-  it('should filter out context not in contextTypes', function() {
+  it('should filter out context not in contextTypes', () => {
     var Component = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string
@@ -942,7 +942,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance).scalarContextEqual({foo: 'abc'});
   });
 
-  it('should filter context properly in callbacks', function() {
+  it('should filter context properly in callbacks', () => {
     var actualComponentWillReceiveProps;
     var actualShouldComponentUpdate;
     var actualComponentWillUpdate;
@@ -1003,7 +1003,7 @@ describe('ReactCompositeComponent', function() {
     expect(actualComponentDidUpdate).toEqual({foo: 'abc'});
   });
 
-  it('should support statics', function() {
+  it('should support statics', () => {
     var Component = React.createClass({
       statics: {
         abc: 'def',
@@ -1028,7 +1028,7 @@ describe('ReactCompositeComponent', function() {
     expect(Component.jkl).toBe('mno');
   });
 
-  it('should support statics in mixins', function() {
+  it('should support statics in mixins', () => {
     var Mixin = {
       statics: {
         foo: 'bar'
@@ -1053,7 +1053,7 @@ describe('ReactCompositeComponent', function() {
     expect(Component.abc).toBe('def');
   });
 
-  it("should throw if mixins override each others' statics", function() {
+  it("should throw if mixins override each others' statics", () => {
     expect(function() {
       var Mixin = {
         statics: {
@@ -1079,7 +1079,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it("should throw if the mixin is a React component", function() {
+  it("should throw if the mixin is a React component", () => {
     expect(function() {
       React.createClass({
         mixins: [<div />],
@@ -1094,7 +1094,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it("should throw if the mixin is a React component class", function() {
+  it("should throw if the mixin is a React component class", () => {
     expect(function() {
       var Component = React.createClass({
         render: function() {
@@ -1115,7 +1115,7 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
-  it('should have bound the mixin methods to the component', function() {
+  it('should have bound the mixin methods to the component', () => {
     var mixin = {
       mixinFunc: function() {return this;}
     };
@@ -1133,28 +1133,27 @@ describe('ReactCompositeComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should include the mixin keys in even if their values are falsy',
-    function() {
-      var mixin = {
-        keyWithNullValue: null,
-        randomCounter: 0
-      };
+  it('should include the mixin keys in even if their values are falsy', () => {
+    var mixin = {
+      keyWithNullValue: null,
+      randomCounter: 0
+    };
 
-      var Component = React.createClass({
-        mixins: [mixin],
-        componentDidMount: function() {
-          expect(this.randomCounter).toBe(0);
-          expect(this.keyWithNullValue).toBeNull();
-        },
-        render: function() {
-          return <span />;
-        }
-      });
-      var instance = <Component />;
-      instance = ReactTestUtils.renderIntoDocument(instance);
+    var Component = React.createClass({
+      mixins: [mixin],
+      componentDidMount: function() {
+        expect(this.randomCounter).toBe(0);
+        expect(this.keyWithNullValue).toBeNull();
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    var instance = <Component />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should warn if an umounted component is touched', function() {
+  it('should warn if an umounted component is touched', () => {
     spyOn(console, 'warn');
 
     var ComponentClass = React.createClass({
@@ -1187,7 +1186,7 @@ describe('ReactCompositeComponent', function() {
     expect(unmountedInstance2.someOtherMethod).toBe('override');
   });
 
-  it('should allow static methods called using type property', function() {
+  it('should allow static methods called using type property', () => {
     spyOn(console, 'warn');
 
     var ComponentClass = React.createClass({

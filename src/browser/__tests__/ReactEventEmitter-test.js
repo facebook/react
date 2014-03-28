@@ -90,8 +90,8 @@ function registerSimpleTestHandler() {
 }
 
 
-describe('ReactEventEmitter', function() {
-  beforeEach(function() {
+describe('ReactEventEmitter', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     LISTENER.mockClear();
     EventPluginHub = require('EventPluginHub');
@@ -110,36 +110,36 @@ describe('ReactEventEmitter', function() {
     });
   });
 
-  afterEach(function() {
+  afterEach(() => {
     ReactMount.getNode = oldGetNode;
   });
 
-  it('should store a listener correctly', function() {
+  it('should store a listener correctly', () => {
     registerSimpleTestHandler();
     var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(LISTENER);
   });
 
-  it('should retrieve a listener correctly', function() {
+  it('should retrieve a listener correctly', () => {
     registerSimpleTestHandler();
     var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toEqual(LISTENER);
   });
 
-  it('should clear all handlers when asked to', function() {
+  it('should clear all handlers when asked to', () => {
     registerSimpleTestHandler();
     ReactEventEmitter.deleteAllListeners(getID(CHILD));
     var listener = ReactEventEmitter.getListener(getID(CHILD), ON_CLICK_KEY);
     expect(listener).toBe(undefined);
   });
 
-  it('should invoke a simple handler registered on a node', function() {
+  it('should invoke a simple handler registered on a node', () => {
     registerSimpleTestHandler();
     ReactTestUtils.Simulate.click(CHILD);
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke handlers if ReactEventEmitter is disabled', function() {
+  it('should not invoke handlers if ReactEventEmitter is disabled', () => {
     registerSimpleTestHandler();
     ReactEventEmitter.setEnabled(false);
     ReactTestUtils.SimulateNative.click(CHILD);
@@ -149,7 +149,7 @@ describe('ReactEventEmitter', function() {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it('should bubble simply', function() {
+  it('should bubble simply', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -172,7 +172,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
   });
 
-  it('should set currentTarget', function() {
+  it('should set currentTarget', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -204,7 +204,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[2]).toBe(getID(GRANDPARENT));
   });
 
-  it('should support stopPropagation()', function() {
+  it('should support stopPropagation()', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -226,7 +226,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[1]).toBe(getID(PARENT));
   });
 
-  it('should stop after first dispatch if stopPropagation', function() {
+  it('should stop after first dispatch if stopPropagation', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -247,7 +247,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should stopPropagation if false is returned', function() {
+  it('should stopPropagation if false is returned', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -277,7 +277,7 @@ describe('ReactEventEmitter', function() {
    * these new listeners.
    */
 
-  it('should invoke handlers that were removed while bubbling', function() {
+  it('should invoke handlers that were removed while bubbling', () => {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(event) {
       ReactEventEmitter.deleteAllListeners(getID(PARENT));
@@ -292,7 +292,7 @@ describe('ReactEventEmitter', function() {
     expect(handleParentClick.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke newly inserted handlers while bubbling', function() {
+  it('should not invoke newly inserted handlers while bubbling', () => {
     var handleParentClick = mocks.getMockFunction();
     var handleChildClick = function(event) {
       ReactEventEmitter.putListener(
@@ -306,7 +306,7 @@ describe('ReactEventEmitter', function() {
     expect(handleParentClick.mock.calls.length).toBe(0);
   });
 
-  it('should infer onTouchTap from a touchStart/End', function() {
+  it('should infer onTouchTap from a touchStart/End', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -324,7 +324,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should infer onTouchTap from when dragging below threshold', function() {
+  it('should infer onTouchTap from when dragging below threshold', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -342,7 +342,7 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should not onTouchTap from when dragging beyond threshold', function() {
+  it('should not onTouchTap from when dragging beyond threshold', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,
@@ -359,14 +359,14 @@ describe('ReactEventEmitter', function() {
     expect(idCallOrder.length).toBe(0);
   });
 
-  it('should listen to events only once', function() {
+  it('should listen to events only once', () => {
     spyOn(EventListener, 'listen');
     ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
     ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
     expect(EventListener.listen.callCount).toBe(1);
   });
 
-  it('should work with event plugins without dependencies', function() {
+  it('should work with event plugins without dependencies', () => {
     spyOn(EventListener, 'listen');
 
     ReactEventEmitter.listenTo(ON_CLICK_KEY, document);
@@ -374,7 +374,7 @@ describe('ReactEventEmitter', function() {
     expect(EventListener.listen.argsForCall[0][1]).toBe('click');
   });
 
-  it('should work with event plugins with dependencies', function() {
+  it('should work with event plugins with dependencies', () => {
     spyOn(EventListener, 'listen');
     spyOn(EventListener, 'capture');
 
@@ -399,7 +399,7 @@ describe('ReactEventEmitter', function() {
     }
   });
 
-  it('should bubble onTouchTap', function() {
+  it('should bubble onTouchTap', () => {
     ReactEventEmitter.putListener(
       getID(CHILD),
       ON_TOUCH_TAP_KEY,

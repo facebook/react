@@ -22,8 +22,8 @@ var Transaction;
 var mixInto;
 
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
-describe('Transaction', function() {
-  beforeEach(function() {
+describe('Transaction', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     Transaction = require('Transaction');
     mixInto = require('mixInto');
@@ -34,7 +34,7 @@ describe('Transaction', function() {
    * return values to closers when those inits are successful. We should not
    * invoke the actual method when any of the initializers fail.
    */
-  it('should invoke closers with/only-with init returns', function() {
+  it('should invoke closers with/only-with init returns', () => {
     var throwInInit = function() {
       throw new Error('close[0] should receive Transaction.OBSERVED_ERROR');
     };
@@ -79,7 +79,7 @@ describe('Transaction', function() {
 
     var transaction = new TestTransaction();
 
-    expect(function() {
+    expect(() => {
       transaction.perform(dontPerformThis);
     }).toThrow();
 
@@ -90,7 +90,7 @@ describe('Transaction', function() {
     expect(transaction.isInTransaction()).toBe(false);
   });
 
-  it('should invoke closers and wrapped method when inits success', function() {
+  it('should invoke closers and wrapped method when inits success', () => {
 
     var performSideEffect;
     /**
@@ -151,7 +151,7 @@ describe('Transaction', function() {
    * throws an error, the transaction should prefer to throw the error
    * encountered earlier in the operation.
    */
-  it('should throw when wrapped operation throws', function() {
+  it('should throw when wrapped operation throws', () => {
 
     var performSideEffect;
     /**
@@ -204,17 +204,19 @@ describe('Transaction', function() {
 
     var transaction = new TestTransaction();
 
-    expect(function() {
-      var isTypeError = false;
-      try {
-        transaction.perform(function() {
-          throw new TypeError("Thrown in main wrapped operation");
-        });
-      } catch (err) {
-        isTypeError = (err instanceof TypeError);
-      }
-      return isTypeError;
-    }()).toBe(true);
+    expect(
+      (() => {
+        var isTypeError = false;
+        try {
+          transaction.perform(function() {
+            throw new TypeError("Thrown in main wrapped operation");
+          });
+        } catch (err) {
+          isTypeError = (err instanceof TypeError);
+        }
+        return isTypeError;
+      })()
+    ).toBe(true);
 
     expect(performSideEffect).toBe(undefined);
     expect(transaction.firstCloseParam).toBe('firstResult');
@@ -223,7 +225,7 @@ describe('Transaction', function() {
     expect(transaction.isInTransaction()).toBe(false);
   });
 
-  it('should throw errors in transaction close', function() {
+  it('should throw errors in transaction close', () => {
     var TestTransaction = function() {
       this.reinitializeTransaction();
     };
@@ -240,13 +242,13 @@ describe('Transaction', function() {
     };
 
     var transaction = new TestTransaction();
-    expect(function() {
+    expect(() => {
       transaction.perform(function() {});
     }).toThrow(exceptionMsg);
     expect(transaction.isInTransaction()).toBe(false);
   });
 
-  it('should allow nesting of transactions', function() {
+  it('should allow nesting of transactions', () => {
     var performSideEffect;
     var nestedPerformSideEffect;
     /**

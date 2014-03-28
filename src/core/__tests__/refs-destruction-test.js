@@ -35,12 +35,12 @@ var TestComponent = React.createClass({
   }
 });
 
-describe('refs-destruction', function() {
-  beforeEach(function() {
+describe('refs-destruction', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
   });
 
-  it("should remove refs when destroying the parent", function() {
+  it("should remove refs when destroying the parent", () => {
     var testInstance = ReactTestUtils.renderIntoDocument(<TestComponent />);
     reactComponentExpect(testInstance.refs.theInnerDiv)
         .toBeDOMComponentWithTag('div');
@@ -49,7 +49,7 @@ describe('refs-destruction', function() {
     expect(Object.keys(testInstance.refs || {}).length).toEqual(0);
   });
 
-  it("should remove refs when destroying the child", function() {
+  it("should remove refs when destroying the child", () => {
     var testInstance = ReactTestUtils.renderIntoDocument(<TestComponent />);
     reactComponentExpect(testInstance.refs.theInnerDiv)
         .toBeDOMComponentWithTag('div');

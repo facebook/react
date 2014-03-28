@@ -24,14 +24,14 @@ var ReactTestUtils;
 
 var reactComponentExpect;
 
-describe('ReactComponent', function() {
-  beforeEach(function() {
+describe('ReactComponent', () => {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
   });
 
-  it('should throw on invalid render targets', function() {
+  it('should throw on invalid render targets', () => {
     var container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
@@ -49,14 +49,14 @@ describe('ReactComponent', function() {
     );
   });
 
-  it('should throw when supplying a ref outside of render method', function() {
+  it('should throw when supplying a ref outside of render method', () => {
     var instance = <div ref="badDiv" />;
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
-  it('should throw when attempting to hijack a ref', function() {
+  it('should throw when attempting to hijack a ref', () => {
     var Component = React.createClass({
       render: function() {
         var child = this.props.child;
@@ -75,7 +75,7 @@ describe('ReactComponent', function() {
     );
   });
 
-  it('should support refs on owned components', function() {
+  it('should support refs on owned components', () => {
     var inner, outer;
 
     var Component = React.createClass({
@@ -94,7 +94,7 @@ describe('ReactComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should not have refs on unmounted components', function() {
+  it('should not have refs on unmounted components', () => {
     var Parent = React.createClass({
       render: function() {
         return <Child><div ref="test" /></Child>;
@@ -113,7 +113,7 @@ describe('ReactComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
-  it('should correctly determine if a component is mounted', function() {
+  it('should correctly determine if a component is mounted', () => {
     var Component = React.createClass({
       componentWillMount: function() {
         expect(this.isMounted()).toBeFalsy();
@@ -132,7 +132,7 @@ describe('ReactComponent', function() {
     expect(instance.isMounted()).toBeTruthy();
   });
 
-  it('should know its simple mount depth', function() {
+  it('should know its simple mount depth', () => {
     var Owner = React.createClass({
       render: function() {
         return <Child ref="child" />;
@@ -151,7 +151,7 @@ describe('ReactComponent', function() {
     expect(instance.refs.child._mountDepth).toBe(1);
   });
 
-  it('should know its (complicated) mount depth', function() {
+  it('should know its (complicated) mount depth', () => {
     var Box = React.createClass({
       render: function() {
         return <div ref="boxDiv">{this.props.children}</div>;

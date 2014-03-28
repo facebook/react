@@ -21,8 +21,8 @@
 
 "use strict";
 
-describe('ReactWebWorker', function() {
-  ;(typeof Worker == 'undefined' ? xit : it)('can run React in a web worker', function() {
+describe('ReactWebWorker', () => {
+  ;(typeof Worker == 'undefined' ? xit : it)('can run React in a web worker', () => {
     var done = false;
     var error;
 

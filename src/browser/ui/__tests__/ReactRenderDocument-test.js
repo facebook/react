@@ -35,8 +35,8 @@ var UNMOUNT_INVARIANT_MESSAGE =
   'efficiently. To fix this, have a single top-level component that ' +
   'never unmounts render these elements.';
 
-describe('rendering React components at document', function() {
-  beforeEach(function() {
+describe('rendering React components at document', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
 
     React = require('React');
@@ -46,7 +46,7 @@ describe('rendering React components at document', function() {
     testDocument = getTestDocument();
   });
 
-  it('should be able to get root component id for document node', function() {
+  it('should be able to get root component id for document node', () => {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -73,7 +73,7 @@ describe('rendering React components at document', function() {
     expect(componentID).toBe(component._rootNodeID);
   });
 
-  it('should not be able to unmount component from document node', function() {
+  it('should not be able to unmount component from document node', () => {
     expect(testDocument).not.toBeUndefined();
 
     var Root = React.createClass({
@@ -103,7 +103,7 @@ describe('rendering React components at document', function() {
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
-  it('should not be able to switch root constructors', function() {
+  it('should not be able to switch root constructors', () => {
     expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
@@ -151,7 +151,7 @@ describe('rendering React components at document', function() {
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
-  it('should be able to mount into document', function() {
+  it('should be able to mount into document', () => {
     expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
@@ -179,7 +179,7 @@ describe('rendering React components at document', function() {
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
 
-  it('should give helpful errors on state desync', function() {
+  it('should give helpful errors on state desync', () => {
     expect(testDocument).not.toBeUndefined();
 
     var Component = React.createClass({
@@ -218,7 +218,7 @@ describe('rendering React components at document', function() {
     );
   });
 
-  it('should throw on full document render w/ no markup', function() {
+  it('should throw on full document render w/ no markup', () => {
     expect(testDocument).not.toBeUndefined();
 
     var container = testDocument;

@@ -18,15 +18,15 @@
 
 "use strict";
 
-describe('memoizeStringOnly', function() {
+describe('memoizeStringOnly', () => {
   var memoizeStringOnly;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     memoizeStringOnly = require('memoizeStringOnly');
   });
 
-  it('should be transparent to callers', function() {
+  it('should be transparent to callers', () => {
     var callback = function(string) {
       return string;
     };

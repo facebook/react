@@ -22,27 +22,27 @@ require('mock-modules')
   .dontMock('EventPluginHub')
   .mock('isEventSupported');
 
-describe('EventPluginHub', function() {
+describe('EventPluginHub', () => {
   var EventPluginHub;
   var isEventSupported;
 
-  beforeEach(function() {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
     isEventSupported.mockReturnValue(false);
   });
 
-  it('should warn about the `onScroll` issue on IE8', function() {
+  it('should warn about the `onScroll` issue on IE8', () => {
     spyOn(console, 'warn');
-    EventPluginHub.putListener(1, 'onScroll', function(){});
+    EventPluginHub.putListener(1, 'onScroll', () => {});
     expect(console.warn.callCount).toBe(1);
     expect(console.warn.mostRecentCall.args[0]).toBe(
       'This browser doesn\'t support the `onScroll` event'
     );
   });
 
-  it("should prevent non-function listeners", function() {
+  it("should prevent non-function listeners", () => {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');
     }).toThrow(

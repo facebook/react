@@ -26,11 +26,11 @@ var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactTestUtils = require('ReactTestUtils');
 
-describe('ReactDOM', function() {
+describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
   /*
-  it('should bubble onSubmit', function() {
+  it('should bubble onSubmit', () => {
     var count = 0;
     var form;
     var Parent = React.createClass({
@@ -56,7 +56,7 @@ describe('ReactDOM', function() {
   });
   */
 
-  it("should allow children to be passed as an argument", function() {
+  it("should allow children to be passed as an argument", () => {
     var argDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div(null, 'child')
     );
@@ -64,7 +64,7 @@ describe('ReactDOM', function() {
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it("should overwrite props.children with children argument", function() {
+  it("should overwrite props.children with children argument", () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       ReactDOM.div({children: 'fakechild'}, 'child')
     );
@@ -76,7 +76,7 @@ describe('ReactDOM', function() {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it("should purge the DOM cache when removing nodes", function() {
+  it("should purge the DOM cache when removing nodes", () => {
     var myDiv = ReactTestUtils.renderIntoDocument(
       <div>{{
         theDog: <div className="dog" />,
@@ -115,7 +115,7 @@ describe('ReactDOM', function() {
     expect(dog.className).toBe('bigdog');
   });
 
-  it('should be a valid class', function() {
+  it('should be a valid class', () => {
     expect(React.isValidClass(ReactDOM.div)).toBe(true);
   });
 });

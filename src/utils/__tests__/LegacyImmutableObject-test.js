@@ -27,7 +27,7 @@ var LegacyImmutableObject;
  * To perform performance testing of using `LegacyImmutableObject` vs. not using
  * `LegacyImmutableObject`, such testing must be done with __DEV__ set to false.
  */
-describe('LegacyImmutableObject', function() {
+describe('LegacyImmutableObject', () => {
   var message;
   beforeEach(function() {
     require('mock-modules').dumpCache();
@@ -71,53 +71,53 @@ describe('LegacyImmutableObject', function() {
     testProd(message + ':PROD', testFunc);
   };
 
-  testDev('should be running in DEV', function() {
+  testDev('should be running in DEV', () => {
     expect(window.__DEV__).toBe(true);
   });
 
-  testDev('should require initial map to be an object', function() {
-    expect(function() {
+  testDev('should require initial map to be an object', () => {
+    expect(() => {
       new LegacyImmutableObject([1,2,3]);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       new LegacyImmutableObject('asdf');
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       new LegacyImmutableObject({oldField: 'asdf', fieldTwo: null});
     }).not.toThrow();
   });
 
-  testDev('should not exceed maximum call stack size with nodes', function() {
+  testDev('should not exceed maximum call stack size with nodes', () => {
     var node = document.createElement('div');
     var object = new LegacyImmutableObject({node: node});
     expect(object.node).toBe(node);
   });
 
-  testDevAndProd('should not throw when not mutating directly', function() {
+  testDevAndProd('should not throw when not mutating directly', () => {
     var io = new LegacyImmutableObject({oldField: 'asdf'});
-    expect(function() {
+    expect(() => {
       LegacyImmutableObject.set(io, {newField: null}); // not a mutation!
     }).not.toThrow();
   });
 
-  testDev('should prevent shallow field addition when strict', function() {
-    expect(function() {
+  testDev('should prevent shallow field addition when strict', () => {
+    expect(() => {
       var io = new LegacyImmutableObject({oldField: 'asdf'});
       io.newField = 'this will not work';
     }).toThrow();
   });
 
-  testDev('should prevent shallow field mutation when strict', function() {
-    expect(function() {
+  testDev('should prevent shallow field mutation when strict', () => {
+    expect(() => {
       var io = new LegacyImmutableObject({oldField: 'asdf'});
       io.oldField = 'this will not work!';
     }).toThrow();
   });
 
-  testDev('should prevent deep field addition when strict', function() {
-    expect(function() {
+  testDev('should prevent deep field addition when strict', () => {
+    expect(() => {
       var io =
         new LegacyImmutableObject(
           {shallowField: {deepField: {oldField: null}}}
@@ -126,8 +126,8 @@ describe('LegacyImmutableObject', function() {
     }).toThrow();
   });
 
-  testDev('should prevent deep field mutation when strict', function() {
-    expect(function() {
+  testDev('should prevent deep field mutation when strict', () => {
+    expect(() => {
       var io =
         new LegacyImmutableObject(
           {shallowField: {deepField: {oldField: null}}}
@@ -138,7 +138,7 @@ describe('LegacyImmutableObject', function() {
 
   testDevAndProd(
     'should create object with same structure when set with {}',
-    function() {
+    () => {
       var beforeIO =
         new LegacyImmutableObject(
           {shallowField: {deepField: {oldField: null}}}
@@ -151,7 +151,7 @@ describe('LegacyImmutableObject', function() {
 
   testDevAndProd(
     'should create distinct object with shallow field insertion',
-    function() {
+    () => {
       var beforeStructure = {
         oldShallowField: {
           deepField: {
@@ -182,7 +182,7 @@ describe('LegacyImmutableObject', function() {
 
   testDevAndProd(
     'should create distinct object with shallow field mutation',
-      function() {
+    () => {
       var beforeStructure = {
         oldShallowField: {
           deepField: {
@@ -207,7 +207,7 @@ describe('LegacyImmutableObject', function() {
   );
 
   message = 'should create distinct object with deep field insertion';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     var beforeStructure = {
       oldShallowField: {
         deepField: {
@@ -234,7 +234,7 @@ describe('LegacyImmutableObject', function() {
 
   message =
     'should tolerate arrays at deeper levels and prevent mutation on them';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     if (window.callPhantom) {
       // PhantomJS has a bug with Object.freeze and Arrays.
       // https://github.com/ariya/phantomjs/issues/10817
@@ -244,17 +244,17 @@ describe('LegacyImmutableObject', function() {
       shallowField: [1,'second field',3]
     };
     var io = new LegacyImmutableObject(beforeStructure);
-    expect(function() {
+    expect(() => {
       io.newField = 'nope!';
     }).toThrow();
-    expect(function() {
+    expect(() => {
       io.shallowField[0] = 'nope!';
     }).toThrow();
     expect(io.shallowField[1]).toEqual('second field');
   });
 
   message = 'should provide a setField interface as sugar for set()';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     var beforeIO = new LegacyImmutableObject({initialField: null});
     var afterIO =
       LegacyImmutableObject.setField(beforeIO, 'anotherField', 'anotherValue');
@@ -266,7 +266,7 @@ describe('LegacyImmutableObject', function() {
   });
 
   message = 'should recursively create distinct objects when deep copying';
-  testDevAndProd(message, function() {
+  testDevAndProd(message, () => {
     var beforeIO = new LegacyImmutableObject({
       a: {b: 'b', c: {}, d: 'd', e: new LegacyImmutableObject({f: 'f'}) }
     });
@@ -281,7 +281,7 @@ describe('LegacyImmutableObject', function() {
     expect(afterIO.a.e).not.toBe(beforeIO.a.e);
   });
 
-  testDevAndProd('should deep copy member immutability', function() {
+  testDevAndProd('should deep copy member immutability', () => {
     var beforeIO = new LegacyImmutableObject({
       a: {b: new LegacyImmutableObject({c: 'c'}), e: {f: 'f'}}
     });

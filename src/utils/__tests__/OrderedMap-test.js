@@ -139,108 +139,107 @@ var extractUniqueID = function(entity) {
   return entity.uniqueID;
 };
 
-describe('OrderedMap', function() {
-  beforeEach(function() {
+describe('OrderedMap', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     OrderedMap = require('OrderedMap');
   });
 
-  it('should create according to simple object with keys', function() {
+  it('should create according to simple object with keys', () => {
     OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
     // Iterate over and ensure key order.
   });
 
-  it('should create from array when providing an identity CB', function() {
-    expect(function() {
+  it('should create from array when providing an identity CB', () => {
+    expect(() => {
       OrderedMap.fromArray(idEntities, extractUniqueID);
     }).not.toThrow();
   });
 
-  it('should throw if constructing from Array without identity CB', function() {
+  it('should throw if constructing from Array without identity CB', () => {
     OrderedMap.fromArray(idEntities, extractUniqueID);
     // Iterate and ensure key order
   });
 
-  it('should not throw when fromArray extracts a numeric key', function() {
-    expect(function() {
+  it('should not throw when fromArray extracts a numeric key', () => {
+    expect(() => {
       OrderedMap.fromArray(hasPositiveNumericKey, extractUniqueID);
     }).not.toThrow();
 
   });
 
-  it('should throw when any key is the empty string', function() {
-    expect(function() {
+  it('should throw when any key is the empty string', () => {
+    expect(() => {
       OrderedMap.fromArray(hasEmptyKey, extractUniqueID);
     }).toThrow();
   });
 
-  it('should not throw when a key is the string "undefined" or "null"',
-    function() {
-      var om = OrderedMap.fromArray(hasNullAndUndefStringKey, extractUniqueID);
-      expect(om.length).toBe(2);
-      expect(om.indexOfKey('undefined')).toBe(0);
-      expect(om.indexOfKey('null')).toBe(1);
-      expect(om.keyAfter('undefined')).toBe('null');
-      expect(om.keyAfter('null')).toBe(undefined);
-      expect(om.keyBefore('undefined')).toBe(undefined);
-      expect(om.has('undefined')).toBe(true);
-      expect(om.has('null')).toBe(true);
-      expect(om.get('undefined').val).toBe('thisIsUndefined');
-      expect(om.get('null').val).toBe('thisIsNull');
-    });
+  it('should not throw when a key is the string "undefined" or "null"', () => {
+    var om = OrderedMap.fromArray(hasNullAndUndefStringKey, extractUniqueID);
+    expect(om.length).toBe(2);
+    expect(om.indexOfKey('undefined')).toBe(0);
+    expect(om.indexOfKey('null')).toBe(1);
+    expect(om.keyAfter('undefined')).toBe('null');
+    expect(om.keyAfter('null')).toBe(undefined);
+    expect(om.keyBefore('undefined')).toBe(undefined);
+    expect(om.has('undefined')).toBe(true);
+    expect(om.has('null')).toBe(true);
+    expect(om.get('undefined').val).toBe('thisIsUndefined');
+    expect(om.get('null').val).toBe('thisIsNull');
+  });
 
 
   /**
    * Numeric keys are cast to strings.
    */
-  it('should not throw when a key is the number zero', function() {
+  it('should not throw when a key is the number zero', () => {
     var om = OrderedMap.fromArray(hasZeroNumberKey, extractUniqueID);
     expect(om.length).toBe(3);
     expect(om.indexOfKey('0')).toBe(1);
     expect(om.indexOfKey(0)).toBe(1);
   });
 
-  it('should throw when any key is falsey', function() {
-    expect(function() {
+  it('should throw when any key is falsey', () => {
+    expect(() => {
       OrderedMap.fromArray(hasEmptyStringKey, extractUniqueID);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasNullKey, extractUniqueID);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasUndefinedKey, extractUniqueID);
     }).toThrow();
   });
 
-  it('should not throw on string keys "undefined/null"', function() {
-    expect(function() {
+  it('should not throw on string keys "undefined/null"', () => {
+    expect(() => {
       OrderedMap.fromArray(hasNullStringKey, extractUniqueID);
     }).not.toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasUndefinedStringKey, extractUniqueID);
     }).not.toThrow();
   });
 
-  it('should throw on extracting keys that are not strings/nums', function() {
-    expect(function() {
+  it('should throw on extracting keys that are not strings/nums', () => {
+    expect(() => {
       OrderedMap.fromArray(hasObjectKey, extractUniqueID);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasArrayKey, extractUniqueID);
     }).toThrow();
   });
 
-  it('should throw if instantiating with duplicate key', function() {
-    expect(function() {
+  it('should throw if instantiating with duplicate key', () => {
+    expect(() => {
       OrderedMap.fromArray(hasDuplicateKeys, extractUniqueID);
     }).toThrow();
   });
 
-  it('should not throw when a key is the string "0"', function() {
+  it('should not throw when a key is the string "0"', () => {
     var verifyOM = function(om) {
       expect(om.length).toBe(3);
       expect(om.indexOfKey('greg')).toBe(0);
@@ -265,97 +264,97 @@ describe('OrderedMap', function() {
     verifyOM(om);
   });
 
-  it('should throw when getting invalid public key', function() {
+  it('should throw when getting invalid public key', () => {
     var om = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
-    expect(function() {
+    expect(() => {
       om.has(undefined);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.get(undefined);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.has(null);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.get(null);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.has('');
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.get('');
     }).toThrow();
   });
 
-  it('should throw when any key is falsey', function() {
-    expect(function() {
+  it('should throw when any key is falsey', () => {
+    expect(() => {
       OrderedMap.fromArray(hasEmptyStringKey, extractUniqueID);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasNullKey, extractUniqueID);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(hasUndefinedKey, extractUniqueID);
     }).toThrow();
   });
 
 
-  it('should throw when fromArray is passed crazy args', function() {
+  it('should throw when fromArray is passed crazy args', () => {
     // Test passing another OrderedMap (when it expects a plain object.)
     // This is probably not what you meant to do! We should error.
     var validOM = OrderedMap.fromArray(hasAllValidKeys, extractUniqueID);
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray({uniqueID: 'asdf'}, extractUniqueID);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(validOM, extractUniqueID);
     }).toThrow();
   });
 
-  it('should throw when fromArray is passed crazy things', function() {
-    expect(function() {
+  it('should throw when fromArray is passed crazy things', () => {
+    expect(() => {
       OrderedMap.fromArray(null, extractUniqueID);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray('stringgg', extractUniqueID);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(undefined, extractUniqueID);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(new Date(), extractUniqueID);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray({}, extractUniqueID);
     }).toThrow();
 
     // Test failure without extractor
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(idEntities);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(idEntities, extractUniqueID);
     }).not.toThrow();
   });
 
   // Testing methods that accept other `OrderedMap`s.
-  it('should throw when from/merge is passed an non-OrderedMap.', function() {
+  it('should throw when from/merge is passed an non-OrderedMap.', () => {
     // Test passing an array to construction.
-    expect(function() {
+    expect(() => {
       OrderedMap.from(idEntities, extractUniqueID);
     }).toThrow();
 
     // Test passing an array to merge.
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(idEntities, extractUniqueID)
         .merge(idEntities, extractUniqueID);
     }).toThrow();
 
 
     // Test passing a plain object to merge.
-    expect(function() {
+    expect(() => {
       OrderedMap.fromArray(
         idEntities,
         extractUniqueID
@@ -363,88 +362,87 @@ describe('OrderedMap', function() {
     }).toThrow();
   });
 
-  it('should throw when accessing key before/after of non-key', function() {
+  it('should throw when accessing key before/after of non-key', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'first'},
       {uniqueID: 'two'}], extractUniqueID
     );
-    expect(function() {
+    expect(() => {
       om.keyBefore('dog');
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.keyAfter('cat');
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.keyAfter(null);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.keyAfter(undefined);
     }).toThrow();
   });
 
-  it('should throw passing invalid/not-present-keys to before/after',
-    function() {
-      var om = OrderedMap.fromArray([
-        {uniqueID: 'one', val: 'first'},
-        {uniqueID: 'two', val: 'second'},
-        {uniqueID: 'three', val: 'third'},
-        {uniqueID: 'four', val: 'fourth'}
-      ], extractUniqueID);
+  it('should throw passing invalid/not-present-keys to before/after', () => {
+    var om = OrderedMap.fromArray([
+      {uniqueID: 'one', val: 'first'},
+      {uniqueID: 'two', val: 'second'},
+      {uniqueID: 'three', val: 'third'},
+      {uniqueID: 'four', val: 'fourth'}
+    ], extractUniqueID);
 
-      expect(function() {
-        om.keyBefore('');
-      }).toThrow();
-      expect(function() {
-        om.keyBefore(null);
-      }).toThrow();
-      expect(function() {
-        om.keyBefore(undefined);
-      }).toThrow();
-      expect(function() {
-        om.keyBefore('notInTheOrderedMap!');
-      }).toThrow();
+    expect(() => {
+      om.keyBefore('');
+    }).toThrow();
+    expect(() => {
+      om.keyBefore(null);
+    }).toThrow();
+    expect(() => {
+      om.keyBefore(undefined);
+    }).toThrow();
+    expect(() => {
+      om.keyBefore('notInTheOrderedMap!');
+    }).toThrow();
 
-      expect(function() {
-        om.keyAfter('');
-      }).toThrow();
-      expect(function() {
-        om.keyAfter(null);
-      }).toThrow();
-      expect(function() {
-        om.keyAfter(undefined);
-      }).toThrow();
-      expect(function() {
-        om.keyAfter('notInTheOrderedMap!');
-      }).toThrow();
+    expect(() => {
+      om.keyAfter('');
+    }).toThrow();
+    expect(() => {
+      om.keyAfter(null);
+    }).toThrow();
+    expect(() => {
+      om.keyAfter(undefined);
+    }).toThrow();
+    expect(() => {
+      om.keyAfter('notInTheOrderedMap!');
+    }).toThrow();
 
-      expect(function() {
-        om.nthKeyAfter('', 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyAfter(null, 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyAfter(undefined, 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyAfter('notInTheOrderedMap!', 1);
-      }).toThrow();
+    expect(() => {
+      om.nthKeyAfter('', 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyAfter(null, 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyAfter(undefined, 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyAfter('notInTheOrderedMap!', 1);
+    }).toThrow();
 
-      expect(function() {
-        om.nthKeyBefore('', 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyBefore(null, 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyBefore(undefined, 1);
-      }).toThrow();
-      expect(function() {
-        om.nthKeyBefore('notInTheOrderedMap!', 1);
-      }).toThrow();
-    });
+    expect(() => {
+      om.nthKeyBefore('', 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyBefore(null, 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyBefore(undefined, 1);
+    }).toThrow();
+    expect(() => {
+      om.nthKeyBefore('notInTheOrderedMap!', 1);
+    }).toThrow();
+  });
 
-  it('should correctly determine the nth key after before', function() {
+  it('should correctly determine the nth key after before', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'},
@@ -478,7 +476,7 @@ describe('OrderedMap', function() {
     expect(om.nthKeyAfter('four', 1)).toBe(undefined);
   });
 
-  it('should compute key indices correctly', function() {
+  it('should compute key indices correctly', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'}
@@ -489,18 +487,18 @@ describe('OrderedMap', function() {
     expect(om.indexOfKey('one')).toBe(0);
     expect(om.indexOfKey('two')).toBe(1);
     expect(om.indexOfKey('nope')).toBe(undefined);
-    expect(function() {
+    expect(() => {
       om.indexOfKey(null);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.indexOfKey(undefined);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.indexOfKey(''); // Empty key is not allowed
     }).toThrow();
   });
 
-  it('should compute indices on array that extracted numeric ids', function() {
+  it('should compute indices on array that extracted numeric ids', () => {
     var om = OrderedMap.fromArray(hasZeroStringKey, extractUniqueID);
     expect(om.keyAtIndex(0)).toBe('greg');
     expect(om.keyAtIndex(1)).toBe('0');
@@ -526,7 +524,7 @@ describe('OrderedMap', function() {
     verifyNumericKeys(omNumericKeys);
   });
 
-  it('should compute indices on mutually exclusive merge', function() {
+  it('should compute indices on mutually exclusive merge', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'}
@@ -559,7 +557,7 @@ describe('OrderedMap', function() {
     expect(res.get('dog')).toBe(undefined);
   });
 
-  it('should compute indices on intersected merge', function() {
+  it('should compute indices on intersected merge', () => {
     var oneTwo = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'secondOM1'}
@@ -630,7 +628,7 @@ describe('OrderedMap', function() {
 
   });
 
-  it('should merge mutually exclusive keys to the end.', function() {
+  it('should merge mutually exclusive keys to the end.', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'one', val: 'first'},
       {uniqueID: 'two', val: 'second'}
@@ -644,7 +642,7 @@ describe('OrderedMap', function() {
 
   });
 
-  it('should map correctly', function() {
+  it('should map correctly', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
@@ -679,7 +677,7 @@ describe('OrderedMap', function() {
     verifyResult(resultOM);
   });
 
-  it('should filter correctly', function() {
+  it('should filter correctly', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
@@ -720,7 +718,7 @@ describe('OrderedMap', function() {
     verifyResult(resultOM);
   });
 
-  it('should throw when providing invalid ranges to ranging', function() {
+  it('should throw when providing invalid ranges to ranging', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
@@ -728,136 +726,136 @@ describe('OrderedMap', function() {
     ], extractUniqueID);
     var scope = {justToTestScope: 'justTestingScope'};
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 0, 3, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 0, 3, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 0, 3, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'x' , 3, scope);
     }).toThrow(
       'Invariant Violation: mapKeyRange must be given keys ' +
       'that are present.'
     );
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'x', 3, scope);
     }).toThrow(
       'Invariant Violation: forEachKeyRange must be given keys ' +
       'that are present.'
     );
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 0, 4, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 0, 4, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 0, 4, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'x', null, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'x', null, scope);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, -1, 1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, -1, 1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, -1, 1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, null, 'y', scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, null, 'y', scope);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 0, 0, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 0, 0, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 0, 0, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'x', 'x', scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'x', 'x', scope);
     }).not.toThrow();
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 0, -1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 0, -1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 0, -1, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'x', null, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'x', null, scope);
     }).toThrow();
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 2, 1, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 2, 1, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 2, 1, scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'z', 'z', scope);
     }).not.toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'z', 'z', scope);
     }).not.toThrow();
 
-    expect(function() {
+    expect(() => {
       om.mapRange(duplicate, 2, 2, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.filterRange(duplicate, 2, 2, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachRange(duplicate, 2, 2, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'z', null, scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'z', null, scope);
     }).toThrow();
 
     // Provide keys in reverse order - should throw.
-    expect(function() {
+    expect(() => {
       om.mapKeyRange(duplicate, 'y', 'x', scope);
     }).toThrow();
-    expect(function() {
+    expect(() => {
       om.forEachKeyRange(duplicate, 'y', 'x', scope);
     }).toThrow();
   });
 
   // TEST length zero map, or keyrange start===end
 
-  it('should map range correctly', function() {
+  it('should map range correctly', () => {
     var om = OrderedMap.fromArray([
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},
@@ -938,7 +936,7 @@ describe('OrderedMap', function() {
     verifyEmpty(omResultNone);
   });
 
-  it('should extract the original array correctly', function() {
+  it('should extract the original array correctly', () => {
     var sourceArray = [
       {uniqueID: 'x', val: 'xx'},
       {uniqueID: 'y', val: 'yy'},

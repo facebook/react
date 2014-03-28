@@ -25,9 +25,9 @@ var reactComponentExpect;
 
 var TestComponent;
 
-describe('ReactPropTransferer', function() {
+describe('ReactPropTransferer', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
@@ -46,7 +46,7 @@ describe('ReactPropTransferer', function() {
     });
   });
 
-  it('should leave explicitly specified properties intact', function() {
+  it('should leave explicitly specified properties intact', () => {
     var instance = <TestComponent type="radio" />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -61,7 +61,7 @@ describe('ReactPropTransferer', function() {
         });
   });
 
-  it('should transfer unspecified properties', function() {
+  it('should transfer unspecified properties', () => {
     var instance = <TestComponent placeholder="Type here..." />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -71,7 +71,7 @@ describe('ReactPropTransferer', function() {
         .scalarPropsEqual({placeholder: 'Type here...'});
   });
 
-  it('should transfer using merge strategies', function() {
+  it('should transfer using merge strategies', () => {
     var instance =
       <TestComponent
         className="hidden_elem"
@@ -91,7 +91,7 @@ describe('ReactPropTransferer', function() {
         });
   });
 
-  it('should not transfer children', function() {
+  it('should not transfer children', () => {
     var ChildrenTestComponent = React.createClass({
       render: function() {
         return this.transferPropsTo(<div />);
@@ -110,7 +110,7 @@ describe('ReactPropTransferer', function() {
         .toBeDOMComponentWithNoChildren();
   });
 
-  it('should not transfer ref or key', function() {
+  it('should not transfer ref or key', () => {
     var TestComponent = React.createClass({
       render: function() {
         expect(this.props.ref).toBeUndefined();
@@ -132,7 +132,7 @@ describe('ReactPropTransferer', function() {
     ReactTestUtils.renderIntoDocument(<OuterOuterTestComponent />);
   });
 
-  it('should not transferPropsTo() a component you don\'t own', function() {
+  it('should not transferPropsTo() a component you don\'t own', () => {
     var Parent = React.createClass({
       render: function() {
         return <Child><span /></Child>;

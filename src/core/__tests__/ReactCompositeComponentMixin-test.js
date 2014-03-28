@@ -30,9 +30,9 @@ var TestComponentWithPropTypes;
 var mixinPropValidator;
 var componentPropValidator;
 
-describe('ReactCompositeComponent-mixin', function() {
+describe('ReactCompositeComponent-mixin', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
@@ -100,7 +100,7 @@ describe('ReactCompositeComponent-mixin', function() {
     });
   });
 
-  it('should support merging propTypes and statics', function() {
+  it('should support merging propTypes and statics', () => {
     var listener = mocks.getMockFunction();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -115,7 +115,7 @@ describe('ReactCompositeComponent-mixin', function() {
     expect('staticComponent' in TestComponent).toBe(true);
   });
 
-  it('should support chaining delegate functions', function() {
+  it('should support chaining delegate functions', () => {
     var listener = mocks.getMockFunction();
     var instance = <TestComponent listener={listener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
@@ -128,13 +128,13 @@ describe('ReactCompositeComponent-mixin', function() {
     ]);
   });
 
-  it('should validate prop types via mixins', function() {
+  it('should validate prop types via mixins', () => {
     expect(TestComponent.componentConstructor.propTypes).toBeDefined();
     expect(TestComponent.componentConstructor.propTypes.value)
       .toBe(mixinPropValidator);
   });
 
-  it('should override mixin prop types with class prop types', function() {
+  it('should override mixin prop types with class prop types', () => {
     // Sanity check...
     expect(componentPropValidator).toNotBe(mixinPropValidator);
     // Actually check...

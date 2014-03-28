@@ -121,8 +121,8 @@ var expectClickLogsLengthToBe = function(instance, length) {
   expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
 };
 
-describe('reactiverefs', function() {
-  beforeEach(function() {
+describe('reactiverefs', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
   });
 
@@ -130,7 +130,7 @@ describe('reactiverefs', function() {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
-  it("Should increase refs with an increase in divs", function() {
+  it("Should increase refs with an increase in divs", () => {
     var testRefsComponent = renderTestRefsComponent();
     var clickIncrementer =
       ReactTestUtils.findRenderedDOMComponentWithClass(
@@ -164,8 +164,8 @@ describe('reactiverefs', function() {
 /**
  * Tests that when a ref hops around children, we can track that correctly.
  */
-describe('ref swapping', function() {
-  beforeEach(function() {
+describe('ref swapping', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
   });
 
@@ -203,7 +203,7 @@ describe('ref swapping', function() {
     }
   });
 
-  it("Allow refs to hop around children correctly", function() {
+  it("Allow refs to hop around children correctly", () => {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
     var firstDiv =
@@ -238,7 +238,7 @@ describe('ref swapping', function() {
   });
 
 
-  it('always has a value for this.refs', function() {
+  it('always has a value for this.refs', () => {
     var Component = React.createClass({
       render: function() {
         return <div />;

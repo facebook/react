@@ -32,9 +32,9 @@ var onlyChild;
 var cloneWithProps;
 var emptyObject;
 
-describe('cloneWithProps', function() {
+describe('cloneWithProps', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
@@ -42,7 +42,7 @@ describe('cloneWithProps', function() {
     emptyObject = require('emptyObject');
   });
 
-  it('should clone a DOM component with new props', function() {
+  it('should clone a DOM component with new props', () => {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div className="child" /></Parent>;
@@ -62,7 +62,7 @@ describe('cloneWithProps', function() {
       .toBe('xyz child');
   });
 
-  it('should clone a composite component with new props', function() {
+  it('should clone a composite component with new props', () => {
 
     var Child = React.createClass({
       render: function() {
@@ -89,7 +89,7 @@ describe('cloneWithProps', function() {
       .toBe('xyz child');
   });
 
-  it('should warn when cloning with refs', function() {
+  it('should warn when cloning with refs', () => {
     var Grandparent = React.createClass({
       render: function() {
         return <Parent><div ref="yolo" /></Parent>;
@@ -118,7 +118,7 @@ describe('cloneWithProps', function() {
     }
   });
 
-  it('should transfer the key property', function() {
+  it('should transfer the key property', () => {
     var Component = React.createClass({
       render: function() {
         expect(this.props.key).toBe('xyz');
@@ -131,7 +131,7 @@ describe('cloneWithProps', function() {
     );
   });
 
-  it('should transfer children', function() {
+  it('should transfer children', () => {
     var Component = React.createClass({
       render: function() {
         expect(this.props.children).toBe('xyz');
@@ -144,7 +144,7 @@ describe('cloneWithProps', function() {
     );
   });
 
-  it('should shallow clone children', function() {
+  it('should shallow clone children', () => {
     var Component = React.createClass({
       render: function() {
         expect(this.props.children).toBe('xyz');
@@ -157,7 +157,7 @@ describe('cloneWithProps', function() {
     );
   });
 
-  it('should support keys and refs', function() {
+  it('should support keys and refs', () => {
     var Component = React.createClass({
       render: function() {
         expect(this.props.key).toBe('xyz');
@@ -183,7 +183,7 @@ describe('cloneWithProps', function() {
     ReactTestUtils.renderIntoDocument(<Grandparent />);
   });
 
-  it('should overwrite props', function() {
+  it('should overwrite props', () => {
     var Component = React.createClass({
       render: function() {
         expect(this.props.myprop).toBe('xyz');

@@ -21,12 +21,12 @@
 
 var React;
 
-describe('ReactTextComponent', function() {
-  beforeEach(function() {
+describe('ReactTextComponent', () => {
+  beforeEach(() => {
     React = require('React');
   });
 
-  it('should escape the rootID', function(){
+  it('should escape the rootID', () => {
     var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
     var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
     var thing = React.DOM.div(null, React.DOM.span({key:ThisThingShouldBeEscaped}, ["LULZ"]));

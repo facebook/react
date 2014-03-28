@@ -22,8 +22,8 @@ require('mock-modules').dontMock('keyMirror');
 
 var keyMirror = require('keyMirror');
 
-describe('keyMirror', function() {
-  it('should create an object with values matching keys provided', function() {
+describe('keyMirror', () => {
+  it('should create an object with values matching keys provided', () => {
     var mirror = keyMirror({
       foo: null,
       bar: true,
@@ -40,7 +40,7 @@ describe('keyMirror', function() {
     expect(mirror.qux).toBe('qux');
   });
 
-  it('should not use properties from prototypes', function() {
+  it('should not use properties from prototypes', () => {
     function Klass() {
       this.useMeToo = true;
     }
@@ -55,13 +55,13 @@ describe('keyMirror', function() {
     expect('useMeToo' in mirror).toBe(true);
   });
 
-  it('should throw when a non-object argument is used', function() {
+  it('should throw when a non-object argument is used', () => {
     [null, undefined, 0, 7, ['uno'], true, "string"].forEach(function(testVal) {
       expect(keyMirror.bind(null, testVal)).toThrow();
     });
   });
 
-  it('should work when "constructor" is a key', function() {
+  it('should work when "constructor" is a key', () => {
     var obj = { constructor: true };
     expect(keyMirror.bind(null, obj)).not.toThrow();
     var mirror = keyMirror(obj);

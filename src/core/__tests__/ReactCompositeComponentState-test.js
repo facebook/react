@@ -27,9 +27,9 @@ var reactComponentExpect;
 
 var TestComponent;
 
-describe('ReactCompositeComponent-state', function() {
+describe('ReactCompositeComponent-state', () => {
 
-  beforeEach(function() {
+  beforeEach(() => {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
@@ -106,7 +106,7 @@ describe('ReactCompositeComponent-state', function() {
 
   });
 
-  it('should support setting state', function() {
+  it('should support setting state', () => {
     var stateListener = mocks.getMockFunction();
     var instance = <TestComponent stateListener={stateListener} />;
     instance = ReactTestUtils.renderIntoDocument(instance);

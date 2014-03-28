@@ -80,8 +80,8 @@ var POST_WILL_UNMOUNT_STATE = {
  * is *reused*, then that won't be the case and things will appear to work in
  * some cases. Better to just block all updates in initialization.
  */
-describe('ReactComponentLifeCycle', function() {
-  beforeEach(function() {
+describe('ReactComponentLifeCycle', () => {
+  beforeEach(() => {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
@@ -91,7 +91,7 @@ describe('ReactComponentLifeCycle', function() {
     CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
   });
 
-  it('should scrub state when reinitialized using getInitialState', function() {
+  it('should scrub state when reinitialized using getInitialState', () => {
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         return { };
@@ -120,7 +120,7 @@ describe('ReactComponentLifeCycle', function() {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', function() {
+  it('it should fire onDOMReady when already in onDOMReady', () => {
 
     var _testJournal = [];
 
@@ -166,7 +166,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
 
-  it('should scrub state when re-initialized', function() {
+  it('should scrub state when re-initialized', () => {
     var StatefulComponent = React.createClass({
       addAnotherField: function() {
         this.setState({
@@ -190,7 +190,7 @@ describe('ReactComponentLifeCycle', function() {
 
   // You could assign state here, but not access members of it, unless you
   // had provided a getInitialState method.
-  it('throws when accessing state in componentWillMount', function() {
+  it('throws when accessing state in componentWillMount', () => {
     var StatefulComponent = React.createClass({
       componentWillMount: function() {
         this.state.yada;
@@ -207,7 +207,7 @@ describe('ReactComponentLifeCycle', function() {
     }).toThrow();
   });
 
-  it('should allow update state inside of componentWillMount', function() {
+  it('should allow update state inside of componentWillMount', () => {
     var StatefulComponent = React.createClass({
       componentWillMount: function() {
         this.setState({stateField: 'something'});
@@ -224,7 +224,7 @@ describe('ReactComponentLifeCycle', function() {
     }).not.toThrow();
   });
 
-  it('should allow update state inside of getInitialState', function() {
+  it('should allow update state inside of getInitialState', () => {
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         this.setState({stateField: 'something'});
@@ -247,7 +247,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
 
-  it('should carry through each of the phases of setup', function() {
+  it('should carry through each of the phases of setup', () => {
     var LifeCycleComponent = React.createClass({
       getInitialState: function() {
         this._testJournal = {};
@@ -378,7 +378,7 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
-  it('should throw when calling setProps() on an owned component', function() {
+  it('should throw when calling setProps() on an owned component', () => {
     /**
      * calls setProps in an componentDidMount.
      */
@@ -413,7 +413,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should not throw when updating an auxiliary component', function() {
+  it('should not throw when updating an auxiliary component', () => {
     var Tooltip = React.createClass({
       render: function() {
         return <div>{this.props.children}</div>;
@@ -454,8 +454,7 @@ describe('ReactComponentLifeCycle', function() {
     instance.setProps({text: "dos", tooltipText: "two"});
   });
 
-  it('should throw when calling setProps() on an unmounted component',
-     function() {
+  it('should throw when calling setProps() on an unmounted component', () => {
     var PropsToUpdate = React.createClass({
       render: function() {
         return (
@@ -475,7 +474,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('should allow state updates in componentDidMount', function() {
+  it('should allow state updates in componentDidMount', () => {
     /**
      * calls setState in an componentDidMount.
      */
@@ -501,7 +500,7 @@ describe('ReactComponentLifeCycle', function() {
     expect(instance.state.stateField).toBe('goodbye');
   });
 
-  it('should call nested lifecycle methods in the right order', function() {
+  it('should call nested lifecycle methods in the right order', () => {
     var log;
     var logger = function(msg) {
       return function() {
