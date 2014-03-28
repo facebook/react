@@ -105,13 +105,23 @@ describe('ReactIdentity', function() {
   });
 
   function renderAComponentWithKeyIntoContainer(key, container) {
-    var span1 = <span key={key} />;
-    var span2 = <span />;
 
-    var map = {};
-    map[key] = span2;
+    var Wrapper = React.createClass({
 
-    React.renderComponent(<div>{[span1, map]}</div>, container);
+      render: function() {
+        var span1 = <span ref="span1" key={key} />;
+        var span2 = <span ref="span2" />;
+
+        var map = {};
+        map[key] = span2;
+        return <div>{[span1, map]}</div>;
+      }
+
+    });
+
+    var instance = React.renderComponent(<Wrapper />, container);
+    var span1 = instance.refs.span1;
+    var span2 = instance.refs.span2;
 
     expect(span1.getDOMNode()).not.toBe(null);
     expect(span2.getDOMNode()).not.toBe(null);

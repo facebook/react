@@ -121,17 +121,28 @@ describe('ReactEventTopLevelCallback', function() {
 
   it('should not fire duplicate events for a React DOM tree', function() {
     var container = document.createElement('div');
-    var inner = <div>Inner</div>;
-    var control = <div><div id="outer">{inner}</div></div>;
-    ReactMount.renderComponent(control, container);
+    var Wrapper = React.createClass({
+
+      getInner: function() {
+        return this.refs.inner;
+      },
+
+      render: function() {
+        var inner = <div ref="inner">Inner</div>;
+        return <div><div id="outer">{inner}</div></div>;
+      }
+
+    });
+
+    var instance = ReactMount.renderComponent(<Wrapper />, container);
 
     var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
     callback({
-      target: inner.getDOMNode()
+      target: instance.getInner().getDOMNode()
     });
 
     var calls = ReactEventEmitter.handleTopLevel.mock.calls;
     expect(calls.length).toBe(1);
-    expect(calls[0][EVENT_TARGET_PARAM]).toBe(inner.getDOMNode());
+    expect(calls[0][EVENT_TARGET_PARAM]).toBe(instance.getInner().getDOMNode());
   });
 });

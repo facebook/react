@@ -22,6 +22,7 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
+var ReactDescriptor = require('ReactDescriptor');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -41,18 +42,8 @@ var mixInto = require('mixInto');
  * @extends ReactComponent
  * @internal
  */
-var ReactTextComponent = function(initialText) {
-  this.construct({text: initialText});
-};
-
-/**
- * Used to clone the text descriptor object before it's mounted.
- *
- * @param {object} props
- * @return {object} A new ReactTextComponent instance
- */
-ReactTextComponent.ConvenienceConstructor = function(props) {
-  return new ReactTextComponent(props.text);
+var ReactTextComponent = function(descriptor) {
+  this.construct(descriptor);
 };
 
 mixInto(ReactTextComponent, ReactComponent.Mixin);
@@ -77,7 +68,7 @@ mixInto(ReactTextComponent, {
       mountDepth
     );
 
-    var escapedText = escapeTextForBrowser(this.props.text);
+    var escapedText = escapeTextForBrowser(this.props);
 
     if (transaction.renderToStaticMarkup) {
       // Normally we'd wrap this in a `span` for the reasons stated above, but
@@ -102,20 +93,15 @@ mixInto(ReactTextComponent, {
    */
   receiveComponent: function(nextComponent, transaction) {
     var nextProps = nextComponent.props;
-    if (nextProps.text !== this.props.text) {
-      this.props.text = nextProps.text;
+    if (nextProps !== this.props) {
+      this.props = nextProps;
       ReactComponent.BackendIDOperations.updateTextContentByID(
         this._rootNodeID,
-        nextProps.text
+        nextProps
       );
     }
   }
 
 });
 
-// Expose the constructor on itself and the prototype for consistency with other
-// descriptors.
-ReactTextComponent.type = ReactTextComponent;
-ReactTextComponent.prototype.type = ReactTextComponent;
-
-module.exports = ReactTextComponent;
+module.exports = ReactDescriptor.createFactory(ReactTextComponent);

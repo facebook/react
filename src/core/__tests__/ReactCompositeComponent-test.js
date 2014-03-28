@@ -402,12 +402,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance = <Component />;
-    expect(function() {
-      instance.forceUpdate();
-    }).toThrow(
-      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted or mounting components.'
-    );
+    expect(instance.forceUpdate).not.toBeDefined();
 
     instance = React.renderComponent(instance, container);
     expect(function() {
@@ -1152,39 +1147,6 @@ describe('ReactCompositeComponent', function() {
       });
       var instance = <Component />;
       instance = ReactTestUtils.renderIntoDocument(instance);
-  });
-
-  it('should warn if an umounted component is touched', function() {
-    spyOn(console, 'warn');
-
-    var ComponentClass = React.createClass({
-      getInitialState: function() {
-        return {valueToReturn: 'hi'};
-      },
-      someMethod: function() {
-        return this;
-      },
-      someOtherMethod: function() {
-        return this;
-      },
-      render: function() {
-        return <div></div>;
-      }
-    });
-
-    var descriptor = <ComponentClass />;
-    var instance = ReactTestUtils.renderIntoDocument(descriptor);
-    instance.someMethod();
-    expect(console.warn.argsForCall.length).toBe(0);
-
-    var unmountedInstance = <ComponentClass />;
-    unmountedInstance.someMethod();
-    expect(console.warn.argsForCall.length).toBe(1);
-
-    var unmountedInstance2 = <ComponentClass />;
-    unmountedInstance2.someOtherMethod = 'override';
-    expect(console.warn.argsForCall.length).toBe(2);
-    expect(unmountedInstance2.someOtherMethod).toBe('override');
   });
 
   it('should allow static methods called using type property', function() {

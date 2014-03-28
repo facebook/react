@@ -20,40 +20,23 @@
 "use strict";
 
 /**
- * Given a `prevComponentInstance` and `nextComponent`, determines if
- * `prevComponentInstance` should be updated as opposed to being destroyed or
- * replaced by a new instance. The second argument is a descriptor. Future
- * versions of the reconciler should only compare descriptors to other
- * descriptors.
+ * Given a `prevDescriptor` and `nextDescriptor`, determines if the existing
+ * instance should be updated as opposed to being destroyed or replaced by a new
+ * instance. Both arguments are descriptors. This ensures that this logic can
+ * operate on stateless trees without any backing instance.
  *
- * @param {?object} prevComponentInstance
+ * @param {?object} prevDescriptor
  * @param {?object} nextDescriptor
- * @return {boolean} True if `prevComponentInstance` should be updated.
+ * @return {boolean} True if the existing instance should be updated.
  * @protected
  */
-function shouldUpdateReactComponent(prevComponentInstance, nextDescriptor) {
-  // TODO: Remove warning after a release.
-  if (prevComponentInstance && nextDescriptor &&
-      prevComponentInstance.constructor === nextDescriptor.constructor && (
-        (prevComponentInstance.props && prevComponentInstance.props.key) ===
+function shouldUpdateReactComponent(prevDescriptor, nextDescriptor) {
+  if (prevDescriptor && nextDescriptor &&
+      prevDescriptor.type === nextDescriptor.type && (
+        (prevDescriptor.props && prevDescriptor.props.key) ===
         (nextDescriptor.props && nextDescriptor.props.key)
-      )) {
-    if (prevComponentInstance._owner === nextDescriptor._owner) {
-      return true;
-    } else {
-      if (__DEV__) {
-        if (prevComponentInstance.state) {
-          console.warn(
-            'A recent change to React has been found to impact your code. ' +
-            'A mounted component will now be unmounted and replaced by a ' +
-            'component (of the same class) if their owners are different. ' +
-            'Previously, ownership was not considered when updating.',
-            prevComponentInstance,
-            nextDescriptor
-          );
-        }
-      }
-    }
+      ) && prevDescriptor._owner === nextDescriptor._owner) {
+    return true;
   }
   return false;
 }

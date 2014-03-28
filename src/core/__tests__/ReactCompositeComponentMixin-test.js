@@ -129,8 +129,8 @@ describe('ReactCompositeComponent-mixin', function() {
   });
 
   it('should validate prop types via mixins', function() {
-    expect(TestComponent.componentConstructor.propTypes).toBeDefined();
-    expect(TestComponent.componentConstructor.propTypes.value)
+    expect(TestComponent.type.propTypes).toBeDefined();
+    expect(TestComponent.type.propTypes.value)
       .toBe(mixinPropValidator);
   });
 
@@ -138,11 +138,11 @@ describe('ReactCompositeComponent-mixin', function() {
     // Sanity check...
     expect(componentPropValidator).toNotBe(mixinPropValidator);
     // Actually check...
-    expect(TestComponentWithPropTypes.componentConstructor.propTypes)
+    expect(TestComponentWithPropTypes.type.propTypes)
       .toBeDefined();
-    expect(TestComponentWithPropTypes.componentConstructor.propTypes.value)
+    expect(TestComponentWithPropTypes.type.propTypes.value)
       .toNotBe(mixinPropValidator);
-    expect(TestComponentWithPropTypes.componentConstructor.propTypes.value)
+    expect(TestComponentWithPropTypes.type.propTypes.value)
       .toBe(componentPropValidator);
   });
 });

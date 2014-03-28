@@ -25,6 +25,7 @@ var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
@@ -63,8 +64,8 @@ var React = {
   renderComponentToStaticMarkup:
     ReactServerRendering.renderComponentToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  isValidClass: ReactCompositeComponent.isValidClass,
-  isValidComponent: ReactComponent.isValidComponent,
+  isValidClass: ReactDescriptor.isValidFactory,
+  isValidComponent: ReactDescriptor.isValidDescriptor,
   withContext: ReactContext.withContext,
   __internals: {
     Component: ReactComponent,

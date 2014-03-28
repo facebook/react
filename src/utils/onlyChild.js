@@ -17,7 +17,7 @@
  */
 "use strict";
 
-var ReactComponent = require('ReactComponent');
+var ReactDescriptor = require('ReactDescriptor');
 
 var invariant = require('invariant');
 
@@ -34,7 +34,7 @@ var invariant = require('invariant');
  */
 function onlyChild(children) {
   invariant(
-    ReactComponent.isValidComponent(children),
+    ReactDescriptor.isValidDescriptor(children),
     'onlyChild must be passed a children with exactly one child.'
   );
   return children;

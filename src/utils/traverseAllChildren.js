@@ -153,11 +153,11 @@ var traverseAllChildrenImpl =
             }
           }
         } else if (type === 'string') {
-          var normalizedText = new ReactTextComponent(children);
+          var normalizedText = ReactTextComponent(children);
           callback(traverseContext, normalizedText, storageName, indexSoFar);
           subtreeCount += 1;
         } else if (type === 'number') {
-          var normalizedNumber = new ReactTextComponent('' + children);
+          var normalizedNumber = ReactTextComponent('' + children);
           callback(traverseContext, normalizedNumber, storageName, indexSoFar);
           subtreeCount += 1;
         }

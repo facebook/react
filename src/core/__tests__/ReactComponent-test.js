@@ -65,7 +65,8 @@ describe('ReactComponent', function() {
       }
     });
 
-    var instance = <Component child={<span />} />;
+    var childInstance = ReactTestUtils.renderIntoDocument(<span />);
+    var instance = <Component child={childInstance} />;
 
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
@@ -76,21 +77,33 @@ describe('ReactComponent', function() {
   });
 
   it('should support refs on owned components', function() {
-    var inner, outer;
+    var innerObj = {}, outerObj = {};
+
+    var Wrapper = React.createClass({
+
+      getObject: function() {
+        return this.props.object;
+      },
+
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+
+    });
 
     var Component = React.createClass({
       render: function() {
-        inner = <div ref="inner" />;
-        outer = <div ref="outer">{inner}</div>;
+        var inner = <Wrapper object={innerObj} ref="inner" />;
+        var outer = <Wrapper object={outerObj} ref="outer">{inner}</Wrapper>;
         return outer;
       },
       componentDidMount: function() {
-        expect(this.refs.inner).toEqual(inner);
-        expect(this.refs.outer).toEqual(outer);
+        expect(this.refs.inner.getObject()).toEqual(innerObj);
+        expect(this.refs.outer.getObject()).toEqual(outerObj);
       }
     });
 
-    var instance = <Component child={<span />} />;
+    var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 

@@ -38,7 +38,7 @@ var invariant = require('invariant');
 function createFullPageComponent(componentClass) {
   var FullPageComponent = ReactCompositeComponent.createClass({
     displayName: 'ReactFullPageComponent' + (
-      componentClass.componentConstructor.displayName || ''
+      componentClass.type.displayName || ''
     ),
 
     componentWillUnmount: function() {

@@ -49,7 +49,7 @@ describe('ReactCompositeComponent-spec', function() {
       }
     });
 
-    expect(TestComponent.componentConstructor.displayName)
+    expect(TestComponent.type.displayName)
       .toBe('TestComponent');
   });
 
@@ -64,8 +64,8 @@ describe('ReactCompositeComponent-spec', function() {
       }
     });
 
-    expect(TestComponent.componentConstructor.propTypes).toBeDefined();
-    expect(TestComponent.componentConstructor.propTypes.value)
+    expect(TestComponent.type.propTypes).toBeDefined();
+    expect(TestComponent.type.propTypes.value)
       .toBe(propValidator);
   });
 });

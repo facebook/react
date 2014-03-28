@@ -21,6 +21,7 @@
 "use strict";
 
 var React = require('React');
+var instantiateReactComponent = require('instantiateReactComponent');
 
 describe('Danger', function() {
 
@@ -37,14 +38,18 @@ describe('Danger', function() {
     });
 
     it('should render markup', function() {
-      var markup = (<div />).mountComponent('.rX', transaction, 0);
+      var markup = instantiateReactComponent(
+        <div />
+      ).mountComponent('.rX', transaction, 0);
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
     });
 
     it('should render markup with props', function() {
-      var markup = (<div className="foo" />).mountComponent(
+      var markup = instantiateReactComponent(
+        <div className="foo" />
+      ).mountComponent(
         '.rX',
         transaction,
         0
@@ -56,7 +61,9 @@ describe('Danger', function() {
     });
 
     it('should render wrapped markup', function() {
-      var markup = (<th />).mountComponent('.rX', transaction, 0);
+      var markup = instantiateReactComponent(
+        <th />
+      ).mountComponent('.rX', transaction, 0);
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');
