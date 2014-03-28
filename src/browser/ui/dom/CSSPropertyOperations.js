@@ -23,11 +23,11 @@ var CSSProperty = require('CSSProperty');
 
 var dangerousStyleValue = require('dangerousStyleValue');
 var escapeTextForBrowser = require('escapeTextForBrowser');
-var hyphenate = require('hyphenate');
+var hyphenateStyleName = require('hyphenateStyleName');
 var memoizeStringOnly = require('memoizeStringOnly');
 
 var processStyleName = memoizeStringOnly(function(styleName) {
-  return escapeTextForBrowser(hyphenate(styleName));
+  return escapeTextForBrowser(hyphenateStyleName(styleName));
 });
 
 /**
