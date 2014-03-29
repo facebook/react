@@ -133,7 +133,9 @@ var DOMChildrenOperations = {
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
       for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+        if (updatedChildren[j]) {
+          updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+        }
       }
     }
 
