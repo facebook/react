@@ -21,7 +21,7 @@
 
 /*jshint evil:true */
 
-describe('ReactDOMNoscript', function() {
+describe('ReactDOMNoScript', function() {
   var React;
   var ReactTestUtils;
 

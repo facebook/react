@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMNoscript
+ * @providesModule ReactDOMNoScript
  */
 
 "use strict";
@@ -36,8 +36,8 @@ var noscript = ReactDOM.noscript;
  * <noscript> for server-side rendering without causing reconciliation problems
  * for the browser (where they would be seen as a string anyway).
  */
-var ReactDOMNoscript = ReactCompositeComponent.createClass({
-  displayName: 'ReactDOMNoscript',
+var ReactDOMNoScript = ReactCompositeComponent.createClass({
+  displayName: 'ReactDOMNoScript',
   tagName: 'NOSCRIPT',
 
   mixins: [ReactBrowserComponentMixin],
@@ -69,4 +69,4 @@ var ReactDOMNoscript = ReactCompositeComponent.createClass({
   }
 });
 
-module.exports = ReactDOMNoscript;
+module.exports = ReactDOMNoScript;
