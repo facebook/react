@@ -212,7 +212,7 @@ ReactDOMComponent.Mixin = {
       // we can do a cheap identity compare here to determine if this is a
       // superfluous reconcile. It's possible for state to be mutable but such
       // change should trigger an update of the owner which would recreate
-      // the descriptor. We explicitly check for the existance of an owner since
+      // the descriptor. We explicitly check for the existence of an owner since
       // it's possible for a descriptor created outside a composite to be
       // deeply mutated and reused.
       return;
