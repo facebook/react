@@ -43,8 +43,7 @@ var ReactDOMNoscript = ReactCompositeComponent.createClass({
   mixins: [ReactBrowserComponentMixin],
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
+    var props = this.props;
 
     // Note the use of `==` which checks for null or undefined.
     invariant(
@@ -53,6 +52,9 @@ var ReactDOMNoscript = ReactCompositeComponent.createClass({
     );
 
     if (props.children != null) {
+      // Clone `this.props` so we don't mutate the input.
+      props = merge(props);
+
       var serializedChildren = [];
       ReactChildren.forEach(this.props.children, function(child) {
         serializedChildren.push(
