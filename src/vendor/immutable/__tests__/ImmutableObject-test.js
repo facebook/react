@@ -56,6 +56,14 @@ describe('ImmutableObject', function() {
     testProd(message + ':PROD', testFunc);
   };
 
+  /**
+   * Deep clone a JSON-ifiable object. Jasmine doesn't support comparing frozen
+   * objects, so we clone before asserting equality.
+   */
+  var deepClone = function(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  };
+
   testDev('should be running in DEV', function() {
     expect(window.__DEV__).toBe(true);
   });
@@ -165,7 +173,7 @@ describe('ImmutableObject', function() {
 
       var beforeIO = new ImmutableObject(beforeStructure);
       var afterIO = ImmutableObject.set(beforeIO, delta);
-      expect(afterIO).toEqual(expectedAfterStructure);
+      expect(deepClone(afterIO)).toEqual(expectedAfterStructure);
       expect(afterIO).not.toBe(beforeIO);
     }
   );
@@ -192,7 +200,7 @@ describe('ImmutableObject', function() {
 
       var beforeIO = new ImmutableObject(beforeStructure);
       var afterIO = ImmutableObject.set(beforeIO, delta);
-      expect(afterIO).toEqual(expectedAfterStructure);
+      expect(deepClone(afterIO)).toEqual(expectedAfterStructure);
       expect(afterIO).not.toBe(beforeIO);
     }
   );
@@ -220,7 +228,7 @@ describe('ImmutableObject', function() {
 
     var beforeIO = new ImmutableObject(beforeStructure);
     var afterIO = ImmutableObject.set(beforeIO, delta);
-    expect(afterIO).toEqual(expectedAfterStructure);
+    expect(deepClone(afterIO)).toEqual(expectedAfterStructure);
     expect(afterIO).not.toBe(beforeIO);
   });
 
@@ -251,7 +259,7 @@ describe('ImmutableObject', function() {
     var beforeIO = new ImmutableObject({initialField: null});
     var afterIO =
       ImmutableObject.setProperty(beforeIO, 'anotherField', 'anotherValue');
-    expect(afterIO).toEqual({
+    expect(deepClone(afterIO)).toEqual({
       initialField: null,
       anotherField: 'anotherValue'
     });
@@ -267,7 +275,7 @@ describe('ImmutableObject', function() {
     var afterIO = ImmutableObject.setDeep(beforeIO, {
       a: {b: {}, c: 'C', e: {f: 'F', g: 'G'}, h: 'H'}
     });
-    expect(afterIO).toEqual({
+    expect(deepClone(afterIO)).toEqual({
       a: {b: {}, c: 'C', d: 'd', e: {f: 'F', g: 'G'}, h: 'H'}
     });
     expect(afterIO).not.toBe(beforeIO);
@@ -283,7 +291,7 @@ describe('ImmutableObject', function() {
     var afterIO = ImmutableObject.setDeep(beforeIO, {
       a: {b: {d: 'D'}, e: new ImmutableObject({g: 'G'})}
     });
-    expect(afterIO).toEqual({
+    expect(deepClone(afterIO)).toEqual({
       a: {b: {c: 'c', d: 'D'}, e: {f: 'f', g: 'G'}}
     });
     expect(afterIO instanceof Immutable).toBe(true);
