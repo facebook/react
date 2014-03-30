@@ -24,8 +24,15 @@
 
   "globals": {
     "__DEV__": false,
-    "require": false,
+    "exports": false,
     "module": false,
-    "exports": false
+    "require": false,
+
+    "afterEach": false,
+    "beforeEach": false,
+    "describe": false,
+    "expect": false,
+    "it": false,
+    "spyOn": false
   }
 }
