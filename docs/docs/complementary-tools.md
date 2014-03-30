@@ -39,6 +39,7 @@ If you want your project on this list, or think one of these projects should be 
   * **[Backbone](http://backbonejs.org/)** (For an example see [github-issues-viewer](https://github.com/jaredly/github-issues-viewer)).
   * **[react-router](https://github.com/jaredly/react-router)** (Example coming soon).
   * **[react-router-component](http://andreypopp.viewdocs.io/react-router-component)**
+  * **[Aviator](https://github.com/swipely/aviator)** ([Example](https://gist.github.com/hojberg/9549330)).
 
 ### Model management
 
