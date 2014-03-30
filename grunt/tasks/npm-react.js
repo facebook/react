@@ -38,6 +38,7 @@ function buildRelease() {
 }
 
 function packRelease() {
+  /*jshint validthis:true */
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
@@ -47,7 +48,7 @@ function packRelease() {
     }
   };
   grunt.util.spawn(spawnCmd, function() {
-    var src = 'build/react-' + grunt.config.data.pkg.version + '.tgz'
+    var src = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
     var dest = 'build/react.tgz';
     fs.rename(src, dest, done);
   });

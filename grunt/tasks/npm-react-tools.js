@@ -4,6 +4,7 @@ var fs = require('fs');
 var grunt = require('grunt');
 
 function pack() {
+  /*jshint validthis:true */
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
