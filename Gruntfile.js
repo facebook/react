@@ -122,7 +122,8 @@ module.exports = function(grunt) {
     'webdriver-jasmine:local',
 
     'sauce-tunnel',
-    'webdriver-jasmine:saucelabs_android',
+    // Temporarily disabled due to spurious test failures.
+    // 'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
     'webdriver-jasmine:saucelabs_chrome'
   ]);
