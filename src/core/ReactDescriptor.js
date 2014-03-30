@@ -95,6 +95,11 @@ function validateExplicitKey(component) {
  * @param {ReactComponent} component Component that requires a key.
  */
 function validatePropertyKey(name) {
+  // We can't provide friendly warnings for top level components.
+  if (!ReactCurrentOwner.current) {
+    return;
+  }
+
   if (NUMERIC_PROPERTY_REGEX.test(name)) {
     // Name of the component whose render method tried to pass children.
     var currentName = ReactCurrentOwner.current.constructor.displayName;
