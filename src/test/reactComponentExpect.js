@@ -17,7 +17,6 @@
  * @nolint
  */
 
-var ReactComponent = require('ReactComponent');
 var ReactTestUtils = require('ReactTestUtils');
 
 var mergeInto = require('mergeInto');
@@ -32,7 +31,9 @@ function reactComponentExpect(instance) {
   }
 
   this._instance = instance;
-  this.toBeValidReactComponent();
+  expect(typeof instance).toBe('object');
+  expect(typeof instance.constructor).toBe('function');
+  expect(ReactTestUtils.isDescriptor(instance)).toBe(false);
 }
 
 mergeInto(reactComponentExpect.prototype, {
@@ -105,10 +106,9 @@ mergeInto(reactComponentExpect.prototype, {
   // Matchers ------------------------------------------------------------------
 
   toBeComponentOfType: function(convenienceConstructor) {
-    expect(ReactTestUtils.isComponentOfType(
-      this.instance(),
-      convenienceConstructor
-    )).toBe(true);
+    expect(
+      this.instance().constructor === convenienceConstructor.type
+    ).toBe(true);
     return this;
   },
 
@@ -117,29 +117,23 @@ mergeInto(reactComponentExpect.prototype, {
    * here.
    */
   toBeCompositeComponent: function() {
-    this.toBeValidReactComponent();
-    expect(ReactTestUtils.isCompositeComponent(this.instance())).toBe(true);
+    expect(
+      typeof this.instance().render === 'function' &&
+      typeof this.instance().setState === 'function'
+    ).toBe(true);
     return this;
   },
 
   toBeCompositeComponentWithType: function(convenienceConstructor) {
-    expect(ReactTestUtils.isCompositeComponentWithType(
-      this.instance(),
-      convenienceConstructor
-    )).toBe(true);
+    this.toBeCompositeComponent();
+    expect(
+      this.instance().constructor === convenienceConstructor.type
+    ).toBe(true);
     return this;
   },
 
   toBeTextComponent: function() {
     expect(ReactTestUtils.isTextComponent(this.instance())).toBe(true);
-    return this;
-  },
-
-  /**
-   * Falsy values are valid components - the vanished component that is.
-   */
-  toBeValidReactComponent: function() {
-    expect(ReactComponent.isValidComponent(this.instance())).toBe(true);
     return this;
   },
 

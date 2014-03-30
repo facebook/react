@@ -307,8 +307,8 @@ describe('ReactDOMComponent', function() {
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var StubNativeComponent = function(initialProps) {
-        ReactComponent.Mixin.construct.call(this, initialProps);
+      var StubNativeComponent = function(descriptor) {
+        ReactComponent.Mixin.construct.call(this, descriptor);
       };
       mixInto(StubNativeComponent, ReactComponent.Mixin);
       mixInto(StubNativeComponent, ReactDOMComponent.Mixin);
@@ -316,7 +316,12 @@ describe('ReactDOMComponent', function() {
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();
-        var stubComponent = new StubNativeComponent(props);
+        var stubComponent = new StubNativeComponent({
+          type: StubNativeComponent,
+          props: props,
+          _owner: null,
+          _context: null
+        });
         return stubComponent.mountComponent('test', transaction, 0);
       };
     });

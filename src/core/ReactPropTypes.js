@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactComponent = require('ReactComponent');
+var ReactDescriptor = require('ReactDescriptor');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var warning = require('warning');
@@ -106,7 +106,7 @@ function isRenderable(propValue) {
       if (Array.isArray(propValue)) {
         return propValue.every(isRenderable);
       }
-      if (ReactComponent.isValidComponent(propValue)) {
+      if (ReactDescriptor.isValidDescriptor(propValue)) {
         return true;
       }
       for (var k in propValue) {
@@ -279,7 +279,7 @@ function createComponentTypeChecker() {
   function validateComponentType(
     shouldWarn, propValue, propName, componentName, location
   ) {
-    var isValid = ReactComponent.isValidComponent(propValue);
+    var isValid = ReactDescriptor.isValidDescriptor(propValue);
     if (shouldWarn) {
       warning(
         isValid,

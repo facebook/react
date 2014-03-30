@@ -91,15 +91,11 @@ describe('ReactComponentLifeCycle', function() {
     CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
   });
 
-  it('should scrub state when reinitialized using getInitialState', function() {
+  it('should not reuse an instance when it has been unmounted', function() {
+    var container = document.createElement('div');
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         return { };
-      },
-      addAnotherField: function() {
-        this.setState({
-          aField: 'asdf'
-        });
       },
       render: function() {
         return (
@@ -107,13 +103,11 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    var instance = <StatefulComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.addAnotherField();
-    expect(instance.state.aField).toBe('asdf');
-    instance.unmountComponent();
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(typeof instance.state.aField).toBe('undefined');
+    var descriptor = <StatefulComponent />;
+    var firstInstance = React.renderComponent(descriptor, container);
+    React.unmountComponentAtNode(container);
+    var secondInstance = React.renderComponent(descriptor, container);
+    expect(firstInstance).not.toBe(secondInstance);
   });
 
   /**
@@ -163,29 +157,6 @@ describe('ReactComponentLifeCycle', function() {
       'SwitcherParent:onDOMReady',
       'Child:onDOMReady'
     ]);
-  });
-
-
-  it('should scrub state when re-initialized', function() {
-    var StatefulComponent = React.createClass({
-      addAnotherField: function() {
-        this.setState({
-          aField: 'asdf'
-        });
-      },
-      render: function() {
-        return (
-          <div></div>
-        );
-      }
-    });
-    var instance = <StatefulComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.addAnotherField();
-    expect(instance.state.aField).toBe('asdf');
-    instance.unmountComponent();
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(instance.state).toBe(null);
   });
 
   // You could assign state here, but not access members of it, unless you
@@ -454,7 +425,7 @@ describe('ReactComponentLifeCycle', function() {
     instance.setProps({text: "dos", tooltipText: "two"});
   });
 
-  it('should throw when calling setProps() on an unmounted component',
+  it('should not allow setProps() called on an unmounted descriptor',
      function() {
     var PropsToUpdate = React.createClass({
       render: function() {
@@ -467,12 +438,7 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     var instance = <PropsToUpdate value="hello" />;
-    expect(function() {
-      instance.setProps({value: "goodbye"});
-    }).toThrow(
-      'Invariant Violation: replaceProps(...): Can only update a ' +
-      'mounted component.'
-    );
+    expect(instance.setProps).not.toBeDefined();
   });
 
   it('should allow state updates in componentDidMount', function() {

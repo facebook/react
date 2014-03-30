@@ -112,7 +112,7 @@ Various methods are executed at specific points in a component's lifecycle.
 componentWillMount()
 ```
 
-Invoked once, immediately before the initial rendering occurs. If you call `setState` within this method, `render()` will see the updated state and will be executed only once despite the state change.
+Invoked once, both on the client and server, immediately before the initial rendering occurs. If you call `setState` within this method, `render()` will see the updated state and will be executed only once despite the state change.
 
 
 ### Mounting: componentDidMount
@@ -121,7 +121,7 @@ Invoked once, immediately before the initial rendering occurs. If you call `setS
 componentDidMount()
 ```
 
-Invoked immediately after rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via `this.getDOMNode()`.
+Invoked immediately after rendering occurs, only on the client (not on the server). At this point in the lifecycle, the component has a DOM representation which you can access via `this.getDOMNode()`.
 
 If you want to integrate with other JavaScript frameworks, set timers using `setTimeout` or `setInterval`, or send AJAX requests, perform those operations in this method.
 
