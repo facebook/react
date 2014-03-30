@@ -21,7 +21,7 @@ var params = []
   )
   .concat(reactVersions
     .map(encodeURIComponent)
-    .map(function(version){ return 'react=' + version }
+    .map(function(version){ return 'react=' + version; }
   )
 );
 

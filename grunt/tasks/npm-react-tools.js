@@ -3,7 +3,7 @@
 var fs = require('fs');
 var grunt = require('grunt');
 
-function pack() {
+var pack = function() {
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
@@ -14,7 +14,7 @@ function pack() {
     var dest = 'build/react-tools.tgz';
     fs.rename(src, dest, done);
   });
-}
+};
 
 module.exports = {
   pack: pack
