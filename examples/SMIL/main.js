@@ -11,7 +11,7 @@ var Dot = React.createClass({
     return (
       <circle cx={r} cy={this.props.y} r={r} fill={this.props.color || 'Black'} stroke="black" strokeWidth="1">
         <animateMotion path={path} dur={this.props.duration + 's'} repeatCount="indefinite" />
-      { !this.props.color ? <animate dur="5s" begin="6s" from="#000000" to="#CC9933" calcMode="linear" attributeName="fill"/> : false }
+        <animate dur="5s" from="#CC11AA" to="#CC9933" calcMode="linear" repeatCount="indefinite" attributeName="fill"/>
       </circle>
       );
   }
@@ -35,33 +35,13 @@ var Square = React.createClass({
 });
 
 var SmilDemo = React.createClass({
-  getInitialState: function () {
-    return {start: 0};
-  },
-
-  componentDidMount: function () {
-    this.interval = Timers.requestInterval(this.tick, INTERVAL);
-  },
-
-  componentWillUnmount: function () {
-    Timers.clearInterval(this.interval);
-  },
-
-  tick: function () {
-    this.setState({start: this.state.start + 1});
-  },
-
   render: function () {
-    var val = this.state.start % 255;
-    var color1 = "rgba(0," + val + ",100,0.5)";
-    var color2 = "rgba(0,100," + val + ",0.5)";
-    var radius1 = 20 + (this.state.start % 30);
+
     return (
       <div>
-        <div>{val}</div>
         <svg width="500px" height="500px">
-          <Dot y={radius1} radius={radius1} duration="8" color={color1} />
-          <Dot y="100" radius="30" duration="2" color={color2} />
+          <Dot y="45" radius="45" duration="8" color="Red" />
+          <Dot y="100" radius="30" duration="2" />
           <Dot y="200" radius="15" duration="4">
           </Dot>
           <Square/>
