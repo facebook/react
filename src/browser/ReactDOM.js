@@ -189,7 +189,8 @@ var ReactDOM = mapObject({
   // SVG - SMIL
   animate: false,
   animateMotion: false,
-  animateTransform: false
+  animateTransform: false,
+  'set': false
 }, createDOMComponentClass);
 
 var injection = {
