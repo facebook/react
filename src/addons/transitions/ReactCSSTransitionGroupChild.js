@@ -84,11 +84,6 @@ var ReactCSSTransitionGroupChild = React.createClass({
   queueClass: function(className) {
     this.classNameQueue.push(className);
 
-    if (this.props.runNextTick) {
-      this.props.runNextTick(this.flushClassNameQueue);
-      return;
-    }
-
     if (!this.timeout) {
       this.timeout = setTimeout(this.flushClassNameQueue, TICK);
     }
