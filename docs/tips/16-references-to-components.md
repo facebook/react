@@ -23,7 +23,7 @@ Descriptors also contain any methods that you define in the [statics](http://fac
 
 var myComponent = <MyComponent />; // This is just a descriptor.
 
-// Some code here, possibly using static methods...
+// Some code here...
 
 myComponent = React.renderComponent(myComponent, myContainer);
 ```
