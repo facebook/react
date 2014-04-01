@@ -14,12 +14,12 @@ If you're using React components in a larger non-React application or transition
 var myComponent = React.renderComponent(<MyComponent />, myContainer);
 ```
 
-If you pass a variable to 'React.renderComponent`, it's not guaranteed that the component passed in will be the one that's mounted. In cases where you construct a component before mounting it, be sure to reassign your variable:
+Keep in mind, however, that the "constructor" of a component doesn't return a component instance! It's just a **descriptor**: a lightweight representation that tells React what the mounted component should look like.
 
 ```js
 /** @jsx React.DOM */
 
-var myComponent = <MyComponent />;
+var myComponent = <MyComponent />; // This is just a descriptor.
 
 // Some code here...
 
@@ -28,4 +28,4 @@ myComponent = React.renderComponent(myComponent, myContainer);
 
 > Note:
 >
-> This should only ever be used at the top level. Inside components, let your `props` and `state` handle communication with child components, and only reference components via `ref`s.
+> This should only ever be used at the top level. Inside components, let your `props` and `state` handle communication with child components, and only reference components via [refs](http://facebook.github.io/react/docs/more-about-refs.html).
