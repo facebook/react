@@ -34,6 +34,7 @@
   <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
   <script type="text/javascript" src="/react/js/live_editor.js"></script>
   <script type="text/javascript" src="/react/js/showdown.js"></script>
+  <script type="text/javascript" src="/react/js/search.min.js" charset="utf-8"></script>
 </head>
 <body>
 
@@ -50,7 +51,8 @@
           <li><a href="/react/support.html"{% if page.id == 'support' %} class="active"{% endif %}>support</a></li>
           <li><a href="/react/downloads.html"{% if page.id == 'downloads' %} class="active"{% endif %}>download</a></li>
           <li><a href="/react/blog/"{% if page.sectionid == 'blog' %} class="active"{% endif %}>blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="/react/search.html"{% if page.sectionid == 'search' %} class="active"{% endif %}>search</a></li>
+          <li><a href="http://github.com/facebook/react">github</a></li>
         </ul>
       </div>
     </div>

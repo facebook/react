@@ -765,3 +765,14 @@ div[data-twttr-id] iframe {
 .three-column > ul:first-child {
   margin-left: 20px;
 }
+
+
+form#search {
+  margin-top: 10px;
+}
+
+#search-query {
+  padding: 16px;
+  font-size: 1.2em;
+  width: 90%;
+}
