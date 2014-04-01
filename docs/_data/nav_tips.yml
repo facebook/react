@@ -30,3 +30,7 @@
     title: Communicate Between Components
   - id: expose-component-functions
     title: Expose Component Functions
+  - id: references-to-components
+    title: References to Components
+  - id: children-undefined
+    title: this.props.children undefined
