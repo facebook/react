@@ -16,8 +16,6 @@ var myComponent = React.renderComponent(<MyComponent />, myContainer);
 
 Keep in mind, however, that the "constructor" of a component doesn't return a component instance! It's just a **descriptor**: a lightweight representation that tells React what the mounted component should look like.
 
-Descriptors also contain any methods that you define in the [statics](http://facebook.github.io/react/docs/component-specs.html#statics) property of the component.
-
 ```js
 /** @jsx React.DOM */
 
