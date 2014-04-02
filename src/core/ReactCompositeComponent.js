@@ -668,17 +668,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Components in the intermediate state now has cyclic references. To avoid
-   * breaking JSON serialization we expose a custom JSON format.
-   * @return {object} JSON compatible representation.
-   * @internal
-   * @final
-   */
-  toJSON: function() {
-    return { type: this.type, props: this.props };
-  },
-
-  /**
    * Checks whether or not this composite component is mounted.
    * @return {boolean} True if mounted, false otherwise.
    * @protected
