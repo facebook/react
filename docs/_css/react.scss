@@ -792,11 +792,15 @@ div[data-twttr-id] iframe {
 
 
 form#search {
-  margin-top: 10px;
+  margin: 20px 0;
+}
+
+.entries {
+  padding: 0 20px;
 }
 
 #search-query {
   padding: 16px;
   font-size: 1.2em;
-  width: 90%;
+  width: 100%;
 }

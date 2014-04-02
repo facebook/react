@@ -5,6 +5,9 @@ layout: single
 sectionid: search
 ---
 
+<script type="text/javascript" src="/react/js/lunr.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/react/js/mustache.min.js" charset="utf-8"></script>
+<script type="text/javascript" src="/react/js/search.js" charset="utf-8"></script>
 
 <form id="search" action="/react/search.html" method="get">
   <input type="text" id="search-query" name="q" placeholder="Enter query..." autocomplete="off">
@@ -15,31 +18,28 @@ sectionid: search
   </div>
 </section>
 
-
 {% raw %}
 <script id="search-results-template" type="text/mustache">
   {{#entries}}
     <article>
       <h4>
         <a href="/react{{url}}">{{title}}</a>
-        {{#date}}<small>(<time datetime="{{pubdate}}" pubdate>{{displaydate}}</time>)</small>{{/date}}
+        {{#date}}<small></small>{{/date}}
       </h4>
     </article>
   {{/entries}}
-
-
-
 </script>
 {% endraw %}
 
 <script type="text/javascript">
-  $(function () {
-    $('#search-query').lunrSearch({
+
+    lunrSearch('#search-query', {
       indexUrl: '/react/search.json',             // URL of the `search.json` index data for your site
       results: '#search-results',          // jQuery selector for the search results container
       entries: '.entries',                 // jQuery selector for the element to contain the results list, must be a child of the results element above.
       template: '#search-results-template'  // jQuery selector for the Mustache.js template
     });
-  });
+
+
 </script>
 
