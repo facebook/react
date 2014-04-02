@@ -1,3 +1,6 @@
+// based on https://github.com/slashdotdash/jekyll-lunr-js-search
+// refactored to remove jquery, uri and dateformat dependency
+
 var lunrSearch = (function() {
 
     function forEach(o, iter, ctx) {

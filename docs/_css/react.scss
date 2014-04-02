@@ -766,17 +766,17 @@ div[data-twttr-id] iframe {
   margin-left: 20px;
 }
 
+/* Search */
 
 form#search {
-  margin: 20px 0;
-}
-
-.entries {
-  padding: 0 20px;
+  margin: 20px 0 26px 0;
 }
 
 #search-query {
   padding: 16px;
   font-size: 1.2em;
+  outline: none;
+  border: 1px solid;
+  border-color: rgba(0,0,0,0.5);
   width: 100%;
 }

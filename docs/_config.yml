@@ -13,9 +13,14 @@ redcarpet:
 pygments: true
 name: React
 markdown: redcarpet
-react_version: 0.10.0
+react_version: 0.11.0-alpha
 description: A JavaScript library for building user interfaces
 relative_permalinks: true
 paginate: 5
 paginate_path: /blog/page:num/
 timezone: America/Los_Angeles
+lunr_search:
+  stopwords: stopwords.txt
+  excludes:
+  - \/blog
+  - \/downloads
