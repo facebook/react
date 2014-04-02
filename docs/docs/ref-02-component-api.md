@@ -24,10 +24,10 @@ If this component has been mounted into the DOM, this returns the corresponding 
 ### setProps
 
 ```javascript
-setProps(object nextProps)
+setProps(object nextProps[, function callback])
 ```
 
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `renderComponent()`. Simply call `setProps()` to change its properties and trigger a re-render.
+When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `renderComponent()`. Simply call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed.
 
 > Note:
 >
@@ -37,7 +37,7 @@ When you're integrating with an external JavaScript application you may want to 
 ### replaceProps
 
 ```javascript
-replaceProps(object nextProps)
+replaceProps(object nextProps[, function callback])
 ```
 
 Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
