@@ -19,3 +19,8 @@ relative_permalinks: true
 paginate: 5
 paginate_path: "/blog/page:num/"
 timezone: America/Los_Angeles
+lunr_search:
+  stopwords: stopwords.txt
+  excludes:
+  - \/blog
+  - \/downloads
