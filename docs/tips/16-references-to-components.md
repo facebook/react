@@ -4,6 +4,7 @@ title: References to Components
 layout: tips
 permalink: references-to-components.html
 prev: expose-component-functions.html
+next: children-undefined.html
 ---
 
 If you're using React components in a larger non-React application or transitioning your code to React, you may need to keep references to components. `React.renderComponent` returns a reference to the mounted component:
