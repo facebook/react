@@ -13,26 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule hyphenate
+ * @providesModule hyphenateStyleName
  * @typechecks
  */
 
-var _uppercasePattern = /([A-Z])/g;
+"use strict";
+
+var hyphenate = require('hyphenate');
+
+var msPattern = /^ms-/;
 
 /**
- * Hyphenates a camelcased string, for example:
+ * Hyphenates a camelcased CSS property name, for example:
  *
  *   > hyphenate('backgroundColor')
  *   < "background-color"
+ *   > hyphenate('MozTransition')
+ *   < "-moz-transition"
+ *   > hyphenate('msTransition')
+ *   < "-ms-transition"
  *
- * For CSS style names, use `hyphenateStyleName` instead which works properly
- * with all vendor prefixes, including `ms`.
+ * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix
+ * is converted to `-ms-`.
  *
  * @param {string} string
  * @return {string}
  */
-function hyphenate(string) {
-  return string.replace(_uppercasePattern, '-$1').toLowerCase();
+function hyphenateStyleName(string) {
+  return hyphenate(string).replace(msPattern, '-ms-');
 }
 
-module.exports = hyphenate;
+module.exports = hyphenateStyleName;

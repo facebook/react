@@ -79,6 +79,13 @@ describe('CSSPropertyOperations', function() {
     });
   });
 
+  it('should create vendor-prefixed markup correctly', function() {
+    expect(CSSPropertyOperations.createMarkupForStyles({
+      msTransition: 'none',
+      MozTransition: 'none'
+    })).toBe('-ms-transition:none;-moz-transition:none;');
+  });
+
   it('should set style attribute when styles exist', function() {
     var styles = {
       backgroundColor: '#000',
