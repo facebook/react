@@ -106,6 +106,7 @@ var DefaultDOMPropertyConfig = {
     sandbox: null,
     scope: null,
     scrollLeft: MUST_USE_PROPERTY,
+    scrolling: null,
     scrollTop: MUST_USE_PROPERTY,
     seamless: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
