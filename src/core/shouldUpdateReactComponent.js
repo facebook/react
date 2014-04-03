@@ -36,7 +36,7 @@ function shouldUpdateReactComponent(prevDescriptor, nextDescriptor) {
         (prevDescriptor.props && prevDescriptor.props.key) ===
         (nextDescriptor.props && nextDescriptor.props.key)
       ) && prevDescriptor._owner === nextDescriptor._owner) {
-    return true;
+    return prevDescriptor.props.__type__ === nextDescriptor.props.__type__
   }
   return false;
 }
