@@ -124,4 +124,4 @@ We'd like to thank all of our contributors:
   </ul>
 </div>
 
-In addition, we're grateful to [Jeff Barczewski](https://github.com/jeffbski) for allowing us to use the `react` package name on npm.
+In addition, we're grateful to [Jeff Barczewski](https://github.com/jeffbski) for allowing us to use the [react](https://www.npmjs.org/package/react) package name on npm and to [Christopher Aue](http://christopheraue.net/) for letting us use the [reactjs.com](http://reactjs.com/) domain name and the [@reactjs](https://twitter.com/reactjs) username on Twitter.
