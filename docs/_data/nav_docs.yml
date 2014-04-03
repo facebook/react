@@ -1,11 +1,11 @@
 - title: Quick Start
   items:
-  - id: search-docs
-    title: Search
   - id: getting-started
     title: Getting Started
   - id: tutorial
     title: Tutorial
+  - id: search-docs
+    title: Search
   - id: thinking-in-react
     title: Thinking in React
 - title: Community Resources
