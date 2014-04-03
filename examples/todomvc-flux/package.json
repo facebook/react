@@ -1,0 +1,32 @@
+{
+  "name": "todomvc-flux",
+  "version": "0.0.1",
+  "description": "Example Flux architecture.",
+  "main": "js/app.js",
+  "dependencies": {
+    "es6-promise": "~0.1.1",
+    "react": "~0.9"
+  },
+  "devDependencies": {
+    "browserify": "~2.36.0",
+    "envify": "~1.2.0",
+    "reactify": "~0.4.0",
+    "statics": "~0.1.0",
+    "uglifyjs": "~2.3.6",
+    "watchify": "~0.4.1"
+  },
+  "scripts": {
+    "start": "STATIC_ROOT=./static watchify -o js/bundle.js -v -d .",
+    "build": "STATIC_ROOT=./static NODE_ENV=production browserify . | uglifyjs -cm > js/bundle.min.js",
+    "collect-static": "collect-static . ./static",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bill Fisher",
+  "license": "Apache 2",
+  "browserify": {
+    "transform": [
+      "reactify",
+      "envify"
+    ]
+  }
+}
