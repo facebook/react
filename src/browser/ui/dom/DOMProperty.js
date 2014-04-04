@@ -132,15 +132,11 @@ var DOMPropertyInjection = {
         propName
       );
       invariant(
-        !DOMProperty.hasBooleanValue[propName] ||
-          !DOMProperty.hasNumericValue[propName],
-        'DOMProperty: Cannot have both boolean and numeric value: %s',
-        propName
-      );
-      invariant(
-        !DOMProperty.hasBooleanValue[propName] ||
-          !DOMProperty.hasBooleanishValue[propName],
-        'DOMProperty: Cannot have boolean and booleanish value: %s',
+        !!DOMProperty.hasBooleanValue[propName] +
+          !!DOMProperty.hasNumericValue[propName] +
+          !!DOMProperty.hasBooleanishValue[propName] <= 1,
+        'DOMProperty: Value can be one of boolean, booleanish, or numeric ' +
+        'value, but not a combination: %s',
         propName
       );
     }
