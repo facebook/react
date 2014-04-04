@@ -37,8 +37,9 @@ mixInto(ReactPutListenerQueue, {
   },
 
   putListeners: function() {
-    for (var i = 0; i < this.listenersToPut.length; i++) {
-      var listenerToPut = this.listenersToPut[i];
+    var listenersToPut = this.listenersToPut;
+    for (var i = 0, l = listenersToPut.length; i < l; i++) {
+      var listenerToPut = listenersToPut[i];
       ReactEventEmitter.putListener(
         listenerToPut.rootNodeID,
         listenerToPut.propKey,
