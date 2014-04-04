@@ -683,7 +683,10 @@ p code {
 }
 
 .highlight pre code {
+  /* Cancel out styles for `li code` in case we have a <pre> within an <li>. */
+  background: none;
   font-size: inherit;
+  padding: 0;
 }
 
 .highlight pre .lineno {
