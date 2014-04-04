@@ -7,6 +7,44 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Use React and JSX in ASP.NET MVC</title>
+				<description>&lt;p&gt;Today we&amp;#39;re happy to announce the initial release of
+&lt;a href=&quot;http://reactjs.net/&quot;&gt;ReactJS.NET&lt;/a&gt;, which makes it easier to use React and JSX
+in .NET applications, focusing specifically on ASP.NET MVC web applications.
+It has several purposes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
+will be compiled and cached server-side.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;@Url.Content(&amp;quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Scripts&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;HelloWorld&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;JSX to JavaScript compilation via popular minification/combination libraries
+(Cassette and ASP.NET Bundling and Minification). This is suggested for
+production websites.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;Server-side component rendering to make your initial render super fast.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Even though we are focusing on ASP.NET MVC, ReactJS.NET can also be used in
+Web Forms applications as well as non-web applications (for example, in build
+scripts). ReactJS.NET currently only works on Microsoft .NET but we are working
+on support for Linux and Mac OS X via Mono as well.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;installation&quot;&gt;&lt;/a&gt;Installation &lt;a class=&quot;hash-link&quot; href=&quot;#installation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;ReactJS.NET is packaged in NuGet. Simply run &lt;code&gt;Install-Package React.Mvc4&lt;/code&gt; in the
+package manager console or search NuGet for &amp;quot;React&amp;quot; to install it.
+&lt;a href=&quot;http://reactjs.net/docs&quot;&gt;See the documentation&lt;/a&gt; for more information. The
+GitHub project contains
+&lt;a href=&quot;https://github.com/reactjs/React.NET/tree/master/src/React.Sample.Mvc4&quot;&gt;a sample website&lt;/a&gt;
+demonstrating all of the features.&lt;/p&gt;
+
+&lt;p&gt;Let us know what you think, and feel free to send through any feedback and
+report bugs &lt;a href=&quot;https://github.com/reactjs/React.NET&quot;&gt;on GitHub&lt;/a&gt;.&lt;/p&gt;
+</description>
+				<pubDate>2014-04-04T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/04/04/reactnet.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/04/04/reactnet.html</guid>
+			</item>
+		
+			<item>
 				<title>The Road to 1.0</title>
 				<description>&lt;p&gt;When we launched React last spring, we purposefully decided not to call it 1.0. It was production ready, but we had plans to evolve APIs and behavior as we saw how people were using React, both internally and externally. We&amp;#39;ve learned a lot over the past 9 months and we&amp;#39;ve thought a lot about what 1.0 will mean for React. A couple weeks ago, I outlined &lt;a href=&quot;https://github.com/facebook/react/wiki/Projects&quot;&gt;several projects&lt;/a&gt; that we have planned to take us to 1.0 and beyond. Today I&amp;#39;m writing a bit more about them to give our users a better insight into our plans.&lt;/p&gt;
 
@@ -633,7 +671,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-a-complex-react-component&quot;&gt;&lt;/a&gt;Building a complex React component &lt;a class=&quot;hash-link&quot; href=&quot;#building-a-complex-react-component&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;&lt;a href=&quot;http://matt-harrison.com/&quot;&gt;Matt Harrison&lt;/a&gt; walks through the process of &lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;creating an SVG-based Resistance Calculator&lt;/a&gt; using React. &lt;figure&gt;&lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;&lt;img src=&quot;/react/img/blog/resistance-calculator.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it&#39;s amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
 &lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs]((https://twitter.com/search?q=%23reactjs&amp;src=hash) makes refactoring your HTML as easy &amp; natural as refactoring your javascript [@react_js](https://twitter.com/react_js)&lt;/p&gt;&amp;mdash; Jared Forsyth (@jaredforsyth) &lt;a href=&quot;https://twitter.com/jaredforsyth/status/420304083010854912&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 
@@ -753,84 +791,11 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-experience-report&quot;&gt;&lt;/a&gt;Om Experience Report &lt;a class=&quot;hash-link&quot; href=&quot;#om-experience-report&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
 &lt;p&gt;Adam Solove (&lt;a href=&quot;https://twitter.com/asolove/&quot;&gt;@asolove&lt;/a&gt;) &lt;a href=&quot;http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html&quot;&gt;dives a little deeper into Om, React and ClojureScript&lt;/a&gt;. He shares some helpful tips he gathered while building his &lt;a href=&quot;https://github.com/asolove/carto-crayon&quot;&gt;CartoCrayon&lt;/a&gt; prototype.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;not-so-random-tweet&quot;&gt;&lt;/a&gt;Not-so-random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#not-so-random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
+&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@swannodette](https://twitter.com/swannodette) No thank you! It&#39;s honestly a bit weird because Om is exactly what I didn&#39;t know I wanted for doing functional UI work.&lt;/p&gt;&amp;mdash; Adam Solove (@asolove) &lt;a href=&quot;https://twitter.com/asolove/status/420294067637858304&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
 </description>
 				<pubDate>2014-02-05T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/05/community-roundup-15.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #14</title>
-				<description>&lt;p&gt;The theme of this first round-up of 2014 is integration. I&amp;#39;ve tried to assemble a list of articles and projects that use React in various environments.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-baseline&quot;&gt;&lt;/a&gt;React Baseline &lt;a class=&quot;hash-link&quot; href=&quot;#react-baseline&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;React is only one-piece of your web application stack. &lt;a href=&quot;https://github.com/intabulas&quot;&gt;Mark Lussier&lt;/a&gt; shared his baseline stack that uses React along with Grunt, Browserify, Bower, Zepto, Director and Sass. This should help you get started using React for a new project.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;As I do more projects with ReactJS I started to extract a baseline to use when starting new projects. This is very opinionated and I change my opinion from time to time. This is by no ways perfect and in your opinion most likely wrong :).. which is why I love github&lt;/p&gt;
-
-&lt;p&gt;I encourage you to fork, and make it right and submit a pull request!&lt;/p&gt;
-
-&lt;p&gt;My current opinion is using tools like Grunt, Browserify, Bower and mutiple grunt plugins to get the job done. I also opted for Zepto over jQuery and the Flatiron Project&amp;#39;s Director when I need a router. Oh and for the last little bit of tech that makes you mad, I am in the SASS camp when it comes to stylesheets&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/intabulas/reactjs-baseline&quot;&gt;Check it out on GitHub...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;animal-sounds&quot;&gt;&lt;/a&gt;Animal Sounds &lt;a class=&quot;hash-link&quot; href=&quot;#animal-sounds&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://joshduck.com/&quot;&gt;Josh Duck&lt;/a&gt; used React in order to build a Windows 8 tablet app. This is a good example of a touch app written in React.
-&lt;figure&gt;&lt;a href=&quot;http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9&quot;&gt;&lt;img src=&quot;/react/img/blog/animal-sounds.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9&quot;&gt;Download the app...&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-rails-tutorial&quot;&gt;&lt;/a&gt;React Rails Tutorial &lt;a class=&quot;hash-link&quot; href=&quot;#react-rails-tutorial&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://selem.im&quot;&gt;Selem Delul&lt;/a&gt; bundled the &lt;a href=&quot;http://facebook.github.io/react/docs/tutorial.html&quot;&gt;React Tutorial&lt;/a&gt; into a rails app. This is a good example on how to get started with a rails project.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;text language-text&quot; data-lang=&quot;text&quot;&gt;git clone https://github.com/necrodome/react-rails-tutorial
-cd react-rails-tutorial
-bundle install
-rake db:migrate
-rails s
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Then visit http://localhost:3000/app to see the React application that is explained in the React Tutorial. Try opening multiple tabs!&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/necrodome/react-rails-tutorial&quot;&gt;View on GitHub...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;mixing-with-backbone&quot;&gt;&lt;/a&gt;Mixing with Backbone &lt;a class=&quot;hash-link&quot; href=&quot;#mixing-with-backbone&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://eldar.djafarov.com/&quot;&gt;Eldar Djafarov&lt;/a&gt; implemented a mixin to link Backbone models to React state and a small abstraction to write two-way binding on-top.&lt;/p&gt;
-
-&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/djkojb/qZf48/13/embedded/&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/&quot;&gt;Check out the blog post...&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-infinite-scroll&quot;&gt;&lt;/a&gt;React Infinite Scroll &lt;a class=&quot;hash-link&quot; href=&quot;#react-infinite-scroll&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/guillaumervls&quot;&gt;Guillaume Rivals&lt;/a&gt; implemented an InfiniteScroll component. This is a good example of a React component that has a simple yet powerful API.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;InfiniteScroll&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;pageStart&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;loadMore&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadFunc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;hasMore&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;loader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;loader&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Loading&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;}&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// &amp;lt;-- This is the &amp;quot;stuff&amp;quot; you want to load&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/InfiniteScroll&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/guillaumervls/react-infinite-scroll&quot;&gt;Try it out on GitHub!&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;web-components-style&quot;&gt;&lt;/a&gt;Web Components Style &lt;a class=&quot;hash-link&quot; href=&quot;#web-components-style&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://subtlegradient.com/&quot;&gt;Thomas Aylott&lt;/a&gt; implemented an API that looks like Web Components but using React underneath.&lt;/p&gt;
-
-&lt;iframe width=&quot;100%&quot; height=&quot;300&quot; src=&quot;http://jsfiddle.net/SubtleGradient/ue2Aa/embedded/html,js,result&quot; allowfullscreen=&quot;allowfullscreen&quot; frameborder=&quot;0&quot;&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs-angular&quot;&gt;&lt;/a&gt;React vs Angular &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs-angular&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;React is often compared with Angular. &lt;a href=&quot;http://skulbuny.com/2013/10/31/react-vs-angular/&quot;&gt;Pete Hunt&lt;/a&gt; wrote an opinionated post on the subject.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;First of all I think it’s important to evaluate technologies on objective rather than subjective features. “It feels nicer” or “it’s cleaner” aren’t valid reasons: performance, modularity, community size and ease of testing / integration with other tools are.&lt;/p&gt;
-
-&lt;p&gt;I’ve done a lot of work benchmarking, building apps, and reading the code of Angular to try to come up with a reasonable comparison between their ways of doing things.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://skulbuny.com/2013/10/31/react-vs-angular/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Really intrigued by React.js. I&amp;#39;ve looked at all JS frameworks, and excepting &lt;a href=&quot;https://twitter.com/serenadejs&quot;&gt;@serenadejs&lt;/a&gt; this is the first one which makes sense to me.&lt;/p&gt;&amp;mdash; Jonas Nicklas (@jonicklas) &lt;a href=&quot;https://twitter.com/jonicklas/statuses/412640708755869696&quot;&gt;December 16, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-</description>
-				<pubDate>2014-01-06T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/01/06/community-roundup-14.html</guid>
 			</item>
 		
 	</channel>
