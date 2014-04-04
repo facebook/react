@@ -99,7 +99,7 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
-    it('should create markup for minimizable properties', function() {
+    it('should create markup for booleanish properties', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'download',
         'simple'

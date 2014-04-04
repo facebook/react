@@ -30,7 +30,7 @@ function shouldIgnoreValue(name, value) {
     (DOMProperty.hasBooleanValue[name] && !value) ||
     (DOMProperty.hasNumericValue[name] && isNaN(value)) ||
     (DOMProperty.hasPositiveNumericValue[name] && (value < 1)) ||
-    (DOMProperty.canBeMinimized[name] && value === false);
+    (DOMProperty.hasBooleanishValue[name] && value === false);
 }
 
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
@@ -98,7 +98,7 @@ var DOMPropertyOperations = {
       }
       var attributeName = DOMProperty.getAttributeName[name];
       if (DOMProperty.hasBooleanValue[name] ||
-          (DOMProperty.canBeMinimized[name] && value === true)) {
+          (DOMProperty.hasBooleanishValue[name] && value === true)) {
         return escapeTextForBrowser(attributeName);
       }
       return processAttributeNameAndPrefix(attributeName) +

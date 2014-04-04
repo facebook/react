@@ -34,7 +34,7 @@ var DOMPropertyInjection = {
   HAS_BOOLEAN_VALUE: 0x8,
   HAS_NUMERIC_VALUE: 0x10,
   HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
-  CAN_BE_MINIMIZED: 0x40,
+  HAS_BOOLEANISH_VALUE: 0x40,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -116,8 +116,8 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_NUMERIC_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
-      DOMProperty.canBeMinimized[propName] =
-        propConfig & DOMPropertyInjection.CAN_BE_MINIMIZED;
+      DOMProperty.hasBooleanishValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_BOOLEANISH_VALUE;
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
@@ -139,8 +139,8 @@ var DOMPropertyInjection = {
       );
       invariant(
         !DOMProperty.hasBooleanValue[propName] ||
-          !DOMProperty.canBeMinimized[propName],
-        'DOMProperty: Cannot have boolean value and be minimizable: %s',
+          !DOMProperty.hasBooleanishValue[propName],
+        'DOMProperty: Cannot have boolean and booleanish value: %s',
         propName
       );
     }
@@ -246,7 +246,7 @@ var DOMProperty = {
    * to true; present with a value otherwise.
    * @type {Object}
    */
-  canBeMinimized: {},
+  hasBooleanishValue: {},
 
   /**
    * All of the isCustomAttribute() functions that have been injected.
