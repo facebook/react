@@ -24,6 +24,7 @@ var renderXJSExpressionContainer =
   require('./xjs').renderXJSExpressionContainer;
 var renderXJSLiteral = require('./xjs').renderXJSLiteral;
 var quoteAttrName = require('./xjs').quoteAttrName;
+var isValidIdentifier = require('./xjs').isValidIdentifier;
 
 /**
  * Customized desugar processor.
@@ -61,10 +62,19 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
-  utils.append(
-    (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
-    state
-  );
+  var tagOpening;
+  if (isFallbackTag) {
+    tagOpening = jsxObjIdent;
+    if (isValidIdentifier(nameObject.name)) {
+      tagOpening += '.' + nameObject.name;
+    } else {
+      tagOpening += '[' + JSON.stringify(nameObject.name) + ']';
+    }
+  } else {
+    tagOpening = nameObject.name;
+  }
+  tagOpening += '(';
+  utils.append(tagOpening, state);
 
   utils.move(nameObject.range[1], state);
 

@@ -228,9 +228,13 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   return false;
 }
 
+function isValidIdentifier(attr) {
+  return (/^[a-z_$][a-z\d_$]*$/i.test(attr));
+}
+
 function quoteAttrName(attr) {
   // Quote invalid JS identifiers.
-  if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
+  if (!isValidIdentifier(attr)) {
     return "'" + attr + "'";
   }
   return attr;
@@ -240,3 +244,4 @@ exports.knownTags = knownTags;
 exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
 exports.renderXJSLiteral = renderXJSLiteral;
 exports.quoteAttrName = quoteAttrName;
+exports.isValidIdentifier = isValidIdentifier;
