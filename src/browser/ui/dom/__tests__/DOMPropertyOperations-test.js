@@ -124,6 +124,21 @@ describe('DOMPropertyOperations', function() {
         'download',
         'false'
       )).toBe('download="false"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        undefined
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        null
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        0
+      )).toBe('download="0"');
     });
 
     it('should create markup for custom attributes', function() {
