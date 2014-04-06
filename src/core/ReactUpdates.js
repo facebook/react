@@ -18,10 +18,14 @@
 
 "use strict";
 
+var CallbackQueue = require('CallbackQueue');
+var PooledClass = require('PooledClass');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactPerf = require('ReactPerf');
+var Transaction = require('Transaction');
 
 var invariant = require('invariant');
+var mixInto = require('mixInto');
 var warning = require('warning');
 
 var dirtyComponents = [];
@@ -36,9 +40,77 @@ function ensureInjected() {
   );
 }
 
-function batchedUpdates(callback, param) {
+var NESTED_UPDATES = {
+  initialize: function() {
+    this.dirtyComponentsLength = dirtyComponents.length;
+  },
+  close: function() {
+    if (this.dirtyComponentsLength !== dirtyComponents.length) {
+      // Additional updates were enqueued by componentDidUpdate handlers or
+      // similar; before our own UPDATE_QUEUEING wrapper closes, we want to run
+      // these new updates so that if A's componentDidUpdate calls setState on
+      // B, B will update before the callback A's updater provided when calling
+      // setState.
+      dirtyComponents.splice(0, this.dirtyComponentsLength);
+      flushBatchedUpdates();
+    } else {
+      dirtyComponents.length = 0;
+    }
+  }
+};
+
+var UPDATE_QUEUEING = {
+  initialize: function() {
+    this.callbackQueue.reset();
+  },
+  close: function() {
+    this.callbackQueue.notifyAll();
+  }
+};
+
+var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
+
+function ReactUpdatesFlushTransaction() {
+  this.reinitializeTransaction();
+  this.dirtyComponentsLength = null;
+  this.callbackQueue = CallbackQueue.getPooled(null);
+  this.reconcileTransaction =
+    ReactUpdates.ReactReconcileTransaction.getPooled();
+}
+
+mixInto(ReactUpdatesFlushTransaction, Transaction.Mixin);
+mixInto(ReactUpdatesFlushTransaction, {
+  getTransactionWrappers: function() {
+    return TRANSACTION_WRAPPERS;
+  },
+
+  destructor: function() {
+    this.dirtyComponentsLength = null;
+    CallbackQueue.release(this.callbackQueue);
+    this.callbackQueue = null;
+    ReactUpdates.ReactReconcileTransaction.release(this.reconcileTransaction);
+    this.reconcileTransaction = null;
+  },
+
+  perform: function(method, scope, a) {
+    // Essentially calls `this.reconcileTransaction.perform(method, scope, a)`
+    // with this transaction's wrappers around it.
+    return Transaction.Mixin.perform.call(
+      this,
+      this.reconcileTransaction.perform,
+      this.reconcileTransaction,
+      method,
+      scope,
+      a
+    );
+  }
+});
+
+PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
+
+function batchedUpdates(callback, a, b) {
   ensureInjected();
-  batchingStrategy.batchedUpdates(callback, param);
+  batchingStrategy.batchedUpdates(callback, a, b);
 }
 
 /**
@@ -53,13 +125,21 @@ function mountDepthComparator(c1, c2) {
 }
 
 function runBatchedUpdates(transaction) {
+  var len = transaction.dirtyComponentsLength;
+  invariant(
+    len === dirtyComponents.length,
+    'Expected flush transaction\'s stored dirty-components length (%s) to ' +
+    'match dirty-components array length (%s).',
+    len,
+    dirtyComponents.length
+  );
+
   // Since reconciling a component higher in the owner hierarchy usually (not
   // always -- see shouldComponentUpdate()) will reconcile children, reconcile
   // them before their children by sorting the array.
-
   dirtyComponents.sort(mountDepthComparator);
 
-  for (var i = 0; i < dirtyComponents.length; i++) {
+  for (var i = 0; i < len; i++) {
     // If a component is unmounted before pending changes apply, ignore them
     // TODO: Queue unmounts in the same list to avoid this happening at all
     var component = dirtyComponents[i];
@@ -69,11 +149,11 @@ function runBatchedUpdates(transaction) {
       // stash the callbacks first
       var callbacks = component._pendingCallbacks;
       component._pendingCallbacks = null;
-      component.performUpdateIfNecessary(transaction);
+      component.performUpdateIfNecessary(transaction.reconcileTransaction);
 
       if (callbacks) {
         for (var j = 0; j < callbacks.length; j++) {
-          transaction.getReactMountReady().enqueue(
+          transaction.callbackQueue.enqueue(
             callbacks[j],
             component
           );
@@ -83,30 +163,18 @@ function runBatchedUpdates(transaction) {
   }
 }
 
-function clearDirtyComponents() {
-  dirtyComponents.length = 0;
-}
-
-function flushBatchedUpdatesOnce(transaction) {
-  // Run these in separate functions so the JIT can optimize
-  try {
-    runBatchedUpdates(transaction);
-  } finally {
-    clearDirtyComponents();
-  }
-}
-
 var flushBatchedUpdates = ReactPerf.measure(
   'ReactUpdates',
   'flushBatchedUpdates',
   function() {
-    // flushBatchedUpdatesOnce will clear the dirtyComponents array, but
-    // mount-ready handlers (i.e., componentDidMount/Update) may enqueue more
-    // state updates which we should apply immediately
+    // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
+    // array and perform any updates enqueued by mount-ready handlers (i.e.,
+    // componentDidUpdate) but we need to check here too in order to catch
+    // updates enqueued by setState callbacks.
     while (dirtyComponents.length) {
-      var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-      transaction.perform(flushBatchedUpdatesOnce, null, transaction);
-      ReactUpdates.ReactReconcileTransaction.release(transaction);
+      var transaction = ReactUpdatesFlushTransaction.getPooled();
+      transaction.perform(runBatchedUpdates, null, transaction);
+      ReactUpdatesFlushTransaction.release(transaction);
     }
   }
 );
@@ -138,14 +206,7 @@ function enqueueUpdate(component, callback) {
   );
 
   if (!batchingStrategy.isBatchingUpdates) {
-    var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-    transaction.perform(
-      component.performUpdateIfNecessary,
-      component,
-      transaction
-    );
-    ReactUpdates.ReactReconcileTransaction.release(transaction);
-    callback && callback.call(component);
+    batchingStrategy.batchedUpdates(enqueueUpdate, component, callback);
     return;
   }
 

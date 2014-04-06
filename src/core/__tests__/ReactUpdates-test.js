@@ -565,4 +565,162 @@ describe('ReactUpdates', function() {
 
     expect(aUpdated).toBe(true);
   });
+
+  it('should flush updates in the correct order', function() {
+    var updates = [];
+    var Outer = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      render: function() {
+        updates.push('Outer-render-' + this.state.x);
+        return <div><Inner x={this.state.x} ref="inner" /></div>;
+      },
+      componentDidUpdate: function() {
+        var x = this.state.x;
+        updates.push('Outer-didUpdate-' + x);
+        updates.push('Inner-setState-' + x);
+        this.refs.inner.setState({x: x}, function() {
+          updates.push('Inner-callback-' + x);
+        });
+      }
+    });
+    var Inner = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      render: function() {
+        updates.push('Inner-render-' + this.props.x + '-' + this.state.x);
+        return <div />;
+      },
+      componentDidUpdate: function() {
+        updates.push('Inner-didUpdate-' + this.props.x + '-' + this.state.x);
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Outer />);
+
+    updates.push('Outer-setState-1');
+    instance.setState({x: 1}, function() {
+      updates.push('Outer-callback-1');
+      updates.push('Outer-setState-2');
+      instance.setState({x: 2}, function() {
+        updates.push('Outer-callback-2');
+      });
+    });
+
+    expect(updates).toEqual([
+      'Outer-render-0',
+        'Inner-render-0-0',
+
+      'Outer-setState-1',
+        'Outer-render-1',
+          'Inner-render-1-0',
+          'Inner-didUpdate-1-0',
+        'Outer-didUpdate-1',
+          'Inner-setState-1',
+            'Inner-render-1-1',
+            'Inner-didUpdate-1-1',
+          'Inner-callback-1',
+      'Outer-callback-1',
+
+      'Outer-setState-2',
+        'Outer-render-2',
+          'Inner-render-2-1',
+          'Inner-didUpdate-2-1',
+        'Outer-didUpdate-2',
+          'Inner-setState-2',
+            'Inner-render-2-2',
+            'Inner-didUpdate-2-2',
+          'Inner-callback-2',
+      'Outer-callback-2'
+    ]);
+  });
+
+  it('should queue nested updates', function() {
+    // See https://github.com/facebook/react/issues/1147
+
+    var X = React.createClass({
+      getInitialState: function() {
+        return {s: 0};
+      },
+      render: function() {
+        if (this.state.s === 0) {
+          return <div>
+            <span>0</span>
+          </div>;
+        } else {
+          return <div>1</div>;
+        }
+      },
+      go: function() {
+        this.setState({s: 1});
+        this.setState({s: 0});
+        this.setState({s: 1});
+      }
+    });
+
+    var Y = React.createClass({
+      render: function() {
+        return <div>
+          <Z />
+        </div>;
+      }
+    });
+
+    var Z = React.createClass({
+      render: function() { return <div />; },
+      componentWillUpdate: function() {
+        x.go();
+      }
+    });
+
+    var x;
+    var y;
+
+    x = ReactTestUtils.renderIntoDocument(<X />);
+    y = ReactTestUtils.renderIntoDocument(<Y />);
+    expect(x.getDOMNode().textContent).toBe('0');
+
+    y.forceUpdate();
+    expect(x.getDOMNode().textContent).toBe('1');
+  });
+
+  it('should queue updates from during mount', function() {
+    // See https://github.com/facebook/react/issues/1353
+    var a;
+
+    var A = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      componentWillMount: function() {
+        a = this;
+      },
+      render: function() {
+        return <div>A{this.state.x}</div>;
+      }
+    });
+
+    var B = React.createClass({
+      componentWillMount: function() {
+        a.setState({x: 1});
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    ReactUpdates.batchedUpdates(function() {
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <A />
+          <B />
+        </div>
+      );
+    });
+
+    expect(a.state.x).toBe(1);
+    expect(a.getDOMNode().textContent).toBe('A1');
+  });
 });
