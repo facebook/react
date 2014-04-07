@@ -45,7 +45,7 @@ var NUMERIC_PROPERTY_REGEX = /^\d+$/;
  * @param {ReactComponent} component Component that requires a key.
  */
 function validateExplicitKey(component) {
-  if (component._store.validated || component.props.key != null) {
+  if (component._store.validated || component.props.key !== undefined) {
     return;
   }
   component._store.validated = true;
