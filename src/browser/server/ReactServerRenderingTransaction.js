@@ -20,7 +20,7 @@
 "use strict";
 
 var PooledClass = require('PooledClass');
-var ReactMountReady = require('ReactMountReady');
+var CallbackQueue = require('CallbackQueue');
 var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
@@ -28,7 +28,7 @@ var emptyFunction = require('emptyFunction');
 var mixInto = require('mixInto');
 
 /**
- * Provides a `ReactMountReady` queue for collecting `onDOMReady` callbacks
+ * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks
  * during the performing of the transaction.
  */
 var ON_DOM_READY_QUEUEING = {
@@ -67,7 +67,7 @@ var TRANSACTION_WRAPPERS = [
 function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
   this.renderToStaticMarkup = renderToStaticMarkup;
-  this.reactMountReady = ReactMountReady.getPooled(null);
+  this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }
 
@@ -84,7 +84,6 @@ var Mixin = {
 
   /**
    * @return {object} The queue to collect `onDOMReady` callbacks with.
-   *   TODO: convert to ReactMountReady
    */
   getReactMountReady: function() {
     return this.reactMountReady;
@@ -99,7 +98,7 @@ var Mixin = {
    * instance to be resused.
    */
   destructor: function() {
-    ReactMountReady.release(this.reactMountReady);
+    CallbackQueue.release(this.reactMountReady);
     this.reactMountReady = null;
 
     ReactPutListenerQueue.release(this.putListenerQueue);

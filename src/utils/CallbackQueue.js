@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactMountReady
+ * @providesModule CallbackQueue
  */
 
 "use strict";
 
 var PooledClass = require('PooledClass');
 
+var invariant = require('invariant');
 var mixInto = require('mixInto');
 
 /**
@@ -27,30 +28,31 @@ var mixInto = require('mixInto');
  * be notified when their DOM representations are available for use.
  *
  * This implements `PooledClass`, so you should never need to instantiate this.
- * Instead, use `ReactMountReady.getPooled()`.
+ * Instead, use `CallbackQueue.getPooled()`.
  *
- * @param {?array<function>} initialCollection
  * @class ReactMountReady
  * @implements PooledClass
  * @internal
  */
-function ReactMountReady(initialCollection) {
-  this._queue = initialCollection || null;
+function CallbackQueue() {
+  this._callbacks = null;
+  this._contexts = null;
 }
 
-mixInto(ReactMountReady, {
+mixInto(CallbackQueue, {
 
   /**
-   * Enqueues a callback to be invoked when `notifyAll` is invoked. This is used
-   * to enqueue calls to `componentDidMount` and `componentDidUpdate`.
+   * Enqueues a callback to be invoked when `notifyAll` is invoked.
    *
-   * @param {ReactComponent} component Component being rendered.
-   * @param {function(DOMElement)} callback Invoked when `notifyAll` is invoked.
+   * @param {function} callback Invoked when `notifyAll` is invoked.
+   * @param {?object} context Context to call `callback` with.
    * @internal
    */
-  enqueue: function(component, callback) {
-    this._queue = this._queue || [];
-    this._queue.push({component: component, callback: callback});
+  enqueue: function(callback, context) {
+    this._callbacks = this._callbacks || [];
+    this._contexts = this._contexts || [];
+    this._callbacks.push(callback);
+    this._contexts.push(context);
   },
 
   /**
@@ -60,15 +62,20 @@ mixInto(ReactMountReady, {
    * @internal
    */
   notifyAll: function() {
-    var queue = this._queue;
-    if (queue) {
-      this._queue = null;
-      for (var i = 0, l = queue.length; i < l; i++) {
-        var component = queue[i].component;
-        var callback = queue[i].callback;
-        callback.call(component);
+    var callbacks = this._callbacks;
+    var contexts = this._contexts;
+    if (callbacks) {
+      invariant(
+        callbacks.length === contexts.length,
+        "Mismatched list of contexts in callback queue"
+      );
+      this._callbacks = null;
+      this._contexts = null;
+      for (var i = 0, l = callbacks.length; i < l; i++) {
+        callbacks[i].call(contexts[i]);
       }
-      queue.length = 0;
+      callbacks.length = 0;
+      contexts.length = 0;
     }
   },
 
@@ -78,7 +85,8 @@ mixInto(ReactMountReady, {
    * @internal
    */
   reset: function() {
-    this._queue = null;
+    this._callbacks = null;
+    this._contexts = null;
   },
 
   /**
@@ -90,6 +98,6 @@ mixInto(ReactMountReady, {
 
 });
 
-PooledClass.addPoolingTo(ReactMountReady);
+PooledClass.addPoolingTo(CallbackQueue);
 
-module.exports = ReactMountReady;
+module.exports = CallbackQueue;
