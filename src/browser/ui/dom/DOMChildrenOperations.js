@@ -19,6 +19,8 @@
 
 "use strict";
 
+var invariant = require('invariant');
+
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
@@ -97,20 +99,28 @@ if (textContentAccessor === 'textContent') {
 }
 
 /**
- * Move `childNode` as a child of `parentNode` `steps` to the right.
- * By shifting nodes on the right side over to the left side, the node moves
- * without being physically moved itself, this is very important for iframes.
+ * Same purpose as `insertBefore` but does so without moving `childNode` or
+ * knowing where it is located, instead moving its siblings from one side to the
+ * other. `childNode` will be moved to the end if there is no node at
+ * `referenceIndex´. This behavior avoids resetting iframe/audio/video/etc.
  *
- * @param {DOMElement} parentNode Parent node in which to insert.
- * @param {DOMElement} childNode Child node to insert.
- * @param {number} steps Numbers of steps the child should be moved right.
+ * @param {DOMElement} parentNode Parent node of the child.
+ * @param {DOMElement} childNode Child node to move.
+ * @param {number} referenceIndex Index to which the child should move to.
  * @internal
  */
-function moveChildTo(parentNode, childNode, index) {
+function moveChildBefore(parentNode, childNode, referenceIndex) {
   // We only support moving right as the current implementation of
   // `ReactMultiChild` always moves components by inserting them further right.
-  var beforeNode = parentNode.childNodes[index];
-  while (childNode.previousSibling !== beforeNode) {
+  var referenceNode = parentNode.childNodes[referenceIndex];
+  while (childNode.previousSibling !== referenceNode) {
+    invariant(
+      referenceNode == null || childNode.nextSibling != null,
+      'moveChildBefore: tried to move childNode to referenceIndex, but did ' +
+      'not encounter the node at referenceIndex on the way. The node at ' +
+      'referenceIndex must come after childNode or not be in the DOM at all. ' +
+      'This is at present an intentional limitation of this implementation.'
+    );
     parentNode.insertBefore(childNode.nextSibling, childNode);
   }
 }
@@ -274,7 +284,7 @@ var DOMChildrenOperations = {
         for (var k = immovableUpdates[parentID].length - 1; k >= 0; k--) {
           update = immovableUpdates[parentID][k];
 
-          moveChildTo(
+          moveChildBefore(
             update.parentNode,
             initialChildren[parentID][update.fromIndex],
             update.toIndex
