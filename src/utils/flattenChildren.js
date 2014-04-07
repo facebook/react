@@ -18,8 +18,8 @@
 
 "use strict";
 
-var invariant = require('invariant');
 var traverseAllChildren = require('traverseAllChildren');
+var warning = require('warning');
 
 /**
  * @param {function} traverseContext Context passed through traversal.
@@ -29,13 +29,15 @@ var traverseAllChildren = require('traverseAllChildren');
 function flattenSingleChildIntoContext(traverseContext, child, name) {
   // We found a component instance.
   var result = traverseContext;
-  invariant(
-    !result.hasOwnProperty(name),
-    'flattenChildren(...): Encountered two children with the same key, `%s`. ' +
-    'Children keys must be unique.',
+  var keyUnique = !result.hasOwnProperty(name);
+  warning(
+    keyUnique,
+    'flattenChildren(...): Encountered two children with the same key, ' +
+    '`%s`. Child keys must be unique; when two children share a key, only ' +
+    'the first child will be used.',
     name
   );
-  if (child != null) {
+  if (keyUnique && child != null) {
     result[name] = child;
   }
 }

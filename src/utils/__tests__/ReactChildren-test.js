@@ -320,17 +320,19 @@ describe('ReactChildren', function() {
     }).not.toThrow();
   });
 
-  it('should throw if key provided is a dupe with explicit key', function() {
+  it('should warn if key provided is a dupe with explicit key', function() {
     var zero = <div key="something"/>;
-    var one = <div key="something" />;
+    var one = <span key="something" />;
 
-    var mapFn = function() {return null;};
+    var mapFn = function(component) { return component; };
     var instance = (
       <div>{zero}{one}</div>
     );
 
-    expect(function() {
-      ReactChildren.map(instance.props.children, mapFn);
-    }).toThrow();
+    spyOn(console, 'warn');
+    var mapped = ReactChildren.map(instance.props.children, mapFn);
+
+    expect(console.warn.calls.length).toEqual(1);
+    expect(mapped).toEqual({'.$something': zero});
   });
 });
