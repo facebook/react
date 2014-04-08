@@ -9,6 +9,7 @@ next: working-with-the-browser.html
 
 Form components such as `<input>`, `<textarea>`, and `<option>` differ from other native components because they can be mutated via user interactions. These components provide interfaces that make it easier to manage forms in response to user interactions.
 
+For information on events on `<form>` see [Form Events](/react/docs/events.html#form-events).
 
 ## Interactive Props
 
