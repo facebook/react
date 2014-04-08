@@ -19,20 +19,23 @@
 
 "use strict";
 
-var MorphingComponent;
 var ChildUpdates;
+var MorphingComponent;
 var React;
 var ReactComponent;
 var ReactCurrentOwner;
-var ReactPropTypes;
-var ReactTestUtils;
-var ReactMount;
 var ReactDoNotBindDeprecated;
+var ReactMount;
+var ReactPropTypes;
+var ReactServerRendering;
+var ReactTestUtils;
+var TogglingComponent;
 
 var cx;
 var reactComponentExpect;
 var mocks;
 var warn;
+
 
 describe('ReactCompositeComponent', function() {
 
@@ -48,6 +51,7 @@ describe('ReactCompositeComponent', function() {
     ReactPropTypes = require('ReactPropTypes');
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
+    ReactServerRendering = require('ReactServerRendering');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -82,6 +86,22 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
+    TogglingComponent = React.createClass({
+      getInitialState: function() {
+        return {component: this.props.firstComponent};
+      },
+      componentDidMount: function() {
+        console.log(this.getDOMNode());
+        this.setState({component: this.props.secondComponent});
+      },
+      componentDidUpdate: function() {
+        console.log(this.getDOMNode());
+      },
+      render: function() {
+        return this.state.component ? this.state.component() : null;
+      }
+    });
+
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
@@ -107,6 +127,160 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(instance)
       .expectRenderedChild()
       .toBeDOMComponentWithTag('a');
+  });
+
+  it('should render null and false as a script tag under the hood', () => {
+    var Component1 = React.createClass({
+      render: function() {
+        return null;
+      }
+    });
+    var Component2 = React.createClass({
+      render: function() {
+        return false;
+      }
+    });
+
+    var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
+    var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
+    reactComponentExpect(instance1)
+      .expectRenderedChild()
+      .toBeDOMComponentWithTag('script');
+    reactComponentExpect(instance2)
+      .expectRenderedChild()
+      .toBeDOMComponentWithTag('script');
+  });
+
+  it('should still throw when rendering to undefined', () => {
+    var Component = React.createClass({
+      render: function() {}
+    });
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrow(
+      'Invariant Violation: Component.render(): A valid ReactComponent must ' +
+      'be returned. You may have returned an array or some other invalid ' +
+      'object.'
+    );
+  });
+
+  it('should be able to switch between rendering null and a normal tag', () => {
+    spyOn(console, 'log');
+
+    var instance1 =
+      <TogglingComponent
+        firstComponent={null}
+        secondComponent={React.DOM.div}
+      />;
+    var instance2 =
+      <TogglingComponent
+        firstComponent={React.DOM.div}
+        secondComponent={null}
+      />;
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance1);
+      ReactTestUtils.renderIntoDocument(instance2);
+    }).not.toThrow();
+
+    expect(console.log.argsForCall.length).toBe(4);
+    expect(console.log.argsForCall[0][0]).toBe(null);
+    expect(console.log.argsForCall[1][0].tagName).toBe('DIV');
+    expect(console.log.argsForCall[2][0].tagName).toBe('DIV');
+    expect(console.log.argsForCall[3][0]).toBe(null);
+  });
+
+  it('should distinguish between a script placeholder and an actual script tag',
+    () => {
+      spyOn(console, 'log');
+
+      var instance1 =
+        <TogglingComponent
+          firstComponent={null}
+          secondComponent={React.DOM.script}
+        />;
+      var instance2 =
+        <TogglingComponent
+          firstComponent={React.DOM.script}
+          secondComponent={null}
+        />;
+
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(instance1);
+      }).not.toThrow();
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(instance2);
+      }).not.toThrow();
+
+      expect(console.log.argsForCall.length).toBe(4);
+      expect(console.log.argsForCall[0][0]).toBe(null);
+      expect(console.log.argsForCall[1][0].tagName).toBe('SCRIPT');
+      expect(console.log.argsForCall[2][0].tagName).toBe('SCRIPT');
+      expect(console.log.argsForCall[3][0]).toBe(null);
+    }
+  );
+
+  it('should have getDOMNode return null when multiple layers of composite ' +
+    'components render to the same null placeholder', () => {
+      spyOn(console, 'log');
+
+      var GrandChild = React.createClass({
+        render: function() {
+          return null;
+        }
+      });
+
+      var Child = React.createClass({
+        render: function() {
+          return <GrandChild />;
+        }
+      });
+
+      var instance1 =
+        <TogglingComponent
+          firstComponent={React.DOM.div}
+          secondComponent={Child}
+        />;
+      var instance2 =
+        <TogglingComponent
+          firstComponent={Child}
+          secondComponent={React.DOM.div}
+        />;
+
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(instance1);
+      }).not.toThrow();
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(instance2);
+      }).not.toThrow();
+
+      expect(console.log.argsForCall.length).toBe(4);
+      expect(console.log.argsForCall[0][0].tagName).toBe('DIV');
+      expect(console.log.argsForCall[1][0]).toBe(null);
+      expect(console.log.argsForCall[2][0]).toBe(null);
+      expect(console.log.argsForCall[3][0].tagName).toBe('DIV');
+    }
+  );
+
+  it('should not thrash a server rendered layout with client side one', () => {
+    var Child = React.createClass({
+      render: function() {
+        return null;
+      }
+    });
+    var Parent = React.createClass({
+      render: function() {
+        return <div><Child /></div>;
+      }
+    });
+
+    var markup = ReactServerRendering.renderComponentToString(<Parent />);
+    var container = document.createElement('div');
+    container.innerHTML = markup;
+
+    spyOn(console, 'warn');
+    React.renderComponent(<Parent />, container);
+    expect(console.warn).not.toHaveBeenCalled();
   });
 
   it('should react to state changes from callbacks', function() {

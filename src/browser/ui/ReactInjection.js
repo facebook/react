@@ -23,6 +23,7 @@ var EventPluginHub = require('EventPluginHub');
 var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactPerf = require('ReactPerf');
 var ReactRootIndex = require('ReactRootIndex');
@@ -32,6 +33,7 @@ var ReactInjection = {
   Component: ReactComponent.injection,
   CompositeComponent: ReactCompositeComponent.injection,
   DOMProperty: DOMProperty.injection,
+  EmptyComponent: ReactEmptyComponent.injection,
   EventPluginHub: EventPluginHub.injection,
   DOM: ReactDOM.injection,
   EventEmitter: ReactEventEmitter.injection,
