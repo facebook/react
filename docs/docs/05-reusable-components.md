@@ -61,7 +61,7 @@ React.createClass({
     // shown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired,
 
-    // An object of any kind
+    // A value of any data type
     requiredAny: React.PropTypes.any.isRequired,
 
     // You can also specify a custom validator.
