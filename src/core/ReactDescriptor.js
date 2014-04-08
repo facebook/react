@@ -29,11 +29,24 @@ var warning = require('warning');
  * object keys are not valid. This allows us to keep track of children between
  * updates.
  */
-var ownerHasExplicitKeyWarning = {};
-var ownerHasPropertyWarning = {};
+var ownerHasKeyUseWarning = {
+  'react_key_warning': {},
+  'react_numeric_key_warning': {}
+};
 var ownerHasMonitoredObjectMap = {};
 
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
+
+/**
+ * Gets the current owner's displayName for use in warnings.
+ *
+ * @internal
+ * @return {?string} Display name or undefined
+ */
+function getCurrentOwnerDisplayName() {
+  var current = ReactCurrentOwner.current;
+  return current && current.constructor.displayName || undefined;
+}
 
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
@@ -43,47 +56,20 @@ var NUMERIC_PROPERTY_REGEX = /^\d+$/;
  *
  * @internal
  * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
  */
-function validateExplicitKey(component) {
+function validateExplicitKey(component, parentType) {
   if (component._store.validated || component.props.key != null) {
     return;
   }
   component._store.validated = true;
 
-  // We can't provide friendly warnings for top level components.
-  if (!ReactCurrentOwner.current) {
-    return;
-  }
-
-  // Name of the component whose render method tried to pass children.
-  var currentName = ReactCurrentOwner.current.constructor.displayName;
-  if (ownerHasExplicitKeyWarning.hasOwnProperty(currentName)) {
-    return;
-  }
-  ownerHasExplicitKeyWarning[currentName] = true;
-
-  var message = 'Each child in an array should have a unique "key" prop. ' +
-                'Check the render method of ' + currentName + '.';
-
-  var childOwnerName = null;
-  if (component._owner !== ReactCurrentOwner.current) {
-    // Name of the component that originally created this child.
-    childOwnerName =
-      component._owner &&
-      component._owner.constructor.displayName;
-
-    // Usually the current owner is the offender, but if it accepts
-    // children as a property, it may be the creator of the child that's
-    // responsible for assigning it a key.
-    message += ' It was passed a child from ' + childOwnerName + '.';
-  }
-
-  message += ' See http://fb.me/react-warning-keys for more information.';
-  monitorCodeUse('react_key_warning', {
-    component: currentName,
-    componentOwner: childOwnerName
-  });
-  console.warn(message);
+  warnAndMonitorForKeyUse(
+    'react_key_warning',
+    'Each child in an array should have a unique "key" prop.',
+    component,
+    parentType
+  );
 }
 
 /**
@@ -93,28 +79,61 @@ function validateExplicitKey(component) {
  * @internal
  * @param {string} name Property name of the key.
  * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
  */
-function validatePropertyKey(name) {
-  // We can't provide friendly warnings for top level components.
-  if (!ReactCurrentOwner.current) {
+function validatePropertyKey(name, component, parentType) {
+  if (!NUMERIC_PROPERTY_REGEX.test(name)) {
     return;
   }
+  warnAndMonitorForKeyUse(
+    'react_numeric_key_warning',
+    'Child objects should have non-numeric keys so ordering is preserved.',
+    component,
+    parentType
+  );
+}
 
-  if (NUMERIC_PROPERTY_REGEX.test(name)) {
-    // Name of the component whose render method tried to pass children.
-    var currentName = ReactCurrentOwner.current.constructor.displayName;
-    if (ownerHasPropertyWarning.hasOwnProperty(currentName)) {
-      return;
-    }
-    ownerHasPropertyWarning[currentName] = true;
+/**
+ * Shared warning and monitoring code for the key warnings.
+ *
+ * @internal
+ * @param {string} warningID The id used when logging.
+ * @param {string} message The base warning that gets output.
+ * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
+ */
+function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
+  var ownerName = getCurrentOwnerDisplayName();
+  var parentName = parentType.displayName;
 
-    monitorCodeUse('react_numeric_key_warning');
-    console.warn(
-      'Child objects should have non-numeric keys so ordering is preserved. ' +
-      'Check the render method of ' + currentName + '. ' +
-      'See http://fb.me/react-warning-keys for more information.'
-    );
+  var useName = ownerName || parentName;
+  var memoizer = ownerHasKeyUseWarning[warningID];
+  if (memoizer.hasOwnProperty(useName)) {
+    return;
   }
+  memoizer[useName] = true;
+
+  message += ownerName ?
+    ` Check the render method of ${ownerName}.` :
+    ` Check the renderComponent call using <${parentName}>.`;
+
+  // Usually the current owner is the offender, but if it accepts children as a
+  // property, it may be the creator of the child that's responsible for
+  // assigning it a key.
+  var childOwnerName = null;
+  if (component._owner && component._owner !== ReactCurrentOwner.current) {
+    // Name of the component that originally created this child.
+    childOwnerName = component._owner.constructor.displayName;
+
+    message += ` It was passed a child from ${childOwnerName}.`;
+  }
+
+  message += ' See http://fb.me/react-warning-keys for more information.';
+  monitorCodeUse(warningID, {
+    component: useName,
+    componentOwner: childOwnerName
+  });
+  console.warn(message);
 }
 
 /**
@@ -124,11 +143,7 @@ function validatePropertyKey(name) {
  * @internal
  */
 function monitorUseOfObjectMap() {
-  // Name of the component whose render method tried to pass children.
-  // We only use this to avoid spewing the logs. We lose additional
-  // owner stacks but hopefully one level is enough to trace the source.
-  var currentName = (ReactCurrentOwner.current &&
-                    ReactCurrentOwner.current.constructor.displayName) || '';
+  var currentName = getCurrentOwnerDisplayName() || '';
   if (ownerHasMonitoredObjectMap.hasOwnProperty(currentName)) {
     return;
   }
@@ -143,14 +158,15 @@ function monitorUseOfObjectMap() {
  *
  * @internal
  * @param {*} component Statically passed child of any type.
+ * @param {*} parentType component's parent's type.
  * @return {boolean}
  */
-function validateChildKeys(component) {
+function validateChildKeys(component, parentType) {
   if (Array.isArray(component)) {
     for (var i = 0; i < component.length; i++) {
       var child = component[i];
       if (ReactDescriptor.isValidDescriptor(child)) {
-        validateExplicitKey(child);
+        validateExplicitKey(child, parentType);
       }
     }
   } else if (ReactDescriptor.isValidDescriptor(component)) {
@@ -159,7 +175,7 @@ function validateChildKeys(component) {
   } else if (component && typeof component === 'object') {
     monitorUseOfObjectMap();
     for (var name in component) {
-      validatePropertyKey(name, component);
+      validatePropertyKey(name, component[name], parentType);
     }
   }
 }
@@ -247,14 +263,14 @@ ReactDescriptor.createFactory = function(type) {
     var childrenLength = arguments.length - 1;
     if (childrenLength === 1) {
       if (__DEV__) {
-        validateChildKeys(children);
+        validateChildKeys(children, type);
       }
       props.children = children;
     } else if (childrenLength > 1) {
       var childArray = Array(childrenLength);
       for (var i = 0; i < childrenLength; i++) {
         if (__DEV__) {
-          validateChildKeys(arguments[i + 1]);
+          validateChildKeys(arguments[i + 1], type);
         }
         childArray[i] = arguments[i + 1];
       }
