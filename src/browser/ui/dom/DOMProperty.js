@@ -72,7 +72,7 @@ var DOMPropertyInjection = {
     }
 
     for (var propName in Properties) {
-      if (!Properties.hasOwnProperty(probName)) {
+      if (!Properties.hasOwnProperty(propName)) {
         continue;
       }
       invariant(
