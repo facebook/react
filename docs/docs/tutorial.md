@@ -420,6 +420,9 @@ var CommentBox = React.createClass({
       dataType: 'json',
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
@@ -526,6 +529,9 @@ var CommentBox = React.createClass({
       dataType: 'json',
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
@@ -593,6 +599,9 @@ var CommentBox = React.createClass({
       dataType: 'json',
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
@@ -604,6 +613,9 @@ var CommentBox = React.createClass({
       data: comment,
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
@@ -641,6 +653,9 @@ var CommentBox = React.createClass({
       dataType: 'json',
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
@@ -655,6 +670,9 @@ var CommentBox = React.createClass({
       data: comment,
       success: function(data) {
         this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
       }.bind(this)
     });
   },
