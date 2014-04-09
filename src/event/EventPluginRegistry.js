@@ -42,6 +42,9 @@ function recomputePluginOrdering() {
     return;
   }
   for (var pluginName in namesToPlugins) {
+    if (!namesToPlugins.hasOwnProperty(pluginName)) {
+      continue;
+    }
     var PluginModule = namesToPlugins[pluginName];
     var pluginIndex = EventPluginOrder.indexOf(pluginName);
     invariant(
@@ -62,6 +65,9 @@ function recomputePluginOrdering() {
     EventPluginRegistry.plugins[pluginIndex] = PluginModule;
     var publishedEvents = PluginModule.eventTypes;
     for (var eventName in publishedEvents) {
+      if (!publishedEvents.hasOwnProperty(eventName)) {
+        continue;
+      }
       invariant(
         publishEventForPlugin(
           publishedEvents[eventName],
