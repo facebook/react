@@ -30,6 +30,7 @@ var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
+var SyntheticPointerEvent = require('SyntheticPointerEvent');
 
 var invariant = require('invariant');
 var keyOf = require('keyOf');
@@ -201,6 +202,42 @@ var eventTypes = {
       captured: keyOf({onPasteCapture: true})
     }
   },
+  pointerCancel: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerCancel: true}),
+      captured: keyOf({onPointerCancelCapture: true})
+    }
+  },
+  pointerDown: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerDown: true}),
+      captured: keyOf({onPointerDownCapture: true})
+    }
+  },
+  pointerMove: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerMove: true}),
+      captured: keyOf({onPointerMoveCapture: true})
+    }
+  },
+  pointerOut: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerOut: true}),
+      captured: keyOf({onPointerOutCapture: true})
+    }
+  },
+  pointerOver: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerOver: true}),
+      captured: keyOf({onPointerOverCapture: true})
+    }
+  },
+  pointerUp: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerUp: true}),
+      captured: keyOf({onPointerUpCapture: true})
+    }
+  },
   reset: {
     phasedRegistrationNames: {
       bubbled: keyOf({onReset: true}),
@@ -252,41 +289,47 @@ var eventTypes = {
 };
 
 var topLevelEventsToDispatchConfig = {
-  topBlur:        eventTypes.blur,
-  topClick:       eventTypes.click,
+  topBlur: eventTypes.blur,
+  topClick: eventTypes.click,
   topContextMenu: eventTypes.contextMenu,
-  topCopy:        eventTypes.copy,
-  topCut:         eventTypes.cut,
+  topCopy: eventTypes.copy,
+  topCut: eventTypes.cut,
   topDoubleClick: eventTypes.doubleClick,
-  topDrag:        eventTypes.drag,
-  topDragEnd:     eventTypes.dragEnd,
-  topDragEnter:   eventTypes.dragEnter,
-  topDragExit:    eventTypes.dragExit,
-  topDragLeave:   eventTypes.dragLeave,
-  topDragOver:    eventTypes.dragOver,
-  topDragStart:   eventTypes.dragStart,
-  topDrop:        eventTypes.drop,
-  topError:       eventTypes.error,
-  topFocus:       eventTypes.focus,
-  topInput:       eventTypes.input,
-  topKeyDown:     eventTypes.keyDown,
-  topKeyPress:    eventTypes.keyPress,
-  topKeyUp:       eventTypes.keyUp,
-  topLoad:        eventTypes.load,
-  topMouseDown:   eventTypes.mouseDown,
-  topMouseMove:   eventTypes.mouseMove,
-  topMouseOut:    eventTypes.mouseOut,
-  topMouseOver:   eventTypes.mouseOver,
-  topMouseUp:     eventTypes.mouseUp,
-  topPaste:       eventTypes.paste,
-  topReset:       eventTypes.reset,
-  topScroll:      eventTypes.scroll,
-  topSubmit:      eventTypes.submit,
+  topDrag: eventTypes.drag,
+  topDragEnd: eventTypes.dragEnd,
+  topDragEnter: eventTypes.dragEnter,
+  topDragExit: eventTypes.dragExit,
+  topDragLeave: eventTypes.dragLeave,
+  topDragOver: eventTypes.dragOver,
+  topDragStart: eventTypes.dragStart,
+  topDrop: eventTypes.drop,
+  topError: eventTypes.error,
+  topFocus: eventTypes.focus,
+  topInput: eventTypes.input,
+  topKeyDown: eventTypes.keyDown,
+  topKeyPress: eventTypes.keyPress,
+  topKeyUp: eventTypes.keyUp,
+  topLoad: eventTypes.load,
+  topMouseDown: eventTypes.mouseDown,
+  topMouseMove: eventTypes.mouseMove,
+  topMouseOut: eventTypes.mouseOut,
+  topMouseOver: eventTypes.mouseOver,
+  topMouseUp: eventTypes.mouseUp,
+  topPaste: eventTypes.paste,
+  topPointerCancel: eventTypes.pointerCancel,
+  topPointerDown: eventTypes.pointerDown,
+  topPointerMove: eventTypes.pointerMove,
+  topPointerOut: eventTypes.pointerOut,
+  topPointerOver: eventTypes.pointerOver,
+  topPointerUp: eventTypes.pointerUp,
+  topReset: eventTypes.reset,
+  topScroll: eventTypes.scroll,
+  topSubmit: eventTypes.submit,
   topTouchCancel: eventTypes.touchCancel,
-  topTouchEnd:    eventTypes.touchEnd,
-  topTouchMove:   eventTypes.touchMove,
-  topTouchStart:  eventTypes.touchStart,
-  topWheel:       eventTypes.wheel
+  topTouchEnd: eventTypes.touchEnd,
+  topTouchMove: eventTypes.touchMove,
+  topTouchStart: eventTypes.touchStart,
+  topWheel: eventTypes.wheel
 };
 
 for (var topLevelType in topLevelEventsToDispatchConfig) {
@@ -365,6 +408,14 @@ var SimpleEventPlugin = {
       case topLevelTypes.topMouseOver:
       case topLevelTypes.topMouseUp:
         EventConstructor = SyntheticMouseEvent;
+        break;
+      case topLevelTypes.topPointerCancel:
+      case topLevelTypes.topPointerDown:
+      case topLevelTypes.topPointerMove:
+      case topLevelTypes.topPointerOut:
+      case topLevelTypes.topPointerOver:
+      case topLevelTypes.topPointerUp:
+        EventConstructor = SyntheticPointerEvent;
         break;
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:
