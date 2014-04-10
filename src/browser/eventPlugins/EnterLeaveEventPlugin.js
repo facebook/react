@@ -94,6 +94,7 @@ var EnterLeaveEventPlugin = {
       topLevelType === topLevelTypes.topMouseOut ||
       topLevelType === topLevelTypes.topPointerOut
     );
+
     if (!isOverEvent && !isOutEvent) {
       // Must not be a mouse/pointer in or out - ignoring.
       return null;
@@ -101,6 +102,7 @@ var EnterLeaveEventPlugin = {
     if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
       return null;
     }
+
     var win;
     if (topLevelTarget.window === topLevelTarget) {
       // `topLevelTarget` is probably a window object.
@@ -108,19 +110,16 @@ var EnterLeaveEventPlugin = {
     } else {
       // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
       var doc = topLevelTarget.ownerDocument;
-      if (doc) {
-        win = doc.defaultView || doc.parentWindow;
-      } else {
-        win = window;
-      }
+      win = doc ? doc.defaultView || doc.parentWindow : window;
     }
 
     var from, to;
     if (isOutEvent) {
       from = topLevelTarget;
-      to =
+      to = (
         getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-        win;
+        win
+      );
     } else {
       from = win;
       to = topLevelTarget;
@@ -131,42 +130,31 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromID = from ? ReactMount.getID(from) : '';
-    var toID = to ? ReactMount.getID(to) : '';
-
-    var syntheticEventInterface,
-        leaveEventType,
-        enterEventType,
-        eventTypePrefix;
+    var eventInterface, leaveEventType, enterEventType, eventTypePrefix;
 
     if (topLevelType === topLevelTypes.topMouseOut ||
         topLevelType === topLevelTypes.topMouseOver) {
-      syntheticEventInterface = SyntheticMouseEvent;
+      eventInterface = SyntheticMouseEvent;
       leaveEventType = eventTypes.mouseLeave;
       enterEventType = eventTypes.mouseEnter;
       eventTypePrefix = 'mouse';
     } else if (topLevelType === topLevelTypes.topPointerOut ||
                topLevelType === topLevelTypes.topPointerOver) {
-      syntheticEventInterface = SyntheticPointerEvent;
+      eventInterface = SyntheticPointerEvent;
       leaveEventType = eventTypes.pointerLeave;
       enterEventType = eventTypes.pointerEnter;
       eventTypePrefix = 'pointer';
     }
 
-    var leave = syntheticEventInterface.getPooled(
-      leaveEventType,
-      fromID,
-      nativeEvent
-    );
+    var fromID = from ? ReactMount.getID(from) : '';
+    var toID = to ? ReactMount.getID(to) : '';
+
+    var leave = eventInterface.getPooled(leaveEventType, fromID, nativeEvent);
     leave.type = eventTypePrefix + 'leave';
     leave.target = from;
     leave.relatedTarget = to;
 
-    var enter = syntheticEventInterface.getPooled(
-      enterEventType,
-      fromID,
-      nativeEvent
-    );
+    var enter = eventInterface.getPooled(enterEventType, fromID, nativeEvent);
     enter.type = eventTypePrefix + 'enter';
     enter.target = to;
     enter.relatedTarget = from;

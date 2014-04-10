@@ -20,11 +20,10 @@
 "use strict";
 
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var ViewportMetrics = require('ViewportMetrics');
 
 /**
  * @interface PointerEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ * @see http://www.w3.org/TR/pointerevents/
  */
 var PointerEventInterface = {
   pointerId: null,
