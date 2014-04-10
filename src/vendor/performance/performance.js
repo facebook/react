@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule performanceNow
- * @typechecks static-only
+ * @providesModule performance
+ * @typechecks
  */
 
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
-/**
- * Detect if we can use window.performance.now() and gracefully
- * fallback to Date.now() if it doesn't exist.
- * We need to support Firefox < 15 for now due to Facebook's webdriver
- * infrastructure.
- */
-var performance = null;
+var performance;
 
 if (ExecutionEnvironment.canUseDOM) {
-  performance = window.performance || window.webkitPerformance;
+  performance =
+    window.performance ||
+    window.msPerformance ||
+    window.webkitPerformance;
 }
 
-if (!performance || !performance.now) {
-  performance = Date;
-}
-
-var performanceNow = performance.now.bind(performance);
-
-module.exports = performanceNow;
+module.exports = performance || {};
