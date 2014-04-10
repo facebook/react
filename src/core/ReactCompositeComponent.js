@@ -927,7 +927,11 @@ var ReactCompositeComponentMixin = {
     var componentName = this.constructor.displayName;
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
-        propTypes[propName](props, propName, componentName, location);
+        var error =
+          propTypes[propName](props, propName, componentName, location);
+        if (error instanceof Error) {
+          warning(false, error.message);
+        }
       }
     }
   },
