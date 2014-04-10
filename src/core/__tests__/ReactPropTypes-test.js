@@ -459,6 +459,16 @@ describe('Union Types', function() {
       [],
       'Invalid prop `testProp` supplied to `testComponent`.'
     );
+
+    var checker = PropTypes.oneOfType([
+      PropTypes.shape({a: PropTypes.number.isRequired}),
+      PropTypes.shape({b: PropTypes.number.isRequired})
+    ]);
+    typeCheckFail(
+      checker,
+      {c: 1},
+      'Invalid prop `testProp` supplied to `testComponent`.'
+    );
   });
 
   it('should not warn if one of the types are valid', function() {
@@ -469,6 +479,13 @@ describe('Union Types', function() {
     typeCheckPass(checker, null);
     typeCheckPass(checker, 'foo');
     typeCheckPass(checker, 123);
+
+    checker = PropTypes.oneOfType([
+      PropTypes.shape({a: PropTypes.number.isRequired}),
+      PropTypes.shape({b: PropTypes.number.isRequired})
+    ]);
+    typeCheckPass(checker, {a: 1});
+    typeCheckPass(checker, {b: 1});
   });
 
   it("should be implicitly optional and not warn without values", function() {
@@ -531,6 +548,17 @@ describe('Shape Types', function() {
   it("should warn for required valid types", function() {
     typeCheckFail(
       PropTypes.shape({key: PropTypes.number.isRequired}),
+      {},
+      'Required prop `key` was not specified in `testComponent`.'
+    );
+  });
+
+  it("should warn for the first required type", function() {
+    typeCheckFail(
+      PropTypes.shape({
+        key: PropTypes.number.isRequired,
+        secondKey: PropTypes.number.isRequired
+      }),
       {},
       'Required prop `key` was not specified in `testComponent`.'
     );
