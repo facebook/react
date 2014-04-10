@@ -86,30 +86,21 @@ var EnterLeaveEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    var isMouseEvent = (
-      topLevelType === topLevelTypes.topMouseOut ||
-      topLevelType === topLevelTypes.topMouseOver
-    );
-    var isPointerEvent = (
-      topLevelType === topLevelTypes.topPointerOut ||
-      topLevelType === topLevelTypes.topPointerOver
-    );
-    if (!isMouseEvent && !isPointerEvent) {
-      // Must not be a mouse/pointer in or out - ignoring.
-      return null;
-    }
     var isOverEvent = (
       topLevelType === topLevelTypes.topMouseOver ||
       topLevelType === topLevelTypes.topPointerOver
     );
-    if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
-      return null;
-    }
     var isOutEvent = (
       topLevelType === topLevelTypes.topMouseOut ||
       topLevelType === topLevelTypes.topPointerOut
     );
-
+    if (!isOverEvent && !isOutEvent) {
+      // Must not be a mouse/pointer in or out - ignoring.
+      return null;
+    }
+    if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+      return null;
+    }
     var win;
     if (topLevelTarget.window === topLevelTarget) {
       // `topLevelTarget` is probably a window object.
@@ -148,12 +139,14 @@ var EnterLeaveEventPlugin = {
         enterEventType,
         eventTypePrefix;
 
-    if (isMouseEvent) {
+    if (topLevelType === topLevelTypes.topMouseOut ||
+        topLevelType === topLevelTypes.topMouseOver) {
       syntheticEventInterface = SyntheticMouseEvent;
       leaveEventType = eventTypes.mouseLeave;
       enterEventType = eventTypes.mouseEnter;
       eventTypePrefix = 'mouse';
-    } else if (isPointerEvent) {
+    } else if (topLevelType === topLevelTypes.topPointerOut ||
+               topLevelType === topLevelTypes.topPointerOver) {
       syntheticEventInterface = SyntheticPointerEvent;
       leaveEventType = eventTypes.pointerLeave;
       enterEventType = eventTypes.pointerEnter;
