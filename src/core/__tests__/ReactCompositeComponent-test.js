@@ -159,8 +159,8 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrow(
       'Invariant Violation: Component.render(): A valid ReactComponent must ' +
-      'be returned. You may have returned an array or some other invalid ' +
-      'object.'
+      'be returned. You may have returned undefined, an array or some other ' +
+      'invalid object.'
     );
   });
 
