@@ -32,7 +32,8 @@ var DOMPropertyInjection = {
   MUST_USE_PROPERTY: 0x2,
   HAS_SIDE_EFFECTS: 0x4,
   HAS_BOOLEAN_VALUE: 0x8,
-  HAS_POSITIVE_NUMERIC_VALUE: 0x10,
+  HAS_NUMERIC_VALUE: 0x10,
+  HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -110,6 +111,8 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_SIDE_EFFECTS;
       DOMProperty.hasBooleanValue[propName] =
         propConfig & DOMPropertyInjection.HAS_BOOLEAN_VALUE;
+      DOMProperty.hasNumericValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_NUMERIC_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
 
@@ -127,8 +130,8 @@ var DOMPropertyInjection = {
       );
       invariant(
         !DOMProperty.hasBooleanValue[propName] ||
-          !DOMProperty.hasPositiveNumericValue[propName],
-        'DOMProperty: Cannot have both boolean and positive numeric value: %s',
+          !DOMProperty.hasNumericValue[propName],
+        'DOMProperty: Cannot have both boolean and numeric value: %s',
         propName
       );
     }
@@ -213,6 +216,13 @@ var DOMProperty = {
    * @type {Object}
    */
   hasBooleanValue: {},
+
+  /**
+   * Whether the property must be numeric or parse as a
+   * numeric and should be removed when set to a falsey value.
+   * @type {Object}
+   */
+  hasNumericValue: {},
 
   /**
    * Whether the property must be positive numeric or parse as a positive

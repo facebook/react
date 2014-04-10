@@ -26,6 +26,7 @@ var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
+var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 
@@ -116,6 +117,7 @@ var DefaultDOMPropertyConfig = {
     src: null,
     srcDoc: MUST_USE_PROPERTY,
     srcSet: null,
+    start: HAS_NUMERIC_VALUE,
     step: null,
     style: null,
     tabIndex: null,
