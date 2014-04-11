@@ -81,7 +81,7 @@ describe('Primitive Types', function() {
     );
   });
 
-  it('should check for corner case JS types', function() {
+  it('should fail date and regexp correctly', function() {
     typeCheckFail(
       PropTypes.string,
       new Date(),
@@ -101,8 +101,10 @@ describe('Primitive Types', function() {
     typeCheckPass(PropTypes.bool, false);
     typeCheckPass(PropTypes.func, function() {});
     typeCheckPass(PropTypes.number, 0);
-    typeCheckPass(PropTypes.object, {});
     typeCheckPass(PropTypes.string, '');
+    typeCheckPass(PropTypes.object, {});
+    typeCheckPass(PropTypes.object, new Date());
+    typeCheckPass(PropTypes.object, /please/);
   });
 
   it("should be implicitly optional and not warn without values", function() {
@@ -272,24 +274,36 @@ describe('Component Type', function() {
 describe('Instance Types', function() {
   it("should warn for invalid instances", function() {
     function Person() {}
-    var name = Person.name || '<<anonymous>>';
+
     typeCheckFail(
       PropTypes.instanceOf(Person),
       false,
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `' + name + '`.'
+      'instance of `Person`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(Person),
       {},
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `' + name + '`.'
+      'instance of `Person`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(Person),
       '',
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `' + name + '`.'
+      'instance of `Person`.'
+    );
+    typeCheckFail(
+      PropTypes.instanceOf(Date),
+      {},
+      'Invalid prop `testProp` supplied to `testComponent`, expected ' +
+      'instance of `Date`.'
+    );
+    typeCheckFail(
+      PropTypes.instanceOf(RegExp),
+      {},
+      'Invalid prop `testProp` supplied to `testComponent`, expected ' +
+      'instance of `RegExp`.'
     );
   });
 
@@ -300,6 +314,9 @@ describe('Instance Types', function() {
 
     typeCheckPass(PropTypes.instanceOf(Person), new Person());
     typeCheckPass(PropTypes.instanceOf(Person), new Engineer());
+
+    typeCheckPass(PropTypes.instanceOf(Date), new Date());
+    typeCheckPass(PropTypes.instanceOf(RegExp), /please/);
   });
 
   it("should be implicitly optional and not warn without values", function() {

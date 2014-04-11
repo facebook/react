@@ -113,11 +113,17 @@ function createChainableTypeChecker(validate) {
 
 function createPrimitiveTypeChecker(expectedType) {
   function validate(props, propName, componentName, location) {
-    var propType = getPropType(props[propName]);
+    var propValue = props[propName];
+    var propType = getPropType(propValue);
     if (propType !== expectedType) {
       var locationName = ReactPropTypeLocationNames[location];
+      // `propValue` being instance of, say, date/regexp, pass the 'object'
+      // check, but we can offer a more precise error message here rather than
+      // 'of type `object`'.
+      var preciseType = getPreciseType(propValue);
+
       return new Error(
-        `Invalid ${locationName} \`${propName}\` of type \`${propType}\` ` +
+        `Invalid ${locationName} \`${propName}\` of type \`${preciseType}\` ` +
         `supplied to \`${componentName}\`, expected \`${expectedType}\`.`
       );
     }
@@ -275,13 +281,21 @@ function isRenderable(propValue) {
   }
 }
 
-// Equivalent of typeof but with special handling for arrays
+// Equivalent of `typeof` but with special handling for array.
 function getPropType(propValue) {
   var propType = typeof propValue;
+  if (Array.isArray(propValue)) {
+    return 'array';
+  }
+  return propType;
+}
+
+// This handles more types than `getPropType`. Only used for error messages.
+// See `createPrimitiveTypeChecker`.
+function getPreciseType(propValue) {
+  var propType = getPropType(propValue);
   if (propType === 'object') {
-    if (Array.isArray(propValue)) {
-      return 'array';
-    } else if (propValue instanceof Date) {
+    if (propValue instanceof Date) {
       return 'date';
     } else if(propValue instanceof RegExp) {
       return 'regexp';
