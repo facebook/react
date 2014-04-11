@@ -494,6 +494,13 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
           }
         } else {
           proto[name] = property;
+          if (__DEV__) {
+            // Add verbose displayName to the function, which helps when looking
+            // at profiling tools.
+            if (typeof property === 'function' && spec.displayName) {
+              proto[name].displayName = spec.displayName + '_' + name;
+            }
+          }
         }
       }
     }
