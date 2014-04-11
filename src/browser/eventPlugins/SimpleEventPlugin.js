@@ -128,6 +128,12 @@ var eventTypes = {
       captured: keyOf({onFocusCapture: true})
     }
   },
+  gotPointerCapture: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onGotPointerCapture: true}),
+      captured: keyOf({onGotPointerCaptureCapture: true})
+    }
+  },
   input: {
     phasedRegistrationNames: {
       bubbled: keyOf({onInput: true}),
@@ -156,6 +162,12 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onLoad: true}),
       captured: keyOf({onLoadCapture: true})
+    }
+  },
+  lostPointerCapture: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onLostPointerCapture: true}),
+      captured: keyOf({onLostPointerCaptureCapture: true})
     }
   },
   error: {
@@ -305,11 +317,13 @@ var topLevelEventsToDispatchConfig = {
   topDrop: eventTypes.drop,
   topError: eventTypes.error,
   topFocus: eventTypes.focus,
+  topGotPointerCapture: eventTypes.gotPointerCapture,
   topInput: eventTypes.input,
   topKeyDown: eventTypes.keyDown,
   topKeyPress: eventTypes.keyPress,
   topKeyUp: eventTypes.keyUp,
   topLoad: eventTypes.load,
+  topLostPointerCapture: eventTypes.lostPointerCapture,
   topMouseDown: eventTypes.mouseDown,
   topMouseMove: eventTypes.mouseMove,
   topMouseOut: eventTypes.mouseOut,
@@ -415,6 +429,8 @@ var SimpleEventPlugin = {
       case topLevelTypes.topPointerOut:
       case topLevelTypes.topPointerOver:
       case topLevelTypes.topPointerUp:
+      case topLevelTypes.topGotPointerCapture:
+      case topLevelTypes.topLostPointerCapture:
         EventConstructor = SyntheticPointerEvent;
         break;
       case topLevelTypes.topDrag:
