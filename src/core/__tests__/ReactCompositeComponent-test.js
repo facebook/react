@@ -1345,4 +1345,27 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.argsForCall.length).toBe(0);
   });
 
+  it('should disallow nested render calls', function() {
+    var Inner = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    var Outer = React.createClass({
+      render: function() {
+        ReactTestUtils.renderIntoDocument(<Inner />);
+        return <div />;
+      }
+    });
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Outer />);
+    }).toThrow(
+      'Invariant Violation: Inner.render(): Render methods should be a pure ' +
+      'function of props and state; triggering nested component updates ' +
+      'from render is not allowed. If necessary, trigger nested updates in ' +
+      'componentDidUpdate.'
+    );
+  });
+
 });

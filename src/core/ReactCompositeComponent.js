@@ -1164,6 +1164,17 @@ var ReactCompositeComponentMixin = {
     'ReactCompositeComponent',
     '_renderValidatedComponent',
     function() {
+      // We set ReactCurrentOwner.current back to null at the end of this
+      // function, so it should be null right now. If it's not, later code may
+      // give confusing errors.
+      invariant(
+        ReactCurrentOwner.current == null,
+        '%s.render(): Render methods should be a pure function of props and ' +
+          'state; triggering nested component updates from render is not ' +
+          'allowed. If necessary, trigger nested updates in ' +
+          'componentDidUpdate.',
+        this.constructor.displayName || 'ReactCompositeComponent'
+      );
       var renderedComponent;
       var previousContext = ReactContext.current;
       ReactContext.current = this._processChildContext(
