@@ -57,17 +57,19 @@ React.createClass({
       fontSize: React.PropTypes.number
     }),
 
-    // You can chain any of the above with isRequired to make sure a warning is
-    // shown if the prop isn't provided.
+    // You can chain any of the above with `isRequired` to make sure a warning
+    // is shown if the prop isn't provided.
     requiredFunc: React.PropTypes.func.isRequired,
 
     // A value of any data type
     requiredAny: React.PropTypes.any.isRequired,
 
-    // You can also specify a custom validator.
+    // You can also specify a custom validator. It should return an Error
+    // object if the validation fails. Don't `console.warn` or throw, as this
+    // won't work inside `oneOfType`.
     customProp: function(props, propName, componentName) {
       if (!/matchme/.test(props[propName])) {
-        console.warn('Validation failed!');
+        return new Error('Validation failed!');
       }
     }
   },
