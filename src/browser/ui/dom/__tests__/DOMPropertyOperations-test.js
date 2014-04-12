@@ -153,6 +153,21 @@ describe('DOMPropertyOperations', function() {
       expect(stubNode.hasAttribute('allowFullScreen')).toBe(false);
     });
 
+    it('should remove when setting custom attr to null', function() {
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'data-foo',
+        'bar'
+      );
+      expect(stubNode.hasAttribute('data-foo')).toBe(true);
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'data-foo',
+        null
+      );
+      expect(stubNode.hasAttribute('data-foo')).toBe(false);
+    });
+
     it('should use mutation method where applicable', function() {
       var foobarSetter = mocks.getMockFunction();
       // inject foobar DOM property
