@@ -19,7 +19,6 @@
 "use strict";
 
 var EventPluginHub = require('EventPluginHub');
-var ReactUpdates = require('ReactUpdates');
 
 function runEventQueueInBatch(events) {
   EventPluginHub.enqueueEvents(events);
@@ -49,8 +48,7 @@ var ReactEventEmitterMixin = {
       nativeEvent
     );
 
-    // Event queue being processed in the same cycle allows `preventDefault`.
-    ReactUpdates.batchedUpdates(runEventQueueInBatch, events);
+    runEventQueueInBatch(events);
   }
 };
 
