@@ -28,6 +28,7 @@ var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
 
 var invariant = require('invariant');
+var setInnerHTML = require('setInnerHTML');
 
 /**
  * Errors for properties that should not be updated with `updatePropertyById()`.
@@ -40,8 +41,6 @@ var INVALID_PROPERTY_ERRORS = {
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
 };
-
-var useWhitespaceWorkaround;
 
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
@@ -131,35 +130,7 @@ var ReactDOMIDOperations = {
     'updateInnerHTMLByID',
     function(id, html) {
       var node = ReactMount.getNode(id);
-
-      // IE8: When updating a just created node with innerHTML only leading
-      // whitespace is removed. When updating an existing node with innerHTML
-      // whitespace in root TextNodes is also collapsed.
-      // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
-
-      if (useWhitespaceWorkaround === undefined) {
-        // Feature detection; only IE8 is known to behave improperly like this.
-        var temp = document.createElement('div');
-        temp.innerHTML = ' ';
-        useWhitespaceWorkaround = temp.innerHTML === '';
-      }
-
-      if (useWhitespaceWorkaround) {
-        // Magic theory: IE8 supposedly differentiates between added and updated
-        // nodes when processing innerHTML, innerHTML on updated nodes suffers
-        // from worse whitespace behavior. Re-adding a node like this triggers
-        // the initial and more favorable whitespace behavior.
-        node.parentNode.replaceChild(node, node);
-      }
-
-      if (useWhitespaceWorkaround && html.match(/^[ \r\n\t\f]/)) {
-        // Recover leading whitespace by temporarily prepending any character.
-        // \uFEFF has the potential advantage of being zero-width/invisible.
-        node.innerHTML = '\uFEFF' + html;
-        node.firstChild.deleteData(0, 1);
-      } else {
-        node.innerHTML = html;
-      }
+      setInnerHTML(node, html);
     }
   ),
 

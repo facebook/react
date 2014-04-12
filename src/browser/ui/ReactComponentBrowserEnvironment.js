@@ -28,6 +28,7 @@ var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var invariant = require('invariant');
+var setInnerHTML = require('setInnerHTML');
 
 
 var ELEMENT_NODE_TYPE = 1;
@@ -113,7 +114,7 @@ var ReactComponentBrowserEnvironment = {
           'See renderComponentToString() for server rendering.'
       );
 
-      container.innerHTML = markup;
+      setInnerHTML(container, markup);
     }
   )
 };
