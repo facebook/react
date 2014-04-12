@@ -42,7 +42,7 @@ describe('LegacyImmutableObject', function() {
       toBeSeriallyEqualTo: function(expected) {
         var actual = this.actual;
         var notText = this.isNot ? " not" : "";
-        this.message = function () {
+        this.message = function() {
           return "Expected " + JSON.stringify(actual) + notText +
               " to be serially equal to " + JSON.stringify(expected);
         };

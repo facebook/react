@@ -30,7 +30,7 @@ describe('ReactChildren', function() {
 
 
   it('should support identity for simple', function() {
-    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
+    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
       return kid;
     });
 
@@ -49,7 +49,7 @@ describe('ReactChildren', function() {
   });
 
   it('should treat single arrayless child as being in array', function() {
-    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
+    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
       return kid;
     });
 
@@ -64,7 +64,7 @@ describe('ReactChildren', function() {
   });
 
   it('should treat single child in array as expected', function() {
-    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
+    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
       return kid;
     });
 
@@ -79,7 +79,7 @@ describe('ReactChildren', function() {
   });
 
   it('should pass key to returned component', function() {
-    var mapFn = function (kid, index) {
+    var mapFn = function(kid, index) {
       return <div>{kid}</div>;
     };
 
@@ -97,7 +97,7 @@ describe('ReactChildren', function() {
 
   it('should invoke callback with the right context', function() {
     var lastContext;
-    var callback = function (kid, index) {
+    var callback = function(kid, index) {
       lastContext = this;
       return this;
     };
@@ -130,7 +130,7 @@ describe('ReactChildren', function() {
     var threeMapped = <span />; // Map from null to something.
     var fourMapped = <div key="keyFour" />;
 
-    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
+    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
       return index === 0 ? zeroMapped :
         index === 1 ? oneMapped :
         index === 2 ? twoMapped :
@@ -202,7 +202,7 @@ describe('ReactChildren', function() {
     var fourMapped = <div key="keyFour" />;
     var fiveMapped = <div />;
 
-    var callback = jasmine.createSpy().andCallFake(function (kid, index) {
+    var callback = jasmine.createSpy().andCallFake(function(kid, index) {
       return index === 0 ? zeroMapped :
         index === 1 ? oneMapped :
         index === 2 ? twoMapped :
