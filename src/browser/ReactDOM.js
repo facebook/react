@@ -127,7 +127,7 @@ var ReactDOM = mapObject({
   meta: true,
   meter: false,
   nav: false,
-  noscript: false,
+  noscript: false, // NOTE: Injected, see `ReactDOMNoScript`.
   object: false,
   ol: false,
   optgroup: false,

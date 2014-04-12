@@ -39,6 +39,7 @@ var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMInput = require('ReactDOMInput');
+var ReactDOMNoScript = require('ReactDOMNoScript');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
@@ -84,6 +85,7 @@ function inject() {
     form: ReactDOMForm,
     img: ReactDOMImg,
     input: ReactDOMInput,
+    noscript: ReactDOMNoScript,
     option: ReactDOMOption,
     select: ReactDOMSelect,
     textarea: ReactDOMTextarea,
