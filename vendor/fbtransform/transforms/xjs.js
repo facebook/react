@@ -143,6 +143,7 @@ var knownTags = {
   title: true,
   tr: true,
   track: true,
+  tspan: true,
   u: true,
   ul: true,
   'var': true,
