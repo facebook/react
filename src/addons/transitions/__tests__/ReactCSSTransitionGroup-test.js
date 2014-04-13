@@ -125,7 +125,7 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[0].id).toBe('three');
     expect(a.getDOMNode().childNodes[1].id).toBe('two');
   });
-  return;
+
   it('should work with no children', function () {
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
