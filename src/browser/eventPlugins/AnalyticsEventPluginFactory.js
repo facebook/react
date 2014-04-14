@@ -155,7 +155,7 @@ function extractEvents(
 
   var analyticsIDAttribute = topLevelTarget.attributes[ANALYTICS_ID];
   var analyticsEventsAttribute = topLevelTarget.attributes[ANALYTICS_EVENTS];
-  if(!analyticsIDAttribute || !analyticsEventsAttribute) {
+  if (!analyticsIDAttribute || !analyticsEventsAttribute) {
     return null;
   }
 

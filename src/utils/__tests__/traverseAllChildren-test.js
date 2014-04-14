@@ -31,7 +31,7 @@ describe('traverseAllChildren', function() {
   it('should support identity for simple', function() {
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -52,7 +52,7 @@ describe('traverseAllChildren', function() {
   it('should treat single arrayless child as being in array', function() {
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -71,7 +71,7 @@ describe('traverseAllChildren', function() {
   it('should treat single child in array as expected', function() {
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -96,7 +96,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -151,7 +151,7 @@ describe('traverseAllChildren', function() {
 
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 
@@ -212,7 +212,7 @@ describe('traverseAllChildren', function() {
     var oneForceKey = <div key="keyOne" />;
     var traverseContext = [];
     var traverseFn =
-      jasmine.createSpy().andCallFake(function (context, kid, key, index) {
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
         context.push(true);
       });
 

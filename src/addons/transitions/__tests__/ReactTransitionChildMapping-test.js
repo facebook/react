@@ -117,7 +117,7 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
-  it('should support mergeChildMappings with undefined input', function () {
+  it('should support mergeChildMappings with undefined input', function() {
     var prev = {
       one: true,
       two: true
