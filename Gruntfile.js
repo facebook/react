@@ -20,7 +20,7 @@ module.exports = function(grunt) {
     copy: require('./grunt/config/copy'),
     jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
-    populist: require('./grunt/config/populist'),
+    populist: require('./grunt/config/populist')(grunt),
     connect: require('./grunt/config/server')(grunt),
     "webdriver-jasmine": require('./grunt/config/webdriver-jasmine'),
     "webdriver-perf": require('./grunt/config/webdriver-perf'),
@@ -179,6 +179,13 @@ module.exports = function(grunt) {
     'test:webdriver:phantomjs',
     'coverage:parse'
   ]);
+  grunt.registerTask('fasttest', function() {
+    if (grunt.option('debug')) {
+      grunt.task.run('build:test', 'connect:server:keepalive');
+    } else {
+      grunt.task.run('build:test', 'test:webdriver:phantomjs');
+    }
+  });
   grunt.registerTask('test', function() {
     if (grunt.option('debug')) {
       grunt.task.run('build:test', 'build:basic', 'connect:server:keepalive');
