@@ -29,7 +29,8 @@ function shouldIgnoreValue(name, value) {
   return value == null ||
     (DOMProperty.hasBooleanValue[name] && !value) ||
     (DOMProperty.hasNumericValue[name] && isNaN(value)) ||
-    (DOMProperty.hasPositiveNumericValue[name] && (value < 1));
+    (DOMProperty.hasPositiveNumericValue[name] && (value < 1)) ||
+    (DOMProperty.hasOverloadedBooleanValue[name] && value === false);
 }
 
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
@@ -96,7 +97,8 @@ var DOMPropertyOperations = {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName[name];
-      if (DOMProperty.hasBooleanValue[name]) {
+      if (DOMProperty.hasBooleanValue[name] ||
+          (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
         return escapeTextForBrowser(attributeName);
       }
       return processAttributeNameAndPrefix(attributeName) +

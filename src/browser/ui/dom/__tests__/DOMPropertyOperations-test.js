@@ -99,6 +99,48 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
+    it('should create markup for booleanish properties', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        'simple'
+      )).toBe('download="simple"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        true
+      )).toBe('download');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        'true'
+      )).toBe('download="true"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        false
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        'false'
+      )).toBe('download="false"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        undefined
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        null
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'download',
+        0
+      )).toBe('download="0"');
+    });
+
     it('should create markup for custom attributes', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'aria-label',

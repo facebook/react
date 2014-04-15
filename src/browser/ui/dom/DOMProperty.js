@@ -34,6 +34,7 @@ var DOMPropertyInjection = {
   HAS_BOOLEAN_VALUE: 0x8,
   HAS_NUMERIC_VALUE: 0x10,
   HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
+  HAS_OVERLOADED_BOOLEAN_VALUE: 0x40,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -115,6 +116,8 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_NUMERIC_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
+      DOMProperty.hasOverloadedBooleanValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
@@ -129,9 +132,11 @@ var DOMPropertyInjection = {
         propName
       );
       invariant(
-        !DOMProperty.hasBooleanValue[propName] ||
-          !DOMProperty.hasNumericValue[propName],
-        'DOMProperty: Cannot have both boolean and numeric value: %s',
+        !!DOMProperty.hasBooleanValue[propName] +
+          !!DOMProperty.hasNumericValue[propName] +
+          !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
+        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+        'numeric value, but not a combination: %s',
         propName
       );
     }
@@ -230,6 +235,14 @@ var DOMProperty = {
    * @type {Object}
    */
   hasPositiveNumericValue: {},
+
+  /**
+   * Whether the property can be used as a flag as well as with a value. Removed
+   * when strictly equal to false; present without a value when strictly equal
+   * to true; present with a value otherwise.
+   * @type {Object}
+   */
+  hasOverloadedBooleanValue: {},
 
   /**
    * All of the isCustomAttribute() functions that have been injected.
