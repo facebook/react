@@ -34,7 +34,7 @@ var DOMPropertyInjection = {
   HAS_BOOLEAN_VALUE: 0x8,
   HAS_NUMERIC_VALUE: 0x10,
   HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
-  HAS_BOOLEANISH_VALUE: 0x40,
+  HAS_OVERLOADED_BOOLEAN_VALUE: 0x40,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -116,8 +116,8 @@ var DOMPropertyInjection = {
         propConfig & DOMPropertyInjection.HAS_NUMERIC_VALUE;
       DOMProperty.hasPositiveNumericValue[propName] =
         propConfig & DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE;
-      DOMProperty.hasBooleanishValue[propName] =
-        propConfig & DOMPropertyInjection.HAS_BOOLEANISH_VALUE;
+      DOMProperty.hasOverloadedBooleanValue[propName] =
+        propConfig & DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||
@@ -134,9 +134,9 @@ var DOMPropertyInjection = {
       invariant(
         !!DOMProperty.hasBooleanValue[propName] +
           !!DOMProperty.hasNumericValue[propName] +
-          !!DOMProperty.hasBooleanishValue[propName] <= 1,
-        'DOMProperty: Value can be one of boolean, booleanish, or numeric ' +
-        'value, but not a combination: %s',
+          !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
+        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+        'numeric value, but not a combination: %s',
         propName
       );
     }
@@ -242,7 +242,7 @@ var DOMProperty = {
    * to true; present with a value otherwise.
    * @type {Object}
    */
-  hasBooleanishValue: {},
+  hasOverloadedBooleanValue: {},
 
   /**
    * All of the isCustomAttribute() functions that have been injected.

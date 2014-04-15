@@ -29,7 +29,8 @@ var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
 var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
-var HAS_BOOLEANISH_VALUE = DOMProperty.injection.HAS_BOOLEANISH_VALUE;
+var HAS_OVERLOADED_BOOLEAN_VALUE =
+  DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
 var DefaultDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
@@ -67,7 +68,7 @@ var DefaultDOMPropertyConfig = {
     defer: HAS_BOOLEAN_VALUE,
     dir: null,
     disabled: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
-    download: HAS_BOOLEANISH_VALUE,
+    download: HAS_OVERLOADED_BOOLEAN_VALUE,
     draggable: null,
     encType: null,
     form: MUST_USE_ATTRIBUTE,
