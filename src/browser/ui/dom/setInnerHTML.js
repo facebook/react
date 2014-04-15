@@ -47,7 +47,10 @@ if (ExecutionEnvironment.canUseDOM) {
       // nodes when processing innerHTML, innerHTML on updated nodes suffers
       // from worse whitespace behavior. Re-adding a node like this triggers
       // the initial and more favorable whitespace behavior.
-      node.parentNode.replaceChild(node, node);
+      // TODO: What to do on a detached node?
+      if (node.parentNode) {
+        node.parentNode.replaceChild(node, node);
+      }
 
       if (html.match(/^[ \r\n\t\f]/)) {
         // Recover leading whitespace by temporarily prepending any character.
