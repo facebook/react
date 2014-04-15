@@ -59,7 +59,7 @@ function getCurrentOwnerDisplayName() {
  * @param {*} parentType component's parent's type.
  */
 function validateExplicitKey(component, parentType) {
-  if (component._store.validated || component.props.key != null) {
+  if (component._store.validated || component.key != null) {
     return;
   }
   component._store.validated = true;
@@ -285,6 +285,11 @@ ReactDescriptor.createFactory = function(type) {
     // TODO: Deprecate withContext, and then the context becomes accessible
     // through the owner.
     descriptor._context = ReactContext.current;
+
+    // These props are special and affect how the reconciler, etc. work so we
+    // pull them out to live on the descriptor
+    descriptor.key = props.key;
+    descriptor.ref = props.ref;
 
     if (__DEV__) {
       // The validation flag and props are currently mutative. We put them on
