@@ -281,11 +281,17 @@ function isRenderable(propValue) {
   }
 }
 
-// Equivalent of `typeof` but with special handling for array.
+// Equivalent of `typeof` but with special handling for array and regexp.
 function getPropType(propValue) {
   var propType = typeof propValue;
   if (Array.isArray(propValue)) {
     return 'array';
+  }
+  if (propValue instanceof RegExp) {
+    // Old webkits (at least until Android 4.0) return 'function' rather than
+    // 'object' for typeof a RegExp. We'll normalize this here so that /bla/
+    // passes PropTypes.object.
+    return 'object';
   }
   return propType;
 }
@@ -297,7 +303,7 @@ function getPreciseType(propValue) {
   if (propType === 'object') {
     if (propValue instanceof Date) {
       return 'date';
-    } else if(propValue instanceof RegExp) {
+    } else if (propValue instanceof RegExp) {
       return 'regexp';
     }
   }
