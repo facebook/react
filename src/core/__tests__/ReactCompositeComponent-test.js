@@ -1361,10 +1361,10 @@ describe('ReactCompositeComponent', function() {
     expect(() => {
       ReactTestUtils.renderIntoDocument(<Outer />);
     }).toThrow(
-      'Invariant Violation: Inner.render(): Render methods should be a pure ' +
-      'function of props and state; triggering nested component updates ' +
-      'from render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.'
+      'Invariant Violation: _renderNewRootComponent(): Render methods should ' +
+      'be a pure function of props and state; triggering nested component ' +
+      'updates from render is not allowed. If necessary, trigger nested ' +
+      'updates in componentDidUpdate.'
     );
   });
 
