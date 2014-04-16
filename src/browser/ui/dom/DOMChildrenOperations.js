@@ -19,10 +19,20 @@
 
 "use strict";
 
+var invariant = require('invariant');
+
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var getTextContentAccessor = require('getTextContentAccessor');
+
+var immovableTagNames = {
+  'IFRAME': true,
+  'OBJECT': true,
+  'EMBED': true,
+  'VIDEO': true,
+  'AUDIO': true
+};
 
 /**
  * The DOM property to use when setting text content.
@@ -89,6 +99,53 @@ if (textContentAccessor === 'textContent') {
 }
 
 /**
+ * Same purpose as `insertBefore` but does so without moving `childNode` or
+ * knowing where it is located, instead moving its siblings from one side to the
+ * other. `childNode` will be moved to the end if there is no node at
+ * `referenceIndex´. This behavior avoids resetting iframe/audio/video/etc.
+ *
+ * @param {DOMElement} parentNode Parent node of the child.
+ * @param {DOMElement} childNode Child node to move.
+ * @param {number} referenceIndex Index to which the child should move to.
+ * @internal
+ */
+function moveChildBefore(parentNode, childNode, referenceIndex) {
+  // We only support moving right as the current implementation of
+  // `ReactMultiChild` always moves components by inserting them further right.
+  var referenceNode = parentNode.childNodes[referenceIndex];
+  while (childNode.previousSibling !== referenceNode) {
+    invariant(
+      referenceNode == null || childNode.nextSibling != null,
+      'moveChildBefore: tried to move childNode to referenceIndex, but did ' +
+      'not encounter the node at referenceIndex on the way. The node at ' +
+      'referenceIndex must come after childNode or not be in the DOM at all. ' +
+      'This is at present an intentional limitation of this implementation.'
+    );
+    parentNode.insertBefore(childNode.nextSibling, childNode);
+  }
+}
+
+/**
+ * Detects if `node` is or has any descendants that must not be moved.
+ * `getElementsByTagName` relies on special LiveNodeLists which are super fast.
+ *
+ * iframe+object+embed reload and video+audio pause if they are in any way
+ * detached from the DOM and must be considered immovable.
+ *
+ * @param {DOMElement} node Node to test if it is or has immovable descendants.
+ * @return {boolean}
+ * @internal
+ */
+function hasImmovableDescendants(node) {
+  for (var tagName in immovableTagNames) {
+    if (node.getElementsByTagName(tagName)[0]) {
+      return true;
+    }
+  }
+  return !!immovableTagNames[node.nodeName];
+}
+
+/**
  * Operations for updating with DOM children.
  */
 var DOMChildrenOperations = {
@@ -106,23 +163,107 @@ var DOMChildrenOperations = {
    * @internal
    */
   processUpdates: function(updates, markupList) {
-    var update;
+    var update, updatedChild, parentID;
+
     // Mapping from parent IDs to initial child orderings.
     var initialChildren = null;
     // List of children that will be moved or removed.
     var updatedChildren = null;
 
-    for (var i = 0; update = updates[i]; i++) {
-      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
-          update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
-        var updatedIndex = update.fromIndex;
-        var updatedChild = update.parentNode.childNodes[updatedIndex];
-        var parentID = update.parentID;
+    // Mapping of parents that has immovable descendants.
+    var immovableParents = {};
+    // Mapping of parents to updates, for immovable parents.
+    var immovableUpdates = null;
+    // Mapping of parents to inserted children count, for immovable parents.
+    var immovableInsertionCount = null;
 
+    // Test if there are any has immovable nodes at all in the document.
+    // Optimally, this should be done on the React root node instead.
+    var rootHasImmovableDescendants =
+      hasImmovableDescendants(document.documentElement);
+
+    for (var i = 0; update = updates[i]; i++) {
+      updatedChild = update.parentNode.childNodes[update.fromIndex];
+      parentID = update.parentID;
+
+      /**
+       * This implementation for solving immovable nodes relies on two
+       * assumptions that make it extra fast and simple.
+       *
+       * 1. `ReactMultiChild` sends updates in strict ascending `toIndex` order.
+       * 2. `ReactMultiChild` removes from the left and inserts to the right.
+       *
+       * Since immovable nodes must not be detached, we need to push them right
+       * and out of the way so that the indexes remain consistent as is
+       * expected. We do this by counting all insertions taking place before the
+       * immovable node. This allows us to compute its actual toIndex, and thus
+       * its expected previous sibling, after all updated nodes have been
+       * detached. This saves us from having to detach it and performs the
+       * minimal number of moves necessary.
+       */
+
+      if (rootHasImmovableDescendants) {
+        // Test if parent has immovable descendants and cache results.
+        if (immovableParents[parentID] === undefined) {
+          immovableParents[parentID] =
+            hasImmovableDescendants(update.parentNode);
+
+          if (immovableParents[parentID]) {
+            immovableInsertionCount = immovableInsertionCount || {};
+            immovableInsertionCount[parentID] = 0;
+          }
+        }
+
+        if (immovableParents[parentID]) {
+          if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
+            // Test if child has immovable descendants and cache results.
+            if (hasImmovableDescendants(updatedChild)) {
+              immovableUpdates = immovableUpdates || {};
+              immovableUpdates[parentID] = immovableUpdates[parentID] || [];
+
+              var lastImmovableUpdate =
+                immovableUpdates[parentID][immovableUpdates[parentID].length - 1];
+
+              // Determine if crossing the boundary of another immovable object.
+              // Assumption: `ReactMultiChild` moves nodes by `toIndex` in
+              // ascending order.
+              if (!lastImmovableUpdate ||
+                  lastImmovableUpdate.fromIndex < update.fromIndex) {
+                update.type = ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE;
+                update.toIndex -= immovableInsertionCount[parentID];
+                immovableUpdates[parentID].push(update);
+              } else if (__DEV__) {
+                // Unstoppable force meets immovable object, this is a violation,
+                // our only way out is treat it as movable and let it break/reset.
+                console.warn(
+                  'React has moved an iframe/object/embed/video/audio-node ' +
+                  'over to the other side of another such node. This is a ' +
+                  'valid operation, but the contents of the node has been ' +
+                  'reset/reloaded/paused. This is a "flaw" in HTML that cannot ' +
+                  'be avoided.'
+                );
+              }
+            }
+          }
+
+          if (update.type === ReactMultiChildUpdateTypes.INSERT_MARKUP ||
+              update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING) {
+            // Insertion of a movable object in an immovable parent, count it.
+            immovableInsertionCount[parentID]++;
+          }
+        }
+      }
+
+      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
+          update.type === ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE ||
+          update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         initialChildren = initialChildren || {};
         initialChildren[parentID] = initialChildren[parentID] || [];
-        initialChildren[parentID][updatedIndex] = updatedChild;
+        initialChildren[parentID][update.fromIndex] = updatedChild;
+      }
 
+      if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
+          update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         updatedChildren = updatedChildren || [];
         updatedChildren.push(updatedChild);
       }
@@ -132,12 +273,27 @@ var DOMChildrenOperations = {
 
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
-      for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+      for (var j = 0; updatedChild = updatedChildren[j]; j++) {
+        updatedChild.parentNode.removeChild(updatedChild);
       }
     }
 
-    for (var k = 0; update = updates[k]; k++) {
+    // We found immovable nodes, move them into position immediately.
+    if (immovableUpdates) {
+      for (parentID in immovableUpdates) {
+        for (var k = immovableUpdates[parentID].length - 1; k >= 0; k--) {
+          update = immovableUpdates[parentID][k];
+
+          moveChildBefore(
+            update.parentNode,
+            initialChildren[parentID][update.fromIndex],
+            update.toIndex
+          );
+        }
+      }
+    }
+
+    for (var l = 0; update = updates[l]; l++) {
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertChildAt(
@@ -153,15 +309,18 @@ var DOMChildrenOperations = {
             update.toIndex
           );
           break;
+        //case ReactMultiChildUpdateTypes.SHIFT_IMMOVABLE:
+          // Already moved into position by the loops above.
+          //break;
         case ReactMultiChildUpdateTypes.TEXT_CONTENT:
           updateTextContent(
             update.parentNode,
             update.textContent
           );
           break;
-        case ReactMultiChildUpdateTypes.REMOVE_NODE:
+        //case ReactMultiChildUpdateTypes.REMOVE_NODE:
           // Already removed by the for-loop above.
-          break;
+          //break;
       }
     }
   }
