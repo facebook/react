@@ -28,9 +28,9 @@ var invariant = require('invariant');
 /**
  * Dummy container used to render all markup.
  */
-var dummyNode = function() {
+function getDummyNode() {
   return ExecutionEnvironment.canUseDOM ? document.createElement('div') : null;
-};
+}
 
 /**
  * Pattern used by `getNodeName`.
@@ -59,7 +59,7 @@ function getNodeName(markup) {
  * @return {array<DOMElement|DOMTextNode>} An array of rendered nodes.
  */
 function createNodesFromMarkup(markup, handleScript) {
-  var node = dummyNode();
+  var node = getDummyNode();
   invariant(!!node, 'createNodesFromMarkup dummy not initialized');
   var nodeName = getNodeName(markup);
 
