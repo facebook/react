@@ -27,8 +27,7 @@ module.exports = function(grunt) {
     npm: require('./grunt/config/npm'),
     clean: ['./build', './*.gem', './docs/_site', './examples/shared/*.js', '.module-cache'],
     jshint: require('./grunt/config/jshint'),
-    compare_size: require('./grunt/config/compare_size'),
-    complexity: require('./grunt/config/complexity')
+    compare_size: require('./grunt/config/compare_size')
   });
 
   grunt.config.set('compress', require('./grunt/config/compress'));
