@@ -23,6 +23,7 @@ var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var getTextContentAccessor = require('getTextContentAccessor');
+var invariant = require('invariant');
 
 /**
  * The DOM property to use when setting text content.
@@ -118,6 +119,17 @@ var DOMChildrenOperations = {
         var updatedIndex = update.fromIndex;
         var updatedChild = update.parentNode.childNodes[updatedIndex];
         var parentID = update.parentID;
+
+        invariant(
+          updatedChild,
+          'processUpdates(): Unable to find child %s of element. This ' +
+          'probably means the DOM was unexpectedly mutated (e.g., by the ' +
+          'browser), usually due to forgetting a <tbody> when using tables ' +
+          'or nesting <p> or <a> tags. Try inspecting the child nodes of the ' +
+          'element with React ID `%s`.',
+          updatedIndex,
+          parentID
+        );
 
         initialChildren = initialChildren || {};
         initialChildren[parentID] = initialChildren[parentID] || [];
