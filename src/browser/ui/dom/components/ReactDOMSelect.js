@@ -24,7 +24,6 @@ var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
 
-var invariant = require('invariant');
 var merge = require('merge');
 
 // Store a reference to the <select> `ReactDOMComponent`.
@@ -39,19 +38,19 @@ function selectValueType(props, propName, componentName) {
     return;
   }
   if (props.multiple) {
-    invariant(
-      Array.isArray(props[propName]),
-      'The `%s` prop supplied to <select> must be an array if `multiple` is ' +
-      'true.',
-      propName
-    );
+    if (!Array.isArray(props[propName])) {
+      return new Error(
+        `The \`${propName}\` prop supplied to <select> must be an array if ` +
+        `\`multiple\` is true.`
+      );
+    }
   } else {
-    invariant(
-      !Array.isArray(props[propName]),
-      'The `%s` prop supplied to <select> must be a scalar value if ' +
-      '`multiple` is false.',
-      propName
-    );
+    if (Array.isArray(props[propName])) {
+      return new Error(
+        `The \`${propName}\` prop supplied to <select> must be a scalar ` +
+        `value if \`multiple\` is false.`
+      );
+    }
   }
 }
 
