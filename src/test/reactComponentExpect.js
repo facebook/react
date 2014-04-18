@@ -73,17 +73,14 @@ mergeInto(reactComponentExpect.prototype, {
     // change soon.
     this.toBeDOMComponent();
     var renderedChildren = this.instance()._renderedChildren || {};
-    var nonEmptyCount = 0;
-    var name;
     for (name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
       }
       if (renderedChildren[name]) {
-        if (nonEmptyCount === childIndex) {
+        if (renderedChildren[name]._mountIndex === childIndex) {
           return new reactComponentExpect(renderedChildren[name]);
         }
-        nonEmptyCount++;
       }
     }
     throw new Error('Child:' + childIndex + ' is not found');
