@@ -171,19 +171,13 @@ var ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */
-  getOffsets: function(node) {
-    var getOffsets = document.selection ? getIEOffsets : getModernOffsets;
-    return getOffsets(node);
-  },
+  getOffsets: document.selection ? getIEOffsets : getModernOffsets,
 
   /**
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  setOffsets: function(node, offsets) {
-    var setOffsets = document.selection ? setIEOffsets : setModernOffsets;
-    setOffsets(node, offsets);
-  }
+  setOffsets: document.selection ? setIEOffsets : setModernOffsets
 };
 
 module.exports = ReactDOMSelection;
