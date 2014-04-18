@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
 var getTextContentAccessor = require('getTextContentAccessor');
 
@@ -171,13 +173,13 @@ var ReactDOMSelection = {
   /**
    * @param {DOMElement} node
    */
-  getOffsets: document.selection ? getIEOffsets : getModernOffsets,
+  getOffsets: ExecutionEnvironment.canUseDOM && document.selection ? getIEOffsets : getModernOffsets,
 
   /**
    * @param {DOMElement|DOMTextNode} node
    * @param {object} offsets
    */
-  setOffsets: document.selection ? setIEOffsets : setModernOffsets
+  setOffsets: ExecutionEnvironment.canUseDOM && document.selection ? setIEOffsets : setModernOffsets
 };
 
 module.exports = ReactDOMSelection;
