@@ -344,38 +344,20 @@ describe('React Component Types', function() {
   });
 
   it('should warn for invalid values', function() {
-    typeCheckFail(
-      PropTypes.renderable,
-      false,
-      'Invalid prop `testProp` supplied to `testComponent`, expected a ' +
-      'renderable prop.'
-    );
-    typeCheckFail(
-      PropTypes.renderable,
-      function() {},
-      'Invalid prop `testProp` supplied to `testComponent`, expected a ' +
-      'renderable prop.'
-    );
-    typeCheckFail(
-      PropTypes.renderable,
-      {key: function() {}},
-      'Invalid prop `testProp` supplied to `testComponent`, expected a ' +
-      'renderable prop.'
-    );
+    var failMessage = 'Invalid prop `testProp` supplied to `testComponent`, ' +
+      'expected a renderable prop.';
+    typeCheckFail(PropTypes.renderable, true, failMessage);
+    typeCheckFail(PropTypes.renderable, function() {}, failMessage);
+    typeCheckFail(PropTypes.renderable, {key: function() {}}, failMessage);
   });
 
   it('should not warn for valid values', function() {
-    // DOM component
     typeCheckPass(PropTypes.renderable, <div />);
-    // Custom component
+    typeCheckPass(PropTypes.renderable, false);
     typeCheckPass(PropTypes.renderable, <MyComponent />);
-    // String
     typeCheckPass(PropTypes.renderable, 'Some string');
-    // Empty array
     typeCheckPass(PropTypes.renderable, []);
-    // Empty object
     typeCheckPass(PropTypes.renderable, {});
-    // Array of renderable things
     typeCheckPass(PropTypes.renderable, [
       123,
       'Some string',
