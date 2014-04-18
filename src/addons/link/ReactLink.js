@@ -42,6 +42,8 @@
  * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
+var React = require('React');
+
 /**
  * @param {*} value current value of the link
  * @param {function} requestChange callback to request a change
@@ -50,5 +52,27 @@ function ReactLink(value, requestChange) {
   this.value = value;
   this.requestChange = requestChange;
 }
+
+/**
+ * Creates a PropType that enforces the ReactLink API and optionally checks the
+ * type of the value being passed inside the link. Example:
+ *
+ * MyComponent.propTypes = {
+ *   tabIndexLink: ReactLink.PropTypes.link(React.PropTypes.number)
+ * }
+ */
+function createLinkTypeChecker(linkType) {
+  var shapes = {
+    value: typeof linkType === 'undefined'
+      ? React.PropTypes.any.isRequired
+      : linkType.isRequired,
+    requestChange: React.PropTypes.func.isRequired
+  };
+  return React.PropTypes.shape(shapes);
+}
+
+ReactLink.PropTypes = {
+  link: createLinkTypeChecker
+};
 
 module.exports = ReactLink;
