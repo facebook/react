@@ -198,7 +198,8 @@ var DefaultDOMPropertyConfig = {
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
     srcSet: 'srcset'
-  }
+  },
+  Constants: DOMPropertyInjectionConstants
 };
 
 module.exports = DefaultDOMPropertyConfig;
