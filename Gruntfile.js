@@ -10,6 +10,7 @@ var sauceTunnelTask = require('./grunt/tasks/sauce-tunnel');
 var npmTask = require('./grunt/tasks/npm');
 var releaseTasks = require('./grunt/tasks/release');
 var npmReactTasks = require('./grunt/tasks/npm-react');
+var npmDomPropertyConfigTasks = require('./grunt/tasks/npm-dom-property-config');
 var npmReactToolsTasks = require('./grunt/tasks/npm-react-tools');
 var versionCheckTask = require('./grunt/tasks/version-check');
 
@@ -67,6 +68,10 @@ module.exports = function(grunt) {
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
   grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.pack);
+  grunt.registerTask('npm-dom-property-config:release',
+    npmDomPropertyConfigTasks.buildRelease)
+  grunt.registerTask('npm-dom-property-config:pack',
+    npmDomPropertyConfigTasks.packRelease)
 
   grunt.registerTask('version-check', versionCheckTask);
 
@@ -208,6 +213,8 @@ module.exports = function(grunt) {
     'browserify:addonsMin',
     'npm-react:release',
     'npm-react:pack',
+    'npm-dom-property-config:release',
+    'npm-dom-property-config:pack',
     'npm-react-tools:pack',
     'copy:react_docs',
     'compare_size'
