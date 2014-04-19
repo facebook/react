@@ -123,6 +123,20 @@ You can use this object to decided how to serialize your DOM
 
 `npm install dom-property-config`
 
+## Contributing
+
+To work on this module please check out and clone the 
+  [react](https://github.com/facebook/react) source code.
+
+The implementation of this module can be found in 
+
+ - [DefaultDomPropertyConfig](https://github.com/facebook/react/blob/master/src/browser/ui/dom/DefaultDOMPropertyConfig.js)
+ - [DOMPropertyInjectionConstants](https://github.com/facebook/react/blob/master/src/browser/ui/dom/DOMPropertyInjectionConstants.js)
+
+The source code in this directly is auto generated and you 
+  should branch and work on the files in the `react` src
+  directory directly.
+
 ## Contributors
 
  - React maintainers
