@@ -82,18 +82,18 @@ describe('ReactDOMInput', function() {
   });
 
   it('should allow setting `value` to `true`', function() {
-    var stub = <input type="text" value="yolo" />;
+    var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('yolo');
 
-    stub.replaceProps({value: true});
+    stub.replaceProps({value: true, onChange: emptyFunction});
     expect(node.value).toEqual('true');
   });
 
   it("should allow setting `value` to `false`", function() {
-    var stub = <input type="text" value="yolo" />;
+    var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
@@ -104,7 +104,7 @@ describe('ReactDOMInput', function() {
   });
 
   it('should allow setting `value` to `objToString`', function() {
-    var stub = <input type="text" value="foo" />;
+    var stub = <input type="text" value="foo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
@@ -116,12 +116,12 @@ describe('ReactDOMInput', function() {
       }
     };
 
-    stub.replaceProps({value: objToString});
+    stub.replaceProps({value: objToString, onChange: emptyFunction});
     expect(node.value).toEqual('foobar');
   });
 
   it('should properly control a value of number `0`', function() {
-    var stub = <input type="text" value={0} />;
+    var stub = <input type="text" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
@@ -145,11 +145,28 @@ describe('ReactDOMInput', function() {
       render: function() {
         return (
           <div>
-            <input ref="a" type="radio" name="fruit" checked={true} />A
-            <input ref="b" type="radio" name="fruit" />B
+            <input
+              ref="a"
+              type="radio"
+              name="fruit"
+              checked={true}
+              onChange={emptyFunction}
+            />A
+            <input
+              ref="b"
+              type="radio"
+              name="fruit"
+              onChange={emptyFunction}
+            />B
 
             <form>
-              <input ref="c" type="radio" name="fruit" defaultChecked={true} />
+              <input
+                ref="c"
+                type="radio"
+                name="fruit"
+                defaultChecked={true}
+                onChange={emptyFunction}
+              />
             </form>
           </div>
         );
@@ -246,7 +263,13 @@ describe('ReactDOMInput', function() {
 
     expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
 
-    instance = <input type="text" valueLink={link} value="test" />;
+    instance =
+      <input
+        type="text"
+        valueLink={link}
+        value="test"
+        onChange={emptyFunction}
+      />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
     instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
@@ -283,7 +306,11 @@ describe('ReactDOMInput', function() {
       expect(console.warn.mock.calls.length).toBe(0);
 
       React.renderComponent(
-        <input type="checkbox" checked="false" onChange={mocks.getMockFunction()} />,
+        <input
+          type="checkbox"
+          checked="false"
+          onChange={mocks.getMockFunction()}
+        />,
         node
       );
       expect(console.warn.mock.calls.length).toBe(0);
@@ -319,10 +346,17 @@ describe('ReactDOMInput', function() {
 
     expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
 
-    instance = <input type="checkbox" checkedLink={link} checked="false" />;
+    instance =
+      <input
+        type="checkbox"
+        checkedLink={link}
+        checked="false"
+        onChange={emptyFunction}
+      />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
-    instance = <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
+    instance =
+      <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
   });
@@ -342,7 +376,8 @@ describe('ReactDOMInput', function() {
     instance = <input type="checkbox" valueLink={link} />;
     expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
 
-    instance = <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
+    instance =
+      <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
   });
 });
