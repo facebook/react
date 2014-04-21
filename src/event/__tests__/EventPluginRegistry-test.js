@@ -135,7 +135,8 @@ describe('EventPluginRegistry', function() {
       EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
     }).toThrow(
       'Invariant Violation: EventPluginRegistry: Cannot inject event plugin ' +
-      'ordering more than once.'
+      'ordering more than once. You are likely trying to load more than one ' +
+      'copy of React.'
     );
   });
 
