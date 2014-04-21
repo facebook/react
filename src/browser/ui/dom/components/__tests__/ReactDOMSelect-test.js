@@ -51,6 +51,24 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('giraffe');
   });
 
+  it('should allow setting `defaultValue` when rendering to Markup', function() {
+    var stub = React.renderComponentToStaticMarkup(
+      <select defaultValue="giraffe">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+
+    expect(stub).toMatch(
+      '<select>' +
+        '<option value="monkey">A monkey!</option>' +
+        '<option value="giraffe" selected>A giraffe!</option>' +
+        '<option value="gorilla">A gorilla!</option>' +
+      '</select>'
+    );
+  });
+
   it('should not control when using `defaultValue`', function() {
     var stub =
       <select defaultValue="giraffe">
@@ -108,6 +126,24 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('gorilla');
   });
 
+  it('should allow setting `value` when rendering to Markup', function() {
+    var stub = React.renderComponentToStaticMarkup(
+      <select value="giraffe">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+
+    expect(stub).toMatch(
+      '<select>' +
+        '<option value="monkey">A monkey!</option>' +
+        '<option value="giraffe" selected>A giraffe!</option>' +
+        '<option value="gorilla">A gorilla!</option>' +
+      '</select>'
+    );
+  });
+
   it('should allow setting `value` with multiple', function() {
     var stub =
       <select multiple={true} value={['giraffe', 'gorilla']}>
@@ -128,6 +164,24 @@ describe('ReactDOMSelect', function() {
     expect(node.options[0].selected).toBe(true);  // monkey
     expect(node.options[1].selected).toBe(false);  // giraffe
     expect(node.options[2].selected).toBe(false);  // gorilla
+  });
+
+  it('should allow setting `value` with multiple when rendering to Markup', function() {
+    var stub = React.renderComponentToStaticMarkup(
+      <select multiple={true} value={["giraffe","gorilla"]}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>
+    );
+
+    expect(stub).toMatch(
+      '<select multiple>' +
+        '<option value="monkey">A monkey!</option>' +
+        '<option value="giraffe" selected>A giraffe!</option>' +
+        '<option value="gorilla" selected>A gorilla!</option>' +
+      '</select>'
+    );
   });
 
   it('should not select other options automatically', function() {

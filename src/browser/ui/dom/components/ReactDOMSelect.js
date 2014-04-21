@@ -55,37 +55,6 @@ function selectValueType(props, propName, componentName) {
 }
 
 /**
- * If `value` is supplied, updates <option> elements on mount and update.
- * @param {ReactComponent} component Instance of ReactDOMSelect
- * @param {?*} propValue For uncontrolled components, null/undefined. For
- * controlled components, a string (or with `multiple`, a list of strings).
- * @private
- */
-function updateOptions(component, propValue) {
-  var multiple = component.props.multiple;
-  var value = propValue != null ? propValue : component.state.value;
-  var options = component.getDOMNode().options;
-  var selectedValue, i, l;
-  if (multiple) {
-    selectedValue = {};
-    for (i = 0, l = value.length; i < l; ++i) {
-      selectedValue['' + value[i]] = true;
-    }
-  } else {
-    selectedValue = '' + value;
-  }
-  for (i = 0, l = options.length; i < l; i++) {
-    var selected = multiple ?
-      selectedValue.hasOwnProperty(options[i].value) :
-      options[i].value === selectedValue;
-
-    if (selected !== options[i].selected) {
-      options[i].selected = selected;
-    }
-  }
-}
-
-/**
  * Implements a <select> native component that allows optionally setting the
  * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
  * string. If `multiple` is true, the prop must be an array of strings.
@@ -134,18 +103,31 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     props.onChange = this._handleChange;
     props.value = null;
 
-    return select(props, this.props.children);
-  },
-
-  componentDidMount: function() {
-    updateOptions(this, LinkedValueUtils.getValue(this));
-  },
-
-  componentDidUpdate: function() {
-    var value = LinkedValueUtils.getValue(this);
-    if (value != null) {
-      updateOptions(this, value);
+    // Sets selected on the appropriate child option descriptors
+    var propValue = LinkedValueUtils.getValue(this);
+    var value = propValue != null ? propValue : this.state.value;
+    var selectedValue, i, l;
+    if (this.props.multiple) {
+      selectedValue = {};
+      for (i = 0, l = value.length; i < l; ++i) {
+        selectedValue['' + value[i]] = true;
+      }
+    } else {
+      selectedValue = '' + value;
     }
+    for (i = 0, l = this.props.children.length; i < l; i++) {
+      var optionDescriptor = this.props.children[i];
+      if (!optionDescriptor) continue;
+      var selected = this.props.multiple ?
+        selectedValue.hasOwnProperty(optionDescriptor.props.value) :
+        optionDescriptor.props.value === selectedValue;
+
+      if (selected !== optionDescriptor.props.selected) {
+        optionDescriptor.props.selected = selected;
+      }
+    }
+
+    return select(props, this.props.children);
   },
 
   _handleChange: function(event) {
