@@ -37,7 +37,7 @@ describe('ReactPropTransferer', function() {
         return this.transferPropsTo(
           <input
             className="textinput"
-            style={{display: 'block'}}
+            style={{display: 'block', color: 'green'}}
             type="text"
             value=""
           />
@@ -55,7 +55,7 @@ describe('ReactPropTransferer', function() {
         .toBeComponentOfType(React.DOM.input)
         .scalarPropsEqual({
           className: 'textinput',
-          style: {display: 'block'},
+          style: {display: 'block', color: 'green'},
           type: 'text',
           value: ''
         });
@@ -75,7 +75,7 @@ describe('ReactPropTransferer', function() {
     var instance =
       <TestComponent
         className="hidden_elem"
-        style={{width: '100%'}}
+        style={{width: '100%', display: 'none'}}
       />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -85,6 +85,7 @@ describe('ReactPropTransferer', function() {
         .scalarPropsEqual({
           className: 'textinput hidden_elem',
           style: {
+            color: 'green',
             display: 'block',
             width: '100%'
           }
