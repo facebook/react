@@ -22,6 +22,7 @@ var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactChildren = require('ReactChildren');
 var ReactDOM = require('ReactDOM');
 
 var merge = require('merge');
@@ -115,17 +116,17 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     } else {
       selectedValue = '' + value;
     }
-    for (i = 0, l = this.props.children.length; i < l; i++) {
-      var optionDescriptor = this.props.children[i];
-      if (!optionDescriptor) continue;
-      var selected = this.props.multiple ?
-        selectedValue.hasOwnProperty(optionDescriptor.props.value) :
-        optionDescriptor.props.value === selectedValue;
+    var multiple = this.props.multiple;
+    ReactChildren.forEach(this.props.children, function (child) {
+      if (!child) return;
+      var selected = multiple ?
+        selectedValue.hasOwnProperty(child.props.value) :
+        child.props.value === selectedValue;
 
-      if (selected !== optionDescriptor.props.selected) {
-        optionDescriptor.props.selected = selected;
+      if (selected !== child.props.selected) {
+        child.props.selected = selected;
       }
-    }
+    });
 
     return select(props, this.props.children);
   },
