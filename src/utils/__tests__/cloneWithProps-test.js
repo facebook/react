@@ -176,7 +176,7 @@ describe('cloneWithProps', function() {
 
     var Grandparent = React.createClass({
       render: function() {
-        return <Parent><Component key="abc" ref="abc" /></Parent>;
+        return <Parent><Component key="abc" /></Parent>;
       }
     });
 
