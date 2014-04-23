@@ -33,6 +33,7 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       React = require('React');
       ReactTestUtils = require('ReactTestUtils');
+      require('mock-modules').dumpCache();
 
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
       transaction = new ReactReconcileTransaction();
@@ -111,6 +112,130 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
+    it("should give one deprecation warning for setting data-* and aria-*",
+      () => {
+        spyOn(console, 'warn');
+        var message = 'Warning: Direct usage of data-* and aria-* is being ' +
+          'deprecated. Use `dataSet` and `ariaSet` instead, akin to `style`.';
+
+        var instance1 = ReactTestUtils.renderIntoDocument(
+          <div data-foo-bar="a" data-bar-baz="b" />
+        ).getDOMNode();
+
+        ReactTestUtils.renderIntoDocument(
+          <div aria-foo-bar="a" aria-bar-baz="b" />
+        );
+
+        expect(instance1.getAttribute('data-foo-bar')).toBe('a');
+        expect(instance1.getAttribute('data-bar-baz')).toBe('b');
+        expect(console.warn.argsForCall.length).toBe(2);
+        expect(console.warn.argsForCall[0][0]).toBe(message);
+        expect(console.warn.argsForCall[1][0]).toBe(message);
+      }
+    );
+
+    it('should warn for data-* and aria-* added at re-render', () => {
+      spyOn(console, 'warn');
+      var message = 'Warning: Direct usage of data-* and aria-* is being ' +
+        'deprecated. Use `dataSet` and `ariaSet` instead, akin to `style`.';
+
+      var stub = ReactTestUtils.renderIntoDocument(<div />);
+
+      stub.receiveComponent(
+        {props: {'data-foo': 'a', 'aria-bar': 'b'}},
+        transaction
+      );
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toBe(message);
+    });
+
+    it("should update data-* and aria-* correctly", () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div data-foo-bar="a" data-bar-baz="b" aria-qux="c" />
+      );
+      var instance = stub.getDOMNode();
+
+      stub.receiveComponent({
+        props: {'data-foo-bar': "d", 'aria-what': 'd'}
+      }, transaction);
+      expect(instance.getAttribute('data-foo-bar')).toEqual('d');
+      expect(instance.getAttribute('data-bar-baz')).toEqual(null);
+      expect(instance.getAttribute('aria-qux')).toEqual(null);
+      expect(instance.getAttribute('aria-what')).toEqual('d');
+    });
+
+    it("should mix data-*, dataSet.*, aria-* and ariaSet correctly", () => {
+      spyOn(console, 'warn');
+      var warning = 'Warning: Direct usage of data-* and aria-* is being ' +
+        'deprecated. Use `dataSet` and `ariaSet` instead, akin to `style`.';
+
+      var instance1 = ReactTestUtils.renderIntoDocument(
+        <div data-foo-bar="a"
+          dataSet={{fooBar: 'b'}}
+          aria-foo-bar="c"
+          ariaSet={{fooBar: 'd'}}
+        />
+      ).getDOMNode();
+
+      var instance2 = ReactTestUtils.renderIntoDocument(
+        <div
+          ariaSet={{fooBar: 'd'}}
+          aria-foo-bar="c"
+          dataSet={{fooBar: 'b'}}
+          data-foo-bar="a"
+        />
+      ).getDOMNode();
+
+      expect(instance1.getAttribute('data-foo-bar')).toBe('b');
+      expect(instance1.getAttribute('aria-foo-bar')).toBe('d');
+      expect(instance2.getAttribute('data-foo-bar')).toBe('b');
+      expect(instance2.getAttribute('aria-foo-bar')).toBe('d');
+      expect(console.warn.argsForCall.length).toBe(2);
+      expect(console.warn.argsForCall[0][0]).toBe(warning);
+      expect(console.warn.argsForCall[1][0]).toBe(warning);
+    });
+
+    it("should handle dataSet as data-* and ariaSet as aria-*", () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dataSet={{}} ariaSet={{}} />
+      );
+      var instance = stub.getDOMNode();
+
+      var dataSetup = {id: 42, firstName: 'Douglas'};
+      var ariaSetup = {id: 47, firstName: 'John'};
+      stub.receiveComponent(
+        {props: {dataSet: dataSetup, ariaSet: ariaSetup}},
+        transaction
+      );
+      expect(instance.getAttribute('data-id')).toEqual('42');
+      expect(instance.getAttribute('data-first-name')).toEqual('Douglas');
+      expect(instance.getAttribute('aria-id')).toEqual('47');
+      expect(instance.getAttribute('aria-first-name')).toEqual('John');
+
+      var dataReset = {firstName: ''};
+      var ariaReset = {id: ''};
+      stub.receiveComponent(
+        {props: {dataSet: dataReset, ariaSet: ariaReset}},
+        transaction
+      );
+      expect(instance.getAttribute('data-id')).toBe(null);
+      expect(instance.getAttribute('data-first-name')).toBe('');
+      expect(instance.getAttribute('aria-id')).toBe('');
+      expect(instance.getAttribute('aria-first-name')).toBe(null);
+    });
+
+    it("should update data if initially null", () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dataSet={null} ariaSet={null} />
+      );
+      stub.receiveComponent(
+        {props: {dataSet: {id: 42}, ariaSet: {id: 20}}},
+        transaction
+      );
+      expect(stub.getDOMNode().getAttribute('data-id')).toBe('42');
+      expect(stub.getDOMNode().getAttribute('aria-id')).toBe('20');
+    });
+
     it("should remove attributes", function() {
       var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
 
@@ -148,6 +273,46 @@ describe('ReactDOMComponent', function() {
       stub.receiveComponent({props: {}}, transaction);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('');
+    });
+
+    it("should clear a single data prop when changing dataSet", () => {
+      var data = {id: 42, firstName: 'Douglas'};
+      var stub = ReactTestUtils.renderIntoDocument(<div dataSet={data} />);
+      var instance = stub.getDOMNode();
+
+      stub.receiveComponent({props: {dataSet: {id: 20}}}, transaction);
+      expect(instance.getAttribute('data-id')).toEqual('20');
+      expect(instance.getAttribute('data-first-name')).toEqual(null);
+    });
+
+    it("should clear all the data when removing dataSet", () => {
+      var data = {id: 42, firstName: 'Douglas'};
+      var stub = ReactTestUtils.renderIntoDocument(<div dataSet={data} />);
+      var instance = stub.getDOMNode();
+
+      stub.receiveComponent({props: {}}, transaction);
+      expect(instance.getAttribute('data-id')).toEqual(null);
+      expect(instance.getAttribute('data-first-name')).toEqual(null);
+    });
+
+    it("should clear a single aria prop when changing ariaSet", () => {
+      var aria = {id: 42, firstName: 'Douglas'};
+      var stub = ReactTestUtils.renderIntoDocument(<div ariaSet={aria} />);
+      var instance = stub.getDOMNode();
+
+      stub.receiveComponent({props: {ariaSet: {id: 20}}}, transaction);
+      expect(instance.getAttribute('aria-id')).toEqual('20');
+      expect(instance.getAttribute('aria-first-name')).toEqual(null);
+    });
+
+    it("should clear all the aria when removing ariaSet", () => {
+      var aria = {id: 42, firstName: 'Douglas'};
+      var stub = ReactTestUtils.renderIntoDocument(<div ariaSet={aria} />);
+      var instance = stub.getDOMNode();
+
+      stub.receiveComponent({props: {}}, transaction);
+      expect(instance.getAttribute('aria-id')).toEqual(null);
+      expect(instance.getAttribute('aria-first-name')).toEqual(null);
     });
 
     it("should empty element when removing innerHTML", function() {
