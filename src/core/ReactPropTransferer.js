@@ -70,9 +70,12 @@ var TransferStrategies = {
    */
   ref: emptyFunction,
   /**
-   * Transfer the `style` prop (which is an object) by merging them.
+   * Transfer `style`, `dataSet` and `ariaSet` (which are objects) by merging
+   * them.
    */
-  style: transferStrategyMerge
+  style: transferStrategyMerge,
+  dataSet: transferStrategyMerge,
+  ariaSet: transferStrategyMerge
 };
 
 /**

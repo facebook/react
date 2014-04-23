@@ -20,6 +20,7 @@
 "use strict";
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
+var CustomPropertyOperations = require('CustomPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
@@ -34,6 +35,7 @@ var invariant = require('invariant');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var warning = require('warning');
 
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
@@ -43,6 +45,8 @@ var registrationNameModules = ReactEventEmitter.registrationNameModules;
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
+var DATA_SET = keyOf({dataSet: null});
+var ARIA_SET = keyOf({ariaSet: null});
 
 var ELEMENT_NODE_TYPE = 1;
 
@@ -138,8 +142,43 @@ ReactDOMComponent.Mixin = {
   _createOpenTagMarkupAndPutListeners: function(transaction) {
     var props = this.props;
     var ret = this._tagOpen;
+    var propKey;
+    var dataSet = props.dataSet;
+    var ariaSet = props.ariaSet;
 
-    for (var propKey in props) {
+    if (__DEV__) {
+      for (propKey in props) {
+        if (!props.hasOwnProperty(propKey)) {
+          continue;
+        }
+        if (DOMProperty.isCustomAttribute(propKey)) {
+          warning(
+            false,
+            'Direct usage of data-* and aria-* is being deprecated. Use ' +
+            '`dataSet` and `ariaSet` instead, akin to `style`.'
+          );
+          break;
+        }
+      }
+    }
+
+    // We spread dataSet.* and ariaSet.* into `props` as data-* (hyphenated).
+    // Two reasons:
+    // 1. data-foo-bar and dataSet.fooBar will be merged correctly. The former
+    // should be deprecated soon.
+    // 2. We piggy ride on the following diffing procedure for data-* and aria-*
+    if (dataSet || ariaSet) {
+      props = merge(props);
+    }
+
+    if (dataSet) {
+      CustomPropertyOperations.spreadDataSetOntoPropsByMutating(props, dataSet);
+    }
+    if (ariaSet) {
+      CustomPropertyOperations.spreadAriaSetOntoPropsByMutating(props, ariaSet);
+    }
+
+    for (propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
       }
@@ -147,6 +186,10 @@ ReactDOMComponent.Mixin = {
       if (propValue == null) {
         continue;
       }
+      if (propKey === DATA_SET || propKey === ARIA_SET) {
+        continue;
+      }
+
       if (registrationNameModules[propKey]) {
         putListener(this._rootNodeID, propKey, propValue, transaction);
       } else {
@@ -266,9 +309,66 @@ ReactDOMComponent.Mixin = {
    */
   _updateDOMProperties: function(lastProps, transaction) {
     var nextProps = this.props;
-    var propKey;
     var styleName;
     var styleUpdates;
+    var propKey;
+
+    if (__DEV__) {
+      for (propKey in nextProps) {
+        if (!nextProps.hasOwnProperty(propKey)) {
+          continue;
+        }
+        if (DOMProperty.isCustomAttribute(propKey)) {
+          warning(
+            false,
+            'Direct usage of data-* and aria-* is being deprecated. Use ' +
+            '`dataSet` and `ariaSet` instead, akin to `style`.'
+          );
+          break;
+        }
+      }
+    }
+
+    // See `_createOpenTagMarkupAndPutListeners` for the reasoning for `dataSet`
+    // and `ariaSet`.
+    var lastDataSet = lastProps.dataSet;
+    var nextDataSet = nextProps.dataSet;
+    var lastAriaSet = lastProps.ariaSet;
+    var nextAriaSet = nextProps.ariaSet;
+
+    if (nextDataSet || nextAriaSet) {
+      nextProps = merge(this.props);
+    }
+    if (nextDataSet) {
+      CustomPropertyOperations.spreadDataSetOntoPropsByMutating(
+        nextProps,
+        nextDataSet
+      );
+      delete nextProps.dataSet;
+    }
+    if (nextAriaSet) {
+      CustomPropertyOperations.spreadAriaSetOntoPropsByMutating(
+        nextProps,
+        nextAriaSet
+      );
+      delete nextProps.ariaSet;
+    }
+
+    if (lastDataSet) {
+      CustomPropertyOperations.spreadDataSetOntoPropsByMutating(
+        lastProps,
+        lastDataSet
+      );
+      delete lastProps.dataSet;
+    }
+    if (lastAriaSet) {
+      CustomPropertyOperations.spreadAriaSetOntoPropsByMutating(
+        lastProps,
+        lastAriaSet
+      );
+      delete lastProps.ariaSet;
+    }
+
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey)) {
