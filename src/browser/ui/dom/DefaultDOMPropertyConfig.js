@@ -20,17 +20,17 @@
 
 "use strict";
 
-var DOMProperty = require('DOMProperty');
+var DOMPropertyInjectionConstants = require('DOMPropertyInjectionConstants');
 
-var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
-var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
-var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
-var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
-var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
+var MUST_USE_ATTRIBUTE = DOMPropertyInjectionConstants.MUST_USE_ATTRIBUTE;
+var MUST_USE_PROPERTY = DOMPropertyInjectionConstants.MUST_USE_PROPERTY;
+var HAS_BOOLEAN_VALUE = DOMPropertyInjectionConstants.HAS_BOOLEAN_VALUE;
+var HAS_SIDE_EFFECTS = DOMPropertyInjectionConstants.HAS_SIDE_EFFECTS;
+var HAS_NUMERIC_VALUE = DOMPropertyInjectionConstants.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
-  DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
+  DOMPropertyInjectionConstants.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
-  DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+  DOMPropertyInjectionConstants.HAS_OVERLOADED_BOOLEAN_VALUE;
 
 var DefaultDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
@@ -198,7 +198,8 @@ var DefaultDOMPropertyConfig = {
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
     srcSet: 'srcset'
-  }
+  },
+  Constants: DOMPropertyInjectionConstants
 };
 
 module.exports = DefaultDOMPropertyConfig;

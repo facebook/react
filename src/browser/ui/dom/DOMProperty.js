@@ -22,19 +22,22 @@
 "use strict";
 
 var invariant = require('invariant');
+var DOMPropertyInjectionConstants = require('DOMPropertyInjectionConstants');
 
 var DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
    * specifies how the associated DOM property should be accessed or rendered.
    */
-  MUST_USE_ATTRIBUTE: 0x1,
-  MUST_USE_PROPERTY: 0x2,
-  HAS_SIDE_EFFECTS: 0x4,
-  HAS_BOOLEAN_VALUE: 0x8,
-  HAS_NUMERIC_VALUE: 0x10,
-  HAS_POSITIVE_NUMERIC_VALUE: 0x20 | 0x10,
-  HAS_OVERLOADED_BOOLEAN_VALUE: 0x40,
+  MUST_USE_ATTRIBUTE: DOMPropertyInjectionConstants.MUST_USE_ATTRIBUTE,
+  MUST_USE_PROPERTY: DOMPropertyInjectionConstants.MUST_USE_PROPERTY,
+  HAS_SIDE_EFFECTS: DOMPropertyInjectionConstants.HAS_SIDE_EFFECTS,
+  HAS_BOOLEAN_VALUE: DOMPropertyInjectionConstants.HAS_BOOLEAN_VALUE,
+  HAS_NUMERIC_VALUE: DOMPropertyInjectionConstants.HAS_NUMERIC_VALUE,
+  HAS_POSITIVE_NUMERIC_VALUE:
+    DOMPropertyInjectionConstants.HAS_POSITIVE_NUMERIC_VALUE,
+  HAS_OVERLOADED_BOOLEAN_VALUE:
+    DOMPropertyInjectionConstants.HAS_OVERLOADED_BOOLEAN_VALUE,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
