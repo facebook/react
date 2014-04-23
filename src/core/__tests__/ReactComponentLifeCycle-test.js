@@ -356,15 +356,15 @@ describe('ReactComponentLifeCycle', function() {
     var PropsUpdaterInOnDOMReady = React.createClass({
       componentDidMount: function() {
         this.refs.theSimpleComponent.setProps({
-          value: this.props.valueToUseInOnDOMReady
+          valueToUseInitially: this.props.valueToUseInOnDOMReady
         });
       },
       render: function() {
         return (
-          <input
-            value={this.props.valueToUseInitially}
-            ref="theSimpleComponent">
-          </input>
+          <div
+            className={this.props.valueToUseInitially}
+            ref="theSimpleComponent"
+          />
         );
       }
     });
@@ -429,12 +429,7 @@ describe('ReactComponentLifeCycle', function() {
      function() {
     var PropsToUpdate = React.createClass({
       render: function() {
-        return (
-          <input
-            value={this.props.value}
-            ref="theSimpleComponent">
-          </input>
-        );
+        return <div className={this.props.value} ref="theSimpleComponent" />;
       }
     });
     var instance = <PropsToUpdate value="hello" />;
