@@ -13,6 +13,11 @@ next: complementary-tools.html
 
 "At Facebook and Instagram, we’re trying to push the limits of what’s possible on the web with React. My talk will start with a brief introduction to the framework, and then dive into three controversial topics: Throwing out the notion of templates and building views with JavaScript, “re-rendering” your entire application when your data changes, and a lightweight implementation of the DOM and events." -- [Pete Hunt](http://www.petehunt.net/)
 
+### Secrets of the Virtual DOM - MtnWest JS
+
+<iframe width="560" height="315" src="//www.youtube.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+
+"In this talk I’ll be discussing why we built a virtual DOM, how it compares to other systems, and its relevance to the future of browser technologies." -- [Pete Hunt](http://www.petehunt.net/)
 
 ### CodeWinds
 
