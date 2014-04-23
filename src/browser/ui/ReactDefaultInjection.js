@@ -18,22 +18,19 @@
 
 "use strict";
 
-var ReactInjection = require('ReactInjection');
-
-var ExecutionEnvironment = require('ExecutionEnvironment');
-
-var DefaultDOMPropertyConfig = require('DefaultDOMPropertyConfig');
-
+var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var ClientReactRootIndex = require('ClientReactRootIndex');
 var CompositionEventPlugin = require('CompositionEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
-var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
 var ReactDOM = require('ReactDOM');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
@@ -42,14 +39,14 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
+var ReactInjection = require('ReactInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var SelectEventPlugin = require('SelectEventPlugin');
 var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
-var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
-
-var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
+var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
 var createFullPageComponent = require('createFullPageComponent');
 
@@ -94,12 +91,12 @@ function inject() {
     body: createFullPageComponent(ReactDOM.body)
   });
 
-
   // This needs to happen after createFullPageComponent() otherwise the mixin
   // gets double injected.
   ReactInjection.CompositeComponent.injectMixin(ReactBrowserComponentMixin);
 
-  ReactInjection.DOMProperty.injectDOMPropertyConfig(DefaultDOMPropertyConfig);
+  ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
+  ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
 
   ReactInjection.EmptyComponent.injectEmptyComponent(ReactDOM.script);
 
