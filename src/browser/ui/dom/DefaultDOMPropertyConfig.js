@@ -170,7 +170,31 @@ var DefaultDOMPropertyConfig = {
     x: MUST_USE_ATTRIBUTE,
     y1: MUST_USE_ATTRIBUTE,
     y2: MUST_USE_ATTRIBUTE,
-    y: MUST_USE_ATTRIBUTE
+    y: MUST_USE_ATTRIBUTE,
+
+    /**
+     * SMIL Properties
+     */
+    accumulate: MUST_USE_ATTRIBUTE,
+    additive: MUST_USE_ATTRIBUTE,
+    attributeName: MUST_USE_ATTRIBUTE,
+    attributeType: MUST_USE_ATTRIBUTE,
+    begin: MUST_USE_ATTRIBUTE,
+    by: MUST_USE_ATTRIBUTE,
+    calcMode: MUST_USE_ATTRIBUTE,
+    dur: MUST_USE_ATTRIBUTE,
+    end:MUST_USE_ATTRIBUTE,
+    from: MUST_USE_ATTRIBUTE,
+    keySplines: MUST_USE_ATTRIBUTE,
+    keyTimes: MUST_USE_ATTRIBUTE,
+    path: MUST_USE_ATTRIBUTE,
+    repeatCount: MUST_USE_ATTRIBUTE,
+    repeatDur: MUST_USE_ATTRIBUTE,
+    restart: MUST_USE_ATTRIBUTE,
+    rotate: MUST_USE_ATTRIBUTE,
+    to: MUST_USE_ATTRIBUTE,
+    values: MUST_USE_ATTRIBUTE
+
   },
   DOMAttributeNames: {
     className: 'class',
