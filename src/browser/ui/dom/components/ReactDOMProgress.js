@@ -27,7 +27,8 @@ var ReactDOM = require('ReactDOM');
 var progress = ReactDOM.progress;
 
 /**
- * Implements <progress> native component that returns to an indeterminate (barbershop-pole) state when its value prop is set to null or undefined.
+ * Implements <progress> native component that returns to an indeterminate
+ * (barbershop-pole) state when its value prop is set to null or undefined.
  */
 var ReactDOMProgress = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMProgress',
