@@ -42,7 +42,10 @@ var ReactDOMProgress = ReactCompositeComponent.createClass({
     } else {
       previousValue = prevProps.value;
     }
-    if(typeof previousValue === 'undefined' || previousValue === null) return;
+
+    if(typeof previousValue === 'undefined' || previousValue === null) {
+      return;
+    }
 
     var value = LinkedValueUtils.getValue(this);
     if(typeof value === 'undefined' || value === null) {
