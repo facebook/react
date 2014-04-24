@@ -53,6 +53,8 @@ var instancesByReactID = {};
 var ReactDOMInput = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMInput',
 
+  tagName: input.tagName,
+
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {

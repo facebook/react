@@ -36,6 +36,8 @@ var form = ReactDOM.form;
 var ReactDOMForm = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMForm',
 
+  tagName: form.tagName,
+
   mixins: [ReactBrowserComponentMixin],
 
   render: function() {

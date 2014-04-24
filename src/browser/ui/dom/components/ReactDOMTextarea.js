@@ -51,6 +51,8 @@ var textarea = ReactDOM.textarea;
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMTextarea',
 
+  tagName: textarea.tagName,
+
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {
