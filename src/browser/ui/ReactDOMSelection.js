@@ -24,6 +24,15 @@ var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
 var getTextContentAccessor = require('getTextContentAccessor');
 
 /**
+ * While `isCollapsed` is available on the Selection object and `collapsed`
+ * is available on the Range object, IE11 sometimes gets them wrong.
+ * If the anchor/focus nodes and offsets are the same, the range is collapsed.
+ */
+function isCollapsed(anchorNode, anchorOffset, focusNode, focusOffset) {
+  return anchorNode === focusNode && anchorOffset === focusOffset;
+}
+
+/**
  * Get the appropriate anchor and focus node/offset pairs for IE.
  *
  * The catch here is that IE's selection API doesn't provide information
@@ -73,13 +82,31 @@ function getModernOffsets(node) {
   var focusOffset = selection.focusOffset;
 
   var currentRange = selection.getRangeAt(0);
-  var rangeLength = currentRange.toString().length;
+
+  // If the node and offset values are the same, the selection is collapsed.
+  // `Selection.isCollapsed` is available natively, but IE sometimes gets
+  // this value wrong.
+  var isSelectionCollapsed = isCollapsed(
+    selection.anchorNode,
+    selection.anchorOffset,
+    selection.focusNode,
+    selection.focusOffset
+  );
+
+  var rangeLength = isSelectionCollapsed ? 0 : currentRange.toString().length;
 
   var tempRange = currentRange.cloneRange();
   tempRange.selectNodeContents(node);
   tempRange.setEnd(currentRange.startContainer, currentRange.startOffset);
 
-  var start = tempRange.toString().length;
+  var isTempRangeCollapsed = isCollapsed(
+    tempRange.startContainer,
+    tempRange.startOffset,
+    tempRange.endContainer,
+    tempRange.endOffset
+  );
+
+  var start = isTempRangeCollapsed ? 0 : tempRange.toString().length;
   var end = start + rangeLength;
 
   // Detect whether the selection is backward.
