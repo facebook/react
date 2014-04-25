@@ -9,8 +9,8 @@ exports.defer = true;
 exports.setup = function(){
   /*global*/_rootNode = document.createElement('div');
   document.body.appendChild(_rootNode);
-  /*global*/_app = todolist.App({ fakeDataCount: 333 });
-  React.renderComponent(_app, _rootNode);
+  var appDescriptor = todolist.App({ fakeDataCount: 333 });
+  /*global*/_app = React.renderComponent(appDescriptor, _rootNode);
   /*global*/_todo1 = _app.addItem("Howdy 1!");
   /*global*/_todo2 = _app.addItem("Howdy 2!");
   /*global*/_todo3 = _app.addItem("Howdy 3!");
