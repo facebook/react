@@ -11,8 +11,8 @@ exports.defer = true;
 exports.setup = function(){
   /*global*/_rootNode = document.createElement('div');
   document.body.appendChild(_rootNode);
-  /*global*/_app = todolist.App({ fakeDataCount: 333 });
-  React.renderComponent(_app, _rootNode);
+  var appDescriptor = todolist.App({ fakeDataCount: 333 });
+  /*global*/_app = React.renderComponent(appDescriptor, _rootNode);
 };
 
 exports.fn = function(deferred){
