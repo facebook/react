@@ -21,7 +21,7 @@ module.exports = function() {
 
   var taskCompletedSuccessfully = task.async();
 
-  var stunnel = new SauceTunnel(SAUCE_USERNAME, SAUCE_ACCESS_KEY, IDENTIFIER, /*tunneled*/true, /*tunnelTimeout*/5);
+  var stunnel = new SauceTunnel(SAUCE_USERNAME, SAUCE_ACCESS_KEY, IDENTIFIER, /*tunneled*/true);
   process.on('exit', stunnel.stop.bind(stunnel, function(){}));
 
   stunnel.on('log:error', grunt.log.error.bind(grunt.log));
