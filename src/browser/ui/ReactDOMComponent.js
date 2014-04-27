@@ -34,6 +34,7 @@ var invariant = require('invariant');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var getObjectDiff = require('getObjectDiff');
 
 var deleteListener = ReactEventEmitter.deleteListener;
 var listenTo = ReactEventEmitter.listenTo;
@@ -267,21 +268,14 @@ ReactDOMComponent.Mixin = {
   _updateDOMProperties: function(lastProps, transaction) {
     var nextProps = this.props;
     var propKey;
-    var styleName;
-    var styleUpdates;
+
     for (propKey in lastProps) {
       if (nextProps.hasOwnProperty(propKey) ||
          !lastProps.hasOwnProperty(propKey)) {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = lastProps[propKey];
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = '';
-          }
-        }
+        continue;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         deleteListener(this._rootNodeID, propKey);
       } else if (
@@ -301,28 +295,8 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
+          // Defensive copy in case the object is mutated afterward by user.
           nextProp = nextProps.style = merge(nextProp);
-        }
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = '';
-            }
-          }
-          // Update styles that changed since `lastProp`.
-          for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = nextProp[styleName];
-            }
-          }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          styleUpdates = nextProp;
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         putListener(this._rootNodeID, propKey, nextProp, transaction);
@@ -336,6 +310,8 @@ ReactDOMComponent.Mixin = {
         );
       }
     }
+
+    var styleUpdates = getObjectDiff(lastProps.style, nextProps.style);
     if (styleUpdates) {
       ReactComponent.BackendIDOperations.updateStylesByID(
         this._rootNodeID,
