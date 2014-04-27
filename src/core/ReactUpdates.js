@@ -22,6 +22,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactPerf = require('ReactPerf');
 
 var invariant = require('invariant');
+var warning = require('warning');
 
 var dirtyComponents = [];
 
@@ -109,7 +110,7 @@ function enqueueUpdate(component, callback) {
   // verify that that's the case. (This is called by each top-level update
   // function, like setProps, setState, forceUpdate, etc.; creation and
   // destruction of top-level components is guarded in ReactMount.)
-  invariant(
+  warning(
     ReactCurrentOwner.current == null,
     'enqueueUpdate(): Render methods should be a pure function of props ' +
     'and state; triggering nested component updates from render is not ' +
