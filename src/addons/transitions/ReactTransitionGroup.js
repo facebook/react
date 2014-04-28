@@ -61,15 +61,15 @@ var ReactTransitionGroup = React.createClass({
     var key;
 
     for (key in nextChildMapping) {
-      if (!prevChildMapping.hasOwnProperty(key) &&
-        !this.currentlyTransitioningKeys[key]) {
+      var hasPrev = prevChildMapping && prevChildMapping.hasOwnProperty(key);
+      if (!hasPrev && !this.currentlyTransitioningKeys[key]) {
         this.keysToEnter.push(key);
       }
     }
 
     for (key in prevChildMapping) {
-      if (!nextChildMapping.hasOwnProperty(key) &&
-        !this.currentlyTransitioningKeys[key]) {
+      var hasNext = nextChildMapping && nextChildMapping.hasOwnProperty(key);
+      if (!hasNext && !this.currentlyTransitioningKeys[key]) {
         this.keysToLeave.push(key);
       }
     }
