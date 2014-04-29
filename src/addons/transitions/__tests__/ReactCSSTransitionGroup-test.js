@@ -142,4 +142,25 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
   });
+
+  it('should transition from one to null', function() {
+    var a = React.renderComponent(
+      <ReactCSSTransitionGroup transitionName="yolo">
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    React.renderComponent(
+      <ReactCSSTransitionGroup transitionName="yolo">
+        {null}
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    // (Here, we expect the original child to stick around but test that no
+    // exception is thrown)
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    expect(a.getDOMNode().childNodes[0].id).toBe('one');
+  });
+
 });
