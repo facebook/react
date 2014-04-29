@@ -20,7 +20,6 @@
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');

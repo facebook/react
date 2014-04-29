@@ -17,6 +17,8 @@
  * @nolint
  */
 
+"use strict";
+
 var ReactTestUtils = require('ReactTestUtils');
 
 var mergeInto = require('mergeInto');
@@ -73,7 +75,7 @@ mergeInto(reactComponentExpect.prototype, {
     // change soon.
     this.toBeDOMComponent();
     var renderedChildren = this.instance()._renderedChildren || {};
-    for (name in renderedChildren) {
+    for (var name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
       }
