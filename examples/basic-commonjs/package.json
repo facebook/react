@@ -1,0 +1,14 @@
+{
+  "name": "react-basic-commonjs-example",
+  "description": "Basic example of using React with CommonJS",
+  "main": "index.js",
+  "devDependencies": {
+    "envify": "~1.2.1",
+    "react": "~0.10.0",
+    "reactify": "~0.13.1",
+    "browserify": "~3.44.2"
+  },
+  "scripts": {
+    "build": "browserify --debug --transform reactify index.js > bundle.js"
+  }
+}
