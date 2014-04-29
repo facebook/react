@@ -252,6 +252,12 @@ describe('ReactDOMComponent', function() {
       expect(genMarkup({ className: 'a b' })).toHaveAttribute('class', 'a b');
       expect(genMarkup({ className: '' })).toHaveAttribute('class', '');
     });
+
+    it("should escape style names and values", function() {
+      expect(genMarkup({
+        style: {'b&ckground': '<3'}
+      })).toHaveAttribute('style', 'b&amp;ckground:&lt;3;');
+    });
   });
 
   describe('createContentMarkup', function() {
