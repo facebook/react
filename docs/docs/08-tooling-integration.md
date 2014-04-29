@@ -38,18 +38,4 @@ If you have [npm](http://npmjs.org/), you can simply run `npm install -g react-t
 
 ### Helpful Open-Source Projects
 
-The open-source community has built tools that integrate JSX with several build systems. See [JSX integrations](/react/docs/complementary-tools.html#jsx-integrations) for the full list.
-
-
-### Syntax Highlighting & Linting
-
-* Many editors already include reasonable support for JSX (Vim, Emacs js2-mode).
-  * [JSX syntax highlighting](https://github.com/yungsters/sublime/blob/master/tmLanguage/JavaScript%20(JSX\).tmLanguage) is available for Sublime Text and other editors
-    that support `*.tmLanguage`.
-  * [web-mode.el](http://web-mode.org) is an autonomous emacs major mode that indents and highlights JSX
-* Linting provides accurate line numbers after compiling without sourcemaps.
-* Elements use standard scoping so linters can find usage of out-of-scope components.
-
-### Debugging
-
-[React Developer Tools](https://github.com/facebook/react-devtools) is a [Chrome extension](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) that allows you to inspect the React component hierarchy in the Chrome Developer Tools.
+The open-source community has built tools that integrate JSX with several editors and build systems. See [JSX integrations](https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations) for the full list.
