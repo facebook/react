@@ -13,6 +13,13 @@ next: complementary-tools.html
 
 "At Facebook and Instagram, we’re trying to push the limits of what’s possible on the web with React. My talk will start with a brief introduction to the framework, and then dive into three controversial topics: Throwing out the notion of templates and building views with JavaScript, “re-rendering” your entire application when your data changes, and a lightweight implementation of the DOM and events." -- [Pete Hunt](http://www.petehunt.net/)
 
+
+### Thinking in react - tagtree.tv
+
+A [tagtree.tv](htp://tagtree.tv/) video conveying the principles of [Thinking in React](/react/docs/thinking-in-react.html) while building a simple app
+<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+
+
 ### Secrets of the Virtual DOM - MtnWest JS
 
 <iframe width="560" height="315" src="//www.youtube.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
