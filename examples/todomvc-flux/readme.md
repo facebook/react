@@ -26,7 +26,7 @@ Control is inverted with ___stores___: the stores accept updates and reconcile t
 Data in a Flux application flows in a single direction, in a cycle:
 
 <pre>
-Views ---> (actions) ----> Dispatcher ---> (registerd callback) ---> Stores --------+
+Views ---> (actions) ----> Dispatcher ---> (registered callback) ---> Stores --------+
 Ʌ                                                                                   |
 |                                                                                   V
 +-- (Controller-Views "change" event handlers) ---- (Stores emit "change" events) --+
