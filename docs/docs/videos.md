@@ -16,8 +16,8 @@ next: complementary-tools.html
 
 ### Thinking in react - tagtree.tv
 
-A [tagtree.tv](htp://tagtree.tv/) video conveying the principles of 'Thinking in react' while building a simple app
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv)</figure>
+A [tagtree.tv](htp://tagtree.tv/) video conveying the principles of [Thinking in React](/react/docs/thinking-in-react.html) while building a simple app
+<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
 
 
 ### Secrets of the Virtual DOM - MtnWest JS
