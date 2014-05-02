@@ -12,7 +12,7 @@ A post on the [React Blog](http://facebook.github.io/react/blog/) is forthcoming
 
 ## Overview
 
-Flux applications have three major parts: the ___dispatcher___, the ___stores___, and the ___views___ (React components).  These should not be confused with Model-View-Controller.  Controllers do exist in a Flux application, but they are ___controller-views___ -- views often found at the top of the hierarchy that retrieve data from the stores and pass this data down to their children.  Additionally, ___actions___ — dispatcher helper methods — are often used to support a semantic dispatcher API.  It can be useful to think of them as a fourth part of the Flux Cycle.
+Flux applications have three major parts: the ___dispatcher___, the ___stores___, and the ___views___ (React components).  These should not be confused with Model-View-Controller.  Controllers do exist in a Flux application, but they are ___controller-views___ -- views often found at the top of the hierarchy that retrieve data from the stores and pass this data down to their children.  Additionally, ___actions___ — dispatcher helper methods — are often used to support a semantic dispatcher API.  It can be useful to think of them as a fourth part of the Flux update cycle.
 
 Flux eschews MVC in favor of a unidirectional data flow. When a user interacts with a React ___view___, the view propagates an ___action___ through a central ___dispatcher___, to the various ___stores___ that hold the application's data and business logic, which updates all of the views that are affected. This works especially well with React's declarative programming style, which allows the store to send updates without specifying how to transition views between states.
 
@@ -21,7 +21,7 @@ We originally set out to deal correctly with derived data: for example, we wante
 Control is inverted with ___stores___: the stores accept updates and reconcile them as appropriate, rather than depending on something external to update its data in a consistent way. Nothing outside the store has any insight into how it manages the data for its domain, helping to keep a clear separation of concerns. This also makes stores more testable than models, especially since stores have no direct setter methods like `setAsRead()`, but instead have only an input point for the payload, which is delivered through the ___dispatcher___ and originates with ___actions___.
 
 
-## Implementation
+## Structure and Data Flow
 
 Data in a Flux application flows in a single direction, in a cycle:
 
@@ -34,13 +34,13 @@ Views ---> (actions) ----> Dispatcher ---> (registerd callback) ---> Stores ----
 
 A unidirectional data flow is central to the Flux pattern, and in fact Flux takes its name from the Latin word for flow. In the above diagram, the ___dispatcher___, ___stores___ and ___views___ are independent nodes with distinct inputs and outputs. The ___actions___ are simply discrete, semantic helper functions that facilitate passing data to the ___dispatcher___. 
 
-All data flows through the ___dispatcher___ as a central hub.  ___Actions___ most often originate from user interactions with the ___views___, and are nothing more than a call into the ___dispatcher___.  The ___dispatcher___ then invokes the callbacks that the ___stores___ have registered with it, effectively dispatching the data payload contained in the ___actions___ to all ___stores___.  Within their registered callbacks, ___stores___ determine which ___actions___ they are interested in, and respond accordingly.  The ___stores___ then emit a "change" event to alert the ___controller-views___ that a change to the data layer has occurred.  ___Controller-Views___ listen for these events and retrieve data from the ___stores___ in an event handler.  The ___controller-views___ call their own `render()` method via `setState()` or `forceUpdate()`, updating themselves and all of their children.
+All data flows through the ___dispatcher___ as a central hub.  ___Actions___ most often originate from user interactions with the ___views___, and are nothing more than a call into the ___dispatcher___.  The ___dispatcher___ then invokes the callbacks that the ___stores___ have registered with it, effectively dispatching the data payload contained in the ___actions___ to all ___stores___.  Within their registered callbacks, ___stores___ determine which ___actions___ they are interested in, and respond accordingly.  The ___stores___ then emit a "change" event to alert the ___controller-views___ that a change to the data layer has occurred.  ___Controller-views___ listen for these events and retrieve data from the ___stores___ in an event handler.  The ___controller-views___ call their own `render()` method via `setState()` or `forceUpdate()`, updating themselves and all of their children.
 
 This structure allows us to reason easily about our application in a way that is reminiscent of functional reactive programming, or more specifically data-flow programming or flow-based programming, where data flows through the application in a single direction — there are no two-way bindings. Application state is maintained only in the ___stores___, allowing the different parts of the application to remain highly decoupled. Where dependencies do occur between ___stores___, they are kept in a strict hierarchy, with synchronous updates managed by the ___dispatcher___. 
 
 We found that two-way data bindings led to cascading updates, where changing one object led to another object changing, which could also trigger more updates. As applications grew, these cascading updates made it very difficult to predict what would change as the result of one user interaction. When updates can only change data within a single round, the system as a whole becomes more predictable.
 
-Let's look at the various parts of the Flux Cycle up close. A good place to start is the dispatcher. 
+Let's look at the various parts of the Flux update cycle up close. A good place to start is the dispatcher. 
 
 
 ### A Single Dispatcher 
@@ -56,7 +56,7 @@ Stores contain the application state and logic. Their role is somewhat similar t
 
 For example, Facebook's [Lookback Video Editor](https://facebook.com/lookback/edit) utilized a TimeStore that kept track of the playback time position and the playback state. On the other hand, the same application's ImageStore kept track of a collection of images.  The TodoStore in our TodoMVC example is similar in that it manages a collection of to-do items.  A store exhibits characteristics of both a collection of models and a singleton model of a logical domain. 
 
-As mentioned above, a store registers itself with the dispatcher and provides it with a callback. This callback receives the action's data payload as a parameter. The payload contains a type attribute, identifying the action's type. Within the store's registered callback, a switch statement based on the action's type is used to interpret the payload and to provide the proper hooks into the Store's internal methods. This allows an action to result in an update to the state of the store, via the dispatcher. After the stores are updated, they broadcast an event declaring that their state has changed, so the views may query the new state and update themselves. 
+As mentioned above, a store registers itself with the dispatcher and provides it with a callback. This callback receives the action's data payload as a parameter. The payload contains a type attribute, identifying the action's type. Within the store's registered callback, a switch statement based on the action's type is used to interpret the payload and to provide the proper hooks into the store's internal methods. This allows an action to result in an update to the state of the store, via the dispatcher. After the stores are updated, they broadcast an event declaring that their state has changed, so the views may query the new state and update themselves. 
 
 
 ### Views and Controller-Views 
@@ -77,7 +77,30 @@ The dispatcher exposes a method that allows a view to trigger a dispatch to the 
 Actions may also come from other places, such as the server. This happens, for example, during data initialization. It may also happen when the server returns an error code or when the server has updates to provide to the application. We'll talk more about server actions in a future article. In this post we're only concerned with the basics of the data flow.
 
 
-## Implementation
+### What About that Dispatcher? 
+
+As mentioned earlier, the dispatcher is also able to manage dependencies between stores. This functionality is available through the `waitFor()` method within the Dispatcher class.  The TodoMVC application is extremely simple, so we did not need to use this method, but we have included it here as an example of what a dispatcher should be able to do in a larger, more complex application.
+
+Within the TodoStore's registered callback we can explicitly wait for any dependencies to first update before moving forward: 
+
+``` 
+case 'TODO_CREATE': 
+  Dispatcher.waitFor([ 
+    PrependedTextStore.dispatcherIndex, 
+    YetAnotherStore.dispatcherIndex 
+  ], function() { 
+    TodoStore.create(PrependedTextStore.getText() + ' ' + action.text); 
+    TodoStore.emit('change'); 
+  }); 
+  break; 
+```
+
+The arguments for `waitFor()` are an array of dipatcher registry indexes, and a final callback to invoke after the callbacks at the given indexes have completed.  Thus the store that is invoking `waitFor()` can depend on the state of another store to inform how it should update its own state.
+
+A problem arises if we create circular dependencies. If Store A waits for Store B, and B waits for A, then we'll have a very bad situation on our hands. We'll need a more robust dispatcher that flags these circular dependencies with console errors, and this is not easily accomplished with promises. Unfortunately, that's a bit beyond the scope of this documentation. In future blog posts, we hope to cover how to build a more robust dispatcher and how to initialize, update, and save the state of the application with persistent data, like a web service API.
+
+
+## TodoMVC Example Implementation
 
 In this TodoMVC example application, we can see the elements of Flux in our directory structure.  Views here are referred to as "components" as they are React components.
 
@@ -103,13 +126,13 @@ In this TodoMVC example application, we can see the elements of Flux in our dire
       TodoStore.js
 </pre>
 
-The primary entry point into the application is app.js.  This file bootstraps the React rendering inside of index.html.  TodoApp.js is our Controller-View and it passes all data down into its child React components.
+The primary entry point into the application is app.js.  This file bootstraps the React rendering inside of index.html.  TodoApp.js is our controller-view and it passes all data down into its child React components.
 
 TodoActions.js is a collection of actions that views may call from within their event handlers, in response to user interactions.  They are nothing more than helpers that call into the AppDispatcher.
 
-Dispatcher.js is a base class for AppDispatcher.js which extends it with a small amount of application-specific code.  This Dispatcher is a naive implementation based on promises, but much more robust implementations are possible.
+Dispatcher.js is a base class for AppDispatcher.js which extends it with a small amount of application-specific code.  This dispatcher is a naive implementation based on promises, but much more robust implementations are possible.
 
-TodoStore.js is our only Store.  It provides all of the application logic and in-memory storage.  Based on EventEmitter from Node.js, it emits "change" events after responding to actions in the callback it registers with the Dispatcher.
+TodoStore.js is our only store.  It provides all of the application logic and in-memory storage.  Based on EventEmitter from Node.js, it emits "change" events after responding to actions in the callback it registers with the dispatcher.
 
 The bundle.js file is automatically genenerated by the build process, explained below.
 
