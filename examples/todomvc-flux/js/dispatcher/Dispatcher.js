@@ -54,7 +54,7 @@ var _clearPromises = function() {
  * @param {number} index The index within the _promises array
  */
 var _checkPromise = function(_,j){
-  return promiseIndexes.indexOf(j) !== -1;
+  return _promises.indexOf(j) !== -1;
 }
 
 var Dispatcher = function() {};
