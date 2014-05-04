@@ -49,14 +49,6 @@ var _clearPromises = function() {
   _promises = [];
 };
 
-/**
- * Used below in waitFor().
- * @param {number} index The index within the _promises array
- */
-var _checkPromise = function(_,j){
-  return _promises.indexOf(j) !== -1;
-}
-
 var Dispatcher = function() {};
 Dispatcher.prototype = merge(Dispatcher.prototype, {
 
@@ -116,7 +108,7 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    * A more robust Dispatcher would issue a warning in this scenario.
    */
   waitFor: function(/*array*/ promiseIndexes, /*function*/ callback) {
-    var selectedPromises = _promises.filter(_checkPromise)
+    var selectedPromises = _promises.filter(function(_,j){return promiseIndexes.indexOf(j) !== -1;})
     Promise.all(selectedPromises).then(callback);
   }
 
