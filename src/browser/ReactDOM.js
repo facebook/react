@@ -184,7 +184,8 @@ var ReactDOM = mapObject({
   rect: false,
   stop: false,
   svg: false,
-  text: false
+  text: false,
+  tspan: false
 }, createDOMComponentClass);
 
 var injection = {
