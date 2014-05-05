@@ -22,6 +22,8 @@
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var ViewportMetrics = require('ViewportMetrics');
 
+var getEventModifierState = require('getEventModifierState');
+
 /**
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -35,6 +37,7 @@ var MouseEventInterface = {
   shiftKey: null,
   altKey: null,
   metaKey: null,
+  getEventModifierState: getEventModifierState,
   button: function(event) {
     // Webkit, Firefox, IE9+
     // which:  1 2 3
