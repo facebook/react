@@ -614,7 +614,7 @@ describe('Custom validator', function() {
     var instance = <Component num={5} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(spy.argsForCall.length).toBe(1);
+    expect(spy.argsForCall.length).toBe(2); // temp double validation
     expect(spy.argsForCall[0][1]).toBe('num');
     expect(spy.argsForCall[0][2]).toBe('Component');
   });
@@ -632,7 +632,7 @@ describe('Custom validator', function() {
     var instance = <Component bla={5} />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(spy.argsForCall.length).toBe(1);
+    expect(spy.argsForCall.length).toBe(2); // temp double validation
   });
 
   it('should have received the validator\'s return value', function() {
