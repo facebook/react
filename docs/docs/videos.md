@@ -111,3 +111,7 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 ### "Functional DOM programming" - Meteor DevShop 11
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+
+### "Rethinking web app development at Facebook" - Facebook F8 Conference 2014
+
+<iframe width="650" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
