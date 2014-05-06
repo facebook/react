@@ -21,8 +21,164 @@
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
-var merge = require('merge');
+var monitorCodeUse = require('monitorCodeUse');
 var warning = require('warning');
+
+/**
+ * Warn if there's no key explicitly set on dynamic arrays of children or
+ * object keys are not valid. This allows us to keep track of children between
+ * updates.
+ */
+var ownerHasKeyUseWarning = {
+  'react_key_warning': {},
+  'react_numeric_key_warning': {}
+};
+var ownerHasMonitoredObjectMap = {};
+
+var NUMERIC_PROPERTY_REGEX = /^\d+$/;
+
+/**
+ * Gets the current owner's displayName for use in warnings.
+ *
+ * @internal
+ * @return {?string} Display name or undefined
+ */
+function getCurrentOwnerDisplayName() {
+  var current = ReactCurrentOwner.current;
+  return current && current.constructor.displayName || undefined;
+}
+
+/**
+ * Warn if the component doesn't have an explicit key assigned to it.
+ * This component is in an array. The array could grow and shrink or be
+ * reordered. All children that haven't already been validated are required to
+ * have a "key" property assigned to it.
+ *
+ * @internal
+ * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
+ */
+function validateExplicitKey(component, parentType) {
+  if (component._store.validated || component.props.key != null) {
+    return;
+  }
+  component._store.validated = true;
+
+  warnAndMonitorForKeyUse(
+    'react_key_warning',
+    'Each child in an array should have a unique "key" prop.',
+    component,
+    parentType
+  );
+}
+
+/**
+ * Warn if the key is being defined as an object property but has an incorrect
+ * value.
+ *
+ * @internal
+ * @param {string} name Property name of the key.
+ * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
+ */
+function validatePropertyKey(name, component, parentType) {
+  if (!NUMERIC_PROPERTY_REGEX.test(name)) {
+    return;
+  }
+  warnAndMonitorForKeyUse(
+    'react_numeric_key_warning',
+    'Child objects should have non-numeric keys so ordering is preserved.',
+    component,
+    parentType
+  );
+}
+
+/**
+ * Shared warning and monitoring code for the key warnings.
+ *
+ * @internal
+ * @param {string} warningID The id used when logging.
+ * @param {string} message The base warning that gets output.
+ * @param {ReactComponent} component Component that requires a key.
+ * @param {*} parentType component's parent's type.
+ */
+function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
+  var ownerName = getCurrentOwnerDisplayName();
+  var parentName = parentType.displayName;
+
+  var useName = ownerName || parentName;
+  var memoizer = ownerHasKeyUseWarning[warningID];
+  if (memoizer.hasOwnProperty(useName)) {
+    return;
+  }
+  memoizer[useName] = true;
+
+  message += ownerName ?
+    ` Check the render method of ${ownerName}.` :
+    ` Check the renderComponent call using <${parentName}>.`;
+
+  // Usually the current owner is the offender, but if it accepts children as a
+  // property, it may be the creator of the child that's responsible for
+  // assigning it a key.
+  var childOwnerName = null;
+  if (component._owner && component._owner !== ReactCurrentOwner.current) {
+    // Name of the component that originally created this child.
+    childOwnerName = component._owner.constructor.displayName;
+
+    message += ` It was passed a child from ${childOwnerName}.`;
+  }
+
+  message += ' See http://fb.me/react-warning-keys for more information.';
+  monitorCodeUse(warningID, {
+    component: useName,
+    componentOwner: childOwnerName
+  });
+  console.warn(message);
+}
+
+/**
+ * Log that we're using an object map. We're considering deprecating this
+ * feature and replace it with proper Map and ImmutableMap data structures.
+ *
+ * @internal
+ */
+function monitorUseOfObjectMap() {
+  var currentName = getCurrentOwnerDisplayName() || '';
+  if (ownerHasMonitoredObjectMap.hasOwnProperty(currentName)) {
+    return;
+  }
+  ownerHasMonitoredObjectMap[currentName] = true;
+  monitorCodeUse('react_object_map_children');
+}
+
+/**
+ * Ensure that every component either is passed in a static location, in an
+ * array with an explicit keys property defined, or in an object literal
+ * with valid key property.
+ *
+ * @internal
+ * @param {*} component Statically passed child of any type.
+ * @param {*} parentType component's parent's type.
+ * @return {boolean}
+ */
+function validateChildKeys(component, parentType) {
+  if (Array.isArray(component)) {
+    for (var i = 0; i < component.length; i++) {
+      var child = component[i];
+      if (ReactDescriptor.isValidDescriptor(child)) {
+        validateExplicitKey(child, parentType);
+      }
+    }
+  } else if (ReactDescriptor.isValidDescriptor(component)) {
+    // This component was passed in a valid location.
+    component._store.validated = true;
+  } else if (component && typeof component === 'object') {
+    monitorUseOfObjectMap();
+    for (var name in component) {
+      validatePropertyKey(name, component[name], parentType);
+    }
+  }
+}
 
 /**
  * Warn for mutations.
@@ -82,26 +238,6 @@ function defineMutationMembrane(prototype) {
 }
 
 /**
- * Transfer static properties from the source to the target. Functions are
- * rebound to have this reflect the original source.
- */
-function proxyStaticMethods(target, source) {
-  if (typeof source !== 'function') {
-    return;
-  }
-  for (var key in source) {
-    if (source.hasOwnProperty(key)) {
-      var value = source[key];
-      if (typeof value === 'function') {
-        target[key] = value.bind(source);
-      } else {
-        target[key] = value;
-      }
-    }
-  }
-}
-
-/**
  * Base constructor for all React descriptors. This is only used to make this
  * work with a dynamic instanceof check. Nothing should live on this prototype.
  *
@@ -118,44 +254,29 @@ ReactDescriptor.createFactory = function(type) {
 
   var descriptorPrototype = Object.create(ReactDescriptor.prototype);
 
-  var defaultProps = type.getDefaultProps && type.getDefaultProps();
-
   var factory = function(props, children) {
-    // For consistency we currently allocate a new object for every descriptor.
-    // This protects the descriptor from being mutated by the original props
-    // object being mutated. It also protects the original props object from
-    // being mutated by children arguments and default props. This behavior
-    // comes with a performance cost and could be deprecated in the future.
-    // It could also be optimized with a smarter JSX transform.
     if (props == null) {
       props = {};
-    } else if (typeof props === 'object') {
-      props = merge(props);
     }
 
-    // Children can be more than one argument, and those are transferred onto
-    // the newly allocated props object.
+    // Children can be more than one argument
     var childrenLength = arguments.length - 1;
     if (childrenLength === 1) {
+      if (__DEV__) {
+        validateChildKeys(children, type);
+      }
       props.children = children;
     } else if (childrenLength > 1) {
       var childArray = Array(childrenLength);
       for (var i = 0; i < childrenLength; i++) {
+        if (__DEV__) {
+          validateChildKeys(arguments[i + 1], type);
+        }
         childArray[i] = arguments[i + 1];
       }
       props.children = childArray;
     }
 
-    // Resolve default props
-    if (defaultProps) {
-      for (var propName in defaultProps) {
-        if (typeof props[propName] === 'undefined') {
-          props[propName] = defaultProps[propName];
-        }
-      }
-    }
-
-    // Initialize the descriptor object
     var descriptor = Object.create(descriptorPrototype);
 
     // Record the component responsible for creating this descriptor.
@@ -168,13 +289,10 @@ ReactDescriptor.createFactory = function(type) {
     if (__DEV__) {
       // The validation flag and props are currently mutative. We put them on
       // an external backing store so that we can freeze the whole object.
-      // This can be replaced with a WeakMap once they are implemented in
-      // commonly used development environments.
       descriptor._store = { validated: false, props: props };
 
       // We're not allowed to set props directly on the object so we early
-      // return and rely on the prototype membrane to forward to the backing
-      // store.
+      // return and rely on the prototype membrane toward to the backing store.
       if (useMutationMembrane) {
         Object.freeze(descriptor);
         return descriptor;
@@ -183,6 +301,7 @@ ReactDescriptor.createFactory = function(type) {
 
     descriptor.props = props;
     return descriptor;
+
   };
 
   // Currently we expose the prototype of the descriptor so that
@@ -196,8 +315,6 @@ ReactDescriptor.createFactory = function(type) {
   // that created the descriptor, and it may not even be a constructor.
   factory.type = type;
   descriptorPrototype.type = type;
-
-  proxyStaticMethods(factory, type);
 
   // Expose a unique constructor on the prototype is that this works with type
   // systems that compare constructor properties: <Foo />.constructor === Foo

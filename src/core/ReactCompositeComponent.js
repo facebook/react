@@ -22,7 +22,6 @@ var ReactComponent = require('ReactComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDescriptor = require('ReactDescriptor');
-var ReactDescriptorValidator = require('ReactDescriptorValidator');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactOwner = require('ReactOwner');
@@ -329,17 +328,18 @@ var ReactCompositeComponentInterface = {
  * which all other static methods are defined.
  */
 var RESERVED_SPEC_KEYS = {
-  displayName: function(Constructor, displayName) {
-    Constructor.displayName = displayName;
+  displayName: function(ConvenienceConstructor, displayName) {
+    ConvenienceConstructor.type.displayName = displayName;
   },
-  mixins: function(Constructor, mixins) {
+  mixins: function(ConvenienceConstructor, mixins) {
     if (mixins) {
       for (var i = 0; i < mixins.length; i++) {
-        mixSpecIntoComponent(Constructor, mixins[i]);
+        mixSpecIntoComponent(ConvenienceConstructor, mixins[i]);
       }
     }
   },
-  childContextTypes: function(Constructor, childContextTypes) {
+  childContextTypes: function(ConvenienceConstructor, childContextTypes) {
+    var Constructor = ConvenienceConstructor.type;
     validateTypeDef(
       Constructor,
       childContextTypes,
@@ -350,7 +350,8 @@ var RESERVED_SPEC_KEYS = {
       childContextTypes
     );
   },
-  contextTypes: function(Constructor, contextTypes) {
+  contextTypes: function(ConvenienceConstructor, contextTypes) {
+    var Constructor = ConvenienceConstructor.type;
     validateTypeDef(
       Constructor,
       contextTypes,
@@ -358,21 +359,8 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.contextTypes = merge(Constructor.contextTypes, contextTypes);
   },
-  /**
-   * Special case getDefaultProps which should move into statics but requires
-   * automatic merging.
-   */
-  getDefaultProps: function(Constructor, getDefaultProps) {
-    if (Constructor.getDefaultProps) {
-      Constructor.getDefaultProps = createMergedResultFunction(
-        Constructor.getDefaultProps,
-        getDefaultProps
-      );
-    } else {
-      Constructor.getDefaultProps = getDefaultProps;
-    }
-  },
-  propTypes: function(Constructor, propTypes) {
+  propTypes: function(ConvenienceConstructor, propTypes) {
+    var Constructor = ConvenienceConstructor.type;
     validateTypeDef(
       Constructor,
       propTypes,
@@ -380,8 +368,8 @@ var RESERVED_SPEC_KEYS = {
     );
     Constructor.propTypes = merge(Constructor.propTypes, propTypes);
   },
-  statics: function(Constructor, statics) {
-    mixStaticSpecIntoComponent(Constructor, statics);
+  statics: function(ConvenienceConstructor, statics) {
+    mixStaticSpecIntoComponent(ConvenienceConstructor, statics);
   }
 };
 
@@ -449,7 +437,7 @@ function validateLifeCycleOnReplaceState(instance) {
  * Custom version of `mixInto` which handles policy validation and reserved
  * specification keys when building `ReactCompositeComponent` classses.
  */
-function mixSpecIntoComponent(Constructor, spec) {
+function mixSpecIntoComponent(ConvenienceConstructor, spec) {
   invariant(
     !ReactDescriptor.isValidFactory(spec),
     'ReactCompositeComponent: You\'re attempting to ' +
@@ -461,6 +449,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     'use a component as a mixin. Instead, just use a regular object.'
   );
 
+  var Constructor = ConvenienceConstructor.type;
   var proto = Constructor.prototype;
   for (var name in spec) {
     var property = spec[name];
@@ -471,7 +460,7 @@ function mixSpecIntoComponent(Constructor, spec) {
     validateMethodOverride(proto, name);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
-      RESERVED_SPEC_KEYS[name](Constructor, property);
+      RESERVED_SPEC_KEYS[name](ConvenienceConstructor, property);
     } else {
       // Setup methods on prototype:
       // The following member methods should not be automatically bound:
@@ -532,7 +521,7 @@ function mixSpecIntoComponent(Constructor, spec) {
   }
 }
 
-function mixStaticSpecIntoComponent(Constructor, statics) {
+function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
   if (!statics) {
     return;
   }
@@ -542,10 +531,10 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
       continue;
     }
 
-    var isInherited = name in Constructor;
+    var isInherited = name in ConvenienceConstructor;
     var result = property;
     if (isInherited) {
-      var existingProperty = Constructor[name];
+      var existingProperty = ConvenienceConstructor[name];
       var existingType = typeof existingProperty;
       var propertyType = typeof property;
       invariant(
@@ -558,7 +547,8 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
       );
       result = createChainedFunction(existingProperty, property);
     }
-    Constructor[name] = result;
+    ConvenienceConstructor[name] = result;
+    ConvenienceConstructor.type[name] = result;
   }
 }
 
@@ -733,6 +723,7 @@ var ReactCompositeComponentMixin = {
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
       this.context = this._processContext(this._descriptor._context);
+      this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
       this.props = this._processProps(this.props);
 
       if (this.__reactAutoBindMap) {
@@ -789,6 +780,8 @@ var ReactCompositeComponentMixin = {
       this.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
+
+    this._defaultProps = null;
 
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
@@ -928,6 +921,12 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(newProps) {
     var props = merge(newProps);
+    var defaultProps = this._defaultProps;
+    for (var propName in defaultProps) {
+      if (typeof props[propName] === 'undefined') {
+        props[propName] = defaultProps[propName];
+      }
+    }
     if (__DEV__) {
       var propTypes = this.constructor.propTypes;
       if (propTypes) {
@@ -946,8 +945,6 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _checkPropTypes: function(propTypes, props, location) {
-    // TODO: Stop validating prop types here and only use the descriptor
-    // validation.
     var componentName = this.constructor.displayName;
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
@@ -1313,11 +1310,16 @@ var ReactCompositeComponent = {
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
 
+    var ConvenienceConstructor = ReactDescriptor.createFactory(Constructor);
+
+    // TODO: Move statics off of the convenience constructor. That way the
+    // factory can be created independently from the main class.
+
     injectedMixins.forEach(
-      mixSpecIntoComponent.bind(null, Constructor)
+      mixSpecIntoComponent.bind(null, ConvenienceConstructor)
     );
 
-    mixSpecIntoComponent(Constructor, spec);
+    mixSpecIntoComponent(ConvenienceConstructor, spec);
 
     invariant(
       Constructor.prototype.render,
@@ -1346,17 +1348,7 @@ var ReactCompositeComponent = {
       }
     }
 
-    var descriptorFactory = ReactDescriptor.createFactory(Constructor);
-
-    if (__DEV__) {
-      return ReactDescriptorValidator.createFactory(
-        descriptorFactory,
-        Constructor.propTypes,
-        Constructor.contextTypes
-      );
-    }
-
-    return descriptorFactory;
+    return ConvenienceConstructor;
   },
 
   injection: {
