@@ -59,7 +59,7 @@ function detectEvents() {
   }
 
   if (!('TransitionEvent' in window)) {
-   delete EVENT_NAME_MAP.transitionend.transition;
+    delete EVENT_NAME_MAP.transitionend.transition;
   }
 
   for (var baseEventName in EVENT_NAME_MAP) {
