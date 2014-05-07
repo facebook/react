@@ -135,7 +135,10 @@ var HTMLDOMPropertyConfig = {
      */
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
     autoCorrect: null, // Supported in Mobile Safari for keyboard hints
-    property: null // Supports OG in meta tags
+    property: null, // Supports OG in meta tags
+    itemscope: HAS_BOOLEAN_VALUE, // Microdata: http://schema.org/docs/gs.html
+    itemtype: null, // Microdata: http://schema.org/docs/gs.html
+    itemprop: null // Microdata: http://schema.org/docs/gs.html
   },
   DOMAttributeNames: {
     className: 'class',
