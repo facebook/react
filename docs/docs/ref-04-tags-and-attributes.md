@@ -57,7 +57,7 @@ accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan cols content contentEditable contextMenu controls data
 dateTime defer dir disabled draggable encType form formNoValidate frameBorder
-height hidden href htmlFor httpEquiv icon id itemprop itemscope itemtype
+height hidden href htmlFor httpEquiv icon id itemProp itemScope itemType
 label lang list loop max maxLength method min multiple name noValidate
 pattern placeholder poster preload radioGroup readOnly rel required role
 rowSpan rows sandbox scope scrollLeft scrollTop seamless selected size span
