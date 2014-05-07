@@ -57,11 +57,11 @@ accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan cols content contentEditable contextMenu controls data
 dateTime defer dir disabled draggable encType form formNoValidate frameBorder
-height hidden href htmlFor httpEquiv icon id label lang list loop max
-maxLength method min multiple name noValidate pattern placeholder poster
-preload radioGroup readOnly rel required role rowSpan rows sandbox scope
-scrollLeft scrollTop seamless selected size span spellCheck src srcDoc step
-style tabIndex target title type value width wmode
+height hidden href htmlFor httpEquiv icon id itemprop itemscope itemtype
+label lang list loop max maxLength method min multiple name noValidate
+pattern placeholder poster preload radioGroup readOnly rel required role
+rowSpan rows sandbox scope scrollLeft scrollTop seamless selected size span
+spellCheck src srcDoc step style tabIndex target title type value width wmode
 ```
 
 In addition, the non-standard `autoCapitalize` and `autoCorrect` attributes are supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
