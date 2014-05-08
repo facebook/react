@@ -184,7 +184,9 @@ var ReactDOM = mapObject({
   g: false,
   line: false,
   linearGradient: false,
+  mask: false,
   path: false,
+  pattern: false,
   polygon: false,
   polyline: false,
   radialGradient: false,
@@ -192,9 +194,7 @@ var ReactDOM = mapObject({
   stop: false,
   svg: false,
   text: false,
-  tspan: false,
-  mask: false,
-  pattern: false
+  tspan: false
 }, createDOMComponentClass);
 
 var injection = {
