@@ -163,4 +163,22 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[0].id).toBe('one');
   });
 
+  it('should transition from false to one', function() {
+    var a = React.renderComponent(
+      <ReactCSSTransitionGroup transitionName="yolo">
+        {false}
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(0);
+    React.renderComponent(
+      <ReactCSSTransitionGroup transitionName="yolo">
+        <span key="one" id="one" />
+      </ReactCSSTransitionGroup>,
+      container
+    );
+    expect(a.getDOMNode().childNodes.length).toBe(1);
+    expect(a.getDOMNode().childNodes[0].id).toBe('one');
+  });
+
 });
