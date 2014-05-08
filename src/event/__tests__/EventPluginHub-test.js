@@ -30,7 +30,7 @@ describe('EventPluginHub', function() {
     require('mock-modules').dumpCache();
     EventPluginHub = require('EventPluginHub');
     isEventSupported = require('isEventSupported');
-    isEventSupported.mockReturnValue(false);
+    isEventSupported.mockReturnValueOnce(false);
   });
 
   it('should warn about the `onScroll` issue on IE8', function() {
