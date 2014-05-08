@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | React v0.5.1</title>
+  <title>React | Flux: An Application Architecture for React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.5.1" />
+  <meta property="og:title" content="React | Flux: An Application Architecture for React" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/10/29/react-v0-5-1.html" />
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/05/06/flux.html" />
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
   <meta property="og:description" content="A JavaScript library for building user interfaces" />
   <meta property="fb:app_id" content="623268441017527" />
@@ -63,7 +63,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a></li>
+        <li><a href="/react/blog/2014/05/06/flux.html" class="active">Flux: An Application Architecture for React</a></li>
       
         <li><a href="/react/blog/2014/04/04/reactnet.html">Use React and JSX in ASP.NET MVC</a></li>
       
@@ -89,24 +89,23 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.5.1</h1>
-    <p class="meta">October 29, 2013 by Paul O'Shannessy</p>
+    <h1>Flux: An Application Architecture for React</h1>
+    <p class="meta">May  6, 2014 by Bill Fisher and Jing Chen</p>
 
     <hr>
 
     <div class="post">
-      <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
-<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h3>
-<ul>
-<li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
-<li>Fixed bug with selection and focus.</li>
-<li>Made it possible to unmount components from the document root.</li>
-<li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
-</ul>
-<h3><a class="anchor" name="react-with-addons"></a>React with Addons <a class="hash-link" href="#react-with-addons">#</a></h3>
-<ul>
-<li>Fixed bug with transition and animation event detection.</li>
-</ul>
+      <p>We recently spoke at one of f8&#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:</p>
+
+<figure><iframe width="560" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v" frameborder="0" allowfullscreen></iframe></figure>
+
+<p>To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.</p>
+
+<p>In Flux, the Dispatcher is a singleton that directs the flow of data and ensures that updates do not cascade. As an application grows, the Dispatcher becomes more vital, as it can also manage dependencies between stores by invoking the registered callbacks in a specific order.</p>
+
+<p>When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.</p>
+
+<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/react/tree/master/examples/todomvc-flux">example of this architecture</a> is available, along with more <a href="http://facebook.github.io/react/docs/flux-overview.html">detailed documentation</a> and a <a href="http://facebook.github.io/react/docs/flux/flux-todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
 
     </div>
 
