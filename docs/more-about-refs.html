@@ -399,7 +399,7 @@
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
-    <span class="nx">handleKeyUp</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -410,11 +410,11 @@
       <span class="k">return</span> <span class="p">(</span>
         <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
           <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">clearAndFocusInput</span><span class="p">}</span><span class="o">&gt;</span>
-            <span class="nx">Click</span> <span class="nx">To</span> <span class="nx">Focus</span> <span class="nx">and</span> <span class="nx">Reset</span>
+            <span class="nx">Click</span> <span class="nx">to</span> <span class="nx">Focus</span> <span class="nx">and</span> <span class="nx">Reset</span>
           <span class="o">&lt;</span><span class="err">/div&gt;</span>
           <span class="o">&lt;</span><span class="nx">input</span>
             <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">userInput</span><span class="p">}</span>
-            <span class="nx">onKeyUp</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleKeyUp</span><span class="p">}</span>
+            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
           <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="err">/div&gt;</span>
       <span class="p">);</span>
@@ -459,7 +459,7 @@
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
-    <span class="nx">handleKeyUp</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -470,12 +470,12 @@
       <span class="k">return</span> <span class="p">(</span>
         <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
           <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">clearAndFocusInput</span><span class="p">}</span><span class="o">&gt;</span>
-            <span class="nx">Click</span> <span class="nx">To</span> <span class="nx">Focus</span> <span class="nx">and</span> <span class="nx">Reset</span>
+            <span class="nx">Click</span> <span class="nx">to</span> <span class="nx">Focus</span> <span class="nx">and</span> <span class="nx">Reset</span>
           <span class="o">&lt;</span><span class="err">/div&gt;</span>
           <span class="o">&lt;</span><span class="nx">input</span>
             <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;theInput&quot;</span>
             <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">userInput</span><span class="p">}</span>
-            <span class="nx">onKeyUp</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleKeyUp</span><span class="p">}</span>
+            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
           <span class="o">/&gt;</span>
         <span class="o">&lt;</span><span class="err">/div&gt;</span>
       <span class="p">);</span>
@@ -507,8 +507,6 @@
         <a class="docs-next" href="/react/docs/tooling-integration.html">Next &rarr;</a>
       
     </div>
-
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/more-about-refs.html"></div>
   </div>
 </section>
 

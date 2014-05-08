@@ -409,7 +409,7 @@
     <span class="nx">$</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">source</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>
       <span class="kd">var</span> <span class="nx">lastGist</span> <span class="o">=</span> <span class="nx">result</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span>
-        <span class="nx">username</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">login</span><span class="p">,</span>
+        <span class="nx">username</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">owner</span><span class="p">.</span><span class="nx">login</span><span class="p">,</span>
         <span class="nx">lastGistUrl</span><span class="o">:</span> <span class="nx">lastGist</span><span class="p">.</span><span class="nx">html_url</span>
       <span class="p">});</span>
     <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">));</span>
@@ -439,8 +439,6 @@
         <a class="docs-next" href="/react/tips/false-in-jsx.html">Next &rarr;</a>
       
     </div>
-
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/tips/initial-ajax.html"></div>
   </div>
 </section>
 

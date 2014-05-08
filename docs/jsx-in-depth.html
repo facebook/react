@@ -512,8 +512,18 @@ pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</co
 <span class="c1">// Output (JS):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">Container</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">Nav</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span> <span class="o">:</span> <span class="nx">Login</span><span class="p">(</span><span class="kc">null</span><span class="p">));</span>
 </code></pre></div><h3><a class="anchor" name="comments"></a>Comments <a class="hash-link" href="#comments">#</a></h3>
-<p>It&#39;s easy to add comments within your JSX; they&#39;re just JS expressions:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="cm">/* this is a comment */</span><span class="p">}</span><span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;&lt;</span><span class="err">/Container&gt;;</span>
+<p>It&#39;s easy to add comments within your JSX; they&#39;re just JS expressions. You just need to be careful to put <code>{}</code> around the comments when you are within the children section of a tag.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* child comment, put {} around */</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="nx">Person</span>
+      <span class="cm">/* multi</span>
+<span class="cm">         line</span>
+<span class="cm">         comment */</span>
+      <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="c1">// end of line comment</span>
+    <span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Nav&gt;</span>
+<span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="prior-work"></a>Prior Work <a class="hash-link" href="#prior-work">#</a></h2>
 <p>JSX is similar to several other JavaScript embedded XML language
 proposals/projects. Some of the features of JSX that distinguish it from similar
@@ -536,8 +546,6 @@ efforts include:</p>
         <a class="docs-next" href="/react/docs/jsx-gotchas.html">Next &rarr;</a>
       
     </div>
-
-    <div class="fb-comments" data-width="650" data-num-posts="10" data-href="http://facebook.github.io/react/docs/jsx-in-depth.html"></div>
   </div>
 </section>
 
