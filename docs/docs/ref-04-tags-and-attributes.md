@@ -57,14 +57,18 @@ accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
 className colSpan cols content contentEditable contextMenu controls data
 dateTime defer dir disabled draggable encType form formNoValidate frameBorder
-height hidden href htmlFor httpEquiv icon id itemProp itemScope itemType
-label lang list loop max maxLength method min multiple name noValidate
-pattern placeholder poster preload radioGroup readOnly rel required role
-rowSpan rows sandbox scope scrollLeft scrollTop seamless selected size span
-spellCheck src srcDoc step style tabIndex target title type value width wmode
+height hidden href htmlFor httpEquiv icon id label lang list loop max
+maxLength method min multiple name noValidate pattern placeholder poster
+preload radioGroup readOnly rel required role rowSpan rows sandbox scope
+scrollLeft scrollTop seamless selected size span spellCheck src srcDoc step
+style tabIndex target title type value width wmode
 ```
 
-In addition, the non-standard `autoCapitalize` and `autoCorrect` attributes are supported for Mobile Safari, and the `property` attribute is supported for Open Graph `<meta>` tags.
+In addition, the following non-standard attributes are supported:
+
+- `autoCapitalize autoCorrect` for Mobile Safari.
+- `property` for [Open Graph](http://ogp.me/) meta tags.
+- `itemProp itemScope itemType` for [HTML5 microdata](http://schema.org/docs/gs.html).
 
 There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting HTML strings into a component.
 
