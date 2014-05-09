@@ -5,7 +5,7 @@ layout: docs
 prev: flux-overview.html
 ---
 
-To demonstrate the Flux architecture with some example code, let's take on the classic TodoMVC application. The entire application is available in the React GitHub repo within the [todomvc-flux]([https://github.com/facebook/react/tree/master/examples/todomvc-flux](https://https//github.com/facebook/react/tree/master/examples/todomvc-flux)) example directory, but let's walk through the development of it a step at a time. 
+To demonstrate the Flux architecture with some example code, let's take on the classic TodoMVC application. The entire application is available in the React GitHub repo within the [todomvc-flux](https://github.com/facebook/react/tree/master/examples/todomvc-flux) example directory, but let's walk through the development of it a step at a time. 
 
 To begin, we'll need some boilerplate and get up and running with a module system. Node's module system, based on CommonJS, will fit the bill very nicely and we can build off of [react-boilerplate](https://github.com/petehunt/react-boilerplate) to get up and running quickly. Assuming you have npm installed, simply clone the react-boilerplate code from GitHub, and navigate into the resulting directory in Terminal (or whatever CLI application you like). Next run the npm scripts to get up and running: `npm install`, then `npm run build`, and lastly `npm start` to continuously build using Browserify.
 
