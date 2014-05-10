@@ -275,6 +275,16 @@ ReactDescriptor.createFactory = function(type) {
         childArray[i] = arguments[i + 1];
       }
       props.children = childArray;
+    } else if (__DEV__) {
+      if (props.children) {
+        if (!Array.isArray(props.children)) {
+          validateChildKeys(props.children, type);
+        } else {
+          for (var i = 0; i < props.children.length; i++) {
+            validateChildKeys(props.children[i], type);
+          }
+        }
+      }
     }
 
     var descriptor = Object.create(descriptorPrototype);

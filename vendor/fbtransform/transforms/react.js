@@ -70,70 +70,78 @@ function visitReactTag(traverse, object, path, state) {
 
   utils.move(nameObject.range[1], state);
 
-  var hasAttributes = attributesObject.length;
-
-  // if we don't have any attributes, pass in null
-  if (hasAttributes) {
-    utils.append('{', state);
-  } else {
-    utils.append('null', state);
-  }
-
-  // write attributes
-  attributesObject.forEach(function(attr, index) {
-    if (attr.name.namespace) {
-      throw new Error(
-         'Namespace attributes are not supported. ReactJSX is not XML.');
-    }
-    var name = attr.name.name;
-    var isLast = index === attributesObject.length - 1;
-
-    utils.catchup(attr.range[0], state, trimLeft);
-    utils.append(quoteAttrName(name), state);
-    utils.append(': ', state);
-
-    if (!attr.value) {
-      state.g.buffer += 'true';
-      state.g.position = attr.name.range[1];
-      if (!isLast) {
-        utils.append(', ', state);
-      }
-    } else {
-      utils.move(attr.name.range[1], state);
-      // Use catchupNewlines to skip over the '=' in the attribute
-      utils.catchupNewlines(attr.value.range[0], state);
-      if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
-        utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
-        utils.move(attr.value.range[1], state);
-        if (!isLast) {
-          utils.append(', ', state);
-        }
-      } else if (attr.value.type === Syntax.Literal) {
-        renderXJSLiteral(attr.value, isLast, state);
-      } else {
-        renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
-      }
-    }
-
-    utils.catchup(attr.range[1], state, trimLeft);
-  });
-
-  if (!openingElement.selfClosing) {
-    utils.catchup(openingElement.range[1] - 1, state, trimLeft);
-    utils.move(openingElement.range[1], state);
-  }
-
-  if (hasAttributes) {
-    utils.append('}', state);
-  }
-
   // filter out whitespace
   var childrenToRender = object.children.filter(function(child) {
     return !(child.type === Syntax.Literal
              && typeof child.value === 'string'
              && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
   });
-  if (childrenToRender.length > 0) {
+
+  var hasAttributes = attributesObject.length;
+  var hasChildren = childrenToRender.length;
+
+  // if we don't have any attributes, pass in null
+  if (hasAttributes || hasChildren) {
+    utils.append('{', state);
+
+    // write attributes
+    attributesObject.forEach(function(attr, index) {
+      if (attr.name.namespace) {
+        throw new Error(
+           'Namespace attributes are not supported. ReactJSX is not XML.');
+      }
+      var name = attr.name.name;
+      var isLast = index === attributesObject.length - 1 && !hasChildren;
+
+      if (hasChildren && name === 'children') {
+        throw new Error(
+          'Inline children are invalid if the "children" attribute is used.');
+      }
+
+      utils.catchup(attr.range[0], state, trimLeft);
+      utils.append(quoteAttrName(name), state);
+      utils.append(': ', state);
+
+      if (!attr.value) {
+        state.g.buffer += 'true';
+        state.g.position = attr.name.range[1];
+        if (!isLast) {
+          utils.append(', ', state);
+        }
+      } else {
+        utils.move(attr.name.range[1], state);
+        // Use catchupNewlines to skip over the '=' in the attribute
+        utils.catchupNewlines(attr.value.range[0], state);
+        if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
+          utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
+          utils.move(attr.value.range[1], state);
+          if (!isLast) {
+            utils.append(', ', state);
+          }
+        } else if (attr.value.type === Syntax.Literal) {
+          renderXJSLiteral(attr.value, isLast, state);
+        } else {
+          renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);
+        }
+      }
+
+      utils.catchup(attr.range[1], state, trimLeft);
+    });
+  }
+
+  if (!openingElement.selfClosing) {
+    utils.catchup(openingElement.range[1] - 1, state, trimLeft);
+    utils.move(openingElement.range[1], state);
+  }
+
+  if (hasChildren) {
+    var onlyChild = childrenToRender.length === 1;
+
+    utils.append('children: ', state);
+    if (!onlyChild) {
+      utils.append('[', state);
+    }
+
     var lastRenderableIndex;
 
     childrenToRender.forEach(function(child, index) {
@@ -142,10 +150,6 @@ function visitReactTag(traverse, object, path, state) {
         lastRenderableIndex = index;
       }
     });
-
-    if (lastRenderableIndex !== undefined) {
-      utils.append(', ', state);
-    }
 
     childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state, trimLeft);
@@ -175,6 +179,13 @@ function visitReactTag(traverse, object, path, state) {
     // everything up to </ sdflksjfd>
     utils.catchup(object.closingElement.range[0], state, trimLeft);
     utils.move(object.closingElement.range[1], state);
+  }
+
+  if (hasAttributes || hasChildren) {
+    if (hasChildren && !onlyChild) {
+      utils.append(']', state);
+    }
+    utils.append('}', state);
   }
 
   utils.append(')', state);
