@@ -104,8 +104,8 @@ var DOMPropertyInjection = {
       }
 
       var propConfig = Properties[propName];
-      DOMProperty.mustUseAttribute[propName] =
-        propConfig & DOMPropertyInjection.MUST_USE_ATTRIBUTE;
+      //DOMProperty.mustUseAttribute[propName] =
+      //  propConfig & DOMPropertyInjection.MUST_USE_ATTRIBUTE;
       DOMProperty.mustUseProperty[propName] =
         propConfig & DOMPropertyInjection.MUST_USE_PROPERTY;
       DOMProperty.hasSideEffects[propName] =
