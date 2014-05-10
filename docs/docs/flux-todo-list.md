@@ -221,9 +221,10 @@ var TodoStore = merge(EventEmitter.prototype, {
       
       case TodoConstants.TODO_DESTROY: 
         destroy(action.id); 
+        TodoStore.emitChange(); 
         break; 
       
-    // add more cases for other actionTypes, like TODO_UPDATE, etc. 
+      // add more cases for other actionTypes, like TODO_UPDATE, etc. 
     }
     
     return true; // No errors. Needed by promise in Dispatcher. 
