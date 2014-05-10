@@ -605,9 +605,10 @@
 
       <span class="k">case</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_DESTROY</span><span class="o">:</span> 
         <span class="nx">destroy</span><span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">id</span><span class="p">);</span> 
+        <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">emitChange</span><span class="p">();</span> 
         <span class="k">break</span><span class="p">;</span> 
 
-    <span class="c1">// add more cases for other actionTypes, like TODO_UPDATE, etc. </span>
+      <span class="c1">// add more cases for other actionTypes, like TODO_UPDATE, etc. </span>
     <span class="p">}</span>
 
     <span class="k">return</span> <span class="kc">true</span><span class="p">;</span> <span class="c1">// No errors. Needed by promise in Dispatcher. </span>
