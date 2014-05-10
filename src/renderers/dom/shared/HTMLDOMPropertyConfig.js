@@ -12,9 +12,7 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 
-var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_SIDE_EFFECTS = DOMProperty.injection.HAS_SIDE_EFFECTS;
@@ -23,19 +21,6 @@ var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
-
-var hasSVG;
-if (ExecutionEnvironment.canUseDOM) {
-  var implementation = document.implementation;
-  hasSVG = (
-    implementation &&
-    implementation.hasFeature &&
-    implementation.hasFeature(
-      'http://www.w3.org/TR/SVG11/feature#BasicStructure',
-      '1.1'
-    )
-  );
-}
 
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
@@ -49,86 +34,83 @@ var HTMLDOMPropertyConfig = {
     acceptCharset: null,
     accessKey: null,
     action: null,
-    allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
-    allowTransparency: MUST_USE_ATTRIBUTE,
+    allowFullScreen: HAS_BOOLEAN_VALUE,
+    allowTransparency: null,
     alt: null,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: null,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
-    capture: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
-    cellPadding: MUST_USE_ATTRIBUTE,
-    cellSpacing: MUST_USE_ATTRIBUTE,
-    challenge: MUST_USE_ATTRIBUTE,
-    charSet: MUST_USE_ATTRIBUTE,
+    capture: HAS_BOOLEAN_VALUE,
+    cellPadding: null,
+    cellSpacing: null,
+    charSet: null,
+    challenge: null,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    classID: MUST_USE_ATTRIBUTE,
-    // To set className on SVG elements, it's necessary to use .setAttribute;
-    // this works on HTML elements too in all browsers except IE8. Conveniently,
-    // IE8 doesn't support SVG and so we can simply use the attribute in
-    // browsers that support SVG and the property in browsers that don't,
-    // regardless of whether the element is HTML or SVG.
-    className: hasSVG ? MUST_USE_ATTRIBUTE : MUST_USE_PROPERTY,
-    cols: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
-    colSpan: MUST_USE_ATTRIBUTE,
+    classID: null,
+    className: null,
+    cols: HAS_POSITIVE_NUMERIC_VALUE,
+    colSpan: null,
     content: null,
-    contentEditable: MUST_USE_ATTRIBUTE,
-    contextMenu: MUST_USE_ATTRIBUTE,
-    controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    contentEditable: null,
+    contextMenu: null,
+    controls: HAS_BOOLEAN_VALUE,
     coords: null,
     crossOrigin: null,
     data: null, // For `<object />` acts as `src`.
-    dateTime: MUST_USE_ATTRIBUTE,
+    dateTime: null,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
-    dir: MUST_USE_ATTRIBUTE,
-    disabled: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
+    dir: null,
+    disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
     draggable: null,
-    encType: MUST_USE_ATTRIBUTE,
-    form: MUST_USE_ATTRIBUTE,
-    formAction: MUST_USE_ATTRIBUTE,
-    formEncType: MUST_USE_ATTRIBUTE,
-    formMethod: MUST_USE_ATTRIBUTE,
+    encType: null,
+    form: null,
+    formAction: null,
+    formEncType: null,
+    formMethod: null,
     formNoValidate: HAS_BOOLEAN_VALUE,
-    formTarget: MUST_USE_ATTRIBUTE,
-    frameBorder: MUST_USE_ATTRIBUTE,
+    formTarget: null,
+    frameBorder: null,
     headers: null,
-    height: MUST_USE_ATTRIBUTE,
-    hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
+    height: null,
+    hidden: HAS_BOOLEAN_VALUE,
     high: null,
     href: null,
     hrefLang: null,
     htmlFor: null,
     httpEquiv: null,
     icon: null,
-    id: MUST_USE_PROPERTY,
-    inputMode: MUST_USE_ATTRIBUTE,
+    id: null,
+    inputMode: null,
     integrity: null,
-    is: MUST_USE_ATTRIBUTE,
-    keyParams: MUST_USE_ATTRIBUTE,
-    keyType: MUST_USE_ATTRIBUTE,
+    is: null,
+    keyParams: null,
+    keyType: null,
     kind: null,
     label: null,
     lang: null,
-    list: MUST_USE_ATTRIBUTE,
-    loop: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
+    list: null,
+    loop: HAS_BOOLEAN_VALUE,
     low: null,
-    manifest: MUST_USE_ATTRIBUTE,
-    marginHeight: MUST_USE_ATTRIBUTE,
-    marginWidth: MUST_USE_ATTRIBUTE,
+    manifest: null,
+    marginHeight: null,
+    marginWidth: null,
     max: null,
-    maxLength: MUST_USE_ATTRIBUTE,
-    media: MUST_USE_ATTRIBUTE,
+    maxLength: null,
+    media: null,
     mediaGroup: null,
-    method: MUST_USE_ATTRIBUTE,
+    method: null,
     min: null,
-    minLength: MUST_USE_ATTRIBUTE,
+    minLength: null,
+    // Caution; `option.selected` is not updated if `select.multiple` is
+    // disabled with `removeAttribute`.
     multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     name: null,
-    nonce: MUST_USE_ATTRIBUTE,
+    nonce: null,
     noValidate: HAS_BOOLEAN_VALUE,
     open: HAS_BOOLEAN_VALUE,
     optimum: null,
@@ -137,29 +119,29 @@ var HTMLDOMPropertyConfig = {
     poster: null,
     preload: null,
     radioGroup: null,
-    readOnly: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    readOnly: HAS_BOOLEAN_VALUE,
     rel: null,
     required: HAS_BOOLEAN_VALUE,
     reversed: HAS_BOOLEAN_VALUE,
-    role: MUST_USE_ATTRIBUTE,
-    rows: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
-    rowSpan: MUST_USE_ATTRIBUTE | HAS_NUMERIC_VALUE,
+    role: null,
+    rows: HAS_POSITIVE_NUMERIC_VALUE,
+    rowSpan: HAS_NUMERIC_VALUE,
     sandbox: null,
     scope: null,
     scoped: HAS_BOOLEAN_VALUE,
-    scrolling: MUST_USE_ATTRIBUTE,
-    seamless: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
+    scrolling: null,
+    seamless: HAS_BOOLEAN_VALUE,
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     shape: null,
-    size: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
-    sizes: MUST_USE_ATTRIBUTE,
-    span: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
+    size: HAS_POSITIVE_NUMERIC_VALUE,
+    sizes: null,
+    span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
     src: null,
-    srcDoc: MUST_USE_PROPERTY,
+    srcDoc: null,
     srcLang: null,
-    srcSet: MUST_USE_ATTRIBUTE,
-    start: MUST_USE_ATTRIBUTE | HAS_NUMERIC_VALUE,
+    srcSet: null,
+    start: HAS_NUMERIC_VALUE,
     step: null,
     style: null,
     summary: null,
@@ -167,55 +149,55 @@ var HTMLDOMPropertyConfig = {
     target: null,
     title: null,
     // Setting .type throws on non-<input> tags
-    type: MUST_USE_ATTRIBUTE,
+    type: null,
     useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
-    width: MUST_USE_ATTRIBUTE,
-    wmode: MUST_USE_ATTRIBUTE,
-    wrap: MUST_USE_ATTRIBUTE,
+    width: null,
+    wmode: null,
+    wrap: null,
 
     /**
      * RDFa Properties
      */
-    about: MUST_USE_ATTRIBUTE,
-    datatype: MUST_USE_ATTRIBUTE,
-    inlist: MUST_USE_ATTRIBUTE,
-    prefix: MUST_USE_ATTRIBUTE,
+    about: null,
+    datatype: null,
+    inlist: null,
+    prefix: null,
     // property is also supported for OpenGraph in meta tags.
-    property: MUST_USE_ATTRIBUTE,
-    resource: MUST_USE_ATTRIBUTE,
-    typeof: MUST_USE_ATTRIBUTE,
-    vocab: MUST_USE_ATTRIBUTE,
+    property: null,
+    resource: null,
+    typeof: null,
+    vocab: null,
 
     /**
      * Non-standard Properties
      */
     // autoCapitalize and autoCorrect are supported in Mobile Safari for
     // keyboard hints.
-    autoCapitalize: MUST_USE_ATTRIBUTE,
-    autoCorrect: MUST_USE_ATTRIBUTE,
+    autoCapitalize: null,
+    autoCorrect: null,
     // autoSave allows WebKit/Blink to persist values of input fields on page reloads
     autoSave: null,
     // color is for Safari mask-icon link
     color: null,
     // itemProp, itemScope, itemType are for
     // Microdata support. See http://schema.org/docs/gs.html
-    itemProp: MUST_USE_ATTRIBUTE,
-    itemScope: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
-    itemType: MUST_USE_ATTRIBUTE,
+    itemProp: null,
+    itemScope: HAS_BOOLEAN_VALUE,
+    itemType: null,
     // itemID and itemRef are for Microdata support as well but
     // only specified in the WHATWG spec document. See
     // https://html.spec.whatwg.org/multipage/microdata.html#microdata-dom-api
-    itemID: MUST_USE_ATTRIBUTE,
-    itemRef: MUST_USE_ATTRIBUTE,
+    itemID: null,
+    itemRef: null,
     // results show looking glass icon and recent searches on input
     // search fields in WebKit/Blink
     results: null,
     // IE-only attribute that specifies security restrictions on an iframe
     // as an alternative to the sandbox attribute on IE<10
-    security: MUST_USE_ATTRIBUTE,
+    security: null,
     // IE-only attribute that controls focus behavior
-    unselectable: MUST_USE_ATTRIBUTE,
+    unselectable: null,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
@@ -224,15 +206,6 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: 'http-equiv',
   },
   DOMPropertyNames: {
-    autoComplete: 'autocomplete',
-    autoFocus: 'autofocus',
-    autoPlay: 'autoplay',
-    autoSave: 'autosave',
-    hrefLang: 'hreflang',
-    radioGroup: 'radiogroup',
-    spellCheck: 'spellcheck',
-    srcDoc: 'srcdoc',
-    srcSet: 'srcset',
   },
 };
 

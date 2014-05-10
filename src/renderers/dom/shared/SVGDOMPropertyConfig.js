@@ -11,10 +11,6 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-
-var MUST_USE_ATTRIBUTE = DOMProperty.injection.MUST_USE_ATTRIBUTE;
-
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
@@ -22,30 +18,30 @@ var NS = {
 
 var SVGDOMPropertyConfig = {
   Properties: {
-    clipPath: MUST_USE_ATTRIBUTE,
-    fillOpacity: MUST_USE_ATTRIBUTE,
-    fontFamily: MUST_USE_ATTRIBUTE,
-    fontSize: MUST_USE_ATTRIBUTE,
-    markerEnd: MUST_USE_ATTRIBUTE,
-    markerMid: MUST_USE_ATTRIBUTE,
-    markerStart: MUST_USE_ATTRIBUTE,
-    stopColor: MUST_USE_ATTRIBUTE,
-    stopOpacity: MUST_USE_ATTRIBUTE,
-    strokeDasharray: MUST_USE_ATTRIBUTE,
-    strokeLinecap: MUST_USE_ATTRIBUTE,
-    strokeOpacity: MUST_USE_ATTRIBUTE,
-    strokeWidth: MUST_USE_ATTRIBUTE,
-    textAnchor: MUST_USE_ATTRIBUTE,
-    xlinkActuate: MUST_USE_ATTRIBUTE,
-    xlinkArcrole: MUST_USE_ATTRIBUTE,
-    xlinkHref: MUST_USE_ATTRIBUTE,
-    xlinkRole: MUST_USE_ATTRIBUTE,
-    xlinkShow: MUST_USE_ATTRIBUTE,
-    xlinkTitle: MUST_USE_ATTRIBUTE,
-    xlinkType: MUST_USE_ATTRIBUTE,
-    xmlBase: MUST_USE_ATTRIBUTE,
-    xmlLang: MUST_USE_ATTRIBUTE,
-    xmlSpace: MUST_USE_ATTRIBUTE,
+    clipPath: null,
+    fillOpacity: null,
+    fontFamily: null,
+    fontSize: null,
+    markerEnd: null,
+    markerMid: null,
+    markerStart: null,
+    stopColor: null,
+    stopOpacity: null,
+    strokeDasharray: null,
+    strokeLinecap: null,
+    strokeOpacity: null,
+    strokeWidth: null,
+    textAnchor: null,
+    xlinkActuate: null,
+    xlinkArcrole: null,
+    xlinkHref: null,
+    xlinkRole: null,
+    xlinkShow: null,
+    xlinkTitle: null,
+    xlinkType: null,
+    xmlBase: null,
+    xmlLang: null,
+    xmlSpace: null,
   },
   DOMAttributeNamespaces: {
     xlinkActuate: NS.xlink,
