@@ -185,8 +185,12 @@ ReactDOMComponent.Mixin = {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = this.props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
+      // Support use of legacy {__html: } object for dangerouslySerInnerHTML
       if (innerHTML.__html != null) {
         return innerHTML.__html;
+      }
+      if (innerHTML.__html === undefined) {
+        return innerHTML;
       }
     } else {
       var contentToUse =
@@ -359,12 +363,20 @@ ReactDOMComponent.Mixin = {
     var nextContent =
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
-    var lastHtml =
-      lastProps.dangerouslySetInnerHTML &&
-      lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml =
-      nextProps.dangerouslySetInnerHTML &&
-      nextProps.dangerouslySetInnerHTML.__html;
+    var lastHtml = (
+      lastProps.dangerouslySetInnerHTML && (
+        lastProps.dangerouslySetInnerHTML.__html !== undefined ?
+          lastProps.dangerouslySetInnerHTML.__html :
+          lastProps.dangerouslySetInnerHTML
+      )
+    );
+    var nextHtml = (
+      nextProps.dangerouslySetInnerHTML && (
+        nextProps.dangerouslySetInnerHTML.__html !== undefined ?
+          nextProps.dangerouslySetInnerHTML.__html :
+          nextProps.dangerouslySetInnerHTML
+      )
+    );
 
     // Note the use of `!=` which checks for null or undefined.
     var lastChildren = lastContent != null ? null : lastProps.children;
