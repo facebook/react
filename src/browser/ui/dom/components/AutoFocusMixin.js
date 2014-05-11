@@ -24,7 +24,10 @@ var focusNode = require('focusNode');
 var AutoFocusMixin = {
   componentDidMount: function() {
     if (this.props.autoFocus) {
-      focusNode(this.getDOMNode());
+      var domNode = this.getDOMNode();
+      setTimeout(function () {
+        focusNode(domNode);
+      }, 0);
     }
   }
 };
