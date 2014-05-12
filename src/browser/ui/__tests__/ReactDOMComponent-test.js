@@ -335,6 +335,13 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it("should warn about contentEditable and children", function() {
+      spyOn(console, 'warn');
+      mountComponent({ contentEditable: true, children: '' });
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('contentEditable');
+    });
+
     it("should validate against invalid styles", function() {
       expect(function() {
         mountComponent({ style: 'display: none' });
@@ -366,6 +373,16 @@ describe('ReactDOMComponent', function() {
         'Invariant Violation: Can only set one of `children` or ' +
         '`props.dangerouslySetInnerHTML`.'
       );
+    });
+
+    it("should warn about contentEditable and children", function() {
+      spyOn(console, 'warn');
+      React.renderComponent(
+        <div contentEditable><div /></div>,
+        container
+      );
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('contentEditable');
     });
 
     it("should validate against invalid styles", function() {
