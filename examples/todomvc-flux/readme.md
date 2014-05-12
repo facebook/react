@@ -7,7 +7,7 @@
 
 The [React website](http://facebook.github.io/react) is a great resource for getting started.
 
-A post on the [React Blog](http://facebook.github.io/react/blog/) is forthcoming to describe the Flux architecture in more detail.
+Read the blog post announcing Flux: ["An Application Architecture for React"](http://facebook.github.io/react/blog/2014/05/06/flux.html), then read more about the [Flux architecture](http://facebook.github.io/react/docs/flux-overview.html) and a [TodoMVC tutorial](http://facebook.github.io/react/docs/flux-todo-list.html) explaining the structure of the files in this folder.
 
 
 ## Overview
