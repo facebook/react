@@ -493,4 +493,76 @@ describe('ReactUpdates', function() {
       ['Box', 'Switcher', 'Child']
     );
   });
+
+  it('should share reconcile transaction across different roots', function() {
+    var ReconcileTransaction = ReactUpdates.ReactReconcileTransaction;
+    spyOn(ReconcileTransaction, 'getPooled').andCallThrough();
+
+    var Component = React.createClass({
+      render: function() {
+        return <div>{this.props.text}</div>;
+      }
+    });
+
+    var containerA = document.createElement('div');
+    var containerB = document.createElement('div');
+
+    // Initial renders aren't batched together yet...
+    ReactUpdates.batchedUpdates(function() {
+      React.renderComponent(<Component text="A1" />, containerA);
+      React.renderComponent(<Component text="B1" />, containerB);
+    });
+    expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
+
+    // ...but updates are! Here only one more transaction is used, which means
+    // we only have to initialize and close the wrappers once.
+    ReactUpdates.batchedUpdates(function() {
+      React.renderComponent(<Component text="A2" />, containerA);
+      React.renderComponent(<Component text="B2" />, containerB);
+    });
+    expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
+  });
+
+  it('should queue mount-ready handlers across different roots', function() {
+    // We'll define two components A and B, then update both of them. When A's
+    // componentDidUpdate handlers is called, B's DOM should already have been
+    // updated.
+
+    var a;
+    var b;
+
+    var aUpdated = false;
+
+    var A = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      componentDidUpdate: function() {
+        expect(b.getDOMNode().textContent).toBe("B1");
+        aUpdated = true;
+      },
+      render: function() {
+        return <div>A{this.state.x}</div>;
+      }
+    });
+
+    var B = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      render: function() {
+        return <div>B{this.state.x}</div>;
+      }
+    });
+
+    a = ReactTestUtils.renderIntoDocument(<A />);
+    b = ReactTestUtils.renderIntoDocument(<B />);
+
+    ReactUpdates.batchedUpdates(function() {
+      a.setState({x: 1});
+      b.setState({x: 1});
+    });
+
+    expect(aUpdated).toBe(true);
+  });
 });

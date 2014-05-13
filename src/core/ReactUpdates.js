@@ -28,12 +28,16 @@ var dirtyComponents = [];
 
 var batchingStrategy = null;
 
-function ensureBatchingStrategy() {
-  invariant(batchingStrategy, 'ReactUpdates: must inject a batching strategy');
+function ensureInjected() {
+  invariant(
+    ReactUpdates.ReactReconcileTransaction && batchingStrategy,
+    'ReactUpdates: must inject a reconcile transaction class and batching ' +
+    'strategy'
+  );
 }
 
 function batchedUpdates(callback, param) {
-  ensureBatchingStrategy();
+  ensureInjected();
   batchingStrategy.batchedUpdates(callback, param);
 }
 
@@ -48,7 +52,7 @@ function mountDepthComparator(c1, c2) {
   return c1._mountDepth - c2._mountDepth;
 }
 
-function runBatchedUpdates() {
+function runBatchedUpdates(transaction) {
   // Since reconciling a component higher in the owner hierarchy usually (not
   // always -- see shouldComponentUpdate()) will reconcile children, reconcile
   // them before their children by sorting the array.
@@ -65,10 +69,14 @@ function runBatchedUpdates() {
       // stash the callbacks first
       var callbacks = component._pendingCallbacks;
       component._pendingCallbacks = null;
-      component.performUpdateIfNecessary();
+      component.performUpdateIfNecessary(transaction);
+
       if (callbacks) {
         for (var j = 0; j < callbacks.length; j++) {
-          callbacks[j].call(component);
+          transaction.getReactMountReady().enqueue(
+            callbacks[j],
+            component
+          );
         }
       }
     }
@@ -79,15 +87,26 @@ function clearDirtyComponents() {
   dirtyComponents.length = 0;
 }
 
+function flushBatchedUpdatesOnce(transaction) {
+  // Run these in separate functions so the JIT can optimize
+  try {
+    runBatchedUpdates(transaction);
+  } finally {
+    clearDirtyComponents();
+  }
+}
+
 var flushBatchedUpdates = ReactPerf.measure(
   'ReactUpdates',
   'flushBatchedUpdates',
   function() {
-    // Run these in separate functions so the JIT can optimize
-    try {
-      runBatchedUpdates();
-    } finally {
-      clearDirtyComponents();
+    // flushBatchedUpdatesOnce will clear the dirtyComponents array, but
+    // mount-ready handlers (i.e., componentDidMount/Update) may enqueue more
+    // state updates which we should apply immediately
+    while (dirtyComponents.length) {
+      var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+      transaction.perform(flushBatchedUpdatesOnce, null, transaction);
+      ReactUpdates.ReactReconcileTransaction.release(transaction);
     }
   }
 );
@@ -103,7 +122,7 @@ function enqueueUpdate(component, callback) {
     '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
     'isn\'t callable.'
   );
-  ensureBatchingStrategy();
+  ensureInjected();
 
   // Various parts of our code (such as ReactCompositeComponent's
   // _renderValidatedComponent) assume that calls to render aren't nested;
@@ -119,7 +138,13 @@ function enqueueUpdate(component, callback) {
   );
 
   if (!batchingStrategy.isBatchingUpdates) {
-    component.performUpdateIfNecessary();
+    var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+    transaction.perform(
+      component.performUpdateIfNecessary,
+      component,
+      transaction
+    );
+    ReactUpdates.ReactReconcileTransaction.release(transaction);
     callback && callback.call(component);
     return;
   }
@@ -136,6 +161,14 @@ function enqueueUpdate(component, callback) {
 }
 
 var ReactUpdatesInjection = {
+  injectReconcileTransaction: function(ReconcileTransaction) {
+    invariant(
+      ReconcileTransaction,
+      'ReactUpdates: must provide a reconcile transaction class'
+    );
+    ReactUpdates.ReactReconcileTransaction = ReconcileTransaction;
+  },
+
   injectBatchingStrategy: function(_batchingStrategy) {
     invariant(
       _batchingStrategy,
@@ -154,6 +187,14 @@ var ReactUpdatesInjection = {
 };
 
 var ReactUpdates = {
+  /**
+   * React references `ReactReconcileTransaction` using this property in order
+   * to allow dependency injection.
+   *
+   * @internal
+   */
+  ReactReconcileTransaction: null,
+
   batchedUpdates: batchedUpdates,
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,

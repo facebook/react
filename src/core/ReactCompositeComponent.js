@@ -957,17 +957,6 @@ var ReactCompositeComponentMixin = {
     }
   },
 
-  performUpdateIfNecessary: function() {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    // Do not trigger a state transition if we are in the middle of mounting or
-    // receiving props because both of those will already be doing this.
-    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
-        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
-      return;
-    }
-    ReactComponent.Mixin.performUpdateIfNecessary.call(this);
-  },
-
   /**
    * If any of `_pendingDescriptor`, `_pendingState`, or `_pendingForceUpdate`
    * is set, update the component.
@@ -975,7 +964,15 @@ var ReactCompositeComponentMixin = {
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  _performUpdateIfNecessary: function(transaction) {
+  performUpdateIfNecessary: function(transaction) {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    // Do not trigger a state transition if we are in the middle of mounting or
+    // receiving props because both of those will already be doing this.
+    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
+        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
+      return;
+    }
+
     if (this._pendingDescriptor == null &&
         this._pendingState == null &&
         !this._pendingForceUpdate) {

@@ -100,6 +100,9 @@ function inject() {
 
   ReactInjection.EmptyComponent.injectEmptyComponent(ReactDOM.script);
 
+  ReactInjection.Updates.injectReconcileTransaction(
+    ReactComponentBrowserEnvironment.ReactReconcileTransaction
+  );
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
   );
