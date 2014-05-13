@@ -1,4 +1,4 @@
-/**
+  /**
  * Copyright 2013-2014 Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,13 @@ describe('LinkedStateMixin', function() {
   var LinkedStateMixin;
   var React;
   var ReactLink;
+  var ReactTestUtils;
 
   beforeEach(function() {
     LinkedStateMixin = require('LinkedStateMixin');
     React = require('React');
     ReactLink = require('ReactLink');
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   it('should create a ReactLink for state', function() {
@@ -44,13 +46,12 @@ describe('LinkedStateMixin', function() {
         return <span>value is {this.state.value}</span>;
       }
     });
-    var container = document.createElement('div');
-    var component = React.renderComponent(<Component />, container);
-    var link = component.linkState('value');
-    expect(component.state.value).toBe('initial value');
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var link = instance.linkState('value');
+    expect(instance.state.value).toBe('initial value');
     expect(link.value).toBe('initial value');
     link.requestChange('new value');
-    expect(component.state.value).toBe('new value');
-    expect(component.linkState('value').value).toBe('new value');
+    expect(instance.state.value).toBe('new value');
+    expect(instance.linkState('value').value).toBe('new value');
   });
 });
