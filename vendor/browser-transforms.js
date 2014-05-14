@@ -184,7 +184,7 @@ runScripts = function() {
 
   jsxScripts.forEach(function(script) {
     var options;
-    if (script.type.indexOf('harmony') !== -1) {
+    if (script.type.indexOf('harmony=true') !== -1) {
       options = {
         harmony: true 
       };
