@@ -89,12 +89,12 @@ var createSourceCodeErrorMessage = function(code, e) {
   return message;
 };
 
-var transformCode = function(code, source) {
+var transformCode = function(code, source, options) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
   if (jsx) {
     try {
-      var transformed = transformReact(code);
+      var transformed = transformReact(code, options);
     } catch(e) {
       e.message += '\n    at ';
       if (source) {
@@ -137,13 +137,13 @@ var transformCode = function(code, source) {
   }
 };
 
-var run = exports.run = function(code, source) {
+var run = exports.run = function(code, source, options) {
   var scriptEl = document.createElement('script');
-  scriptEl.text = transformCode(code, source);
+  scriptEl.text = transformCode(code, source, options);
   headEl.appendChild(scriptEl);
 };
 
-var load = exports.load = function(url, callback) {
+var load = exports.load = function(url, callback, options) {
   var xhr;
   xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP')
                              : new XMLHttpRequest();
@@ -157,7 +157,7 @@ var load = exports.load = function(url, callback) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
       if (xhr.status === 0 || xhr.status === 200) {
-        run(xhr.responseText, url);
+        run(xhr.responseText, url, options);
       } else {
         throw new Error("Could not load " + url);
       }
@@ -175,7 +175,7 @@ runScripts = function() {
   // Array.prototype.slice cannot be used on NodeList on IE8
   var jsxScripts = [];
   for (var i = 0; i < scripts.length; i++) {
-    if (scripts.item(i).type === 'text/jsx') {
+    if (scripts.item(i).type.indexOf('text/jsx') !== -1) {
       jsxScripts.push(scripts.item(i));
     }
   }
@@ -183,10 +183,17 @@ runScripts = function() {
   console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
   jsxScripts.forEach(function(script) {
+    var options;
+    if (script.type.indexOf('harmony') !== -1) {
+      options = {
+        harmony: true 
+      };
+    }
+
     if (script.src) {
-      load(script.src);
+      load(script.src, null, options);
     } else {
-      run(script.innerHTML, null);
+      run(script.innerHTML, null, options);
     }
   });
 };
