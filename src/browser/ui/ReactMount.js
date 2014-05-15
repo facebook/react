@@ -19,8 +19,9 @@
 "use strict";
 
 var DOMProperty = require('DOMProperty');
-var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDescriptor = require('ReactDescriptor');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
 
@@ -335,6 +336,21 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   renderComponent: function(nextDescriptor, container, callback) {
+    invariant(
+      ReactDescriptor.isValidDescriptor(nextDescriptor),
+      'renderComponent(): Invalid component descriptor.%s',
+      (
+        ReactDescriptor.isValidFactory(nextDescriptor) ?
+          ' Instead of passing a component class, make sure to instantiate ' +
+          'it first by calling it with props.' :
+        // Check if it quacks like a descriptor
+        typeof nextDescriptor.props !== "undefined" ?
+          ' This may be caused by unintentionally loading two independent ' +
+          'copies of React.' :
+          ''
+      )
+    );
+
     var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
     if (prevComponent) {
