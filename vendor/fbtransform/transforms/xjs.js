@@ -19,6 +19,7 @@ var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
 var knownTags = {
+  'font-face': true,
   a: true,
   abbr: true,
   address: true,
