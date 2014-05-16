@@ -115,11 +115,11 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
-      return (
-        this._createOpenTagMarkupAndPutListeners(transaction) +
-        this._createContentMarkup(transaction) +
-        this._tagClose
-      );
+      this._createOpenTagMarkupAndPutListeners(transaction);
+      this._createContentMarkup(transaction);
+      if (this._tagClose) {
+        transaction.markupFragments.push(this._tagClose);
+      }
     }
   ),
 
@@ -137,8 +137,10 @@ ReactDOMComponent.Mixin = {
    */
   _createOpenTagMarkupAndPutListeners: function(transaction) {
     var props = this.props;
-    var ret = this._tagOpen;
 
+    transaction.markupFragments.push(this._tagOpen);
+
+    var markupForAttr = '';
     for (var propKey in props) {
       if (!props.hasOwnProperty(propKey)) {
         continue;
@@ -159,7 +161,7 @@ ReactDOMComponent.Mixin = {
         var markup =
           DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
         if (markup) {
-          ret += ' ' + markup;
+          transaction.markupFragments.push(markup);
         }
       }
     }
@@ -167,11 +169,12 @@ ReactDOMComponent.Mixin = {
     // For static pages, no need to put React ID and checksum. Saves lots of
     // bytes.
     if (transaction.renderToStaticMarkup) {
-      return ret + '>';
+      transaction.markupFragments.push('>');
+      return;
     }
 
     var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    transaction.markupFragments.push(markupForID + '>');
   },
 
   /**
@@ -186,23 +189,23 @@ ReactDOMComponent.Mixin = {
     var innerHTML = this.props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return innerHTML.__html;
+        transaction.markupFragments.push(innerHTML.__html);
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
       if (contentToUse != null) {
-        return escapeTextForBrowser(contentToUse);
+        transaction.markupFragments.push(
+          escapeTextForBrowser(contentToUse)
+        );
       } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
+        this.mountChildren(
           childrenToUse,
           transaction
         );
-        return mountImages.join('');
       }
     }
-    return '';
   },
 
   receiveComponent: function(nextDescriptor, transaction) {

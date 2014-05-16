@@ -77,8 +77,8 @@ mixInto(ReactTextComponent, {
       return escapedText;
     }
 
-    return (
-      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+    transaction.markupFragments.push(
+      '<span' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
         escapedText +
       '</span>'
     );

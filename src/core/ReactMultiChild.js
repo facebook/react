@@ -187,7 +187,6 @@ var ReactMultiChild = {
      */
     mountChildren: function(nestedChildren, transaction) {
       var children = flattenChildren(nestedChildren);
-      var mountImages = [];
       var index = 0;
       this._renderedChildren = children;
       for (var name in children) {
@@ -199,17 +198,15 @@ var ReactMultiChild = {
           children[name] = childInstance;
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + name;
-          var mountImage = childInstance.mountComponent(
+          childInstance.mountComponent(
             rootID,
             transaction,
             this._mountDepth + 1
           );
           childInstance._mountIndex = index;
-          mountImages.push(mountImage);
           index++;
         }
       }
-      return mountImages;
     },
 
     /**
@@ -396,11 +393,13 @@ var ReactMultiChild = {
     _mountChildByNameAtIndex: function(child, name, index, transaction) {
       // Inlined for performance, see `ReactInstanceHandles.createReactID`.
       var rootID = this._rootNodeID + name;
-      var mountImage = child.mountComponent(
+      child.mountComponent(
         rootID,
         transaction,
         this._mountDepth + 1
       );
+      var mountImage = transaction.markupFragments.join('');
+      transaction.markupFragments.length = 0;
       child._mountIndex = index;
       this.createChild(child, mountImage);
       this._renderedChildren = this._renderedChildren || {};

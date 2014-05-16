@@ -132,6 +132,7 @@ function ReactReconcileTransaction() {
   // accessible and defaults to false when `ReactDOMComponent` and
   // `ReactTextComponent` checks it in `mountComponent`.`
   this.renderToStaticMarkup = false;
+  this.markupFragments = [];
   this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }
@@ -169,6 +170,8 @@ var Mixin = {
 
     ReactPutListenerQueue.release(this.putListenerQueue);
     this.putListenerQueue = null;
+
+    this.markupFragments.length = 0;
   }
 };
 

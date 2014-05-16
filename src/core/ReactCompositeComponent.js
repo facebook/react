@@ -1130,14 +1130,14 @@ var ReactCompositeComponentMixin = {
         var prevComponentID = prevComponentInstance._rootNodeID;
         prevComponentInstance.unmountComponent();
         this._renderedComponent = instantiateReactComponent(nextDescriptor);
-        var nextMarkup = this._renderedComponent.mountComponent(
+        this._renderedComponent.mountComponent(
           thisID,
           transaction,
           this._mountDepth + 1
         );
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
-          nextMarkup
+          transaction.markupFragments.join('')
         );
       }
     }
