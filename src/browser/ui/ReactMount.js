@@ -50,9 +50,6 @@ if (__DEV__) {
   var rootElementsByReactRootID = {};
 }
 
-// Used to store breadth-first search state in findComponentRoot.
-var findComponentRootReusableArray = [];
-
 /**
  * @param {DOMElement} container DOM element that may contain a React component.
  * @return {?string} A "reactRoot" ID, if a React component is rendered.
@@ -74,21 +71,26 @@ function getReactRootID(container) {
  */
 function getID(node) {
   var id = internalGetID(node);
-  if (id) {
-    if (nodeCache.hasOwnProperty(id)) {
-      var cached = nodeCache[id];
-      if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
 
-        nodeCache[id] = node;
-      }
-    } else {
-      nodeCache[id] = node;
-    }
+  if (id) {
+    invariant(
+      nodeCache.hasOwnProperty(id),
+      'getID(%s): Element not in node cache. This probably ' +
+      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
+      'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
+      'or <a> tags. Try inspecting the ancestor nodes of the element with ' +
+      'React ID `%s`.',
+      id, id
+    );
+    invariant(
+      nodeCache[id] === node,
+      'getID(%s): Element is different from element in node cache. This ' +
+      'probably means the DOM was unexpectedly mutated (e.g., by the ' +
+      'browser), usually due to forgetting a <tbody> when using tables or ' +
+      'nesting <p> or <a> tags. Try inspecting the ancestor nodes of the ' +
+      'element with React ID `%s`.',
+      id, id
+    );
   }
 
   return id;
@@ -124,10 +126,19 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
-  }
-  return nodeCache[id];
+  var cached = nodeCache[id];
+
+  invariant(
+    nodeCache.hasOwnProperty(id) && isValid(cached, id),
+    'getNode(%s): Element does not exist in node cache. This probably ' +
+    'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
+    'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
+    'or <a> tags. Try inspecting the ancestor nodes of the element with ' +
+    'React ID `%s`.',
+    id, id
+  );
+
+  return cached;
 }
 
 /**
@@ -166,31 +177,25 @@ function purgeID(id) {
   delete nodeCache[id];
 }
 
-var deepestNodeSoFar = null;
-function findDeepestCachedAncestorImpl(ancestorID) {
-  var ancestor = nodeCache[ancestorID];
-  if (ancestor && isValid(ancestor, ancestorID)) {
-    deepestNodeSoFar = ancestor;
-  } else {
-    // This node isn't populated in the cache, so presumably none of its
-    // descendants are. Break out of the loop.
-    return false;
+function updateNodeCache(child) {
+  while (child) {
+    var childID = child.getAttribute && child.getAttribute(ATTR_NAME);
+
+    if (childID) {
+      nodeCache[childID] = child;
+      updateNodeCache(child.firstChild);
+    } else {
+      // If the child is a TBODY without an ID, it's very likely to have been
+      // injected automatically by the browser, as when a `<table>`
+      // element sprouts an extra `<tbody>` child as a side effect of
+      // `.innerHTML` parsing.
+      var child2 = child.firstChild;
+      if (child2 && child2.hasAttribute && child2.hasAttribute(ATTR_NAME)) {
+        updateNodeCache(child2);
+      }
+    }
+    child = child.nextSibling;
   }
-}
-
-/**
- * Return the deepest cached node whose ID is a prefix of `targetID`.
- */
-function findDeepestCachedAncestor(targetID) {
-  deepestNodeSoFar = null;
-  ReactInstanceHandles.traverseAncestors(
-    targetID,
-    findDeepestCachedAncestorImpl
-  );
-
-  var foundNode = deepestNodeSoFar;
-  deepestNodeSoFar = null;
-  return foundNode;
 }
 
 /**
@@ -527,17 +532,6 @@ var ReactMount = {
   },
 
   /**
-   * Finds an element rendered by React with the supplied ID.
-   *
-   * @param {string} id ID of a DOM node in the React component.
-   * @return {DOMElement} Root DOM node of the React component.
-   */
-  findReactNodeByID: function(id) {
-    var reactRoot = ReactMount.findReactContainerForID(id);
-    return ReactMount.findComponentRoot(reactRoot, id);
-  },
-
-  /**
    * True if the supplied `node` is rendered by React.
    *
    * @param {*} node DOM Element to check.
@@ -573,87 +567,10 @@ var ReactMount = {
   },
 
   /**
-   * Finds a node with the supplied `targetID` inside of the supplied
-   * `ancestorNode`.  Exploits the ID naming scheme to perform the search
-   * quickly.
-   *
-   * @param {DOMEventTarget} ancestorNode Search from this root.
-   * @pararm {string} targetID ID of the DOM representation of the component.
-   * @return {DOMEventTarget} DOM node with the supplied `targetID`.
-   * @internal
-   */
-  findComponentRoot: function(ancestorNode, targetID) {
-    var firstChildren = findComponentRootReusableArray;
-    var childIndex = 0;
-
-    var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
-
-    firstChildren[0] = deepestAncestor.firstChild;
-    firstChildren.length = 1;
-
-    while (childIndex < firstChildren.length) {
-      var child = firstChildren[childIndex++];
-      var targetChild;
-
-      while (child) {
-        var childID = ReactMount.getID(child);
-        if (childID) {
-          // Even if we find the node we're looking for, we finish looping
-          // through its siblings to ensure they're cached so that we don't have
-          // to revisit this node again. Otherwise, we make n^2 calls to getID
-          // when visiting the many children of a single node in order.
-
-          if (targetID === childID) {
-            targetChild = child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-          }
-
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
-          firstChildren.push(child.firstChild);
-        }
-
-        child = child.nextSibling;
-      }
-
-      if (targetChild) {
-        // Emptying firstChildren/findComponentRootReusableArray is
-        // not necessary for correctness, but it helps the GC reclaim
-        // any nodes that were left at the end of the search.
-        firstChildren.length = 0;
-
-        return targetChild;
-      }
-    }
-
-    firstChildren.length = 0;
-
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
-      'or <a> tags. Try inspecting the child nodes of the element with React ' +
-      'ID `%s`.',
-      targetID,
-      ReactMount.getID(ancestorNode)
-    );
-  },
-
-
-  /**
    * React ID utilities.
    */
+
+  updateNodeCache: updateNodeCache,
 
   getReactRootID: getReactRootID,
 

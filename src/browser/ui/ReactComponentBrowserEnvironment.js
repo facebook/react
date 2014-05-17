@@ -115,6 +115,7 @@ var ReactComponentBrowserEnvironment = {
       );
 
       setInnerHTML(container, markup);
+      ReactMount.updateNodeCache(container.firstChild);
     }
   )
 };
