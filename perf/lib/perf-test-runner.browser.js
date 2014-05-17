@@ -40,9 +40,9 @@ perfRunner.WriteReactLibScript = function(params){
   } else {
     minSuffix = '.min';
   }
-  
+
   if (params.version && typeof params.version != 'string') throw TypeError("Expected 'version' to be a string");
-  
+
   if (params.version == 'edge' || !params.version) {
     console.log('React edge (local)');
     perfRunner.WriteScript({src:'../build/react' + minSuffix + '.js'});
@@ -83,7 +83,7 @@ perfRunner.getQueryParamArray = function(key){
   var values;
   var queryString = location.search.substr(1);
   var _key = encodeURIComponent(key) + '=';
-  
+
   if (queryString.indexOf(_key) > -1) {
     values = queryString
       .split(_key)
@@ -98,7 +98,7 @@ perfRunner.getQueryParamArray = function(key){
       })
     ;
   }
-  
+
   perfRunner.assert(values && values.length && values[0], 'expected ' + key + ' query param');
   return values;
 }
@@ -142,7 +142,7 @@ perfRunner.quickBench = function(benchmarkOptions, onComplete, onBeforeStart){
   bench.on('cycle', function(){
     var bench = this,
         size = bench.stats.size;
-  
+
     if (!bench.aborted) {
       console.warn(bench.name + ' × ' + bench.count +
         ' (' + bench.stats.sample.length + ' samples)' +
@@ -162,12 +162,12 @@ perfRunner.quickBench = function(benchmarkOptions, onComplete, onBeforeStart){
       // times: bench.times,
       // stats: bench.stats
     };
-    
+
     results['s/op'] = bench.stats.mean
     results['ms/op'] = results['s/op'] * 1000
     results['op/s'] = 1 / results['s/op']
     results["% frame 60"] = results['ms/op'] / (1000 / 60) * 100
-    
+
     console.log(results);
     onComplete(null, results);
   });
@@ -192,13 +192,15 @@ perfRunner.singleTest = function(benchmarkOptions, onComplete){
 perfRunner.ViewObject = function(props){
   var value = props.value;
   delete props.value;
-  
+
   if (typeof value != 'object') return React.DOM.span(props, [JSON.stringify(value), " ", typeof value]);
-  
-  return React.DOM.table(props, Object.keys(value).map(function(key){
-    return React.DOM.tr(null,
-      React.DOM.th(null, key),
-      React.DOM.td(null, perfRunner.ViewObject({key:key, value:value[key]}))
-    );
-  }));
+
+  return React.DOM.table(props,
+    React.DOM.tbody(null, Object.keys(value).map(function(key){
+      return React.DOM.tr(null,
+        React.DOM.th(null, key),
+        React.DOM.td(null, perfRunner.ViewObject({key:key, value:value[key]}))
+      )
+    }))
+  );
 }

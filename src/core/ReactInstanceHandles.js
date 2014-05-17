@@ -229,7 +229,7 @@ var ReactInstanceHandles = {
    * @return {string} A React root ID.
    */
   createReactRootID: function() {
-    return getReactRootIDString(ReactRootIndex.createReactRootIndex());
+    return getReactRootIDString('#' + ReactRootIndex.createReactRootIndex());
   },
 
   /**
