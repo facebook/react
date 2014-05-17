@@ -410,7 +410,7 @@ var ReactComponent = {
         transaction,
         shouldReuseMarkup) {
       var markup = this.mountComponent(rootID, transaction, 0);
-      mountImageIntoNode(markup, container, shouldReuseMarkup);
+      mountImageIntoNode(markup, container, this, shouldReuseMarkup);
     },
 
     /**

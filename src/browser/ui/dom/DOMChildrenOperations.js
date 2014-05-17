@@ -153,7 +153,7 @@ var DOMChildrenOperations = {
             renderedNode,
             update.toIndex
           );
-          ReactMount.updateNodeCache(renderedNode);
+          ReactMount.updateNodeCache(renderedNode, update.parentComponent);
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(

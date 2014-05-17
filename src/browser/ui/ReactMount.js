@@ -100,7 +100,7 @@ function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  return node && node.__reactID__ || '';
 }
 
 /**
@@ -114,7 +114,7 @@ function setID(node, id) {
   if (oldID !== id) {
     delete nodeCache[oldID];
   }
-  node.setAttribute(ATTR_NAME, id);
+  node.__reactID__ = id;
   nodeCache[id] = node;
 }
 
@@ -177,24 +177,25 @@ function purgeID(id) {
   delete nodeCache[id];
 }
 
-function updateNodeCache(child) {
-  while (child) {
-    var childID = child.getAttribute && child.getAttribute(ATTR_NAME);
+function updateNodeCache(parentNode, parentComponent) {
+  while (parentComponent._renderedComponent) {
+    parentComponent = parentComponent._renderedComponent;
+  }
 
-    if (childID) {
-      nodeCache[childID] = child;
-      updateNodeCache(child.firstChild);
-    } else {
-      // If the child is a TBODY without an ID, it's very likely to have been
-      // injected automatically by the browser, as when a `<table>`
-      // element sprouts an extra `<tbody>` child as a side effect of
-      // `.innerHTML` parsing.
-      var child2 = child.firstChild;
-      if (child2 && child2.hasAttribute && child2.hasAttribute(ATTR_NAME)) {
-        updateNodeCache(child2);
-      }
+  nodeCache[parentComponent._rootNodeID] = parentNode;
+  parentNode.__reactID__ = parentComponent._rootNodeID;
+
+  var childComponents = parentComponent._renderedChildren;
+  if (childComponents) {
+    var childNode = parentNode.firstChild;
+
+    for (var id in childComponents) {
+      var childComponent = childComponents[id];
+
+      updateNodeCache(childNode, childComponent);
+
+      childNode = childNode.nextSibling;
     }
-    child = child.nextSibling;
   }
 }
 

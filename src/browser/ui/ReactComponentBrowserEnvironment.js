@@ -64,7 +64,7 @@ var ReactComponentBrowserEnvironment = {
   mountImageIntoNode: ReactPerf.measure(
     'ReactComponentBrowserEnvironment',
     'mountImageIntoNode',
-    function(markup, container, shouldReuseMarkup) {
+    function(markup, container, component, shouldReuseMarkup) {
       invariant(
         container && (
           container.nodeType === ELEMENT_NODE_TYPE ||
@@ -115,7 +115,10 @@ var ReactComponentBrowserEnvironment = {
       );
 
       setInnerHTML(container, markup);
-      ReactMount.updateNodeCache(container.firstChild);
+      ReactMount.updateNodeCache(
+        container.firstChild,
+        component
+      );
     }
   )
 };
