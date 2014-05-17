@@ -116,6 +116,7 @@ var HTMLDOMPropertyConfig = {
     name: null,
     noValidate: HAS_BOOLEAN_VALUE,
     pattern: null,
+    patternUnits: null,
     placeholder: null,
     poster: null,
     preload: null,
