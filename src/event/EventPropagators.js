@@ -53,7 +53,7 @@ function accumulateDirectionalDispatches(node, upwards, event) {
   var listener = listenerAtPhase(node.__reactComponent__, event, phase);
   if (listener) {
     event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-    event._dispatchIDs = accumulate(event._dispatchIDs, node);
+    event._dispatchNodes = accumulate(event._dispatchNodes, node);
   }
 }
 
@@ -80,13 +80,13 @@ function accumulateTwoPhaseDispatchesSingle(event) {
  * registration names. Same as `accumulateDirectDispatchesSingle` but without
  * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
-function accumulateDispatches(id, ignoredDirection, event) {
+function accumulateDispatches(node, ignoredDirection, event) {
   if (event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(id, registrationName);
+    var listener = getListener(node.__reactComponent__, registrationName);
     if (listener) {
       event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-      event._dispatchIDs = accumulate(event._dispatchIDs, id);
+      event._dispatchNodes = accumulate(event._dispatchNodes, node);
     }
   }
 }

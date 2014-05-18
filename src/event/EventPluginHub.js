@@ -260,7 +260,8 @@ var EventPluginHub = {
       'processEventQueue(): Additional events were enqueued while processing ' +
       'an event queue. Support for this has not yet been implemented.'
     );
-  },
+  }
+
 };
 
 module.exports = EventPluginHub;
