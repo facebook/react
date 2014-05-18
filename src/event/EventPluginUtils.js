@@ -112,9 +112,9 @@ function forEachEventDispatch(event, cb) {
  * @param {function} Application-level callback
  * @param {string} domID DOM id to pass to the callback.
  */
-function executeDispatch(event, listener, domID) {
-  event.currentTarget = injection.Mount.getNode(domID);
-  var returnValue = listener(event, domID);
+function executeDispatch(event, listener, node) {
+  event.currentTarget = node;
+  var returnValue = listener(event, node.__reactID__);
   event.currentTarget = null;
   return returnValue;
 }

@@ -26,11 +26,11 @@ var DOM_OPERATION_TYPES = {
   MOVE_EXISTING: 'move',
   REMOVE_NODE: 'remove',
   TEXT_CONTENT: 'set textContent',
-  'updatePropertyByID': 'update attribute',
-  'deletePropertyByID': 'delete attribute',
-  'updateStylesByID': 'update styles',
-  'updateInnerHTMLByID': 'set innerHTML',
-  'dangerouslyReplaceNodeWithMarkupByID': 'replace'
+  'updateProperty': 'update attribute',
+  'deleteProperty': 'delete attribute',
+  'updateStyles': 'update styles',
+  'updateInnerHTML': 'set innerHTML',
+  'dangerouslyReplaceNodeWithMarkup': 'replace'
 };
 
 function getTotalTime(measurements) {

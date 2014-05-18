@@ -38,7 +38,7 @@ var executeDispatchesInOrderStopAtTrue =
  * ID of element that should respond to touch/move types of interactions, as
  * indicated explicitly by relevant callbacks.
  */
-var responderID = null;
+var responder = null;
 var isPressing = false;
 
 var eventTypes = {
@@ -168,33 +168,33 @@ function setResponderAndExtractTransfer(
     isMoveish(topLevelType) ? eventTypes.moveShouldSetResponder :
     eventTypes.scrollShouldSetResponder;
 
-  var bubbleShouldSetFrom = responderID || topLevelTargetID;
+  var bubbleShouldSetFrom = responder || topLevelTarget;
   var shouldSetEvent = SyntheticEvent.getPooled(
     shouldSetEventType,
     bubbleShouldSetFrom,
     nativeEvent
   );
   EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
-  var wantsResponderID = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
+  var wantsResponder = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
   if (!shouldSetEvent.isPersistent()) {
     shouldSetEvent.constructor.release(shouldSetEvent);
   }
 
-  if (!wantsResponderID || wantsResponderID === responderID) {
+  if (!wantsResponder || wantsResponder === responder) {
     return null;
   }
   var extracted;
   var grantEvent = SyntheticEvent.getPooled(
     eventTypes.responderGrant,
-    wantsResponderID,
+    wantsResponder,
     nativeEvent
   );
 
   EventPropagators.accumulateDirectDispatches(grantEvent);
-  if (responderID) {
+  if (responder) {
     var terminationRequestEvent = SyntheticEvent.getPooled(
       eventTypes.responderTerminationRequest,
-      responderID,
+      responder,
       nativeEvent
     );
     EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
@@ -208,16 +208,16 @@ function setResponderAndExtractTransfer(
       var terminateType = eventTypes.responderTerminate;
       var terminateEvent = SyntheticEvent.getPooled(
         terminateType,
-        responderID,
+        responder,
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(terminateEvent);
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
-      responderID = wantsResponderID;
+      responder = wantsResponder;
     } else {
       var rejectEvent = SyntheticEvent.getPooled(
         eventTypes.responderReject,
-        wantsResponderID,
+        wantsResponder,
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(rejectEvent);
@@ -225,7 +225,7 @@ function setResponderAndExtractTransfer(
     }
   } else {
     extracted = accumulate(extracted, grantEvent);
-    responderID = wantsResponderID;
+    responder = wantsResponder;
   }
   return extracted;
 }
@@ -252,8 +252,8 @@ function canTriggerTransfer(topLevelType) {
  */
 var ResponderEventPlugin = {
 
-  getResponderID: function() {
-    return responderID;
+  getResponder: function() {
+    return responder;
   },
 
   eventTypes: eventTypes,
@@ -273,8 +273,8 @@ var ResponderEventPlugin = {
       nativeEvent) {
     var extracted;
     // Must have missed an end event - reset the state here.
-    if (responderID && isStartish(topLevelType)) {
-      responderID = null;
+    if (responder && isStartish(topLevelType)) {
+      responder = null;
     }
     if (isStartish(topLevelType)) {
       isPressing = true;
@@ -284,7 +284,7 @@ var ResponderEventPlugin = {
     if (canTriggerTransfer(topLevelType)) {
       var transfer = setResponderAndExtractTransfer(
         topLevelType,
-        topLevelTargetID,
+        topLevelTarget,
         nativeEvent
       );
       if (transfer) {
@@ -299,14 +299,14 @@ var ResponderEventPlugin = {
     if (type) {
       var gesture = SyntheticEvent.getPooled(
         type,
-        responderID || '',
+        responder,
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(gesture);
       extracted = accumulate(extracted, gesture);
     }
     if (type === eventTypes.responderRelease) {
-      responderID = null;
+      responder = null;
     }
     return extracted;
   }

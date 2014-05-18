@@ -1127,7 +1127,6 @@ var ReactCompositeComponentMixin = {
       } else {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
-        var prevComponentID = prevComponentInstance._rootNodeID;
         prevComponentInstance.unmountComponent();
         this._renderedComponent = instantiateReactComponent(nextDescriptor);
         var nextMarkup = this._renderedComponent.mountComponent(
@@ -1135,8 +1134,8 @@ var ReactCompositeComponentMixin = {
           transaction,
           this._mountDepth + 1
         );
-        ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-          prevComponentID,
+        ReactComponent.BackendOperations.dangerouslyReplaceNodeWithMarkup(
+          prevComponentInstance,
           nextMarkup
         );
       }

@@ -43,17 +43,17 @@ function listenerAtPhase(id, event, propagationPhase) {
  * Mutating the event's members allows us to not have to create a wrapping
  * "dispatch" object that pairs the event with the listener.
  */
-function accumulateDirectionalDispatches(domID, upwards, event) {
+function accumulateDirectionalDispatches(node, upwards, event) {
   if (__DEV__) {
-    if (!domID) {
+    if (!node || !node.__reactID__) {
       throw new Error('Dispatching id must not be null');
     }
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
-  var listener = listenerAtPhase(domID, event, phase);
+  var listener = listenerAtPhase(node.__reactID__, event, phase);
   if (listener) {
     event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-    event._dispatchIDs = accumulate(event._dispatchIDs, domID);
+    event._dispatchIDs = accumulate(event._dispatchIDs, node);
   }
 }
 

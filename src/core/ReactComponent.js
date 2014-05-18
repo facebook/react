@@ -99,8 +99,8 @@ var ReactComponent = {
       mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
       unmountIDFromEnvironment =
         ReactComponentEnvironment.unmountIDFromEnvironment;
-      ReactComponent.BackendIDOperations =
-        ReactComponentEnvironment.BackendIDOperations;
+      ReactComponent.BackendOperations =
+        ReactComponentEnvironment.BackendOperations;
       injected = true;
     }
   },
@@ -117,7 +117,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  BackendIDOperations: null,
+  BackendOperations: null,
 
   /**
    * Base functionality for every ReactComponent constructor. Mixed into the
@@ -264,6 +264,7 @@ var ReactComponent = {
         var owner = this._descriptor._owner;
         ReactOwner.addComponentAsRefTo(this, props.ref, owner);
       }
+      this._rootNode = null;
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
       this._mountDepth = mountDepth;

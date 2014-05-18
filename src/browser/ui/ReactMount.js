@@ -179,11 +179,14 @@ function purgeID(id) {
 
 function updateNodeCache(parentNode, parentComponent) {
   while (parentComponent._renderedComponent) {
+    parentComponent._rootNode = parentNode;
     parentComponent = parentComponent._renderedComponent;
   }
 
+  parentComponent._rootNode = parentNode;
   nodeCache[parentComponent._rootNodeID] = parentNode;
   parentNode.__reactID__ = parentComponent._rootNodeID;
+  parentNode.__reactComponent__ = parentComponent;
 
   var childComponents = parentComponent._renderedChildren;
   if (childComponents) {
@@ -583,5 +586,7 @@ var ReactMount = {
 
   purgeID: purgeID
 };
+
+ReactInstanceHandles.getNodeByID = getNode;
 
 module.exports = ReactMount;

@@ -200,7 +200,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
   for (var id = start; /* until break */; id = traverse(id, stop)) {
     var ret;
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
-      ret = cb(id, traverseUp, arg);
+      ret = cb(ReactInstanceHandles.getNodeByID(id), traverseUp, arg);
     }
     if (ret === false || id === stop) {
       // Only break //after// visiting `stop`.
@@ -275,7 +275,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   traverseEnterLeave: function(leaveID, enterID, cb, upArg, downArg) {
-    var ancestorID = getFirstCommonAncestorID(leaveID, enterID);
+    var ancestorID = getFirstCommonAncestorID(leaveID.__reactID__, enterID.__reactID__);
     if (ancestorID !== leaveID) {
       traverseParentPath(leaveID, ancestorID, cb, upArg, false, true);
     }
@@ -296,8 +296,8 @@ var ReactInstanceHandles = {
    */
   traverseTwoPhase: function(targetID, cb, arg) {
     if (targetID) {
-      traverseParentPath('', targetID, cb, arg, true, false);
-      traverseParentPath(targetID, '', cb, arg, false, true);
+      traverseParentPath('', targetID.__reactID__, cb, arg, true, false);
+      traverseParentPath(targetID.__reactID__, '', cb, arg, false, true);
     }
   },
 
@@ -314,7 +314,7 @@ var ReactInstanceHandles = {
    * @internal
    */
   traverseAncestors: function(targetID, cb, arg) {
-    traverseParentPath('', targetID, cb, arg, true, false);
+    traverseParentPath('', targetID.__reactID__, cb, arg, true, false);
   },
 
   /**

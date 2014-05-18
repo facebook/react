@@ -112,7 +112,7 @@ function constructSelectEvent(nativeEvent) {
 
     var syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
-      activeElementID,
+      activeElement,
       nativeEvent
     );
 

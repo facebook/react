@@ -146,7 +146,7 @@ function enqueueTextContent(parentID, textContent) {
  */
 function processQueue() {
   if (updateQueue.length) {
-    ReactComponent.BackendIDOperations.dangerouslyProcessChildrenUpdates(
+    ReactComponent.BackendOperations.dangerouslyProcessChildrenUpdates(
       updateQueue,
       markupQueue
     );

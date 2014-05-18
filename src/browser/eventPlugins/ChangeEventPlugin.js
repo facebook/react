@@ -79,7 +79,7 @@ if (ExecutionEnvironment.canUseDOM) {
 function manualDispatchChangeEvent(nativeEvent) {
   var event = SyntheticEvent.getPooled(
     eventTypes.change,
-    activeElementID,
+    activeElement,
     nativeEvent
   );
   EventPropagators.accumulateTwoPhaseDispatches(event);
@@ -123,7 +123,7 @@ function getTargetIDForChangeEvent(
     topLevelTarget,
     topLevelTargetID) {
   if (topLevelType === topLevelTypes.topChange) {
-    return topLevelTargetID;
+    return topLevelTarget;
   }
 }
 function handleEventsForChangeEventIE8(
@@ -232,7 +232,7 @@ function getTargetIDForInputEvent(
   if (topLevelType === topLevelTypes.topInput) {
     // In modern browsers (i.e., not IE8 or IE9), the input event is exactly
     // what we want so fall through here and trigger an abstract event
-    return topLevelTargetID;
+    return topLevelTarget;
   }
 }
 
@@ -306,7 +306,7 @@ function getTargetIDForClickEvent(
     topLevelTarget,
     topLevelTargetID) {
   if (topLevelType === topLevelTypes.topClick) {
-    return topLevelTargetID;
+    return topLevelTarget;
   }
 }
 
@@ -357,15 +357,15 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetIDFunc) {
-      var targetID = getTargetIDFunc(
+      var target = getTargetIDFunc(
         topLevelType,
         topLevelTarget,
         topLevelTargetID
       );
-      if (targetID) {
+      if (target) {
         var event = SyntheticEvent.getPooled(
           eventTypes.change,
-          targetID,
+          target,
           nativeEvent
         );
         EventPropagators.accumulateTwoPhaseDispatches(event);

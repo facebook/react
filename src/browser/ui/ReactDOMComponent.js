@@ -166,12 +166,12 @@ ReactDOMComponent.Mixin = {
 
     // For static pages, no need to put React ID and checksum. Saves lots of
     // bytes.
-    if (transaction.renderToStaticMarkup) {
+    //if (transaction.renderToStaticMarkup) {
       return ret + '>';
-    }
+    //}
 
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    //var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
+    //return ret + ' ' + markupForID + '>';
   },
 
   /**
@@ -287,8 +287,8 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.deletePropertyByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.deleteProperty(
+          this._rootNode,
           propKey
         );
       }
@@ -321,7 +321,7 @@ ReactDOMComponent.Mixin = {
             }
           }
         } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          // Relies on `updateStyles` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules[propKey]) {
@@ -329,16 +329,16 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.updatePropertyByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.updateProperty(
+          this._rootNode,
           propKey,
           nextProp
         );
       }
     }
     if (styleUpdates) {
-      ReactComponent.BackendIDOperations.updateStylesByID(
-        this._rootNodeID,
+      ReactComponent.BackendOperations.updateStyles(
+        this._rootNode,
         styleUpdates
       );
     }
@@ -386,8 +386,8 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.updateInnerHTML(
+          this._rootNode,
           nextHtml
         );
       }
