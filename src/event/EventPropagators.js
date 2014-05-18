@@ -31,10 +31,10 @@ var getListener = EventPluginHub.getListener;
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
-function listenerAtPhase(id, event, propagationPhase) {
+function listenerAtPhase(component, event, propagationPhase) {
   var registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(id, registrationName);
+  return getListener(component, registrationName);
 }
 
 /**
@@ -50,7 +50,7 @@ function accumulateDirectionalDispatches(node, upwards, event) {
     }
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
-  var listener = listenerAtPhase(node.__reactID__, event, phase);
+  var listener = listenerAtPhase(node.__reactComponent__, event, phase);
   if (listener) {
     event._dispatchListeners = accumulate(event._dispatchListeners, listener);
     event._dispatchIDs = accumulate(event._dispatchIDs, node);

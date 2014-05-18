@@ -28,11 +28,6 @@ var isEventSupported = require('isEventSupported');
 var monitorCodeUse = require('monitorCodeUse');
 
 /**
- * Internal store for event listeners
- */
-var listenerBank = {};
-
-/**
  * Internal queue of events that have accumulated their dispatches and are
  * waiting to have their dispatches executed.
  */
@@ -152,7 +147,7 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {?function} listener The callback to store.
    */
-  putListener: function(id, registrationName, listener) {
+  putListener: function(component, registrationName, listener) {
     invariant(
       !listener || typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
@@ -168,9 +163,8 @@ var EventPluginHub = {
         console.warn('This browser doesn\'t support the `onScroll` event');
       }
     }
-    var bankForRegistrationName =
-      listenerBank[registrationName] || (listenerBank[registrationName] = {});
-    bankForRegistrationName[id] = listener;
+    component._listeners = component._listeners || {};
+    component._listeners[registrationName] = listener;
   },
 
   /**
@@ -178,9 +172,8 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @return {?function} The stored callback.
    */
-  getListener: function(id, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
-    return bankForRegistrationName && bankForRegistrationName[id];
+  getListener: function(component, registrationName) {
+    return component._listeners && component._listeners[registrationName];
   },
 
   /**
@@ -189,11 +182,8 @@ var EventPluginHub = {
    * @param {string} id ID of the DOM element.
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
-  deleteListener: function(id, registrationName) {
-    var bankForRegistrationName = listenerBank[registrationName];
-    if (bankForRegistrationName) {
-      delete bankForRegistrationName[id];
-    }
+  deleteListener: function(component, registrationName) {
+    delete component._listeners[registrationName];
   },
 
   /**
@@ -201,10 +191,8 @@ var EventPluginHub = {
    *
    * @param {string} id ID of the DOM element.
    */
-  deleteAllListeners: function(id) {
-    for (var registrationName in listenerBank) {
-      delete listenerBank[registrationName][id];
-    }
+  deleteAllListeners: function(component) {
+    component._listeners = null;
   },
 
   /**
@@ -273,18 +261,6 @@ var EventPluginHub = {
       'an event queue. Support for this has not yet been implemented.'
     );
   },
-
-  /**
-   * These are needed for tests only. Do not use!
-   */
-  __purge: function() {
-    listenerBank = {};
-  },
-
-  __getListenerBank: function() {
-    return listenerBank;
-  }
-
 };
 
 module.exports = EventPluginHub;
