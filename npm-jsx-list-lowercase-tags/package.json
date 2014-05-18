@@ -1,0 +1,15 @@
+{
+  "name": "jsx-list-lowercase-tags",
+  "version": "0.1.0",
+  "description": "List lowercase user-defined JSX tags found in JavaScript files.",
+  "preferGlobal": true,
+  "bin": {
+    "jsx-list-lowercase-tags": "./index.js"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "esprima-fb": "~3001.1.0-dev-harmony-fb",
+    "ast-types": "~0.3.28"
+  }
+}
