@@ -168,7 +168,7 @@ var ReactDefaultPerf = {
           ReactDefaultPerf._allMeasurements.length - 1
         ].totalTime = performanceNow() - start;
         return rv;
-      } else if (moduleName === 'ReactDOMIDOperations' ||
+      } else if (moduleName === 'ReactDOMOperations' ||
         moduleName === 'ReactComponentBrowserEnvironment') {
         start = performanceNow();
         rv = func.apply(this, args);

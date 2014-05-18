@@ -31,10 +31,10 @@ var getListener = EventPluginHub.getListener;
  * Some event types have a notion of different registration names for different
  * "phases" of propagation. This finds listeners by a given phase.
  */
-function listenerAtPhase(id, event, propagationPhase) {
+function listenerAtPhase(component, event, propagationPhase) {
   var registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
-  return getListener(id, registrationName);
+  return getListener(component, registrationName);
 }
 
 /**
@@ -43,17 +43,17 @@ function listenerAtPhase(id, event, propagationPhase) {
  * Mutating the event's members allows us to not have to create a wrapping
  * "dispatch" object that pairs the event with the listener.
  */
-function accumulateDirectionalDispatches(domID, upwards, event) {
+function accumulateDirectionalDispatches(node, upwards, event) {
   if (__DEV__) {
-    if (!domID) {
+    if (!node || !node.__reactComponent__) {
       throw new Error('Dispatching id must not be null');
     }
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
-  var listener = listenerAtPhase(domID, event, phase);
+  var listener = listenerAtPhase(node.__reactComponent__, event, phase);
   if (listener) {
     event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-    event._dispatchIDs = accumulate(event._dispatchIDs, domID);
+    event._dispatchNodes = accumulate(event._dispatchNodes, node);
   }
 }
 
@@ -80,13 +80,13 @@ function accumulateTwoPhaseDispatchesSingle(event) {
  * registration names. Same as `accumulateDirectDispatchesSingle` but without
  * requiring that the `dispatchMarker` be the same as the dispatched ID.
  */
-function accumulateDispatches(id, ignoredDirection, event) {
+function accumulateDispatches(node, ignoredDirection, event) {
   if (event && event.dispatchConfig.registrationName) {
     var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(id, registrationName);
+    var listener = getListener(node.__reactComponent__, registrationName);
     if (listener) {
       event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-      event._dispatchIDs = accumulate(event._dispatchIDs, id);
+      event._dispatchNodes = accumulate(event._dispatchNodes, node);
     }
   }
 }
@@ -106,10 +106,10 @@ function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
+function accumulateEnterLeaveDispatches(leave, enter, fromNode, toNode) {
   EventPluginHub.injection.getInstanceHandle().traverseEnterLeave(
-    fromID,
-    toID,
+    fromNode,
+    toNode,
     accumulateDispatches,
     leave,
     enter

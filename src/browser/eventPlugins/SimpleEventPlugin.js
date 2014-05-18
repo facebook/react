@@ -305,8 +305,8 @@ var SimpleEventPlugin = {
    * @param {function} Application-level callback.
    * @param {string} domID DOM ID to pass to the callback.
    */
-  executeDispatch: function(event, listener, domID) {
-    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
+  executeDispatch: function(event, listener, node) {
+    var returnValue = EventPluginUtils.executeDispatch(event, listener, node);
     if (returnValue === false) {
       event.stopPropagation();
       event.preventDefault();
@@ -407,7 +407,7 @@ var SimpleEventPlugin = {
     );
     var event = EventConstructor.getPooled(
       dispatchConfig,
-      topLevelTargetID,
+      topLevelTarget,
       nativeEvent
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);

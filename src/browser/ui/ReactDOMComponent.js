@@ -65,16 +65,17 @@ function assertValidProps(props) {
   );
 }
 
-function putListener(id, registrationName, listener, transaction) {
-  var container = ReactMount.findReactContainerForID(id);
+function putListener(component, registrationName, listener, transaction) {
+  /*var container = ReactMount.findReactContainerForID(component._rootNode.__reactID__);
   if (container) {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
       container.ownerDocument :
       container;
     listenTo(registrationName, doc);
-  }
+  }*/
+  listenTo(registrationName, document);
   transaction.getPutListenerQueue().enqueuePutListener(
-    id,
+    component,
     registrationName,
     listener
   );
@@ -114,6 +115,7 @@ ReactDOMComponent.Mixin = {
         transaction,
         mountDepth
       );
+      this._listeners = null;
       assertValidProps(this.props);
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
@@ -148,7 +150,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNameModules[propKey]) {
-        putListener(this._rootNodeID, propKey, propValue, transaction);
+        putListener(this, propKey, propValue, transaction);
       } else {
         if (propKey === STYLE) {
           if (propValue) {
@@ -166,12 +168,12 @@ ReactDOMComponent.Mixin = {
 
     // For static pages, no need to put React ID and checksum. Saves lots of
     // bytes.
-    if (transaction.renderToStaticMarkup) {
+    //if (transaction.renderToStaticMarkup) {
       return ret + '>';
-    }
+    //}
 
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    //var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
+    //return ret + ' ' + markupForID + '>';
   },
 
   /**
@@ -283,12 +285,12 @@ ReactDOMComponent.Mixin = {
           }
         }
       } else if (registrationNameModules[propKey]) {
-        deleteListener(this._rootNodeID, propKey);
+        deleteListener(this, propKey);
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.deletePropertyByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.deleteProperty(
+          this._rootNode,
           propKey
         );
       }
@@ -321,24 +323,24 @@ ReactDOMComponent.Mixin = {
             }
           }
         } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
+          // Relies on `updateStyles` not mutating `styleUpdates`.
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules[propKey]) {
-        putListener(this._rootNodeID, propKey, nextProp, transaction);
+        putListener(this, propKey, nextProp, transaction);
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.updatePropertyByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.updateProperty(
+          this._rootNode,
           propKey,
           nextProp
         );
       }
     }
     if (styleUpdates) {
-      ReactComponent.BackendIDOperations.updateStylesByID(
-        this._rootNodeID,
+      ReactComponent.BackendOperations.updateStyles(
+        this._rootNode,
         styleUpdates
       );
     }
@@ -386,8 +388,8 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
-          this._rootNodeID,
+        ReactComponent.BackendOperations.updateInnerHTML(
+          this._rootNode,
           nextHtml
         );
       }
@@ -404,7 +406,7 @@ ReactDOMComponent.Mixin = {
    */
   unmountComponent: function() {
     this.unmountChildren();
-    ReactEventEmitter.deleteAllListeners(this._rootNodeID);
+    ReactEventEmitter.deleteAllListeners(this);
     ReactComponent.Mixin.unmountComponent.call(this);
   }
 

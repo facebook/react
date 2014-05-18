@@ -20,7 +20,7 @@
 
 "use strict";
 
-var ReactDOMIDOperations = require('ReactDOMIDOperations');
+var ReactDOMOperations = require('ReactDOMOperations');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactMount = require('ReactMount');
 var ReactPerf = require('ReactPerf');
@@ -42,7 +42,7 @@ var DOC_NODE_TYPE = 9;
 var ReactComponentBrowserEnvironment = {
   ReactReconcileTransaction: ReactReconcileTransaction,
 
-  BackendIDOperations: ReactDOMIDOperations,
+  BackendOperations: ReactDOMOperations,
 
   /**
    * If a particular environment requires that some resources be cleaned up,
@@ -51,8 +51,8 @@ var ReactComponentBrowserEnvironment = {
    *
    * @private
    */
-  unmountIDFromEnvironment: function(rootNodeID) {
-    ReactMount.purgeID(rootNodeID);
+  unmountFromEnvironment: function(component) {
+    component._rootNode.__reactComponent__ = null;
   },
 
   /**
@@ -64,7 +64,7 @@ var ReactComponentBrowserEnvironment = {
   mountImageIntoNode: ReactPerf.measure(
     'ReactComponentBrowserEnvironment',
     'mountImageIntoNode',
-    function(markup, container, shouldReuseMarkup) {
+    function(markup, container, component, shouldReuseMarkup) {
       invariant(
         container && (
           container.nodeType === ELEMENT_NODE_TYPE ||
@@ -115,6 +115,10 @@ var ReactComponentBrowserEnvironment = {
       );
 
       setInnerHTML(container, markup);
+      ReactMount.updateNodeCache(
+        container.firstChild,
+        component
+      );
     }
   )
 };

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMIDOperations
+ * @providesModule ReactDOMOperations
  * @typechecks static-only
  */
 
@@ -31,22 +31,22 @@ var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 
 /**
- * Errors for properties that should not be updated with `updatePropertyById()`.
+ * Errors for properties that should not be updated with `updateProperty()`.
  *
  * @type {object}
  * @private
  */
 var INVALID_PROPERTY_ERRORS = {
   dangerouslySetInnerHTML:
-    '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
-  style: '`style` must be set using `updateStylesByID()`.'
+    '`dangerouslySetInnerHTML` must be set using `updateInnerHTML()`.',
+  style: '`style` must be set using `updateStyles()`.'
 };
 
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
- * `ReactComponent.BackendIDOperations`.
+ * `ReactComponent.BackendOperations`.
  */
-var ReactDOMIDOperations = {
+var ReactDOMOperations = {
 
   /**
    * Updates a DOM node with new property values. This should only be used to
@@ -57,14 +57,13 @@ var ReactDOMIDOperations = {
    * @param {*} value New value of the property.
    * @internal
    */
-  updatePropertyByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updatePropertyByID',
-    function(id, name, value) {
-      var node = ReactMount.getNode(id);
+  updateProperty: ReactPerf.measure(
+    'ReactDOMOperations',
+    'updateProperty',
+    function(node, name, value) {
       invariant(
         !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-        'updatePropertyByID(...): %s',
+        'updateProperty(...): %s',
         INVALID_PROPERTY_ERRORS[name]
       );
 
@@ -87,14 +86,13 @@ var ReactDOMIDOperations = {
    * @param {string} name A property name to remove, see `DOMProperty`.
    * @internal
    */
-  deletePropertyByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'deletePropertyByID',
-    function(id, name, value) {
-      var node = ReactMount.getNode(id);
+  deleteProperty: ReactPerf.measure(
+    'ReactDOMOperations',
+    'deleteProperty',
+    function(node, name, value) {
       invariant(
         !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-        'updatePropertyByID(...): %s',
+        'updateProperty(...): %s',
         INVALID_PROPERTY_ERRORS[name]
       );
       DOMPropertyOperations.deleteValueForProperty(node, name, value);
@@ -109,11 +107,10 @@ var ReactDOMIDOperations = {
    * @param {object} styles Mapping from styles to values.
    * @internal
    */
-  updateStylesByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateStylesByID',
-    function(id, styles) {
-      var node = ReactMount.getNode(id);
+  updateStyles: ReactPerf.measure(
+    'ReactDOMOperations',
+    'updateStyles',
+    function(node, styles) {
       CSSPropertyOperations.setValueForStyles(node, styles);
     }
   ),
@@ -125,11 +122,10 @@ var ReactDOMIDOperations = {
    * @param {string} html An HTML string.
    * @internal
    */
-  updateInnerHTMLByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateInnerHTMLByID',
-    function(id, html) {
-      var node = ReactMount.getNode(id);
+  updateInnerHTML: ReactPerf.measure(
+    'ReactDOMOperations',
+    'updateInnerHTML',
+    function(node, html) {
       setInnerHTML(node, html);
     }
   ),
@@ -141,11 +137,10 @@ var ReactDOMIDOperations = {
    * @param {string} content Text content.
    * @internal
    */
-  updateTextContentByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateTextContentByID',
-    function(id, content) {
-      var node = ReactMount.getNode(id);
+  updateTextContent: ReactPerf.measure(
+    'ReactDOMOperations',
+    'updateTextContent',
+    function(node, content) {
       DOMChildrenOperations.updateTextContent(node, content);
     }
   ),
@@ -158,11 +153,10 @@ var ReactDOMIDOperations = {
    * @internal
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
-  dangerouslyReplaceNodeWithMarkupByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'dangerouslyReplaceNodeWithMarkupByID',
-    function(id, markup) {
-      var node = ReactMount.getNode(id);
+  dangerouslyReplaceNodeWithMarkup: ReactPerf.measure(
+    'ReactDOMOperations',
+    'dangerouslyReplaceNodeWithMarkup',
+    function(node, markup) {
       DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
     }
   ),
@@ -175,15 +169,15 @@ var ReactDOMIDOperations = {
    * @internal
    */
   dangerouslyProcessChildrenUpdates: ReactPerf.measure(
-    'ReactDOMIDOperations',
+    'ReactDOMOperations',
     'dangerouslyProcessChildrenUpdates',
     function(updates, markup) {
       for (var i = 0; i < updates.length; i++) {
-        updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
+        updates[i].parentNode = updates[i].parentComponent._rootNode;
       }
       DOMChildrenOperations.processUpdates(updates, markup);
     }
   )
 };
 
-module.exports = ReactDOMIDOperations;
+module.exports = ReactDOMOperations;

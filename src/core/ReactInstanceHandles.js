@@ -142,28 +142,35 @@ function getNextDescendantID(ancestorID, destinationID) {
  * @private
  */
 function getFirstCommonAncestorID(oneID, twoID) {
-  var minLength = Math.min(oneID.length, twoID.length);
-  if (minLength === 0) {
-    return '';
+  var child;
+  var commonAncestor;
+
+  child = oneID;
+  while (child) {
+    if (child) {
+      child.__reactCommonAncestor__ = true;
+    }
+    child = child.parentNode;
   }
-  var lastCommonMarkerIndex = 0;
-  // Use `<=` to traverse until the "EOL" of the shorter string.
-  for (var i = 0; i <= minLength; i++) {
-    if (isBoundary(oneID, i) && isBoundary(twoID, i)) {
-      lastCommonMarkerIndex = i;
-    } else if (oneID.charAt(i) !== twoID.charAt(i)) {
+
+  child = twoID;
+  while (child) {
+    if (child.__reactCommonAncestor__) {
+      commonAncestor = child;
       break;
     }
+    child = child.parentNode;
   }
-  var longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
-  invariant(
-    isValidID(longestCommonID),
-    'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
-    oneID,
-    twoID,
-    longestCommonID
-  );
-  return longestCommonID;
+
+  child = oneID;
+  while (child) {
+    if (child) {
+      child.__reactCommonAncestor__ = false;
+    }
+    child = child.parentNode;
+  }
+
+  return commonAncestor;
 }
 
 /**
@@ -178,8 +185,8 @@ function getFirstCommonAncestorID(oneID, twoID) {
  * @param {?boolean} skipLast Whether or not to skip the last node.
  * @private
  */
-function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
-  start = start || '';
+function traverseParentPath(start, stop, cb, arg, traverseUp, skipFirst, skipLast) {
+  /*start = start || '';
   stop = stop || '';
   invariant(
     start !== stop,
@@ -193,14 +200,33 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
     'not have a parent path.',
     start,
     stop
-  );
+  );*/
   // Traverse from `start` to `stop` one depth at a time.
+  var order = [];
+  var child = start;
+  while (child) {
+    if (child.__reactID__) {
+      order.push(child);
+      if (child === stop) {
+        break;
+      }
+    }
+    child = child.parentNode;
+  }
+  if (traverseUp) {
+    order.reverse();
+  }
+  for (var i in order) {
+    child = order[i];
+    cb(child, traverseUp, arg);
+  }
+/*
   var depth = 0;
   var traverse = traverseUp ? getParentID : getNextDescendantID;
-  for (var id = start; /* until break */; id = traverse(id, stop)) {
+  for (var id = start; ; id = traverse(id, stop)) {
     var ret;
     if ((!skipFirst || id !== start) && (!skipLast || id !== stop)) {
-      ret = cb(id, traverseUp, arg);
+      ret = cb(ReactInstanceHandles.getNodeByID(id), traverseUp, arg);
     }
     if (ret === false || id === stop) {
       // Only break //after// visiting `stop`.
@@ -212,7 +238,7 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
       'traversing the React DOM ID tree. This may be due to malformed IDs: %s',
       start, stop
     );
-  }
+  }*/
 }
 
 /**
@@ -274,13 +300,13 @@ var ReactInstanceHandles = {
    * @param {*} downArg Argument to invoke the callback with on entered IDs.
    * @internal
    */
-  traverseEnterLeave: function(leaveID, enterID, cb, upArg, downArg) {
-    var ancestorID = getFirstCommonAncestorID(leaveID, enterID);
-    if (ancestorID !== leaveID) {
-      traverseParentPath(leaveID, ancestorID, cb, upArg, false, true);
+  traverseEnterLeave: function(leaveNode, enterNode, cb, upArg, downArg) {
+    var ancestorNode = getFirstCommonAncestorID(leaveNode, enterNode);
+    if (ancestorNode !== leaveNode) {
+      traverseParentPath(leaveNode, ancestorNode, cb, upArg, true, false, true);
     }
-    if (ancestorID !== enterID) {
-      traverseParentPath(ancestorID, enterID, cb, downArg, true, false);
+    if (ancestorNode !== enterNode) {
+      traverseParentPath(enterNode, ancestorNode, cb, downArg, false, true, false);
     }
   },
 
@@ -294,10 +320,10 @@ var ReactInstanceHandles = {
    * @param {*} arg Argument to invoke the callback with.
    * @internal
    */
-  traverseTwoPhase: function(targetID, cb, arg) {
-    if (targetID) {
-      traverseParentPath('', targetID, cb, arg, true, false);
-      traverseParentPath(targetID, '', cb, arg, false, true);
+  traverseTwoPhase: function(targetNode, cb, arg) {
+    if (targetNode) {
+      traverseParentPath(targetNode, null, cb, arg, true, true, false);
+      traverseParentPath(targetNode, null, cb, arg, false, false, true);
     }
   },
 
@@ -313,8 +339,8 @@ var ReactInstanceHandles = {
    * @param {*} arg Argument to invoke the callback with.
    * @internal
    */
-  traverseAncestors: function(targetID, cb, arg) {
-    traverseParentPath('', targetID, cb, arg, true, false);
+  traverseAncestors: function(targetNode, cb, arg) {
+    traverseParentPath(targetNode, null, cb, arg, true, true, false);
   },
 
   /**

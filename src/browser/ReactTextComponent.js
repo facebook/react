@@ -95,8 +95,8 @@ mixInto(ReactTextComponent, {
     var nextProps = nextComponent.props;
     if (nextProps !== this.props) {
       this.props = nextProps;
-      ReactComponent.BackendIDOperations.updateTextContentByID(
-        this._rootNodeID,
+      ReactComponent.BackendOperations.updateTextContent(
+        this._rootNode,
         nextProps
       );
     }

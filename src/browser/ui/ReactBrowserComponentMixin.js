@@ -39,7 +39,7 @@ var ReactBrowserComponentMixin = {
     if (ReactEmptyComponent.isNullComponentID(this._rootNodeID)) {
       return null;
     }
-    return ReactMount.getNode(this._rootNodeID);
+    return this._rootNode;
   }
 };
 

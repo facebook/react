@@ -20,9 +20,9 @@
 
 "use strict";
 
-describe('ReactDOMIDOperations', function() {
+describe('ReactDOMOperations', function() {
   var DOMPropertyOperations = require('DOMPropertyOperations');
-  var ReactDOMIDOperations = require('ReactDOMIDOperations');
+  var ReactDOMOperations = require('ReactDOMOperations');
   var ReactMount = require('ReactMount');
   var keyOf = require('keyOf');
 
@@ -31,7 +31,7 @@ describe('ReactDOMIDOperations', function() {
     spyOn(DOMPropertyOperations, "setValueForProperty");
 
     expect(function() {
-      ReactDOMIDOperations.updatePropertyByID(
+      ReactDOMOperations.updateProperty(
         'testID',
         keyOf({dangerouslySetInnerHTML: null}),
         {__html: 'testContent'}
@@ -53,7 +53,7 @@ describe('ReactDOMIDOperations', function() {
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
-    ReactDOMIDOperations.updateInnerHTMLByID(
+    ReactDOMOperations.updateInnerHTML(
       'testID',
       html
     );

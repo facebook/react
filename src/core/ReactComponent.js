@@ -50,7 +50,7 @@ var injected = false;
  *
  * @private
  */
-var unmountIDFromEnvironment = null;
+var unmountFromEnvironment = null;
 
 /**
  * The "image" of a component tree, is the platform specific (typically
@@ -97,10 +97,10 @@ var ReactComponent = {
         'ReactComponent: injectEnvironment() can only be called once.'
       );
       mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
-      unmountIDFromEnvironment =
-        ReactComponentEnvironment.unmountIDFromEnvironment;
-      ReactComponent.BackendIDOperations =
-        ReactComponentEnvironment.BackendIDOperations;
+      unmountFromEnvironment =
+        ReactComponentEnvironment.unmountFromEnvironment;
+      ReactComponent.BackendOperations =
+        ReactComponentEnvironment.BackendOperations;
       injected = true;
     }
   },
@@ -117,7 +117,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  BackendIDOperations: null,
+  BackendOperations: null,
 
   /**
    * Base functionality for every ReactComponent constructor. Mixed into the
@@ -264,6 +264,7 @@ var ReactComponent = {
         var owner = this._descriptor._owner;
         ReactOwner.addComponentAsRefTo(this, props.ref, owner);
       }
+      this._rootNode = null;
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
       this._mountDepth = mountDepth;
@@ -289,7 +290,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, this._owner);
       }
-      unmountIDFromEnvironment(this._rootNodeID);
+      unmountFromEnvironment(this);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -410,7 +411,7 @@ var ReactComponent = {
         transaction,
         shouldReuseMarkup) {
       var markup = this.mountComponent(rootID, transaction, 0);
-      mountImageIntoNode(markup, container, shouldReuseMarkup);
+      mountImageIntoNode(markup, container, this, shouldReuseMarkup);
     },
 
     /**

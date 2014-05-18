@@ -21,6 +21,7 @@
 
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
+var ReactMount = require('ReactMount');
 
 var getTextContentAccessor = require('getTextContentAccessor');
 var invariant = require('invariant');
@@ -146,11 +147,13 @@ var DOMChildrenOperations = {
     for (var k = 0; update = updates[k]; k++) {
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
+          var renderedNode = renderedMarkup[update.markupIndex];
           insertChildAt(
             update.parentNode,
-            renderedMarkup[update.markupIndex],
+            renderedNode,
             update.toIndex
           );
+          ReactMount.updateNodeCache(renderedNode, update.markupComponent);
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(

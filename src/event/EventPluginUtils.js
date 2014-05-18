@@ -22,28 +22,6 @@ var EventConstants = require('EventConstants');
 
 var invariant = require('invariant');
 
-/**
- * Injected dependencies:
- */
-
-/**
- * - `Mount`: [required] Module that can convert between React dom IDs and
- *   actual node references.
- */
-var injection = {
-  Mount: null,
-  injectMount: function(InjectedMount) {
-    injection.Mount = InjectedMount;
-    if (__DEV__) {
-      invariant(
-        InjectedMount && InjectedMount.getNode,
-        'EventPluginUtils.injection.injectMount(...): Injected Mount module ' +
-        'is missing getNode.'
-      );
-    }
-  }
-};
-
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
@@ -66,17 +44,17 @@ var validateEventDispatches;
 if (__DEV__) {
   validateEventDispatches = function(event) {
     var dispatchListeners = event._dispatchListeners;
-    var dispatchIDs = event._dispatchIDs;
+    var dispatchNodes = event._dispatchNodes;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
-    var idsIsArr = Array.isArray(dispatchIDs);
-    var IDsLen = idsIsArr ? dispatchIDs.length : dispatchIDs ? 1 : 0;
+    var nodesIsArr = Array.isArray(dispatchNodes);
+    var nodesLen = nodesIsArr ? dispatchNodes.length : dispatchNodes ? 1 : 0;
     var listenersLen = listenersIsArr ?
       dispatchListeners.length :
       dispatchListeners ? 1 : 0;
 
     invariant(
-      idsIsArr === listenersIsArr && IDsLen === listenersLen,
+      nodesIsArr === listenersIsArr && nodesLen === listenersLen,
       'EventPluginUtils: Invalid `event`.'
     );
   };
@@ -89,7 +67,7 @@ if (__DEV__) {
  */
 function forEachEventDispatch(event, cb) {
   var dispatchListeners = event._dispatchListeners;
-  var dispatchIDs = event._dispatchIDs;
+  var dispatchNodes = event._dispatchNodes;
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -99,10 +77,10 @@ function forEachEventDispatch(event, cb) {
         break;
       }
       // Listeners and IDs are two parallel arrays that are always in sync.
-      cb(event, dispatchListeners[i], dispatchIDs[i]);
+      cb(event, dispatchListeners[i], dispatchNodes[i]);
     }
   } else if (dispatchListeners) {
-    cb(event, dispatchListeners, dispatchIDs);
+    cb(event, dispatchListeners, dispatchNodes);
   }
 }
 
@@ -112,9 +90,9 @@ function forEachEventDispatch(event, cb) {
  * @param {function} Application-level callback
  * @param {string} domID DOM id to pass to the callback.
  */
-function executeDispatch(event, listener, domID) {
-  event.currentTarget = injection.Mount.getNode(domID);
-  var returnValue = listener(event, domID);
+function executeDispatch(event, listener, node) {
+  event.currentTarget = node;
+  var returnValue = listener(event);
   event.currentTarget = null;
   return returnValue;
 }
@@ -125,7 +103,7 @@ function executeDispatch(event, listener, domID) {
 function executeDispatchesInOrder(event, executeDispatch) {
   forEachEventDispatch(event, executeDispatch);
   event._dispatchListeners = null;
-  event._dispatchIDs = null;
+  event._dispatchNodes = null;
 }
 
 /**
@@ -137,7 +115,7 @@ function executeDispatchesInOrder(event, executeDispatch) {
  */
 function executeDispatchesInOrderStopAtTrueImpl(event) {
   var dispatchListeners = event._dispatchListeners;
-  var dispatchIDs = event._dispatchIDs;
+  var dispatchNodes = event._dispatchNodes;
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -147,13 +125,13 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
         break;
       }
       // Listeners and IDs are two parallel arrays that are always in sync.
-      if (dispatchListeners[i](event, dispatchIDs[i])) {
-        return dispatchIDs[i];
+      if (dispatchListeners[i](event, dispatchNodes[i])) {
+        return dispatchNodes[i];
       }
     }
   } else if (dispatchListeners) {
-    if (dispatchListeners(event, dispatchIDs)) {
-      return dispatchIDs;
+    if (dispatchListeners(event, dispatchNodes)) {
+      return dispatchNodes;
     }
   }
   return null;
@@ -164,7 +142,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
  */
 function executeDispatchesInOrderStopAtTrue(event) {
   var ret = executeDispatchesInOrderStopAtTrueImpl(event);
-  event._dispatchIDs = null;
+  event._dispatchNodes = null;
   event._dispatchListeners = null;
   return ret;
 }
@@ -183,16 +161,16 @@ function executeDirectDispatch(event) {
     validateEventDispatches(event);
   }
   var dispatchListener = event._dispatchListeners;
-  var dispatchID = event._dispatchIDs;
+  var dispatchNode = event._dispatchNodes;
   invariant(
     !Array.isArray(dispatchListener),
     'executeDirectDispatch(...): Invalid `event`.'
   );
   var res = dispatchListener ?
-    dispatchListener(event, dispatchID) :
+    dispatchListener(event, dispatchNode) :
     null;
   event._dispatchListeners = null;
-  event._dispatchIDs = null;
+  event._dispatchNodes = null;
   return res;
 }
 
@@ -217,7 +195,6 @@ var EventPluginUtils = {
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
-  injection: injection,
   useTouchEvents: false
 };
 
