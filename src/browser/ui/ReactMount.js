@@ -94,11 +94,53 @@ function getID(node) {
   return id;
 }
 
+function idToNodeID(id) {
+  return id.substr(id.lastIndexOf('.') + 1);
+}
+
+function getNodeID(node, ancestorID) {
+  var id = node && node.getAttribute && node.getAttribute(ATTR_NAME);
+  id = id != null ? ancestorID + '.' + id : '';
+
+  if (id) {
+    if (nodeCache.hasOwnProperty(id)) {
+      var cached = nodeCache[id];
+      if (cached !== node) {
+        invariant(
+          !isValid(cached, id),
+          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
+          ATTR_NAME, id
+        );
+
+        nodeCache[id] = node;
+      }
+    } else {
+      nodeCache[id] = node;
+    }
+  }
+
+  return id;
+}
+
 function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  var id = '';
+  while (node && node.getAttribute) {
+    var value = node.getAttribute(ATTR_NAME);
+    if (value == null) {
+      break;
+    }
+    id = '.' + value + id;
+    if (value[0] === '#') {
+      break;
+    }
+    node = node.parentNode;
+  }
+  return id;
+
+  //return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
 }
 
 /**
@@ -112,7 +154,7 @@ function setID(node, id) {
   if (oldID !== id) {
     delete nodeCache[oldID];
   }
-  node.setAttribute(ATTR_NAME, id);
+  node.setAttribute(ATTR_NAME, idToNodeID(id));
   nodeCache[id] = node;
 }
 
@@ -142,11 +184,13 @@ function getNode(id) {
  */
 function isValid(node, id) {
   if (node) {
-    invariant(
-      internalGetID(node) === id,
-      'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
-    );
+    if (__DEV__) {
+      invariant(
+        internalGetID(node) === id,
+        'ReactMount: Unexpected modification of `%s`',
+        ATTR_NAME
+      );
+    }
 
     var container = ReactMount.findReactContainerForID(id);
     if (container && containsNode(container, node)) {
@@ -166,11 +210,11 @@ function purgeID(id) {
   delete nodeCache[id];
 }
 
-var deepestNodeSoFar = null;
-function findDeepestCachedAncestorImpl(ancestorID) {
+var deepestNodeIDSoFar = null;
+function findDeepestCachedAncestorIDImpl(ancestorID) {
   var ancestor = nodeCache[ancestorID];
   if (ancestor && isValid(ancestor, ancestorID)) {
-    deepestNodeSoFar = ancestor;
+    deepestNodeIDSoFar = ancestorID;
   } else {
     // This node isn't populated in the cache, so presumably none of its
     // descendants are. Break out of the loop.
@@ -181,16 +225,16 @@ function findDeepestCachedAncestorImpl(ancestorID) {
 /**
  * Return the deepest cached node whose ID is a prefix of `targetID`.
  */
-function findDeepestCachedAncestor(targetID) {
-  deepestNodeSoFar = null;
+function findDeepestCachedAncestorID(targetID) {
+  deepestNodeIDSoFar = null;
   ReactInstanceHandles.traverseAncestors(
     targetID,
-    findDeepestCachedAncestorImpl
+    findDeepestCachedAncestorIDImpl
   );
 
-  var foundNode = deepestNodeSoFar;
-  deepestNodeSoFar = null;
-  return foundNode;
+  var foundNodeID = deepestNodeIDSoFar;
+  deepestNodeIDSoFar = null;
+  return foundNodeID;
 }
 
 /**
@@ -549,8 +593,7 @@ var ReactMount = {
       // Not a DOMElement, therefore not a React component
       return false;
     }
-    var id = ReactMount.getID(node);
-    return id ? id.charAt(0) === SEPARATOR : false;
+    return node.hasAttribute && node.hasAttribute(ATTR_NAME);
   },
 
   /**
@@ -586,25 +629,42 @@ var ReactMount = {
     var firstChildren = findComponentRootReusableArray;
     var childIndex = 0;
 
-    var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
+    var deepestAncestorID = findDeepestCachedAncestorID(targetID);
+    var deepestAncestor;
+    if (deepestAncestorID) {
+      deepestAncestor = ReactMount.getNode(deepestAncestorID);
+    } else {
+      deepestAncestorID = ReactMount.getID(ancestorNode);
+      deepestAncestor = ancestorNode;
+    }
 
     firstChildren[0] = deepestAncestor.firstChild;
     firstChildren.length = 1;
 
+    var ancestorID = deepestAncestorID;
+
     while (childIndex < firstChildren.length) {
       var child = firstChildren[childIndex++];
-      var targetChild;
 
       while (child) {
-        var childID = ReactMount.getID(child);
+        var childID = ReactMount.getNodeID(child, ancestorID);
+
         if (childID) {
           // Even if we find the node we're looking for, we finish looping
           // through its siblings to ensure they're cached so that we don't have
           // to revisit this node again. Otherwise, we make n^2 calls to getID
           // when visiting the many children of a single node in order.
 
+          //console.log(targetID, childID);
           if (targetID === childID) {
-            targetChild = child;
+            var targetChild = child;
+
+            // Emptying firstChildren/findComponentRootReusableArray is
+            // not necessary for correctness, but it helps the GC reclaim
+            // any nodes that were left at the end of the search.
+            firstChildren.length = 0;
+
+            return targetChild;
           } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
             // If we find a child whose ID is an ancestor of the given ID,
             // then we can be sure that we only want to search the subtree
@@ -612,6 +672,8 @@ var ReactMount = {
             // search state.
             firstChildren.length = childIndex = 0;
             firstChildren.push(child.firstChild);
+            ancestorID = childID;
+            break;
           }
 
         } else {
@@ -625,18 +687,11 @@ var ReactMount = {
 
         child = child.nextSibling;
       }
-
-      if (targetChild) {
-        // Emptying firstChildren/findComponentRootReusableArray is
-        // not necessary for correctness, but it helps the GC reclaim
-        // any nodes that were left at the end of the search.
-        firstChildren.length = 0;
-
-        return targetChild;
-      }
     }
 
     firstChildren.length = 0;
+
+    //console.log(ancestorID);
 
     invariant(
       false,
@@ -658,6 +713,8 @@ var ReactMount = {
   getReactRootID: getReactRootID,
 
   getID: getID,
+
+  getNodeID: getNodeID,
 
   setID: setID,
 

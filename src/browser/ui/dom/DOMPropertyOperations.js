@@ -81,7 +81,7 @@ var DOMPropertyOperations = {
    */
   createMarkupForID: function(id) {
     return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
-      escapeTextForBrowser(id) + '"';
+      escapeTextForBrowser(id.substr(id.lastIndexOf('.') + 1)) + '"';
   },
 
   /**

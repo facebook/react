@@ -33,7 +33,7 @@ var BrowserPerfRunnerApp = React.createClass({
 
   handleComplete: function(queueItem){
     queueItem.completed = true;
-    
+
     if (!this.props.onCompleteEach) {
       return;
     }
@@ -53,7 +53,7 @@ var BrowserPerfRunnerApp = React.createClass({
       .map(function(key){return this.state.results[key];}, this)
     ;
     this.props.onCompleteEach(resultsForAllVersions);
-    
+
     if (this.props.onComplete && incompleteCount === 0) {
       this.props.onComplete(this.state.results);
     }
@@ -99,7 +99,7 @@ BrowserPerfRunnerApp.renderBenchmarkCell = function(props, row, col){
       return benchmark && !benchmark.isRunning && benchmark.stats;
     })
   ;
-  
+
   if (col == null) return React.DOM.th({style:{verticalAlign:'top', textAlign:'right'}},
     React.DOM.a({href:'?test=' + row}, benchmarks[0] && benchmarks[0].name || row)
   );
@@ -107,8 +107,8 @@ BrowserPerfRunnerApp.renderBenchmarkCell = function(props, row, col){
   var key = row + '@' + col;
   var benchmark = props.value[key];
   if (!(benchmark && benchmark.stats)) return React.DOM.td({key:key});
- 
- 
+
+
   var colors = [
     '000000',
     'AA0000',
@@ -197,8 +197,11 @@ var GridViewTable = React.createClass({
 
   render: function(){
     return React.DOM.table(null,
-      this._renderRow(null, 0),
-      this.props.rows.map(this._renderRow, this)
+      React.DOM.tbody(
+        null,
+        this._renderRow(null, 0),
+        this.props.rows.map(this._renderRow, this)
+      )
     );
   }
 
