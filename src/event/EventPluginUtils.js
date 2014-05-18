@@ -22,28 +22,6 @@ var EventConstants = require('EventConstants');
 
 var invariant = require('invariant');
 
-/**
- * Injected dependencies:
- */
-
-/**
- * - `Mount`: [required] Module that can convert between React dom IDs and
- *   actual node references.
- */
-var injection = {
-  Mount: null,
-  injectMount: function(InjectedMount) {
-    injection.Mount = InjectedMount;
-    if (__DEV__) {
-      invariant(
-        InjectedMount && InjectedMount.getNode,
-        'EventPluginUtils.injection.injectMount(...): Injected Mount module ' +
-        'is missing getNode.'
-      );
-    }
-  }
-};
-
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
@@ -90,7 +68,6 @@ if (__DEV__) {
 function forEachEventDispatch(event, cb) {
   var dispatchListeners = event._dispatchListeners;
   var dispatchNodes = event._dispatchNodes;
-  console.log(dispatchNodes);
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -115,7 +92,7 @@ function forEachEventDispatch(event, cb) {
  */
 function executeDispatch(event, listener, node) {
   event.currentTarget = node;
-  var returnValue = listener(event, node.__reactID__);
+  var returnValue = listener(event);
   event.currentTarget = null;
   return returnValue;
 }
@@ -218,7 +195,6 @@ var EventPluginUtils = {
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
-  injection: injection,
   useTouchEvents: false
 };
 

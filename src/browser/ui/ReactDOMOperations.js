@@ -173,7 +173,7 @@ var ReactDOMOperations = {
     'dangerouslyProcessChildrenUpdates',
     function(updates, markup) {
       for (var i = 0; i < updates.length; i++) {
-        updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
+        updates[i].parentNode = updates[i].parentComponent._rootNode;
       }
       DOMChildrenOperations.processUpdates(updates, markup);
     }

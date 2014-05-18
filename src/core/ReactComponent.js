@@ -50,7 +50,7 @@ var injected = false;
  *
  * @private
  */
-var unmountIDFromEnvironment = null;
+var unmountFromEnvironment = null;
 
 /**
  * The "image" of a component tree, is the platform specific (typically
@@ -97,8 +97,8 @@ var ReactComponent = {
         'ReactComponent: injectEnvironment() can only be called once.'
       );
       mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
-      unmountIDFromEnvironment =
-        ReactComponentEnvironment.unmountIDFromEnvironment;
+      unmountFromEnvironment =
+        ReactComponentEnvironment.unmountFromEnvironment;
       ReactComponent.BackendOperations =
         ReactComponentEnvironment.BackendOperations;
       injected = true;
@@ -290,7 +290,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, this._owner);
       }
-      unmountIDFromEnvironment(this._rootNodeID);
+      unmountFromEnvironment(this);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },

@@ -45,7 +45,7 @@ function listenerAtPhase(component, event, propagationPhase) {
  */
 function accumulateDirectionalDispatches(node, upwards, event) {
   if (__DEV__) {
-    if (!node || !node.__reactID__) {
+    if (!node || !node.__reactComponent__) {
       throw new Error('Dispatching id must not be null');
     }
   }
@@ -106,10 +106,10 @@ function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
+function accumulateEnterLeaveDispatches(leave, enter, fromNode, toNode) {
   EventPluginHub.injection.getInstanceHandle().traverseEnterLeave(
-    fromID,
-    toID,
+    fromNode,
+    toNode,
     accumulateDispatches,
     leave,
     enter

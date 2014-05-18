@@ -111,12 +111,9 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromID = from ? ReactMount.getID(from) : '';
-    var toID = to ? ReactMount.getID(to) : '';
-
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
-      fromID,
+      from,
       nativeEvent
     );
     leave.type = 'mouseleave';
@@ -125,14 +122,14 @@ var EnterLeaveEventPlugin = {
 
     var enter = SyntheticMouseEvent.getPooled(
       eventTypes.mouseEnter,
-      toID,
+      to,
       nativeEvent
     );
     enter.type = 'mouseenter';
     enter.target = to;
     enter.relatedTarget = from;
 
-    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, fromID, toID);
+    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, from, to);
 
     extractedEvents[0] = leave;
     extractedEvents[1] = enter;

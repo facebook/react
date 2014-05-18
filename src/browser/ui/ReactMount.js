@@ -34,7 +34,6 @@ var warning = require('warning');
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-var nodeCache = {};
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
@@ -70,75 +69,14 @@ function getReactRootID(container) {
  * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
-  var id = internalGetID(node);
-
-  if (id) {
-    invariant(
-      nodeCache.hasOwnProperty(id),
-      'getID(%s): Element not in node cache. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
-      'or <a> tags. Try inspecting the ancestor nodes of the element with ' +
-      'React ID `%s`.',
-      id, id
-    );
-    invariant(
-      nodeCache[id] === node,
-      'getID(%s): Element is different from element in node cache. This ' +
-      'probably means the DOM was unexpectedly mutated (e.g., by the ' +
-      'browser), usually due to forgetting a <tbody> when using tables or ' +
-      'nesting <p> or <a> tags. Try inspecting the ancestor nodes of the ' +
-      'element with React ID `%s`.',
-      id, id
-    );
-  }
-
-  return id;
+  return internalGetID(node);
 }
 
 function internalGetID(node) {
   // If node is something like a window, document, or text node, none of
   // which support attributes or a .getAttribute method, gracefully return
   // the empty string, as if the attribute were missing.
-  return node && node.__reactID__ || '';
-}
-
-/**
- * Sets the React-specific ID of the given node.
- *
- * @param {DOMElement} node The DOM node whose ID will be set.
- * @param {string} id The value of the ID attribute.
- */
-function setID(node, id) {
-  var oldID = internalGetID(node);
-  if (oldID !== id) {
-    delete nodeCache[oldID];
-  }
-  node.__reactID__ = id;
-  nodeCache[id] = node;
-}
-
-/**
- * Finds the node with the supplied React-generated DOM ID.
- *
- * @param {string} id A React-generated DOM ID.
- * @return {DOMElement} DOM node with the suppled `id`.
- * @internal
- */
-function getNode(id) {
-  var cached = nodeCache[id];
-
-  invariant(
-    nodeCache.hasOwnProperty(id) && isValid(cached, id),
-    'getNode(%s): Element does not exist in node cache. This probably ' +
-    'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-    'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
-    'or <a> tags. Try inspecting the ancestor nodes of the element with ' +
-    'React ID `%s`.',
-    id, id
-  );
-
-  return cached;
+  return node && node.__reactComponent__ && node.__reactComponent__._rootNodeID || '';
 }
 
 /**
@@ -168,15 +106,6 @@ function isValid(node, id) {
   return false;
 }
 
-/**
- * Causes the cache to forget about one React-specific ID.
- *
- * @param {string} id The ID to forget.
- */
-function purgeID(id) {
-  delete nodeCache[id];
-}
-
 function updateNodeCache(parentNode, parentComponent) {
   while (parentComponent._renderedComponent) {
     parentComponent._rootNode = parentNode;
@@ -184,7 +113,6 @@ function updateNodeCache(parentNode, parentComponent) {
   }
 
   parentComponent._rootNode = parentNode;
-  nodeCache[parentComponent._rootNodeID] = parentNode;
   parentNode.__reactID__ = parentComponent._rootNodeID;
   parentNode.__reactComponent__ = parentComponent;
 
@@ -578,15 +506,7 @@ var ReactMount = {
 
   getReactRootID: getReactRootID,
 
-  getID: getID,
-
-  setID: setID,
-
-  getNode: getNode,
-
-  purgeID: purgeID
+  getID: getID
 };
-
-ReactInstanceHandles.getNodeByID = getNode;
 
 module.exports = ReactMount;

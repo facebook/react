@@ -61,14 +61,15 @@ var markupQueue = [];
  * @param {number} toIndex Destination index.
  * @private
  */
-function enqueueMarkup(parentID, markup, parentComponent, toIndex) {
+function enqueueMarkup(parentComponent, markup, markupComponent, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
     parentComponent: parentComponent,
-    parentID: parentID,
+    parentID: parentComponent._rootNodeID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
+    markupComponent: markupComponent,
     textContent: null,
     fromIndex: null,
     toIndex: toIndex
@@ -83,14 +84,15 @@ function enqueueMarkup(parentID, markup, parentComponent, toIndex) {
  * @param {number} toIndex Destination index of the element.
  * @private
  */
-function enqueueMove(parentID, fromIndex, toIndex) {
+function enqueueMove(parentComponent, fromIndex, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentComponent: null,
-    parentID: parentID,
+    parentComponent: parentComponent,
+    parentID: parentComponent._rootNodeID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     markupIndex: null,
+    markupComponent: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: toIndex
@@ -104,14 +106,15 @@ function enqueueMove(parentID, fromIndex, toIndex) {
  * @param {number} fromIndex Index of the element to remove.
  * @private
  */
-function enqueueRemove(parentID, fromIndex) {
+function enqueueRemove(parentComponent, fromIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentComponent: null,
-    parentID: parentID,
+    parentComponent: parentComponent,
+    parentID: parentComponent._rootNodeID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
     markupIndex: null,
+    markupComponent: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: null
@@ -125,14 +128,15 @@ function enqueueRemove(parentID, fromIndex) {
  * @param {string} textContent Text content to set.
  * @private
  */
-function enqueueTextContent(parentID, textContent) {
+function enqueueTextContent(parentComponent, textContent) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
-    parentComponent: null,
-    parentID: parentID,
+    parentComponent: parentComponent,
+    parentID: parentComponent._rootNodeID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
     markupIndex: null,
+    markupComponent: null,
     textContent: textContent,
     fromIndex: null,
     toIndex: null
@@ -351,7 +355,7 @@ var ReactMultiChild = {
       // be moved. Otherwise, we do not need to move it because a child will be
       // inserted or moved before `child`.
       if (child._mountIndex < lastIndex) {
-        enqueueMove(this._rootNodeID, child._mountIndex, toIndex);
+        enqueueMove(this, child._mountIndex, toIndex);
       }
     },
 
@@ -363,7 +367,7 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, mountImage) {
-      enqueueMarkup(this._rootNodeID, mountImage, child, child._mountIndex);
+      enqueueMarkup(this, mountImage, child, child._mountIndex);
     },
 
     /**
@@ -373,7 +377,7 @@ var ReactMultiChild = {
      * @protected
      */
     removeChild: function(child) {
-      enqueueRemove(this._rootNodeID, child._mountIndex);
+      enqueueRemove(this, child._mountIndex);
     },
 
     /**
@@ -383,7 +387,7 @@ var ReactMultiChild = {
      * @protected
      */
     setTextContent: function(textContent) {
-      enqueueTextContent(this._rootNodeID, textContent);
+      enqueueTextContent(this, textContent);
     },
 
     /**

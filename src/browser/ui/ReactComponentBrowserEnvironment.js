@@ -51,8 +51,8 @@ var ReactComponentBrowserEnvironment = {
    *
    * @private
    */
-  unmountIDFromEnvironment: function(rootNodeID) {
-    ReactMount.purgeID(rootNodeID);
+  unmountFromEnvironment: function(component) {
+    component._rootNode.__reactComponent__ = null;
   },
 
   /**
