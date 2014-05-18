@@ -22,6 +22,7 @@ var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactChildren = require('ReactChildren');
 var ReactDOM = require('ReactDOM');
 
 var merge = require('merge');
@@ -50,37 +51,6 @@ function selectValueType(props, propName, componentName) {
         `The \`${propName}\` prop supplied to <select> must be a scalar ` +
         `value if \`multiple\` is false.`
       );
-    }
-  }
-}
-
-/**
- * If `value` is supplied, updates <option> elements on mount and update.
- * @param {ReactComponent} component Instance of ReactDOMSelect
- * @param {?*} propValue For uncontrolled components, null/undefined. For
- * controlled components, a string (or with `multiple`, a list of strings).
- * @private
- */
-function updateOptions(component, propValue) {
-  var multiple = component.props.multiple;
-  var value = propValue != null ? propValue : component.state.value;
-  var options = component.getDOMNode().options;
-  var selectedValue, i, l;
-  if (multiple) {
-    selectedValue = {};
-    for (i = 0, l = value.length; i < l; ++i) {
-      selectedValue['' + value[i]] = true;
-    }
-  } else {
-    selectedValue = '' + value;
-  }
-  for (i = 0, l = options.length; i < l; i++) {
-    var selected = multiple ?
-      selectedValue.hasOwnProperty(options[i].value) :
-      options[i].value === selectedValue;
-
-    if (selected !== options[i].selected) {
-      options[i].selected = selected;
     }
   }
 }
@@ -134,18 +104,31 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     props.onChange = this._handleChange;
     props.value = null;
 
-    return select(props, this.props.children);
-  },
-
-  componentDidMount: function() {
-    updateOptions(this, LinkedValueUtils.getValue(this));
-  },
-
-  componentDidUpdate: function() {
-    var value = LinkedValueUtils.getValue(this);
-    if (value != null) {
-      updateOptions(this, value);
+    // Sets selected on the appropriate child option descriptors
+    var propValue = LinkedValueUtils.getValue(this);
+    var value = propValue != null ? propValue : this.state.value;
+    var selectedValue, i, l;
+    if (this.props.multiple) {
+      selectedValue = {};
+      for (i = 0, l = value.length; i < l; ++i) {
+        selectedValue['' + value[i]] = true;
+      }
+    } else {
+      selectedValue = '' + value;
     }
+    var multiple = this.props.multiple;
+    ReactChildren.forEach(this.props.children, function (child) {
+      if (!child) return;
+      var selected = multiple ?
+        selectedValue.hasOwnProperty(child.props.value) :
+        child.props.value === selectedValue;
+
+      if (selected !== child.props.selected) {
+        child.props.selected = selected;
+      }
+    });
+
+    return select(props, this.props.children);
   },
 
   _handleChange: function(event) {
