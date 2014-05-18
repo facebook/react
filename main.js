@@ -8,7 +8,8 @@ module.exports = {
   React: React,
   transform: function(input, options) {
     options = options || {};
-    var result = transform(visitors.react, input, options);
+    var visitorList = getVisitors(options.harmony);
+    var result = transform(visitorList, input, options);
     var output = result.code;
     if (options.sourceMap) {
       var map = inlineSourceMap(
@@ -22,10 +23,18 @@ module.exports = {
   }
 };
 
+function getVisitors(harmony) {
+  if (harmony) {
+    return visitors.getAllVisitors();
+  } else {
+    return visitors.transformVisitors.react;
+  }
+}
+
 function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
   var json = sourceMap.toJSON();
-  json.sources = [ sourceFilename ];
-  json.sourcesContent = [ sourceCode ];
+  json.sources = [sourceFilename];
+  json.sourcesContent = [sourceCode];
   var base64 = Buffer(JSON.stringify(json)).toString('base64');
   return '//# sourceMappingURL=data:application/json;base64,' +
          base64;
