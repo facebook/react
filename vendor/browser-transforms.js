@@ -148,9 +148,9 @@ var load = exports.load = function(url, callback) {
   xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP')
                              : new XMLHttpRequest();
 
-  // Disable async since we need to execute scripts in the order they are in the
+  // async, however scripts will be executed in the order they are in the
   // DOM to mirror normal script loading.
-  xhr.open('GET', url, false);
+  xhr.open('GET', url, true);
   if ('overrideMimeType' in xhr) {
     xhr.overrideMimeType('text/plain');
   }
@@ -182,13 +182,20 @@ runScripts = function() {
 
   console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
-  jsxScripts.forEach(function(script) {
+  function tick() {
+    if (!jsxScripts.length) return;
+
+    var script = jsxScripts.shift();
+
     if (script.src) {
-      load(script.src);
+      load(script.src, tick);
     } else {
       run(script.innerHTML, null);
+      tick();
     }
-  });
+  }
+
+  tick();
 };
 
 if (typeof window !== "undefined" && window !== null) {
