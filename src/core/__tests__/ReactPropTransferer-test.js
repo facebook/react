@@ -40,6 +40,10 @@ describe('ReactPropTransferer', function() {
             style={{display: 'block', color: 'green'}}
             type="text"
             value=""
+            data-foo-bar="a"
+            dataSet={{fooBar: 'b', barBaz: 'c'}}
+            aria-foo-bar="a"
+            ariaSet={{fooBar: 'b', barBaz: 'c'}}
           />
         );
       }
@@ -72,12 +76,16 @@ describe('ReactPropTransferer', function() {
   });
 
   it('should transfer using merge strategies', function() {
-    var instance =
+    var component =
       <TestComponent
         className="hidden_elem"
         style={{width: '100%', display: 'none'}}
+        data-foo-bar="this will not be assigned"
+        dataSet={{barBaz: 'not assigned', bazQux: 'assigned'}}
+        aria-foo-bar="this will not be assigned"
+        ariaSet={{barBaz: 'not assigned', bazQux: 'assigned'}}
       />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(component);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -88,6 +96,18 @@ describe('ReactPropTransferer', function() {
             color: 'green',
             display: 'block',
             width: '100%'
+          },
+          'data-foo-bar': 'a',
+          dataSet: {
+            fooBar: 'b',
+            barBaz: 'c',
+            bazQux: 'assigned'
+          },
+          'aria-foo-bar': 'a',
+          ariaSet: {
+            fooBar: 'b',
+            barBaz: 'c',
+            bazQux: 'assigned'
           }
         });
   });
