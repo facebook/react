@@ -149,19 +149,18 @@ function extractEvents(
     topLevelTargetID,
     nativeEvent) {
   var currentEvent = topLevelTypesToAnalyticsEvent[topLevelType];
-  if (!currentEvent || !topLevelTarget || !topLevelTarget.attributes) {
+  if (!currentEvent || !topLevelTarget) {
     return null;
   }
 
-  var analyticsIDAttribute = topLevelTarget.attributes[ANALYTICS_ID];
-  var analyticsEventsAttribute = topLevelTarget.attributes[ANALYTICS_EVENTS];
-  if (!analyticsIDAttribute || !analyticsEventsAttribute) {
+  var analyticsID = topLevelTarget.getAttribute(ANALYTICS_ID);
+  var analyticsEventsStr = topLevelTarget.getAttribute(ANALYTICS_EVENTS);
+  if (!analyticsID || !analyticsEventsStr) {
     return null;
   }
 
-  var analyticsEventsArr = analyticsEventsAttribute.value.split(",");
-  var analyticsID = analyticsIDAttribute.value;
-  if (!analyticsData[analyticsID]) {
+  var analyticsEventsArr = analyticsEventsStr.split(",");
+  if (!analyticsData.hasOwnProperty(analyticsID)) {
     initAnalyticsDataForID(analyticsID, analyticsEventsArr);
   }
 
