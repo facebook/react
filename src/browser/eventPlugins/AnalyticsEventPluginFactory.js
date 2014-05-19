@@ -149,7 +149,8 @@ function extractEvents(
     topLevelTargetID,
     nativeEvent) {
   var currentEvent = topLevelTypesToAnalyticsEvent[topLevelType];
-  if (!currentEvent || !topLevelTarget) {
+  // If topLevelTarget is window, getAttribute isn't present
+  if (!currentEvent || !topLevelTarget || !topLevelTarget.getAttribute) {
     return null;
   }
 
