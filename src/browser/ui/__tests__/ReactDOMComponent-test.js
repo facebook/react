@@ -150,6 +150,15 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
+    it('should accept valid data attributes', () => {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div data--a="5" aria--b_9="6" />
+      );
+      var instance = stub.getDOMNode();
+      expect(instance.getAttribute('data--a')).toBe('5');
+      expect(instance.getAttribute('aria--b_9')).toBe('6');
+    });
+
     it("should empty element when removing innerHTML", function() {
       var stub = ReactTestUtils.renderIntoDocument(
         <div dangerouslySetInnerHTML={{__html: ':)'}} />
