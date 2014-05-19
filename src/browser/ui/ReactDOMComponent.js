@@ -164,14 +164,7 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    // For static pages, no need to put React ID and checksum. Saves lots of
-    // bytes.
-    if (transaction.renderToStaticMarkup) {
-      return ret + '>';
-    }
-
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    return ret + '>';
   },
 
   /**
@@ -405,6 +398,7 @@ ReactDOMComponent.Mixin = {
   unmountComponent: function() {
     this.unmountChildren();
     ReactEventEmitter.deleteAllListeners(this._rootNodeID);
+    ReactMount.purgeID(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
   }
 

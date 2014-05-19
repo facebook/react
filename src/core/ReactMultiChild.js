@@ -61,13 +61,14 @@ var markupQueue = [];
  * @param {number} toIndex Destination index.
  * @private
  */
-function enqueueMarkup(parentID, markup, toIndex) {
+function enqueueMarkup(parentID, markup, instance, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
     parentID: parentID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
     markupIndex: markupQueue.push(markup) - 1,
+    instance: instance,
     textContent: null,
     fromIndex: null,
     toIndex: toIndex
@@ -89,6 +90,7 @@ function enqueueMove(parentID, fromIndex, toIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
     markupIndex: null,
+    instance: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: toIndex
@@ -109,6 +111,7 @@ function enqueueRemove(parentID, fromIndex) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
     markupIndex: null,
+    instance: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: null
@@ -129,6 +132,7 @@ function enqueueTextContent(parentID, textContent) {
     parentNode: null,
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
     markupIndex: null,
+    instance: null,
     textContent: textContent,
     fromIndex: null,
     toIndex: null
@@ -359,7 +363,7 @@ var ReactMultiChild = {
      * @protected
      */
     createChild: function(child, mountImage) {
-      enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
+      enqueueMarkup(this._rootNodeID, mountImage, child, child._mountIndex);
     },
 
     /**

@@ -23,6 +23,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactEventEmitter = require('ReactEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 
 var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
@@ -33,8 +34,13 @@ var warning = require('warning');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
-var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-var nodeCache = {};
+var ID_PROP_NAME = DOMProperty.ID_PROPERTY_NAME;
+var nodesByReactRootID = {};
+
+if (__DEV__) {
+  /** Mapping from reactRootID to first React component instance in hierarchy.*/
+  var firstInstancesForNodeByReactRootID = {};
+}
 
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
@@ -50,9 +56,6 @@ if (__DEV__) {
   var rootElementsByReactRootID = {};
 }
 
-// Used to store breadth-first search state in findComponentRoot.
-var findComponentRootReusableArray = [];
-
 /**
  * @param {DOMElement} container DOM element that may contain a React component.
  * @return {?string} A "reactRoot" ID, if a React component is rendered.
@@ -63,42 +66,28 @@ function getReactRootID(container) {
 }
 
 /**
- * Accessing node[ATTR_NAME] or calling getAttribute(ATTR_NAME) on a form
- * element can return its control whose name or ID equals ATTR_NAME. All
- * DOM nodes support `getAttributeNode` but this can also get called on
- * other objects so just return '' if we're given something other than a
- * DOM node (such as window).
- *
  * @param {?DOMElement|DOMWindow|DOMDocument|DOMTextNode} node DOM node.
  * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
   var id = internalGetID(node);
-  if (id) {
-    if (nodeCache.hasOwnProperty(id)) {
-      var cached = nodeCache[id];
-      if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
 
-        nodeCache[id] = node;
-      }
-    } else {
-      nodeCache[id] = node;
-    }
+  if (id) {
+    invariant(
+      nodesByReactRootID.hasOwnProperty(id),
+      'getID(): Element not in node lookup.'
+    );
+    invariant(
+      nodesByReactRootID[id] === node,
+      'getID(): Node is different from node in nodesByReactRootID.'
+    );
   }
 
   return id;
 }
 
 function internalGetID(node) {
-  // If node is something like a window, document, or text node, none of
-  // which support attributes or a .getAttribute method, gracefully return
-  // the empty string, as if the attribute were missing.
-  return node && node.getAttribute && node.getAttribute(ATTR_NAME) || '';
+  return node && node[ID_PROP_NAME] || '';
 }
 
 /**
@@ -110,10 +99,10 @@ function internalGetID(node) {
 function setID(node, id) {
   var oldID = internalGetID(node);
   if (oldID !== id) {
-    delete nodeCache[oldID];
+    delete nodesByReactRootID[oldID];
   }
-  node.setAttribute(ATTR_NAME, id);
-  nodeCache[id] = node;
+  node[ID_PROP_NAME] = id;
+  nodesByReactRootID[id] = node;
 }
 
 /**
@@ -124,10 +113,19 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
-  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
-    nodeCache[id] = ReactMount.findReactNodeByID(id);
-  }
-  return nodeCache[id];
+  invariant(
+    nodesByReactRootID.hasOwnProperty(id),
+    'getNode(): Node does not exist in nodesByReactRootID.'
+  );
+
+  var node = nodesByReactRootID[id];
+
+  invariant(
+    isValid(node, id),
+    'getNode(): Node is not valid.'
+  );
+
+  return node;
 }
 
 /**
@@ -145,7 +143,7 @@ function isValid(node, id) {
     invariant(
       internalGetID(node) === id,
       'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
+      id
     );
 
     var container = ReactMount.findReactContainerForID(id);
@@ -158,39 +156,116 @@ function isValid(node, id) {
 }
 
 /**
- * Causes the cache to forget about one React-specific ID.
+ * Causes the lookup to forget about one React-specific ID.
  *
  * @param {string} id The ID to forget.
  */
 function purgeID(id) {
-  delete nodeCache[id];
-}
+  delete nodesByReactRootID[id];
 
-var deepestNodeSoFar = null;
-function findDeepestCachedAncestorImpl(ancestorID) {
-  var ancestor = nodeCache[ancestorID];
-  if (ancestor && isValid(ancestor, ancestorID)) {
-    deepestNodeSoFar = ancestor;
-  } else {
-    // This node isn't populated in the cache, so presumably none of its
-    // descendants are. Break out of the loop.
-    return false;
+  if (__DEV__) {
+    delete firstInstancesForNodeByReactRootID[id];
   }
 }
 
-/**
- * Return the deepest cached node whose ID is a prefix of `targetID`.
- */
-function findDeepestCachedAncestor(targetID) {
-  deepestNodeSoFar = null;
-  ReactInstanceHandles.traverseAncestors(
-    targetID,
-    findDeepestCachedAncestorImpl
+function getHumanReadablePathTo(node) {
+  var nodes = [];
+
+  while (node && node !== document) {
+    nodes.push(node);
+    node = node.parentNode;
+  }
+
+  var humanReadablePath = [];
+
+  for (var i = 0; node = nodes[i]; i++) {
+    var parentID = internalGetID(node);
+
+    if (parentID) {
+      var parentInstance = firstInstancesForNodeByReactRootID[parentID];
+
+      while (parentInstance._renderedComponent) {
+        humanReadablePath.push(
+          parentInstance.displayName || 'UnnamedComponent'
+        );
+        parentInstance = parentInstance._renderedComponent;
+      }
+    }
+
+    humanReadablePath.push(node.tagName);
+  }
+
+  humanReadablePath.reverse();
+
+  return humanReadablePath.join(' > ');
+}
+
+function mountHierarchy(node, instance) {
+  if (__DEV__) {
+    firstInstancesForNodeByReactRootID[instance._rootNodeID] = instance;
+  }
+
+  // Step through and ignore any ReactCompositeComponents
+  while (instance._renderedComponent) {
+    instance = instance._renderedComponent;
+  }
+
+  var expectedTagName = instance.tagName;
+  if (!expectedTagName) {
+    // Only ReactTextComponent doesn't have a tagName at the moment
+    expectedTagName = 'SPAN';
+  }
+
+  invariant(
+    node && node.tagName,
+    'Expected to see a rendered node of type "%s", but there were no more ' +
+    'elements in the DOM.',
+    expectedTagName
   );
 
-  var foundNode = deepestNodeSoFar;
-  deepestNodeSoFar = null;
-  return foundNode;
+  if (node.tagName !== expectedTagName) {
+    if (__DEV__) {
+      console.warn(getHumanReadablePathTo(node));
+    }
+
+    invariant(
+      false,
+      'Expected to see a rendered node of type "%s", but the actual ' +
+      'element is of type "%s". This is most commonly caused by invalid ' +
+      'nesting, such as nesting <a> or <p>, <table> without a <tbody>, etc.',
+      expectedTagName, node.tagName
+    );
+  }
+
+  var rootID = instance._rootNodeID;
+  nodesByReactRootID[rootID] = node;
+  node[ID_PROP_NAME] = rootID;
+
+  var childInstances = instance._renderedChildren;
+
+  if (!childInstances) {
+    return;
+  }
+
+  var childNode = node.firstChild;
+
+  for (var id in childInstances) {
+    if (childInstances.hasOwnProperty(id)) {
+      var childInstance = childInstances[id];
+      mountHierarchy(childNode, childInstance);
+      childNode = childNode.nextSibling;
+    }
+  }
+
+  if (childNode) {
+    invariant(
+      false,
+      'Expected there to be no more rendered elements, but found a ' +
+      'node of type `%s`. This is most commonly caused by invalid ' +
+      'nesting, such as nesting <a> or <p>.',
+      childNode.tagName
+    );
+  }
 }
 
 /**
@@ -361,10 +436,10 @@ var ReactMount = {
     }
 
     var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup =
-      reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
-
-    var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
+    var shouldReuseMarkup = (
+      reactRootElement && !prevComponent &&
+      ReactMarkupChecksum.canReuseNode(reactRootElement)
+    );
 
     var component = ReactMount._renderNewRootComponent(
       nextDescriptor,
@@ -527,33 +602,6 @@ var ReactMount = {
   },
 
   /**
-   * Finds an element rendered by React with the supplied ID.
-   *
-   * @param {string} id ID of a DOM node in the React component.
-   * @return {DOMElement} Root DOM node of the React component.
-   */
-  findReactNodeByID: function(id) {
-    var reactRoot = ReactMount.findReactContainerForID(id);
-    return ReactMount.findComponentRoot(reactRoot, id);
-  },
-
-  /**
-   * True if the supplied `node` is rendered by React.
-   *
-   * @param {*} node DOM Element to check.
-   * @return {boolean} True if the DOM Element appears to be rendered by React.
-   * @internal
-   */
-  isRenderedByReact: function(node) {
-    if (node.nodeType !== 1) {
-      // Not a DOMElement, therefore not a React component
-      return false;
-    }
-    var id = ReactMount.getID(node);
-    return id ? id.charAt(0) === SEPARATOR : false;
-  },
-
-  /**
    * Traverses up the ancestors of the supplied node to find a node that is a
    * DOM representation of a React component.
    *
@@ -564,7 +612,7 @@ var ReactMount = {
   getFirstReactDOM: function(node) {
     var current = node;
     while (current && current.parentNode !== current) {
-      if (ReactMount.isRenderedByReact(current)) {
+      if (current[ID_PROP_NAME]) {
         return current;
       }
       current = current.parentNode;
@@ -573,89 +621,12 @@ var ReactMount = {
   },
 
   /**
-   * Finds a node with the supplied `targetID` inside of the supplied
-   * `ancestorNode`.  Exploits the ID naming scheme to perform the search
-   * quickly.
-   *
-   * @param {DOMEventTarget} ancestorNode Search from this root.
-   * @pararm {string} targetID ID of the DOM representation of the component.
-   * @return {DOMEventTarget} DOM node with the supplied `targetID`.
-   * @internal
-   */
-  findComponentRoot: function(ancestorNode, targetID) {
-    var firstChildren = findComponentRootReusableArray;
-    var childIndex = 0;
-
-    var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
-
-    firstChildren[0] = deepestAncestor.firstChild;
-    firstChildren.length = 1;
-
-    while (childIndex < firstChildren.length) {
-      var child = firstChildren[childIndex++];
-      var targetChild;
-
-      while (child) {
-        var childID = ReactMount.getID(child);
-        if (childID) {
-          // Even if we find the node we're looking for, we finish looping
-          // through its siblings to ensure they're cached so that we don't have
-          // to revisit this node again. Otherwise, we make n^2 calls to getID
-          // when visiting the many children of a single node in order.
-
-          if (targetID === childID) {
-            targetChild = child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-          }
-
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
-          firstChildren.push(child.firstChild);
-        }
-
-        child = child.nextSibling;
-      }
-
-      if (targetChild) {
-        // Emptying firstChildren/findComponentRootReusableArray is
-        // not necessary for correctness, but it helps the GC reclaim
-        // any nodes that were left at the end of the search.
-        firstChildren.length = 0;
-
-        return targetChild;
-      }
-    }
-
-    firstChildren.length = 0;
-
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables or nesting <p> ' +
-      'or <a> tags. Try inspecting the child nodes of the element with React ' +
-      'ID `%s`.',
-      targetID,
-      ReactMount.getID(ancestorNode)
-    );
-  },
-
-
-  /**
    * React ID utilities.
    */
 
   getReactRootID: getReactRootID,
+
+  mountHierarchy: mountHierarchy,
 
   getID: getID,
 

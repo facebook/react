@@ -36,6 +36,17 @@ var ReactMarkupChecksum = {
   },
 
   /**
+   * @param {DOMElement} element root React element
+   * @returns {boolean} whether or not the element can be reused
+   */
+  canReuseNode: function(element) {
+    return (
+      element && element.hasAttribute &&
+      element.hasAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME)
+    );
+  },
+
+  /**
    * @param {string} markup to use
    * @param {DOMElement} element root React element
    * @returns {boolean} whether or not the markup is the same

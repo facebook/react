@@ -1137,7 +1137,8 @@ var ReactCompositeComponentMixin = {
         );
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
-          nextMarkup
+          nextMarkup,
+          this
         );
       }
     }
