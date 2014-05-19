@@ -149,7 +149,7 @@ function extractEvents(
     topLevelTargetID,
     nativeEvent) {
   var currentEvent = topLevelTypesToAnalyticsEvent[topLevelType];
-  if (!currentEvent || !topLevelTarget) {
+  if (!currentEvent || !topLevelTarget || !topLevelTarget.attributes) {
     return null;
   }
 
