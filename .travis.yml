@@ -7,7 +7,7 @@ script:
     grunt $TEST_TYPE
 after_script:
 - |
-    if [ "$TEST_TYPE" = test:full ] && [ "$SERVER" ]; then
+    if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
       grunt build
       curl \
         -F "react=@build/react.js" \
@@ -26,10 +26,11 @@ after_script:
     fi
 env:
   matrix:
-  - TEST_TYPE=test:full
+  - TEST_TYPE=test
   - TEST_TYPE=lint
   - TEST_TYPE=perf:full
   - TEST_TYPE=test:coverage
+  - TEST_TYPE=test:webdriver:saucelabs:modern
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
   - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
@@ -47,6 +48,7 @@ matrix:
     - env: TEST_TYPE=lint
     - env: TEST_TYPE=test:coverage
     - env: TEST_TYPE=perf:full
+    - env: TEST_TYPE=test:webdriver:saucelabs:modern
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
