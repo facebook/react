@@ -723,4 +723,29 @@ describe('ReactUpdates', function() {
     expect(a.state.x).toBe(1);
     expect(a.getDOMNode().textContent).toBe('A1');
   });
+
+  it('calls componentWillReceiveProps setState callback properly', function() {
+    var callbackCount = 0;
+    var A = React.createClass({
+      getInitialState: function() {
+        return {x: this.props.x};
+      },
+      componentWillReceiveProps: function(nextProps) {
+        var newX = nextProps.x;
+        this.setState({x: newX}, function() {
+          // State should have updated by the time this callback gets called
+          expect(this.state.x).toBe(newX);
+          callbackCount++;
+        });
+      },
+      render: function() {
+        return <div>{this.state.x}</div>;
+      }
+    });
+
+    var container = document.createElement('div');
+    React.renderComponent(<A x={1} />, container);
+    React.renderComponent(<A x={2} />, container);
+    expect(callbackCount).toBe(1);
+  });
 });
