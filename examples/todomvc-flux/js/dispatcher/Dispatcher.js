@@ -109,7 +109,7 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    */
   waitFor: function(/*array*/ promiseIndexes, /*function*/ callback) {
     var selectedPromises = _promises.filter(function(/*object*/ _, /*number*/ j) {
-      return promiseIndexes.indexOf(j) !== -1;
+      return promiseIndexes.indexOf(_) !== -1;
     });
     Promise.all(selectedPromises).then(callback);
   }
