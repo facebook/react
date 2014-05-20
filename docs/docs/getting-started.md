@@ -7,7 +7,7 @@ next: tutorial.html
 
 ## JSFiddle
 
-The easiest way to start hacking on React is using the following JSFiddle Hello Worlds
+The easiest way to start hacking on React is using the following JSFiddle Hello World examples:
 
  * **[React JSFiddle](http://jsfiddle.net/vjeux/kb3gN/)**
  * [React JSFiddle without JSX](http://jsfiddle.net/vjeux/VkebS/)
@@ -48,7 +48,7 @@ The XML syntax inside of JavaScript is called JSX; check out the [JSX syntax](/r
 
 ### Separate File
 
-Your React JSX file can live in a separate file. Create the following `src/helloworld.js`.
+Your React JSX code can live in a separate file. Create the following `src/helloworld.js`.
 
 ```javascript
 /** @jsx React.DOM */
@@ -111,8 +111,8 @@ Update your HTML file as below:
 
 ## Want CommonJS?
 
-If you want to use React within a module system, [fork our repo](http://github.com/facebook/react), `npm install` and run `grunt`. A nice set of CommonJS modules will be generated. Our `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
+If you want to use React with [browserify](http://browserify.org/), [webpack](http://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.org/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
 
 ## Next Steps
 
-Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the `/examples` directory to learn more. Good luck, and welcome!
+Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more. Good luck, and welcome!

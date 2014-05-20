@@ -389,7 +389,9 @@ function validateTypeDef(Constructor, typeDef, location) {
 }
 
 function validateMethodOverride(proto, name) {
-  var specPolicy = ReactCompositeComponentInterface[name];
+  var specPolicy = ReactCompositeComponentInterface.hasOwnProperty(name) ?
+    ReactCompositeComponentInterface[name] :
+    null;
 
   // Disallow overriding of base class methods unless explicitly allowed.
   if (ReactCompositeComponentMixin.hasOwnProperty(name)) {
@@ -923,7 +925,8 @@ var ReactCompositeComponentMixin = {
     var props = merge(newProps);
     var defaultProps = this._defaultProps;
     for (var propName in defaultProps) {
-      if (typeof props[propName] === 'undefined') {
+      if (!props.hasOwnProperty(propName) ||
+          typeof props[propName] === 'undefined') {
         props[propName] = defaultProps[propName];
       }
     }

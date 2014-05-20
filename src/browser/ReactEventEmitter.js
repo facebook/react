@@ -129,7 +129,9 @@ var topEventMapping = {
 var topListenersIDKey = "_reactListenersID" + String(Math.random()).slice(2);
 
 function getListeningForDocument(mountAt) {
-  if (mountAt[topListenersIDKey] == null) {
+  // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
+  // directly.
+  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
     mountAt[topListenersIDKey] = reactTopListenersCounter++;
     alreadyListeningTo[mountAt[topListenersIDKey]] = {};
   }
@@ -254,7 +256,10 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
       var dependency = dependencies[i];
-      if (!isListening[dependency]) {
+      if (!(
+          isListening.hasOwnProperty(dependency) &&
+          isListening[dependency]
+        )) {
         var topLevelType = topLevelTypes[dependency];
 
         if (topLevelType === topLevelTypes.topWheel) {
@@ -293,7 +298,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
           // to make sure blur and focus event listeners are only attached once
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
-        } else if (topEventMapping[dependency]) {
+        } else if (topEventMapping.hasOwnProperty(dependency)) {
           trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
         }
 

@@ -45,6 +45,11 @@ Return the only child in `children`. Throws otherwise.
 `React.DOM` provides all of the standard HTML tags needed to build a React app. You generally don't use it directly; instead, just include it as part of the `/** @jsx React.DOM */` docblock.
 
 
+### React.PropTypes
+
+`React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components. For more information about `propTypes`, see [Reusable Components](/react/docs/reusable-components.html).
+
+
 ### React.initializeTouchEvents
 
 ```javascript
