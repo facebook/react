@@ -87,7 +87,6 @@ function inject() {
 
     html: createFullPageComponent(ReactDOM.html),
     head: createFullPageComponent(ReactDOM.head),
-    title: createFullPageComponent(ReactDOM.title),
     body: createFullPageComponent(ReactDOM.body)
   });
 
