@@ -180,8 +180,8 @@ loadScripts = function(scripts) {
       script = result[i];
 
       if (script && !script.executed) {
-        script.executed = true;
         run(script.content, script.url);
+        script.executed = true;
       } else if (!script) {
         break;
       }
