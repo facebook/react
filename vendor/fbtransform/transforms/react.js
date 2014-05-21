@@ -19,7 +19,6 @@
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 
-var FALLBACK_TAGS = require('./xjs').knownTags;
 var renderXJSExpressionContainer =
   require('./xjs').renderXJSExpressionContainer;
 var renderXJSLiteral = require('./xjs').renderXJSLiteral;
@@ -62,7 +61,7 @@ function visitReactTag(traverse, object, path, state) {
        'Namespace tags are not supported. ReactJSX is not XML.');
   }
 
-  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
+  var isFallbackTag = /^[a-z]/.test(nameObject.name);
   utils.append(
     (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
     state
