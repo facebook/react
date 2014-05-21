@@ -102,9 +102,9 @@ By [Steven Luscher](https://github.com/steveluscher)
 
 by [Stoyan Stefanov](http://www.phpied.com/)
 
-### "fun + React + ClojureScript" - Small Talk KyivJS Meetup
+### React, or how to make life simpler - FrontEnd Dev Conf '14
 
-<iframe width="650" height="315" src="//www.youtube.com/embed/R2CGKiNnPFo" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="//www.youtube.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
 **In Russian** by [Alexander Solovyov](http://solovyov.net/)
 
