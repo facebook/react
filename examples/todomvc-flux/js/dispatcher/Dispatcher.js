@@ -108,8 +108,8 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    * A more robust Dispatcher would issue a warning in this scenario.
    */
   waitFor: function(/*array*/ promiseIndexes, /*function*/ callback) {
-    var selectedPromises = _promises.filter(function(/*object*/ _, /*number*/ j) {
-      return promiseIndexes.indexOf(j) !== -1;
+    var selectedPromises = promiseIndexes.map(function(idx) {
+      return _promises[idx];
     });
     Promise.all(selectedPromises).then(callback);
   }
