@@ -57,18 +57,23 @@ function visitReactTag(traverse, object, path, state) {
 
   utils.catchup(openingElement.range[0], state, trimLeft);
 
-  if (nameObject.namespace) {
-    throw new Error(
-       'Namespace tags are not supported. ReactJSX is not XML.');
+  var isFallbackTag = false;
+
+  if (nameObject.type === Syntax.XJSIdentifier) {
+    if (nameObject.namespace) {
+      throw new Error(
+         'Namespace tags are not supported. ReactJSX is not XML.');
+    }
+
+    isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   }
 
-  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
-  utils.append(
-    (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
-    state
-  );
+  utils.append(isFallbackTag ? jsxObjIdent + '.' : '', state);
 
-  utils.move(nameObject.range[1], state);
+  utils.move(nameObject.range[0], state);
+  utils.catchup(nameObject.range[1], state);
+
+  utils.append('(', state);
 
   var hasAttributes = attributesObject.length;
 
