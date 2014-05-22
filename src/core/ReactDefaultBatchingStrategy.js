@@ -58,16 +58,16 @@ var ReactDefaultBatchingStrategy = {
    * Call the provided function in a context within which calls to `setState`
    * and friends are batched such that components aren't updated unnecessarily.
    */
-  batchedUpdates: function(callback, param) {
+  batchedUpdates: function(callback, a, b) {
     var alreadyBatchingUpdates = ReactDefaultBatchingStrategy.isBatchingUpdates;
 
     ReactDefaultBatchingStrategy.isBatchingUpdates = true;
 
     // The code is written this way to avoid extra allocations
     if (alreadyBatchingUpdates) {
-      callback(param);
+      callback(a, b);
     } else {
-      transaction.perform(callback, null, param);
+      transaction.perform(callback, null, a, b);
     }
   }
 };
