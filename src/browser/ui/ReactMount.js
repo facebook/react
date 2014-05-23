@@ -36,6 +36,7 @@ var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
 var ID_PROP_NAME = DOMProperty.ID_PROPERTY_NAME;
 var nodesByReactRootID = {};
+var reactDOMInstancesByReactRootID = {};
 
 if (__DEV__) {
   /** Mapping from reactRootID to first React component instance in hierarchy.*/
@@ -70,7 +71,9 @@ function getReactRootID(container) {
  * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
-  var id = internalGetID(node);
+  var id = ''; // = internalGetID(node);
+  var instance = getInstanceForNode(node);
+  if (instance) id = instance._rootNodeID;
 
   if (id) {
     invariant(
@@ -113,6 +116,12 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
+  var instance = reactDOMInstancesByReactRootID[id];
+
+  invariant(instance, 'awd');
+
+  var node = getNodeForInstance(instance);
+
   invariant(
     nodesByReactRootID.hasOwnProperty(id),
     'getNode(): Node does not exist in nodesByReactRootID.'
@@ -162,6 +171,7 @@ function isValid(node, id) {
  */
 function purgeID(id) {
   delete nodesByReactRootID[id];
+  delete reactDOMInstancesByReactRootID[id];
 
   if (__DEV__) {
     delete firstInstancesForNodeByReactRootID[id];
@@ -201,6 +211,8 @@ function getHumanReadablePathTo(node) {
 }
 
 function mountHierarchy(node, instance) {
+  evaluateDOMChild(node, instance);
+  return;
   if (__DEV__) {
     firstInstancesForNodeByReactRootID[instance._rootNodeID] = instance;
   }
@@ -258,6 +270,139 @@ function mountHierarchy(node, instance) {
   }
 
   if (childNode) {
+    invariant(
+      false,
+      'Expected there to be no more rendered elements, but found a ' +
+      'node of type `%s`. This is most commonly caused by invalid ' +
+      'nesting, such as nesting <a> or <p>.',
+      childNode.tagName
+    );
+  }
+}
+
+function getNodeForInstance(instance) {
+  var rootID = instance._rootNodeID;
+  if (nodesByReactRootID.hasOwnProperty(rootID)) {
+    return nodesByReactRootID[rootID];
+  }
+
+  evaluateToInstance(instance);
+
+  if (nodesByReactRootID.hasOwnProperty(rootID)) {
+    return nodesByReactRootID[rootID];
+  }
+}
+
+function getInstanceForNode(node) {
+  var rootID = node[ID_PROP_NAME];
+  if (rootID) {
+    return reactDOMInstancesByReactRootID[rootID];
+  }
+
+  evaluateToNode(node);
+
+  rootID = node[ID_PROP_NAME]
+  if (rootID) {
+    return reactDOMInstancesByReactRootID[rootID];
+  }
+}
+
+function evaluateToInstance(instance) {
+  var rootID = instance._rootNodeID;
+  var isCached = nodesByReactRootID.hasOwnProperty(rootID);
+
+  if (!isCached) {
+    evaluateToInstance(reactDOMInstancesByReactRootID[instance._parentNodeID]);
+    isCached = nodesByReactRootID.hasOwnProperty(rootID);
+  }
+  if (isCached) {
+    evaluateDOMChildren(nodesByReactRootID[rootID], instance);
+  }
+}
+
+function evaluateToNode(node) {
+  if (!node || node === document) {
+    return;
+  }
+
+  var rootID = node[ID_PROP_NAME];
+
+  if (!rootID) {
+    evaluateToNode(node.parentNode);
+    rootID = node[ID_PROP_NAME];
+  }
+  if (rootID) {
+    evaluateDOMChildren(node, reactDOMInstancesByReactRootID[rootID]);
+  }
+}
+
+function evaluateDOMChild(node, rootInstance) {
+  var leafInstance = rootInstance;
+  // Step through and ignore any ReactCompositeComponents
+  while (leafInstance._renderedComponent) {
+    leafInstance = leafInstance._renderedComponent;
+  }
+
+  var expectedTagName = leafInstance.tagName;
+  if (!expectedTagName) {
+    // Only ReactTextComponent doesn't have a tagName at the moment
+    expectedTagName = 'SPAN';
+  }
+
+  invariant(
+    node && node.tagName,
+    'Expected to see a rendered node of type "%s", but there were no more ' +
+    'elements in the DOM.',
+    expectedTagName
+  );
+
+  if (node.tagName !== expectedTagName) {
+    if (__DEV__) {
+      console.warn(getHumanReadablePathTo(node));
+    }
+
+    invariant(
+      false,
+      'Expected to see a rendered node of type "%s", but the actual ' +
+      'element is of type "%s". This is most commonly caused by invalid ' +
+      'nesting, such as nesting <a> or <p>, <table> without a <tbody>, etc.',
+      expectedTagName, node.tagName
+    );
+  }
+
+  var rootID = rootInstance._rootNodeID;
+  nodesByReactRootID[rootID] = node;
+  node[ID_PROP_NAME] = rootID;
+
+  if (__DEV__) {
+    firstInstancesForNodeByReactRootID[rootID] = rootInstance;
+  }
+
+  //evaluateDOMChildren(node, leafInstance);
+
+  return node.nextSibling;
+}
+
+function evaluateDOMChildren(parentNode, parentInstance) {
+  var childInstances = parentInstance._renderedChildren;
+
+  if (!childInstances) {
+    return;
+  }
+
+  var childNode = parentNode.firstChild;
+
+  for (var id in childInstances) {
+    if (childInstances.hasOwnProperty(id)) {
+      childNode = evaluateDOMChild(childNode, childInstances[id]);
+    }
+  }
+
+  if (childNode) {
+    if (__DEV__) {
+      console.warn(getHumanReadablePathTo(childNode));
+    }
+
     invariant(
       false,
       'Expected there to be no more rendered elements, but found a ' +
@@ -624,6 +769,9 @@ var ReactMount = {
    * React ID utilities.
    */
 
+  getNodeForInstance: getNodeForInstance,
+  getInstanceForNode: getInstanceForNode,
+
   getReactRootID: getReactRootID,
 
   mountHierarchy: mountHierarchy,
@@ -633,6 +781,10 @@ var ReactMount = {
   setID: setID,
 
   getNode: getNode,
+
+  addDOMInstance: function(instance) {
+    reactDOMInstancesByReactRootID[instance._rootNodeID] = instance;
+  },
 
   purgeID: purgeID
 };

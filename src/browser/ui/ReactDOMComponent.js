@@ -107,13 +107,15 @@ ReactDOMComponent.Mixin = {
   mountComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(parentID, rootID, transaction, mountDepth) {
       ReactComponent.Mixin.mountComponent.call(
         this,
+        parentID,
         rootID,
         transaction,
         mountDepth
       );
+      ReactMount.addDOMInstance(this);
       assertValidProps(this.props);
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +

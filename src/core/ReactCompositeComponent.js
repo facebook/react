@@ -713,9 +713,10 @@ var ReactCompositeComponentMixin = {
   mountComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(parentID, rootID, transaction, mountDepth) {
       ReactComponent.Mixin.mountComponent.call(
         this,
+        parentID,
         rootID,
         transaction,
         mountDepth
@@ -757,6 +758,7 @@ var ReactCompositeComponentMixin = {
       // Done with mounting, `setState` will now trigger UI changes.
       this._compositeLifeCycleState = null;
       var markup = this._renderedComponent.mountComponent(
+        parentID,
         rootID,
         transaction,
         mountDepth + 1
@@ -1131,6 +1133,7 @@ var ReactCompositeComponentMixin = {
         prevComponentInstance.unmountComponent();
         this._renderedComponent = instantiateReactComponent(nextDescriptor);
         var nextMarkup = this._renderedComponent.mountComponent(
+          this._parentNodeID,
           thisID,
           transaction,
           this._mountDepth + 1
