@@ -34,8 +34,8 @@
   },
   "dependencies": {
     "commoner": "^0.9.2",
-    "esprima-fb": "~3001.1.0-dev-harmony-fb",
-    "jstransform": "~4.0.1"
+    "esprima-fb": "~4001.1.0-dev-harmony-fb",
+    "jstransform": "~5.0.0"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
