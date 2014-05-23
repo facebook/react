@@ -103,6 +103,18 @@ var addonsMin = _.merge({}, addons, {
   after: [minify, bannerify]
 });
 
+var workers = {
+  entries: [
+    './build/modules/ReactWithWorkers.js'
+  ],
+  outfile: './build/react-with-workers.js',
+  debug: false,
+  standalone: 'React',
+  transforms: [envify({NODE_ENV: 'development'})],
+  packageName: 'React (web workers)',
+  after: [es3ify.transform, simpleBannerify]
+};
+
 var withCodeCoverageLogging = {
   entries: [
     './build/modules/React.js'
@@ -122,5 +134,6 @@ module.exports = {
   transformer: transformer,
   addons: addons,
   addonsMin: addonsMin,
+  workers: workers,
   withCodeCoverageLogging: withCodeCoverageLogging
 };

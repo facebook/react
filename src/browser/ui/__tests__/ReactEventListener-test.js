@@ -19,23 +19,24 @@
 
 'use strict';
 
-require('mock-modules')
-  .mock('ReactEventEmitter');
+var mocks = require('mocks');
 
 var EVENT_TARGET_PARAM = 1;
 
-describe('ReactEventTopLevelCallback', function() {
+describe('ReactEventListener', function() {
   var React;
-  var ReactEventTopLevelCallback;
   var ReactMount;
-  var ReactEventEmitter; // mocked
+  var ReactEventListener;
+  var handleTopLevel;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
-    ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
     ReactMount = require('ReactMount');
-    ReactEventEmitter = require('ReactEventEmitter'); // mocked
+    ReactEventListener = require('ReactEventListener');
+
+    handleTopLevel = mocks.getMockFunction();
+    ReactEventListener._handleTopLevel = handleTopLevel;
   });
 
   describe('Propagation', function() {
@@ -48,12 +49,12 @@ describe('ReactEventTopLevelCallback', function() {
       parentControl = ReactMount.renderComponent(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
-      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: childControl.getDOMNode()
       });
 
-      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
       expect(calls[0][EVENT_TARGET_PARAM]).toBe(childControl.getDOMNode());
       expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
@@ -72,12 +73,12 @@ describe('ReactEventTopLevelCallback', function() {
       parentControl.getDOMNode().appendChild(childContainer);
       grandParentControl.getDOMNode().appendChild(parentContainer);
 
-      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: childControl.getDOMNode()
       });
 
-      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(3);
       expect(calls[0][EVENT_TARGET_PARAM]).toBe(childControl.getDOMNode());
       expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
@@ -99,7 +100,7 @@ describe('ReactEventTopLevelCallback', function() {
       // handlers are called; we'll still expect to receive a second call for
       // the parent control.
       var childNode = childControl.getDOMNode();
-      ReactEventEmitter.handleTopLevel.mockImplementation(
+      handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           if (topLevelTarget === childNode) {
             ReactMount.unmountComponentAtNode(childContainer);
@@ -107,12 +108,12 @@ describe('ReactEventTopLevelCallback', function() {
         }
       );
 
-      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
         target: childNode
       });
 
-      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
       expect(calls[0][EVENT_TARGET_PARAM]).toBe(childNode);
       expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
@@ -134,7 +135,7 @@ describe('ReactEventTopLevelCallback', function() {
       // Suppose an event handler in each root enqueues an update to the
       // childControl element -- the two updates should get batched together.
       var childNode = childControl.getDOMNode();
-      ReactEventEmitter.handleTopLevel.mockImplementation(
+      handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           ReactMount.renderComponent(
             <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
@@ -145,12 +146,12 @@ describe('ReactEventTopLevelCallback', function() {
         }
       );
 
-      var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+      var callback = ReactEventListener.dispatchEvent.bind(ReactEventListener, 'test');
       callback({
         target: childNode
       });
 
-      var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+      var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
       expect(childNode.textContent).toBe('2');
     });
@@ -173,12 +174,12 @@ describe('ReactEventTopLevelCallback', function() {
 
     var instance = ReactMount.renderComponent(<Wrapper />, container);
 
-    var callback = ReactEventTopLevelCallback.createTopLevelCallback('test');
+    var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({
       target: instance.getInner().getDOMNode()
     });
 
-    var calls = ReactEventEmitter.handleTopLevel.mock.calls;
+    var calls = handleTopLevel.mock.calls;
     expect(calls.length).toBe(1);
     expect(calls[0][EVENT_TARGET_PARAM]).toBe(instance.getInner().getDOMNode());
   });

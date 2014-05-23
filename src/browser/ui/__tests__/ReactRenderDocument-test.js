@@ -22,7 +22,7 @@
 "use strict";
 
 var React;
-var ReactMount;
+var ReactDOMNodeMapping;
 
 var getTestDocument;
 
@@ -40,7 +40,7 @@ describe('rendering React components at document', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
     getTestDocument = require('getTestDocument');
 
     testDocument = getTestDocument();
@@ -69,7 +69,7 @@ describe('rendering React components at document', function() {
     var component = React.renderComponent(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
-    var componentID = ReactMount.getReactRootID(testDocument);
+    var componentID = ReactDOMNodeMapping.getReactRootID(testDocument);
     expect(componentID).toBe(component._rootNodeID);
   });
 

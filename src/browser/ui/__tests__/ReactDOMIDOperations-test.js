@@ -23,11 +23,11 @@
 describe('ReactDOMIDOperations', function() {
   var DOMPropertyOperations = require('DOMPropertyOperations');
   var ReactDOMIDOperations = require('ReactDOMIDOperations');
-  var ReactMount = require('ReactMount');
+  var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
   var keyOf = require('keyOf');
 
   it('should disallow updating special properties', function() {
-    spyOn(ReactMount, "getNode");
+    spyOn(ReactDOMNodeMapping, "getNode");
     spyOn(DOMPropertyOperations, "setValueForProperty");
 
     expect(function() {
@@ -39,7 +39,7 @@ describe('ReactDOMIDOperations', function() {
     }).toThrow();
 
     expect(
-      ReactMount.getNode.argsForCall[0][0]
+      ReactDOMNodeMapping.getNode.argsForCall[0][0]
     ).toBe('testID');
 
     expect(
@@ -49,17 +49,17 @@ describe('ReactDOMIDOperations', function() {
 
   it('should update innerHTML and preserve whitespace', function() {
     var stubNode = document.createElement('div');
-    spyOn(ReactMount, "getNode").andReturn(stubNode);
+    spyOn(ReactDOMNodeMapping, "getNode").andReturn(stubNode);
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
-    ReactDOMIDOperations.updateInnerHTMLByID(
+    ReactDOMIDOperations.updateImageByID(
       'testID',
       html
     );
 
     expect(
-      ReactMount.getNode.argsForCall[0][0]
+      ReactDOMNodeMapping.getNode.argsForCall[0][0]
     ).toBe('testID');
 
     expect(stubNode.innerHTML).toBe(html);

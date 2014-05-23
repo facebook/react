@@ -19,6 +19,7 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var SyntheticEvent = require('SyntheticEvent');
 
 var getEventTarget = require('getEventTarget');
@@ -44,7 +45,7 @@ var UIEventInterface = {
     if (doc) {
       return doc.defaultView || doc.parentWindow;
     } else {
-      return window;
+      return ExecutionEnvironment.global;
     }
   },
   detail: function(event) {

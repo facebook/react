@@ -384,7 +384,7 @@ describe('ReactDOMComponent', function() {
     it("should clean up listeners", function() {
       var React = require('React');
       var ReactEventEmitter = require('ReactEventEmitter');
-      var ReactMount = require('ReactMount');
+      var ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
       var container = document.createElement('div');
       document.documentElement.appendChild(container);
@@ -394,7 +394,7 @@ describe('ReactDOMComponent', function() {
       instance = React.renderComponent(instance, container);
 
       var rootNode = instance.getDOMNode();
-      var rootNodeID = ReactMount.getID(rootNode);
+      var rootNodeID = ReactDOMNodeMapping.getID(rootNode);
       expect(
         ReactEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);

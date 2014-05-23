@@ -13,22 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ViewportMetrics
+ * @providesModule RemoteModule
+ * @typechecks static-only
  */
 
-"use strict";
-
-var ViewportMetrics = {
-
-  currentScrollLeft: 0,
-
-  currentScrollTop: 0,
-
-  refreshScrollValues: function(scrollPosition) {
-    ViewportMetrics.currentScrollLeft = scrollPosition.x;
-    ViewportMetrics.currentScrollTop = scrollPosition.y;
+// TODO: use a better bridging system that doesn't marshal strings all
+// the time.
+class RemoteModule {
+  constructor(target, name, methods) {
+    this.target = target;
+    this.name = name;
+    for (var method in methods) {
+      this[method] = this.invoke.bind(this, method);
+    }
   }
 
-};
+  invoke(name) {
+    // No return values allowed!
+    var args = Array.prototype.slice.call(arguments, 1);
+    this.target.postMessage([this.name, name, args]);
+  }
+}
 
-module.exports = ViewportMetrics;
+module.exports = RemoteModule;

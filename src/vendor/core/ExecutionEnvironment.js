@@ -20,7 +20,21 @@
 
 "use strict";
 
+var invariant = require('invariant');
+
 var canUseDOM = typeof window !== 'undefined';
+
+var globalObj;
+
+if (typeof window !== 'undefined') {
+  globalObj = window;
+} else if (typeof self !== 'undefined') {
+  globalObj = self;
+} else if (typeof global !== 'undefined') {
+  globalObj = global;
+}
+
+invariant(globalObj, 'ExecutionEnvironment: could not find global object');
 
 /**
  * Simple, lightweight module assisting with the detection and context of
@@ -37,7 +51,9 @@ var ExecutionEnvironment = {
   canUseEventListeners:
     canUseDOM && (window.addEventListener || window.attachEvent),
 
-  isInWorker: !canUseDOM // For now, this is true - might change in the future.
+  isInWorker: !canUseDOM, // For now, this is true - might change in the future.
+
+  global: globalObj
 
 };
 

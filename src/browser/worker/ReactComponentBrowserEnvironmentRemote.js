@@ -13,24 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule getEventTarget
- * @typechecks static-only
+ * @providesModule ReactComponentBrowserEnvironmentRemote
  */
 
 "use strict";
 
-/**
- * Gets the target node from a native browser event by accounting for
- * inconsistencies in browser DOM APIs.
- *
- * @param {object} nativeEvent Native browser event.
- * @return {DOMEventTarget} Target node.
- */
-function getEventTarget(nativeEvent) {
-  var target = nativeEvent.target || nativeEvent.srcElement || window;
-  // Safari may fire events on text nodes (Node.TEXT_NODE is 3).
-  // @see http://www.quirksmode.org/js/events_properties.html
-  return target.nodeType === 3 ? target.parentNode : target;
-}
+var ExecutionEnvironment = require('ExecutionEnvironment');
+var RemoteModule = require('RemoteModule');
 
-module.exports = getEventTarget;
+var keyOf = require('keyOf');
+
+var ReactComponentBrowserEnvironmentRemote = new RemoteModule(
+  ExecutionEnvironment.global,
+  keyOf({ReactComponentBrowserEnvironment: null}),
+  {
+    mountImageIntoNode: null,
+    unmountIDFromEnvironment: null
+  }
+);
+
+module.exports = ReactComponentBrowserEnvironmentRemote;

@@ -28,7 +28,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 /**
  * Updating children of a component may trigger recursive updates. The depth is
- * used to batch recursive updates to render markup more efficiently.
+ * used to batch recursive updates to render image more efficiently.
  *
  * @type {number}
  * @private
@@ -46,28 +46,28 @@ var updateDepth = 0;
 var updateQueue = [];
 
 /**
- * Queue of markup to be rendered.
+ * Queue of image to be rendered.
  *
  * @type {array<string>}
  * @private
  */
-var markupQueue = [];
+var imageQueue = [];
 
 /**
- * Enqueues markup to be rendered and inserted at a supplied index.
+ * Enqueues image to be rendered and inserted at a supplied index.
  *
  * @param {string} parentID ID of the parent component.
- * @param {string} markup Markup that renders into an element.
+ * @param {string} image Image that renders into an element.
  * @param {number} toIndex Destination index.
  * @private
  */
-function enqueueMarkup(parentID, markup, toIndex) {
+function enqueueImage(parentID, image, toIndex) {
   // NOTE: Null values reduce hidden classes.
   updateQueue.push({
     parentID: parentID,
     parentNode: null,
-    type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
-    markupIndex: markupQueue.push(markup) - 1,
+    type: ReactMultiChildUpdateTypes.INSERT_IMAGE,
+    imageIndex: imageQueue.push(image) - 1,
     textContent: null,
     fromIndex: null,
     toIndex: toIndex
@@ -88,7 +88,7 @@ function enqueueMove(parentID, fromIndex, toIndex) {
     parentID: parentID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
-    markupIndex: null,
+    imageIndex: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: toIndex
@@ -108,7 +108,7 @@ function enqueueRemove(parentID, fromIndex) {
     parentID: parentID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.REMOVE_NODE,
-    markupIndex: null,
+    imageIndex: null,
     textContent: null,
     fromIndex: fromIndex,
     toIndex: null
@@ -128,7 +128,7 @@ function enqueueTextContent(parentID, textContent) {
     parentID: parentID,
     parentNode: null,
     type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
-    markupIndex: null,
+    imageIndex: null,
     textContent: textContent,
     fromIndex: null,
     toIndex: null
@@ -144,7 +144,7 @@ function processQueue() {
   if (updateQueue.length) {
     ReactComponent.BackendIDOperations.dangerouslyProcessChildrenUpdates(
       updateQueue,
-      markupQueue
+      imageQueue
     );
     clearQueue();
   }
@@ -157,7 +157,7 @@ function processQueue() {
  */
 function clearQueue() {
   updateQueue.length = 0;
-  markupQueue.length = 0;
+  imageQueue.length = 0;
 }
 
 /**
@@ -179,7 +179,7 @@ var ReactMultiChild = {
 
     /**
      * Generates a "mount image" for each of the supplied children. In the case
-     * of `ReactDOMComponent`, a mount image is a string of markup.
+     * of `ReactDOMComponent`, a mount image is a string of image.
      *
      * @param {?object} nestedChildren Nested child maps.
      * @return {array} An array of mounted representations.
@@ -355,11 +355,11 @@ var ReactMultiChild = {
      * Creates a child component.
      *
      * @param {ReactComponent} child Component to create.
-     * @param {string} mountImage Markup to insert.
+     * @param {string} mountImage Image to insert.
      * @protected
      */
     createChild: function(child, mountImage) {
-      enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
+      enqueueImage(this._rootNodeID, mountImage, child._mountIndex);
     },
 
     /**

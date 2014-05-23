@@ -75,6 +75,7 @@ module.exports = function(grunt) {
   grunt.registerTask('build:transformer', ['jsx:normal', 'browserify:transformer']);
   grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'browserify:min']);
   grunt.registerTask('build:addons-min', ['jsx:normal', 'browserify:addonsMin']);
+  grunt.registerTask('build:workers', ['jsx:normal', 'browserify:workers']);
   grunt.registerTask('build:withCodeCoverageLogging', [
     'jsx:normal',
     'version-check',
@@ -217,6 +218,7 @@ module.exports = function(grunt) {
     'browserify:addons',
     'browserify:min',
     'browserify:addonsMin',
+    'browserify:workers',
     'npm-react:release',
     'npm-react:pack',
     'npm-react-tools:pack',

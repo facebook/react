@@ -24,7 +24,7 @@
 var EnterLeaveEventPlugin;
 var EventConstants;
 var React;
-var ReactMount;
+var ReactDOMNodeMapping;
 
 var topLevelTypes;
 
@@ -35,7 +35,7 @@ describe('EnterLeaveEventPlugin', function() {
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');
     React = require('React');
-    ReactMount = require('ReactMount');
+    ReactDOMNodeMapping = require('ReactDOMNodeMapping');
 
     topLevelTypes = EventConstants.topLevelTypes;
   });
@@ -56,7 +56,7 @@ describe('EnterLeaveEventPlugin', function() {
     var extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,
       div,
-      ReactMount.getID(div),
+      ReactDOMNodeMapping.getID(div),
       {target: div}
     );
     expect(extracted.length).toBe(2);
