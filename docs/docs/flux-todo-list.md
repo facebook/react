@@ -93,12 +93,12 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    */
   dispatch: function(payload) {
     // First create array of promises for callbacks to reference.
-    var _resolves = [];
-    var _rejects = [];
+    var resolves = [];
+    var rejects = [];
     _promises = _callbacks.map(function(_, i) {
         return new Promise(function(resolve, reject) {
-          _resolves[i] = resolve;
-          _rejects[i] = reject;
+          resolves[i] = resolve;
+          rejects[i] = reject;
         });
     });
     // Dispatch to callbacks and resolve/reject promises.
@@ -106,9 +106,9 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
       // Callback can return an obj, to resolve, or a promise, to chain.
       // See waitFor() for why this might be useful.
       Promise.resolve(callback(payload)).then(function() {
-        _resolves[i](payload);
+        resolves[i](payload);
       }, function() {
-        _rejects[i](new Error('Dispatcher callback unsuccessful'));
+        rejects[i](new Error('Dispatcher callback unsuccessful'));
       });
     });
     _promises = [];
@@ -591,7 +591,7 @@ Adding Dependency Management to the Dispatcher
 
 As I said previously, our Dispatcher implementation is a bit naive. It's pretty good, but it will not suffice for most applications. We need a way to be able to manage dependencies between Stores. Let's add that functionality with a waitFor() method within the main body of the Dispatcher class. 
 
-We'll need another public method, waitFor(). Note that it return a Promise that can in turn be returned from the Store callback.
+We'll need another public method, waitFor(). Note that it returns a Promise that can in turn be returned from the Store callback.
 
 ```javascript
   /**
