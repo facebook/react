@@ -19,7 +19,6 @@
 "use strict";
 
 require('mock-modules')
-    .dontMock('BrowserScroll')
     .dontMock('EventPluginHub')
     .dontMock('ReactMount')
     .dontMock('ReactEventEmitter')
