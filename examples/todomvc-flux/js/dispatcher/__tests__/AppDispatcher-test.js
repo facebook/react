@@ -24,10 +24,11 @@ describe('AppDispatcher', function() {
 
     var listener1Done = false;
     var listener1 = function(pl) {
-      return AppDispatcher.waitFor([index2], function() {
-        // Second and third listeners should have now been called
+      return AppDispatcher.waitFor([index2, index4], function() {
+        // Second, third, and fourth listeners should have now been called
         expect(listener2Done).toBe(true);
         expect(listener3Done).toBe(true);
+        expect(listener4Done).toBe(true);
         listener1Done = true;
       });
     };
@@ -48,6 +49,15 @@ describe('AppDispatcher', function() {
       return true;
     };
     var index3 = AppDispatcher.register(listener3);
+
+    var listener4Done = false;
+    var listener4 = function(pl) {
+      return AppDispatcher.waitFor([index3], function() {
+        expect(listener3Done).toBe(true);
+        listener4Done = true;
+      });
+    };
+    var index4 = AppDispatcher.register(listener4);
 
     runs(function() {
       AppDispatcher.dispatch(payload);
