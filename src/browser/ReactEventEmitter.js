@@ -144,10 +144,12 @@ function getListeningForDocument(mountAt) {
  * @param {string} topLevelType Record from `EventConstants`.
  * @param {string} handlerBaseName Event name (e.g. "click").
  * @param {DOMEventTarget} element Element on which to attach listener.
+ * @return {object} An object with a remove function which will forcefully
+ *                  remove the listener.
  * @internal
  */
 function trapBubbledEvent(topLevelType, handlerBaseName, element) {
-  EventListener.listen(
+  return EventListener.listen(
     element,
     handlerBaseName,
     ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
@@ -162,10 +164,12 @@ function trapBubbledEvent(topLevelType, handlerBaseName, element) {
  * @param {string} topLevelType Record from `EventConstants`.
  * @param {string} handlerBaseName Event name (e.g. "click").
  * @param {DOMEventTarget} element Element on which to attach listener.
+ * @return {object} An object with a remove function which will forcefully
+ *                  remove the listener.
  * @internal
  */
 function trapCapturedEvent(topLevelType, handlerBaseName, element) {
-  EventListener.capture(
+  return EventListener.capture(
     element,
     handlerBaseName,
     ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
