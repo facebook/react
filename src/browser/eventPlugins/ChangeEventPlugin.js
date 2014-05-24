@@ -64,7 +64,8 @@ var activeElementValueProp = null;
 function shouldUseChangeEvent(elem) {
   return (
     elem.nodeName === 'SELECT' ||
-    (elem.nodeName === 'INPUT' && elem.type === 'file')
+    (elem.nodeName === 'INPUT' &&
+      (elem.type === 'file' || elem.type === 'range'))
   );
 }
 
