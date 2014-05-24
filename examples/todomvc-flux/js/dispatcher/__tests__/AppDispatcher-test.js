@@ -19,7 +19,7 @@ describe('AppDispatcher', function() {
     expect(listener.mock.calls[0][0]).toBe(payload);
   });
 
-  it.only('waits with chained dependencies properly', function() {
+  it('waits with chained dependencies properly', function() {
     var payload = {};
 
     var listener1Done = false;

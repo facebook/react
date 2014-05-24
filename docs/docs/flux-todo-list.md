@@ -96,10 +96,10 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
     var resolves = [];
     var rejects = [];
     _promises = _callbacks.map(function(_, i) {
-        return new Promise(function(resolve, reject) {
-          resolves[i] = resolve;
-          rejects[i] = reject;
-        });
+      return new Promise(function(resolve, reject) {
+        resolves[i] = resolve;
+        rejects[i] = reject;
+      });
     });
     // Dispatch to callbacks and resolve/reject promises.
     _callbacks.forEach(function(callback, i) {
