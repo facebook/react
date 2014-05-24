@@ -27,28 +27,6 @@ var merge = require('react/lib/merge');
 var _callbacks = [];
 var _promises = [];
 
-/**
- * Add a promise to the queue of callback invocation promises.
- * @param {function} callback The Store's registered callback.
- * @param {object} payload The data from the Action.
- */
-var _addPromise = function(callback, payload) {
-  _promises.push(new Promise(function(resolve, reject) {
-    if (callback(payload)) {
-      resolve(payload);
-    } else {
-      reject(new Error('Dispatcher callback unsuccessful'));
-    }
-  }));
-};
-
-/**
- * Empty the queue of callback invocation promises.
- */
-var _clearPromises = function() {
-  _promises = [];
-};
-
 var Dispatcher = function() {};
 Dispatcher.prototype = merge(Dispatcher.prototype, {
 
@@ -67,10 +45,26 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    * @param  {object} payload The data from the action.
    */
   dispatch: function(payload) {
-    _callbacks.forEach(function(callback) {
-      _addPromise(callback, payload);
+    // First create array of promises for callbacks to reference.
+    var resolves = [];
+    var rejects = [];
+    _promises = _callbacks.map(function(_, i) {
+        return new Promise(function(resolve, reject) {
+          resolves[i] = resolve;
+          rejects[i] = reject;
+        });
     });
-    Promise.all(_promises).then(_clearPromises);
+    // Dispatch to callbacks and resolve/reject promises.
+    _callbacks.forEach(function(callback, i) {
+      // Callback can return an obj, to resolve, or a promise, to chain.
+      // See waitFor() for why this might be useful.
+      Promise.resolve(callback(payload)).then(function() {
+        resolves[i](payload);
+      }, function() {
+        rejects[i](new Error('Dispatcher callback unsuccessful'));
+      });
+    });
+    _promises = [];
   },
 
   /**
@@ -108,10 +102,10 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
    * A more robust Dispatcher would issue a warning in this scenario.
    */
   waitFor: function(/*array*/ promiseIndexes, /*function*/ callback) {
-    var selectedPromises = promiseIndexes.map(function(idx) {
-      return _promises[idx];
+    var selectedPromises = promiseIndexes.map(function(index) {
+      return _promises[index];
     });
-    Promise.all(selectedPromises).then(callback);
+    return Promise.all(selectedPromises).then(callback);
   }
 
 });
