@@ -13,7 +13,8 @@
     "reactify": "~0.4.0",
     "statics": "~0.1.0",
     "uglify-js": "~2.4.13",
-    "watchify": "~0.4.1"
+    "watchify": "~0.4.1",
+    "jest-cli": "~0.1.5"
   },
   "scripts": {
     "start": "STATIC_ROOT=./static watchify -o js/bundle.js -v -d .",
