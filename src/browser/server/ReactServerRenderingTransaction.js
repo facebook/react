@@ -66,6 +66,7 @@ var TRANSACTION_WRAPPERS = [
  */
 function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
+  this.renderToString = true;
   this.renderToStaticMarkup = renderToStaticMarkup;
   this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();

@@ -30,6 +30,7 @@ var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
+var ReactMount = require('ReactMount');
 
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
@@ -1130,6 +1131,7 @@ var ReactCompositeComponentMixin = {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
         var prevComponentID = prevComponentInstance._rootNodeID;
+        var prevComponentNode = ReactMount.getNode(prevComponentInstance._rootNodeID);
         prevComponentInstance.unmountComponent();
         this._renderedComponent = instantiateReactComponent(nextDescriptor);
         var nextMarkup = this._renderedComponent.mountComponent(
@@ -1139,7 +1141,7 @@ var ReactCompositeComponentMixin = {
           this._mountDepth + 1
         );
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-          prevComponentID,
+          prevComponentNode,
           nextMarkup,
           this
         );

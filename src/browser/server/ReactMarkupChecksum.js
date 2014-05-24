@@ -37,9 +37,9 @@ var ReactMarkupChecksum = {
 
   /**
    * @param {DOMElement} element root React element
-   * @returns {boolean} whether or not the element can be reused
+   * @returns {boolean} whether or not the root element can be reused
    */
-  canReuseNode: function(element) {
+  canReuseRoot: function(element) {
     return (
       element && element.hasAttribute &&
       element.hasAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME)

@@ -50,10 +50,10 @@ describe('ReactServerRendering', function() {
     ReactMarkupChecksum = require('ReactMarkupChecksum');
   });
 
-  describe('canReuseNode', function() {
+  describe('canReuseRoot', function() {
     it('should not crash on text nodes', function() {
       expect(function() {
-        ReactMarkupChecksum.canReuseNode(document.createTextNode('yolo'));
+        ReactMarkupChecksum.canReuseRoot(document.createTextNode('yolo'));
       }).not.toThrow();
     });
   });

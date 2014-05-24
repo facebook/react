@@ -70,7 +70,9 @@ mixInto(ReactTextComponent, {
       mountDepth
     );
 
-    ReactMount.addDOMInstance(this);
+    if (!transaction.renderToString) {
+      ReactMount.registerDOMInstance(this);
+    }
     var escapedText = escapeTextForBrowser(this.props);
 
     if (transaction.renderToStaticMarkup) {

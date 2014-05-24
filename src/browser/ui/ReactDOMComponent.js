@@ -115,7 +115,9 @@ ReactDOMComponent.Mixin = {
         transaction,
         mountDepth
       );
-      ReactMount.addDOMInstance(this);
+      if (!transaction.renderToString) {
+        ReactMount.registerDOMInstance(this);
+      }
       assertValidProps(this.props);
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +

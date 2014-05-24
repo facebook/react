@@ -39,8 +39,9 @@ var nodesByReactRootID = {};
 var reactDOMInstancesByReactRootID = {};
 
 if (__DEV__) {
-  /** Mapping from reactRootID to first React component instance in hierarchy.*/
-  var firstInstancesForNodeByReactRootID = {};
+  /** Mapping from reactRootID to the owning React component instance of a
+      React node instance */
+  var owningInstancesForNodeByReactRootID = {};
 }
 
 var ELEMENT_NODE_TYPE = 1;
@@ -71,20 +72,29 @@ function getReactRootID(container) {
  * @return {string} ID of the supplied `domNode`.
  */
 function getID(node) {
-  var id = ''; // = internalGetID(node);
-  var instance = getInstanceForNode(node);
-  if (instance) id = instance._rootNodeID;
-
-  if (id) {
-    invariant(
-      nodesByReactRootID.hasOwnProperty(id),
-      'getID(): Element not in node lookup.'
-    );
-    invariant(
-      nodesByReactRootID[id] === node,
-      'getID(): Node is different from node in nodesByReactRootID.'
-    );
+  if (!node || node.nodeType !== ELEMENT_NODE_TYPE) {
+    return '';
   }
+
+  var id = node[ID_PROP_NAME];
+
+  if (!id) {
+    evaluateNodeParents(node);
+    id = node[ID_PROP_NAME];
+
+    if (!id) {
+      return '';
+    }
+  }
+
+  invariant(
+    nodesByReactRootID.hasOwnProperty(id),
+    'getID(): Element not in node lookup.'
+  );
+  invariant(
+    nodesByReactRootID[id] === node,
+    'getID(): Node is different from node in nodesByReactRootID.'
+  );
 
   return id;
 }
@@ -118,14 +128,19 @@ function setID(node, id) {
 function getNode(id) {
   var instance = reactDOMInstancesByReactRootID[id];
 
-  invariant(instance, 'awd');
-
-  var node = getNodeForInstance(instance);
-
   invariant(
-    nodesByReactRootID.hasOwnProperty(id),
-    'getNode(): Node does not exist in nodesByReactRootID.'
+    instance,
+    'getNode(): Instance does not exist in reactDOMInstancesByReactRootID.'
   );
+
+  if (!nodesByReactRootID.hasOwnProperty(id)) {
+    evaluateInstanceParents(instance);
+
+    invariant(
+      nodesByReactRootID.hasOwnProperty(id),
+      'getNode(): Node for instance is apparently missing.'
+    )
+  }
 
   var node = nodesByReactRootID[id];
 
@@ -174,8 +189,190 @@ function purgeID(id) {
   delete reactDOMInstancesByReactRootID[id];
 
   if (__DEV__) {
-    delete firstInstancesForNodeByReactRootID[id];
+    delete owningInstancesForNodeByReactRootID[id];
   }
+}
+
+/**
+ * Store reference to a React node component instance by React ID.
+ *
+ * @param {ReactComponent} instance The React node component instance.
+ */
+function registerDOMInstance(instance) {
+  reactDOMInstancesByReactRootID[instance._rootNodeID] = instance;
+}
+
+/**
+ * Evaluate an inserted/replaced node/instance pair. This MUST be invoked for
+ * the React root container instance. Invoking on inserted/replaced
+ * instances/nodes prevents already evaluated siblings from being potentially
+ * re-evaluated as a side-effect of the removal of an evaluated sibling.
+ *
+ * @param {DOMElement} node The node to store.
+ * @param {ReactComponent} instance The root component instance.
+ */
+function evaluateRoot(node, instance) {
+  evaluateChild(node, instance);
+}
+
+/**
+ * Validate nesting and update the data structures with the resulting
+ * node/instance pair.
+ *
+ * @param {DOMElement} node The node associated with the instance.
+ * @param {ReactComponent} instance The root component instance for the node.
+ */
+function evaluateChild(node, instance) {
+  var rootID = instance._rootNodeID;
+  var reactDOMInstance = instance;
+
+  // Step through ReactCompositeComponents until we encounter
+  // a ReactDOMComponent or ReactTextComponent, only ReactCompositeComponents
+  // have _renderedComponent
+  while (reactDOMInstance._renderedComponent) {
+    reactDOMInstance = reactDOMInstance._renderedComponent;
+  }
+
+  var expectedTagName = reactDOMInstance.tagName;
+  if (!expectedTagName) {
+    // ReactTextComponent doesn't have a tagName at the moment
+    expectedTagName = 'SPAN';
+  }
+
+  invariant(
+    node && node.tagName,
+    'Expected to see a rendered node of type "%s", but there were no more ' +
+    'elements in the DOM.',
+    expectedTagName
+  );
+
+  if (node.tagName !== expectedTagName) {
+    if (__DEV__) {
+      console.warn(getHumanReadablePathTo(node));
+    }
+
+    invariant(
+      false,
+      'Expected to see a rendered node of type "%s", but the actual ' +
+      'element is of type "%s". This is most commonly caused by invalid ' +
+      'nesting, such as nesting <a> or <p>, <table> without a <tbody>, etc. %s',
+      expectedTagName, node.tagName, getHumanReadablePathTo(node)
+    );
+  }
+
+
+  nodesByReactRootID[rootID] = node;
+  node[ID_PROP_NAME] = rootID;
+
+  if (__DEV__) {
+    owningInstancesForNodeByReactRootID[rootID] = instance;
+
+    // Immediately evaluate all children in DEV to discover any invalid nesting
+    //evaluateChildren(node, reactDOMInstance);
+  }
+
+  //return node.nextSibling;
+}
+
+/**
+ * Evaluate all children node/instance pairs for a parent node/instance pair.
+ * Does not recursively evaluate children.
+ *
+ * @param {DOMElement} node The parent node to evaluate children for.
+ * @param {ReactComponent} instance The parent root component instance.
+ */
+function evaluateChildren(node, instance) {
+  var childInstances = instance._renderedChildren;
+
+  if (!childInstances) {
+    return;
+  }
+
+  //var childNode = node.firstChild;
+  var childNodes = node.childNodes;
+
+  for (var id in childInstances) {
+    if (childInstances.hasOwnProperty(id)) {
+      var childInstance = childInstances[id];
+      //childNode =
+      evaluateChild(childNodes[childInstance._mountIndex], childInstance);
+    }
+  }
+
+  //if (childNode) {
+  //  if (__DEV__) {
+  //    console.warn(getHumanReadablePathTo(childNode));
+  //  }
+  //
+  //  invariant(
+  //    false,
+  //    'Expected there to be no more rendered elements, but found a ' +
+  //    'node of type `%s`. This is most commonly caused by invalid ' +
+  //    'nesting, such as nesting <a> or <p>. %s',
+  //    childNode.tagName, getHumanReadablePathTo(childNode)
+  //  );
+  //}
+}
+
+/**
+ * Recursively traverse the parents of a node until an evaluated node is
+ * encountered, if there is one. Then iteratively evaluate all children for each
+ * parent.
+ *
+ * @param {DOMElement} node The node to evaluate parents for.
+ */
+function evaluateNodeParents(node) {
+  var parentNode = node.parentNode;
+
+  if (!parentNode || parentNode.nodeType !== ELEMENT_NODE_TYPE) {
+    return;
+  }
+
+  var id = parentNode[ID_PROP_NAME];
+
+  if (!id) {
+    // If evaluation of the parent node did succeed, then it is not owned by
+    // React and thus no earlier parents can be either, early out all the way.
+    if (!evaluateNodeParents(parentNode)) {
+      return false;
+    }
+
+    // As all children have been evaluated, simply checking if our node is now
+    // evaluated is enough.
+    id = parentNode[ID_PROP_NAME];
+
+    if (!id) {
+      return false;
+    }
+  }
+
+  evaluateChildren(parentNode, reactDOMInstancesByReactRootID[id]);
+  return true;
+}
+
+/**
+ * Recursively traverse the parents of an instance until an evaluated instance
+ * is encountered, if there is one. Then iteratively evaluate all children for
+ * for each parent.
+ *
+ * @param {ReactComponent} instance The instance to evaluate parents for.
+ */
+function evaluateInstanceParents(instance) {
+  var parentInstance = reactDOMInstancesByReactRootID[instance._parentNodeID];
+  var id = parentInstance._rootNodeID;
+
+  if (!nodesByReactRootID.hasOwnProperty(id)) {
+    evaluateInstanceParents(parentInstance);
+
+    // As all children have been evaluated, if our instance is not evaluated
+    // now then something is terribly wrong.
+    invariant(
+      nodesByReactRootID.hasOwnProperty(id),
+      'getNode(): Instance cannot find its node.'
+    );
+  }
+
+  evaluateChildren(nodesByReactRootID[id], parentInstance);
 }
 
 function getHumanReadablePathTo(node) {
@@ -192,11 +389,11 @@ function getHumanReadablePathTo(node) {
     var parentID = internalGetID(node);
 
     if (parentID) {
-      var parentInstance = firstInstancesForNodeByReactRootID[parentID];
+      var parentInstance = owningInstancesForNodeByReactRootID[parentID];
 
       while (parentInstance._renderedComponent) {
         humanReadablePath.push(
-          parentInstance.displayName || 'UnnamedComponent'
+          parentInstance.constructor.displayName || 'UnnamedComponent'
         );
         parentInstance = parentInstance._renderedComponent;
       }
@@ -208,209 +405,6 @@ function getHumanReadablePathTo(node) {
   humanReadablePath.reverse();
 
   return humanReadablePath.join(' > ');
-}
-
-function mountHierarchy(node, instance) {
-  evaluateDOMChild(node, instance);
-  return;
-  if (__DEV__) {
-    firstInstancesForNodeByReactRootID[instance._rootNodeID] = instance;
-  }
-
-  // Step through and ignore any ReactCompositeComponents
-  while (instance._renderedComponent) {
-    instance = instance._renderedComponent;
-  }
-
-  var expectedTagName = instance.tagName;
-  if (!expectedTagName) {
-    // Only ReactTextComponent doesn't have a tagName at the moment
-    expectedTagName = 'SPAN';
-  }
-
-  invariant(
-    node && node.tagName,
-    'Expected to see a rendered node of type "%s", but there were no more ' +
-    'elements in the DOM.',
-    expectedTagName
-  );
-
-  if (node.tagName !== expectedTagName) {
-    if (__DEV__) {
-      console.warn(getHumanReadablePathTo(node));
-    }
-
-    invariant(
-      false,
-      'Expected to see a rendered node of type "%s", but the actual ' +
-      'element is of type "%s". This is most commonly caused by invalid ' +
-      'nesting, such as nesting <a> or <p>, <table> without a <tbody>, etc.',
-      expectedTagName, node.tagName
-    );
-  }
-
-  var rootID = instance._rootNodeID;
-  nodesByReactRootID[rootID] = node;
-  node[ID_PROP_NAME] = rootID;
-
-  var childInstances = instance._renderedChildren;
-
-  if (!childInstances) {
-    return;
-  }
-
-  var childNode = node.firstChild;
-
-  for (var id in childInstances) {
-    if (childInstances.hasOwnProperty(id)) {
-      var childInstance = childInstances[id];
-      mountHierarchy(childNode, childInstance);
-      childNode = childNode.nextSibling;
-    }
-  }
-
-  if (childNode) {
-    invariant(
-      false,
-      'Expected there to be no more rendered elements, but found a ' +
-      'node of type `%s`. This is most commonly caused by invalid ' +
-      'nesting, such as nesting <a> or <p>.',
-      childNode.tagName
-    );
-  }
-}
-
-function getNodeForInstance(instance) {
-  var rootID = instance._rootNodeID;
-  if (nodesByReactRootID.hasOwnProperty(rootID)) {
-    return nodesByReactRootID[rootID];
-  }
-
-  evaluateToInstance(instance);
-
-  if (nodesByReactRootID.hasOwnProperty(rootID)) {
-    return nodesByReactRootID[rootID];
-  }
-}
-
-function getInstanceForNode(node) {
-  var rootID = node[ID_PROP_NAME];
-  if (rootID) {
-    return reactDOMInstancesByReactRootID[rootID];
-  }
-
-  evaluateToNode(node);
-
-  rootID = node[ID_PROP_NAME]
-  if (rootID) {
-    return reactDOMInstancesByReactRootID[rootID];
-  }
-}
-
-function evaluateToInstance(instance) {
-  var rootID = instance._rootNodeID;
-  var isCached = nodesByReactRootID.hasOwnProperty(rootID);
-
-  if (!isCached) {
-    evaluateToInstance(reactDOMInstancesByReactRootID[instance._parentNodeID]);
-    isCached = nodesByReactRootID.hasOwnProperty(rootID);
-  }
-  if (isCached) {
-    evaluateDOMChildren(nodesByReactRootID[rootID], instance);
-  }
-}
-
-function evaluateToNode(node) {
-  if (!node || node === document) {
-    return;
-  }
-
-  var rootID = node[ID_PROP_NAME];
-
-  if (!rootID) {
-    evaluateToNode(node.parentNode);
-    rootID = node[ID_PROP_NAME];
-  }
-  if (rootID) {
-    evaluateDOMChildren(node, reactDOMInstancesByReactRootID[rootID]);
-  }
-}
-
-function evaluateDOMChild(node, rootInstance) {
-  var leafInstance = rootInstance;
-  // Step through and ignore any ReactCompositeComponents
-  while (leafInstance._renderedComponent) {
-    leafInstance = leafInstance._renderedComponent;
-  }
-
-  var expectedTagName = leafInstance.tagName;
-  if (!expectedTagName) {
-    // Only ReactTextComponent doesn't have a tagName at the moment
-    expectedTagName = 'SPAN';
-  }
-
-  invariant(
-    node && node.tagName,
-    'Expected to see a rendered node of type "%s", but there were no more ' +
-    'elements in the DOM.',
-    expectedTagName
-  );
-
-  if (node.tagName !== expectedTagName) {
-    if (__DEV__) {
-      console.warn(getHumanReadablePathTo(node));
-    }
-
-    invariant(
-      false,
-      'Expected to see a rendered node of type "%s", but the actual ' +
-      'element is of type "%s". This is most commonly caused by invalid ' +
-      'nesting, such as nesting <a> or <p>, <table> without a <tbody>, etc.',
-      expectedTagName, node.tagName
-    );
-  }
-
-  var rootID = rootInstance._rootNodeID;
-  nodesByReactRootID[rootID] = node;
-  node[ID_PROP_NAME] = rootID;
-
-  if (__DEV__) {
-    firstInstancesForNodeByReactRootID[rootID] = rootInstance;
-  }
-
-  //evaluateDOMChildren(node, leafInstance);
-
-  return node.nextSibling;
-}
-
-function evaluateDOMChildren(parentNode, parentInstance) {
-  var childInstances = parentInstance._renderedChildren;
-
-  if (!childInstances) {
-    return;
-  }
-
-  var childNode = parentNode.firstChild;
-
-  for (var id in childInstances) {
-    if (childInstances.hasOwnProperty(id)) {
-      childNode = evaluateDOMChild(childNode, childInstances[id]);
-    }
-  }
-
-  if (childNode) {
-    if (__DEV__) {
-      console.warn(getHumanReadablePathTo(childNode));
-    }
-
-    invariant(
-      false,
-      'Expected there to be no more rendered elements, but found a ' +
-      'node of type `%s`. This is most commonly caused by invalid ' +
-      'nesting, such as nesting <a> or <p>.',
-      childNode.tagName
-    );
-  }
 }
 
 /**
@@ -583,7 +577,7 @@ var ReactMount = {
     var reactRootElement = getReactRootElementInContainer(container);
     var shouldReuseMarkup = (
       reactRootElement && !prevComponent &&
-      ReactMarkupChecksum.canReuseNode(reactRootElement)
+      ReactMarkupChecksum.canReuseRoot(reactRootElement)
     );
 
     var component = ReactMount._renderNewRootComponent(
@@ -769,22 +763,17 @@ var ReactMount = {
    * React ID utilities.
    */
 
-  getNodeForInstance: getNodeForInstance,
-  getInstanceForNode: getInstanceForNode,
-
   getReactRootID: getReactRootID,
 
-  mountHierarchy: mountHierarchy,
+  registerDOMInstance: registerDOMInstance,
+
+  evaluateRoot: evaluateRoot,
 
   getID: getID,
 
   setID: setID,
 
   getNode: getNode,
-
-  addDOMInstance: function(instance) {
-    reactDOMInstancesByReactRootID[instance._rootNodeID] = instance;
-  },
 
   purgeID: purgeID
 };

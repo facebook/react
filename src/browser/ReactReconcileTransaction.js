@@ -131,6 +131,7 @@ function ReactReconcileTransaction() {
   // `ReactServerRenderingTransaction` instead. This option is here so that it's
   // accessible and defaults to false when `ReactDOMComponent` and
   // `ReactTextComponent` checks it in `mountComponent`.`
+  this.renderToString = false;
   this.renderToStaticMarkup = false;
   this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();

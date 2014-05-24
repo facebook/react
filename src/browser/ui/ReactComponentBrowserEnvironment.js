@@ -76,7 +76,7 @@ var ReactComponentBrowserEnvironment = {
       if (shouldReuseMarkup) {
         var rootElement = getReactRootElementInContainer(container);
         if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
-          ReactMount.mountHierarchy(rootElement, instance);
+          ReactMount.evaluateRoot(rootElement, instance);
           return;
         } else {
           invariant(
@@ -115,7 +115,7 @@ var ReactComponentBrowserEnvironment = {
       );
 
       setInnerHTML(container, markup);
-      ReactMount.mountHierarchy(container.firstChild, instance);
+      ReactMount.evaluateRoot(container.firstChild, instance);
     }
   )
 };

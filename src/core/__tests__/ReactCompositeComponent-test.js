@@ -841,7 +841,7 @@ describe('ReactCompositeComponent', function() {
 
     // <Component />, <Inner />, and both <div /> elements each call
     // unmountIDFromEnvironment which calls purgeID, for a total of 4.
-    expect(ReactMount.purgeID.callCount).toBe(4);
+    expect(ReactMount.purgeID.callCount).toBe(2);
   });
 
   it('should detect valid CompositeComponent classes', function() {

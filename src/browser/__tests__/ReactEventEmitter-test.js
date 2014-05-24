@@ -100,6 +100,7 @@ describe('ReactEventEmitter', function() {
     EventListener = require('EventListener');
     ReactEventEmitter = require('ReactEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
+    ReactMount.getID = getID;
     ReactMount.getNode = function(id) {
       return idToNode[id];
     };

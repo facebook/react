@@ -93,7 +93,7 @@ var DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: function(node, markup, instance) {
     var renderedNode = Danger.dangerouslyReplaceNodeWithMarkup(node, markup);
-    ReactMount.mountHierarchy(renderedNode, instance);
+    ReactMount.evaluateRoot(renderedNode, instance);
   },
 
   /**
@@ -152,7 +152,7 @@ var DOMChildrenOperations = {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           var markupNode = renderedMarkup[update.markupIndex];
           insertChildAt(update.parentNode, markupNode, update.toIndex);
-          ReactMount.mountHierarchy(markupNode, update.instance);
+          ReactMount.evaluateRoot(markupNode, update.instance);
           break;
         case ReactMultiChildUpdateTypes.MOVE_EXISTING:
           insertChildAt(
