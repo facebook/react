@@ -34,12 +34,15 @@ var ReactUpdates = require('ReactUpdates');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
+var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
 var mapObject = require('mapObject');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+
+var MIXINS_KEY = keyOf({mixins: null});
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -453,12 +456,25 @@ function mixSpecIntoComponent(ConvenienceConstructor, spec) {
 
   var Constructor = ConvenienceConstructor.type;
   var proto = Constructor.prototype;
+
+  // By handling mixins before any other properties, we ensure the same
+  // chaining order is applied to methods with DEFINE_MANY policy, whether
+  // mixins are listed before or after these methods in the spec.
+  if (spec.hasOwnProperty(MIXINS_KEY)) {
+    RESERVED_SPEC_KEYS.mixins(ConvenienceConstructor, spec.mixins);
+  }
+
   for (var name in spec) {
-    var property = spec[name];
     if (!spec.hasOwnProperty(name)) {
       continue;
     }
 
+    if (name === MIXINS_KEY) {
+      // We have already handled mixins in a special case above
+      continue;
+    }
+
+    var property = spec[name];
     validateMethodOverride(proto, name);
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
