@@ -226,12 +226,10 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
     for (var i = 0, l = dependencies.length; i < l; i++) {
       var dependency = dependencies[i];
       if (!(
-          isListening.hasOwnProperty(dependency) &&
-          isListening[dependency]
-        )) {
-        var topLevelType = topLevelTypes[dependency];
-
-        if (topLevelType === topLevelTypes.topWheel) {
+            isListening.hasOwnProperty(dependency) &&
+            isListening[dependency]
+          )) {
+        if (dependency === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               topLevelTypes.topWheel,
@@ -253,7 +251,7 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
               mountAt
             );
           }
-        } else if (topLevelType === topLevelTypes.topScroll) {
+        } else if (dependency === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
@@ -268,8 +266,8 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
               ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
             );
           }
-        } else if (topLevelType === topLevelTypes.topFocus ||
-            topLevelType === topLevelTypes.topBlur) {
+        } else if (dependency === topLevelTypes.topFocus ||
+            dependency === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
             ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
@@ -302,7 +300,7 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
           isListening[topLevelTypes.topFocus] = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
           ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
-            topLevelType,
+            dependency,
             topEventMapping[dependency],
             mountAt
           );
