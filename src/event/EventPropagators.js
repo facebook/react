@@ -26,6 +26,8 @@ var forEachAccumulated = require('forEachAccumulated');
 
 var PropagationPhases = EventConstants.PropagationPhases;
 var getListener = EventPluginHub.getListener;
+var getListenersForRegistrationName =
+  EventPluginHub.getListenersForRegistrationName;
 
 /**
  * Some event types have a notion of different registration names for different
@@ -102,6 +104,31 @@ function accumulateDirectDispatchesSingle(event) {
   }
 }
 
+/**
+ * Accumulates dispatches on an `SyntheticEvent` for any listeners on elements
+ * outside the target and excluding the target's ancestors, suitable for an
+ * `onClickOutside` event or similar.
+ * @param {SyntheticEvent} event
+ */
+function accumulateOutsideDispatchesSingle(event) {
+  if (event && event.dispatchConfig.registrationName) {
+    var InstanceHandle = EventPluginHub.injection.getInstanceHandle();
+    var registrationName = event.dispatchConfig.registrationName;
+    var listeners = getListenersForRegistrationName(registrationName);
+    // TODO: Should these listeners fire in a specific order?
+    for (var id in listeners) {
+      if (!InstanceHandle.isAncestorIDOf(id, event.dispatchMarker)) {
+        event._dispatchListeners = accumulate(
+          event._dispatchListeners,
+          listeners[id]
+        );
+        event._dispatchIDs = accumulate(event._dispatchIDs, id);
+      }
+    }
+  }
+}
+
+
 function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
@@ -116,9 +143,12 @@ function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
   );
 }
 
-
 function accumulateDirectDispatches(events) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
+}
+
+function accumulateOutsideDispatches(events) {
+  forEachAccumulated(events, accumulateOutsideDispatchesSingle);
 }
 
 
@@ -137,7 +167,8 @@ function accumulateDirectDispatches(events) {
 var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches
+  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
+  accumulateOutsideDispatches: accumulateOutsideDispatches
 };
 
 module.exports = EventPropagators;

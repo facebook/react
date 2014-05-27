@@ -184,6 +184,14 @@ var EventPluginHub = {
   },
 
   /**
+   * @param {string} registrationName Name of listener (e.g. `onClick`).
+   * @return {?object} Object mapping element IDs to listener functions
+   */
+  getListenersForRegistrationName: function(registrationName) {
+    return listenerBank[registrationName];
+  },
+
+  /**
    * Deletes a listener from the registration bank.
    *
    * @param {string} id ID of the DOM element.

@@ -20,6 +20,7 @@
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
+var ClickOutsideEventPlugin = require('ClickOutsideEventPlugin');
 var ClientReactRootIndex = require('ClientReactRootIndex');
 var CompositionEventPlugin = require('CompositionEventPlugin');
 var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
@@ -73,7 +74,8 @@ function inject() {
     CompositionEventPlugin: CompositionEventPlugin,
     MobileSafariClickEventPlugin: MobileSafariClickEventPlugin,
     SelectEventPlugin: SelectEventPlugin,
-    BeforeInputEventPlugin: BeforeInputEventPlugin
+    BeforeInputEventPlugin: BeforeInputEventPlugin,
+    ClickOutsideEventPlugin: ClickOutsideEventPlugin
   });
 
   ReactInjection.DOM.injectComponentClasses({
