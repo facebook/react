@@ -18,6 +18,7 @@
 
 'use strict';
 var runScripts;
+var loadScripts;
 var headEl;
 
 var buffer = require('buffer');
@@ -157,16 +158,47 @@ var load = exports.load = function(url, callback) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
       if (xhr.status === 0 || xhr.status === 200) {
-        run(xhr.responseText, url);
+        callback(xhr.responseText, url);
       } else {
         throw new Error("Could not load " + url);
-      }
-      if (callback) {
-        return callback();
       }
     }
   };
   return xhr.send(null);
+};
+
+loadScripts = function(scripts) {
+  var result = scripts.map(function() {
+    return false;
+  });
+  var count = result.length;
+
+  var check = function() {
+    var script, i;
+
+    for (i = 0; i < count; i++) {
+      script = result[i];
+
+      if (script && !script.executed) {
+        run(script.content, script.url);
+        script.executed = true;
+      } else if (!script) {
+        break;
+      }
+    };
+  };
+
+  scripts.forEach(function(script, i) {
+    if (script.src) {
+      load(script.src, function(content, url) {
+        result[i] = { executed: false, content: content, url: url };
+        check();
+      });
+    } else {
+      result[i] = { executed: false, content: script.innerHTML, url: null };
+      check();
+    }
+  });
 };
 
 runScripts = function() {
@@ -182,20 +214,7 @@ runScripts = function() {
 
   console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
 
-  function tick() {
-    if (!jsxScripts.length) return;
-
-    var script = jsxScripts.shift();
-
-    if (script.src) {
-      load(script.src, tick);
-    } else {
-      run(script.innerHTML, null);
-      tick();
-    }
-  }
-
-  tick();
+  loadScripts(jsxScripts);
 };
 
 if (typeof window !== "undefined" && window !== null) {
