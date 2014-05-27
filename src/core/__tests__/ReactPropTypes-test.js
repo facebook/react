@@ -403,6 +403,97 @@ describe('React Component Types', function() {
   });
 });
 
+describe('ObjectOf Type', function() {
+  it('should support the objectOf propTypes', function() {
+    typeCheckPass(PropTypes.objectOf(PropTypes.number), {a: 1, b: 2, c: 3});
+    typeCheckPass(
+      PropTypes.objectOf(PropTypes.string),
+      {a: 'a', b: 'b', c: 'c'}
+    );
+    typeCheckPass(
+      PropTypes.objectOf(PropTypes.oneOf(['a', 'b'])),
+      {a: 'a', b: 'b'}
+    );
+  });
+
+  it('should support objectOf with complex types', function() {
+    typeCheckPass(
+      PropTypes.objectOf(PropTypes.shape({a: PropTypes.number.isRequired})),
+      {a: {a: 1}, b: {a: 2}}
+    );
+
+    function Thing() {}
+    typeCheckPass(
+      PropTypes.objectOf(PropTypes.instanceOf(Thing)),
+      {a: new Thing(), b: new Thing()}
+    );
+  });
+
+  it('should warn with invalid items in the object', function() {
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number),
+      {a: 1, b: 2, c: 'b'},
+      'Invalid prop `c` of type `string` supplied to `testComponent`, ' +
+      'expected `number`.'
+    );
+  });
+
+  it('should warn with invalid complex types', function() {
+    function Thing() {}
+    var name = Thing.name || '<<anonymous>>';
+
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.instanceOf(Thing)),
+      {a: new Thing(), b: 'xyz'},
+      'Invalid prop `b` supplied to `testComponent`, expected instance of `' +
+      name + '`.'
+    );
+  });
+
+  it('should warn when passed something other than an object', function() {
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number),
+      [1, 2],
+      'Invalid prop `testProp` of type `array` supplied to `testComponent`, ' +
+      'expected an object.'
+    );
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number),
+      123,
+      'Invalid prop `testProp` of type `number` supplied to `testComponent`, ' +
+      'expected an object.'
+    );
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number),
+      'string',
+      'Invalid prop `testProp` of type `string` supplied to `testComponent`, ' +
+      'expected an object.'
+    );
+  });
+
+  it('should not warn when passing an empty object', function() {
+    typeCheckPass(PropTypes.objectOf(PropTypes.number), {});
+  });
+
+  it("should be implicitly optional and not warn without values", function() {
+    typeCheckPass(PropTypes.objectOf(PropTypes.number), null);
+    typeCheckPass(PropTypes.objectOf(PropTypes.number), undefined);
+  });
+
+  it("should warn for missing required values", function() {
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number).isRequired,
+      null,
+      requiredMessage
+    );
+    typeCheckFail(
+      PropTypes.objectOf(PropTypes.number).isRequired,
+      undefined,
+      requiredMessage
+    );
+  });
+});
+
 describe('OneOf Types', function() {
   it("should warn for invalid strings", function() {
     typeCheckFail(
@@ -443,10 +534,14 @@ describe('OneOf Types', function() {
 
   it("should warn for missing required values", function() {
     typeCheckFail(
-      PropTypes.oneOf(['red', 'blue']).isRequired, null, requiredMessage
+      PropTypes.oneOf(['red', 'blue']).isRequired,
+      null,
+      requiredMessage
     );
     typeCheckFail(
-      PropTypes.oneOf(['red', 'blue']).isRequired, undefined, requiredMessage
+      PropTypes.oneOf(['red', 'blue']).isRequired,
+      undefined,
+      requiredMessage
     );
   });
 });
