@@ -27,7 +27,7 @@ describe('SyntheticEvent', function() {
     SyntheticEvent = require('SyntheticEvent');
 
     createEvent = function(nativeEvent) {
-      return SyntheticEvent.getPooled({}, '', nativeEvent);
+      return new SyntheticEvent({}, '', nativeEvent);
     };
   });
 
@@ -68,14 +68,6 @@ describe('SyntheticEvent', function() {
     expect(syntheticEvent.isPropagationStopped()).toBe(true);
 
     expect(nativeEvent.cancelBubble).toBe(true);
-  });
-
-  it('should be able to `persist`', function() {
-    var syntheticEvent = createEvent({});
-
-    expect(syntheticEvent.isPersistent()).toBe(false);
-    syntheticEvent.persist();
-    expect(syntheticEvent.isPersistent()).toBe(true);
   });
 
 });

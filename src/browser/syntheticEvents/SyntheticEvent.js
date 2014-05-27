@@ -19,8 +19,6 @@
 
 "use strict";
 
-var PooledClass = require('PooledClass');
-
 var emptyFunction = require('emptyFunction');
 var getEventTarget = require('getEventTarget');
 var merge = require('merge');
@@ -106,35 +104,6 @@ mergeInto(SyntheticEvent.prototype, {
     this.isPropagationStopped = emptyFunction.thatReturnsTrue;
   },
 
-  /**
-   * We release all dispatched `SyntheticEvent`s after each event loop, adding
-   * them back into the pool. This allows a way to hold onto a reference that
-   * won't be added back into the pool.
-   */
-  persist: function() {
-    this.isPersistent = emptyFunction.thatReturnsTrue;
-  },
-
-  /**
-   * Checks if this event should be released back into the pool.
-   *
-   * @return {boolean} True if this should not be released, false otherwise.
-   */
-  isPersistent: emptyFunction.thatReturnsFalse,
-
-  /**
-   * `PooledClass` looks for `destructor` on each instance it releases.
-   */
-  destructor: function() {
-    var Interface = this.constructor.Interface;
-    for (var propName in Interface) {
-      this[propName] = null;
-    }
-    this.dispatchConfig = null;
-    this.dispatchMarker = null;
-    this.nativeEvent = null;
-  }
-
 });
 
 SyntheticEvent.Interface = EventInterface;
@@ -155,10 +124,6 @@ SyntheticEvent.augmentClass = function(Class, Interface) {
 
   Class.Interface = merge(Super.Interface, Interface);
   Class.augmentClass = Super.augmentClass;
-
-  PooledClass.addPoolingTo(Class, PooledClass.threeArgumentPooler);
 };
-
-PooledClass.addPoolingTo(SyntheticEvent, PooledClass.threeArgumentPooler);
 
 module.exports = SyntheticEvent;

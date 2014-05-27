@@ -114,7 +114,7 @@ var EnterLeaveEventPlugin = {
     var fromID = from ? ReactMount.getID(from) : '';
     var toID = to ? ReactMount.getID(to) : '';
 
-    var leave = SyntheticMouseEvent.getPooled(
+    var leave = new SyntheticMouseEvent(
       eventTypes.mouseLeave,
       fromID,
       nativeEvent
@@ -123,7 +123,7 @@ var EnterLeaveEventPlugin = {
     leave.target = from;
     leave.relatedTarget = to;
 
-    var enter = SyntheticMouseEvent.getPooled(
+    var enter = new SyntheticMouseEvent(
       eventTypes.mouseEnter,
       toID,
       nativeEvent

@@ -405,8 +405,7 @@ var SimpleEventPlugin = {
       'SimpleEventPlugin: Unhandled event type, `%s`.',
       topLevelType
     );
-    var event = EventConstructor.getPooled(
-      dispatchConfig,
+    var event = new EventConstructor(dispatchConfig,
       topLevelTargetID,
       nativeEvent
     );

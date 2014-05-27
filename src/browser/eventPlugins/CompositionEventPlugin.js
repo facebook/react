@@ -245,7 +245,7 @@ var CompositionEventPlugin = {
     }
 
     if (eventType) {
-      var event = SyntheticCompositionEvent.getPooled(
+      var event = new SyntheticCompositionEvent(
         eventType,
         topLevelTargetID,
         nativeEvent
