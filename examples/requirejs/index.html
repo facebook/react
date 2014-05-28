@@ -16,22 +16,28 @@
         If you can see this, React is not running. You probably didn't run:
         <pre>
           npm install -g react-tools
-          jsx . build/
+          jsx -x jsx . build/
         </pre>
       </p>
     </div>
     <h4>Example Details</h4>
     <ul>
       <li>
-        This is built with
-        <a href="https://github.com/substack/node-browserify">browserify</a>.
-      </li>
-      <li>
         This is written with JSX and precompiled to vanilla JS by doing:
         <pre>
           npm install -g react-tools
-          jsx . build/
+          jsx -x jsx . build/
         </pre>
+      </li>
+      <li>
+        AMD's define(…) and require(…) calls should include the React build as
+        `React`, since jsx translations use `React`, e.g.
+        &lt;div&gt;…&lt;/div&gt;
+        ↦
+        React.DOM.div(…).
+        See <a href="./subcomponent.jsx">subcomponent.jsx</a> and its
+        precompiled image,
+        <a href="./build/subcomponent.js">subcomponent.js</a>.
       </li>
     </ul>
     <p>
@@ -40,9 +46,19 @@
       Learn more at
       <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
     </p>
-    <script src="../../build/react.js"></script>
-    <script type="text/javascript" src="../../build/react.js"></script>
     <script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.8/require.min.js"></script>
-    <script type="text/javascript" src="build/app.js"></script>
+    <script>
+      require.config({
+        baseUrl: '../..',
+        paths: {
+          react : 'build/react',
+          example : 'examples/requirejs/build'
+        }
+      });
+
+      require(['react', 'example/component'], function(react, Component) {
+        Component(document.getElementById('container'));
+      });
+    </script>
   </body>
 </html>
