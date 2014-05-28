@@ -1,8 +1,8 @@
 /**
   * @jsx React.DOM
   */
-var createClass = require('react/lib/ReactCompositeComponent').createClass;
-var renderComponent = require('react/lib/ReactMount').renderComponent;
+
+var React = require('react');
 
 var ExampleApplication = React.createClass({
   render: function() {
