@@ -38,8 +38,6 @@ var ReactServerRendering;
 var ReactMarkupChecksum;
 var ExecutionEnvironment;
 
-var ID_ATTRIBUTE_NAME;
-
 describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
@@ -50,9 +48,14 @@ describe('ReactServerRendering', function() {
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
+  });
 
-    var DOMProperty = require('DOMProperty');
-    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
+  describe('canReuseRoot', function() {
+    it('should not crash on text nodes', function() {
+      expect(function() {
+        ReactMarkupChecksum.canReuseRoot(document.createTextNode('yolo'));
+      }).not.toThrow();
+    });
   });
 
   describe('renderComponentToString', function() {
@@ -61,8 +64,9 @@ describe('ReactServerRendering', function() {
         <span>hello world</span>
       );
       expect(response).toMatch(
-        '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
+        '<span ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
+          'hello world' +
+        '</span>'
       );
     });
 
@@ -91,11 +95,10 @@ describe('ReactServerRendering', function() {
         <Parent />
       );
       expect(response).toMatch(
-        '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">child</span>' +
+        '<div ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
+          '<span>' +
+            '<span>My name is </span>' +
+            '<span>child</span>' +
           '</span>' +
         '</div>'
       );
@@ -141,10 +144,9 @@ describe('ReactServerRendering', function() {
         );
 
         expect(response).toMatch(
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
+          '<span ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
+            '<span>Component name: </span>' +
+            '<span>TestComponent</span>' +
           '</span>'
         );
         expect(lifecycle).toEqual(

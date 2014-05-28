@@ -107,13 +107,17 @@ ReactDOMComponent.Mixin = {
   mountComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(parentID, rootID, transaction, mountDepth) {
       ReactComponent.Mixin.mountComponent.call(
         this,
+        parentID,
         rootID,
         transaction,
         mountDepth
       );
+      if (!transaction.renderToString) {
+        ReactMount.registerDOMInstance(this);
+      }
       assertValidProps(this.props);
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
@@ -164,14 +168,7 @@ ReactDOMComponent.Mixin = {
       }
     }
 
-    // For static pages, no need to put React ID and checksum. Saves lots of
-    // bytes.
-    if (transaction.renderToStaticMarkup) {
-      return ret + '>';
-    }
-
-    var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    return ret + '>';
   },
 
   /**
@@ -405,6 +402,7 @@ ReactDOMComponent.Mixin = {
   unmountComponent: function() {
     this.unmountChildren();
     ReactEventEmitter.deleteAllListeners(this._rootNodeID);
+    ReactMount.purgeID(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
   }
 

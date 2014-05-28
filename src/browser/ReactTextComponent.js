@@ -23,6 +23,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 var ReactDescriptor = require('ReactDescriptor');
+var ReactMount = require('ReactMount');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -60,14 +61,18 @@ mixInto(ReactTextComponent, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth) {
+  mountComponent: function(parentID, rootID, transaction, mountDepth) {
     ReactComponent.Mixin.mountComponent.call(
       this,
+      parentID,
       rootID,
       transaction,
       mountDepth
     );
 
+    if (!transaction.renderToString) {
+      ReactMount.registerDOMInstance(this);
+    }
     var escapedText = escapeTextForBrowser(this.props);
 
     if (transaction.renderToStaticMarkup) {
@@ -78,7 +83,7 @@ mixInto(ReactTextComponent, {
     }
 
     return (
-      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+      '<span>' +
         escapedText +
       '</span>'
     );

@@ -30,6 +30,7 @@ var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
+var ReactMount = require('ReactMount');
 
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
@@ -715,9 +716,10 @@ var ReactCompositeComponentMixin = {
   mountComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(parentID, rootID, transaction, mountDepth) {
       ReactComponent.Mixin.mountComponent.call(
         this,
+        parentID,
         rootID,
         transaction,
         mountDepth
@@ -759,6 +761,7 @@ var ReactCompositeComponentMixin = {
       // Done with mounting, `setState` will now trigger UI changes.
       this._compositeLifeCycleState = null;
       var markup = this._renderedComponent.mountComponent(
+        parentID,
         rootID,
         transaction,
         mountDepth + 1
@@ -1131,16 +1134,19 @@ var ReactCompositeComponentMixin = {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
         var prevComponentID = prevComponentInstance._rootNodeID;
+        var prevComponentNode = ReactMount.getNode(prevComponentInstance._rootNodeID);
         prevComponentInstance.unmountComponent();
         this._renderedComponent = instantiateReactComponent(nextDescriptor);
         var nextMarkup = this._renderedComponent.mountComponent(
+          this._parentNodeID,
           thisID,
           transaction,
           this._mountDepth + 1
         );
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-          prevComponentID,
-          nextMarkup
+          prevComponentNode,
+          nextMarkup,
+          this
         );
       }
     }

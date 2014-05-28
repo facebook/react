@@ -251,7 +251,7 @@ var ReactComponent = {
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
      */
-    mountComponent: function(rootID, transaction, mountDepth) {
+    mountComponent: function(parentID, rootID, transaction, mountDepth) {
       invariant(
         !this.isMounted(),
         'mountComponent(%s, ...): Can only mount an unmounted component. ' +
@@ -264,6 +264,7 @@ var ReactComponent = {
         var owner = this._descriptor._owner;
         ReactOwner.addComponentAsRefTo(this, props.ref, owner);
       }
+      this._parentNodeID = parentID;
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
       this._mountDepth = mountDepth;
@@ -289,7 +290,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, this._owner);
       }
-      unmountIDFromEnvironment(this._rootNodeID);
+      //unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -409,8 +410,8 @@ var ReactComponent = {
         container,
         transaction,
         shouldReuseMarkup) {
-      var markup = this.mountComponent(rootID, transaction, 0);
-      mountImageIntoNode(markup, container, shouldReuseMarkup);
+      var markup = this.mountComponent(null, rootID, transaction, 0);
+      mountImageIntoNode(markup, container, this, shouldReuseMarkup);
     },
 
     /**

@@ -64,7 +64,7 @@ var ReactComponentBrowserEnvironment = {
   mountImageIntoNode: ReactPerf.measure(
     'ReactComponentBrowserEnvironment',
     'mountImageIntoNode',
-    function(markup, container, shouldReuseMarkup) {
+    function(markup, container, instance, shouldReuseMarkup) {
       invariant(
         container && (
           container.nodeType === ELEMENT_NODE_TYPE ||
@@ -74,9 +74,9 @@ var ReactComponentBrowserEnvironment = {
       );
 
       if (shouldReuseMarkup) {
-        if (ReactMarkupChecksum.canReuseMarkup(
-          markup,
-          getReactRootElementInContainer(container))) {
+        var rootElement = getReactRootElementInContainer(container);
+        if (ReactMarkupChecksum.canReuseMarkup(markup, rootElement)) {
+          ReactMount.evaluateRoot(rootElement, instance);
           return;
         } else {
           invariant(
@@ -115,6 +115,7 @@ var ReactComponentBrowserEnvironment = {
       );
 
       setInnerHTML(container, markup);
+      ReactMount.evaluateRoot(container.firstChild, instance);
     }
   )
 };
