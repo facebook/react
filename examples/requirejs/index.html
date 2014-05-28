@@ -30,11 +30,21 @@
         </pre>
       </li>
       <li>
-        AMD's define(…) and require(…) calls should include the React build as
-        `React`, since jsx translations use `React`, e.g.
-        &lt;div&gt;…&lt;/div&gt;
-        ↦
-        React.DOM.div(…).
+        The React build's alias under define(…) and require(…) must be provided
+        to the `@jsx` pragma.
+        Supposing an alias for the React build of `x`:
+        <pre>
+/**
+ * @jsx x.DOM
+ */
+define(['react'], function (x) {
+  return reactjs.createClass({
+    render : function () {
+      return &lt;div&gt;Simple RequireJS Component&lt;/div&gt;;
+    }
+  });
+});
+</pre>
         See <a href="./app.jsx">app.jsx</a> and its
         precompiled image,
         <a href="./build/component.js">component.js</a>.
