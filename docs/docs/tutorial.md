@@ -88,18 +88,17 @@ The first thing you'll notice is the XML-ish syntax in your JavaScript. We have 
 
 ```javascript
 // tutorial1-raw.js
-var CommentBox = React.createClass({
+var CommentBox = React.createClass({displayName: 'CommentBox',
   render: function() {
     return (
-      React.DOM.div({
-        className: 'commentBox',
-        children: 'Hello, world! I am a CommentBox.'
-      })
+      React.DOM.div({className: "commentBox"}, 
+        "Hello, world! I am a CommentBox."
+      )
     );
   }
 });
 React.renderComponent(
-  CommentBox({}),
+  CommentBox(null),
   document.getElementById('content')
 );
 ```
