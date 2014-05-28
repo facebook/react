@@ -2,10 +2,12 @@
  * @jsx React.DOM
  */
 /* global define */
-define(['react', 'example/subcomponent'], function(React, Subcomponent) {
+define(['react'], function (React) {
   "use strict";
 
-  return function (element) {
-    React.renderComponent(<Subcomponent />, element);
-  };
+  return React.createClass({
+    render : function () {
+      return <div>Simple RequireJS Component</div>;
+    }
+  });
 });

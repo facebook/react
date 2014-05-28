@@ -35,9 +35,9 @@
         &lt;div&gt;…&lt;/div&gt;
         ↦
         React.DOM.div(…).
-        See <a href="./subcomponent.jsx">subcomponent.jsx</a> and its
+        See <a href="./app.jsx">app.jsx</a> and its
         precompiled image,
-        <a href="./build/subcomponent.js">subcomponent.js</a>.
+        <a href="./build/component.js">component.js</a>.
       </li>
     </ul>
     <p>
@@ -56,8 +56,8 @@
         }
       });
 
-      require(['example/component'], function(Component) {
-        Component(document.getElementById('container'));
+      require(['example/app'], function(App) {
+        App(document.getElementById('container'));
       });
     </script>
   </body>
