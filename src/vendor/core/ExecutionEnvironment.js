@@ -20,7 +20,10 @@
 
 "use strict";
 
-var canUseDOM = typeof window !== 'undefined';
+var canUseDOM =
+  typeof window !== 'undefined' &&
+  window.document &&
+  typeof window.document.createElement === 'function';
 
 /**
  * Simple, lightweight module assisting with the detection and context of
@@ -35,7 +38,9 @@ var ExecutionEnvironment = {
   canUseWorkers: typeof Worker !== 'undefined',
 
   canUseEventListeners:
-    canUseDOM && (window.addEventListener || window.attachEvent),
+    canUseDOM && !!(window.addEventListener || window.attachEvent),
+
+  canUseViewport: canUseDOM && !!window.screen,
 
   isInWorker: !canUseDOM // For now, this is true - might change in the future.
 

@@ -93,6 +93,17 @@ var mergeHelpers = {
   },
 
   /**
+   * @param {*} arg
+   */
+  checkMergeIntoObjectArg: function(arg) {
+    invariant(
+      (!isTerminal(arg) || typeof arg === 'function') && !Array.isArray(arg),
+      'Tried to merge into an object, instead got %s.',
+      arg
+    );
+  },
+
+  /**
    * Checks that a merge was not given a circular object or an object that had
    * too great of depth.
    *

@@ -25,7 +25,7 @@ var invariant = require('invariant');
  * This API assumes the caller knows the contents of the data type. For less
  * well defined inputs use createArrayFrom.
  *
- * @param {object|function} obj
+ * @param {object|function|filelist} obj
  * @return {array}
  */
 function toArray(obj) {

@@ -22,15 +22,16 @@
 var mergeHelpers = require('mergeHelpers');
 
 var checkMergeObjectArg = mergeHelpers.checkMergeObjectArg;
+var checkMergeIntoObjectArg = mergeHelpers.checkMergeIntoObjectArg;
 
 /**
  * Shallow merges two structures by mutating the first parameter.
  *
- * @param {object} one Object to be merged into.
+ * @param {object|function} one Object to be merged into.
  * @param {?object} two Optional object with properties to merge from.
  */
 function mergeInto(one, two) {
-  checkMergeObjectArg(one);
+  checkMergeIntoObjectArg(one);
   if (two != null) {
     checkMergeObjectArg(two);
     for (var key in two) {

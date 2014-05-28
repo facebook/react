@@ -1,5 +1,6 @@
 /**
  * @providesModule EventListener
+ * @typechecks
  */
 
 var emptyFunction = require('emptyFunction');
@@ -29,7 +30,7 @@ var EventListener = {
       target.attachEvent('on' + eventType, callback);
       return {
         remove: function() {
-          target.detachEvent(eventType, callback);
+          target.detachEvent('on' + eventType, callback);
         }
       };
     }
@@ -63,7 +64,9 @@ var EventListener = {
         }
       };
     }
-  }
+  },
+
+  registerDefault: function() {}
 };
 
 module.exports = EventListener;
