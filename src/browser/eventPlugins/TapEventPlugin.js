@@ -22,6 +22,7 @@
 var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
+var React = require('React');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var TouchEventUtils = require('TouchEventUtils');
 var ViewportMetrics = require('ViewportMetrics');
@@ -31,6 +32,8 @@ var topLevelTypes = EventConstants.topLevelTypes;
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
+
+React.initializeTouchEvents(true);
 
 /**
  * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
