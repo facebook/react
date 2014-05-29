@@ -43,7 +43,7 @@ React.renderComponent(
 
 With React you simply pass your event handler as a camelCased prop similar to how you'd do it in normal HTML. React ensures that all events behave identically in IE8 and above by implementing a synthetic event system. That is, React knows how to bubble and capture events according to the spec, and the events passed to your event handler are guaranteed to be consistent with [the W3C spec](http://www.w3.org/TR/DOM-Level-3-Events/), regardless of which browser you're using.
 
-If you'd like to use React on a touch device (i.e. a phone or tablet), simply call `React.initializeTouchEvents(true);` to turn them on.
+If you'd like to use React on a touch device such as a phone or tablet, simply call `React.initializeTouchEvents(true);` to enable touch event handling.
 
 
 ## Under the Hood: Autobinding and Event Delegation
@@ -80,7 +80,7 @@ A common pattern is to create several stateless components that just render data
 
 **State should contain data that a component's event handlers may change to trigger a UI update.** In real apps this data tends to be very small and JSON-serializable. When building a stateful component, think about the minimal possible representation of its state, and only store those properties in `this.state`. Inside of `render()` simply compute any other information you need based on this state. You'll find that thinking about and writing applications in this way tends to lead to the most correct application, since adding redundant or computed values to state means that you need to explicitly keep them in sync rather than rely on React computing them for you.
 
-## What *Shouldn't* Go in State?
+## What *Shouldn’t* Go in State?
 
 `this.state` should only contain the minimal amount of data needed to represent your UI's state. As such, it should not contain:
 
