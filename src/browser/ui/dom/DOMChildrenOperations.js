@@ -118,9 +118,10 @@ var DOMChildrenOperations = {
           updatedChild,
           'processUpdates(): Unable to find child %s of element. This ' +
           'probably means the DOM was unexpectedly mutated (e.g., by the ' +
-          'browser), usually due to forgetting a <tbody> when using tables ' +
-          'or nesting <p> or <a> tags. Try inspecting the child nodes of the ' +
-          'element with React ID `%s`.',
+          'browser), usually due to forgetting a <tbody> when using tables, ' +
+          'nesting <p> or <a> tags, or using non-SVG elements in an <svg> '+
+          'parent. Try inspecting the child nodes of the element with React ' +
+          'ID `%s`.',
           updatedIndex,
           parentID
         );
