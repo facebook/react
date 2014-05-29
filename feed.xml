@@ -7,6 +7,23 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>One Year of Open-Source React</title>
+				<description>&lt;p&gt;Today marks the one-year open-source anniversary of React.&lt;/p&gt;
+
+&lt;p&gt;It’s been a crazy ride. 2.3k commits and 1.5k issues and pull requests later, we’re approaching version 1.0 and nearing 7k Github stars, with big names such as Khan Academy, New York Times, and Airbnb (and naturally, Facebook and Instagram) using React in production, and many more developers blogging their success stories with it. The &lt;a href=&quot;http://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html&quot;&gt;roadmap&lt;/a&gt; gives a glimpse into the future of the library; exciting stuff lies ahead!&lt;/p&gt;
+
+&lt;p&gt;Every success has its story. React was born out of our frustration at existing solutions for building UIs. When it was first suggested at Facebook, few people thought that functionally re-rendering everything and diffing the results could ever perform well. However, support grew after we built the first implementation and people wrote their first components. When we open-sourced React, the initial reception was &lt;a href=&quot;http://www.reddit.com/r/programming/comments/1fak87/react_facebooks_latest_javascript_client_library/&quot;&gt;similarly skeptical&lt;/a&gt;. It challenges many pre-established conventions and received mostly disapproving first-impressions, intermingled with positive ones that often were votes of confidence in Facebook’s engineering capabilities. On an open, competitive platform such as the web, it&amp;#39;s been hard to convince people to try React. &lt;a href=&quot;http://facebook.github.io/react/docs/jsx-in-depth.html&quot;&gt;JSX&lt;/a&gt;, in particular, filtered out a huge chunk of potential early adopters.&lt;/p&gt;
+
+&lt;p&gt;Fast forward one year, React has strongly &lt;a href=&quot;https://news.ycombinator.com/item?id=7489959&quot;&gt;grown in popularity&lt;/a&gt;. Special acknowledgments go to Khan Academy, the ClosureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&amp;#39;d also like to thank all the &lt;a href=&quot;https://github.com/facebook/react/graphs/contributors&quot;&gt;individual contributors&lt;/a&gt; who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&amp;#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&amp;#39;s possible to achieve when we rethink about current “best practices”.&lt;/p&gt;
+
+&lt;p&gt;Here’s to another year!&lt;/p&gt;
+</description>
+				<pubDate>2014-05-29T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/05/29/one-year-of-open-source-react.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/05/29/one-year-of-open-source-react.html</guid>
+			</item>
+		
+			<item>
 				<title>Flux: An Application Architecture for React</title>
 				<description>&lt;p&gt;We recently spoke at one of f8&amp;#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:&lt;/p&gt;
 
@@ -638,72 +655,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-02-16T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #16</title>
-				<description>&lt;p&gt;There have been many posts recently covering the &lt;i&gt;why&lt;/i&gt; and &lt;i&gt;how&lt;/i&gt; of React. This week&amp;#39;s community round-up includes a collection of recent articles to help you get started with React, along with a few posts that explain some of the inner workings.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-a-nutshell&quot;&gt;&lt;/a&gt;React in a nutshell &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-a-nutshell&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Got five minutes to pitch React to your coworkers? John Lynch (&lt;a href=&quot;https://twitter.com/johnrlynch&quot;&gt;@johnrlynch&lt;/a&gt;) put together &lt;a href=&quot;http://slid.es/johnlynch/reactjs&quot;&gt;this excellent and refreshing slideshow&lt;/a&gt;:&lt;/p&gt;
-
-&lt;iframe src=&quot;//slid.es/johnlynch/reactjs/embed&quot; width=&quot;576&quot; height=&quot;420&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; webkitallowfullscreen mozallowfullscreen allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reacts-diff-algorithm&quot;&gt;&lt;/a&gt;React&amp;#39;s diff algorithm &lt;a class=&quot;hash-link&quot; href=&quot;#reacts-diff-algorithm&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;React core team member Christopher Chedeau (&lt;a href=&quot;https://twitter.com/vjeux&quot;&gt;@vjeux&lt;/a&gt;) explores the innards of React&amp;#39;s tree diffing algorithm in this &lt;a href=&quot;http://calendar.perfplanet.com/2013/diff/&quot;&gt;extensive and well-illustrated post&lt;/a&gt;. &lt;figure&gt;&lt;a href=&quot;http://calendar.perfplanet.com/2013/diff/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-diff-tree.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-
-&lt;p&gt;While we&amp;#39;re talking about tree diffing: Matt Esch (&lt;a href=&quot;https://twitter.com/MatthewEsch&quot;&gt;@MatthewEsch&lt;/a&gt;) created &lt;a href=&quot;https://github.com/Matt-Esch/virtual-dom&quot;&gt;this project&lt;/a&gt;, which aims to implement the virtual DOM and a corresponding diff algorithm as separate modules.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;many-many-new-introductions-to-react&quot;&gt;&lt;/a&gt;Many, many new introductions to React! &lt;a class=&quot;hash-link&quot; href=&quot;#many-many-new-introductions-to-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;James Padosley wrote a short post on the basics (and merits) of React: &lt;a href=&quot;http://james.padolsey.com/javascript/what-is-react/&quot;&gt;What is React?&lt;/a&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;What I like most about React is that it doesn&amp;#39;t impose heady design patterns and data-modelling abstractions on me. [...] Its opinions are so minimal and its abstractions so focused on the problem of the DOM, that you can merrily slap your design choices atop.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://james.padolsey.com/javascript/what-is-react/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;Taylor Lapeyre (&lt;a href=&quot;https://twitter.com/taylorlapeyre&quot;&gt;@taylorlapeyre&lt;/a&gt;) wrote another nice &lt;a href=&quot;http://words.taylorlapeyre.me/an-introduction-to-react&quot;&gt;introduction to React&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;React expects you to do the work of getting and pushing data from the server. This makes it very easy to implement React as a front end solution, since it simply expects you to hand it data. React does all the other work.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://words.taylorlapeyre.me/an-introduction-to-react&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://www.webdesignporto.com/react-js-in-pure-javascript-facebook-library/?utm_source=echojs&amp;amp;utm_medium=post&amp;amp;utm_campaign=echojs&quot;&gt;This &amp;quot;Deep explanation for newbies&amp;quot;&lt;/a&gt; by &lt;a href=&quot;https://twitter.com/ProJavaScript&quot;&gt;@ProJavaScript&lt;/a&gt; explains how to get started building a React game without using the optional JSX syntax.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-around-the-world&quot;&gt;&lt;/a&gt;React around the world &lt;a class=&quot;hash-link&quot; href=&quot;#react-around-the-world&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;It&amp;#39;s great to see the React community expand internationally. &lt;a href=&quot;http://habrahabr.ru/post/189230/&quot;&gt;This site&lt;/a&gt; features a React introduction in Russian.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tutorial-series&quot;&gt;&lt;/a&gt;React tutorial series &lt;a class=&quot;hash-link&quot; href=&quot;#react-tutorial-series&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://medium.com/@followchrisp&quot;&gt;Christopher Pitt&lt;/a&gt; explains &lt;a href=&quot;https://medium.com/react-tutorials/828c397e3dc8&quot;&gt;React Components&lt;/a&gt; and &lt;a href=&quot;https://medium.com/react-tutorials/ef11cd55caa0&quot;&gt;React Properties&lt;/a&gt;. The former includes a nice introduction to using JSX, while the latter focuses on adding interactivity and linking multiple components together. Also check out the &lt;a href=&quot;https://medium.com/react-tutorials&quot;&gt;other posts in his React Tutorial series&lt;/a&gt;, e.g. on using &lt;a href=&quot;https://medium.com/react-tutorials/8aaec65a546c&quot;&gt;React + Backbone Model&lt;/a&gt; and &lt;a href=&quot;https://medium.com/react-tutorials/c00be0cf1592&quot;&gt;React + Backbone Router&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;beginner-tutorial-implementing-the-board-game-go&quot;&gt;&lt;/a&gt;Beginner tutorial: Implementing the board game Go &lt;a class=&quot;hash-link&quot; href=&quot;#beginner-tutorial-implementing-the-board-game-go&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;http://cjlarose.com/&quot;&gt;Chris LaRose&lt;/a&gt; walks through the steps of creating a Go app in React, showing how to separate application logic from the rendered components. Check out his &lt;a href=&quot;http://cjlarose.com/2014/01/09/react-board-game-tutorial.html&quot;&gt;tutorial&lt;/a&gt; or go straight to the &lt;a href=&quot;https://github.com/cjlarose/react-go&quot;&gt;code&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;egghead.io-video-tutorials&quot;&gt;&lt;/a&gt;Egghead.io video tutorials &lt;a class=&quot;hash-link&quot; href=&quot;#egghead.io-video-tutorials&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Joe Maddalone (&lt;a href=&quot;https://twitter.com/joemaddalone&quot;&gt;@joemaddalone&lt;/a&gt;) of &lt;a href=&quot;https://egghead.io/&quot;&gt;egghead.io&lt;/a&gt; created a series of React video tutorials, such as &lt;a href=&quot;http://www.youtube.com/watch?v=rFvZydtmsxM&amp;amp;feature=youtu.be&amp;amp;a&quot;&gt;this&lt;/a&gt; introduction to React Components. [&lt;a href=&quot;http://www.youtube.com/watch?v=rFvZydtmsxM&amp;amp;feature=youtu.be&amp;amp;a&quot;&gt;part 1&lt;/a&gt;], [&lt;a href=&quot;http://www.youtube.com/watch?v=5yvFLrt7N8M&quot;&gt;part 2&lt;/a&gt;]&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-finally-a-great-serverclient-web-stack&quot;&gt;&lt;/a&gt;&amp;quot;React: Finally, a great server/client web stack&amp;quot; &lt;a class=&quot;hash-link&quot; href=&quot;#react-finally-a-great-serverclient-web-stack&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Eric Florenzano (&lt;a href=&quot;https://twitter.com/ericflo&quot;&gt;@ericflo&lt;/a&gt;) sheds some light on what makes React perfect for server rendering:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;[...] the ideal solution would fully render the markup on the server, deliver it to the client so that it can be shown to the user instantly. Then it would asynchronously load some Javascript that would attach to the rendered markup, and invisibly promote the page into a full app that can render its own markup. [...]&lt;/p&gt;
-
-&lt;p&gt;What I&amp;#39;ve discovered is that enough of the pieces have come together, that this futuristic-sounding web environment is actually surprisingly easy to do now with React.js.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://eflorenzano.com/blog/2014/01/23/react-finally-server-client/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-a-complex-react-component&quot;&gt;&lt;/a&gt;Building a complex React component &lt;a class=&quot;hash-link&quot; href=&quot;#building-a-complex-react-component&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://matt-harrison.com/&quot;&gt;Matt Harrison&lt;/a&gt; walks through the process of &lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;creating an SVG-based Resistance Calculator&lt;/a&gt; using React. &lt;figure&gt;&lt;a href=&quot;http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/&quot;&gt;&lt;img src=&quot;/react/img/blog/resistance-calculator.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.&lt;/p&gt;&amp;mdash; Anton Astashov (@anton_astashov) &lt;a href=&quot;https://twitter.com/anton_astashov/status/417556491646693378&quot;&gt;December 30, 2013&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[#reactjs]((https://twitter.com/search?q=%23reactjs&amp;src=hash) makes refactoring your HTML as easy &amp; natural as refactoring your javascript [@react_js](https://twitter.com/react_js)&lt;/p&gt;&amp;mdash; Jared Forsyth (@jaredforsyth) &lt;a href=&quot;https://twitter.com/jaredforsyth/status/420304083010854912&quot;&gt;January 6, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Played with react.js for an hour, so many things suddenly became stupidly simple.&lt;/p&gt;&amp;mdash; andrewingram (@andrewingram) &lt;a href=&quot;https://twitter.com/andrewingram/status/422810480701620225&quot;&gt;January 13, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;[@okonetchnikov](https://twitter.com/okonetchnikov) HOLY CRAP react is nice&lt;/p&gt;&amp;mdash; julik (@julikt) &lt;a href=&quot;https://twitter.com/julikt/status/422843478792765440&quot;&gt;January 13, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;brb rewriting everything with react
-&lt;/p&gt;&amp;mdash; Ben Smithett (@bensmithett) &lt;a href=&quot;https://twitter.com/bensmithett/status/430671242186592256&quot;&gt;February 4, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-</description>
-				<pubDate>2014-02-15T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/02/15/community-roundup-16.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/15/community-roundup-16.html</guid>
 			</item>
 		
 	</channel>
