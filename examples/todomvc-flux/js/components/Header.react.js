@@ -45,7 +45,10 @@ var Header = React.createClass({
    * @param {string} text
    */
   _onSave: function(text) {
-    TodoActions.create(text);
+    if(text.trim()){
+      TodoActions.create(text);
+    }
+    
   }
 
 });
