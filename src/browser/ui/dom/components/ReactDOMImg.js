@@ -44,8 +44,8 @@ var ReactDOMImg = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function() {
-    this.trapBubbledEvent(EventConstants.topLevelTypes.topReset, 'load');
-    this.trapBubbledEvent(EventConstants.topLevelTypes.topSubmit, 'error');
+    this.trapBubbledEvent(EventConstants.topLevelTypes.topLoad, 'load');
+    this.trapBubbledEvent(EventConstants.topLevelTypes.topError, 'error');
   }
 });
 
