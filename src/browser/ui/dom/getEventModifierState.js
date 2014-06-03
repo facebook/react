@@ -35,7 +35,10 @@ function getEventModifierState(nativeEvent) {
   // IE8 does not implement getModifierState so we simply map it to the only
   // modifier keys exposed by the event itself, does not support Lock-keys.
   // Currently, all major browsers except Chrome seems to support Lock-keys.
-  return nativeEvent.getModifierState || function(keyArg) {
+  return function(keyArg) {
+    if (nativeEvent.getModifierState) {
+      return nativeEvent.getModifierState(keyArg);
+    }
     var keyProp = modifierKeyToProp[keyArg.toLowerCase()];
     return keyProp && nativeEvent[keyProp];
   };
