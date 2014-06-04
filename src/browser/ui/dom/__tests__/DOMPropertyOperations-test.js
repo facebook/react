@@ -55,6 +55,13 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
+    it('should create markup for namespaced properties', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'xlink:href',
+        '#'
+      )).toBe('xlink:href="#"');
+    });
+
     it('should work with the id attribute', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'id',
