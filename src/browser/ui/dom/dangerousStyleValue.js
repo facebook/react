@@ -54,6 +54,9 @@ function dangerousStyleValue(name, value) {
     return '' + value; // cast to string
   }
 
+  if (typeof value === 'string') {
+    value = value.trim();
+  }
   return value + 'px';
 }
 
