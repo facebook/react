@@ -36,6 +36,7 @@ var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMImg = require('ReactDOMImg');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
+var ReactDOMProgress = require('ReactDOMProgress');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactEventTopLevelCallback = require('ReactEventTopLevelCallback');
@@ -80,6 +81,7 @@ function inject() {
     img: ReactDOMImg,
     input: ReactDOMInput,
     option: ReactDOMOption,
+    progress: ReactDOMProgress,
     select: ReactDOMSelect,
     textarea: ReactDOMTextarea,
 
