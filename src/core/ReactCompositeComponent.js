@@ -40,6 +40,7 @@ var monitorCodeUse = require('monitorCodeUse');
 var mapObject = require('mapObject');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+var copyProperties = require('copyProperties');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -1311,6 +1312,7 @@ var ReactCompositeComponent = {
     Constructor.prototype.constructor = Constructor;
 
     var ConvenienceConstructor = ReactDescriptor.createFactory(Constructor);
+    ConvenienceConstructor.originalSpec = spec;
 
     // TODO: Move statics off of the convenience constructor. That way the
     // factory can be created independently from the main class.
@@ -1355,6 +1357,31 @@ var ReactCompositeComponent = {
     injectMixin: function(mixin) {
       injectedMixins.push(mixin);
     }
+  },
+  configClass: function(reactClass, config){
+
+    if(!ReactDescriptor.isValidFactory(reactClass)){
+      throw new Error("Class must be a React component class");
+    }
+
+    if(reactClass.originalSpec.config === undefined){
+      throw new Error("The provided class must implement config");
+    }
+
+    if(typeof config !== "object"){
+      throw new Error("Config must be an object");
+    }
+
+    // Merge new config values into original config without mutating original
+    var newConfig = copyProperties({}, reactClass.originalSpec.config, config);
+
+    // TODO: in dev log warnings when add attributes to config
+    // rather than updating them
+
+    // Merge new config into original spec without mutating original
+    var spec = copyProperties({}, reactClass.originalSpec, {config:config});
+
+    return ReactCompositeComponent.createClass(spec);
   }
 };
 

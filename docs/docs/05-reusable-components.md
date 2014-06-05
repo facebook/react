@@ -189,3 +189,83 @@ React.renderComponent(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called.
 
+## Componet Configuration
+
+Props are the best way to configure a componet in React, but when a configuration is going to be consistantly applied, its wisest to apply it once. Doing this mitigates the amount others have to understand about the required props being passed at render and thus leads to more consistant view logic. React provides `configClass` to solve this problem.
+
+```javascript
+/** @jsx React.DOM */
+
+var LoginBox = React.createClass({
+  config: {
+    usernameLabel: 'Username'
+  },
+  propTypes: {
+    onSubmit: React.PropTypes.func.isRequired
+  },
+  getDefaultProps: function() {
+    usernameValue: ''
+  },
+  performLogin: function(){
+    this.props.onSubmit();
+  },
+  render: function(){
+    return (
+      <div>
+        {this.config.usernameLabel}: <input type='text' defaultValue={this.props.usernameValue} /> <br />
+        Password: <input type='password' /> <br />
+        <input type='submit' onClick={this.performLogin} />
+      </div>
+    );
+  }
+});
+
+var EmailLoginBox = React.configClass(LoginBox, {usernameLabel:'Email'});
+
+```
+
+A nice feature about configClass is that it does not modify the original class passed. This means you are able to setup as many basic configurations as needed without worrying about the effect it will have on base componet implementations.
+
+```javascript
+
+var PostLineItem = React.createClass({
+  config: {
+    typeImage: '/imgs/post-default.jpg'
+  },
+  render: function(){
+    return (
+      <li>
+        <img src={this.config.typeImage} />
+        {this.props.title}
+      </li>
+    );
+  }
+}).
+
+var NewsPostLI = React.configClass(PostLineItem, {typeImage: '/imgs/posts-news.jpg'});
+var MemePostLI = React.configClass(PostLineItem, {typeImage: '/imgs/post-meme.jpg'});
+
+var PostList = React.createClass({
+  render: function(){
+    var posts = [];
+    for(var i=0; i<this.props.posts.length; i++){
+      var postData = this.props.posts[i];
+      if(postData.type==='news'){
+        posts.push(<NewsPostLI title={postData.title} />);
+      }
+      else if(postData.type==='meme'){
+        posts.push(<MemePostLI title={postData.title} />);
+      }
+      else{
+        posts.push(<PostLineItem title={postData.title} />);
+      }
+    }
+
+    return (
+      <ul>
+        {posts}
+      </ul>
+    );
+  }
+});
+```
