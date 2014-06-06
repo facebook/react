@@ -48,6 +48,7 @@ React.addons = {
 };
 
 if (__DEV__) {
+  React.addons.Perf = require('ReactDefaultPerf');
   React.addons.TestUtils = require('ReactTestUtils');
 }
 
