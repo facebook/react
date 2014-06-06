@@ -136,7 +136,39 @@ var ReactTestUtils = {
 
   /**
    * Finds all instance of components in the rendered tree that are DOM
-   * components with the class name matching `className`.
+   * components with the prop matching `propValue`.
+   * @return an array of all the matches.
+   */
+  scryRenderedDOMComponentsWithProp: function(root, propName, propValue) {
+    return ReactTestUtils.findAllInRenderedTree(root, function(inst) {
+      return ReactTestUtils.isDOMComponent(inst) &&
+        inst.props.hasOwnProperty(propName) &&
+        inst.props[propName] === propValue;
+    });
+  },
+
+  /**
+   * Like scryRenderedDOMComponentsWithProp but expects there to be one result,
+   * and returns that one result, or throws exception if there is any other
+   * number of matches besides one.
+   * @return {!ReactDOMComponent} The one match.
+   */
+  findRenderedDOMComponentWithProp: function(root, propName, propValue) {
+    var all = ReactTestUtils.scryRenderedDOMComponentsWithProp(
+      root,
+      propName,
+      propValue
+    );
+    if (all.length !== 1) {
+      throw new Error(
+        'Did not find exactly one match for ' + propName + ':' + propValue
+      );
+    }
+    return all[0];
+  },
+
+  /**
+   * A handy version of `scryRenderedDOMComponentsWithProp` for class.
    * @return an array of all the matches.
    */
   scryRenderedDOMComponentsWithClass: function(root, className) {
@@ -163,7 +195,6 @@ var ReactTestUtils = {
     }
     return all[0];
   },
-
 
   /**
    * Finds all instance of components in the rendered tree that are DOM
