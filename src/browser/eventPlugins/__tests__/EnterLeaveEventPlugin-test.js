@@ -46,9 +46,10 @@ describe('EnterLeaveEventPlugin', function() {
 
     var iframeDocument = iframe.contentDocument;
 
-    if (!iframeDocument.innerHTML) {
-      iframeDocument.innerHTML = '<html><head></head><body></body></html>';
-    }
+    iframeDocument.write(
+      '<!DOCTYPE html><html><head></head><body></body></html>'
+    );
+    iframeDocument.close();
 
     var component = React.renderComponent(<div />, iframeDocument.body);
     var div = component.getDOMNode();
