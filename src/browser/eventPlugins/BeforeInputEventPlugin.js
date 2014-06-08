@@ -206,7 +206,7 @@ var BeforeInputEventPlugin = {
       return;
     }
 
-    var event = SyntheticInputEvent.getPooled(
+    var event = new SyntheticInputEvent(
       eventTypes.beforeInput,
       topLevelTargetID,
       nativeEvent

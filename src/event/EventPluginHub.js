@@ -53,10 +53,6 @@ var executeDispatchesAndRelease = function(event) {
       executeDispatch = PluginModule.executeDispatch;
     }
     EventPluginUtils.executeDispatchesInOrder(event, executeDispatch);
-
-    if (!event.isPersistent()) {
-      event.constructor.release(event);
-    }
   }
 };
 

@@ -169,22 +169,19 @@ function setResponderAndExtractTransfer(
     eventTypes.scrollShouldSetResponder;
 
   var bubbleShouldSetFrom = responderID || topLevelTargetID;
-  var shouldSetEvent = SyntheticEvent.getPooled(
+  var shouldSetEvent = new SyntheticEvent(
     shouldSetEventType,
     bubbleShouldSetFrom,
     nativeEvent
   );
   EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
   var wantsResponderID = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
-  if (!shouldSetEvent.isPersistent()) {
-    shouldSetEvent.constructor.release(shouldSetEvent);
-  }
 
   if (!wantsResponderID || wantsResponderID === responderID) {
     return null;
   }
   var extracted;
-  var grantEvent = SyntheticEvent.getPooled(
+  var grantEvent = new SyntheticEvent(
     eventTypes.responderGrant,
     wantsResponderID,
     nativeEvent
@@ -192,7 +189,7 @@ function setResponderAndExtractTransfer(
 
   EventPropagators.accumulateDirectDispatches(grantEvent);
   if (responderID) {
-    var terminationRequestEvent = SyntheticEvent.getPooled(
+    var terminationRequestEvent = new SyntheticEvent(
       eventTypes.responderTerminationRequest,
       responderID,
       nativeEvent
@@ -200,13 +197,10 @@ function setResponderAndExtractTransfer(
     EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
     var shouldSwitch = !hasDispatches(terminationRequestEvent) ||
       executeDirectDispatch(terminationRequestEvent);
-    if (!terminationRequestEvent.isPersistent()) {
-      terminationRequestEvent.constructor.release(terminationRequestEvent);
-    }
 
     if (shouldSwitch) {
       var terminateType = eventTypes.responderTerminate;
-      var terminateEvent = SyntheticEvent.getPooled(
+      var terminateEvent = new SyntheticEvent(
         terminateType,
         responderID,
         nativeEvent
@@ -215,7 +209,7 @@ function setResponderAndExtractTransfer(
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
       responderID = wantsResponderID;
     } else {
-      var rejectEvent = SyntheticEvent.getPooled(
+      var rejectEvent = new SyntheticEvent(
         eventTypes.responderReject,
         wantsResponderID,
         nativeEvent
@@ -297,7 +291,7 @@ var ResponderEventPlugin = {
       isEndish(topLevelType) ? eventTypes.responderRelease :
       isStartish(topLevelType) ? eventTypes.responderStart : null;
     if (type) {
-      var gesture = SyntheticEvent.getPooled(
+      var gesture = new SyntheticEvent(
         type,
         responderID || '',
         nativeEvent
