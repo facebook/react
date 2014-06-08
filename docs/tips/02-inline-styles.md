@@ -15,10 +15,11 @@ In React, inline styles are not specified as a string. Instead they are specifie
 var divStyle = {
   color: 'white',
   backgroundImage: 'url(' + imgUrl + ')',
-  WebkitTransition: 'all' // note the capital 'W' here
+  WebkitTransition: 'all', // note the capital 'W' here
+  msTransition: 'all' // 'ms' is the only lowercase vendor prefix
 };
 
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
-Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. `node.style.backgroundImage`). Vendor prefixes should begin with a capital letter. This is why `WebkitTransition` has an uppercase "W".
+Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. `node.style.backgroundImage`). Vendor prefixes [other than `ms`](http://www.andismith.com/blog/2012/02/modernizr-prefixed/) should begin with a capital letter. This is why `WebkitTransition` has an uppercase "W".
