@@ -136,8 +136,12 @@ describe('ReactDOMInput', function() {
     var node = stub.getDOMNode();
 
     // The value shouldn't be '', or else the button will have no text; it
-    // should have the default "Submit" or "Submit Query" label
-    expect(node.hasAttribute('value')).toBe(false);
+    // should have the default "Submit" or "Submit Query" label. Most browsers
+    // report this as not having a `value` attribute at all; IE reports it as
+    // the actual label that the user sees.
+    expect(
+      !node.hasAttribute('value') || node.getAttribute('value').length > 0
+    ).toBe(true);
   });
 
   it('should control radio buttons', function() {
