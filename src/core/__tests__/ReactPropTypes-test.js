@@ -274,36 +274,39 @@ describe('Component Type', function() {
 describe('Instance Types', function() {
   it("should warn for invalid instances", function() {
     function Person() {}
+    var personName = Person.name || '<<anonymous>>';
+    var dateName = Date.name || '<<anonymous>>';
+    var regExpName = RegExp.name || '<<anonymous>>';
 
     typeCheckFail(
       PropTypes.instanceOf(Person),
       false,
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `Person`.'
+      'instance of `' + personName + '`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(Person),
       {},
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `Person`.'
+      'instance of `' + personName + '`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(Person),
       '',
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `Person`.'
+      'instance of `' + personName + '`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(Date),
       {},
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `Date`.'
+      'instance of `' + dateName + '`.'
     );
     typeCheckFail(
       PropTypes.instanceOf(RegExp),
       {},
       'Invalid prop `testProp` supplied to `testComponent`, expected ' +
-      'instance of `RegExp`.'
+      'instance of `' + regExpName + '`.'
     );
   });
 
