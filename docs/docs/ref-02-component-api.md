@@ -27,9 +27,13 @@ If this component has been mounted into the DOM, this returns the corresponding 
 setProps(object nextProps[, function callback])
 ```
 
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`. Simply call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed.
+When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`.
+
+Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed.
 
 > Note:
+>
+> When possible, the declarative approach of calling `React.renderComponent()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
 >
 > This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
 
