@@ -401,6 +401,11 @@ describe('React Component Types', function() {
     typeCheckPass(PropTypes.renderable.isRequired, []);
     typeCheckPass(PropTypes.renderable.isRequired, {});
   });
+
+  it('should accept an array of null or undefined for required props', function() {
+    typeCheckPass(PropTypes.renderable.isRequired, [null]);
+    typeCheckPass(PropTypes.renderable.isRequired, [undefined]);
+  });
 });
 
 describe('OneOf Types', function() {
