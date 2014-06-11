@@ -97,6 +97,11 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.lineHeight).toEqual('0.5');
+
+      stub.receiveComponent({props: { style: undefined }}, transaction);
+      expect(stubStyle.display).toBe('');
+      expect(stubStyle.fontFamily).toBe('');
+      expect(stubStyle.lineHeight).toBe('');
     });
 
     it("should update styles if initially null", function() {
