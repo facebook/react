@@ -174,6 +174,7 @@ var ReactDOM = mapObject({
   // SVG
   circle: false,
   defs: false,
+  ellipse: false,
   g: false,
   line: false,
   linearGradient: false,

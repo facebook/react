@@ -31,7 +31,7 @@ thead time title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle defs g line linearGradient path polygon polyline radialGradient rect
+circle defs ellipse g line linearGradient path polygon polyline radialGradient rect
 stop svg text
 ```
 
