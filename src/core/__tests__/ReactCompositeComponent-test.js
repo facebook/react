@@ -376,6 +376,29 @@ describe('ReactCompositeComponent', function() {
 
   });
 
+  it('should auto bind before getDefaultProps', function() {
+    var calls = 0;
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {
+          onClick: this.defaultClickHandler
+        };
+      },
+      defaultClickHandler: function() {
+        expect(this).toBe(instance);
+        calls++;
+      },
+      render: function() {
+        return <div onClick={this.props.onClick}></div>;
+      }
+    });
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    var handler = instance.props.onClick;
+    // Call handler with no context
+    handler();
+    expect(calls).toBe(1);
+  });
+
   it('should use default values for undefined props', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
