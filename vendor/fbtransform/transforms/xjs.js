@@ -222,14 +222,16 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   utils.move(object.range[0] + 1, state);
   traverse(object.expression, path, state);
 
+  // Minus 1 to skip `}`.
+  utils.catchup(object.range[1] - 1, state, trimLeft);
+
   if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
-    // If we need to append a comma, make sure to do so after the expression.
-    utils.catchup(object.expression.range[1], state, trimLeft);
+    // #1673 Since parentheses aren't part of object.expression, skip to before
+    // `}` instead of to the end of the expression. For multi-line expressions
+    // the comma will end up where `}` is and not directly after the expression.
     utils.append(', ', state);
   }
 
-  // Minus 1 to skip `}`.
-  utils.catchup(object.range[1] - 1, state, trimLeft);
   utils.move(object.range[1], state);
   return false;
 }
