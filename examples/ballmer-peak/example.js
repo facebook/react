@@ -32,7 +32,7 @@ var BallmerPeakCalculator = React.createClass({
         <p>
           If your BAC is{' '}
           <input type="text" onChange={this.handleChange} value={this.state.bac} />
-          {', '}then <b>{pct}</b> of your lines of code will have bugs.
+          {', '}then <b>{pct}</b> of your lines of code will be bug free.
         </p>
       </div>
     );
