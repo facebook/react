@@ -37,13 +37,15 @@ var COMMAND_UNSHIFT = keyOf({$unshift: null});
 var COMMAND_SPLICE = keyOf({$splice: null});
 var COMMAND_SET = keyOf({$set: null});
 var COMMAND_MERGE = keyOf({$merge: null});
+var COMMAND_APPLY = keyOf({$apply: null});
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,
   COMMAND_UNSHIFT,
   COMMAND_SPLICE,
   COMMAND_SET,
-  COMMAND_MERGE
+  COMMAND_MERGE,
+  COMMAND_APPLY
 ];
 
 var ALL_COMMANDS_SET = {};
@@ -145,6 +147,16 @@ function update(value, spec) {
       );
       nextValue.splice.apply(nextValue, args);
     });
+  }
+
+  if (spec.hasOwnProperty(COMMAND_APPLY)) {
+    invariant(
+      typeof spec[COMMAND_APPLY] === 'function',
+      'update(): expected spec of %s to be a function; got %s.',
+      COMMAND_APPLY,
+      spec[COMMAND_APPLY]
+    );
+    nextValue = spec[COMMAND_APPLY](nextValue);
   }
 
   for (var k in spec) {
