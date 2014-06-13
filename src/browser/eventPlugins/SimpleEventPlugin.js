@@ -32,6 +32,7 @@ var SyntheticDragEvent = require('SyntheticDragEvent');
 var SyntheticTouchEvent = require('SyntheticTouchEvent');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
+var SyntheticPointerEvent = require('SyntheticPointerEvent');
 
 var emptyFunction = require('emptyFunction');
 var invariant = require('invariant');
@@ -130,6 +131,12 @@ var eventTypes = {
       captured: keyOf({onFocusCapture: true})
     }
   },
+  gotPointerCapture: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onGotPointerCapture: true}),
+      captured: keyOf({onGotPointerCaptureCapture: true})
+    }
+  },
   input: {
     phasedRegistrationNames: {
       bubbled: keyOf({onInput: true}),
@@ -158,6 +165,12 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onLoad: true}),
       captured: keyOf({onLoadCapture: true})
+    }
+  },
+  lostPointerCapture: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onLostPointerCapture: true}),
+      captured: keyOf({onLostPointerCaptureCapture: true})
     }
   },
   error: {
@@ -202,6 +215,42 @@ var eventTypes = {
     phasedRegistrationNames: {
       bubbled: keyOf({onPaste: true}),
       captured: keyOf({onPasteCapture: true})
+    }
+  },
+  pointerCancel: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerCancel: true}),
+      captured: keyOf({onPointerCancelCapture: true})
+    }
+  },
+  pointerDown: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerDown: true}),
+      captured: keyOf({onPointerDownCapture: true})
+    }
+  },
+  pointerMove: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerMove: true}),
+      captured: keyOf({onPointerMoveCapture: true})
+    }
+  },
+  pointerOut: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerOut: true}),
+      captured: keyOf({onPointerOutCapture: true})
+    }
+  },
+  pointerOver: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerOver: true}),
+      captured: keyOf({onPointerOverCapture: true})
+    }
+  },
+  pointerUp: {
+    phasedRegistrationNames: {
+      bubbled: keyOf({onPointerUp: true}),
+      captured: keyOf({onPointerUpCapture: true})
     }
   },
   reset: {
@@ -255,41 +304,49 @@ var eventTypes = {
 };
 
 var topLevelEventsToDispatchConfig = {
-  topBlur:        eventTypes.blur,
-  topClick:       eventTypes.click,
+  topBlur: eventTypes.blur,
+  topClick: eventTypes.click,
   topContextMenu: eventTypes.contextMenu,
-  topCopy:        eventTypes.copy,
-  topCut:         eventTypes.cut,
+  topCopy: eventTypes.copy,
+  topCut: eventTypes.cut,
   topDoubleClick: eventTypes.doubleClick,
-  topDrag:        eventTypes.drag,
-  topDragEnd:     eventTypes.dragEnd,
-  topDragEnter:   eventTypes.dragEnter,
-  topDragExit:    eventTypes.dragExit,
-  topDragLeave:   eventTypes.dragLeave,
-  topDragOver:    eventTypes.dragOver,
-  topDragStart:   eventTypes.dragStart,
-  topDrop:        eventTypes.drop,
-  topError:       eventTypes.error,
-  topFocus:       eventTypes.focus,
-  topInput:       eventTypes.input,
-  topKeyDown:     eventTypes.keyDown,
-  topKeyPress:    eventTypes.keyPress,
-  topKeyUp:       eventTypes.keyUp,
-  topLoad:        eventTypes.load,
-  topMouseDown:   eventTypes.mouseDown,
-  topMouseMove:   eventTypes.mouseMove,
-  topMouseOut:    eventTypes.mouseOut,
-  topMouseOver:   eventTypes.mouseOver,
-  topMouseUp:     eventTypes.mouseUp,
-  topPaste:       eventTypes.paste,
-  topReset:       eventTypes.reset,
-  topScroll:      eventTypes.scroll,
-  topSubmit:      eventTypes.submit,
+  topDrag: eventTypes.drag,
+  topDragEnd: eventTypes.dragEnd,
+  topDragEnter: eventTypes.dragEnter,
+  topDragExit: eventTypes.dragExit,
+  topDragLeave: eventTypes.dragLeave,
+  topDragOver: eventTypes.dragOver,
+  topDragStart: eventTypes.dragStart,
+  topDrop: eventTypes.drop,
+  topError: eventTypes.error,
+  topFocus: eventTypes.focus,
+  topGotPointerCapture: eventTypes.gotPointerCapture,
+  topInput: eventTypes.input,
+  topKeyDown: eventTypes.keyDown,
+  topKeyPress: eventTypes.keyPress,
+  topKeyUp: eventTypes.keyUp,
+  topLoad: eventTypes.load,
+  topLostPointerCapture: eventTypes.lostPointerCapture,
+  topMouseDown: eventTypes.mouseDown,
+  topMouseMove: eventTypes.mouseMove,
+  topMouseOut: eventTypes.mouseOut,
+  topMouseOver: eventTypes.mouseOver,
+  topMouseUp: eventTypes.mouseUp,
+  topPaste: eventTypes.paste,
+  topPointerCancel: eventTypes.pointerCancel,
+  topPointerDown: eventTypes.pointerDown,
+  topPointerMove: eventTypes.pointerMove,
+  topPointerOut: eventTypes.pointerOut,
+  topPointerOver: eventTypes.pointerOver,
+  topPointerUp: eventTypes.pointerUp,
+  topReset: eventTypes.reset,
+  topScroll: eventTypes.scroll,
+  topSubmit: eventTypes.submit,
   topTouchCancel: eventTypes.touchCancel,
-  topTouchEnd:    eventTypes.touchEnd,
-  topTouchMove:   eventTypes.touchMove,
-  topTouchStart:  eventTypes.touchStart,
-  topWheel:       eventTypes.wheel
+  topTouchEnd: eventTypes.touchEnd,
+  topTouchMove: eventTypes.touchMove,
+  topTouchStart: eventTypes.touchStart,
+  topWheel: eventTypes.wheel
 };
 
 for (var topLevelType in topLevelEventsToDispatchConfig) {
@@ -377,6 +434,16 @@ var SimpleEventPlugin = {
       case topLevelTypes.topMouseOver:
       case topLevelTypes.topMouseUp:
         EventConstructor = SyntheticMouseEvent;
+        break;
+      case topLevelTypes.topPointerCancel:
+      case topLevelTypes.topPointerDown:
+      case topLevelTypes.topPointerMove:
+      case topLevelTypes.topPointerOut:
+      case topLevelTypes.topPointerOver:
+      case topLevelTypes.topPointerUp:
+      case topLevelTypes.topGotPointerCapture:
+      case topLevelTypes.topLostPointerCapture:
+        EventConstructor = SyntheticPointerEvent;
         break;
       case topLevelTypes.topDrag:
       case topLevelTypes.topDragEnd:

@@ -48,16 +48,20 @@ var topLevelTypes = EventConstants.topLevelTypes;
 
 function isEndish(topLevelType) {
   return topLevelType === topLevelTypes.topMouseUp ||
+         topLevelType === topLevelTypes.topPointerUp ||
+         topLevelType === topLevelTypes.topPointerCancel ||
          topLevelType === topLevelTypes.topTouchEnd ||
          topLevelType === topLevelTypes.topTouchCancel;
 }
 
 function isMoveish(topLevelType) {
   return topLevelType === topLevelTypes.topMouseMove ||
+         topLevelType === topLevelTypes.topPointerMove ||
          topLevelType === topLevelTypes.topTouchMove;
 }
 function isStartish(topLevelType) {
   return topLevelType === topLevelTypes.topMouseDown ||
+         topLevelType === topLevelTypes.topPointerDown ||
          topLevelType === topLevelTypes.topTouchStart;
 }
 

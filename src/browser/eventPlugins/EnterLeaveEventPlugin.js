@@ -22,6 +22,7 @@
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
+var SyntheticPointerEvent = require('SyntheticPointerEvent');
 
 var ReactMount = require('ReactMount');
 var keyOf = require('keyOf');
@@ -42,6 +43,20 @@ var eventTypes = {
     dependencies: [
       topLevelTypes.topMouseOut,
       topLevelTypes.topMouseOver
+    ]
+  },
+  pointerEnter: {
+    registrationName: keyOf({onPointerEnter: null}),
+    dependencies: [
+      topLevelTypes.topPointerOut,
+      topLevelTypes.topPointerOver
+    ]
+  },
+  pointerLeave: {
+    registrationName: keyOf({onPointerLeave: null}),
+    dependencies: [
+      topLevelTypes.topPointerOut,
+      topLevelTypes.topPointerOver
     ]
   }
 };
@@ -71,13 +86,20 @@ var EnterLeaveEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    if (topLevelType === topLevelTypes.topMouseOver &&
-        (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
+    var isOverEvent = (
+      topLevelType === topLevelTypes.topMouseOver ||
+      topLevelType === topLevelTypes.topPointerOver
+    );
+    var isOutEvent = (
+      topLevelType === topLevelTypes.topMouseOut ||
+      topLevelType === topLevelTypes.topPointerOut
+    );
+
+    if (!isOverEvent && !isOutEvent) {
+      // Must not be a mouse/pointer in or out - ignoring.
       return null;
     }
-    if (topLevelType !== topLevelTypes.topMouseOut &&
-        topLevelType !== topLevelTypes.topMouseOver) {
-      // Must not be a mouse in or mouse out - ignoring.
+    if (isOverEvent && (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
       return null;
     }
 
@@ -88,19 +110,16 @@ var EnterLeaveEventPlugin = {
     } else {
       // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
       var doc = topLevelTarget.ownerDocument;
-      if (doc) {
-        win = doc.defaultView || doc.parentWindow;
-      } else {
-        win = window;
-      }
+      win = doc ? doc.defaultView || doc.parentWindow : window;
     }
 
     var from, to;
-    if (topLevelType === topLevelTypes.topMouseOut) {
+    if (isOutEvent) {
       from = topLevelTarget;
-      to =
+      to = (
         getFirstReactDOM(nativeEvent.relatedTarget || nativeEvent.toElement) ||
-        win;
+        win
+      );
     } else {
       from = win;
       to = topLevelTarget;
@@ -111,24 +130,32 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
+    var eventInterface, leaveEventType, enterEventType, eventTypePrefix;
+
+    if (topLevelType === topLevelTypes.topMouseOut ||
+        topLevelType === topLevelTypes.topMouseOver) {
+      eventInterface = SyntheticMouseEvent;
+      leaveEventType = eventTypes.mouseLeave;
+      enterEventType = eventTypes.mouseEnter;
+      eventTypePrefix = 'mouse';
+    } else if (topLevelType === topLevelTypes.topPointerOut ||
+               topLevelType === topLevelTypes.topPointerOver) {
+      eventInterface = SyntheticPointerEvent;
+      leaveEventType = eventTypes.pointerLeave;
+      enterEventType = eventTypes.pointerEnter;
+      eventTypePrefix = 'pointer';
+    }
+
     var fromID = from ? ReactMount.getID(from) : '';
     var toID = to ? ReactMount.getID(to) : '';
 
-    var leave = SyntheticMouseEvent.getPooled(
-      eventTypes.mouseLeave,
-      fromID,
-      nativeEvent
-    );
-    leave.type = 'mouseleave';
+    var leave = eventInterface.getPooled(leaveEventType, fromID, nativeEvent);
+    leave.type = eventTypePrefix + 'leave';
     leave.target = from;
     leave.relatedTarget = to;
 
-    var enter = SyntheticMouseEvent.getPooled(
-      eventTypes.mouseEnter,
-      toID,
-      nativeEvent
-    );
-    enter.type = 'mouseenter';
+    var enter = eventInterface.getPooled(enterEventType, fromID, nativeEvent);
+    enter.type = eventTypePrefix + 'enter';
     enter.target = to;
     enter.relatedTarget = from;
 

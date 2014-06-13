@@ -66,7 +66,11 @@ function getDistance(coords, nativeEvent) {
 var dependencies = [
   topLevelTypes.topMouseDown,
   topLevelTypes.topMouseMove,
-  topLevelTypes.topMouseUp
+  topLevelTypes.topMouseUp,
+  topLevelTypes.topPointerCancel,
+  topLevelTypes.topPointerDown,
+  topLevelTypes.topPointerMove,
+  topLevelTypes.topPointerUp
 ];
 
 if (EventPluginUtils.useTouchEvents) {
