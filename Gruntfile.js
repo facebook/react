@@ -3,6 +3,7 @@
 var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
+var closureTask = require('./grunt/tasks/closure');
 var populistTask = require('./grunt/tasks/populist');
 var webdriverPhantomJSTask = require('./grunt/tasks/webdriver-phantomjs');
 var webdriverJasmineTasks = require('./grunt/tasks/webdriver-jasmine');
@@ -54,6 +55,8 @@ module.exports = function(grunt) {
   // Our own browserify-based tasks to build a single JS file build
   grunt.registerMultiTask('browserify', browserifyTask);
 
+  grunt.registerTask('closure', closureTask);
+
   grunt.registerMultiTask('populist', populistTask);
 
   grunt.registerTask('sauce-tunnel', sauceTunnelTask);
@@ -70,15 +73,16 @@ module.exports = function(grunt) {
 
   grunt.registerTask('version-check', versionCheckTask);
 
-  grunt.registerTask('build:basic', ['jsx:normal', 'version-check', 'browserify:basic']);
-  grunt.registerTask('build:addons', ['jsx:normal', 'browserify:addons']);
+  grunt.registerTask('build:basic', ['jsx:normal', 'version-check', 'browserify:basic', 'closure']);
+  grunt.registerTask('build:addons', ['jsx:normal', 'browserify:addons', 'closure']);
   grunt.registerTask('build:transformer', ['jsx:normal', 'browserify:transformer']);
-  grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'browserify:min']);
-  grunt.registerTask('build:addons-min', ['jsx:normal', 'browserify:addonsMin']);
+  grunt.registerTask('build:min', ['jsx:normal', 'version-check', 'browserify:min', 'closure']);
+  grunt.registerTask('build:addons-min', ['jsx:normal', 'browserify:addonsMin', 'closure']);
   grunt.registerTask('build:withCodeCoverageLogging', [
     'jsx:normal',
     'version-check',
-    'browserify:withCodeCoverageLogging'
+    'browserify:withCodeCoverageLogging',
+    'closure'
   ]);
   grunt.registerTask('build:perf', [
     'jsx:normal',
@@ -86,6 +90,7 @@ module.exports = function(grunt) {
     'browserify:transformer',
     'browserify:basic',
     'browserify:min',
+    'closure',
     'download-previous-version'
   ]);
   grunt.registerTask('build:test', [
