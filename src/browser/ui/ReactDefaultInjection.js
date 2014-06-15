@@ -26,6 +26,7 @@ var DefaultEventPluginOrder = require('DefaultEventPluginOrder');
 var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
+var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
@@ -70,6 +71,7 @@ function inject() {
     EnterLeaveEventPlugin: EnterLeaveEventPlugin,
     ChangeEventPlugin: ChangeEventPlugin,
     CompositionEventPlugin: CompositionEventPlugin,
+    MobileSafariClickEventPlugin: MobileSafariClickEventPlugin,
     SelectEventPlugin: SelectEventPlugin,
     BeforeInputEventPlugin: BeforeInputEventPlugin
   });
