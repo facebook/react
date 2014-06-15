@@ -1201,7 +1201,10 @@ describe('ReactCompositeComponent', function() {
         abc: 'def',
         def: 0,
         ghi: null,
-        jkl: 'mno'
+        jkl: 'mno',
+        pqr: function() {
+          return this;
+        }
       },
 
       render: function() {
@@ -1218,6 +1221,8 @@ describe('ReactCompositeComponent', function() {
     expect(Component.ghi).toBe(null);
     expect(instance.constructor.jkl).toBe('mno');
     expect(Component.jkl).toBe('mno');
+    expect(instance.constructor.pqr()).toBe(Component.type);
+    expect(Component.pqr()).toBe(Component.type);
   });
 
   it('should support statics in mixins', function() {

@@ -549,7 +549,9 @@ function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
       );
       result = createChainedFunction(existingProperty, property);
     }
-    ConvenienceConstructor[name] = result;
+    ConvenienceConstructor[name] = typeof result === 'function' ?
+      result.bind(ConvenienceConstructor.type) :
+      result;
     ConvenienceConstructor.type[name] = result;
   }
 }
