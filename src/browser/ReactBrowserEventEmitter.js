@@ -13,29 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactEventEmitter
+ * @providesModule ReactBrowserEventEmitter
  * @typechecks static-only
  */
 
 "use strict";
 
 var EventConstants = require('EventConstants');
-var EventListener = require('EventListener');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginRegistry = require('EventPluginRegistry');
-var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
-var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var merge = require('merge');
 
 /**
- * Summary of `ReactEventEmitter` event handling:
+ * Summary of `ReactBrowserEventEmitter` event handling:
  *
- *  - Top-level delegation is used to trap native browser events. We normalize
- *    and de-duplicate events to account for browser quirks.
+ *  - Top-level delegation is used to trap most native browser events. This
+ *    may only occur in the main thread and is the responsibility of
+ *    ReactEventListener, which is injected and can therefore support pluggable
+ *    event sources. This is the only work that occurs in the main thread.
+ *
+ *  - We normalize and de-duplicate events to account for browser quirks. This
+ *    may be done in the worker thread.
  *
  *  - Forward these native events (with the associated top-level type used to
  *    trap it) to `EventPluginHub`, which in turn will ask plugins if they want
@@ -48,11 +50,16 @@ var merge = require('merge');
  *
  * Overview of React and the event system:
  *
- *                   .
  * +------------+    .
  * |    DOM     |    .
+ * +------------+    .
+ *       |           .
+ *       v           .
+ * +------------+    .
+ * | ReactEvent |    .
+ * |  Listener  |    .
  * +------------+    .                         +-----------+
- *       +           .               +--------+|SimpleEvent|
+ *       |           .               +--------+|SimpleEvent|
  *       |           .               |         |Plugin     |
  * +-----|------+    .               v         +-----------+
  * |     |      |    .    +--------------+                    +------------+
@@ -139,68 +146,31 @@ function getListeningForDocument(mountAt) {
 }
 
 /**
- * Traps top-level events by using event bubbling.
+ * `ReactBrowserEventEmitter` is used to attach top-level event listeners. For
+ * example:
  *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
- * @param {DOMEventTarget} element Element on which to attach listener.
- * @return {object} An object with a remove function which will forcefully
- *                  remove the listener.
- * @internal
- */
-function trapBubbledEvent(topLevelType, handlerBaseName, element) {
-  return EventListener.listen(
-    element,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
- * Traps a top-level event by using event capturing.
- *
- * @param {string} topLevelType Record from `EventConstants`.
- * @param {string} handlerBaseName Event name (e.g. "click").
- * @param {DOMEventTarget} element Element on which to attach listener.
- * @return {object} An object with a remove function which will forcefully
- *                  remove the listener.
- * @internal
- */
-function trapCapturedEvent(topLevelType, handlerBaseName, element) {
-  return EventListener.capture(
-    element,
-    handlerBaseName,
-    ReactEventEmitter.TopLevelCallbackCreator.createTopLevelCallback(
-      topLevelType
-    )
-  );
-}
-
-/**
- * `ReactEventEmitter` is used to attach top-level event listeners. For example:
- *
- *   ReactEventEmitter.putListener('myID', 'onClick', myFunction);
+ *   ReactBrowserEventEmitter.putListener('myID', 'onClick', myFunction);
  *
  * This would allocate a "registration" of `('onClick', myFunction)` on 'myID'.
  *
  * @internal
  */
-var ReactEventEmitter = merge(ReactEventEmitterMixin, {
+var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
 
   /**
-   * React references `ReactEventTopLevelCallback` using this property in order
-   * to allow dependency injection.
+   * Injectable event backend
    */
-  TopLevelCallbackCreator: null,
+  ReactEventListener: null,
 
   injection: {
     /**
-     * @param {function} TopLevelCallbackCreator
+     * @param {object} ReactEventListener
      */
-    injectTopLevelCallbackCreator: function(TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator = TopLevelCallbackCreator;
+    injectReactEventListener: function(ReactEventListener) {
+      ReactEventListener.setHandleTopLevel(
+        ReactBrowserEventEmitter.handleTopLevel
+      );
+      ReactBrowserEventEmitter.ReactEventListener = ReactEventListener;
     }
   },
 
@@ -210,13 +180,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {boolean} enabled True if callbacks should be enabled.
    */
   setEnabled: function(enabled) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'setEnabled(...): Cannot toggle event listening in a Worker thread. ' +
-      'This is likely a bug in the framework. Please report immediately.'
-    );
-    if (ReactEventEmitter.TopLevelCallbackCreator) {
-      ReactEventEmitter.TopLevelCallbackCreator.setEnabled(enabled);
+    if (ReactBrowserEventEmitter.ReactEventListener) {
+      ReactBrowserEventEmitter.ReactEventListener.setEnabled(enabled);
     }
   },
 
@@ -225,8 +190,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    */
   isEnabled: function() {
     return !!(
-      ReactEventEmitter.TopLevelCallbackCreator &&
-      ReactEventEmitter.TopLevelCallbackCreator.isEnabled()
+      ReactBrowserEventEmitter.ReactEventListener &&
+      ReactBrowserEventEmitter.ReactEventListener.isEnabled()
     );
   },
 
@@ -249,10 +214,10 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
    * they bubble to document.
    *
    * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {DOMDocument} contentDocument Document which owns the container
+   * @param {object} contentDocumentHandle Document which owns the container
    */
-  listenTo: function(registrationName, contentDocument) {
-    var mountAt = contentDocument;
+  listenTo: function(registrationName, contentDocumentHandle) {
+    var mountAt = contentDocumentHandle;
     var isListening = getListeningForDocument(mountAt);
     var dependencies = EventPluginRegistry.
       registrationNameDependencies[registrationName];
@@ -268,47 +233,100 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
         if (topLevelType === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
-            trapBubbledEvent(topLevelTypes.topWheel, 'wheel', mountAt);
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+              topLevelTypes.topWheel,
+              'wheel',
+              mountAt
+            );
           } else if (isEventSupported('mousewheel')) {
-            trapBubbledEvent(topLevelTypes.topWheel, 'mousewheel', mountAt);
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+              topLevelTypes.topWheel,
+              'mousewheel',
+              mountAt
+            );
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            trapBubbledEvent(
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               topLevelTypes.topWheel,
               'DOMMouseScroll',
-              mountAt);
+              mountAt
+            );
           }
         } else if (topLevelType === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
-            trapCapturedEvent(topLevelTypes.topScroll, 'scroll', mountAt);
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              topLevelTypes.topScroll,
+              'scroll',
+              mountAt
+            );
           } else {
-            trapBubbledEvent(topLevelTypes.topScroll, 'scroll', window);
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+              topLevelTypes.topScroll,
+              'scroll',
+              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
+            );
           }
         } else if (topLevelType === topLevelTypes.topFocus ||
             topLevelType === topLevelTypes.topBlur) {
 
           if (isEventSupported('focus', true)) {
-            trapCapturedEvent(topLevelTypes.topFocus, 'focus', mountAt);
-            trapCapturedEvent(topLevelTypes.topBlur, 'blur', mountAt);
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              topLevelTypes.topFocus,
+              'focus',
+              mountAt
+            );
+            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+              topLevelTypes.topBlur,
+              'blur',
+              mountAt
+            );
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            trapBubbledEvent(topLevelTypes.topFocus, 'focusin', mountAt);
-            trapBubbledEvent(topLevelTypes.topBlur, 'focusout', mountAt);
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+              topLevelTypes.topFocus,
+              'focusin',
+              mountAt
+            );
+            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+              topLevelTypes.topBlur,
+              'focusout',
+              mountAt
+            );
           }
 
           // to make sure blur and focus event listeners are only attached once
           isListening[topLevelTypes.topBlur] = true;
           isListening[topLevelTypes.topFocus] = true;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
-          trapBubbledEvent(topLevelType, topEventMapping[dependency], mountAt);
+          ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            topLevelType,
+            topEventMapping[dependency],
+            mountAt
+          );
         }
 
         isListening[dependency] = true;
       }
     }
+  },
+
+  trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
+    return ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+      topLevelType,
+      handlerBaseName,
+      handle
+    );
+  },
+
+  trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
+    return ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+      topLevelType,
+      handlerBaseName,
+      handle
+    );
   },
 
   /**
@@ -322,8 +340,7 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
   ensureScrollValueMonitoring: function(){
     if (!isMonitoringScrollValue) {
       var refresh = ViewportMetrics.refreshScrollValues;
-      EventListener.listen(window, 'scroll', refresh);
-      EventListener.listen(window, 'resize', refresh);
+      ReactBrowserEventEmitter.ReactEventListener.monitorScrollValue(refresh);
       isMonitoringScrollValue = true;
     }
   },
@@ -338,12 +355,8 @@ var ReactEventEmitter = merge(ReactEventEmitterMixin, {
 
   deleteListener: EventPluginHub.deleteListener,
 
-  deleteAllListeners: EventPluginHub.deleteAllListeners,
-
-  trapBubbledEvent: trapBubbledEvent,
-
-  trapCapturedEvent: trapCapturedEvent
+  deleteAllListeners: EventPluginHub.deleteAllListeners
 
 });
 
-module.exports = ReactEventEmitter;
+module.exports = ReactBrowserEventEmitter;

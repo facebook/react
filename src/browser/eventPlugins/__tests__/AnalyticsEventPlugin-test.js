@@ -26,7 +26,7 @@ describe('AnalyticsEventPlugin', function() {
   var EventPluginHub;
   var EventPluginRegistry;
   var React;
-  var ReactEventEmitter;
+  var ReactBrowserEventEmitter;
   var ReactTestUtils;
 
   var DefaultEventPluginOrder;
@@ -40,7 +40,7 @@ describe('AnalyticsEventPlugin', function() {
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
     React = require('React');
-    ReactEventEmitter = require('ReactEventEmitter');
+    ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
 
     EventPluginRegistry._resetEventPlugins();

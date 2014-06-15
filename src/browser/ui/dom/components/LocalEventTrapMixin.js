@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 
 var accumulate = require('accumulate');
 var forEachAccumulated = require('forEachAccumulated');
@@ -31,7 +31,7 @@ function remove(event) {
 var LocalEventTrapMixin = {
   trapBubbledEvent(topLevelType, handlerBaseName) {
     invariant(this.isMounted(), 'Must be mounted to trap events');
-    var listener = ReactEventEmitter.trapBubbledEvent(
+    var listener = ReactBrowserEventEmitter.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
       this.getDOMNode()

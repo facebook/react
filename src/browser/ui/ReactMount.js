@@ -20,7 +20,7 @@
 
 var DOMProperty = require('DOMProperty');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactEventEmitter = require('ReactEventEmitter');
+var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
 
@@ -278,7 +278,7 @@ var ReactMount = {
       '_registerComponent(...): Target container is not a DOM element.'
     );
 
-    ReactEventEmitter.ensureScrollValueMonitoring();
+    ReactBrowserEventEmitter.ensureScrollValueMonitoring();
 
     var reactRootID = ReactMount.registerContainer(container);
     instancesByReactRootID[reactRootID] = nextComponent;
