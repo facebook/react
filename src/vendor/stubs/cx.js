@@ -37,7 +37,7 @@ function cx(classNames) {
       return classNames[className];
     }).join(' ');
   } else {
-    return Array.prototype.join.call(arguments, ' ');
+    return Array.prototype.filter.call(arguments, Boolean).join(' ');
   }
 }
 
