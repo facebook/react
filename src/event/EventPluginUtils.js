@@ -101,7 +101,7 @@ function forEachEventDispatch(event, cb) {
       // Listeners and IDs are two parallel arrays that are always in sync.
       cb(event, dispatchListeners[i], dispatchIDs[i]);
     }
-  } else if (dispatchListeners) {
+  } else if (dispatchListeners && !event.isPropagationStopped()) {
     cb(event, dispatchListeners, dispatchIDs);
   }
 }
