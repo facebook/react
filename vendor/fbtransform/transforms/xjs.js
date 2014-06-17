@@ -190,7 +190,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
     if (trimmedLine || isLastNonEmptyLine) {
       utils.append(
-        state.g.useSingleQuotes ? JSON.stringify(trimmedLine).replace(
+        state.g.opts.useSingleQuotes ? JSON.stringify(trimmedLine).replace(
           /([^\\])"/g, '$1\''
         ).replace(/^"/g, '\''): JSON.stringify(trimmedLine) +
         (!isLastNonEmptyLine ? " + ' ' +" : ''),
