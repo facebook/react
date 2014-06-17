@@ -40,7 +40,10 @@ function addDisplayName(displayName, object, state) {
 
     if (safe) {
       utils.catchup(object['arguments'][0].range[0] + 1, state);
-      utils.append("displayName: '" + displayName + "',", state);
+      utils.append(
+        state.g.useSingleQuotes ? "displayName: '" + displayName + "'," : "displayName: \"" + displayName + "\",",
+        state
+      );
     }
   }
 }

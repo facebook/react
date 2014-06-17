@@ -190,7 +190,9 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
     if (trimmedLine || isLastNonEmptyLine) {
       utils.append(
-        JSON.stringify(trimmedLine) +
+        state.g.useSingleQuotes ? JSON.stringify(trimmedLine).replace(
+          /([^\\])"/g, '$1\''
+        ).replace(/^"/g, '\''): JSON.stringify(trimmedLine) +
         (!isLastNonEmptyLine ? " + ' ' +" : ''),
         state);
 
@@ -234,10 +236,10 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   return false;
 }
 
-function quoteAttrName(attr) {
+function quoteAttrName(attr, useSingleQuotes) {
   // Quote invalid JS identifiers.
   if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
-    return "\"" + attr + "\"";
+    return useSingleQuotes ? "'" + attr + "'" : "\"" + attr + "\"" ;
   }
   return attr;
 }
