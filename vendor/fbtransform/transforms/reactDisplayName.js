@@ -18,6 +18,7 @@
 
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
+var doubleOrSingleQuotes = require('./xjs').doubleOrSingleQuotes;
 
 function addDisplayName(displayName, object, state) {
   if (object &&
@@ -40,10 +41,7 @@ function addDisplayName(displayName, object, state) {
 
     if (safe) {
       utils.catchup(object['arguments'][0].range[0] + 1, state);
-      utils.append(
-        state.g.opts.useSingleQuotes ? "displayName: '" + displayName + "'," : "displayName: \"" + displayName + "\",",
-        state
-      );
+      utils.append('displayName: ' + doubleOrSingleQuotes(displayName, state) + ",", state);
     }
   }
 }

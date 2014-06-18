@@ -237,16 +237,20 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   return false;
 }
 
+function doubleOrSingleQuotes(value, state) {
+  return state.g.opts.useSingleQuotes ? "'" + value + "'" : "\"" + value + "\"";
+}
+
 function swapQuotes(str) {
   return str.replace(/['"]/g, function(m) {
     return m === "\"" ? "'" : "\"";
   });
 }
 
-function quoteAttrName(attr, useSingleQuotes) {
+function quoteAttrName(attr, state) {
   // Quote invalid JS identifiers.
   if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
-    return useSingleQuotes ? "'" + attr + "'" : "\"" + attr + "\"" ;
+    return doubleOrSingleQuotes(attr, state);
   }
   return attr;
 }
@@ -259,4 +263,5 @@ exports.knownTags = knownTags;
 exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
 exports.renderXJSLiteral = renderXJSLiteral;
 exports.quoteAttrName = quoteAttrName;
+exports.doubleOrSingleQuotes = doubleOrSingleQuotes;
 exports.trimLeft = trimLeft;
