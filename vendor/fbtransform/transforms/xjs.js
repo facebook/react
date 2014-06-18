@@ -238,12 +238,15 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
 }
 
 function doubleOrSingleQuotes(value, state) {
-  return state.g.opts.useSingleQuotes ? "'" + value + "'" : "\"" + value + "\"";
+  if (state.g.opts.useSingleQuotes) {
+    return '\'' + value + '\'';
+  }
+  return '"' + value + '"';
 }
 
 function swapQuotes(str) {
   return str.replace(/['"]/g, function(m) {
-    return m === "\"" ? "'" : "\"";
+    return m === '"' ? '\'' : '"';
   });
 }
 
