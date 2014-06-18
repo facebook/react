@@ -181,6 +181,6 @@ AppDispatcher.register(function(payload) {
   TodoStore.emitChange();
 
   return true; // No errors.  Needed by promise in Dispatcher.
-})
+});
 
 module.exports = TodoStore;
