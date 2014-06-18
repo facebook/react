@@ -190,11 +190,12 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
     if (trimmedLine || isLastNonEmptyLine) {
       utils.append(
-        state.g.opts.useSingleQuotes ? JSON.stringify(trimmedLine).replace(
-          /([^\\])"/g, '$1\''
-        ).replace(/^"/g, '\''): JSON.stringify(trimmedLine) +
+        state.g.opts.useSingleQuotes ? swapQuotes(
+          JSON.stringify(swapQuotes(trimmedLine))
+        ) : JSON.stringify(trimmedLine) +
         (!isLastNonEmptyLine ? " + ' ' +" : ''),
-        state);
+        state
+      );
 
       if (isLastNonEmptyLine) {
         if (end) {
@@ -234,6 +235,12 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   utils.catchup(object.range[1] - 1, state, trimLeft);
   utils.move(object.range[1], state);
   return false;
+}
+
+function swapQuotes(str) {
+  return str.replace(/['"]/g, function(m) {
+    return m === "\"" ? "'" : "\"";
+  });
 }
 
 function quoteAttrName(attr, useSingleQuotes) {
