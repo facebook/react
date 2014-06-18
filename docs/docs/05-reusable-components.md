@@ -51,6 +51,9 @@ React.createClass({
     // An array of a certain type
     optionalArrayOf: React.PropTypes.arrayOf(React.PropTypes.number),
 
+    // An object with property values of a certain type
+    optionalObjectOf: React.PropTypes.objectOf(React.PropTypes.number),
+
     // An object taking on a particular shape
     optionalObjectWithShape: React.PropTypes.shape({
       color: React.PropTypes.string,
