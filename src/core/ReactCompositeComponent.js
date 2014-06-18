@@ -1005,9 +1005,22 @@ var ReactCompositeComponentMixin = {
     this._pendingState = null;
 
     try {
-      if (this._pendingForceUpdate ||
-          !this.shouldComponentUpdate ||
-          this.shouldComponentUpdate(nextProps, nextState, nextContext)) {
+      var shouldUpdate =
+        this._pendingForceUpdate ||
+        !this.shouldComponentUpdate ||
+        this.shouldComponentUpdate(nextProps, nextState, nextContext);
+
+      if (__DEV__) {
+        if (typeof shouldUpdate === "undefined") {
+          console.warn(
+            (this.constructor.displayName || 'ReactCompositeComponent') +
+            '.shouldComponentUpdate(): Returned undefined instead of a ' +
+            'boolean value. Make sure to return true or false.'
+          );
+        }
+      }
+
+      if (shouldUpdate) {
         this._pendingForceUpdate = false;
         // Will set `this.props`, `this.state` and `this.context`.
         this._performComponentUpdate(

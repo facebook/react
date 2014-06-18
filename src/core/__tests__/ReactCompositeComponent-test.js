@@ -894,6 +894,38 @@ describe('ReactCompositeComponent', function() {
     expect(React.isValidClass(TrickFnComponent)).toBe(false);
   });
 
+  it('should warn when shouldComponentUpdate() returns undefined', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    try {
+      var Component = React.createClass({
+        getInitialState: function () {
+          return {bogus: false};
+        },
+
+        shouldComponentUpdate: function() {
+          return undefined;
+        },
+
+        render: function() {
+          return <div />;
+        }
+      });
+
+      var instance = ReactTestUtils.renderIntoDocument(<Component />);
+      instance.setState({bogus: true});
+
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Component.shouldComponentUpdate(): Returned undefined instead of a ' +
+        'boolean value. Make sure to return true or false.'
+      );
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it('should warn when mispelling shouldComponentUpdate', function() {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
