@@ -29,7 +29,7 @@ setProps(object nextProps[, function callback])
 
 When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`.
 
-Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed.
+Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
 
 > Note:
 >
@@ -80,7 +80,7 @@ Properties that are specified directly on the target component instance (such as
 setState(object nextState[, function callback])
 ```
 
-Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed.
+Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed and the component is re-rendered.
 
 > Notes:
 >
