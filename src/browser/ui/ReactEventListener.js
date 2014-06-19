@@ -20,6 +20,7 @@
 "use strict";
 
 var EventListener = require('EventListener');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var PooledClass = require('PooledClass');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
@@ -101,7 +102,7 @@ var ReactEventListener = {
   _enabled: true,
   _handleTopLevel: null,
 
-  WINDOW_HANDLE: window,
+  WINDOW_HANDLE: ExecutionEnvironment.canUseDOM ? window : null,
 
   setHandleTopLevel: function(handleTopLevel) {
     ReactEventListener._handleTopLevel = handleTopLevel;
