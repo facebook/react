@@ -238,7 +238,7 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
 }
 
 function doubleOrSingleQuotes(value, state) {
-  if (state.g.opts.useSingleQuotes) {
+  if (state && state.g.opts.useSingleQuotes) {
     return '\'' + value + '\'';
   }
   return '"' + value + '"';
