@@ -5,7 +5,6 @@ var transform = require('jstransform').transform;
 var Buffer = require('buffer').Buffer;
 
 module.exports = {
-  React: React,
   transform: function(input, options) {
     options = options || {};
     var visitorList = getVisitors(options.harmony);
