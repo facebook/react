@@ -55,7 +55,7 @@ $ rake watch # Automatically compiles as needed.
 
 The easiest way to do this is to have a separate clone of this repository, checked out to the `gh-pages` branch. We have a build step that expects this to be in a directory named `react-gh-pages` at the same depth as `react`. Then it's just a matter of running `grunt docs`, which will compile the site and copy it out to this repository. From there you can check it in.
 
-**Note:** This should only be done for new releases. You should create a tag corresponding to the relase tag in the main repository.
+**Note:** This should only be done for new releases. You should create a tag corresponding to the release tag in the main repository.
 
 ### Removing the Jekyll / Ruby Dependency
 
