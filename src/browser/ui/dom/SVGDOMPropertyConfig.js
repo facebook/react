@@ -37,6 +37,7 @@ var SVGDOMPropertyConfig = {
     gradientTransform: MUST_USE_ATTRIBUTE,
     gradientUnits: MUST_USE_ATTRIBUTE,
     offset: MUST_USE_ATTRIBUTE,
+    patternContentUnits: MUST_USE_ATTRIBUTE,
     patternUnits: MUST_USE_ATTRIBUTE,
     points: MUST_USE_ATTRIBUTE,
     preserveAspectRatio: MUST_USE_ATTRIBUTE,
@@ -64,6 +65,7 @@ var SVGDOMPropertyConfig = {
   DOMAttributeNames: {
     gradientTransform: 'gradientTransform',
     gradientUnits: 'gradientUnits',
+    patternContentUnits: 'patternContentUnits',
     patternUnits: 'patternUnits',
     preserveAspectRatio: 'preserveAspectRatio',
     spreadMethod: 'spreadMethod',
