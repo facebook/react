@@ -22,12 +22,11 @@
 var CSSProperty = require('CSSProperty');
 
 var dangerousStyleValue = require('dangerousStyleValue');
-var escapeTextForBrowser = require('escapeTextForBrowser');
 var hyphenateStyleName = require('hyphenateStyleName');
 var memoizeStringOnly = require('memoizeStringOnly');
 
 var processStyleName = memoizeStringOnly(function(styleName) {
-  return escapeTextForBrowser(hyphenateStyleName(styleName));
+  return hyphenateStyleName(styleName);
 });
 
 /**
@@ -42,6 +41,7 @@ var CSSPropertyOperations = {
    *   "width:200px;height:0;"
    *
    * Undefined values are ignored so that declarative programming is easier.
+   * The result should be HTML-escaped before insertion into the DOM.
    *
    * @param {object} styles
    * @return {?string}
