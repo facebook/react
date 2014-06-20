@@ -90,12 +90,12 @@ var createSourceCodeErrorMessage = function(code, e) {
   return message;
 };
 
-var transformCode = function(code, source) {
+var transformCode = function(code, source, options) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
   if (jsx) {
     try {
-      var transformed = transformReact(code);
+      var transformed = transformReact(code, options);
     } catch(e) {
       e.message += '\n    at ';
       if (source) {
@@ -138,9 +138,9 @@ var transformCode = function(code, source) {
   }
 };
 
-var run = exports.run = function(code, source) {
+var run = exports.run = function(code, source, options) {
   var scriptEl = document.createElement('script');
-  scriptEl.text = transformCode(code, source);
+  scriptEl.text = transformCode(code, source, options);
   headEl.appendChild(scriptEl);
 };
 
@@ -180,7 +180,7 @@ loadScripts = function(scripts) {
       script = result[i];
 
       if (script && !script.executed) {
-        run(script.content, script.url);
+        run(script.content, script.url, script.options);
         script.executed = true;
       } else if (!script) {
         break;
@@ -189,13 +189,20 @@ loadScripts = function(scripts) {
   };
 
   scripts.forEach(function(script, i) {
+    var options;
+    if (script.type.indexOf('harmony=true') !== -1) {
+      options = {
+        harmony: true
+      };
+    }
+
     if (script.src) {
       load(script.src, function(content, url) {
-        result[i] = { executed: false, content: content, url: url };
+        result[i] = { executed: false, content: content, url: url, options: options };
         check();
       });
     } else {
-      result[i] = { executed: false, content: script.innerHTML, url: null };
+      result[i] = { executed: false, content: script.innerHTML, url: null, options: options };
       check();
     }
   });
@@ -207,7 +214,7 @@ runScripts = function() {
   // Array.prototype.slice cannot be used on NodeList on IE8
   var jsxScripts = [];
   for (var i = 0; i < scripts.length; i++) {
-    if (scripts.item(i).type === 'text/jsx') {
+    if (scripts.item(i).type.indexOf('text/jsx') !== -1) {
       jsxScripts.push(scripts.item(i));
     }
   }
