@@ -571,7 +571,7 @@ function mergeObjectsWithNoDuplicateKeys(one, two) {
 
   mapObject(two, function(value, key) {
     invariant(
-      one[key] === undefined,
+      typeof one[key] === 'undefined',
       'mergeObjectsWithNoDuplicateKeys(): ' +
       'Tried to merge two objects with the same key: %s',
       key
