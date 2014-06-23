@@ -21,29 +21,32 @@
 
 var React;
 var ReactCSSTransitionGroup;
+var ReactTestUtils;
+var ReactMount;
 var mocks;
 
 // Most of the real functionality is covered in other unit tests, this just
 // makes sure we're wired up correctly.
 describe('ReactCSSTransitionGroup', function() {
-  var container;
 
   beforeEach(function() {
     React = require('React');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
+    ReactTestUtils = require('ReactTestUtils');
+    ReactMount = require('ReactMount');
     mocks = require('mocks');
-
-    container = document.createElement('div');
   });
 
   it('should warn after time with no transitionend', function() {
-    var a = React.renderComponent(
+    var instance = ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
+
+    var container = ReactMount.findReactContainerForID(instance._rootNodeID);
+
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
 
     setTimeout.mock.calls.length = 0;
 
@@ -53,9 +56,9 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('two');
-    expect(a.getDOMNode().childNodes[1].id).toBe('one');
+    expect(instance.getDOMNode().childNodes.length).toBe(2);
+    expect(instance.getDOMNode().childNodes[0].id).toBe('two');
+    expect(instance.getDOMNode().childNodes[1].id).toBe('one');
 
     console.warn = mocks.getMockFunction();
 
@@ -68,40 +71,45 @@ describe('ReactCSSTransitionGroup', function() {
       }
     }
 
-    expect(a.getDOMNode().childNodes.length).toBe(2);
+    expect(instance.getDOMNode().childNodes.length).toBe(2);
     expect(console.warn.mock.calls.length).toBe(1);
   });
 
   it('should keep both sets of DOM nodes around', function() {
-    var a = React.renderComponent(
+    var instance = ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
+
+    var container = ReactMount.findReactContainerForID(instance._rootNodeID);
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
+
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('two');
-    expect(a.getDOMNode().childNodes[1].id).toBe('one');
+
+    expect(instance.getDOMNode().childNodes.length).toBe(2);
+    expect(instance.getDOMNode().childNodes[0].id).toBe('two');
+    expect(instance.getDOMNode().childNodes[1].id).toBe('one');
   });
 
   it('should switch transitionLeave from false to true', function() {
-    var a = React.renderComponent(
+    var instance = ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
           transitionLeave={false}>
         <span key="one" id="one" />
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
+
+    var container = ReactMount.findReactContainerForID(instance._rootNodeID);
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
+
     React.renderComponent(
       <ReactCSSTransitionGroup
           transitionName="yolo"
@@ -111,7 +119,7 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
     React.renderComponent(
       <ReactCSSTransitionGroup
           transitionName="yolo"
@@ -121,36 +129,36 @@ describe('ReactCSSTransitionGroup', function() {
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(a.getDOMNode().childNodes[0].id).toBe('three');
-    expect(a.getDOMNode().childNodes[1].id).toBe('two');
+    expect(instance.getDOMNode().childNodes.length).toBe(2);
+    expect(instance.getDOMNode().childNodes[0].id).toBe('three');
+    expect(instance.getDOMNode().childNodes[1].id).toBe('two');
   });
 
   it('should work with no children', function() {
-    React.renderComponent(
+    ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
   });
 
   it('should work with a null child', function() {
-    React.renderComponent(
+    ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
   });
 
   it('should transition from one to null', function() {
-    var a = React.renderComponent(
+    var instance = ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
+
+    var container = ReactMount.findReactContainerForID(instance._rootNodeID);
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
+
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         {null}
@@ -159,26 +167,28 @@ describe('ReactCSSTransitionGroup', function() {
     );
     // (Here, we expect the original child to stick around but test that no
     // exception is thrown)
-    expect(a.getDOMNode().childNodes.length).toBe(1);
-    expect(a.getDOMNode().childNodes[0].id).toBe('one');
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
+    expect(instance.getDOMNode().childNodes[0].id).toBe('one');
   });
 
   it('should transition from false to one', function() {
-    var a = React.renderComponent(
+    var instance = ReactTestUtils.renderIntoDocument(
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
-      </ReactCSSTransitionGroup>,
-      container
+      </ReactCSSTransitionGroup>
     );
-    expect(a.getDOMNode().childNodes.length).toBe(0);
+
+    var container = ReactMount.findReactContainerForID(instance._rootNodeID);
+    expect(instance.getDOMNode().childNodes.length).toBe(0);
+
     React.renderComponent(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
-    expect(a.getDOMNode().childNodes.length).toBe(1);
-    expect(a.getDOMNode().childNodes[0].id).toBe('one');
+    expect(instance.getDOMNode().childNodes.length).toBe(1);
+    expect(instance.getDOMNode().childNodes[0].id).toBe('one');
   });
 
 });

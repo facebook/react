@@ -358,20 +358,17 @@ describe('ReactDOMComponent', function() {
 
   describe('updateComponent', function() {
     var React;
-    var container;
+    var ReactTestUtils;
 
     beforeEach(function() {
       React = require('React');
-      container = document.createElement('div');
+      ReactTestUtils = require('ReactTestUtils');
     });
 
     it("should validate against multiple children props", function() {
-      React.renderComponent(<div></div>, container);
-
       expect(function() {
-        React.renderComponent(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
-          container
+        ReactTestUtils.renderIntoDocument(
+          <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>
         );
       }).toThrow(
         'Invariant Violation: Can only set one of `children` or ' +
@@ -380,10 +377,8 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should validate against invalid styles", function() {
-      React.renderComponent(<div></div>, container);
-
       expect(function() {
-        React.renderComponent(<div style={1}></div>, container);
+        ReactTestUtils.renderIntoDocument(<div style={1}></div>);
       }).toThrow(
         'Invariant Violation: The `style` prop expects a mapping from style ' +
         'properties to values, not a string.'
@@ -396,20 +391,17 @@ describe('ReactDOMComponent', function() {
       var React = require('React');
       var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
       var ReactMount = require('ReactMount');
-
-      var container = document.createElement('div');
-      document.documentElement.appendChild(container);
+      var ReactTestUtils = require('ReactTestUtils');
 
       var callback = function() {};
-      var instance = <div onClick={callback} />;
-      instance = React.renderComponent(instance, container);
+      var instance = ReactTestUtils.renderIntoDocument(<div onClick={callback} />);
 
-      var rootNode = instance.getDOMNode();
-      var rootNodeID = ReactMount.getID(rootNode);
+      var rootNodeID = instance._rootNodeID;
       expect(
         ReactBrowserEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);
 
+      var container = ReactMount.findReactContainerForID(rootNodeID);
       React.unmountComponentAtNode(container);
 
       expect(

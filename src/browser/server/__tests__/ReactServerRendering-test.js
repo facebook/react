@@ -180,8 +180,8 @@ describe('ReactServerRendering', function() {
         }
       });
 
-      var element = document.createElement('div');
-      React.renderComponent(<TestComponent />, element);
+      var instance = ReactTestUtils.renderIntoDocument(<TestComponent />);
+      var element = ReactMount.findReactContainerForID(instance._rootNodeID);
 
       var lastMarkup = element.innerHTML;
 
