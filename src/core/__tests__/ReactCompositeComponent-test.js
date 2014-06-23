@@ -129,7 +129,7 @@ describe('ReactCompositeComponent', function() {
       .toBeDOMComponentWithTag('a');
   });
 
-  it('should render null and false as a script tag under the hood', () => {
+  it('should render null and false as a noscript tag under the hood', () => {
     var Component1 = React.createClass({
       render: function() {
         return null;
@@ -145,10 +145,10 @@ describe('ReactCompositeComponent', function() {
     var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
     reactComponentExpect(instance1)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('script');
+      .toBeDOMComponentWithTag('noscript');
     reactComponentExpect(instance2)
       .expectRenderedChild()
-      .toBeDOMComponentWithTag('script');
+      .toBeDOMComponentWithTag('noscript');
   });
 
   it('should still throw when rendering to undefined', () => {
