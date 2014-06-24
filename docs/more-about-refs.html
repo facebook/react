@@ -471,12 +471,16 @@
 
 <p>It&#39;s as simple as:</p>
 
-<p><strong>1.</strong> Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">   <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+<ol>
+<li><p>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+</code></pre></div></li>
+<li><p>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
-<p><strong>2.</strong> In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
-</code></pre></div><h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<p>You can access the component&#39;s DOM node directly by calling <code>this.refs.myInput.getDOMNode()</code>.</p></li>
+</ol>
+<h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
     <span class="p">},</span>
@@ -484,8 +488,11 @@
       <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span> <span class="c1">// Clear the input</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// Boom! Focused!</span>
+      <span class="c1">// Clear the input</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// This code executes after the component is re-rendered</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// Boom! Focused!</span>
+      <span class="p">});</span>
     <span class="p">},</span>
     <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">(</span>
@@ -516,7 +523,7 @@
 <ul>
 <li><em>Never</em> access refs inside of any component&#39;s render method - or while any component&#39;s render method is even running anywhere in the call stack.</li>
 <li>If you want to preserve Google Closure Compiler Crushing resilience, make sure to never access as a property what was specified as a string. This means you must access using <code>this.refs[&#39;myRefString&#39;]</code> if your ref was defined as <code>ref=&quot;myRefString&quot;</code>.</li>
-<li>If you have not programmed several apps with React, your first inclination is usually going to be to try to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where <code>state</code> should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. Placing the state there often eliminates any desire to use <code>ref</code>s to &quot;make things happen&quot; - instead, the data flow will usually accomplish your goal.</li>
+<li>If you have not programmed several apps with React, your first inclination is usually going to be to try to use refs to &quot;make things happen&quot; in your app. If this is the case, take a moment and think more critically about where <code>state</code> should be owned in the component hierarchy. Often, it becomes clear that the proper place to &quot;own&quot; that state is at a higher level in the hierarchy. Placing the state there often eliminates any desire to use <code>ref</code>s to &quot;make things happen&quot; – instead, the data flow will usually accomplish your goal.</li>
 </ul>
 
 
