@@ -86,7 +86,7 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should not render value as an attribute', function() {
-    var stub = <textarea value="giraffe" />;
+    var stub = <textarea value="giraffe" onChange={emptyFunction} />;
     stub = renderTextarea(stub);
     var node = stub.getDOMNode();
 
