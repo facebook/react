@@ -20,6 +20,14 @@
 
 var invariant = require('invariant');
 
+var ABOUT_POOLING_MESSAGE = null;
+if (__DEV__) {
+  ABOUT_POOLING_MESSAGE = (
+    'This object is reused for performance reasons. If you\'re seeing this ' +
+    'after logging an object, try logging individual properties.'
+  );
+}
+
 /**
  * Static poolers. Several custom versions for each potential number of
  * arguments. A completely generic pooler is easy to implement, but would
@@ -29,46 +37,54 @@ var invariant = require('invariant');
  */
 var oneArgumentPooler = function(copyFieldsFrom) {
   var Klass = this;
+  var instance;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    instance = Klass.instancePool.pop();
     Klass.call(instance, copyFieldsFrom);
-    return instance;
   } else {
-    return new Klass(copyFieldsFrom);
+    instance = new Klass(copyFieldsFrom);
   }
+  instance._ABOUT_POOLING = null;
+  return instance;
 };
 
 var twoArgumentPooler = function(a1, a2) {
   var Klass = this;
+  var instance;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2);
-    return instance;
   } else {
-    return new Klass(a1, a2);
+    instance = new Klass(a1, a2);
   }
+  instance._ABOUT_POOLING = null;
+  return instance;
 };
 
 var threeArgumentPooler = function(a1, a2, a3) {
   var Klass = this;
+  var instance;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2, a3);
-    return instance;
   } else {
-    return new Klass(a1, a2, a3);
+    instance = new Klass(a1, a2, a3);
   }
+  instance._ABOUT_POOLING = null;
+  return instance;
 };
 
 var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
   var Klass = this;
+  var instance;
   if (Klass.instancePool.length) {
-    var instance = Klass.instancePool.pop();
+    instance = Klass.instancePool.pop();
     Klass.call(instance, a1, a2, a3, a4, a5);
-    return instance;
   } else {
-    return new Klass(a1, a2, a3, a4, a5);
+    instance = new Klass(a1, a2, a3, a4, a5);
   }
+  instance._ABOUT_POOLING = null;
+  return instance;
 };
 
 var standardReleaser = function(instance) {
@@ -80,6 +96,7 @@ var standardReleaser = function(instance) {
   if (instance.destructor) {
     instance.destructor();
   }
+  instance._ABOUT_POOLING = ABOUT_POOLING_MESSAGE;
   if (Klass.instancePool.length < Klass.poolSize) {
     Klass.instancePool.push(instance);
   }
