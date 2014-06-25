@@ -30,6 +30,26 @@ describe('react jsx', function() {
     );
   };
 
+  // These are placeholder variables in scope that we can use to assert that a
+  // specific variable reference was passed, rather than an object clone of it.
+  var x = 123456;
+  var y = 789012;
+  var z = 345678;
+
+  var HEADER =
+    '/**\n' +
+    ' * @jsx React.DOM\n' +
+    ' */\n';
+
+  var expectObjectAssign = function(code) {
+    var Component = jest.genMockFunction();
+    var Child = jest.genMockFunction();
+    var objectAssignMock = jest.genMockFunction();
+    Object.assign = objectAssignMock;
+    eval(transform(HEADER + code).code);
+    return expect(objectAssignMock);
+  }
+
   it('should convert simple tags', function() {
     var code = [
       '/**@jsx React.DOM*/',
@@ -355,6 +375,56 @@ describe('react jsx', function() {
     ].join('\n');
 
     expect(() => transform(code)).toThrow();
+  });
+
+  it('wraps props in Object.assign for spread attributes', function() {
+    var code = HEADER +
+      '<Component { ... x } y\n={2 } z />';
+    var result = HEADER +
+      'Component(Object.assign({},   x , {y: \n2, z: true}))';
+    expect(transform(code).code).toBe(result);
+  });
+
+  it('does not call Object.assign when there are no spreads', function() {
+    expectObjectAssign(
+      '<Component x={y} />'
+    ).not.toBeCalled();
+  });
+
+  it('calls assign with a new target object for spreads', function() {
+    expectObjectAssign(
+      '<Component {...x} />'
+    ).toBeCalledWith({}, x);
+  });
+
+  it('calls assign with an empty object when the spread is first', function() {
+    expectObjectAssign(
+      '<Component { ...x } y={2} />'
+    ).toBeCalledWith({}, x, { y: 2 });
+  });
+
+  it('coalesces consecutive properties into a single object', function() {
+    expectObjectAssign(
+      '<Component { ... x } y={2} z />'
+    ).toBeCalledWith({}, x, { y: 2, z: true });
+  });
+
+  it('avoids an unnecessary empty object when spread is not first', function() {
+    expectObjectAssign(
+      '<Component x={1} {...y} />'
+    ).toBeCalledWith({x: 1}, y);
+  });
+
+  it('passes the same value multiple times to Object.assign', function() {
+    expectObjectAssign(
+      '<Component x={1} y="2" {...z} {...z}><Child /></Component>'
+    ).toBeCalledWith({x: 1, y: "2"}, z, z);
+  });
+
+  it('evaluates sequences before passing them to Object.assign', function() {
+    expectObjectAssign(
+      '<Component x="1" {...(z = { y: 2 }, z)} z={3}>Text</Component>'
+    ).toBeCalledWith({x: "1"}, { y: 2 }, {z: 3});
   });
 
 });

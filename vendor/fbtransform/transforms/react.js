@@ -49,6 +49,14 @@ var JSX_ATTRIBUTE_TRANSFORMS = {
   }
 };
 
+/**
+ * Removes all non-whitespace/parenthesis characters
+ */
+var reNonWhiteParen = /([^\s\(\)])/g;
+function stripNonWhiteParen(value) {
+  return value.replace(reNonWhiteParen, '');
+}
+
 function visitReactTag(traverse, object, path, state) {
   var jsxObjIdent = utils.getDocblock(state).jsx;
   var openingElement = object.openingElement;
@@ -56,6 +64,7 @@ function visitReactTag(traverse, object, path, state) {
   var attributesObject = openingElement.attributes;
 
   utils.catchup(openingElement.range[0], state, trimLeft);
+
 
   if (nameObject.type === Syntax.XJSNamespacedName && nameObject.namespace) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
@@ -75,23 +84,74 @@ function visitReactTag(traverse, object, path, state) {
 
   var hasAttributes = attributesObject.length;
 
+  var hasAtLeastOneSpreadProperty = attributesObject.some(function(attr) {
+    return attr.type === Syntax.XJSSpreadAttribute;
+  });
+
   // if we don't have any attributes, pass in null
-  if (hasAttributes) {
+  if (hasAtLeastOneSpreadProperty) {
+    utils.append('Object.assign({', state);
+  } else if (hasAttributes) {
     utils.append('{', state);
   } else {
     utils.append('null', state);
   }
 
+  // keep track of if the previous attribute was a spread attribute
+  var previousWasSpread = false;
+
   // write attributes
   attributesObject.forEach(function(attr, index) {
+    var isLast = index === attributesObject.length - 1;
+
+    if (attr.type === Syntax.XJSSpreadAttribute) {
+      // Plus 1 to skip `{`.
+      utils.move(attr.range[0] + 1, state);
+
+      // Close the previous object or initial object
+      if (!previousWasSpread) {
+        utils.append('}, ', state);
+      }
+
+      // Move to the expression start, ignoring everything except parenthesis
+      // and whitespace.
+      utils.catchup(attr.argument.range[0], state, stripNonWhiteParen);
+
+      traverse(attr.argument, path, state);
+
+      utils.catchup(attr.argument.range[1], state);
+
+      // Move to the end, ignoring parenthesis and the closing `}`
+      utils.catchup(attr.range[1] - 1, state, stripNonWhiteParen);
+
+      if (!isLast) {
+        utils.append(', ', state);
+      }
+
+      utils.move(attr.range[1], state);
+
+      previousWasSpread = true;
+
+      return;
+    }
+
+    // If the next attribute is a spread, we're effective last in this object
+    if (!isLast) {
+      isLast = attributesObject[index + 1].type === Syntax.XJSSpreadAttribute;
+    }
+
     if (attr.name.namespace) {
       throw new Error(
          'Namespace attributes are not supported. ReactJSX is not XML.');
     }
     var name = attr.name.name;
-    var isLast = index === attributesObject.length - 1;
 
     utils.catchup(attr.range[0], state, trimLeft);
+
+    if (previousWasSpread) {
+      utils.append('{', state);
+    }
+
     utils.append(quoteAttrName(name), state);
     utils.append(': ', state);
 
@@ -119,6 +179,9 @@ function visitReactTag(traverse, object, path, state) {
     }
 
     utils.catchup(attr.range[1], state, trimLeft);
+
+    previousWasSpread = false;
+
   });
 
   if (!openingElement.selfClosing) {
@@ -126,8 +189,12 @@ function visitReactTag(traverse, object, path, state) {
     utils.move(openingElement.range[1], state);
   }
 
-  if (hasAttributes) {
+  if (hasAttributes && !previousWasSpread) {
     utils.append('}', state);
+  }
+
+  if (hasAtLeastOneSpreadProperty) {
+    utils.append(')', state);
   }
 
   // filter out whitespace
