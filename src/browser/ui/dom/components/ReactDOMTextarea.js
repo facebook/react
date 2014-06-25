@@ -88,8 +88,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       // `textContent` (unnecessary since we update value).
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
-      initialValue: '' + (value != null ? value : defaultValue),
-      value: defaultValue
+      initialValue: '' + (value != null ? value : defaultValue)
     };
   },
 
@@ -101,7 +100,6 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
-    var value = LinkedValueUtils.getValue(this);
 
     invariant(
       props.dangerouslySetInnerHTML == null,
@@ -109,7 +107,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     );
 
     props.defaultValue = null;
-    props.value = value != null ? value : this.state.value;
+    props.value = null;
     props.onChange = this._handleChange;
 
     // Always set children to the same thing. In IE9, the selection range will

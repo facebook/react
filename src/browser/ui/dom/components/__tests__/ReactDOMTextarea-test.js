@@ -85,6 +85,14 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('foobar');
   });
 
+  it('should not render value as an attribute', function() {
+    var stub = <textarea value="giraffe" onChange={emptyFunction} />;
+    stub = renderTextarea(stub);
+    var node = stub.getDOMNode();
+
+    expect(node.getAttribute('value')).toBe(null);
+  });
+
   it('should display `value` of number 0', function() {
     var stub = <textarea value={0} />;
     stub = renderTextarea(stub);
