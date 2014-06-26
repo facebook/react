@@ -357,4 +357,33 @@ describe('react jsx', function() {
     expect(() => transform(code)).toThrow();
   });
 
+  it('should allow custom fallback nodes', function() {
+    var code = [
+      '/**',
+      ' * @jsx Custom.XML',
+      ' */',
+      '<CustomNode>',
+      '  <div />',
+      '  <Component />',
+      '</CustomNode>'
+    ].join('\n');
+    var result = [
+      '/**',
+      ' * @jsx Custom.XML',
+      ' */',
+      'Custom.XML.CustomNode(null,',
+      '  div(null),',
+      '  Component(null)',
+      ');'
+    ].join('\n');
+
+    expect(() => transform(code, {
+      fallbackTags: {
+        'Custom.XML': {
+          CustomNode: true
+        }
+      }
+    }).code).toBe(result);
+  });
+
 });
