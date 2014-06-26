@@ -20,6 +20,7 @@
 "use strict";
 
 var ReactDescriptor = require('ReactDescriptor');
+var ReactDescriptorValidator = require('ReactDescriptorValidator');
 var ReactDOMComponent = require('ReactDOMComponent');
 
 var mergeInto = require('mergeInto');
@@ -49,6 +50,12 @@ function createDOMComponentClass(omitClose, tag) {
   Constructor.displayName = tag;
 
   var ConvenienceConstructor = ReactDescriptor.createFactory(Constructor);
+
+  if (__DEV__) {
+    return ReactDescriptorValidator.createFactory(
+      ConvenienceConstructor
+    );
+  }
 
   return ConvenienceConstructor;
 }

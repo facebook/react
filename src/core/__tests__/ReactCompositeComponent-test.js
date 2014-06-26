@@ -376,27 +376,17 @@ describe('ReactCompositeComponent', function() {
 
   });
 
-  it('should auto bind before getDefaultProps', function() {
-    var calls = 0;
+  it('should not pass this to getDefaultProps', function() {
     var Component = React.createClass({
       getDefaultProps: function() {
-        return {
-          onClick: this.defaultClickHandler
-        };
-      },
-      defaultClickHandler: function() {
-        expect(this).toBe(instance);
-        calls++;
+        expect(this.render).not.toBeDefined();
+        return {};
       },
       render: function() {
-        return <div onClick={this.props.onClick}></div>;
+        return <div />;
       }
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
-    var handler = instance.props.onClick;
-    // Call handler with no context
-    handler();
-    expect(calls).toBe(1);
+    ReactTestUtils.renderIntoDocument(<Component />);
   });
 
   it('should use default values for undefined props', function() {

@@ -156,4 +156,34 @@ describe('ReactPropTransferer', function() {
       'passed in as props or children.'
     );
   });
+
+  it('should not use the default when a prop is transfered', function() {
+
+    var Child = React.createClass({
+
+      getDefaultProps: function() {
+        return {
+          x: 2
+        };
+      },
+
+      render: function() {
+        expect(this.props.x).toBe(5);
+        return <div />;
+      }
+
+    });
+
+    var Parent = React.createClass({
+
+      render: function() {
+        return this.transferPropsTo(<Child />);
+      }
+
+    });
+
+    ReactTestUtils.renderIntoDocument(<Parent x={5} />);
+
+  });
+
 });
