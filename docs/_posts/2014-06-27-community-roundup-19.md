@@ -9,12 +9,12 @@ Ever wanted to find developers who also share the same interest in React than yo
 
 If you don't live near San Francisco or London, why not start one in your community?
 
-## Complimentary Tools
+## Complementary Tools
 In case you haven't seen it, we've consolidated the tooling solution around React on [this wiki page](https://github.com/facebook/react/wiki/Complementary-Tools). Some of the notable recent entries include:
 
 - [Ryan Florence](https://github.com/rpflorence)'s [react-nested-router](https://github.com/rpflorence/react-nested-router), which is a translation of the Ember router API to React.
 
-- [Stephen J. Collings](https://github.com/stevoland)'s [React-Bootstrap](https://github.com/react-bootstrap/react-bootstrap), which wraps the popular framework with a bit of React goodness. The [website](http://react-bootstrap.github.io/components.html) features live-editable demos.
+- [Stephen J. Collings](https://github.com/stevoland)'s [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap), which wraps the popular framework with a bit of React goodness. The [website](http://react-bootstrap.github.io/components.html) features live-editable demos.
 
 - [Andrey Popp](https://github.com/andreypopp)'s [react-quickstart](https://github.com/andreypopp/react-quickstart), which gives you a quick template for server-side rendering and routing, among other features.
 
