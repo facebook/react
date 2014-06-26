@@ -62,7 +62,8 @@ function visitReactTag(traverse, object, path, state) {
   }
 
   var fallbackTags =
-    (state.g.opts.fallbackTags && state.g.opts.fallbackTags[jsxObjIdent]) ||
+    (state.g.opts.fallbackTags &&
+      state.g.opts.fallbackTags.hasOwnProperty(jsxObjIdent)) ||
     FALLBACK_TAGS;
 
   // Only identifiers can be fallback tags. XJSMemberExpressions are not.
