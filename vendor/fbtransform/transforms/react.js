@@ -92,7 +92,7 @@ function visitReactTag(traverse, object, path, state) {
     var isLast = index === attributesObject.length - 1;
 
     utils.catchup(attr.range[0], state, trimLeft);
-    utils.append(quoteAttrName(name), state);
+    utils.append(quoteAttrName(name, state.g.opts.useSingleQuotes), state);
     utils.append(': ', state);
 
     if (!attr.value) {

@@ -190,9 +190,12 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
     if (trimmedLine || isLastNonEmptyLine) {
       utils.append(
-        JSON.stringify(trimmedLine) +
+        state.g.opts.useSingleQuotes ? swapQuotes(
+          JSON.stringify(swapQuotes(trimmedLine))
+        ) : JSON.stringify(trimmedLine) +
         (!isLastNonEmptyLine ? " + ' ' +" : ''),
-        state);
+        state
+      );
 
       if (isLastNonEmptyLine) {
         if (end) {
@@ -234,10 +237,23 @@ function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   return false;
 }
 
-function quoteAttrName(attr) {
+function doubleOrSingleQuotes(value, state) {
+  if (state && state.g.opts.useSingleQuotes) {
+    return '\'' + value + '\'';
+  }
+  return '"' + value + '"';
+}
+
+function swapQuotes(str) {
+  return str.replace(/['"]/g, function(m) {
+    return m === '"' ? '\'' : '"';
+  });
+}
+
+function quoteAttrName(attr, state) {
   // Quote invalid JS identifiers.
   if (!/^[a-z_$][a-z\d_$]*$/i.test(attr)) {
-    return "'" + attr + "'";
+    return doubleOrSingleQuotes(attr, state);
   }
   return attr;
 }
@@ -250,4 +266,5 @@ exports.knownTags = knownTags;
 exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
 exports.renderXJSLiteral = renderXJSLiteral;
 exports.quoteAttrName = quoteAttrName;
+exports.doubleOrSingleQuotes = doubleOrSingleQuotes;
 exports.trimLeft = trimLeft;
