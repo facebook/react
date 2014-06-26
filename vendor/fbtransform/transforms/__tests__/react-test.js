@@ -21,6 +21,12 @@ require('mock-modules').autoMockOff();
 
 describe('react jsx', function() {
   var transformAll = require('../../syntax.js').transformAll;
+  var xjs = require('../xjs.js');
+
+  // Add <font-face> to list of known tags to ensure that when we test support
+  // for hyphentated known tags, it's there.
+  // TODO: remove this when/if <font-face> is supported out of the box.
+  xjs.knownTags['font-face'] = true;
 
   var transform = function(code, options, excludes) {
     return transformAll(
@@ -346,6 +352,23 @@ describe('react jsx', function() {
     expect(transform(code).code).toBe(result);
   });
 
+  it('should allow deeper JS namespacing', function() {
+    var code = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      '<Namespace.DeepNamespace.Component />;'
+    ].join('\n');
+    var result = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      'Namespace.DeepNamespace.Component(null);'
+    ].join('\n');
+
+    expect(transform(code).code).toBe(result);
+  });
+
   it('should disallow XML namespacing', function() {
     var code = [
       '/**',
@@ -357,4 +380,33 @@ describe('react jsx', function() {
     expect(() => transform(code)).toThrow();
   });
 
+  it('should transform known hyphenated tags', function() {
+    var code = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      '<font-face />;'
+    ].join('\n');
+    var result = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      'React.DOM[\'font-face\'](null);'
+    ].join('\n');
+
+    expect(transform(code).code).toBe(result);
+  });
+
+  it('should throw for unknown hyphenated tags', function() {
+    var code = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      '<x-component />;'
+    ].join('\n');
+
+    expect(() => transform(code)).toThrow();
+  });
+
 });
+
