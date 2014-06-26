@@ -32,10 +32,9 @@
  */
 function shouldUpdateReactComponent(prevDescriptor, nextDescriptor) {
   if (prevDescriptor && nextDescriptor &&
-      prevDescriptor.type === nextDescriptor.type && (
-        (prevDescriptor.props && prevDescriptor.props.key) ===
-        (nextDescriptor.props && nextDescriptor.props.key)
-      ) && prevDescriptor._owner === nextDescriptor._owner) {
+      prevDescriptor.type === nextDescriptor.type &&
+      prevDescriptor.key === nextDescriptor.key &&
+      prevDescriptor._owner === nextDescriptor._owner) {
     return true;
   }
   return false;
