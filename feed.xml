@@ -7,6 +7,56 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #19</title>
+				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-meetups&quot;&gt;&lt;/a&gt;React Meetups! &lt;a class=&quot;hash-link&quot; href=&quot;#react-meetups&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ever wanted to find developers who also share the same interest in React than you? Recently, there has been a React Meetup in &lt;a href=&quot;http://www.meetup.com/ReactJS-San-Francisco/&quot;&gt;San Francisco&lt;/a&gt; (courtesy of &lt;a href=&quot;http://www.telmate.com&quot;&gt;Telmate&lt;/a&gt;), and one in &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/&quot;&gt;London&lt;/a&gt; (courtesy of &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/members/105837542/&quot;&gt;Stuart Harris&lt;/a&gt;, &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/members/15509971/&quot;&gt;Cain Ullah&lt;/a&gt; and &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/members/137058242/&quot;&gt;Zoe Merchant&lt;/a&gt;). These two events have been big successes; a second one in London is &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/events/191406572/&quot;&gt;already planned&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;If you don&amp;#39;t live near San Francisco or London, why not start one in your community?&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;complimentary-tools&quot;&gt;&lt;/a&gt;Complimentary Tools &lt;a class=&quot;hash-link&quot; href=&quot;#complimentary-tools&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In case you haven&amp;#39;t seen it, we&amp;#39;ve consolidated the tooling solution around React on &lt;a href=&quot;https://github.com/facebook/react/wiki/Complementary-Tools&quot;&gt;this wiki page&lt;/a&gt;. Some of the notable recent entries include:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/rpflorence&quot;&gt;Ryan Florence&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/rpflorence/react-nested-router&quot;&gt;react-nested-router&lt;/a&gt;, which is a translation of the Ember router API to React.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/pieterv&quot;&gt;Pieter Vanderwerff&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/react-bootstrap/react-bootstrap&quot;&gt;React-Bootstrap&lt;/a&gt;, which wraps the popular framework with a bit of React goodness. The &lt;a href=&quot;http://react-bootstrap.github.io/components.html&quot;&gt;website&lt;/a&gt; features live-editable demos.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/andreypopp&quot;&gt;Andrey Popp&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/andreypopp/react-quickstart&quot;&gt;react-quickstart&lt;/a&gt;, which gives you a quick template for server-side rendering and routing, among other features.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These are some of the links that often pop up on the #reactjs IRC channel. If you made something that you think deserves to be shown on the wiki, feel free to add it!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-interesting-places&quot;&gt;&lt;/a&gt;React in Interesting Places &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-interesting-places&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn&amp;#39;t have imagined something like &lt;a href=&quot;http://rigsomelight.com&quot;&gt;Bruce Hauman&lt;/a&gt;&amp;#39;s &lt;a href=&quot;http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html&quot;&gt;Flappy Bird ClojureScript port&lt;/a&gt;, whose interactive programming has been made possible through React:&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/KZjFVdU8VLI&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;And don&amp;#39;t forget &lt;a href=&quot;https://github.com/petehunt&quot;&gt;Pete Hunt&lt;/a&gt;&amp;#39;s Wolfenstein 3D rendering engine in React (&lt;a href=&quot;https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183&quot;&gt;source code&lt;/a&gt;). While it&amp;#39;s nearly a year old, it&amp;#39;s still a nice demo.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://www.petehunt.net/wolfenstein3D-react/wolf3d.html&quot;&gt;&lt;img src=&quot;/react/img/blog/wolfenstein_react.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Give us a shoutout on IRC or &lt;a href=&quot;https://groups.google.com/forum/#!forum/reactjs&quot;&gt;React Google Groups&lt;/a&gt; if you&amp;#39;ve used React in some Interesting places.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;even-more-people-using-react&quot;&gt;&lt;/a&gt;Even More People Using React &lt;a class=&quot;hash-link&quot; href=&quot;#even-more-people-using-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;prismatic&quot;&gt;&lt;/a&gt;Prismatic &lt;a class=&quot;hash-link&quot; href=&quot;#prismatic&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://getprismatic.com/home&quot;&gt;Prismatic&lt;/a&gt; recently shrank their codebase fivefold with the help of React and its popular ClojureScript wrapper, &lt;a href=&quot;https://github.com/swannodette/om&quot;&gt;Om&lt;/a&gt;. They detailed their very positive experience &lt;a href=&quot;http://blog.getprismatic.com/om-sweet-om-high-functional-frontend-engineering-with-clojurescript-and-react/&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Finally, the state is normalized: each piece of information is represented in a single place. Since React ensures consistency between the DOM and the application data, the programmer can focus on ensuring that the state properly stays up to date in response to user input. If the application state is normalized, then this consistency is guaranteed by definition, completely avoiding the possibility of an entire class of common bugs.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;adobe-brackets&quot;&gt;&lt;/a&gt;Adobe Brackets &lt;a class=&quot;hash-link&quot; href=&quot;#adobe-brackets&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://www.kevindangoor.com&quot;&gt;Kevin Dangoor&lt;/a&gt; works on &lt;a href=&quot;http://brackets.io/?lang=en&quot;&gt;Brackets&lt;/a&gt;, the open-source code editor. After writing &lt;a href=&quot;http://www.kevindangoor.com/2014/05/simplifying-code-with-react/&quot;&gt;his first impression on React&lt;/a&gt;, he followed up with another insightful &lt;a href=&quot;http://www.kevindangoor.com/2014/05/react-in-brackets/&quot;&gt;article&lt;/a&gt; on how to gradually make the code transition, how to preserve the editor&amp;#39;s good parts, and how to tune Brackets&amp;#39; tooling around JSX.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We don’t need to switch to React everywhere, all at once. It’s not a framework that imposes anything on the application structure. [...] Easy, iterative adoption is definitely something in React’s favor for us.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;storehouse&quot;&gt;&lt;/a&gt;Storehouse &lt;a class=&quot;hash-link&quot; href=&quot;#storehouse&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;https://www.storehouse.co&quot;&gt;Storehouse&lt;/a&gt; (Apple Design Award 2014)&amp;#39;s web presence is build with React. Here&amp;#39;s &lt;a href=&quot;https://www.storehouse.co/stories/y2ad-mexico-city-clouds&quot;&gt;an example story&lt;/a&gt;. Congratulations on the award!&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;vim-awesome&quot;&gt;&lt;/a&gt;Vim Awesome &lt;a class=&quot;hash-link&quot; href=&quot;#vim-awesome&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;&lt;a href=&quot;http://vimawesome.com&quot;&gt;Vim Awesome&lt;/a&gt;, an open-source Vim plugins directory built on React, was just launched. Be sure to &lt;a href=&quot;https://github.com/divad12/vim-awesome&quot;&gt;check out the source code&lt;/a&gt; if you&amp;#39;re curious to see an example of how to build a small single-page React app.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Spent 12 hours so far with &lt;a href=&quot;https://twitter.com/hashtag/reactjs?src=hash&quot;&gt;#reactjs&lt;/a&gt;. Spent another 2 wondering why we&amp;#39;ve been doing JS frameworks wrong until now. React makes me happy.&lt;/p&gt;&amp;mdash; Paul Irwin (@paulirwin) &lt;a href=&quot;https://twitter.com/paulirwin/statuses/481263947589242882&quot;&gt;June 24, 2014&lt;/a&gt;&lt;/blockquote&gt;
+</description>
+				<pubDate>2014-06-27T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/06/27/community-roundup-19.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/06/27/community-roundup-19.html</guid>
+			</item>
+		
+			<item>
 				<title>One Year of Open-Source React</title>
 				<description>&lt;p&gt;Today marks the one-year open-source anniversary of React.&lt;/p&gt;
 
@@ -530,131 +580,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-02-20T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.9 RC</title>
-				<description>&lt;p&gt;We&amp;#39;re almost ready to release React v0.9! We&amp;#39;re posting a release candidate so that you can test your apps on it; we&amp;#39;d much prefer to find show-stopping bugs now rather than after we release.&lt;/p&gt;
-
-&lt;p&gt;The release candidate is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.9.0-rc1.js&quot;&gt;http://fb.me/react-0.9.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.9.0-rc1.min.js&quot;&gt;http://fb.me/react-0.9.0-rc1.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.9.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.9.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.9.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.9.0-rc1.min.js&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.9.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.9.0-rc1.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.9.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrade-notes&quot;&gt;&lt;/a&gt;Upgrade Notes &lt;a class=&quot;hash-link&quot; href=&quot;#upgrade-notes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;In addition to the changes to React core listed below, we&amp;#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;div&amp;gt;&lt;/span&gt;
-  Monkeys:
-  {listOfMonkeys} {submitButton}
-&lt;span class=&quot;nt&quot;&gt;&amp;lt;/div&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;In v0.8 and below, it was transformed to the following:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;s2&quot;&gt;&amp;quot; Monkeys: &amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;listOfMonkeys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;submitButton&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;In v0.9, it will be transformed to this JS instead:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;s2&quot;&gt;&amp;quot;Monkeys:&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;nx&quot;&gt;listOfMonkeys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot; &amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;submitButton&lt;/span&gt;
-&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We believe this new behavior is more helpful and elimates cases where unwanted whitespace was previously added.&lt;/p&gt;
-
-&lt;p&gt;In cases where you want to preserve the space adjacent to a newline, you can write a JS string like &lt;code&gt;{&amp;quot;Monkeys: &amp;quot;}&lt;/code&gt; in your JSX source. We&amp;#39;ve included a script to do an automated codemod of your JSX source tree that preserves the old whitespace behavior by adding and removing spaces appropriately. You can &lt;a href=&quot;https://github.com/facebook/react/blob/master/npm-jsx_whitespace_transformer/README.md&quot;&gt;install jsx_whitespace_transformer from npm&lt;/a&gt; and run it over your source tree to modify files in place. The transformed JSX files will preserve your code&amp;#39;s existing whitespace behavior.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;The lifecycle methods &lt;code&gt;componentDidMount&lt;/code&gt; and &lt;code&gt;componentDidUpdate&lt;/code&gt; no longer receive the root node as a parameter; use &lt;code&gt;this.getDOMNode()&lt;/code&gt; instead&lt;/li&gt;
-&lt;li&gt;Whenever a prop is equal to &lt;code&gt;undefined&lt;/code&gt;, the default value returned by &lt;code&gt;getDefaultProps&lt;/code&gt; will now be used instead&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.unmountAndReleaseReactRootNode&lt;/code&gt; was previously deprecated and has now been removed&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; is now synchronous and returns the generated HTML string&lt;/li&gt;
-&lt;li&gt;Full-page rendering (that is, rendering the &lt;code&gt;&amp;lt;html&amp;gt;&lt;/code&gt; tag using React) is now supported only when starting with server-rendered markup&lt;/li&gt;
-&lt;li&gt;On mouse wheel events, &lt;code&gt;deltaY&lt;/code&gt; is no longer negated&lt;/li&gt;
-&lt;li&gt;When prop types validation fails, a warning is logged instead of an error thrown (with the production build of React, the type checks are now skipped for performance)&lt;/li&gt;
-&lt;li&gt;On &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt; elements, &lt;code&gt;.getValue()&lt;/code&gt; is no longer supported; use &lt;code&gt;.getDOMNode().value&lt;/code&gt; instead&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;this.context&lt;/code&gt; on components is now reserved for internal use by React&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;React now never rethrows errors, so stack traces are more accurate and Chrome&amp;#39;s purple break-on-error stop sign now works properly&lt;/li&gt;
-&lt;li&gt;Added a new tool for profiling React components and identifying places where defining &lt;code&gt;shouldComponentUpdate&lt;/code&gt; can give performance improvements&lt;/li&gt;
-&lt;li&gt;Added support for SVG tags &lt;code&gt;defs&lt;/code&gt;, &lt;code&gt;linearGradient&lt;/code&gt;, &lt;code&gt;polygon&lt;/code&gt;, &lt;code&gt;radialGradient&lt;/code&gt;, &lt;code&gt;stop&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added support for more attributes:
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;noValidate&lt;/code&gt; and &lt;code&gt;formNoValidate&lt;/code&gt; for forms&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;property&lt;/code&gt; for Open Graph &lt;code&gt;&amp;lt;meta&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;sandbox&lt;/code&gt;, &lt;code&gt;seamless&lt;/code&gt;, and &lt;code&gt;srcDoc&lt;/code&gt; for &lt;code&gt;&amp;lt;iframe&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;scope&lt;/code&gt; for screen readers&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;span&lt;/code&gt; for &lt;code&gt;&amp;lt;colgroup&amp;gt;&lt;/code&gt; tags&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Added support for defining &lt;code&gt;propTypes&lt;/code&gt; in mixins&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;any&lt;/code&gt;, &lt;code&gt;arrayOf&lt;/code&gt;, &lt;code&gt;component&lt;/code&gt;, &lt;code&gt;oneOfType&lt;/code&gt;, &lt;code&gt;renderable&lt;/code&gt;, &lt;code&gt;shape&lt;/code&gt; to &lt;code&gt;React.PropTypes&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;statics&lt;/code&gt; on component spec for static component methods&lt;/li&gt;
-&lt;li&gt;On all events, &lt;code&gt;.currentTarget&lt;/code&gt; is now properly set&lt;/li&gt;
-&lt;li&gt;On keyboard events, &lt;code&gt;.key&lt;/code&gt; is now polyfilled in all browsers for special (non-printable) keys&lt;/li&gt;
-&lt;li&gt;On clipboard events, &lt;code&gt;.clipboardData&lt;/code&gt; is now polyfilled in IE&lt;/li&gt;
-&lt;li&gt;On drag events, &lt;code&gt;.dataTransfer&lt;/code&gt; is now present&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;onMouseOver&lt;/code&gt; and &lt;code&gt;onMouseOut&lt;/code&gt; in addition to the existing &lt;code&gt;onMouseEnter&lt;/code&gt; and &lt;code&gt;onMouseLeave&lt;/code&gt; events&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;onLoad&lt;/code&gt; and &lt;code&gt;onError&lt;/code&gt; on &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;onReset&lt;/code&gt; on &lt;code&gt;&amp;lt;form&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;autoFocus&lt;/code&gt; attribute is now polyfilled consistently on &lt;code&gt;input&lt;/code&gt;, &lt;code&gt;select&lt;/code&gt;, and &lt;code&gt;textarea&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;React no longer adds an &lt;code&gt;__owner__&lt;/code&gt; property to each component&amp;#39;s &lt;code&gt;props&lt;/code&gt; object; passed-in props are now never mutated&lt;/li&gt;
-&lt;li&gt;When nesting top-level components (e.g., calling &lt;code&gt;React.renderComponent&lt;/code&gt; within &lt;code&gt;componentDidMount&lt;/code&gt;), events now properly bubble to the parent component&lt;/li&gt;
-&lt;li&gt;Fixed a case where nesting top-level components would throw an error when updating&lt;/li&gt;
-&lt;li&gt;Passing an invalid or misspelled propTypes type now throws an error&lt;/li&gt;
-&lt;li&gt;On mouse enter/leave events, &lt;code&gt;.target&lt;/code&gt;, &lt;code&gt;.relatedTarget&lt;/code&gt;, and &lt;code&gt;.type&lt;/code&gt; are now set properly&lt;/li&gt;
-&lt;li&gt;On composition events, &lt;code&gt;.data&lt;/code&gt; is now properly normalized in IE9 and IE10&lt;/li&gt;
-&lt;li&gt;CSS property values no longer have &lt;code&gt;px&lt;/code&gt; appended for the unitless properties &lt;code&gt;columnCount&lt;/code&gt;, &lt;code&gt;flex&lt;/code&gt;, &lt;code&gt;flexGrow&lt;/code&gt;, &lt;code&gt;flexShrink&lt;/code&gt;, &lt;code&gt;lineClamp&lt;/code&gt;, &lt;code&gt;order&lt;/code&gt;, &lt;code&gt;widows&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Fixed a memory leak when unmounting children with a &lt;code&gt;componentWillUnmount&lt;/code&gt; handler&lt;/li&gt;
-&lt;li&gt;Fixed a memory leak when &lt;code&gt;renderComponentToString&lt;/code&gt; would store event handlers&lt;/li&gt;
-&lt;li&gt;Fixed an error that could be thrown when removing form elements during a click handler&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;key&lt;/code&gt; values containing &lt;code&gt;.&lt;/code&gt; are now supported&lt;/li&gt;
-&lt;li&gt;Shortened &lt;code&gt;data-reactid&lt;/code&gt; values for performance&lt;/li&gt;
-&lt;li&gt;Components now always remount when the &lt;code&gt;key&lt;/code&gt; property changes&lt;/li&gt;
-&lt;li&gt;Event handlers are attached to &lt;code&gt;document&lt;/code&gt; only when necessary, improving performance in some cases&lt;/li&gt;
-&lt;li&gt;Events no longer use &lt;code&gt;.returnValue&lt;/code&gt; in modern browsers, eliminating a warning in Chrome&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;scrollLeft&lt;/code&gt; and &lt;code&gt;scrollTop&lt;/code&gt; are no longer accessed on document.body, eliminating a warning in Chrome&lt;/li&gt;
-&lt;li&gt;General performance fixes, memory optimizations, improvements to warnings and error messages&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React with Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.addons.TransitionGroup&lt;/code&gt; was renamed to &lt;code&gt;React.addons.CSSTransitionGroup&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.addons.TransitionGroup&lt;/code&gt; was added as a more general animation wrapper&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; was added for cloning components and modifying their props&lt;/li&gt;
-&lt;li&gt;Bug fix for adding back nodes during an exit transition for CSSTransitionGroup&lt;/li&gt;
-&lt;li&gt;Bug fix for changing &lt;code&gt;transitionLeave&lt;/code&gt; in CSSTransitionGroup&lt;/li&gt;
-&lt;li&gt;Performance optimizations for CSSTransitionGroup&lt;/li&gt;
-&lt;li&gt;On checkbox &lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; elements, &lt;code&gt;checkedLink&lt;/code&gt; is now supported for two-way binding&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-compiler-and-react-tools-package&quot;&gt;&lt;/a&gt;JSX Compiler and react-tools Package &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-compiler-and-react-tools-package&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Whitespace normalization has changed; now space between two tags on the same line will be preserved, while newlines between two tags will be removed&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;react-tools&lt;/code&gt; npm package no longer includes the React core libraries; use the &lt;code&gt;react&lt;/code&gt; package instead.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;displayName&lt;/code&gt; is now added in more cases, improving error messages and names in the React Dev Tools&lt;/li&gt;
-&lt;li&gt;Fixed an issue where an invalid token error was thrown after a JSX closing tag&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; now uses source maps automatically in modern browsers&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; error messages now include the filename and problematic line contents when a file fails to parse&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-02-16T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/16/react-v0.9-rc1.html</guid>
 			</item>
 		
 	</channel>
