@@ -61,10 +61,14 @@ function visitReactTag(traverse, object, path, state) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
   }
 
+  var fallbackTags =
+    (state.g.opts.fallbackTags && state.g.opts.fallbackTags[jsxObjIdent]) ||
+    FALLBACK_TAGS;
+
   // Only identifiers can be fallback tags. XJSMemberExpressions are not.
   var isFallbackTag =
     nameObject.type === Syntax.XJSIdentifier &&
-    FALLBACK_TAGS.hasOwnProperty(nameObject.name);
+    fallbackTags.hasOwnProperty(nameObject.name);
 
   utils.append(isFallbackTag ? jsxObjIdent + '.' : '', state);
 
