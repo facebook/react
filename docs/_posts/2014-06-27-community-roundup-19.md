@@ -12,7 +12,7 @@ If you don't live near San Francisco or London, why not start one in your commun
 ## Complementary Tools
 In case you haven't seen it, we've consolidated the tooling solution around React on [this wiki page](https://github.com/facebook/react/wiki/Complementary-Tools). Some of the notable recent entries include:
 
-- [Ryan Florence](https://github.com/rpflorence)'s [react-nested-router](https://github.com/rpflorence/react-nested-router), which is a translation of the Ember router API to React.
+- [Ryan Florence](https://github.com/rpflorence) and [Michael Jackson](https://github.com/mjackson)'s [react-nested-router](https://github.com/rpflorence/react-nested-router), which is a translation of the Ember router API to React.
 
 - [Stephen J. Collings](https://github.com/stevoland)'s [react-bootstrap](https://github.com/react-bootstrap/react-bootstrap), which wraps the popular framework with a bit of React goodness. The [website](http://react-bootstrap.github.io/components.html) features live-editable demos.
 
