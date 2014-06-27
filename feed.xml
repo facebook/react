@@ -16,7 +16,7 @@
 &lt;p&gt;In case you haven&amp;#39;t seen it, we&amp;#39;ve consolidated the tooling solution around React on &lt;a href=&quot;https://github.com/facebook/react/wiki/Complementary-Tools&quot;&gt;this wiki page&lt;/a&gt;. Some of the notable recent entries include:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/rpflorence&quot;&gt;Ryan Florence&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/rpflorence/react-nested-router&quot;&gt;react-nested-router&lt;/a&gt;, which is a translation of the Ember router API to React.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/rpflorence&quot;&gt;Ryan Florence&lt;/a&gt; and &lt;a href=&quot;https://github.com/mjackson&quot;&gt;Michael Jackson&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/rpflorence/react-nested-router&quot;&gt;react-nested-router&lt;/a&gt;, which is a translation of the Ember router API to React.&lt;/p&gt;&lt;/li&gt;
 &lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/stevoland&quot;&gt;Stephen J. Collings&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/react-bootstrap/react-bootstrap&quot;&gt;react-bootstrap&lt;/a&gt;, which wraps the popular framework with a bit of React goodness. The &lt;a href=&quot;http://react-bootstrap.github.io/components.html&quot;&gt;website&lt;/a&gt; features live-editable demos.&lt;/p&gt;&lt;/li&gt;
 &lt;li&gt;&lt;p&gt;&lt;a href=&quot;https://github.com/andreypopp&quot;&gt;Andrey Popp&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/andreypopp/react-quickstart&quot;&gt;react-quickstart&lt;/a&gt;, which gives you a quick template for server-side rendering and routing, among other features.&lt;/p&gt;&lt;/li&gt;
 &lt;/ul&gt;
