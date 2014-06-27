@@ -29,6 +29,7 @@
  *                      In the object case, the values are conditions that
  *                      determine if the className keys should be included.
  * @param [string ...]  Variable list of classNames in the string case.
+ * @param {string}		classElse A single class to be used in the case that all results return false.
  * @return string       Renderable space-separated CSS className.
  */
 function cx(classNames,classElse) {
