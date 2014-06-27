@@ -29,13 +29,17 @@
  *                      In the object case, the values are conditions that
  *                      determine if the className keys should be included.
  * @param [string ...]  Variable list of classNames in the string case.
+ * @param {string}      classElse A single class to be used in the case that all results return false.
  * @return string       Renderable space-separated CSS className.
  */
-function cx(classNames) {
+function cx(classNames,classElse) {
   if (typeof classNames == 'object') {
-    return Object.keys(classNames).filter(function(className) {
+    var ret = Object.keys(classNames).filter(function(className) {
       return classNames[className];
     }).join(' ');
+    return (ret.length > 0) ? 
+      ret : ((typeof classElse !== 'undefined') ?
+        classElse : '');
   } else {
     return Array.prototype.join.call(arguments, ' ');
   }
