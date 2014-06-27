@@ -31,11 +31,12 @@
  * @param [string ...]  Variable list of classNames in the string case.
  * @return string       Renderable space-separated CSS className.
  */
-function cx(classNames) {
+function cx(classNames,classElse) {
   if (typeof classNames == 'object') {
-    return Object.keys(classNames).filter(function(className) {
+    var ret = Object.keys(classNames).filter(function(className) {
       return classNames[className];
     }).join(' ');
+    return (ret.length > 0) ? ret : ((typeof classElse !== 'undefined') ? classElse : '');
   } else {
     return Array.prototype.join.call(arguments, ' ');
   }
