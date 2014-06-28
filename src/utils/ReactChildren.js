@@ -20,6 +20,7 @@
 
 var PooledClass = require('PooledClass');
 
+var invariant = require('invariant');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
@@ -57,6 +58,12 @@ function forEachSingleChild(traverseContext, child, name, i) {
  * @param {*} forEachContext Context for forEachContext.
  */
 function forEachChildren(children, forEachFunc, forEachContext) {
+  invariant(
+    typeof forEachFunc === 'function',
+    'ReactChildren.forEach: Expected a callback function, got ' +
+    typeof forEachFunc + '.'
+  );
+
   if (children == null) {
     return children;
   }
@@ -118,6 +125,11 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
  * @return {object} Object containing the ordered map of results.
  */
 function mapChildren(children, func, context) {
+  invariant(
+    typeof func === 'function',
+    'ReactChildren.map: Expected a callback function, got ' + typeof func + '.'
+  );
+
   if (children == null) {
     return children;
   }
