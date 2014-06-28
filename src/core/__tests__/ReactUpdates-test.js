@@ -748,4 +748,79 @@ describe('ReactUpdates', function() {
     React.renderComponent(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
+
+  it('calls setImmediate callbacks properly', function() {
+    var callbackCount = 0;
+    var A = React.createClass({
+      render: function() {
+        return <div />;
+      },
+      componentDidUpdate: function() {
+        var component = this;
+        ReactUpdates.setImmediate(function() {
+          expect(this).toBe(component);
+          callbackCount++;
+          ReactUpdates.setImmediate(function() {
+            callbackCount++;
+          });
+          expect(callbackCount).toBe(1);
+        }, this);
+        expect(callbackCount).toBe(0);
+      }
+    });
+
+    var container = document.createElement('div');
+    var component = React.renderComponent(<A />, container);
+    component.forceUpdate();
+    expect(callbackCount).toBe(2);
+  });
+
+  it('calls setImmediate callbacks with queued updates', function() {
+    var log = [];
+    var A = React.createClass({
+      getInitialState: () => ({updates: 0}),
+      render: function() {
+        log.push('render-' + this.state.updates);
+        return <div />;
+      },
+      componentDidUpdate: function() {
+        if (this.state.updates === 1) {
+          ReactUpdates.setImmediate(function() {
+            this.setState({updates: 2}, function() {
+              ReactUpdates.setImmediate(function() {
+                log.push('setImmediate-1.2');
+              });
+              log.push('setState-cb');
+            });
+            log.push('setImmediate-1.1');
+          }, this);
+        } else if (this.state.updates === 2) {
+          ReactUpdates.setImmediate(function() {
+            log.push('setImmediate-2');
+          });
+        }
+        log.push('didUpdate-' + this.state.updates);
+      }
+    });
+
+    var container = document.createElement('div');
+    var component = React.renderComponent(<A />, container);
+    component.setState({updates: 1});
+    expect(log).toEqual([
+      'render-0',
+      // We do the first update...
+      'render-1',
+      'didUpdate-1',
+      // ...which calls a setImmediate and enqueues a second update...
+      'setImmediate-1.1',
+      // ...which runs and enqueues the setImmediate-2 log in its didUpdate...
+      'render-2',
+      'didUpdate-2',
+      // ...and runs the setState callback, which enqueues the log for
+      // setImmediate-1.2.
+      'setState-cb',
+      'setImmediate-2',
+      'setImmediate-1.2'
+    ]);
+  });
 });
