@@ -23,11 +23,20 @@ var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDOM = require('ReactDOM');
+var ReactUpdates = require('ReactUpdates');
 
 var merge = require('merge');
 
 // Store a reference to the <select> `ReactDOMComponent`.
 var select = ReactDOM.select;
+
+function updateWithPendingValueIfMounted() {
+  /*jshint validthis:true */
+  if (this.isMounted()) {
+    this.setState({value: this._pendingValue});
+    this._pendingValue = 0;
+  }
+}
 
 /**
  * Validation function for `value` and `defaultValue`.
@@ -114,17 +123,16 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     return {value: this.props.defaultValue || (this.props.multiple ? [] : '')};
   },
 
+  componentWillMount: function() {
+    this._pendingValue = null;
+  },
+
   componentWillReceiveProps: function(nextProps) {
     if (!this.props.multiple && nextProps.multiple) {
       this.setState({value: [this.state.value]});
     } else if (this.props.multiple && !nextProps.multiple) {
       this.setState({value: this.state.value[0]});
     }
-  },
-
-  shouldComponentUpdate: function() {
-    // Defer any updates to this component during the `onChange` handler.
-    return !this._isChanging;
   },
 
   render: function() {
@@ -154,9 +162,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     var returnValue;
     var onChange = LinkedValueUtils.getOnChange(this);
     if (onChange) {
-      this._isChanging = true;
       returnValue = onChange.call(this, event);
-      this._isChanging = false;
     }
 
     var selectedValue;
@@ -172,7 +178,8 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
       selectedValue = event.target.value;
     }
 
-    this.setState({value: selectedValue});
+    this._pendingValue = selectedValue;
+    ReactUpdates.setImmediate(updateWithPendingValueIfMounted, this);
     return returnValue;
   }
 
