@@ -748,4 +748,26 @@ describe('ReactUpdates', function() {
     React.renderComponent(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
+
+  it('calls setImmediate callbacks properly', function() {
+    var callbackCount = 0;
+    var A = React.createClass({
+      render: function() {
+        return <div />;
+      },
+      componentDidUpdate: function() {
+        var component = this;
+        ReactUpdates.setImmediate(function() {
+          expect(this).toBe(component);
+          callbackCount++;
+        }, this);
+        expect(callbackCount).toBe(0);
+      }
+    });
+
+    var container = document.createElement('div');
+    var component = React.renderComponent(<A />, container);
+    component.forceUpdate();
+    expect(callbackCount).toBe(1);
+  });
 });

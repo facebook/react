@@ -29,6 +29,8 @@ var mixInto = require('mixInto');
 var warning = require('warning');
 
 var dirtyComponents = [];
+var setImmediateCallbackQueue = CallbackQueue.getPooled();
+var setImmediateEnqueued = false;
 
 var batchingStrategy = null;
 
@@ -73,7 +75,7 @@ var TRANSACTION_WRAPPERS = [NESTED_UPDATES, UPDATE_QUEUEING];
 function ReactUpdatesFlushTransaction() {
   this.reinitializeTransaction();
   this.dirtyComponentsLength = null;
-  this.callbackQueue = CallbackQueue.getPooled(null);
+  this.callbackQueue = CallbackQueue.getPooled();
   this.reconcileTransaction =
     ReactUpdates.ReactReconcileTransaction.getPooled();
 }
@@ -170,8 +172,8 @@ var flushBatchedUpdates = ReactPerf.measure(
     // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
     // array and perform any updates enqueued by mount-ready handlers (i.e.,
     // componentDidUpdate) but we need to check here too in order to catch
-    // updates enqueued by setState callbacks.
-    while (dirtyComponents.length) {
+    // updates enqueued by setState callbacks and setImmediate calls.
+    while (dirtyComponents.length || setImmediateEnqueued) {
       var allUnmounted = true;
       for (var i = 0, l = dirtyComponents.length; i < l; i++) {
         if (dirtyComponents[i].isMounted()) {
@@ -194,6 +196,10 @@ var flushBatchedUpdates = ReactPerf.measure(
       var transaction = ReactUpdatesFlushTransaction.getPooled();
       transaction.perform(runBatchedUpdates, null, transaction);
       ReactUpdatesFlushTransaction.release(transaction);
+
+      setImmediateCallbackQueue.notifyAll();
+      setImmediateCallbackQueue.reset();
+      setImmediateEnqueued = false;
     }
   }
 );
@@ -240,6 +246,20 @@ function enqueueUpdate(component, callback) {
   }
 }
 
+/**
+ * Enqueue a callback to be run at the end of the current batching cycle. Throws
+ * if no updates are currently being performed.
+ */
+function setImmediate(callback, context) {
+  invariant(
+    batchingStrategy.isBatchingUpdates,
+    'ReactUpdates.setImmediate: Can\'t enqueue an immediate callback in a ' +
+    'context where updates are not being batched.'
+  );
+  setImmediateCallbackQueue.enqueue(callback, context);
+  setImmediateEnqueued = true;
+}
+
 var ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
     invariant(
@@ -278,7 +298,8 @@ var ReactUpdates = {
   batchedUpdates: batchedUpdates,
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
-  injection: ReactUpdatesInjection
+  injection: ReactUpdatesInjection,
+  setImmediate: setImmediate
 };
 
 module.exports = ReactUpdates;
