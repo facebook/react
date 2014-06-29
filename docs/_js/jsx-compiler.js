@@ -13,15 +13,38 @@ var HelloMessage = React.createClass({\n\
 React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
-var transformer = function(code) {
-  return JSXTransformer.transform(code).code;
+function transformer(harmony, code) {
+  return JSXTransformer.transform(code, {harmony: harmony}).code;
 }
+
+var CompilerPlayground = React.createClass({
+  getInitialState: function() {
+    return {harmony: false};
+  },
+  handleHarmonyChange: function(e) {
+    this.setState({harmony: e.target.checked});
+  },
+  render: function() {
+    return (
+      <div>
+        <ReactPlayground
+          codeText={HELLO_COMPONENT}
+          renderCode={true}
+          transformer={transformer.bind(null, this.state.harmony)}
+          showCompiledJSTab={false}
+        />
+        <label className="compiler-option">
+          <input
+            type="checkbox"
+            onChange={this.handleHarmonyChange}
+            checked={this.state.harmony} />{' '}
+          Enable ES6 transforms (<code>--harmony</code>)
+        </label>
+      </div>
+    );
+  },
+});
 React.renderComponent(
-  <ReactPlayground
-    codeText={HELLO_COMPONENT}
-    renderCode={true}
-    transformer={transformer}
-    showCompiledJSTab={false}
-  />,
+  <CompilerPlayground />,
   document.getElementById('jsxCompiler')
 );
