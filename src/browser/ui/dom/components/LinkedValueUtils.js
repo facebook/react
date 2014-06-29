@@ -64,7 +64,19 @@ function _assertCheckedLink(input) {
  */
 function _handleLinkedValueChange(e) {
   /*jshint validthis:true */
-  this.props.valueLink.requestChange(e.target.value);
+  var target = e.target;
+  if (target.nodeName.toLowerCase() === 'select' && target.multiple) {
+    var selectedValue = [];
+    var options = target.options;
+    for (var i = 0, l = options.length; i < l; i++) {
+      if (options[i].selected) {
+        selectedValue.push(options[i].value);
+      }
+    }
+    this.props.valueLink.requestChange(selectedValue);
+  } else {
+    this.props.valueLink.requestChange(e.target.value);
+  }
 }
 
 /**
