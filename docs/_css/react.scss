@@ -455,6 +455,11 @@ section.black content {
   padding-top: 20px;
   width: 1220px;
 
+  label.compiler-option {
+    display: block;
+    margin-top: 5px;
+  }
+
   #jsxCompiler {
     margin-top: 20px;
   }
