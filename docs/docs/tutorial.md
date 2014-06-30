@@ -301,7 +301,7 @@ React.renderComponent(
 
 Now that the data is available in the `CommentList`, let's render the comments dynamically:
 
-```javascript{4-6,9}
+```javascript{4-10,13}
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
@@ -475,7 +475,7 @@ var CommentForm = React.createClass({
 
 Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
-```javascript{3-13,16-17,21}
+```javascript{3-13,16-18}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function() {
@@ -517,7 +517,7 @@ When a user submits a comment, we will need to refresh the list of comments to i
 
 We need to pass data from the child component to its parent. We do this by passing a `callback` in props from parent to child:
 
-```javascript{15-17,31}
+```javascript{15-17,30}
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -651,22 +651,18 @@ var CommentBox = React.createClass({
   handleCommentSubmit: function(comment) {
     var comments = this.state.data;
     var newComments = comments.concat([comment]);
-    this.setState({data: newComments}, function() {
-      // `setState` accepts a callback. To avoid (improbable) race condition,
-      // `we'll send the ajax request right after we optimistically set the new
-      // `state.
-      $.ajax({
-        url: this.props.url,
-        dataType: 'json',
-        type: 'POST',
-        data: comment,
-        success: function(data) {
-          this.setState({data: data});
-        }.bind(this),
-        error: function(xhr, status, err) {
-          console.error(this.props.url, status, err.toString());
-        }.bind(this)
-      });
+    this.setState({data: newComments});
+    $.ajax({
+      url: this.props.url,
+      dataType: 'json',
+      type: 'POST',
+      data: comment,
+      success: function(data) {
+        this.setState({data: data});
+      }.bind(this),
+      error: function(xhr, status, err) {
+        console.error(this.props.url, status, err.toString());
+      }.bind(this)
     });
   },
   getInitialState: function() {
