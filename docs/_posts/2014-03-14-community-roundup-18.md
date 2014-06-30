@@ -22,7 +22,7 @@ We're looking forward to part 2!
 
 ## React vs. async DOM manipulation
 
-Eliseu Monar ([@eliseumds](https://twitter.com/eliseumds))'s post "[ReactJS vs async concurrent rendering](http://eliseu.tk/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering)" is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.
+Eliseu Monar ([@eliseumds](https://twitter.com/eliseumds))'s post "[ReactJS vs async concurrent rendering](http://eliseumds.tumblr.com/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering)" is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.
 
 
 
