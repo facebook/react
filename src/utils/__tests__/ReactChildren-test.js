@@ -19,6 +19,8 @@
 
 "use strict";
 
+var emptyFunction = require('emptyFunction');
+
 describe('ReactChildren', function() {
   var ReactChildren;
   var React;
@@ -334,5 +336,21 @@ describe('ReactChildren', function() {
 
     expect(console.warn.calls.length).toEqual(1);
     expect(mapped).toEqual({'.$something': zero});
+  });
+
+  it('should check its callback argument', function() {
+    expect(function() {
+      ReactChildren.forEach(emptyFunction);
+    }).toThrow(
+      'Invariant Violation: ReactChildren.forEach: Expected a callback ' +
+      'function, got undefined.'
+    );
+
+    expect(function() {
+      ReactChildren.map(emptyFunction);
+    }).toThrow(
+      'Invariant Violation: ReactChildren.map: Expected a callback function, ' +
+      'got undefined.'
+    );
   });
 });
