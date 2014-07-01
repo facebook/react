@@ -335,4 +335,67 @@ describe('ReactChildren', function() {
     expect(console.warn.calls.length).toEqual(1);
     expect(mapped).toEqual({'.$something': zero});
   });
+
+  it('should return 0 for null children', function() {
+    var numberOfChildren = ReactChildren.count(null);
+    expect(numberOfChildren).toBe(0);
+  });
+
+  it('should return 0 for undefined children', function() {
+    var numberOfChildren = ReactChildren.count(undefined);
+    expect(numberOfChildren).toBe(0);
+  });
+
+  it('should return 1 for single child', function() {
+    var simpleKid = <span key="simple" />;
+    var instance = <div>{simpleKid}</div>;
+    var numberOfChildren = ReactChildren.count(instance.props.children);
+    expect(numberOfChildren).toBe(1);
+  });
+
+  it('should count the number of children in flat structure', function() {
+    var zero = <div key="keyZero" />;
+    var one = null;
+    var two = <div key="keyTwo" />;
+    var three = null;
+    var four = <div key="keyFour" />;
+
+    var instance = (
+      <div>
+        {zero}
+        {one}
+        {two}
+        {three}
+        {four}
+      </div>
+    );
+    var numberOfChildren = ReactChildren.count(instance.props.children);
+    expect(numberOfChildren).toBe(5);
+  });
+
+  it('should count the number of children in nested structure', function() {
+    var zero = <div key="keyZero" />;
+    var one = null;
+    var two = <div key="keyTwo" />;
+    var three = null;
+    var four = <div key="keyFour" />;
+    var five = <div key="keyFiveInner" />;
+    // five is placed into a JS object with a key that is joined to the
+    // component key attribute.
+    // Precedence is as follows:
+    // 1. If grouped in an Object, the object key combined with `key` prop
+    // 2. If grouped in an Array, the `key` prop, falling back to array index
+
+    var instance = (
+      <div>{
+        [{
+          firstHalfKey: [zero, one, two],
+          secondHalfKey: [three, four],
+          keyFive: five
+        }]
+      }</div>
+    );
+    var numberOfChildren = ReactChildren.count(instance.props.children);
+    expect(numberOfChildren).toBe(6);
+  });
 });

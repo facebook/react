@@ -180,10 +180,14 @@ var traverseAllChildrenImpl =
  * @param {?*} children Children tree object.
  * @param {!function} callback To invoke upon traversing each child.
  * @param {?*} traverseContext Context for traversal.
+ * @return {!number} The number of children in this subtree.
  */
 function traverseAllChildren(children, callback, traverseContext) {
   if (children !== null && children !== undefined) {
-    traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
+    return traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
+  }
+  else {
+    return 0;
   }
 }
 
