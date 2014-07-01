@@ -74,7 +74,7 @@ var ReactComponentBrowserEnvironment = {
       );
 
       if (shouldReuseMarkup) {
-        if (ReactMarkupChecksum.canReuseMarkup(
+        if (ReactMarkupChecksum.reuseMarkup(
           markup,
           getReactRootElementInContainer(container))) {
           return;

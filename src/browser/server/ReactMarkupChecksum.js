@@ -38,15 +38,20 @@ var ReactMarkupChecksum = {
   /**
    * @param {string} markup to use
    * @param {DOMElement} element root React element
-   * @returns {boolean} whether or not the markup is the same
+   * @returns {boolean} whether or not the markup was reusable
    */
-  canReuseMarkup: function(markup, element) {
+  reuseMarkup: function(markup, element) {
     var existingChecksum = element.getAttribute(
       ReactMarkupChecksum.CHECKSUM_ATTR_NAME
     );
-    existingChecksum = existingChecksum && parseInt(existingChecksum, 10);
-    var markupChecksum = adler32(markup);
-    return markupChecksum === existingChecksum;
+    if (existingChecksum) {
+      var markupChecksum = '' + adler32(markup);
+      if (markupChecksum === existingChecksum) {
+        element.removeAttribute(ReactMarkupChecksum.CHECKSUM_ATTR_NAME);
+        return true;
+      }
+    }
+    return false;
   }
 };
 
