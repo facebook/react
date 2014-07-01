@@ -65,20 +65,46 @@ function visitReactTag(traverse, object, path, state) {
 
   utils.catchup(openingElement.range[0], state, trimLeft);
 
-
   if (nameObject.type === Syntax.XJSNamespacedName && nameObject.namespace) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
   }
 
+  // Only identifiers can be fallback tags or need quoting. We don't need to
+  // handle quoting for other types.
+  var didAddTag = false;
+
   // Only identifiers can be fallback tags. XJSMemberExpressions are not.
-  var isFallbackTag =
-    nameObject.type === Syntax.XJSIdentifier &&
-    FALLBACK_TAGS.hasOwnProperty(nameObject.name);
+  if (nameObject.type === Syntax.XJSIdentifier) {
+    var tagName = nameObject.name;
+    var quotedTagName = quoteAttrName(tagName);
 
-  utils.append(isFallbackTag ? jsxObjIdent + '.' : '', state);
+    if (FALLBACK_TAGS.hasOwnProperty(tagName)) {
+      // "Properly" handle invalid identifiers, like <font-face>, which needs to
+      // be enclosed in quotes.
+      var predicate =
+        tagName === quotedTagName ?
+          ('.' + tagName) :
+          ('[' + quotedTagName + ']');
+      utils.append(jsxObjIdent + predicate, state);
+      utils.move(nameObject.range[1], state);
+      didAddTag = true;
+    } else if (tagName !== quotedTagName) {
+      // If we're in the case where we need to quote and but don't recognize the
+      // tag, throw.
+      throw new Error(
+        'Tags must be valid JS identifiers or a recognized special case. `<' +
+        tagName + '>` is not one of them.'
+      );
+    }
+  }
 
-  utils.move(nameObject.range[0], state);
-  utils.catchup(nameObject.range[1], state);
+  // Use utils.catchup in this case so we can easily handle XJSMemberExpressions
+  // which look like Foo.Bar.Baz. This also handles unhyphenated XJSIdentifiers
+  // that aren't fallback tags.
+  if (!didAddTag) {
+    utils.move(nameObject.range[0], state);
+    utils.catchup(nameObject.range[1], state);
+  }
 
   utils.append('(', state);
 
