@@ -82,6 +82,7 @@ var HTMLDOMPropertyConfig = {
     contentEditable: null,
     contextMenu: MUST_USE_ATTRIBUTE,
     controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    coords: null,
     crossOrigin: null,
     data: null, // For `<object />` acts as `src`.
     dateTime: MUST_USE_ATTRIBUTE,
@@ -133,6 +134,7 @@ var HTMLDOMPropertyConfig = {
     scrollTop: MUST_USE_PROPERTY,
     seamless: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    shape: null,
     size: MUST_USE_ATTRIBUTE | HAS_POSITIVE_NUMERIC_VALUE,
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
@@ -146,6 +148,7 @@ var HTMLDOMPropertyConfig = {
     target: null,
     title: null,
     type: null,
+    useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
