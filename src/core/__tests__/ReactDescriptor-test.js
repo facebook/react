@@ -49,13 +49,18 @@ describe('ReactDescriptor', function() {
   it('immediately calls the type passed to createDescriptor', function() {
     var a = 1, b = 2, c = 3, d = 4;
 
-    var foo = jest.genMockFunction();
-    foo.mockReturnValue(d);
+    // TODO: Switch back to using jest.genMockFunction when we run jest in
+    // github repo.
+    var test = {
+      foo: function() { return d; }
+    };
 
-    var result = React.createDescriptor(foo, a, b, c);
+    spyOn(test, 'foo').andCallThrough();
+
+    var result = React.createDescriptor(test.foo, a, b, c);
 
     expect(result).toBe(d);
-    expect(foo).toBeCalledWith(a, b, c);
+    expect(test.foo).toHaveBeenCalledWith(a, b, c);
   });
 
 });
