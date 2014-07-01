@@ -55,7 +55,8 @@ var emptyFunction = require('emptyFunction');
  *      // An optional string or URI prop named "href".
  *      href: function(props, propName, componentName) {
  *        var propValue = props[propName];
- *        if (typeof propValue === 'string' || propValue instanceof URI) {
+ *        if (propValue != null && typeof propValue !== 'string' &&
+ *            !(propValue instanceof URI)) {
  *          return new Error(
  *            'Expected a string or an URI for ' + propName + ' in ' +
  *            componentName
