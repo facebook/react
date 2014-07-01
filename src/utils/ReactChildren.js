@@ -129,19 +129,19 @@ function mapChildren(children, func, context) {
   return mapResult;
 }
 
-/**
-* Count the number of children that are typically specified as
-* `props.children`.
-*/
-
 function forEachSingleChildDummy(traverseContext, child, name, i) {
   return null;
 }
 
-function countChildren(children,  context) {
-  var numberOfChildren = traverseAllChildren(children, forEachSingleChildDummy,
-    null);
-  return numberOfChildren;
+/**
+ * Count the number of children that are typically specified as
+ * `props.children`.
+ *
+ * @param {?*} children Children tree container.
+ * @return {number} The number of children.
+ */
+function countChildren(children, context) {
+  return traverseAllChildren(children, forEachSingleChildDummy, null);
 }
 
 var ReactChildren = {

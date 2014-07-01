@@ -183,12 +183,11 @@ var traverseAllChildrenImpl =
  * @return {!number} The number of children in this subtree.
  */
 function traverseAllChildren(children, callback, traverseContext) {
-  if (children !== null && children !== undefined) {
-    return traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
-  }
-  else {
+  if (children == null) {
     return 0;
   }
+
+  return traverseAllChildrenImpl(children, '', 0, callback, traverseContext);
 }
 
 module.exports = traverseAllChildren;
