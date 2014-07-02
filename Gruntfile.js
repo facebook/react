@@ -157,7 +157,8 @@ module.exports = function(grunt) {
     'sauce-tunnel',
     'webdriver-jasmine:saucelabs_android',
     'webdriver-jasmine:saucelabs_firefox',
-    'webdriver-jasmine:saucelabs_chrome'
+    'webdriver-jasmine:saucelabs_chrome',
+    'webdriver-jasmine:saucelabs_ie11'
   ]);
 
   grunt.registerTask('test:webdriver:saucelabs:ie', [

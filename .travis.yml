@@ -31,15 +31,7 @@ env:
   matrix:
   - TEST_TYPE=test
   - TEST_TYPE=lint
-  - TEST_TYPE=perf:full
-  - TEST_TYPE=test:coverage
   - TEST_TYPE=test:webdriver:saucelabs:modern
-  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
-  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10
-  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie9
-  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie8
-  - TEST_TYPE=test:webdriver:saucelabs:ios
-  - TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=safari
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
