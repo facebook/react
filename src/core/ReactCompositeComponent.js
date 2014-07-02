@@ -385,6 +385,15 @@ var RESERVED_SPEC_KEYS = {
   }
 };
 
+function getDeclarationErrorAddendum(component) {
+  var owner = component._owner || null;
+  if (owner && owner.constructor && owner.constructor.displayName) {
+    return ' Check the render method of `' + owner.constructor.displayName +
+      '`.';
+  }
+  return '';
+}
+
 function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
@@ -967,7 +976,11 @@ var ReactCompositeComponentMixin = {
         var error =
           propTypes[propName](props, propName, componentName, location);
         if (error instanceof Error) {
-          warning(false, error.message);
+          // We may want to extend this logic for similar errors in
+          // renderComponent calls, so I'm abstracting it away into
+          // a function to minimize refactoring in the future
+          var addendum = getDeclarationErrorAddendum(this);
+          warning(false, error.message + addendum);
         }
       }
     }

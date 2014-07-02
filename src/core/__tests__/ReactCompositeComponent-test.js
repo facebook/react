@@ -110,6 +110,31 @@ describe('ReactCompositeComponent', function() {
     console.warn = warn;
   });
 
+  it('should give context for PropType errors in nested components.', () => {
+    // In this test, we're making sure that if a proptype error is found in a
+    // component, we give a smal hint as to which parent instantiated that
+    // component as per warnings about key-usage in ReactDescriptorValidator.
+    spyOn(console, 'warn');
+    var MyComp = React.createClass({
+      propTypes: {
+        color: ReactPropTypes.string
+      },
+      render: function() {
+        return <div>My color is {this.color}</div>;
+      }
+    });
+    var ParentComp = React.createClass({
+      render: function() {
+        return <MyComp color={123} />;
+      }
+    });
+    ReactTestUtils.renderIntoDocument(<ParentComp />);
+    expect(console.warn.calls[0].args[0]).toBe(
+      'Warning: Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+      'expected `string`. Check the render method of `ParentComp`.'
+    );
+  });
+
   it('should support rendering to different child types over time', function() {
     var instance = <MorphingComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
