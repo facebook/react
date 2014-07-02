@@ -974,7 +974,13 @@ var ReactCompositeComponentMixin = {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error =
-          propTypes[propName](props, propName, componentName, location);
+          propTypes[propName].call(
+            this,
+            props,
+            propName,
+            componentName,
+            location
+          );
         if (error instanceof Error) {
           // We may want to extend this logic for similar errors in
           // renderComponent calls, so I'm abstracting it away into
