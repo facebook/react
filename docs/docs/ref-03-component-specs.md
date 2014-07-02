@@ -42,7 +42,7 @@ Invoked once before the component is mounted. The return value will be used as t
 object getDefaultProps()
 ```
 
-Invoked once when the component is mounted. Values in the mapping will be set on `this.props` if that prop is not specified by the parent component (i.e. using an `in` check).
+Invoked once before the component is mounted. Values in the mapping will be set on `this.props` if that prop is not specified by the parent component (i.e. using an `in` check).
 
 This method is invoked before `getInitialState` and therefore cannot rely on `this.state` or use `this.setState`.
 
