@@ -33,22 +33,22 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "commoner": "^0.9.2",
-    "esprima-fb": "~4001.1.0-dev-harmony-fb",
-    "jstransform": "~5.0.0"
+    "commoner": "^0.9.4",
+    "esprima-fb": "^4001.1001.0-dev-harmony-fb",
+    "jstransform": "^6.0.0"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
     "browserify": "^4.1.10",
     "coverify": "~1.0.4",
-    "envify": "~1.2.0",
+    "envify": "^2.0.0",
     "es3ify": "~0.1.2",
     "es5-shim": "^3.4.0",
     "grunt": "~0.4.2",
     "grunt-cli": "~0.1.9",
     "grunt-compare-size": "~0.4.0",
     "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-compress": "^0.8.0",
+    "grunt-contrib-compress": "^0.9.1",
     "grunt-contrib-connect": "~0.6.0",
     "grunt-contrib-copy": "~0.5.0",
     "grunt-contrib-jshint": "^0.10.0",
