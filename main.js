@@ -19,6 +19,18 @@ module.exports = {
       output += '\n' + map;
     }
     return output;
+  },
+  transformAsObject: function(input, options) {
+    options = options || {};
+    var visitorList = getVisitors(options.harmony);
+    var resultRaw = transform(visitorList, input, options);
+    var result = {
+      code: resultRaw.code
+    };
+    if (options.sourceMap) {
+      result.sourceMap = resultRaw.sourceMap;
+    }
+    return result;
   }
 };
 
