@@ -306,6 +306,9 @@ function isRenderable(propValue) {
         }
       }
       return true;
+    case 'undefined':
+      // Establishes symmetry with `null` case, which is a valid renderable.
+      return true;
     default:
       return false;
   }
