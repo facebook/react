@@ -24,6 +24,7 @@ var mocks = require('mocks');
 describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
+  var ReactTestUtils = require('ReactTestUtils');
 
   describe('constructAndRenderComponentByID', function() {
     it('throws if given an id for a component that doesn\'t exist', function() {
@@ -35,6 +36,29 @@ describe('ReactMount', function() {
         );
       }).toThrow();
     });
+  });
+
+  it('throws when given a factory', function() {
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(React.DOM.div);
+    }).toThrow(
+      'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
+      'Instead of passing a component class, make sure to instantiate it ' +
+      'first by calling it with props.'
+    );
+
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(Component);
+    }).toThrow(
+      'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
+      'Instead of passing a component class, make sure to instantiate it ' +
+      'first by calling it with props.'
+    );
   });
 
   it('should render different components in same root', function() {
