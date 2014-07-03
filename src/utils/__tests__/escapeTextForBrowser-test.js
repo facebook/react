@@ -46,7 +46,6 @@ describe('escapeTextForBrowser', function() {
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
     expect(escaped).not.toContain('\'');
-    expect(escaped).not.toContain('/');
     expect(escaped).not.toContain('\"');
 
     escaped = escapeTextForBrowser('&');
