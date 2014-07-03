@@ -378,7 +378,7 @@ When the component is first created, we want to GET some JSON from the server an
 
 We'll use jQuery to help make an asynchronous request to the server.
 
-Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
+Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory which runs a basic HTTP server responding to GET requests of files.
 
 ```javascript{6-17}
 // tutorial13.js
@@ -579,7 +579,7 @@ var CommentForm = React.createClass({
 });
 ```
 
-Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
+Now that the callbacks are in place, we have to submit to the server and refresh the list:
 
 ```javascript{16-27}
 // tutorial19.js
@@ -628,6 +628,9 @@ var CommentBox = React.createClass({
   }
 });
 ```
+
+Finally, we need our server to accept the POST operation.  The simple server we were using before could only serve files, so now we need to extend the server.  
+
 
 ### Optimization: optimistic updates
 
