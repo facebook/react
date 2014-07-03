@@ -1,5 +1,6 @@
 'use strict';
 
+var path = require("path");
 var grunt = require("grunt");
 var expand = grunt.file.expand;
 var spawn = grunt.util.spawn;
@@ -27,8 +28,8 @@ module.exports = function() {
   args.push("--config" /* from stdin */);
 
   var child = spawn({
-    cmd: "bin/jsx-internal",
-    args: args
+    cmd: "node",
+    args: [path.join("bin", "jsx-internal")].concat(args)
   }, function(error, result, code) {
     if (error) {
       grunt.log.error(error);
