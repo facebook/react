@@ -17,12 +17,10 @@
     }
   ],
   "files": [
-    "README.md",
     "main.js",
     "bin/jsx",
     "src/",
-    "vendor/fbtransform/",
-    "vendor/constants.js"
+    "vendor/fbtransform/"
   ],
   "main": "main.js",
   "bin": {
