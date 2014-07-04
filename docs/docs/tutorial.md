@@ -672,6 +672,35 @@ httpd.serve_forever()
 
 ```
 
+You can write the server in your favorite language as long as it does what our application needs:  handling the GET and POST of the JSON file.   There are many applications written in React that never hit any external server.   As an example, here's a sample node.js server that would also serve our application:
+
+```
+var express = require('express');
+var bodyParser = require('body-parser');
+var app = express();
+
+var comments = [{author: 'Pete Hunt', text: 'Hey there!'}];
+
+app.use('/', express.static(__dirname));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.get('/comments.json', function(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(comments));
+});
+
+app.post('/comments.json', function(req, res) {
+  comments.push(req.body);
+  res.setHeader('Content-Type', 'application/json');
+  res.send(JSON.stringify(comments));
+});
+
+app.listen(3000);
+
+console.log('Server started: http://localhost:3000/');
+```
+
 ### Optimization: optimistic updates
 
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
