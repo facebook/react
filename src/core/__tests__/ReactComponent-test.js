@@ -76,6 +76,28 @@ describe('ReactComponent', function() {
     );
   });
 
+  it('should throw when attempting to use the same ref multiple times', function() {
+    var Component = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <p ref="mySpan">Twinkies</p>;
+            <p ref="mySpan">Twinkies</p>;
+          </div>
+        );
+      }
+    });
+
+    var instance = <Component />;
+
+    expect(function() {
+      instance = ReactTestUtils.renderIntoDocument(instance);
+    }).toThrow(
+      'Invariant Violation: attachRef(mySpan, ...): Duplicate refs: a component ' +
+      'has already been defined for the given ref.'
+    );
+  });
+
   it('should support refs on owned components', function() {
     var innerObj = {}, outerObj = {};
 

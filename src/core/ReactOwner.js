@@ -84,6 +84,12 @@ var ReactOwner = {
       'component\'s `render` method). Try rendering this component inside of ' +
       'a new top-level component which will hold the ref.'
     );
+    invariant(
+      !owner.refs.hasOwnProperty(ref),
+      'attachRef(%s, ...): Duplicate refs: a component has already been ' +
+      'defined for the given ref.',
+      ref
+    );
     owner.attachRef(ref, component);
   },
 
