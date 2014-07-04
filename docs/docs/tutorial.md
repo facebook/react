@@ -376,7 +376,7 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We'll use jQuery to help make an asynchronous request to the server.
+We'll use jQuery to help make an asynchronous request to the server.  It's the only we reason we loaded the jQuery libary:  React appications don't require it.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory which runs a basic HTTP server responding to GET requests of files.
 
