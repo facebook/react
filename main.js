@@ -6,33 +6,34 @@ var Buffer = require('buffer').Buffer;
 
 module.exports = {
   transform: function(input, options) {
-    options = options || {};
-    var visitorList = getVisitors(options.harmony);
-    var result = transform(visitorList, input, options);
-    var output = result.code;
-    if (options.sourceMap) {
+    var output = innerTransform(input, options);
+    var result = output.code;
+    if (options && options.sourceMap) {
       var map = inlineSourceMap(
-        result.sourceMap,
+        output.sourceMap,
         input,
         options.sourceFilename
       );
-      output += '\n' + map;
+      result += '\n' + map;
     }
-    return output;
+    return result;
   },
   transformAsObject: function(input, options) {
-    options = options || {};
-    var visitorList = getVisitors(options.harmony);
-    var resultRaw = transform(visitorList, input, options);
-    var result = {
-      code: resultRaw.code
-    };
-    if (options.sourceMap) {
-      result.sourceMap = resultRaw.sourceMap;
+    var output = innerTransform(input, options);
+    var result = {};
+    result.code = output.code;
+    if (options && options.sourceMap) {
+      result.sourceMap = output.sourceMap;
     }
     return result;
   }
 };
+
+function innerTransform(input, options) {
+  options = options || {};
+  var visitorList = getVisitors(options.harmony);
+  return transform(visitorList, input, options);
+}
 
 function getVisitors(harmony) {
   if (harmony) {
