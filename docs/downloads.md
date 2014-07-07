@@ -76,7 +76,7 @@ React.renderComponent(...);
 
 If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.
 
-**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production`. For use in node, this is sufficient; if you are using browserify, the [envify](https://github.com/hughsk/envify) transform is needed to make use of environment variables. A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
+**Note:** by default, React will be in development mode. To use React in production mode, set the environment variable `NODE_ENV` to `production`. A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
 
 ## Bower
 
