@@ -21,14 +21,207 @@
 
 var React;
 var ReactDescriptor;
+var ReactTestUtils;
 
 describe('ReactDescriptor', function() {
+  var ComponentFactory;
+  var ComponentClass;
+
   beforeEach(function() {
     React = require('React');
     ReactDescriptor = require('ReactDescriptor');
+    ReactTestUtils = require('ReactTestUtils');
+    ComponentFactory = React.createClass({
+      render: function() { return <div />; }
+    });
+    ComponentClass = ComponentFactory.type;
   });
 
-  it('should identify valid descriptors correctly', function() {
+  it('returns a complete descriptor according to spec', function() {
+    var descriptor = React.createFactory(ComponentClass)();
+    expect(descriptor.type).toBe(ComponentClass);
+    expect(descriptor.key).toBe(null);
+    expect(descriptor.ref).toBe(null);
+    expect(descriptor.props).toEqual({});
+  });
+
+  it('allows a string to be passed as the type', function() {
+    var descriptor = React.createFactory('div')();
+    expect(descriptor.type).toBe('div');
+    expect(descriptor.key).toBe(null);
+    expect(descriptor.ref).toBe(null);
+    expect(descriptor.props).toEqual({});
+  });
+
+  it('returns an immutable descriptor', function() {
+    var descriptor = React.createFactory(ComponentClass)();
+    expect(() => descriptor.type = 'div').toThrow();
+  });
+
+  it('does not reuse the original config object', function() {
+    var config = { foo: 1 };
+    var descriptor = React.createFactory(ComponentClass)(config);
+    expect(descriptor.props.foo).toBe(1);
+    config.foo = 2;
+    expect(descriptor.props.foo).toBe(1);
+  });
+
+  it('extracts key and ref from the config', function() {
+    var descriptor = React.createFactory(ComponentClass)({
+      key: '12',
+      ref: '34',
+      foo: '56'
+    });
+    expect(descriptor.type).toBe(ComponentClass);
+    expect(descriptor.key).toBe('12');
+    expect(descriptor.ref).toBe('34');
+    expect(descriptor.props).toEqual({foo:'56'});
+  });
+
+  it('coerces the key to a string', function() {
+    var descriptor = React.createFactory(ComponentClass)({
+      key: 12,
+      foo: '56'
+    });
+    expect(descriptor.type).toBe(ComponentClass);
+    expect(descriptor.key).toBe('12');
+    expect(descriptor.ref).toBe(null);
+    expect(descriptor.props).toEqual({foo:'56'});
+  });
+
+  it('preserves the context on the descriptor', function() {
+    var Component = React.createFactory(ComponentClass);
+    var descriptor;
+
+    var Wrapper = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string
+      },
+      getChildContext: function() {
+        return { foo: 'bar' };
+      },
+      render: function() {
+        descriptor = Component();
+        return descriptor;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<Wrapper />);
+
+    expect(descriptor._context).toEqual({ foo: 'bar' });
+  });
+
+  it('preserves the owner on the descriptor', function() {
+    var Component = React.createFactory(ComponentClass);
+    var descriptor;
+
+    var Wrapper = React.createClass({
+      childContextTypes: {
+        foo: React.PropTypes.string
+      },
+      getChildContext: function() {
+        return { foo: 'bar' };
+      },
+      render: function() {
+        descriptor = Component();
+        return descriptor;
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+
+    expect(descriptor._owner).toBe(instance);
+  });
+
+  it('merges an additional argument onto the children prop', function() {
+    spyOn(console, 'warn');
+    var a = 1;
+    var descriptor = React.createFactory(ComponentClass)({
+      children: 'text'
+    }, a);
+    expect(descriptor.props.children).toBe(a);
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('does not override children if no rest args are provided', function() {
+    spyOn(console, 'warn');
+    var descriptor = React.createFactory(ComponentClass)({
+      children: 'text'
+    });
+    expect(descriptor.props.children).toBe('text');
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('overrides children if null is provided as an argument', function() {
+    spyOn(console, 'warn');
+    var descriptor = React.createFactory(ComponentClass)({
+      children: 'text'
+    }, null);
+    expect(descriptor.props.children).toBe(null);
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('merges rest arguments onto the children prop in an array', function() {
+    spyOn(console, 'warn');
+    var a = 1, b = 2, c = 3;
+    var descriptor = React.createFactory(ComponentClass)(null, a, b, c);
+    expect(descriptor.props.children).toEqual([1, 2, 3]);
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('warns for keys for arrays of descriptors in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentClass);
+
+    Component(null, [ Component(), Component() ]);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Each child in an array should have a unique "key" prop'
+    );
+  });
+
+  it('does not warn when the descriptor is directly in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentClass);
+
+    Component(null, Component(), Component());
+
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('does not warn when the array contains a non-descriptor', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentClass);
+
+    Component(null, [ {}, {} ]);
+
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('allows static methods to be called using the type property', function() {
+    spyOn(console, 'warn');
+
+    var ComponentClass = React.createClass({
+      statics: {
+        someStaticMethod: function() {
+          return 'someReturnValue';
+        }
+      },
+      getInitialState: function() {
+        return {valueToReturn: 'hi'};
+      },
+      render: function() {
+        return <div></div>;
+      }
+    });
+
+    var descriptor = <ComponentClass />;
+    expect(descriptor.type.someStaticMethod()).toBe('someReturnValue');
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('identifies valid descriptors', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
@@ -46,21 +239,26 @@ describe('ReactDescriptor', function() {
     expect(ReactDescriptor.isValidDescriptor(Component)).toEqual(false);
   });
 
-  it('immediately calls the type passed to createDescriptor', function() {
-    var a = 1, b = 2, c = 3, d = 4;
+  it('warns but allow a plain function to be immediately invoked', function() {
+    spyOn(console, 'warn');
+    // This is a temporary helper to allow JSX with plain functions.
+    // This allow you to track down these callers and replace them with regular
+    // function calls.
+    var factory = ReactDescriptor.createFactory(function (x) {
+      return 21 + x;
+    });
+    expect(factory(21)).toBe(42);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'This JSX uses a plain function.'
+    );
+  });
 
-    // TODO: Switch back to using jest.genMockFunction when we run jest in
-    // github repo.
-    var test = {
-      foo: function() { return d; }
-    };
-
-    spyOn(test, 'foo').andCallThrough();
-
-    var result = React.createDescriptor(test.foo, a, b, c);
-
-    expect(result).toBe(d);
-    expect(test.foo).toHaveBeenCalledWith(a, b, c);
+  it('should expose the underlying class from a legacy factory', function() {
+    var Legacy = React.createClass({ render: function() { } });
+    var factory = React.createFactory(Legacy);
+    expect(factory.type).toBe(Legacy.type);
+    expect(factory().type).toBe(Legacy.type);
   });
 
   it('allows the use of PropTypes validators in statics', function() {

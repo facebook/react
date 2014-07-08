@@ -121,14 +121,11 @@ describe('cloneWithProps', function() {
   it('should transfer the key property', function() {
     var Component = React.createClass({
       render: function() {
-        expect(this.props.key).toBe('xyz');
-        return <div />;
+        return null;
       }
     });
-
-    ReactTestUtils.renderIntoDocument(
-      cloneWithProps(<Component />, {key: 'xyz'})
-    );
+    var clone = cloneWithProps(<Component />, {key: 'xyz'});
+    expect(clone.key).toBe('xyz');
   });
 
   it('should transfer children', function() {
@@ -160,8 +157,6 @@ describe('cloneWithProps', function() {
   it('should support keys and refs', function() {
     var Component = React.createClass({
       render: function() {
-        expect(this.props.key).toBe('xyz');
-        expect(this.props.ref).toBe('xyz');
         return <div />;
       }
     });
@@ -170,6 +165,8 @@ describe('cloneWithProps', function() {
       render: function() {
         var clone =
           cloneWithProps(this.props.children, {key: 'xyz', ref: 'xyz'});
+        expect(clone.key).toBe('xyz');
+        expect(clone.ref).toBe('xyz');
         return <div>{clone}</div>;
       }
     });

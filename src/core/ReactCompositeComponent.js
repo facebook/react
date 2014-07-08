@@ -25,6 +25,7 @@ var ReactDescriptor = require('ReactDescriptor');
 var ReactDescriptorValidator = require('ReactDescriptorValidator');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactErrorUtils = require('ReactErrorUtils');
+var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTransferer = require('ReactPropTransferer');
@@ -1387,17 +1388,14 @@ var ReactCompositeComponent = {
       }
     }
 
-    var descriptorFactory = ReactDescriptor.createFactory(Constructor);
-
     if (__DEV__) {
-      return ReactDescriptorValidator.createFactory(
-        descriptorFactory,
-        Constructor.propTypes,
-        Constructor.contextTypes
+      return ReactLegacyDescriptor.wrapFactory(
+        ReactDescriptorValidator.createFactory(Constructor)
       );
     }
-
-    return descriptorFactory;
+    return ReactLegacyDescriptor.wrapFactory(
+      ReactDescriptor.createFactory(Constructor)
+    );
   },
 
   injection: {

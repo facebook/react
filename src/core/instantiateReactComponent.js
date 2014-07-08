@@ -29,11 +29,12 @@ var invariant = require('invariant');
  * @return {boolean} Returns true if this is a valid descriptor of a Component.
  */
 function isValidComponentDescriptor(descriptor) {
-  return (
-    descriptor &&
-    typeof descriptor.type === 'function' &&
-    typeof descriptor.type.prototype.mountComponent === 'function' &&
-    typeof descriptor.type.prototype.receiveComponent === 'function'
+  return !!descriptor && (
+    (
+      typeof descriptor.type === 'function' &&
+      typeof descriptor.type.prototype.mountComponent === 'function' &&
+      typeof descriptor.type.prototype.receiveComponent === 'function'
+    ) || typeof descriptor.type === 'string'
   );
 }
 

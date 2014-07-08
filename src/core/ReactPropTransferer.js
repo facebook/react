@@ -62,14 +62,6 @@ var TransferStrategies = {
    */
   className: createTransferStrategy(joinClasses),
   /**
-   * Never transfer the `key` prop.
-   */
-  key: emptyFunction,
-  /**
-   * Never transfer the `ref` prop.
-   */
-  ref: emptyFunction,
-  /**
    * Transfer the `style` prop (which is an object) by merging them.
    */
   style: transferStrategyMerge
