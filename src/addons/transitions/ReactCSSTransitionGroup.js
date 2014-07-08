@@ -25,6 +25,8 @@ var ReactTransitionGroup = require('ReactTransitionGroup');
 var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
 
 var ReactCSSTransitionGroup = React.createClass({
+  displayName: 'ReactCSSTransitionGroup',
+
   propTypes: {
     transitionName: React.PropTypes.string.isRequired,
     transitionEnter: React.PropTypes.bool,
