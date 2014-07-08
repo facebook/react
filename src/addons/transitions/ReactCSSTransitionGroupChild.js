@@ -48,6 +48,8 @@ if (__DEV__) {
 }
 
 var ReactCSSTransitionGroupChild = React.createClass({
+  displayName: 'ReactCSSTransitionGroupChild',
+
   transition: function(animationType, finishCallback) {
     var node = this.getDOMNode();
     var className = this.props.name + '-' + animationType;

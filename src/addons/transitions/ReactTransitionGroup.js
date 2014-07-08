@@ -26,6 +26,7 @@ var emptyFunction = require('emptyFunction');
 var merge = require('merge');
 
 var ReactTransitionGroup = React.createClass({
+  displayName: 'ReactTransitionGroup',
 
   propTypes: {
     component: React.PropTypes.func,
