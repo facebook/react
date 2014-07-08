@@ -66,7 +66,8 @@ module.exports = function(grunt) {
 
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
-  grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.pack);
+  grunt.registerTask('npm-react-tools:release', npmReactToolsTasks.buildRelease);
+  grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.packRelease);
 
   grunt.registerTask('version-check', versionCheckTask);
 
@@ -220,6 +221,7 @@ module.exports = function(grunt) {
     'browserify:addonsMin',
     'npm-react:release',
     'npm-react:pack',
+    'npm-react-tools:release',
     'npm-react-tools:pack',
     'copy:react_docs',
     'compare_size'
