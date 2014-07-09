@@ -386,7 +386,7 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
-  componentWillMount: function() {
+  componentDidMount: function() {
     $.ajax({
       url: this.props.url,
       dataType: 'json',
@@ -410,7 +410,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Here, `componentWillMount` is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
+Here, `componentDidMount` is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
 ```javascript{3,19-20,34}
 // tutorial14.js
@@ -430,7 +430,7 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
-  componentWillMount: function() {
+  componentDidMount: function() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
@@ -538,7 +538,7 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
-  componentWillMount: function() {
+  componentDidMount: function() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
@@ -613,7 +613,7 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
-  componentWillMount: function() {
+  componentDidMount: function() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
@@ -668,7 +668,7 @@ var CommentBox = React.createClass({
   getInitialState: function() {
     return {data: []};
   },
-  componentWillMount: function() {
+  componentDidMount: function() {
     this.loadCommentsFromServer();
     setInterval(this.loadCommentsFromServer, this.props.pollInterval);
   },
