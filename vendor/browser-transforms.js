@@ -17,15 +17,17 @@
 /* jslint evil: true */
 
 'use strict';
+
+var buffer = require('buffer');
+var docblock = require('jstransform/src/docblock');
+var transform = require('jstransform').transform;
+var visitors = require('./fbtransform/visitors');
+
 var runScripts;
 var loadScripts;
 var headEl;
 var dummyAnchor;
-
-var buffer = require('buffer');
-var transform = require('jstransform').transform;
-var visitors = require('./fbtransform/visitors');
-var docblock = require('jstransform/src/docblock');
+var inlineScriptCount = 0;
 
 // The source-map library relies on Object.defineProperty, but IE8 doesn't
 // support it fully even with es5-sham. Indeed, es5-sham's defineProperty
@@ -33,7 +35,15 @@ var docblock = require('jstransform/src/docblock');
 // the source map in that case.
 var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
 
+/**
+ * Run provided code through jstransform.
+ *
+ * @param {string} source Original source code
+ * @param {object?} options Options to pass to jstransform
+ * @return {object} object as returned from jstransform
+ */
 function transformReact(source, options) {
+  // TODO: just use react-tools
   var visitorList;
   if (options && options.harmony) {
     visitorList = visitors.getAllVisitors();
@@ -46,23 +56,31 @@ function transformReact(source, options) {
   });
 }
 
-exports.transform = transformReact;
+/**
+ * Eval provided source after transforming it.
+ *
+ * @param {string} source Original source code
+ * @param {object?} options Options to pass to jstransform
+ */
+function exec(source, options) {
+  return eval(transformReact(source, options).code);
+}
 
-exports.exec = function(code, options) {
-  return eval(transformReact(code, options).code);
-};
-
-var inlineScriptCount = 0;
-
-// This method returns a nicely formated line of code pointing the
-// exactly location of the error `e`.
-// The line is limited in size so big lines of code are also shown
-// in a readable way.
-// Example:
-//
-// ... x', overflow:'scroll'}} id={} onScroll={this.scroll} class=" ...
-//                                 ^
-var createSourceCodeErrorMessage = function(code, e) {
+/**
+ * This method returns a nicely formated line of code pointing to the exact
+ * location of the error `e`. The line is limited in size so big lines of code
+ * are also shown in a readable way.
+ *
+ * Example:
+ * ... x', overflow:'scroll'}} id={} onScroll={this.scroll} class=" ...
+ * ^
+ *
+ * @param {string} code The full string of code
+ * @param {Error} e The error being thrown
+ * @return {string} formatted message
+ * @internal
+ */
+function createSourceCodeErrorMessage(code, e) {
   var sourceLines = code.split('\n');
   var erroneousLine = sourceLines[e.lineNumber - 1];
 
@@ -89,9 +107,18 @@ var createSourceCodeErrorMessage = function(code, e) {
   var message = '\n\n' + erroneousLine + '\n';
   message += new Array(errorColumn - 1).join(' ') + '^';
   return message;
-};
+}
 
-var transformCode = function(code, source, options) {
+/**
+ * Actually transform the code.
+ *
+ * @param {string} code
+ * @param {string?} url
+ * @param {object?} options
+ * @return {string} The transformed code.
+ * @internal
+ */
+function transformCode(code, url, options) {
   var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
 
   if (jsx) {
@@ -99,14 +126,14 @@ var transformCode = function(code, source, options) {
       var transformed = transformReact(code, options);
     } catch(e) {
       e.message += '\n    at ';
-      if (source) {
+      if (url) {
         if ('fileName' in e) {
           // We set `fileName` if it's supported by this error object and
-          // a `source` was provided.
-          // The error will correctly point to `source` in Firefox.
-          e.fileName = source;
+          // a `url` was provided.
+          // The error will correctly point to `url` in Firefox.
+          e.fileName = url;
         }
-        e.message += source + ':' + e.lineNumber + ':' + e.column;
+        e.message += url + ':' + e.lineNumber + ':' + e.column;
       } else {
         e.message += location.href;
       }
@@ -119,7 +146,8 @@ var transformCode = function(code, source, options) {
     }
 
     var map = transformed.sourceMap.toJSON();
-    if (source == null) {
+    var source;
+    if (url == null) {
       source = "Inline JSX script";
       inlineScriptCount++;
       if (inlineScriptCount > 1) {
@@ -130,7 +158,7 @@ var transformCode = function(code, source, options) {
       // protocol and hostname, so use the pathname. We could use just the
       // filename, but hopefully using the full path will prevent potential
       // issues where the same filename exists in multiple directories.
-      dummyAnchor.href = source;
+      dummyAnchor.href = url;
       source = dummyAnchor.pathname.substr(1);
     }
     map.sources = [source];
@@ -142,17 +170,37 @@ var transformCode = function(code, source, options) {
       buffer.Buffer(JSON.stringify(map)).toString('base64')
     );
   } else {
+    // TODO: warn that we found a script tag missing the docblock?
+    //       or warn and proceed anyway?
+    //       or warn, add it ourselves, and proceed anyway?
     return code;
   }
-};
+}
 
-var run = exports.run = function(code, source, options) {
+
+/**
+ * Appends a script element at the end of the <head> with the content of code,
+ * after transforming it.
+ *
+ * @param {string} code The original source code
+ * @param {string?} url Where the code came from. null if inline
+ * @param {object?} options Options to pass to jstransform
+ * @internal
+ */
+function run(code, url, options) {
   var scriptEl = document.createElement('script');
-  scriptEl.text = transformCode(code, source, options);
+  scriptEl.text = transformCode(code, url, options);
   headEl.appendChild(scriptEl);
-};
+}
 
-var load = exports.load = function(url, callback) {
+/**
+ * Load script from the provided url and pass the content to the callback.
+ *
+ * @param {string} url The location of the script src
+ * @param {function} callback Function to call with the content of url
+ * @internal
+ */
+function load(url, callback) {
   var xhr;
   xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP')
                              : new XMLHttpRequest();
@@ -173,15 +221,23 @@ var load = exports.load = function(url, callback) {
     }
   };
   return xhr.send(null);
-};
+}
 
-loadScripts = function(scripts) {
+/**
+ * Loop over provided script tags and get the content, via innerHTML if an
+ * inline script, or by using XHR. Transforms are applied if needed. The scripts
+ * are executed in the order they are found on the page.
+ *
+ * @param {array} scripts The <script> elements to load and run.
+ * @internal
+ */
+function loadScripts(scripts) {
   var result = scripts.map(function() {
     return false;
   });
   var count = result.length;
 
-  var check = function() {
+  function check() {
     var script, i;
 
     for (i = 0; i < count; i++) {
@@ -193,8 +249,8 @@ loadScripts = function(scripts) {
       } else if (!script) {
         break;
       }
-    };
-  };
+    }
+  }
 
   scripts.forEach(function(script, i) {
     var options;
@@ -206,17 +262,32 @@ loadScripts = function(scripts) {
 
     if (script.src) {
       load(script.src, function(content, url) {
-        result[i] = { executed: false, content: content, url: url, options: options };
+        result[i] = {
+          executed: false,
+          content: content,
+          url: url,
+          options: options
+        };
         check();
       });
     } else {
-      result[i] = { executed: false, content: script.innerHTML, url: null, options: options };
+      result[i] = {
+        executed: false,
+        content: script.innerHTML,
+        url: null,
+        options: options
+      };
       check();
     }
   });
-};
+}
 
-runScripts = function() {
+/**
+ * Find and run all script tags with type="text/jsx".
+ *
+ * @internal
+ */
+function runScripts() {
   var scripts = document.getElementsByTagName('script');
 
   // Array.prototype.slice cannot be used on NodeList on IE8
@@ -227,11 +298,17 @@ runScripts = function() {
     }
   }
 
-  console.warn("You are using the in-browser JSX transformer. Be sure to precompile your JSX for production - http://facebook.github.io/react/docs/tooling-integration.html#jsx");
+  console.warn(
+    'You are using the in-browser JSX transformer. Be sure to precompile ' +
+    'your JSX for production - ' +
+    'http://facebook.github.io/react/docs/tooling-integration.html#jsx'
+  );
 
   loadScripts(jsxScripts);
-};
+}
 
+// Listen for load event if we're in a browser and then kick off finding and
+// running of scripts.
 if (typeof window !== "undefined" && window !== null) {
   headEl = document.getElementsByTagName('head')[0];
   dummyAnchor = document.createElement('a');
@@ -242,3 +319,8 @@ if (typeof window !== "undefined" && window !== null) {
     window.attachEvent('onload', runScripts);
   }
 }
+
+module.exports = {
+  transform: transformReact,
+  exec: exec
+};
