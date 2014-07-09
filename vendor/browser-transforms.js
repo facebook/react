@@ -20,6 +20,7 @@
 var runScripts;
 var loadScripts;
 var headEl;
+var dummyAnchor;
 
 var buffer = require('buffer');
 var transform = require('jstransform').transform;
@@ -124,13 +125,20 @@ var transformCode = function(code, source, options) {
       if (inlineScriptCount > 1) {
         source += ' (' + inlineScriptCount + ')';
       }
+    } else if (dummyAnchor) {
+      // Firefox has problems when the sourcemap source is a proper URL with a
+      // protocol and hostname, so use the pathname. We could use just the
+      // filename, but hopefully using the full path will prevent potential
+      // issues where the same filename exists in multiple directories.
+      dummyAnchor.href = source;
+      source = dummyAnchor.pathname.substr(1);
     }
     map.sources = [source];
     map.sourcesContent = [code];
 
     return (
       transformed.code +
-      '//# sourceMappingURL=data:application/json;base64,' +
+      '\n//# sourceMappingURL=data:application/json;base64,' +
       buffer.Buffer(JSON.stringify(map)).toString('base64')
     );
   } else {
@@ -226,6 +234,7 @@ runScripts = function() {
 
 if (typeof window !== "undefined" && window !== null) {
   headEl = document.getElementsByTagName('head')[0];
+  dummyAnchor = document.createElement('a');
 
   if (window.addEventListener) {
     window.addEventListener('DOMContentLoaded', runScripts, false);
