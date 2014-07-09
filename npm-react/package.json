@@ -17,6 +17,7 @@
     "README.md",
     "addons.js",
     "react.js",
+    "dist/",
     "lib/"
   ],
   "main": "react.js",
