@@ -47,6 +47,9 @@ if (__DEV__) {
 var ELEMENT_NODE_TYPE = 1;
 var DOC_NODE_TYPE = 9;
 
+var isNativeMap =
+  typeof Map === 'function' && Map.toString().indexOf('[native code]');
+
 /** Mapping from reactRootID to React component instance. */
 var instancesByReactRootID = {};
 
@@ -56,6 +59,26 @@ var containersByReactRootID = {};
 if (__DEV__) {
   /** __DEV__-only mapping from reactRootID to root elements. */
   var rootElementsByReactRootID = {};
+}
+
+var internalGetID, internalSetID;
+
+if (isNativeMap) {
+  var reactRootIDsByElement = new Map;
+
+  internalGetID = function(node) {
+    return node && reactRootIDsByElement.get(node) || '';
+  };
+  internalSetID = function(node, id) {
+    reactRootIDsByElement.set(node, id);
+  };
+} else {
+  internalGetID = function(node) {
+    return node && node[ID_PROP_NAME] || '';
+  };
+  internalSetID = function(node, id) {
+    node[ID_PROP_NAME] = id;
+  };
 }
 
 /**
@@ -76,11 +99,11 @@ function getID(node) {
     return '';
   }
 
-  var id = node[ID_PROP_NAME];
+  var id = internalGetID(node);
 
   if (!id) {
     evaluateNodeParents(node);
-    id = node[ID_PROP_NAME];
+    id = internalGetID(node);
 
     if (!id) {
       return '';
@@ -99,10 +122,6 @@ function getID(node) {
   return id;
 }
 
-function internalGetID(node) {
-  return node && node[ID_PROP_NAME] || '';
-}
-
 /**
  * Sets the React-specific ID of the given node.
  *
@@ -114,7 +133,7 @@ function setID(node, id) {
   if (oldID !== id) {
     delete nodesByReactRootID[oldID];
   }
-  node[ID_PROP_NAME] = id;
+  internalSetID(node, id);
   nodesByReactRootID[id] = node;
 }
 
@@ -262,7 +281,7 @@ function evaluateChild(node, instance) {
 
 
   nodesByReactRootID[rootID] = node;
-  node[ID_PROP_NAME] = rootID;
+  internalSetID(node, rootID);
 
   if (__DEV__) {
     owningInstancesForNodeByReactRootID[rootID] = instance;
@@ -328,7 +347,7 @@ function evaluateNodeParents(node) {
     return;
   }
 
-  var id = parentNode[ID_PROP_NAME];
+  var id = internalGetID(parentNode);
 
   if (!id) {
     // If evaluation of the parent node did succeed, then it is not owned by
@@ -339,7 +358,7 @@ function evaluateNodeParents(node) {
 
     // As all children have been evaluated, simply checking if our node is now
     // evaluated is enough.
-    id = parentNode[ID_PROP_NAME];
+    id = internalGetID(parentNode);
 
     if (!id) {
       return false;
