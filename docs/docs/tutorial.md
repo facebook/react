@@ -376,7 +376,7 @@ When the component is first created, we want to GET some JSON from the server an
 ]
 ```
 
-We'll use jQuery to help make an asynchronous request to the server.  It's the only we reason we loaded the jQuery library:  React applications don't require it.
+We'll use jQuery to help make an asynchronous request to the server. It's the only we reason we loaded the jQuery library: React applications don't require it.
 
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory which runs a basic HTTP server responding to GET requests of files.
 
@@ -629,7 +629,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Finally, we need our server to accept the POST operation.  The server needs to accept a POST with the new author and text, update the JSON file on the server, and return the updated JSON.  We need to extend the simple `$ python -m SimpleHTTPServer` with our new script and run it as `$ python server.py`:
+Finally, we need our server to accept the POST operation. The server needs to accept a POST with the new author and text, update the JSON file on the server, and return the updated JSON. We need to extend the simple `$ python -m SimpleHTTPServer` with our new script and run it as `$ python server.py`:
 
 ```
 #!/usr/bin/env python2
@@ -672,7 +672,7 @@ httpd.serve_forever()
 
 ```
 
-You can write the server in your favorite language as long as it does what our application needs:  handling the GET and POST of the JSON file.   There are many applications written in React that never hit any external server.   As an example, here's a sample node.js server that would also serve our application:
+You can write the server in your favorite language as long as it does what our application needs: handling the GET and POST of the JSON file. There are many applications written in React that never hit any external server. As an example, here's a sample node.js server that would also serve our application:
 
 ```
 var express = require('express');
