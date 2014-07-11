@@ -18,7 +18,7 @@ module.exports = {
     }
     return result;
   },
-  transformAsObject: function(input, options) {
+  transformWithDetails: function(input, options) {
     var output = innerTransform(input, options);
     var result = {};
     result.code = output.code;
