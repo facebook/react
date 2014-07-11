@@ -164,7 +164,7 @@ transition to the new props and state will not require a component update.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
-  return !equal(nextProps, this.props) || !equal(nextState, this.state);
+  return nextProps.id !== this.props.id;
 }
 ```
 
