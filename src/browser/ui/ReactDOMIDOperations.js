@@ -101,20 +101,21 @@ var ReactDOMIDOperations = {
     }
   ),
 
-  /**
-   * Updates a DOM node with new style values. If a value is specified as '',
-   * the corresponding style property will be unset.
-   *
-   * @param {string} id ID of the node to update.
-   * @param {object} styles Mapping from styles to values.
-   * @internal
-   */
-  updateStylesByID: ReactPerf.measure(
+  deleteStyleByID: ReactPerf.measure(
     'ReactDOMIDOperations',
-    'updateStylesByID',
-    function(id, styles) {
+    'deleteStyleByID',
+    function(id, styleName) {
       var node = ReactMount.getNode(id);
-      CSSPropertyOperations.setValueForStyles(node, styles);
+      CSSPropertyOperations.deleteStyle(node, styleName);
+    }
+  ),
+
+  updateStyleByID: ReactPerf.measure(
+    'ReactDOMIDOperations',
+    'updateStyleByID',
+    function(id, newStyle, styleName) {
+      var node = ReactMount.getNode(id);
+      CSSPropertyOperations.setValueForStyle(node, newStyle, styleName);
     }
   ),
 
