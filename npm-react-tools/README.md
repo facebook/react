@@ -1,6 +1,6 @@
 # react-tools
 
-This package compliments the usage of React. It ships with tools that are often used in conjunction.
+This package compliments the usage of [React](http://facebook.github.io/react/). It ships with tools that are often used in conjunction.
 
 ## JSX
 
@@ -10,14 +10,45 @@ This package installs a `jsx` executable that can be used to transform JSX into 
 
 ### Command Line
 
-```sh
-jsx input > output
-```
+    Usage: jsx [options] <source directory> <output directory> [<module ID> [<module ID> ...]]
 
-### API
+    Options:
+
+      -h, --help                               output usage information
+      -V, --version                            output the version number
+      -c, --config [file]                      JSON configuration file (no file or - means STDIN)
+      -w, --watch                              Continually rebuild
+      -x, --extension <js | coffee | ...>      File extension to assume when resolving module identifiers
+      --relativize                             Rewrite all module identifiers to be relative
+      --follow-requires                        Scan modules for required dependencies
+      --cache-dir <directory>                  Alternate directory to use for disk cache
+      --no-cache-dir                           Disable the disk cache
+      --source-charset <utf8 | win1252 | ...>  Charset of source (default: utf8)
+      --output-charset <utf8 | win1252 | ...>  Charset of output (default: utf8)
+      --harmony                                Turns on JS transformations such as ES6 Classes etc.
+
+## API
+
+### `transform(inputString, options)`
+
+option | values | default
+-------|--------|---------
+`sourceMap` | `true`: append inline source map at the end of the transformed source | `false`
+`harmony` | `true`: enable ES6 features | `false`
+`filename` | the output filename for the source map | `"source.js"`
 
 ```js
 var reactTools = require('react-tools');
 
 reactTools.transform(string, options);
+```
+
+### `transformWithDetails(inputString, options)`
+
+Just like `transform`, but outputs an object:
+```js
+{
+  code: outputString,
+  sourceMap: theSourceMap // Only if the `sourceMap` option is `true`.
+}
 ```
