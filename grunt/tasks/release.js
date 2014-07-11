@@ -15,7 +15,22 @@ var GH_PAGES_PATH = '../react-gh-pages/';
 var GH_PAGES_GLOB = [GH_PAGES_PATH + '*'];
 
 var EXAMPLES_PATH = 'examples/';
-var EXAMPLES_GLOB = [EXAMPLES_PATH + '/**/*.*'];
+var EXAMPLES_GLOB = [
+  // todomvc-flux has too many other dependencies, so we'll leave it out
+  EXAMPLES_PATH + '/README.md',
+  EXAMPLES_PATH + '/ballmer-peak/**/*.*',
+  EXAMPLES_PATH + '/basic/**/*.*',
+  EXAMPLES_PATH + '/basic-commonjs/**/*.*',
+  EXAMPLES_PATH + '/basic-jsx/**/*.*',
+  EXAMPLES_PATH + '/basic-jsx-external/**/*.*',
+  EXAMPLES_PATH + '/basic-jsx-harmony/**/*.*',
+  EXAMPLES_PATH + '/basic-jsx-precompile/**/*.*',
+  EXAMPLES_PATH + '/jquery-bootstrap/**/*.*',
+  EXAMPLES_PATH + '/jquery-mobile/**/*.*',
+  EXAMPLES_PATH + '/server-rendering/**/*.*',
+  EXAMPLES_PATH + '/shared/**/*.*',
+  EXAMPLES_PATH + '/transitions/**/*.*'
+];
 
 var STARTER_PATH = 'starter/';
 var STARTER_GLOB = [STARTER_PATH  + '/**/*.*'];
