@@ -23,7 +23,7 @@ module.exports = {
     var result = {};
     result.code = output.code;
     if (options && options.sourceMap) {
-      result.sourceMap = output.sourceMap;
+      result.sourceMap = output.sourceMap.toJSON();
     }
     return result;
   }
