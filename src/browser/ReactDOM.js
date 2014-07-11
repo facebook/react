@@ -185,6 +185,7 @@ var ReactDOM = mapObject({
   g: false,
   line: false,
   linearGradient: false,
+  marker: false,
   mask: false,
   path: false,
   pattern: false,
