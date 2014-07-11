@@ -86,6 +86,11 @@ If the React component was previously rendered into `container`, this will perfo
 
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
+> Note:
+>
+> `React.renderComponent()` currently replaces the contents of the node.
+> This restriction may go away in the future.
+
 
 ### React.unmountComponentAtNode
 
