@@ -104,6 +104,7 @@ if (__DEV__) {
       Function.prototype.bind,
       Object.keys,
       String.prototype.split,
+      String.prototype.trim,
 
       // shams
       Object.create,
@@ -114,8 +115,7 @@ if (__DEV__) {
       if (!expectedFeatures[i]) {
         console.error(
           'One or more ES5 shim/shams expected by React are not available: ' +
-          'http://facebook.github.io/react/docs/working-with-the-browser.html' +
-          '#polyfills-needed-to-support-older-browsers'
+          'http://fb.me/react-warning-polyfills'
         );
         break;
       }
