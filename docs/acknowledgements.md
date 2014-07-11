@@ -110,6 +110,7 @@ We'd like to thank all of our contributors:
     <li>Josh Duck</li>
     <li>Josh Yudaken</li>
     <li>Joshua Ma</li>
+    <li>Julen Ruiz Aizpuru</li>
     <li>Jun Wu</li>
     <li>Juraj Dudak</li>
     <li>Justin Jaffray</li>
