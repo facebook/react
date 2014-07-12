@@ -126,7 +126,7 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 * `String.prototype.split`
 * `String.prototype.trim`
 
-`es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim), provides the following that React needs:
+`es5-shim.js`, also from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim), provides the following that React needs:
 
 * `Object.create`
 * `Object.freeze`
