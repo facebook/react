@@ -28,6 +28,24 @@ describe('ReactDOMTextarea', function() {
   var ReactTestUtils;
 
   var renderTextarea;
+  var onClick = mocks.getMockFunction();
+
+  function expectClickThru(textarea) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(textarea.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(1);
+  }
+
+  function expectNoClickThru(textarea) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(textarea.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(0);
+  }
+
+  function mounted(textarea) {
+    textarea = ReactTestUtils.renderIntoDocument(textarea);
+    return textarea;
+  }
 
   beforeEach(function() {
     React = require('React');
@@ -41,6 +59,28 @@ describe('ReactDOMTextarea', function() {
       node.value = node.innerHTML;
       return stub;
     };
+  });
+
+  it('should forward clicks when it starts out not disabled', function() {
+    expectClickThru(mounted(<textarea onClick={onClick} />));
+  });
+
+  it('should not forward clicks when it starts out disabled', function() {
+    expectNoClickThru(
+      mounted(<textarea disabled={true} onClick={onClick} />)
+    );
+  });
+
+  it('should forward clicks when it becomes not disabled', function() {
+    var textarea = mounted(<textarea disabled={true} onClick={onClick} />);
+    textarea.setProps({disabled: false});
+    expectClickThru(textarea);
+  });
+
+  it('should not forward clicks when it becomes disabled', function() {
+    var textarea = mounted(<textarea onClick={onClick} />);
+    textarea.setProps({disabled: true});
+    expectNoClickThru(textarea);
   });
 
   it('should allow setting `defaultValue`', function() {

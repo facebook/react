@@ -28,12 +28,53 @@ describe('ReactDOMSelect', function() {
   var ReactLink;
   var ReactTestUtils;
 
+  var onClick = mocks.getMockFunction();
+
+  function expectClickThru(select) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(select.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(1);
+  }
+
+  function expectNoClickThru(select) {
+    onClick.mockClear();
+    ReactTestUtils.Simulate.click(select.getDOMNode());
+    expect(onClick.mock.calls.length).toBe(0);
+  }
+
+  function mounted(select) {
+    select = ReactTestUtils.renderIntoDocument(select);
+    return select;
+  }
+
   beforeEach(function() {
     React = require('React');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });
+	
+  it('should forward clicks when it starts out not disabled', function() {
+    expectClickThru(mounted(<select onClick={onClick} />));
+  });
 
+  it('should not forward clicks when it starts out disabled', function() {
+    expectNoClickThru(
+      mounted(<select disabled={true} onClick={onClick} />)
+    );
+  });
+
+  it('should forward clicks when it becomes not disabled', function() {
+    var select = mounted(<select disabled={true} onClick={onClick} />);
+    select.setProps({disabled: false});
+    expectClickThru(select);
+  });
+
+  it('should not forward clicks when it becomes disabled', function() {
+    var select = mounted(<select onClick={onClick} />);
+    select.setProps({disabled: true});
+    expectNoClickThru(select);
+  });
+	
   it('should allow setting `defaultValue`', function() {
     var stub =
       <select defaultValue="giraffe">

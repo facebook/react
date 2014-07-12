@@ -24,23 +24,10 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
 
-var keyMirror = require('keyMirror');
+var filterDisabledEvents = require('filterDisabledEvents');
 
 // Store a reference to the <button> `ReactDOMComponent`. TODO: use string
 var button = ReactDescriptor.createFactory(ReactDOM.button.type);
-
-var mouseListenerNames = keyMirror({
-  onClick: true,
-  onDoubleClick: true,
-  onMouseDown: true,
-  onMouseMove: true,
-  onMouseUp: true,
-  onClickCapture: true,
-  onDoubleClickCapture: true,
-  onMouseDownCapture: true,
-  onMouseMoveCapture: true,
-  onMouseUpCapture: true
-});
 
 /**
  * Implements a <button> native component that does not receive mouse events
@@ -52,15 +39,7 @@ var ReactDOMButton = ReactCompositeComponent.createClass({
   mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
 
   render: function() {
-    var props = {};
-
-    // Copy the props; except the mouse listeners if we're disabled
-    for (var key in this.props) {
-      if (this.props.hasOwnProperty(key) &&
-          (!this.props.disabled || !mouseListenerNames[key])) {
-        props[key] = this.props[key];
-      }
-    }
+    var props = filterDisabledEvents(this.props);
 
     return button(props, this.props.children);
   }
