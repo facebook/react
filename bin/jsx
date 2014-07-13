@@ -2,8 +2,7 @@
 // -*- mode: js -*-
 "use strict";
 
-var visitors = require('../vendor/fbtransform/visitors');
-var transform = require('jstransform').transform;
+var transform = require('../main').transform;
 
 require('commoner').version(
   require('../package.json').version
@@ -12,13 +11,14 @@ require('commoner').version(
 }).option(
   '--harmony',
   'Turns on JS transformations such as ES6 Classes etc.'
+).option(
+  '--source-map-inline',
+  'Embed inline sourcemap in transformed source'
 ).process(function(id, source) {
   // This is where JSX, ES6, etc. desugaring happens.
-  var visitorList;
-  if (this.options.harmony) {
-    visitorList = visitors.getAllVisitors();
-  } else {
-    visitorList = visitors.transformVisitors.react;
-  }
-  return transform(visitorList, source).code;
+  var options = {
+    harmony: this.options.harmony,
+    sourceMap: this.options.sourceMapInline
+  };
+  return transform(source, options);
 });
