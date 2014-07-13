@@ -4,7 +4,7 @@
 @import '_solarized';
 
 @mixin code-typography {
-  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
+  font-family: 'source-code-pro', Menlo, Consolas, 'Courier New', monospace;
   font-size: 13px;
   line-height: 20px;
 }
