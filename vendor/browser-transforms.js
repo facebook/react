@@ -254,7 +254,7 @@ function loadScripts(scripts) {
 
   scripts.forEach(function(script, i) {
     var options;
-    if (script.type.indexOf('harmony=true') !== -1) {
+    if (/;harmony=true(;|$)/.test(script.type)) {
       options = {
         harmony: true
       };
@@ -293,7 +293,7 @@ function runScripts() {
   // Array.prototype.slice cannot be used on NodeList on IE8
   var jsxScripts = [];
   for (var i = 0; i < scripts.length; i++) {
-    if (scripts.item(i).type.indexOf('text/jsx') !== -1) {
+    if (/^text\/jsx(;|$)/.test(scripts.item(i).type)) {
       jsxScripts.push(scripts.item(i));
     }
   }
