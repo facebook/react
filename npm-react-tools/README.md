@@ -26,6 +26,7 @@ This package installs a `jsx` executable that can be used to transform JSX into 
       --source-charset <utf8 | win1252 | ...>  Charset of source (default: utf8)
       --output-charset <utf8 | win1252 | ...>  Charset of output (default: utf8)
       --harmony                                Turns on JS transformations such as ES6 Classes etc.
+      --source-map-inline                      Embed inline sourcemap in transformed source
 
 ## API
 
