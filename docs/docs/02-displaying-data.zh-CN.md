@@ -1,6 +1,6 @@
 ---
 id: displaying-data-zh-CN
-title: 显示数据 Displaying Data
+title: 显示数据
 layout: docs
 permalink: displaying-data-zh-CN.html
 prev: why-react-zh-CN.html
@@ -56,13 +56,13 @@ setInterval(function() {
 }, 500);
 ```
 
-## Reactive Updates
+## 被动更新 (Reactive Updates)
 
 在浏览器中打开 `hello-react.html` ，在输入框输入你的名字。你会发现 React 在用户界面中只改变了时间， 任何你在输入框输入的内容一直保留着，即使你没有写任何代码来完成这个功能。React 为你解决了这个问题，做了正确的事。
 
-我们想到的方法是除非不得不操作 DOM ，React 是不会去操作 DOM 的。**它用一种更快的内置仿造的 DOM 来操作差异，为你计算出出效率最高的 DOM 改变**
+我们想到的方法是除非不得不操作 DOM ，React 是不会去操作 DOM 的。**它用一种更快的内置仿造的 DOM 来操作差异，为你计算出出效率最高的 DOM 改变**。
 
-对这个组件的输入称为 `props` - "properties"的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 **`this.props` 是只读的**
+对这个组件的输入称为 `props` - "properties"的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 **`this.props` 是只读的**。
 
 ## 组件就像是函数
 
