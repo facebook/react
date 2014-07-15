@@ -1,6 +1,7 @@
 /*global exports:true*/
 var es6ArrowFunctions = require('jstransform/visitors/es6-arrow-function-visitors');
 var es6Classes = require('jstransform/visitors/es6-class-visitors');
+var es6Destructuring = require('jstransform/visitors/es6-destructuring-visitors');
 var es6ObjectConciseMethod = require('jstransform/visitors/es6-object-concise-method-visitors');
 var es6ObjectShortNotation = require('jstransform/visitors/es6-object-short-notation-visitors');
 var es6RestParameters = require('jstransform/visitors/es6-rest-param-visitors');
@@ -14,6 +15,7 @@ var reactDisplayName = require('./transforms/reactDisplayName');
 var transformVisitors = {
   'es6-arrow-functions': es6ArrowFunctions.visitorList,
   'es6-classes': es6Classes.visitorList,
+  'es6-destructuring': es6Destructuring.visitorList,
   'es6-object-concise-method': es6ObjectConciseMethod.visitorList,
   'es6-object-short-notation': es6ObjectShortNotation.visitorList,
   'es6-rest-params': es6RestParameters.visitorList,
@@ -31,6 +33,7 @@ var transformRunOrder = [
   'es6-classes',
   'es6-rest-params',
   'es6-templates',
+  'es6-destructuring',
   'react'
 ];
 
