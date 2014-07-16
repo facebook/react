@@ -20,6 +20,7 @@
 "use strict";
 
 var CSSProperty = require('CSSProperty');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 
 var dangerousStyleValue = require('dangerousStyleValue');
 var hyphenateStyleName = require('hyphenateStyleName');
@@ -28,6 +29,14 @@ var memoizeStringOnly = require('memoizeStringOnly');
 var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
+
+var styleFloatAccessor = 'cssFloat';
+if (ExecutionEnvironment.canUseDOM) {
+  // IE8 only supports accessing cssFloat (standard) as styleFloat
+  if (document.documentElement.style.cssFloat === undefined) {
+    styleFloatAccessor = 'styleFloat';
+  }
+}
 
 /**
  * Operations for dealing with CSS properties.
@@ -75,6 +84,9 @@ var CSSPropertyOperations = {
         continue;
       }
       var styleValue = dangerousStyleValue(styleName, styles[styleName]);
+      if (styleName === 'float') {
+        styleName = styleFloatAccessor;
+      }
       if (styleValue) {
         style[styleName] = styleValue;
       } else {
