@@ -101,7 +101,7 @@ var ReactTransitionGroup = React.createClass({
 
     var component = this.refs[key];
 
-    if (component.componentWillEnter) {
+    if (component && component.componentWillEnter) {
       component.componentWillEnter(
         this._handleDoneEntering.bind(this, key)
       );
@@ -112,7 +112,7 @@ var ReactTransitionGroup = React.createClass({
 
   _handleDoneEntering: function(key) {
     var component = this.refs[key];
-    if (component.componentDidEnter) {
+    if (component && component.componentDidEnter) {
       component.componentDidEnter();
     }
 
