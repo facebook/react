@@ -17,6 +17,7 @@ We'd like to thank all of our contributors:
     <li>Andrew Davey</li>
     <li>Andrew Zich</li>
     <li>Andrey Popp</li>
+    <li>Anthony van der Hoorn</li>
     <li>Ayman Osman</li>
     <li>Ben Alpert</li>
     <li>Ben Newman</li>
@@ -174,6 +175,7 @@ We'd like to thank all of our contributors:
     <li>Sven Helmberger</li>
     <li>Thomas Aylott</li>
     <li>Thomas Boyt</li>
+    <li>Thomas Shaddox</li>
     <li>Thomas Shafer</li>
     <li>Timothy Yung</li>
     <li>Tom Haggie</li>
