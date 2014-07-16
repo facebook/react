@@ -57,6 +57,8 @@
       title: Immutability Helpers
     - id: pure-render-mixin
       title: PureRenderMixin
+    - id: perf
+      title: Performance Tools
 - title: Reference
   items:
   - id: top-level-api
