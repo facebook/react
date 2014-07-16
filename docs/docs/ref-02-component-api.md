@@ -12,68 +12,6 @@ next: component-specs.html
 Component classes created by `React.createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
 
 
-### getDOMNode
-
-```javascript
-DOMElement getDOMNode()
-```
-
-If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
-
-
-### setProps
-
-```javascript
-setProps(object nextProps[, function callback])
-```
-
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`.
-
-Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
-
-> Note:
->
-> When possible, the declarative approach of calling `React.renderComponent()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
->
-> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
-
-
-### replaceProps
-
-```javascript
-replaceProps(object nextProps[, function callback])
-```
-
-Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
-
-
-### transferPropsTo
-
-```javascript
-ReactComponent transferPropsTo(ReactComponent targetComponent)
-```
-
-Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, `targetComponent` is returned as a convenience. This function is useful when creating simple HTML-like components:
-
-```javascript
-var Avatar = React.createClass({
-  render: function() {
-    return this.transferPropsTo(
-      <img src={"/avatars/" + this.props.userId + ".png"} userId={null} />
-    );
-  }
-});
-
-// <Avatar userId={17} width={200} height={200} />
-```
-
-Properties that are specified directly on the target component instance (such as `src` and `userId` in the above example) will not be overwritten by `transferPropsTo`.
-
-> Note:
->
-> Use `transferPropsTo` with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it's safer to explicitly copy the properties that you need onto the child component.
-
-
 ### setState
 
 ```javascript
@@ -113,6 +51,15 @@ Calling `forceUpdate()` will cause `render()` to be called on the component and 
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your application much simpler and more efficient.
 
 
+### getDOMNode
+
+```javascript
+DOMElement getDOMNode()
+```
+
+If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
+
+
 ### isMounted()
 
 ```javascript
@@ -120,3 +67,56 @@ bool isMounted()
 ```
 
 `isMounted()` returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
+
+
+### transferPropsTo
+
+```javascript
+ReactComponent transferPropsTo(ReactComponent targetComponent)
+```
+
+Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, `targetComponent` is returned as a convenience. This function is useful when creating simple HTML-like components:
+
+```javascript
+var Avatar = React.createClass({
+  render: function() {
+    return this.transferPropsTo(
+      <img src={"/avatars/" + this.props.userId + ".png"} userId={null} />
+    );
+  }
+});
+
+// <Avatar userId={17} width={200} height={200} />
+```
+
+Properties that are specified directly on the target component instance (such as `src` and `userId` in the above example) will not be overwritten by `transferPropsTo`.
+
+> Note:
+>
+> Use `transferPropsTo` with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it's safer to explicitly copy the properties that you need onto the child component.
+
+
+### setProps
+
+```javascript
+setProps(object nextProps[, function callback])
+```
+
+When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`.
+
+Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
+
+> Note:
+>
+> When possible, the declarative approach of calling `React.renderComponent()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
+>
+> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
+
+
+### replaceProps
+
+```javascript
+replaceProps(object nextProps[, function callback])
+```
+
+Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
