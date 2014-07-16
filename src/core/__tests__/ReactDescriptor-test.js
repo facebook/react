@@ -63,4 +63,16 @@ describe('ReactDescriptor', function() {
     expect(test.foo).toHaveBeenCalledWith(a, b, c);
   });
 
+  it('allows the use of PropTypes validators in statics', function() {
+    var Component = React.createClass({
+      render: () => null,
+      statics: {
+        specialType: React.PropTypes.shape({monkey: React.PropTypes.any})
+      }
+    });
+
+    expect(typeof Component.specialType).toBe("function");
+    expect(typeof Component.specialType.isRequired).toBe("function");
+  });
+
 });
