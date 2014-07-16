@@ -566,6 +566,19 @@ figure {
   margin: 0 auto;
 }
 
+h1 {
+  // Contains .edit-page-link
+  @include clearfix;
+}
+
+.edit-page-link {
+  float: right;
+  font-size: 16px;
+  font-weight: normal;
+  line-height: 20px;
+  margin-top: 17px;
+}
+
 /* Blog */
 
 .post-list-item + .post-list-item {
