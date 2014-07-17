@@ -26,6 +26,14 @@ A [tagtree.tv](http://tagtree.tv/) video conveying the principles of [Thinking i
 
 "In this talk I’ll be discussing why we built a virtual DOM, how it compares to other systems, and its relevance to the future of browser technologies." -- [Pete Hunt](http://www.petehunt.net/)
 
+
+### Going big with React ###
+
+"On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale."
+
+<figure>[![](https://i.vimeocdn.com/video/481670116_1280.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
+
+
 ### CodeWinds
 
 [Pete Hunt](http://www.petehunt.net/) talked with [Jeff Barczewski](http://jeff.barczewski.com/) about React in CodeWinds Episode 4.
