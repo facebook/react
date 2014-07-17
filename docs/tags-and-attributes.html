@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Tags and Attributes</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Tags and Attributes" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/tags-and-attributes.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Tags and Attributes">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/tags-and-attributes.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Tags and Attributes</h1>
+    <h1>
+      Tags and Attributes
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-04-tags-and-attributes.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <h2><a class="anchor" name="supported-tags"></a>Supported Tags <a class="hash-link" href="#supported-tags">#</a></h2>
 <p>React attempts to support all common elements. If you need an element that isn&#39;t listed here, please file an issue.</p>
 <h3><a class="anchor" name="html-elements"></a>HTML Elements <a class="hash-link" href="#html-elements">#</a></h3>
@@ -427,8 +451,8 @@ source span strong style sub summary sup table tbody td textarea tfoot th
 thead time title tr track u ul var video wbr
 </code></pre></div><h3><a class="anchor" name="svg-elements"></a>SVG elements <a class="hash-link" href="#svg-elements">#</a></h3>
 <p>The following SVG elements are supported:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">circle defs g line linearGradient path polygon polyline radialGradient rect
-stop svg text
+<div class="highlight"><pre><code class="text language-text" data-lang="text">circle defs ellipse g line linearGradient mask path pattern polygon polyline
+radialGradient rect stop svg text tspan
 </code></pre></div>
 <p>You may also be interested in <a href="https://github.com/facebook/react-art">react-art</a>, a drawing library for React that can render to Canvas, SVG, or VML (for IE8).</p>
 <h2><a class="anchor" name="supported-attributes"></a>Supported Attributes <a class="hash-link" href="#supported-attributes">#</a></h2>
@@ -445,20 +469,29 @@ stop svg text
 <p>These standard attributes are supported:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">accept accessKey action allowFullScreen allowTransparency alt async
 autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked
-className colSpan cols content contentEditable contextMenu controls data
-dateTime defer dir disabled draggable encType form formNoValidate frameBorder
-height hidden href htmlFor httpEquiv icon id label lang list loop max
-maxLength method min multiple name noValidate pattern placeholder poster
-preload radioGroup readOnly rel required role rowSpan rows sandbox scope
-scrollLeft scrollTop seamless selected size span spellCheck src srcDoc step
-style tabIndex target title type value width wmode
+className cols colSpan content contentEditable contextMenu controls coords
+crossOrigin data dateTime defer dir disabled download draggable encType form
+formNoValidate frameBorder height hidden href hrefLang htmlFor httpEquiv icon
+id label lang list loop max maxLength mediaGroup method min multiple muted
+name noValidate pattern placeholder poster preload radioGroup readOnly rel
+required role rows rowSpan sandbox scope scrollLeft scrolling scrollTop
+seamless selected shape size span spellCheck src srcDoc srcSet start step
+style tabIndex target title type useMap value width wmode
 </code></pre></div>
-<p>In addition, the non-standard <code>autoCapitalize</code> and <code>autoCorrect</code> attributes are supported for Mobile Safari, and the <code>property</code> attribute is supported for Open Graph <code>&lt;meta&gt;</code> tags.</p>
+<p>In addition, the following non-standard attributes are supported:</p>
+
+<ul>
+<li><code>autoCapitalize autoCorrect</code> for Mobile Safari.</li>
+<li><code>property</code> for <a href="http://ogp.me/">Open Graph</a> meta tags.</li>
+<li><code>itemProp itemScope itemType</code> for <a href="http://schema.org/docs/gs.html">HTML5 microdata</a>.</li>
+</ul>
 
 <p>There is also the React-specific attribute <code>dangerouslySetInnerHTML</code> (<a href="/react/docs/special-non-dom-attributes.html">more here</a>), used for directly inserting HTML strings into a component.</p>
-<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">cx cy d fill fx fy gradientTransform gradientUnits offset points r rx ry
-spreadMethod stopColor stopOpacity stroke strokeLinecap strokeWidth textAnchor transform
-version viewBox x1 x2 x y1 y2 y
+<h3><a class="anchor" name="svg-attributes"></a>SVG Attributes <a class="hash-link" href="#svg-attributes">#</a></h3><div class="highlight"><pre><code class="text language-text" data-lang="text">cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
+gradientUnits markerEnd markerMid markerStart offset opacity
+patternContentUnits patternUnits points preserveAspectRatio r rx ry
+spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
+strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y
 </code></pre></div>
 
     <div class="docs-prevnext">

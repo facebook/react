@@ -42,6 +42,6 @@ React.renderComponent(<TodoApp />, mountNode);\
 ";
 
 React.renderComponent(
-  ReactPlayground( {codeText:TODO_COMPONENT} ),
+  ReactPlayground({codeText: TODO_COMPONENT}),
   document.getElementById('todoExample')
 );

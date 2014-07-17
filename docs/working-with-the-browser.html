@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Working With the Browser</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Working With the Browser" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/working-with-the-browser.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Working With the Browser">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/working-with-the-browser.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Working With the Browser</h1>
+    <h1>
+      Working With the Browser
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/07-working-with-the-browser.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>React provides powerful abstractions that free you from touching the DOM directly in most cases, but sometimes you simply need to access the underlying API, perhaps to work with a third-party library or existing code.</p>
 <h2><a class="anchor" name="the-virtual-dom"></a>The Virtual DOM <a class="hash-link" href="#the-virtual-dom">#</a></h2>
 <p>React is so fast because it never talks to the DOM directly. React maintains a fast in-memory representation of the DOM. <code>render()</code> methods return a <em>description</em> of the DOM, and React can diff this description with the in-memory representation to compute the fastest way to update the browser.</p>
@@ -502,12 +526,15 @@
 
 <ul>
 <li><code>Array.isArray</code></li>
+<li><code>Array.prototype.every</code></li>
 <li><code>Array.prototype.forEach</code></li>
 <li><code>Array.prototype.indexOf</code></li>
-<li><code>Array.prototype.some</code></li>
+<li><code>Array.prototype.map</code></li>
 <li><code>Date.now</code></li>
 <li><code>Function.prototype.bind</code></li>
 <li><code>Object.keys</code></li>
+<li><code>String.prototype.split</code></li>
+<li><code>String.prototype.trim</code></li>
 </ul>
 
 <p><code>es5-sham.js</code>, also from <a href="https://github.com/kriskowal/es5-shim">kriskowal&#39;s es5-shim</a>, provides the following that React needs:</p>

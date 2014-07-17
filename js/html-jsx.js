@@ -58,32 +58,32 @@ var HELLO_COMPONENT = "\
   	render: function() {
       return (
         React.DOM.div(null, 
-          React.DOM.div( {id:"options"}, 
+          React.DOM.div({id: "options"}, 
             React.DOM.label(null, 
-              React.DOM.input(
-                {type:"checkbox",
-                checked:this.state.createClass,
-                onChange:this.onCreateClassChange} ),
+              React.DOM.input({
+                type: "checkbox", 
+                checked: this.state.createClass, 
+                onChange: this.onCreateClassChange}), 
                 "Create class"
-            ),
-            React.DOM.label( {style:{display: this.state.createClass ? '' : 'none'}}, 
-              "·"+' '+
-              "Class name:",
-              React.DOM.input(
-                {type:"text",
-                value:this.state.outputClassName,
-                onChange:this.onReactClassNameChange} )
+            ), 
+            React.DOM.label({style: {display: this.state.createClass ? '' : 'none'}}, 
+              "·" + ' ' +
+              "Class name:", 
+              React.DOM.input({
+                type: "text", 
+                value: this.state.outputClassName, 
+                onChange: this.onReactClassNameChange})
             )
-          ),
-          ReactPlayground(
-            {codeText:HELLO_COMPONENT,
-            renderCode:true,
-            transformer:this.convertToJSX}
+          ), 
+          ReactPlayground({
+            codeText: HELLO_COMPONENT, 
+            renderCode: true, 
+            transformer: this.convertToJSX}
             )
         )
       );
     }
   });
 
-  React.renderComponent(HTMLtoJSXComponent(null ), document.getElementById('jsxCompiler'));
+  React.renderComponent(HTMLtoJSXComponent(null), document.getElementById('jsxCompiler'));
 }());

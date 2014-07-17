@@ -28,6 +28,6 @@ React.renderComponent(<Timer />, mountNode);\
 ";
 
 React.renderComponent(
-  ReactPlayground( {codeText:TIMER_COMPONENT} ),
+  ReactPlayground({codeText: TIMER_COMPONENT}),
   document.getElementById('timerExample')
 );

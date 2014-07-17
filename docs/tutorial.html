@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Tutorial</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Tutorial" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/tutorial.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Tutorial">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/tutorial.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Tutorial</h1>
+    <h1>
+      Tutorial
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/tutorial.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>We&#39;ll be building a simple, but realistic comments box that you can drop into a blog, a basic version of the realtime comments offered by Disqus, LiveFyre or Facebook comments.</p>
 
 <p>We&#39;ll provide:</p>
@@ -438,8 +462,8 @@
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.10.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.10.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
     <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.10.0.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;/head&gt;</span>
   <span class="nt">&lt;body&gt;</span>
@@ -478,7 +502,7 @@
 </code></pre></div><h4><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h4>
 <p>The first thing you&#39;ll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
-<span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s1">&#39;CommentBox&#39;</span><span class="p">,</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">className</span><span class="o">:</span> <span class="s2">&quot;commentBox&quot;</span><span class="p">},</span>
@@ -488,7 +512,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="nx">CommentBox</span><span class="p">({}),</span>
+  <span class="nx">CommentBox</span><span class="p">(</span><span class="kc">null</span><span class="p">),</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div>
@@ -578,8 +602,8 @@
 <div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.10.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.10.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.11.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://code.jquery.com/jquery-1.10.0.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 <span class="hll">  <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </span><span class="nt">&lt;/head&gt;</span>
@@ -719,7 +743,7 @@
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
-<span class="hll">  <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span><span class="hll">    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
 </span><span class="hll">      <span class="nx">url</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span>
 </span><span class="hll">      <span class="nx">dataType</span><span class="o">:</span> <span class="s1">&#39;json&#39;</span><span class="p">,</span>
@@ -742,7 +766,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Here, <code>componentWillMount</code> is a method called automatically by React before a component is rendered. The key to dynamic updates is the call to <code>this.setState()</code>. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.</p>
+<p>Here, <code>componentDidMount</code> is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to <code>this.setState()</code>. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial14.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -760,7 +784,7 @@
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
-  <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
 </span><span class="hll">    <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
 </span>  <span class="p">},</span>
@@ -850,7 +874,7 @@
 </span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
-  <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
     <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>
@@ -919,7 +943,7 @@
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
-  <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
     <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>
@@ -969,7 +993,7 @@
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
-  <span class="nx">componentWillMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">();</span>
     <span class="nx">setInterval</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">loadCommentsFromServer</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">pollInterval</span><span class="p">);</span>
   <span class="p">},</span>

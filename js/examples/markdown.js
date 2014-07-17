@@ -38,6 +38,6 @@ React.renderComponent(<MarkdownEditor />, mountNode);\
 ";
 
 React.renderComponent(
-  ReactPlayground( {codeText:MARKDOWN_COMPONENT} ),
+  ReactPlayground({codeText: MARKDOWN_COMPONENT}),
   document.getElementById('markdownExample')
 );

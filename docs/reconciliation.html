@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Reconciliation</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Reconciliation" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/reconciliation.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Reconciliation">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/reconciliation.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,9 +431,13 @@
 
 
   <div class="inner-content">
-    <h1>Reconciliation</h1>
+    <h1>
+      Reconciliation
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-08-reconciliation.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
-    <p>React key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.</p>
+
+    <p>React&#39;s key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.</p>
 <h2><a class="anchor" name="motivation"></a>Motivation <a class="hash-link" href="#motivation">#</a></h2>
 <p>Generating the minimum number of operations to transform one tree into another is a complex and well-studied problem. The <a href="http://grfia.dlsi.ua.es/ml/algorithms/references/editsurvey_bille.pdf">state of the art algorithms</a> have a complexity in the order of O(n<sup>3</sup>) where n is the number of nodes in the tree.</p>
 
@@ -458,7 +482,7 @@ renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span cla
 </code></pre></div>
 <p>After the attributes have been updated, we recurse on all the children.</p>
 <h3><a class="anchor" name="custom-components"></a>Custom Components <a class="hash-link" href="#custom-components">#</a></h3>
-<p>We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and call <code>component[Will/Did]ReceiveProps()</code> on the previous one.</p>
+<p>We decided that the two custom components are the same. Since components are stateful, we cannot just use the new component and call it a day. React takes all the attributes from the new component and calls <code>component[Will/Did]ReceiveProps()</code> on the previous one.</p>
 
 <p>The previous component is now operational. Its <code>render()</code> method is called and the diff algorithm restarts with the new result and the previous result.</p>
 <h2><a class="anchor" name="list-wise-diff"></a>List-wise diff <a class="hash-link" href="#list-wise-diff">#</a></h2><h3><a class="anchor" name="problematic-case"></a>Problematic Case <a class="hash-link" href="#problematic-case">#</a></h3>

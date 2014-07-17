@@ -7,6 +7,142 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.11</title>
+				<description>&lt;p&gt;We&amp;#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using &lt;code&gt;jsx --harmony&lt;/code&gt;, fixed a small regression with &lt;code&gt;statics&lt;/code&gt;, and made sure we actually exposed the new API we said we were shipping: &lt;code&gt;React.Children.count&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.&lt;/p&gt;
+
+&lt;p&gt;The release candidate is available for download from the CDN:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.0.js&quot;&gt;http://fb.me/react-0.11.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.0.min.js&quot;&gt;http://fb.me/react-0.11.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0.js&quot;&gt;http://fb.me/react-with-addons-0.11.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.0.js&quot;&gt;http://fb.me/JSXTransformer-0.11.0.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getdefaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;getDefaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#getdefaultprops&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Starting in React 0.11, &lt;code&gt;getDefaultProps()&lt;/code&gt; is called only once when &lt;code&gt;React.createClass()&lt;/code&gt; is called, instead of each time a component is rendered. This means that &lt;code&gt;getDefaultProps()&lt;/code&gt; can no longer vary its return value based on &lt;code&gt;this.props&lt;/code&gt; and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-to-null&quot;&gt;&lt;/a&gt;Rendering to &lt;code&gt;null&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-to-null&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Since React&amp;#39;s release, people have been using work arounds to &amp;quot;render nothing&amp;quot;. Usually this means returning an empty &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;span/&amp;gt;&lt;/code&gt;. Some people even got clever and started returning &lt;code&gt;&amp;lt;noscript/&amp;gt;&lt;/code&gt; to avoid extraneous DOM nodes. We finally provided a &amp;quot;blessed&amp;quot; solution that allows developers to writing meaningful code. Returning &lt;code&gt;null&lt;/code&gt; in an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; element, though in the future we hope to not put anything in the document. In the mean time, &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements do not affect layout in any way, so you can feel safe using &lt;code&gt;null&lt;/code&gt; today!&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-namespacing&quot;&gt;&lt;/a&gt;JSX Namespacing &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-namespacing&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Another feature request we&amp;#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&amp;#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as &lt;code&gt;&amp;lt;Namespace.Component/&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UILabel&amp;gt;&amp;lt;/UILayout&amp;gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UI.Label&amp;gt;&amp;lt;/UI.Layout&amp;gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-keyboard-event-normalization&quot;&gt;&lt;/a&gt;Improved keyboard event normalization &lt;a class=&quot;hash-link&quot; href=&quot;#improved-keyboard-event-normalization&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Keyboard events now contain a normalized &lt;code&gt;e.key&lt;/code&gt; value according to the &lt;a href=&quot;http://www.w3.org/TR/DOM-Level-3-Events/#keys-special&quot;&gt;DOM Level 3 Events spec&lt;/a&gt;, allowing you to write simpler key handling code that works in all browsers, such as:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;handleKeyDown&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Enter&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Handle enter key&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Handle spacebar&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ArrowLeft&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// Handle left arrow&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Keyboard and mouse events also now include a normalized &lt;code&gt;e.getModifierState()&lt;/code&gt; that works consistently across browsers.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;getDefaultProps()&lt;/code&gt; is now called once per class and shared across all instances&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Rendering to &lt;code&gt;null&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Keyboard events include normalized &lt;code&gt;e.key&lt;/code&gt; and &lt;code&gt;e.getModifierState()&lt;/code&gt; properties&lt;/li&gt;
+&lt;li&gt;New normalized &lt;code&gt;onBeforeInput&lt;/code&gt; event&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.Children.count&lt;/code&gt; has been added as a helper for counting the number of children&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Re-renders are batched in more cases&lt;/li&gt;
+&lt;li&gt;Events: &lt;code&gt;e.view&lt;/code&gt; properly normalized&lt;/li&gt;
+&lt;li&gt;Added Support for more HTML attributes (&lt;code&gt;coords&lt;/code&gt;, &lt;code&gt;crossOrigin&lt;/code&gt;, &lt;code&gt;download&lt;/code&gt;, &lt;code&gt;hrefLang&lt;/code&gt;, &lt;code&gt;mediaGroup&lt;/code&gt;, &lt;code&gt;muted&lt;/code&gt;, &lt;code&gt;scrolling&lt;/code&gt;, &lt;code&gt;shape&lt;/code&gt;, &lt;code&gt;srcSet&lt;/code&gt;, &lt;code&gt;start&lt;/code&gt;, &lt;code&gt;useMap&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Improved SVG support
+
+&lt;ul&gt;
+&lt;li&gt;Changing &lt;code&gt;className&lt;/code&gt; on a mounted SVG component now works correctly&lt;/li&gt;
+&lt;li&gt;Added support for elements &lt;code&gt;mask&lt;/code&gt; and &lt;code&gt;tspan&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Added support for attributes &lt;code&gt;dx&lt;/code&gt;, &lt;code&gt;dy&lt;/code&gt;, &lt;code&gt;fillOpacity&lt;/code&gt;, &lt;code&gt;fontFamily&lt;/code&gt;, &lt;code&gt;fontSize&lt;/code&gt;, &lt;code&gt;markerEnd&lt;/code&gt;, &lt;code&gt;markerMid&lt;/code&gt;, &lt;code&gt;markerStart&lt;/code&gt;, &lt;code&gt;opacity&lt;/code&gt;, &lt;code&gt;patternContentUnits&lt;/code&gt;, &lt;code&gt;patternUnits&lt;/code&gt;, &lt;code&gt;preserveAspectRatio&lt;/code&gt;, &lt;code&gt;strokeDasharray&lt;/code&gt;, &lt;code&gt;strokeOpacity&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;CSS property names with vendor prefixes (&lt;code&gt;Webkit&lt;/code&gt;, &lt;code&gt;ms&lt;/code&gt;, &lt;code&gt;Moz&lt;/code&gt;, &lt;code&gt;O&lt;/code&gt;) are now handled properly&lt;/li&gt;
+&lt;li&gt;Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;img&lt;/code&gt; event listeners are now unbound properly, preventing the error &amp;quot;Two valid but unequal nodes with the same &lt;code&gt;data-reactid&lt;/code&gt;&amp;quot;&lt;/li&gt;
+&lt;li&gt;Added explicit warning when missing polyfills&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React With Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;PureRenderMixin: a mixin which helps optimize &amp;quot;pure&amp;quot; components&lt;/li&gt;
+&lt;li&gt;Perf: a new set of tools to help with performance analysis&lt;/li&gt;
+&lt;li&gt;Update: New &lt;code&gt;$apply&lt;/code&gt; command to transform values&lt;/li&gt;
+&lt;li&gt;TransitionGroup bug fixes with null elements, Android&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-npm-module&quot;&gt;&lt;/a&gt;React NPM Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-npm-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Now includes the pre-built packages under &lt;code&gt;dist/&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;envify&lt;/code&gt; is properly listed as a dependency instead of a peer dependency&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for namespaces, eg &lt;code&gt;&amp;lt;Components.Checkbox /&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;JSXTransformer
+
+&lt;ul&gt;
+&lt;li&gt;Enable the same &lt;code&gt;harmony&lt;/code&gt; features available in the command line with &lt;code&gt;&amp;lt;script type=&amp;quot;text/jsx;harmony=true&amp;quot;&amp;gt;&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)&lt;/li&gt;
+&lt;li&gt;Fixed a bug preventing sourcemaps from working in Firefox&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools-module&quot;&gt;&lt;/a&gt;React Tools Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Improved readme with usage and API information&lt;/li&gt;
+&lt;li&gt;Improved ES6 transforms available with &lt;code&gt;--harmony&lt;/code&gt; option&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;--source-map-inline&lt;/code&gt; option to the &lt;code&gt;jsx&lt;/code&gt; executable&lt;/li&gt;
+&lt;li&gt;New &lt;code&gt;transformWithDetails&lt;/code&gt; API which gives access to the raw sourcemap data&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-07-17T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.11 RC</title>
 				<description>&lt;p&gt;It&amp;#39;s that time again… we&amp;#39;re just about ready to ship a new React release! v0.11 includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.&lt;/p&gt;
 
@@ -26,7 +162,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
 
 &lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;blog-post&quot;&gt;&lt;/a&gt;Blog Post &lt;a class=&quot;hash-link&quot; href=&quot;#blog-post&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getdefaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;getDefaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#getdefaultprops&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getdefaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;getDefaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#getdefaultprops&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Starting in React 0.11, &lt;code&gt;getDefaultProps()&lt;/code&gt; is called only once when &lt;code&gt;React.createClass()&lt;/code&gt; is called, instead of each time a component is rendered. This means that &lt;code&gt;getDefaultProps()&lt;/code&gt; can no longer vary its return value based on &lt;code&gt;this.props&lt;/code&gt; and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-to-null&quot;&gt;&lt;/a&gt;Rendering to &lt;code&gt;null&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-to-null&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Since React&amp;#39;s release, people have been using work arounds to &amp;quot;render nothing&amp;quot;. Usually this means returning an empty &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;span/&amp;gt;&lt;/code&gt;. Some people even got clever and started returning &lt;code&gt;&amp;lt;noscript/&amp;gt;&lt;/code&gt; to avoid extraneous DOM nodes. We finally provided a &amp;quot;blessed&amp;quot; solution that allows developers to writing meaningful code. Returning &lt;code&gt;null&lt;/code&gt; in an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; element, though in the future we hope to not put anything in the document. In the mean time, &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements do not affect layout in any way, so you can feel safe using &lt;code&gt;null&lt;/code&gt; today!&lt;/p&gt;
@@ -211,7 +347,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<title>Flux: An Application Architecture for React</title>
 				<description>&lt;p&gt;We recently spoke at one of f8&amp;#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:&lt;/p&gt;
 
-&lt;figure&gt;&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
+&lt;figure&gt;&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&amp;start=621&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;&lt;/figure&gt;
 
 &lt;p&gt;To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.&lt;/p&gt;
 
@@ -526,59 +662,6 @@ Thomas Boyt (&lt;a href=&quot;https://twitter.com/thomasaboyt&quot;&gt;@thomasab
 				<pubDate>2014-03-14T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #17</title>
-				<description>&lt;p&gt;It&amp;#39;s exciting to see the number of real-world React applications and components skyrocket over the past months! This community round-up features a few examples of inspiring React applications and components.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-the-real-world&quot;&gt;&lt;/a&gt;React in the Real World &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-the-real-world&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;facebook-lookback-video-editor&quot;&gt;&lt;/a&gt;Facebook Lookback video editor &lt;a class=&quot;hash-link&quot; href=&quot;#facebook-lookback-video-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Large parts of Facebook&amp;#39;s web frontend are already powered by React. The recently released Facebook &lt;a href=&quot;https://www.facebook.com/lookback/edit/&quot;&gt;Lookback video and its corresponding editor&lt;/a&gt; are great examples of a complex, real-world React app.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;russias-largest-bank-is-now-powered-by-react&quot;&gt;&lt;/a&gt;Russia&amp;#39;s largest bank is now powered by React &lt;a class=&quot;hash-link&quot; href=&quot;#russias-largest-bank-is-now-powered-by-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Sberbank, Russia&amp;#39;s largest bank, recently switched large parts of their site to use React, as detailed in &lt;a href=&quot;https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg&quot;&gt;this post by Vyacheslav Slinko&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;relato&quot;&gt;&lt;/a&gt;Relato &lt;a class=&quot;hash-link&quot; href=&quot;#relato&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;http://bripkens.github.io/relato/&quot;&gt;Relato&lt;/a&gt; by &lt;a href=&quot;https://github.com/bripkens&quot;&gt;Ben Ripkens&lt;/a&gt; shows Open Source Statistics based on npm data. It features a filterable and sortable table built in React. Check it out &amp;ndash; it&amp;#39;s super fast!&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;makona-editor&quot;&gt;&lt;/a&gt;Makona Editor &lt;a class=&quot;hash-link&quot; href=&quot;#makona-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;John Lynch (&lt;a href=&quot;https://twitter.com/johnrlynch&quot;&gt;@johnrlynch&lt;/a&gt;) created Makona, a block-style document editor for the web. Blocks of different content types comprise documents, authored using plain markup. At the switch of a toggle, block contents are then rendered on the page. While not quite a WYSIWYG editor, Makona uses plain textareas for input. This makes it compatible with a wider range of platforms than traditional rich text editors.
-&lt;figure&gt;&lt;a href=&quot;http://johnthethird.github.io/makona-editor/&quot;&gt;&lt;img src=&quot;/react/img/blog/makona-editor.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;create-chrome-extensions-using-react&quot;&gt;&lt;/a&gt;Create Chrome extensions using React &lt;a class=&quot;hash-link&quot; href=&quot;#create-chrome-extensions-using-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;React is in no way limited to just web pages. Brandon Tilley (&lt;a href=&quot;https://twitter.com/BinaryMuse&quot;&gt;@BinaryMuse&lt;/a&gt;) just released a detailed walk-through of &lt;a href=&quot;http://brandontilley.com/2014/02/24/creating-chrome-extensions-with-react.html&quot;&gt;how he built his Chrome extension &amp;quot;Fast Tab Switcher&amp;quot; using React&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;twitter-streaming-client&quot;&gt;&lt;/a&gt;Twitter Streaming Client &lt;a class=&quot;hash-link&quot; href=&quot;#twitter-streaming-client&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Javier Aguirre (&lt;a href=&quot;https://twitter.com/javaguirre&quot;&gt;@javaguirre&lt;/a&gt;) put together a simple &lt;a href=&quot;http://javaguirre.net/2014/02/11/twitter-streaming-api-with-node-socket-io-and-reactjs/&quot;&gt;twitter streaming client using node, socket.io and React&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;sproutsheet&quot;&gt;&lt;/a&gt;Sproutsheet &lt;a class=&quot;hash-link&quot; href=&quot;#sproutsheet&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;http://sproutsheet.com/&quot;&gt;Sproutsheet&lt;/a&gt; is a gardening calendar. You can use it to track certain events that happen in the life of your plants. It&amp;#39;s currently in beta and supports localStorage, and data/image import and export.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;instant-domain-search&quot;&gt;&lt;/a&gt;Instant Domain Search &lt;a class=&quot;hash-link&quot; href=&quot;#instant-domain-search&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://instantdomainsearch.com/&quot;&gt;Instant Domain Search&lt;/a&gt; also uses React. It sure is instant!&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;svg-based-graphical-node-editor&quot;&gt;&lt;/a&gt;SVG-based graphical node editor &lt;a class=&quot;hash-link&quot; href=&quot;#svg-based-graphical-node-editor&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;http://noflojs.org/&quot;&gt;NoFlo&lt;/a&gt; and &lt;a href=&quot;http://meemoo.org/&quot;&gt;Meemoo&lt;/a&gt; developer &lt;a href=&quot;http://www.forresto.com/&quot;&gt;Forresto Oliphant&lt;/a&gt; built an awesome SVG-based &lt;a href=&quot;http://forresto.github.io/prototyping/react/&quot;&gt;node editor&lt;/a&gt; in React.
- &lt;figure&gt;&lt;a href=&quot;http://forresto.github.io/prototyping/react/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-svg-fbp.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/figure&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;ultimate-tic-tac-toe-game-in-react&quot;&gt;&lt;/a&gt;Ultimate Tic-Tac-Toe Game in React &lt;a class=&quot;hash-link&quot; href=&quot;#ultimate-tic-tac-toe-game-in-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Rafał Cieślak (&lt;a href=&quot;https://twitter.com/Ravicious&quot;&gt;@Ravicious&lt;/a&gt;) wrote a &lt;a href=&quot;http://ravicious.github.io/ultimate-ttt/&quot;&gt;React version&lt;/a&gt; of &lt;a href=&quot;http://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/&quot;&gt;Ultimate Tic Tac Toe&lt;/a&gt;. Find the source &lt;a href=&quot;https://github.com/ravicious/ultimate-ttt&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactjs-gallery&quot;&gt;&lt;/a&gt;ReactJS Gallery &lt;a class=&quot;hash-link&quot; href=&quot;#reactjs-gallery&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/lele85&quot;&gt;Emanuele Rampichini&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://github.com/lele85/ReactGallery&quot;&gt;ReactJS Gallery&lt;/a&gt; is a cool demo app that shows fullscreen images from a folder on the server. If the folder content changes, the gallery app updates via websockets.&lt;/p&gt;
-
-&lt;p&gt;Emanuele shared this awesome demo video with us:&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/jYcpaemt90M&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-components&quot;&gt;&lt;/a&gt;React Components &lt;a class=&quot;hash-link&quot; href=&quot;#react-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;table-sorter&quot;&gt;&lt;/a&gt;Table Sorter &lt;a class=&quot;hash-link&quot; href=&quot;#table-sorter&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;http://bgerm.github.io/react-table-sorter-demo/&quot;&gt;Table Sorter&lt;/a&gt; by &lt;a href=&quot;https://github.com/bgerm&quot;&gt;bgerm&lt;/a&gt; [&lt;a href=&quot;https://github.com/bgerm/react-table-sorter-demo&quot;&gt;source&lt;/a&gt;] is another helpful React component.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;static-search&quot;&gt;&lt;/a&gt;Static-search &lt;a class=&quot;hash-link&quot; href=&quot;#static-search&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Dmitry Chestnykh &lt;a href=&quot;https://twitter.com/dchest&quot;&gt;@dchest&lt;/a&gt; wrote a &lt;a href=&quot;https://github.com/dchest/static-search&quot;&gt;static search indexer&lt;/a&gt; in Go, along with a &lt;a href=&quot;http://www.codingrobots.com/search/&quot;&gt;React-based web front-end&lt;/a&gt; that consumes search result via JSON.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;lorem-ipsum-component&quot;&gt;&lt;/a&gt;Lorem Ipsum component &lt;a class=&quot;hash-link&quot; href=&quot;#lorem-ipsum-component&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/martinandert&quot;&gt;Martin Andert&lt;/a&gt; created &lt;a href=&quot;https://github.com/martinandert/react-lorem-component&quot;&gt;react-lorem-component&lt;/a&gt;, a simple component for all your placeholding needs.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;input-with-placeholder-shim&quot;&gt;&lt;/a&gt;Input with placeholder shim &lt;a class=&quot;hash-link&quot; href=&quot;#input-with-placeholder-shim&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/enigma-io/react-input-placeholder&quot;&gt;react-input=placeholder&lt;/a&gt; by &lt;a href=&quot;https://github.com/enigma-io&quot;&gt;enigma-io&lt;/a&gt; is a small wrapper around React.DOM.input that shims in placeholder functionality for browsers that don&amp;#39;t natively support it.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;dicontainer&quot;&gt;&lt;/a&gt;diContainer &lt;a class=&quot;hash-link&quot; href=&quot;#dicontainer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/SpektrumFM/dicontainer&quot;&gt;dicontainer&lt;/a&gt; provides a dependency container that lets you inject Angular-style providers and services as simple React.js Mixins.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-server-rendering&quot;&gt;&lt;/a&gt;React server rendering &lt;a class=&quot;hash-link&quot; href=&quot;#react-server-rendering&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Ever wonder how to pre-render React components on the server? &lt;a href=&quot;https://github.com/mhart/react-server-example&quot;&gt;react-server-example&lt;/a&gt; by Michael Hart (&lt;a href=&quot;http://twitter.com/hichaelmart&quot;&gt;@hichaelmart&lt;/a&gt;) walks through the necessary steps.&lt;/p&gt;
-
-&lt;p&gt;Similarly, Alan deLevie (&lt;a href=&quot;https://twitter.com/adelevie&quot;&gt;@adelevie&lt;/a&gt;) created &lt;a href=&quot;https://github.com/adelevie/react-client-server-starter&quot;&gt;react-client-server-starter&lt;/a&gt;, another detailed walk-through of how to server-render your app.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Recent changes: web ui is being upgraded to [#reactjs](https://twitter.com/search?q=%23reactjs&amp;src=hash), HEAD~4 at [https://camlistore.googlesource.com/camlistore/](https://camlistore.googlesource.com/camlistore/)&lt;/p&gt;&amp;mdash; Camlistore (@Camlistore) &lt;a href=&quot;https://twitter.com/Camlistore/status/423925795820539904&quot;&gt;January 16, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-</description>
-				<pubDate>2014-02-24T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/02/24/community-roundup-17.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/02/24/community-roundup-17.html</guid>
 			</item>
 		
 	</channel>

@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Flux TodoMVC Tutorial</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Flux TodoMVC Tutorial" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/flux-todo-list.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Flux TodoMVC Tutorial">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/flux-todo-list.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Flux TodoMVC Tutorial</h1>
+    <h1>
+      Flux TodoMVC Tutorial
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/flux-todo-list.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>To demonstrate the Flux architecture with some example code, let&#39;s take on the classic TodoMVC application. The entire application is available in the React GitHub repo within the <a href="https://github.com/facebook/react/tree/master/examples/todomvc-flux">todomvc-flux</a> example directory, but let&#39;s walk through the development of it a step at a time. </p>
 
 <p>To begin, we&#39;ll need some boilerplate and get up and running with a module system. Node&#39;s module system, based on CommonJS, will fit the bill very nicely and we can build off of <a href="https://github.com/petehunt/react-boilerplate">react-boilerplate</a> to get up and running quickly. Assuming you have npm installed, simply clone the react-boilerplate code from GitHub, and navigate into the resulting directory in Terminal (or whatever CLI application you like). Next run the npm scripts to get up and running: <code>npm install</code>, then <code>npm run build</code>, and lastly <code>npm start</code> to continuously build using Browserify.</p>
@@ -468,13 +492,6 @@
   <span class="p">}));</span>
 <span class="p">};</span>
 
-<span class="cm">/**</span>
-<span class="cm"> * Empty the queue of callback invocation promises.</span>
-<span class="cm"> */</span>
-<span class="kd">var</span> <span class="nx">_clearPromises</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="nx">_promises</span> <span class="o">=</span> <span class="p">[];</span>
-<span class="p">};</span>
-
 <span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{};</span>
 <span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nx">merge</span><span class="p">(</span><span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
 
@@ -493,12 +510,27 @@
 <span class="cm">   * @param  {object} payload The data from the action.</span>
 <span class="cm">   */</span>
   <span class="nx">dispatch</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-      <span class="nx">_addPromise</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">payload</span><span class="p">);</span>
+    <span class="c1">// First create array of promises for callbacks to reference.</span>
+    <span class="kd">var</span> <span class="nx">resolves</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="kd">var</span> <span class="nx">rejects</span> <span class="o">=</span> <span class="p">[];</span>
+    <span class="nx">_promises</span> <span class="o">=</span> <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
+        <span class="nx">resolves</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">resolve</span><span class="p">;</span>
+        <span class="nx">rejects</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">reject</span><span class="p">;</span>
+      <span class="p">});</span>
     <span class="p">});</span>
-    <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">_promises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">_clearPromises</span><span class="p">);</span>
+    <span class="c1">// Dispatch to callbacks and resolve/reject promises.</span>
+    <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Callback can return an obj, to resolve, or a promise, to chain.</span>
+      <span class="c1">// See waitFor() for why this might be useful.</span>
+      <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">callback</span><span class="p">(</span><span class="nx">payload</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">resolves</span><span class="p">[</span><span class="nx">i</span><span class="p">](</span><span class="nx">payload</span><span class="p">);</span>
+      <span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="nx">rejects</span><span class="p">[</span><span class="nx">i</span><span class="p">](</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Dispatcher callback unsuccessful&#39;</span><span class="p">));</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+    <span class="nx">_promises</span> <span class="o">=</span> <span class="p">[];</span>
   <span class="p">}</span>
-
 <span class="p">});</span> 
 
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Dispatcher</span><span class="p">;</span> 
@@ -620,7 +652,7 @@
 </code></pre></div>
 <p>There are a few important things to note in the above code. To start, we are maintaining a private data structure called _todos. This object contains all the individual to-do items. Because this variable lives outside the class, but within the closure of the module, it remains private — it cannot be directly changed from the outside. This helps us preserve a distinct input/output interface for the flow of data by making it impossible to update the store without using an action. </p>
 
-<p>Another important part is the registration of the store&#39;s callback with the dispatcher. We pass in our payload handling callback to the dispatcher and preserve the index that this store has in the dispatcher&#39;s registry. The callback function currently only handles one actionType, but later we can add as many as we need. </p>
+<p>Another important part is the registration of the store&#39;s callback with the dispatcher. We pass in our payload handling callback to the dispatcher and preserve the index that this store has in the dispatcher&#39;s registry. The callback function currently only handles two actionTypes, but later we can add as many as we need. </p>
 <h2><a class="anchor" name="listening-to-changes-with-a-controller-view-"></a>Listening to Changes with a Controller-View  <a class="hash-link" href="#listening-to-changes-with-a-controller-view-">#</a></h2>
 <p>We need a React component near the top of our component hierarchy to listen for changes in the store. In a larger app, we would have more of these listening components, perhaps one for every section of the page. In Facebook&#39;s Ads Creation Tool, we have many of these controller-like views, each governing a specific section of the UI. In the Lookback Video Editor, we only had two: one for the animated preview and one for the image selection interface. Here&#39;s one for our TodoMVC example. Again, this is slightly abbreviated, but for the full code you can take a look at the TodoMVC example&#39;s <a href="https://github.com/facebook/react/blob/master/examples/todomvc-flux/js/components/TodoApp.react.js">TodoApp.react.js</a> </p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span> 
@@ -925,16 +957,16 @@ to-do items: </p>
 </code></pre></div><h2><a class="anchor" name="adding-dependency-management-to-the-dispatcher-"></a>Adding Dependency Management to the Dispatcher  <a class="hash-link" href="#adding-dependency-management-to-the-dispatcher-">#</a></h2>
 <p>As I said previously, our Dispatcher implementation is a bit naive. It&#39;s pretty good, but it will not suffice for most applications. We need a way to be able to manage dependencies between Stores. Let&#39;s add that functionality with a waitFor() method within the main body of the Dispatcher class. </p>
 
-<p>We&#39;ll need another public method, waitFor(). </p>
+<p>We&#39;ll need another public method, waitFor(). Note that it returns a Promise that can in turn be returned from the Store callback.</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="cm">/**</span>
 <span class="cm">   * @param  {array} promisesIndexes</span>
 <span class="cm">   * @param  {function} callback</span>
 <span class="cm">   */</span>
   <span class="nx">waitFor</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">promiseIndexes</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">selectedPromises</span> <span class="o">=</span> <span class="nx">_promises</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="cm">/*object*/</span> <span class="nx">_</span><span class="p">,</span> <span class="cm">/*number*/</span> <span class="nx">j</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="nx">promiseIndexes</span><span class="p">.</span><span class="nx">indexOf</span><span class="p">(</span><span class="nx">j</span><span class="p">)</span> <span class="o">!==</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">selectedPromises</span> <span class="o">=</span> <span class="nx">promiseIndexes</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">_promises</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
     <span class="p">});</span>
-    <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">selectedPromises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">callback</span><span class="p">);</span>
+    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">selectedPromises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">callback</span><span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div>
 <p>Now within the TodoStore callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur.  A more robust dispatcher is required to flag this scenario with warnings in the console.</p>

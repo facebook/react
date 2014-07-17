@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Performance Tools</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Performance Tools">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/perf.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html" class="active">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">
+              Getting Started
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">
+              Tutorial
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">
+              Thinking in React
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/videos.html">
+              Videos
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/complementary-tools.html">
+              Complementary Tools
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">
+              Examples
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">
+              Why React?
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">
+              Displaying Data
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">
+                      JSX in Depth
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">
+                      JSX Gotchas
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">
+              Interactivity and Dynamic UIs
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">
+              Multiple Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">
+              Reusable Components
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">
+              Forms
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">
+              Working With the Browser
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">
+                      More About Refs
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">
+              Tooling Integration
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">
+              Add-Ons
+            </a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">
+                      Animation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">
+                      Two-Way Binding Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">
+                      Class Name Manipulation
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">
+                      Test Utilities
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">
+                      Cloning Components
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">
+                      Immutability Helpers
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html" class="active">
+                      Performance Tools
+                    </a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">
+              Top-Level API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">
+              Component API
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">
+              Component Specs and Lifecycle
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">
+              Supported Tags and Attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">
+              Event System
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">
+              DOM Differences
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">
+              Special Non-DOM Attributes
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">
+              Reconciliation
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Flux</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/flux-overview.html">
+              Flux Overview
+            </a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/flux-todo-list.html">
+              Flux Todo List
+            </a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>
+      Performance Tools
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.8-perf.md" target="_blank">Edit on GitHub</a>
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> hook where you can add optimization hints to React&#39;s diff algorithm.</p>
+
+<p>In addition to giving you an overview of your app&#39;s overall performance, ReactPerf is a profiling tool that tells you exactly where you need to put these hooks.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>The dev build of React is slower than the prod build, due to all the extra logic for providing, for example, React&#39;s friendly console warnings (stripped away in the prod build). Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
+</blockquote>
+<h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2><h3><a class="anchor" name="perf.start-and-perf.stop"></a><code>Perf.start()</code> and <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-and-perf.stop">#</a></h3>
+<p>Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.</p>
+<h3><a class="anchor" name="perf.printinclusivemeasurements"></a><code>Perf.printInclusive(measurements)</code> <a class="hash-link" href="#perf.printinclusivemeasurements">#</a></h3>
+<p>Prints the overall time taken. If no argument&#39;s passed, defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:</p>
+
+<p><img src="/react/img/docs/perf-inclusive.png" alt=""></p>
+<h3><a class="anchor" name="perf.printexclusivemeasurements"></a><code>Perf.printExclusive(measurements)</code> <a class="hash-link" href="#perf.printexclusivemeasurements">#</a></h3>
+<p>&quot;Exclusive&quot; times don&#39;t include the times taken to mount the components: processing props, <code>getInitialState</code>, call <code>componentWillMount</code> and <code>componentDidMount</code>, etc.</p>
+
+<p><img src="/react/img/docs/perf-exclusive.png" alt=""></p>
+<h3><a class="anchor" name="perf.printwastedmeasurements"></a><code>Perf.printWasted(measurements)</code> <a class="hash-link" href="#perf.printwastedmeasurements">#</a></h3>
+<p><strong>The most useful part of the profiler</strong>.</p>
+
+<p>&quot;Wasted&quot; time is spent on components that didn&#39;t actually render anything, e.g. the render stayed the same, so the DOM wasn&#39;t touched.</p>
+
+<p><img src="/react/img/docs/perf-wasted.png" alt=""></p>
+<h3><a class="anchor" name="perf.printdommeasurements"></a><code>Perf.printDOM(measurements)</code> <a class="hash-link" href="#perf.printdommeasurements">#</a></h3>
+<p>Prints the underlying DOM manipulations, e.g. &quot;set innerHTML&quot; and &quot;remove&quot;.</p>
+
+<p><img src="/react/img/docs/perf-dom.png" alt=""></p>
+<h2><a class="anchor" name="advanced-api"></a>Advanced API <a class="hash-link" href="#advanced-api">#</a></h2>
+<p>The above print methods use <code>Perf.getLastMeasurements()</code> to pretty-print the result.</p>
+<h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
+<p>Get the measurements array from the last start-stop session. The array contains objects, each of which looks like this:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="p">{</span>
+  <span class="c1">// The term &quot;inclusive&quot; and &quot;exclusive&quot; are explained below</span>
+  <span class="s2">&quot;exclusive&quot;</span><span class="o">:</span> <span class="p">{},</span>
+  <span class="c1">// &#39;.0.0&#39; is the React ID of the node</span>
+  <span class="s2">&quot;inclusive&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.0670000008540228</span><span class="p">,</span> <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.3259999939473346</span><span class="p">},</span>
+  <span class="s2">&quot;render&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.036999990697950125</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.010000003385357559</span><span class="p">},</span>
+  <span class="c1">// Number of instances</span>
+  <span class="s2">&quot;counts&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">},</span>
+  <span class="c1">// DOM touches</span>
+  <span class="s2">&quot;writes&quot;</span><span class="o">:</span> <span class="p">{},</span>
+  <span class="c1">// Extra debugging info</span>
+  <span class="s2">&quot;displayNames&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;&lt;root&gt;&quot;</span><span class="p">},</span>
+    <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;Box&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">}</span>
+  <span class="p">},</span>
+  <span class="s2">&quot;totalTime&quot;</span><span class="o">:</span> <span class="mf">0.48499999684281647</span>
+<span class="p">}</span>
+</code></pre></div>
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/pure-render-mixin.html">&larr; Prev</a>
+      
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">&copy; 2014 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

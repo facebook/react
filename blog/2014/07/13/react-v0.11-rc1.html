@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | React v0.11 RC</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | React v0.11 RC" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/07/13/react-v0.11-rc1.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | React v0.11 RC">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/07/13/react-v0.11-rc1.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -63,6 +63,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></li>
+      
         <li><a href="/react/blog/2014/07/13/react-v0.11-rc1.html" class="active">React v0.11 RC</a></li>
       
         <li><a href="/react/blog/2014/06/27/community-roundup-19.html">Community Round-up #19</a></li>
@@ -80,8 +82,6 @@
         <li><a href="/react/blog/2014/03/19/react-v0.10-rc1.html">React v0.10 RC</a></li>
       
         <li><a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a></li>
-      
-        <li><a href="/react/blog/2014/02/24/community-roundup-17.html">Community Round-up #17</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -113,7 +113,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0-rc
 <p>We&#39;ve also published version <code>0.11.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h1><a class="anchor" name="blog-post"></a>Blog Post <a class="hash-link" href="#blog-post">#</a></h1><h2><a class="anchor" name="getdefaultprops"></a><code>getDefaultProps</code> <a class="hash-link" href="#getdefaultprops">#</a></h2>
+<h2><a class="anchor" name="getdefaultprops"></a><code>getDefaultProps</code> <a class="hash-link" href="#getdefaultprops">#</a></h2>
 <p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
 <h2><a class="anchor" name="rendering-to-null"></a>Rendering to <code>null</code> <a class="hash-link" href="#rendering-to-null">#</a></h2>
 <p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to writing meaningful code. Returning <code>null</code> in an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>

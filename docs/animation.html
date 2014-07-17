@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Animation</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Animation" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/animation.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Animation">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/animation.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Animation</h1>
+    <h1>
+      Animation
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.1-animation.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>React provides a <code>ReactTransitionGroup</code> addon component as a low-level API for animation, and a <code>ReactCSSTransitionGroup</code> for easily implementing basic CSS animations and transitions.</p>
 <h2><a class="anchor" name="high-level-api-reactcsstransitiongroup"></a>High-level API: <code>ReactCSSTransitionGroup</code> <a class="hash-link" href="#high-level-api-reactcsstransitiongroup">#</a></h2>
 <p><code>ReactCSSTransitionGroup</code> is based on <code>ReactTransitionGroup</code> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
@@ -478,6 +502,12 @@
 <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
 <p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactCSSTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactCSSTransitionGroup</code> to disable these animations.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>When using <code>ReactCSSTransitionGroup</code>, there&#39;s no way for your components to be notified when a transition has ended or to perform any more complex logic around animation. If you want more fine-grained control, you can use the lower-level <code>ReactTransitionGroup</code> API which provides the hooks you need to do custom transitions.</p>
+</blockquote>
 <h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
 <p><code>ReactTransitionGroup</code> is the basis for animations. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
 <h3><a class="anchor" name="componentwillentercallback"></a><code>componentWillEnter(callback)</code> <a class="hash-link" href="#componentwillentercallback">#</a></h3>

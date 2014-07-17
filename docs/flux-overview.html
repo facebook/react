@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Flux Application Architecture</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Flux Application Architecture" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/flux-overview.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Flux Application Architecture">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/flux-overview.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,11 +431,15 @@
 
 
   <div class="inner-content">
-    <h1>Flux Application Architecture</h1>
+    <h1>
+      Flux Application Architecture
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/flux-overview.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>Flux is the application architecture that Facebook uses for building client-side web applications.  It complements React&#39;s composable view components by utilizing a unidirectional data flow.  It&#39;s more of a pattern rather than a formal framework, and you can start using Flux immediately without a lot of new code.</p>
 
-<figure><iframe width="560" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="560" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
 
 <p>Flux applications have three major parts: the dispatcher, the stores, and the views (React components).  These should not be confused with Model-View-Controller.  Controllers do exist in a Flux application, but they are controller-views — views often found at the top of the hierarchy that retrieve data from the stores and pass this data down to their children.  Additionally, actions — dispatcher helper methods — are often used to support a semantic dispatcher API.  It can be useful to think of them as a fourth part of the Flux update cycle.</p>
 
@@ -479,7 +503,7 @@ Views ---> (actions) ----> Dispatcher ---> (registered callback) ---> Stores ---
   <span class="p">});</span> 
   <span class="k">break</span><span class="p">;</span> 
 </code></pre></div>
-<p>The arguments for <code>waitFor()</code> are an array of dipatcher registry indexes, and a final callback to invoke after the callbacks at the given indexes have completed.  Thus the store that is invoking <code>waitFor()</code> can depend on the state of another store to inform how it should update its own state.</p>
+<p>The arguments for <code>waitFor()</code> are an array of dispatcher registry indexes, and a final callback to invoke after the callbacks at the given indexes have completed.  Thus the store that is invoking <code>waitFor()</code> can depend on the state of another store to inform how it should update its own state.</p>
 
 <p>A problem arises if we create circular dependencies. If Store A waits for Store B, and B waits for A, then we&#39;ll have a very bad situation on our hands. We&#39;ll need a more robust dispatcher that flags these circular dependencies with console errors, and this is not easily accomplished with promises. Unfortunately, that&#39;s a bit beyond the scope of this documentation. In the future we hope to cover how to build a more robust dispatcher and how to initialize, update, and save the state of the application with persistent data, like a web service API.</p>
 

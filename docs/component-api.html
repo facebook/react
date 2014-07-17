@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Component API</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Component API" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/component-api.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Component API">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/component-api.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,49 +431,14 @@
 
 
   <div class="inner-content">
-    <h1>Component API</h1>
+    <h1>
+      Component API
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-02-component-api.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <h2><a class="anchor" name="reactcomponent"></a>ReactComponent <a class="hash-link" href="#reactcomponent">#</a></h2>
 <p>Component classes created by <code>React.createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
-<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
-</code></pre></div>
-<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements.</p>
-<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.renderComponent()</code>.</p>
-
-<p>Though calling <code>React.renderComponent()</code> again on the same node is the preferred way to update a root-level component, you can also call <code>setProps()</code> to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>When possible, the declarative approach of calling <code>React.renderComponent()</code> again is preferred; it tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
-
-<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
-</blockquote>
-<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
-</code></pre></div>
-<p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
-<h3><a class="anchor" name="transferpropsto"></a>transferPropsTo <a class="hash-link" href="#transferpropsto">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
-</code></pre></div>
-<p>Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, <code>targetComponent</code> is returned as a convenience. This function is useful when creating simple HTML-like components:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">transferPropsTo</span><span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;/avatars/&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">}</span> <span class="nx">userId</span><span class="o">=</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span> <span class="o">/&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="c1">// &lt;Avatar userId={17} width={200} height={200} /&gt;</span>
-</code></pre></div>
-<p>Properties that are specified directly on the target component instance (such as <code>src</code> and <code>userId</code> in the above example) will not be overwritten by <code>transferPropsTo</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>Use <code>transferPropsTo</code> with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it&#39;s safer to explicitly copy the properties that you need onto the child component.</p>
-</blockquote>
 <h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once <code>setState</code> is completed and the component is re-rendered.</p>
@@ -477,9 +462,48 @@
 <p>Calling <code>forceUpdate()</code> will cause <code>render()</code> to be called on the component and its children, but React will still only update the DOM if the markup changes.</p>
 
 <p>Normally you should try to avoid all uses of <code>forceUpdate()</code> and only read from <code>this.props</code> and <code>this.state</code> in <code>render()</code>. This makes your application much simpler and more efficient.</p>
+<h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
+</code></pre></div>
+<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
 <h3><a class="anchor" name="ismounted"></a>isMounted() <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code> returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>
+<h3><a class="anchor" name="transferpropsto"></a>transferPropsTo <a class="hash-link" href="#transferpropsto">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
+</code></pre></div>
+<p>Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, <code>targetComponent</code> is returned as a convenience. This function is useful when creating simple HTML-like components:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">transferPropsTo</span><span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;/avatars/&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">}</span> <span class="nx">userId</span><span class="o">=</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// &lt;Avatar userId={17} width={200} height={200} /&gt;</span>
+</code></pre></div>
+<p>Properties that are specified directly on the target component instance (such as <code>src</code> and <code>userId</code> in the above example) will not be overwritten by <code>transferPropsTo</code>.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Use <code>transferPropsTo</code> with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it&#39;s safer to explicitly copy the properties that you need onto the child component.</p>
+</blockquote>
+<h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.renderComponent()</code>.</p>
+
+<p>Though calling <code>React.renderComponent()</code> again on the same node is the preferred way to update a root-level component, you can also call <code>setProps()</code> to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>When possible, the declarative approach of calling <code>React.renderComponent()</code> again is preferred; it tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
+
+<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
+</blockquote>
+<h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+</code></pre></div>
+<p>Like <code>setProps()</code> but deletes any pre-existing props instead of merging the two objects.</p>
 
 
     <div class="docs-prevnext">

@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | References to Components</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | References to Components" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/tips/references-to-components.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | References to Components">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/tips/references-to-components.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html" class="active">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -418,10 +438,10 @@
 
 <span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
 </code></pre></div>
-<p>If you pass a variable to &#39;React.renderComponent`, it&#39;s not guaranteed that the component passed in will be the one that&#39;s mounted. In cases where you construct a component before mounting it, be sure to reassign your variable:</p>
+<p>Keep in mind, however, that the &quot;constructor&quot; of a component doesn&#39;t return a component instance! It&#39;s just a <strong>descriptor</strong>: a lightweight representation that tells React what the mounted component should look like.</p>
 <div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
-<span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span> <span class="c1">// This is just a descriptor.</span>
 
 <span class="c1">// Some code here...</span>
 
@@ -430,7 +450,7 @@
 <blockquote>
 <p>Note:</p>
 
-<p>This should only ever be used at the top level. Inside components, let your <code>props</code> and <code>state</code> handle communication with child components, and only reference components via <code>ref</code>s.</p>
+<p>This should only ever be used at the top level. Inside components, let your <code>props</code> and <code>state</code> handle communication with child components, and only reference components via <a href="http://facebook.github.io/react/docs/more-about-refs.html">refs</a>.</p>
 </blockquote>
 
 
@@ -438,6 +458,8 @@
       
         <a class="docs-prev" href="/react/tips/expose-component-functions.html">&larr; Prev</a>
       
+      
+        <a class="docs-next" href="/react/tips/children-undefined.html">Next &rarr;</a>
       
     </div>
   </div>

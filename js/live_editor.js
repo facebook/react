@@ -46,13 +46,13 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
     var editor;
 
     if (IS_MOBILE) {
-      editor = React.DOM.pre( {style:{overflow: 'scroll'}}, this.props.codeText);
+      editor = React.DOM.pre({style: {overflow: 'scroll'}}, this.props.codeText);
     } else {
-      editor = React.DOM.textarea( {ref:"editor", defaultValue:this.props.codeText} );
+      editor = React.DOM.textarea({ref: "editor", defaultValue: this.props.codeText});
     }
 
     return (
-      React.DOM.div( {style:this.props.style, className:this.props.className}, 
+      React.DOM.div({style: this.props.style, className: this.props.className}, 
         editor
       )
     );
@@ -118,20 +118,20 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } catch (err) {}
 
     var JSContent =
-      CodeMirrorEditor(
-        {key:"js",
-        className:"playgroundStage CodeMirror-readonly",
-        onChange:this.handleCodeChange,
-        codeText:compiledCode,
-        readOnly:true}
+      CodeMirrorEditor({
+        key: "js", 
+        className: "playgroundStage CodeMirror-readonly", 
+        onChange: this.handleCodeChange, 
+        codeText: compiledCode, 
+        readOnly: true}
       );
 
     var JSXContent =
-      CodeMirrorEditor(
-        {key:"jsx",
-        onChange:this.handleCodeChange,
-        className:"playgroundStage",
-        codeText:this.state.code}
+      CodeMirrorEditor({
+        key: "jsx", 
+        onChange: this.handleCodeChange, 
+        className: "playgroundStage", 
+        codeText: this.state.code}
       );
 
     var JSXTabClassName =
@@ -140,30 +140,30 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       'playground-tab' + (isJS ? ' playground-tab-active' : '');
 
     var JSTab =
-      React.DOM.div(
-        {className:JSTabClassName,
-        onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JS)}, 
+      React.DOM.div({
+        className: JSTabClassName, 
+        onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JS)}, 
           "Compiled JS"
       );
 
     var JSXTab =
-      React.DOM.div(
-        {className:JSXTabClassName,
-        onClick:this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}, 
+      React.DOM.div({
+        className: JSXTabClassName, 
+        onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}, 
           "Live JSX Editor"
       )
 
     return (
-      React.DOM.div( {className:"playground"}, 
+      React.DOM.div({className: "playground"}, 
         React.DOM.div(null, 
-          JSXTab,
+          JSXTab, 
           this.props.showCompiledJSTab && JSTab
-        ),
-        React.DOM.div( {className:"playgroundCode"}, 
+        ), 
+        React.DOM.div({className: "playgroundCode"}, 
           isJS ? JSContent : JSXContent
-        ),
-        React.DOM.div( {className:"playgroundPreview"}, 
-          React.DOM.div( {ref:"mount"} )
+        ), 
+        React.DOM.div({className: "playgroundPreview"}, 
+          React.DOM.div({ref: "mount"})
         )
       )
     );
@@ -173,10 +173,11 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     this.executeCode();
   },
 
-  componentWillUpdate: function(nextProps, nextState) {
+  componentDidUpdate: function(prevProps, prevState) {
     // execute code only when the state's not being updated by switching tab
     // this avoids re-displaying the error, which comes after a certain delay
-    if (this.state.code !== nextState.code) {
+    if (this.props.transformer !== prevProps.transformer ||
+        this.state.code !== prevState.code) {
       this.executeCode();
     }
   },
@@ -192,7 +193,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       var compiledCode = this.compileCode();
       if (this.props.renderCode) {
         React.renderComponent(
-          CodeMirrorEditor( {codeText:compiledCode, readOnly:true} ),
+          CodeMirrorEditor({codeText: compiledCode, readOnly: true}),
           mountNode
         );
       } else {
@@ -201,7 +202,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } catch (err) {
       this.setTimeout(function() {
         React.renderComponent(
-          React.DOM.div( {className:"playgroundError"}, err.toString()),
+          React.DOM.div({className: "playgroundError"}, err.toString()),
           mountNode
         );
       }, 500);

@@ -6,12 +6,12 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>React | Cloning Components</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Cloning Components" />
-  <meta property="og:type" content="website" />
-  <meta property="og:url" content="http://facebook.github.io/react/docs/clone-with-props.html" />
-  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png" />
-  <meta property="og:description" content="A JavaScript library for building user interfaces" />
-  <meta property="fb:app_id" content="623268441017527" />
+  <meta property="og:title" content="React | Cloning Components">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/clone-with-props.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
 
   <link rel="shortcut icon" href="/react/favicon.ico">
   <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
@@ -246,6 +246,18 @@
                     </a>
                   </li>
                 
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">
+                      PureRenderMixin
+                    </a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">
+                      Performance Tools
+                    </a>
+                  </li>
+                
               </ul>
             
           </li>
@@ -404,6 +416,14 @@
             <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
           </li>
         
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -411,8 +431,12 @@
 
 
   <div class="inner-content">
-    <h1>Cloning Components</h1>
+    <h1>
+      Cloning Components
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.5-clone-with-props.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
+
     <p>In rare situations a component may want to change the props of a component that it doesn&#39;t own (like changing the <code>className</code> of a component passed as <code>this.props.children</code>). Other times it may want to make multiple copies of a component passed to it. <code>cloneWithProps()</code> makes this possible.</p>
 <h4><a class="anchor" name="reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops"></a><code>ReactComponent React.addons.cloneWithProps(ReactComponent component, object? extraProps)</code> <a class="hash-link" href="#reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops">#</a></h4>
 <p>Do a shallow copy of <code>component</code> and merge any props provided by <code>extraProps</code>. Props are merged in the same manner as <a href="/react/docs/component-api.html#transferpropsto"><code>transferPropsTo()</code></a>, so props like <code>className</code> will be merged intelligently.</p>
