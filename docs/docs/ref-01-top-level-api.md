@@ -117,6 +117,14 @@ React.Children.forEach(object children, function fn [, object context])
 
 Like `React.Children.map()` but does not return an object.
 
+#### React.Children.count
+
+```javascript
+number React.Children.count(object children)
+```
+
+Return the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
+
 #### React.Children.only
 
 ```javascript
