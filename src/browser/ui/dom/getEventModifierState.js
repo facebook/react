@@ -42,7 +42,7 @@ function modifierStateGetter(keyArg) {
     return nativeEvent.getModifierState(keyArg);
   }
   var keyProp = modifierKeyToProp[keyArg];
-  return keyProp && nativeEvent[keyProp];
+  return keyProp ? !!nativeEvent[keyProp] : false;
 }
 
 function getEventModifierState(nativeEvent) {
