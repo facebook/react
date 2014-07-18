@@ -30,6 +30,7 @@ var invariant = require('invariant');
 
 var OPEN_TAG_NAME_EXP = /^(<[^ \/>]+)/;
 var RESULT_INDEX_ATTR = 'data-danger-index';
+var TEXT_NODE = 3;
 
 /**
  * Extracts the `nodeName` from a string of markup.
@@ -54,7 +55,7 @@ var Danger = {
    * `markupList` should be the same.
    *
    * @param {array<string>} markupList List of markup strings to render.
-   * @return {array<DOMElement>} List of rendered nodes.
+   * @return {array<DOMElement|DOMDocumentFragment>} List of rendered nodes.
    * @internal
    */
   dangerouslyRenderMarkup: function(markupList) {
@@ -109,6 +110,7 @@ var Danger = {
         emptyFunction // Do nothing special with <script> tags.
       );
 
+      resultIndex = null;
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
         if (renderNode.hasAttribute &&
@@ -128,11 +130,20 @@ var Danger = {
           // we're done.
           resultListAssignmentCount += 1;
 
+        } else if (resultIndex != null && renderNode.nodeType === TEXT_NODE) {
+          // Text node, probably following a ReactTextComponent script --
+          // combine the two nodes into one document fragment
+          var fragment = document.createDocumentFragment();
+          fragment.appendChild(resultList[resultIndex]);
+          fragment.appendChild(renderNode);
+          resultList[resultIndex] = fragment;
+
         } else if (__DEV__) {
           console.error(
             "Danger: Discarding unexpected node:",
             renderNode
           );
+          resultIndex = null;
         }
       }
     }

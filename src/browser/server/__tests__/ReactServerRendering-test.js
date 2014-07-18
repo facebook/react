@@ -94,8 +94,8 @@ describe('ReactServerRendering', function() {
         '<div ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
           ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">My name is </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">child</span>' +
+            '<script ' + ID_ATTRIBUTE_NAME + '="[^"]+"></script>My name is ' +
+            '<script ' + ID_ATTRIBUTE_NAME + '="[^"]+"></script>child' +
           '</span>' +
         '</div>'
       );
@@ -143,8 +143,10 @@ describe('ReactServerRendering', function() {
         expect(response).toMatch(
           '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+" ' +
             ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">Component name: </span>' +
-            '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">TestComponent</span>' +
+            '<script ' + ID_ATTRIBUTE_NAME + '="[^"]+"></script>' +
+            'Component name: ' +
+            '<script ' + ID_ATTRIBUTE_NAME + '="[^"]+"></script>' +
+            'TestComponent' +
           '</span>'
         );
         expect(lifecycle).toEqual(
