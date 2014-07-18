@@ -172,6 +172,25 @@ var flushBatchedUpdates = ReactPerf.measure(
     // componentDidUpdate) but we need to check here too in order to catch
     // updates enqueued by setState callbacks.
     while (dirtyComponents.length) {
+      var allUnmounted = true;
+      for (var i = 0, l = dirtyComponents.length; i < l; i++) {
+        if (dirtyComponents[i].isMounted()) {
+          allUnmounted = false;
+          break;
+        }
+      }
+
+      if (allUnmounted) {
+        // All the "dirty" components are unmounted, which probably means that
+        // they were marked dirty due to setState calls in componentWillMount
+        // handlers and the components are currently in the process of mounting.
+        // `runBatchedUpdates` will be a noop. In that case, initializing the
+        // DOM-dependent ReactReconcileTransaction is thus not what we want to
+        // do, especially when using server rendering, so we skip it.
+        dirtyComponents.length = 0;
+        return;
+      }
+
       var transaction = ReactUpdatesFlushTransaction.getPooled();
       transaction.perform(runBatchedUpdates, null, transaction);
       ReactUpdatesFlushTransaction.release(transaction);

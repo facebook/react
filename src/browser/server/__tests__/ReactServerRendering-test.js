@@ -31,12 +31,13 @@ require('mock-modules')
 
 var mocks = require('mocks');
 
+var ExecutionEnvironment;
 var React;
+var ReactMarkupChecksum;
 var ReactMount;
+var ReactReconcileTransaction;
 var ReactTestUtils;
 var ReactServerRendering;
-var ReactMarkupChecksum;
-var ExecutionEnvironment;
 
 var ID_ATTRIBUTE_NAME;
 
@@ -44,12 +45,14 @@ describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');
+    ReactReconcileTransaction = require('ReactReconcileTransaction');
+
     ExecutionEnvironment = require('ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
     ReactServerRendering = require('ReactServerRendering');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
@@ -372,6 +375,26 @@ describe('ReactServerRendering', function() {
         'Invariant Violation: renderComponentToStaticMarkup(): You must pass ' +
         'a valid ReactComponent.'
       );
+    });
+
+    it('allows setState in componentWillMount without using DOM', function() {
+      var Component = React.createClass({
+        componentWillMount: function() {
+          this.setState({text: 'hello, world'});
+        },
+        render: function() {
+          return <div>{this.state.text}</div>;
+        }
+      });
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      var markup = ReactServerRendering.renderComponentToString(
+        <Component />
+      );
+      expect(markup.indexOf('hello, world') >= 0).toBe(true);
     });
   });
 });
