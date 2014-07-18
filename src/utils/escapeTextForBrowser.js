@@ -20,11 +20,11 @@
 "use strict";
 
 var ESCAPE_LOOKUP = {
-  "&": "&amp;",
-  ">": "&gt;",
-  "<": "&lt;",
-  "\"": "&quot;",
-  "'": "&#x27;"
+  '&': '&amp;',
+  '>': '&gt;',
+  '<': '&lt;',
+  '"': '&quot;',
+  "'": '&#x27;'
 };
 
 var ESCAPE_REGEX = /[&><"']/g;
@@ -40,7 +40,13 @@ function escaper(match) {
  * @return {string} An escaped string.
  */
 function escapeTextForBrowser(text) {
-  return ('' + text).replace(ESCAPE_REGEX, escaper);
+  text = '' + text;
+
+  if (ESCAPE_REGEX.test(text)) {
+    return text.replace(ESCAPE_REGEX, escaper);
+  }
+
+  return text;
 }
 
 module.exports = escapeTextForBrowser;
