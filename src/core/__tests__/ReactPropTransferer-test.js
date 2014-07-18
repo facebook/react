@@ -28,13 +28,18 @@ var TestComponent;
 describe('ReactPropTransferer', function() {
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
+
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
 
+    // We expect to get a warning from transferPropsTo since it's deprecated
+    spyOn(console, 'warn');
+
     TestComponent = React.createClass({
       render: function() {
-        return this.transferPropsTo(
+        var result = this.transferPropsTo(
           <input
             className="textinput"
             style={{display: 'block', color: 'green'}}
@@ -42,6 +47,8 @@ describe('ReactPropTransferer', function() {
             value=""
           />
         );
+        expect(console.warn).toHaveBeenCalled();
+        return result;
       }
     });
   });

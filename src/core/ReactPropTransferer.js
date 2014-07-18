@@ -22,6 +22,9 @@ var emptyFunction = require('emptyFunction');
 var invariant = require('invariant');
 var joinClasses = require('joinClasses');
 var merge = require('merge');
+var warning = require('warning');
+
+var didWarn = false;
 
 /**
  * Creates a transfer strategy that will merge prop values using the supplied
@@ -140,6 +143,17 @@ var ReactPropTransferer = {
         this.constructor.displayName,
         descriptor.type.displayName
       );
+
+      if (__DEV__) {
+        if (!didWarn) {
+          didWarn = true;
+          warning(
+            false,
+            'transferPropsTo is deprecated. ' +
+            'See http://fb.me/react-transferpropsto for more information.'
+          );
+        }
+      }
 
       // Because descriptors are immutable we have to merge into the existing
       // props object rather than clone it.
