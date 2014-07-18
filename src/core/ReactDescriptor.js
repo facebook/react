@@ -158,6 +158,8 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
     }
   }
 
+  var propName;
+
   // Reserved names are extracted
   var props = {};
 
@@ -168,15 +170,13 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
     ref = config.ref === undefined ? null : config.ref;
     key = config.key === undefined ? null : '' + config.key;
     // Remaining properties are added to a new props object
-    for (var propName in config) {
+    for (propName in config) {
       if (config.hasOwnProperty(propName) &&
           !RESERVED_PROPS.hasOwnProperty(propName)) {
         props[propName] = config[propName];
       }
     }
   }
-
-  // TODO: fill in defaultProps here, after transferPropsTo is gone
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
@@ -189,6 +189,16 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
       childArray[i] = arguments[i + 2];
     }
     props.children = childArray;
+  }
+
+  // Resolve default props
+  if (type.defaultProps) {
+    var defaultProps = type.defaultProps;
+    for (propName in defaultProps) {
+      if (typeof props[propName] === 'undefined') {
+        props[propName] = defaultProps[propName];
+      }
+    }
   }
 
   return new ReactDescriptor(

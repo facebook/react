@@ -939,25 +939,13 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processProps: function(newProps) {
-    var defaultProps = this.constructor.defaultProps;
-    var props;
-    if (defaultProps) {
-      props = merge(newProps);
-      for (var propName in defaultProps) {
-        if (typeof props[propName] === 'undefined') {
-          props[propName] = defaultProps[propName];
-        }
-      }
-    } else {
-      props = newProps;
-    }
     if (__DEV__) {
       var propTypes = this.constructor.propTypes;
       if (propTypes) {
-        this._checkPropTypes(propTypes, props, ReactPropTypeLocations.prop);
+        this._checkPropTypes(propTypes, newProps, ReactPropTypeLocations.prop);
       }
     }
-    return props;
+    return newProps;
   },
 
   /**
