@@ -34,7 +34,15 @@ function proxyStaticMethods(target, source) {
     if (source.hasOwnProperty(key)) {
       var value = source[key];
       if (typeof value === 'function') {
-        target[key] = value.bind(source);
+        var bound = value.bind(source);
+        // Copy any properties defined on the function, such as `isRequired` on
+        // a PropTypes validator. (mergeInto refuses to work on functions.)
+        for (var k in value) {
+          if (value.hasOwnProperty(k)) {
+            bound[k] = value[k];
+          }
+        }
+        target[key] = bound;
       } else {
         target[key] = value;
       }
