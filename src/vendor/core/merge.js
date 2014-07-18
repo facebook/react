@@ -18,8 +18,6 @@
 
 "use strict";
 
-var mergeInto = require('mergeInto');
-
 /**
  * Shallow merges two structures into a return value, without mutating either.
  *
@@ -29,8 +27,12 @@ var mergeInto = require('mergeInto');
  */
 var merge = function(one, two) {
   var result = {};
-  mergeInto(result, one);
-  mergeInto(result, two);
+  if (one != null) {
+    Object.assign(result, one);
+  }
+  if (two != null) {
+    Object.assign(result, two);
+  }
   return result;
 };
 

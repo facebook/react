@@ -75,14 +75,16 @@ describe('LegacyImmutableObject', function() {
     expect(window.__DEV__).toBe(true);
   });
 
-  testDev('should require initial map to be an object', function() {
+  testDev('should not require initial map to be an object', function() {
+    // These won't throw because they're coerced
+
     expect(function() {
       new LegacyImmutableObject([1,2,3]);
-    }).toThrow();
+    }).not.toThrow();
 
     expect(function() {
       new LegacyImmutableObject('asdf');
-    }).toThrow();
+    }).not.toThrow();
 
     expect(function() {
       new LegacyImmutableObject({oldField: 'asdf', fieldTwo: null});
