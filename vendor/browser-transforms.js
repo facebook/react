@@ -23,8 +23,6 @@ var docblock = require('jstransform/src/docblock');
 var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors');
 
-var runScripts;
-var loadScripts;
 var headEl;
 var dummyAnchor;
 var inlineScriptCount = 0;
