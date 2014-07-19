@@ -2,7 +2,7 @@
 
 function createCustomElementClass(tagName) {
   if (typeof window !== 'undefined') {
-    document.registerElement('x-foo', {
+    document.registerElement(tagName, {
       prototype: Object.create(HTMLElement.prototype)
     });
   }
