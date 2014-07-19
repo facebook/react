@@ -68,9 +68,12 @@ function assertValidProps(props) {
 function putListener(id, registrationName, listener, transaction) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
+    var doc;
+    if (container.parentNode.hasOwnProperty('olderShadowRoot') || container.nodeType !== ELEMENT_NODE_TYPE) {
+      doc = container;
+    } else {
+      doc = container.ownerDocument;
+    }
     listenTo(registrationName, doc);
   }
   transaction.getPutListenerQueue().enqueuePutListener(
