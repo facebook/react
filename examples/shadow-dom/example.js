@@ -20,7 +20,7 @@ var ShadowRoot = React.createClass({
   
   componentDidMount: function() {
     var shadowRoot = window.honk = this.getDOMNode().createShadowRoot();
-    shadowRoot.innerHTML = React.renderComponentToString(this.props.component());
+    shadowRoot.innerHTML = '<span></span>';
     this._shadowRoot = shadowRoot.children[0];
     this.rerender();
   },
@@ -30,11 +30,20 @@ var ShadowRoot = React.createClass({
   },
   
   rerender: function() {
-    React.renderComponent(this.props.component(null, this.props.children), this._shadowRoot);
+    React.renderComponent(<span>{this.props.children}</span>, this._shadowRoot);
   }
 });
 
-var XYolo = createCustomElementClass('x-yolo');
+var PaperButton = React.createClass({
+  render: function() {
+    return (
+      <ShadowRoot component={createCustomElementClass('paper-button')}>
+        <style>{'h3 { color: blue; }'}</style>
+        <h3>Hello world</h3>
+      </ShadowRoot>
+    );
+  }
+});
 
 var Hello = React.createClass({
   getInitialState: function() {
@@ -44,7 +53,7 @@ var Hello = React.createClass({
     this.setState({n: this.state.n + 1});
   },
   render: function() {
-    return <div><XYolo>hello world</XYolo><ShadowRoot><span onClick={this.handleClick}>Clicked {this.state.n} times</span></ShadowRoot></div>;
+    return <div><PaperButton /><h3>yolo</h3></div>;
   }
 });
  
