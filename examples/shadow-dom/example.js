@@ -1,5 +1,14 @@
 /** @jsx React.DOM */
 
+function createCustomElementClass(tagName) {
+  if (typeof window !== 'undefined') {
+    document.registerElement('x-foo', {
+      prototype: Object.create(HTMLElement.prototype)
+    });
+  }
+  return React.DOM.createDOMComponentClass(false, tagName);
+}
+
 var ShadowRoot = React.createClass({
   getDefaultProps: function() {
     return {component: React.DOM.div};
@@ -25,6 +34,8 @@ var ShadowRoot = React.createClass({
   }
 });
 
+var XYolo = createCustomElementClass('x-yolo');
+
 var Hello = React.createClass({
   getInitialState: function() {
     return {n: 0};
@@ -33,7 +44,7 @@ var Hello = React.createClass({
     this.setState({n: this.state.n + 1});
   },
   render: function() {
-    return <div><ShadowRoot><span onClick={this.handleClick}>Clicked {this.state.n} times</span></ShadowRoot></div>;
+    return <div><XYolo>hello world</XYolo><ShadowRoot><span onClick={this.handleClick}>Clicked {this.state.n} times</span></ShadowRoot></div>;
   }
 });
  
