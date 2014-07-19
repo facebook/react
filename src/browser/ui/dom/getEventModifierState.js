@@ -45,7 +45,7 @@ function modifierStateGetter(keyArg) {
   return keyProp && nativeEvent[keyProp];
 }
 
-function getEventModifierState(nativeEvent) {
+function getEventModifierState() {
   return modifierStateGetter;
 }
 
