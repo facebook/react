@@ -26,6 +26,7 @@
 
 var modifierKeyToProp = {
   'Alt': 'altKey',
+  'AltGraph': 'altGraphKey',
   'Control': 'ctrlKey',
   'Meta': 'metaKey',
   'Shift': 'shiftKey'
