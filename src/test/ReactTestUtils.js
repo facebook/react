@@ -325,7 +325,8 @@ function makeSimulator(eventType) {
     );
     mergeInto(event, eventData);
     EventPropagators.accumulateTwoPhaseDispatches(event);
-
+    EventPropagators.accumulateDirectDispatches(event);
+    
     ReactUpdates.batchedUpdates(function() {
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue();
