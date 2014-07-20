@@ -22,6 +22,7 @@
 var SyntheticEvent = require('SyntheticEvent');
 
 var getEventTarget = require('getEventTarget');
+var getDefaultView = require('getDefaultView');
 
 /**
  * @interface UIEvent
@@ -39,13 +40,9 @@ var UIEventInterface = {
       return target;
     }
 
-    var doc = target.ownerDocument;
     // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-    if (doc) {
-      return doc.defaultView || doc.parentWindow;
-    } else {
-      return window;
-    }
+    var doc = target.ownerDocument || document;
+    return getDefaultView(doc);
   },
   detail: function(event) {
     return event.detail || 0;
