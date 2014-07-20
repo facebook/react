@@ -25,6 +25,7 @@ var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 var ReactMount = require('ReactMount');
 var keyOf = require('keyOf');
+var getDefaultView = require('getDefaultView');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 var getFirstReactDOM = ReactMount.getFirstReactDOM;
@@ -87,12 +88,8 @@ var EnterLeaveEventPlugin = {
       win = topLevelTarget;
     } else {
       // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-      var doc = topLevelTarget.ownerDocument;
-      if (doc) {
-        win = doc.defaultView || doc.parentWindow;
-      } else {
-        win = window;
-      }
+      var doc = topLevelTarget.ownerDocument || document;
+      win = getDefaultView(doc);
     }
 
     var from, to;
