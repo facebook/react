@@ -59,21 +59,6 @@ var merge = require('react/lib/merge');
 var _callbacks = [];
 var _promises = [];
 
-/**
- * Add a promise to the queue of callback invocation promises.
- * @param {function} callback The Store's registered callback.
- * @param {object} payload The data from the Action.
- */
-var _addPromise = function(callback, payload) {
-  _promises.push(new Promise(function(resolve, reject) {
-    if (callback(payload)) {
-      resolve(payload);
-    } else {
-      reject(new Error('Dispatcher callback unsuccessful'));
-    }
-  }));
-};
-
 var Dispatcher = function() {};
 Dispatcher.prototype = merge(Dispatcher.prototype, {
 
