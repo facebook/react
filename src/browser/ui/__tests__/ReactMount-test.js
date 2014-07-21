@@ -106,4 +106,12 @@ describe('ReactMount', function() {
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
   });
+
+  it('should reuse markup if rendering to the same target twice', function() {
+    var container = document.createElement('container');
+    var instance1 = React.renderComponent(<div />, container);
+    var instance2 = React.renderComponent(<div />, container);
+
+    expect(instance1 === instance2).toBe(true);
+  });
 });
