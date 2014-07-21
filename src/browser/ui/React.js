@@ -18,6 +18,10 @@
 
 "use strict";
 
+// TODO: Move this elsewhere - it only exists in open source until a better
+// solution is found.
+require('Object.es6');
+
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
