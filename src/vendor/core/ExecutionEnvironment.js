@@ -20,11 +20,7 @@
 
 "use strict";
 
-var canUseDOM = !!(
-  typeof window !== 'undefined' &&
-  window.document &&
-  window.document.createElement
-);
+var canUseDOM = typeof document === 'object' && !!document.createElement;
 
 /**
  * Simple, lightweight module assisting with the detection and context of

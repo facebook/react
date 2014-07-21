@@ -78,7 +78,7 @@ function getSelection(node) {
       left: range.boundingLeft
     };
   } else {
-    var selection = window.getSelection();
+    var selection = getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
