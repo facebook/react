@@ -32,46 +32,41 @@ var setInnerHTML = function(node, html) {
   node.innerHTML = html;
 };
 
-if (ExecutionEnvironment.canUseDOM) {
+if (ExecutionEnvironment.isIE8) {
   // IE8: When updating a just created node with innerHTML only leading
   // whitespace is removed. When updating an existing node with innerHTML
   // whitespace in root TextNodes is also collapsed.
   // @see quirksmode.org/bugreports/archives/2004/11/innerhtml_and_t.html
 
-  // Feature detection; only IE8 is known to behave improperly like this.
-  var testElement = document.createElement('div');
-  testElement.innerHTML = ' ';
-  if (testElement.innerHTML === '') {
-    setInnerHTML = function(node, html) {
-      // Magic theory: IE8 supposedly differentiates between added and updated
-      // nodes when processing innerHTML, innerHTML on updated nodes suffers
-      // from worse whitespace behavior. Re-adding a node like this triggers
-      // the initial and more favorable whitespace behavior.
-      // TODO: What to do on a detached node?
-      if (node.parentNode) {
-        node.parentNode.replaceChild(node, node);
-      }
+  setInnerHTML = function(node, html) {
+    // Magic theory: IE8 supposedly differentiates between added and updated
+    // nodes when processing innerHTML, innerHTML on updated nodes suffers
+    // from worse whitespace behavior. Re-adding a node like this triggers
+    // the initial and more favorable whitespace behavior.
+    // TODO: What to do on a detached node?
+    if (node.parentNode) {
+      node.parentNode.replaceChild(node, node);
+    }
 
-      // We also implement a workaround for non-visible tags disappearing into
-      // thin air on IE8, this only happens if there is no visible text
-      // in-front of the non-visible tags. Piggyback on the whitespace fix
-      // and simply check if any non-visible tags appear in the source.
-      if (html.match(/^[ \r\n\t\f]/) ||
-          html[0] === '<' && (
-            html.indexOf('<noscript') !== -1 ||
-            html.indexOf('<script') !== -1 ||
-            html.indexOf('<style') !== -1 ||
-            html.indexOf('<meta') !== -1 ||
-            html.indexOf('<link') !== -1)) {
-        // Recover leading whitespace by temporarily prepending any character.
-        // \uFEFF has the potential advantage of being zero-width/invisible.
-        node.innerHTML = '\uFEFF' + html;
-        node.firstChild.deleteData(0, 1);
-      } else {
-        node.innerHTML = html;
-      }
-    };
-  }
+    // We also implement a workaround for non-visible tags disappearing into
+    // thin air on IE8, this only happens if there is no visible text
+    // in-front of the non-visible tags. Piggyback on the whitespace fix
+    // and simply check if any non-visible tags appear in the source.
+    if (html.match(/^[ \r\n\t\f]/) ||
+        html[0] === '<' && (
+          html.indexOf('<noscript') !== -1 ||
+          html.indexOf('<script') !== -1 ||
+          html.indexOf('<style') !== -1 ||
+          html.indexOf('<meta') !== -1 ||
+          html.indexOf('<link') !== -1)) {
+      // Recover leading whitespace by temporarily prepending any character.
+      // \uFEFF has the potential advantage of being zero-width/invisible.
+      node.innerHTML = '\uFEFF' + html;
+      node.firstChild.deleteData(0, 1);
+    } else {
+      node.innerHTML = html;
+    }
+  };
 }
 
 module.exports = setInnerHTML;

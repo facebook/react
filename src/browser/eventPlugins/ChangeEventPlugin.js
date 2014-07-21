@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
@@ -340,10 +342,10 @@ var ChangeEventPlugin = {
 
     var getTargetIDFunc, handleEventFunc;
     if (shouldUseChangeEvent(topLevelTarget)) {
-      if (doesChangeEventBubble) {
-        getTargetIDFunc = getTargetIDForChangeEvent;
-      } else {
+      if (ExecutionEnvironment.isIE8) {
         handleEventFunc = handleEventsForChangeEventIE8;
+      } else {
+        getTargetIDFunc = getTargetIDForChangeEvent;
       }
     } else if (isTextInputElement(topLevelTarget)) {
       if (isInputEventSupported) {

@@ -19,6 +19,7 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var SyntheticUIEvent = require('SyntheticUIEvent');
 var ViewportMetrics = require('ViewportMetrics');
 
@@ -42,15 +43,16 @@ var MouseEventInterface = {
     // Webkit, Firefox, IE9+
     // which:  1 2 3
     // button: 0 1 2 (standard)
-    var button = event.button;
-    if ('which' in event) {
-      return button;
-    }
+
     // IE<9
     // which:  undefined
     // button: 0 0 0
     // button: 1 4 2 (onmouseup)
-    return button === 2 ? 2 : button === 4 ? 1 : 0;
+
+    // IE8: uses non-standard button values
+    return ExecutionEnvironment.isIE8 ?
+      (button === 2 ? 2 : button === 4 ? 1 : 0) :
+      event.button;
   },
   buttons: null,
   relatedTarget: function(event) {
@@ -61,15 +63,16 @@ var MouseEventInterface = {
     );
   },
   // "Proprietary" Interface.
+  // IE8: does not support pageX/Y
   pageX: function(event) {
-    return 'pageX' in event ?
-      event.pageX :
-      event.clientX + ViewportMetrics.currentScrollLeft;
+    return ExecutionEnvironment.isIE8 ?
+      event.clientX + ViewportMetrics.currentScrollLeft :
+      event.pageX;
   },
   pageY: function(event) {
-    return 'pageY' in event ?
-      event.pageY :
-      event.clientY + ViewportMetrics.currentScrollTop;
+    return ExecutionEnvironment.isIE8 ?
+      event.clientY + ViewportMetrics.currentScrollTop :
+      event.pageY;
   }
 };
 
