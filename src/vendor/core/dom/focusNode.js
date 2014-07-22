@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 /**
  * IE8 throws if an input/textarea is disabled and we try to focus it.
  * Focus only when necessary.
@@ -25,7 +27,12 @@
  * @param {DOMElement} node input/textarea to focus
  */
 function focusNode(node) {
-  if (!node.disabled) {
+  if (ExecutionEnvironment.isIE8) {
+    try {
+      node.focus();
+    } catch(e) {
+    }
+  } else {
     node.focus();
   }
 }

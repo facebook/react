@@ -19,6 +19,7 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
 
 /**
@@ -34,12 +35,15 @@ var WheelEventInterface = {
     );
   },
   deltaY: function(event) {
+    if (ExecutionEnvironment.isIE8) {
+      // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
+      return -event.wheelDelta;
+    }
+
     return (
       'deltaY' in event ? event.deltaY :
       // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      'wheelDeltaY' in event ? -event.wheelDeltaY :
-      // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      'wheelDelta' in event ? -event.wheelDelta : 0
+      'wheelDeltaY' in event ? -event.wheelDeltaY : 0
     );
   },
   deltaZ: null,

@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var ReactDOMSelection = require('ReactDOMSelection');
 
 var containsNode = require('containsNode');
@@ -85,23 +87,25 @@ var ReactInputSelection = {
   getSelection: function(input) {
     var selection;
 
-    if ('selectionStart' in input) {
+    if (ExecutionEnvironment.isIE8) {
+      if (document.selection && input.nodeName === 'INPUT') {
+        // IE8 input.
+        var range = document.selection.createRange();
+        // There can only be one selection per document in IE, so it must
+        // be in our element.
+        if (range.parentElement() === input) {
+          selection = {
+            start: -range.moveStart('character', -input.value.length),
+            end: -range.moveEnd('character', -input.value.length)
+          };
+        }
+      }
+    } else if ('selectionStart' in input) {
       // Modern browser with input or textarea.
       selection = {
         start: input.selectionStart,
         end: input.selectionEnd
       };
-    } else if (document.selection && input.nodeName === 'INPUT') {
-      // IE8 input.
-      var range = document.selection.createRange();
-      // There can only be one selection per document in IE, so it must
-      // be in our element.
-      if (range.parentElement() === input) {
-        selection = {
-          start: -range.moveStart('character', -input.value.length),
-          end: -range.moveEnd('character', -input.value.length)
-        };
-      }
     } else {
       // Content editable or old IE textarea.
       selection = ReactDOMSelection.getOffsets(input);
@@ -123,15 +127,17 @@ var ReactInputSelection = {
       end = start;
     }
 
-    if ('selectionStart' in input) {
+    if (ExecutionEnvironment.isIE8) {
+      if (document.selection && input.nodeName === 'INPUT') {
+        var range = input.createTextRange();
+        range.collapse(true);
+        range.moveStart('character', start);
+        range.moveEnd('character', end - start);
+        range.select();
+      }
+    } else if ('selectionStart' in input) {
       input.selectionStart = start;
       input.selectionEnd = Math.min(end, input.value.length);
-    } else if (document.selection && input.nodeName === 'INPUT') {
-      var range = input.createTextRange();
-      range.collapse(true);
-      range.moveStart('character', start);
-      range.moveEnd('character', end - start);
-      range.select();
     } else {
       ReactDOMSelection.setOffsets(input, offsets);
     }

@@ -19,6 +19,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
 var SyntheticMouseEvent = require('SyntheticMouseEvent');
@@ -87,12 +89,8 @@ var EnterLeaveEventPlugin = {
       win = topLevelTarget;
     } else {
       // TODO: Figure out why `ownerDocument` is sometimes undefined in IE8.
-      var doc = topLevelTarget.ownerDocument;
-      if (doc) {
-        win = doc.defaultView || doc.parentWindow;
-      } else {
-        win = window;
-      }
+      var doc = topLevelTarget.ownerDocument || document;
+      win = ExecutionEnvironment.isIE8 ? doc.parentWindow : doc.defaultView;
     }
 
     var from, to;

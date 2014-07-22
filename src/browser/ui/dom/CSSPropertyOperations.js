@@ -19,6 +19,8 @@
 
 "use strict";
 
+var ExecutionEnvironment = require('ExecutionEnvironment');
+
 var CSSProperty = require('CSSProperty');
 
 var dangerousStyleValue = require('dangerousStyleValue');
@@ -79,7 +81,7 @@ var CSSPropertyOperations = {
         style[styleName] = styleValue;
       } else {
         var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
-        if (expansion) {
+        if (ExecutionEnvironment.isIE8 && expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
           // component to placate it
           for (var individualStyleName in expansion) {

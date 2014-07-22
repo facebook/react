@@ -52,24 +52,17 @@ function insertChildAt(parentNode, childNode, index) {
   );
 }
 
-var updateTextContent;
-if (textContentAccessor === 'textContent') {
-  /**
-   * Sets the text content of `node` to `text`.
-   *
-   * @param {DOMElement} node Node to change
-   * @param {string} text New text content
-   */
-  updateTextContent = function(node, text) {
-    node.textContent = text;
-  };
-} else {
-  /**
-   * Sets the text content of `node` to `text`.
-   *
-   * @param {DOMElement} node Node to change
-   * @param {string} text New text content
-   */
+/**
+ * Sets the text content of `node` to `text`.
+ *
+ * @param {DOMElement} node Node to change
+ * @param {string} text New text content
+ */
+var updateTextContent = function(node, text) {
+  node.textContent = text;
+};
+
+if (ExecutionEnvironment.isIE8) {
   updateTextContent = function(node, text) {
     // In order to preserve newlines correctly, we can't use .innerText to set
     // the contents (see #1080), so we empty the element then append a text node

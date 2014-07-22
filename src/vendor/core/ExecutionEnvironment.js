@@ -23,7 +23,7 @@
 var canUseDOM = !!(
   typeof window !== 'undefined' &&
   window.document &&
-  window.document.createElement
+  document.createElement
 );
 
 /**
@@ -42,6 +42,8 @@ var ExecutionEnvironment = {
     canUseDOM && !!(window.addEventListener || window.attachEvent),
 
   canUseViewport: canUseDOM && !!window.screen,
+
+  isIE8: canUseDOM && document.documentMode === 8,
 
   isInWorker: !canUseDOM // For now, this is true - might change in the future.
 
