@@ -21,6 +21,7 @@
 
 var SyntheticUIEvent = require('SyntheticUIEvent');
 
+var getEventAltGraphKey = require('getEventAltGraphKey');
 var getEventKey = require('getEventKey');
 var getEventModifierState = require('getEventModifierState');
 
@@ -35,6 +36,7 @@ var KeyboardEventInterface = {
   shiftKey: null,
   altKey: null,
   metaKey: null,
+  altGraphKey: getEventAltGraphKey,
   repeat: null,
   locale: null,
   getModifierState: getEventModifierState,
