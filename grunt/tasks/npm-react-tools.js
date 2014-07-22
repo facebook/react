@@ -20,9 +20,9 @@ function buildRelease() {
 
   pkgFiles.map(function(file) {
     if (grunt.file.isDir(file)) {
-      mappings = mappings.concat(grunt.file.expandMapping(file + '**/*', dest))
+      mappings = mappings.concat(grunt.file.expandMapping(file + '**/*', dest));
     } else {
-      mappings.push({src: [file], dest: dest + file})
+      mappings.push({src: [file], dest: dest + file});
     }
   });
 

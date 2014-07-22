@@ -1,7 +1,10 @@
 #encoding: utf-8
 
 require('json')
-package = JSON.parse(File.read('package.json'))
+
+# Because of build process, does not necessarily reflect directory path in the
+# repository.
+package = JSON.parse(File.read('../../package.json'))
 
 gemspec = Gem::Specification.new do |s|
   s.name = 'react-source'
