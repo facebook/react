@@ -206,11 +206,11 @@ describe('ReactServerRendering', function() {
         <TestComponent name="x" />
       );
       ExecutionEnvironment.canUseDOM = true;
-      element.innerHTML = lastMarkup + ' __sentinel__';
+      element.innerHTML = lastMarkup;
 
       React.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-      expect(element.innerHTML.indexOf('__sentinel__') > -1).toBe(true);
+      expect(element.innerHTML).toBe(lastMarkup);
       React.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 

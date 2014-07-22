@@ -120,4 +120,28 @@ describe('ReactMount', function() {
 
     expect(instance1 === instance2).toBe(true);
   });
+
+  it('should warn if mounting into dirty rendered markup', function() {
+    var container = document.createElement('container');
+    container.innerHTML = React.renderToString(<div />) + ' ';
+
+    console.warn = mocks.getMockFunction();
+    ReactMount.render(<div />, container);
+    expect(console.warn.mock.calls.length).toBe(1);
+
+    container.innerHTML = ' ' + React.renderToString(<div />);
+
+    console.warn = mocks.getMockFunction();
+    ReactMount.render(<div />, container);
+    expect(console.warn.mock.calls.length).toBe(1);
+  });
+
+  it('should not warn if mounting into non-empty node', function() {
+    var container = document.createElement('container');
+    container.innerHTML = '<div></div>';
+
+    console.warn = mocks.getMockFunction();
+    ReactMount.render(<div />, container);
+    expect(console.warn.mock.calls.length).toBe(0);
+  });
 });
