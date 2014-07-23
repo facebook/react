@@ -1054,6 +1054,7 @@ var ReactCompositeComponentMixin = {
       } else {
         // If it's determined that a component should not update, we still want
         // to set props and state.
+        var prevDescriptor = this._descriptor;
         this._descriptor = nextDescriptor;
         this.props = nextProps;
         this.state = nextState;
@@ -1062,6 +1063,14 @@ var ReactCompositeComponentMixin = {
         // Owner cannot change because shouldUpdateReactComponent doesn't allow
         // it. TODO: Remove this._owner completely.
         this._owner = nextDescriptor._owner;
+
+        // We're skipping almost all of the update steps, but we still want to
+        // update refs even if shouldComponentUpdate returned false.
+        ReactComponent.Mixin.updateComponent.call(
+          this,
+          transaction,
+          prevDescriptor
+        );
       }
     } finally {
       this._compositeLifeCycleState = null;
