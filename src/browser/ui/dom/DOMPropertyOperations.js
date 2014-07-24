@@ -137,12 +137,19 @@ var DOMPropertyOperations = {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(name, value)) {
         this.deleteValueForProperty(node, name);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
       } else {
-        var propName = DOMProperty.getPropertyName[name];
-        if (!DOMProperty.hasSideEffects[name] || node[propName] !== value) {
-          node[propName] = value;
+        if (!((node.nodeName + '.' + name) in DOMProperty.mustUseAttribute)) {
+          var node2 = document.createElement(node.nodeName);
+          DOMProperty.mustUseAttribute[(node.nodeName + '.' + name)] =
+            !(DOMProperty.getPropertyName[name] in node2);
+        }
+        if (DOMProperty.mustUseAttribute[(node.nodeName + '.' + name)]) {
+          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
+        } else {
+          var propName = DOMProperty.getPropertyName[name];
+          if (!DOMProperty.hasSideEffects[name] || node[propName] !== value) {
+            node[propName] = value;
+          }
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
@@ -168,17 +175,24 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod[name];
       if (mutationMethod) {
         mutationMethod(node, undefined);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        node.removeAttribute(DOMProperty.getAttributeName[name]);
       } else {
-        var propName = DOMProperty.getPropertyName[name];
-        var defaultValue = DOMProperty.getDefaultValueForProperty(
-          node.nodeName,
-          propName
-        );
-        if (!DOMProperty.hasSideEffects[name] ||
-            node[propName] !== defaultValue) {
-          node[propName] = defaultValue;
+        if (!((node.nodeName + '.' + name) in DOMProperty.mustUseAttribute)) {
+          var node2 = document.createElement(node.nodeName);
+          DOMProperty.mustUseAttribute[(node.nodeName + '.' + name)] =
+            !(DOMProperty.getPropertyName[name] in node2);
+        }
+        if (DOMProperty.mustUseAttribute[(node.nodeName + '.' + name)]) {
+          node.removeAttribute(DOMProperty.getAttributeName[name]);
+        } else {
+          var propName = DOMProperty.getPropertyName[name];
+          var defaultValue = DOMProperty.getDefaultValueForProperty(
+            node.nodeName,
+            propName
+          );
+          if (!DOMProperty.hasSideEffects[name] ||
+              node[propName] !== defaultValue) {
+            node[propName] = defaultValue;
+          }
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
