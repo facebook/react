@@ -26,15 +26,15 @@ For more information about the specification object, see [Component Specs and Li
 
 ```javascript
 ReactComponent renderComponent(
-  ReactComponent component,
+  ReactDescriptor descriptor,
   DOMElement container,
   [function callback]
 )
 ```
 
-Render a React component into the DOM in the supplied `container` and return a reference to the component.
+Render a [React component descriptor](http://facebook.github.io/react/docs/references-to-components.html) into the DOM in the supplied `container` and return a reference to the component instance.
 
-If the React component was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
+If you pass in a React component that was previously rendered into `container`, React performs an update on the component and only mutates the DOM as necessary to reflect the component's latest state.
 
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
@@ -57,21 +57,21 @@ Remove a mounted React component from the DOM and clean up its event handlers an
 ### React.renderComponentToString
 
 ```javascript
-string renderComponentToString(ReactComponent component)
+string renderComponentToString(ReactDescriptor descriptor)
 ```
 
-Render a component to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
+Render a component descriptor to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
 
-If you call `React.renderComponent()` on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
+If you call `React.renderComponentToString()` on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
 
 
 ### React.renderComponentToStaticMarkup
 
 ```javascript
-string renderComponentToStaticMarkup(ReactComponent component)
+string renderComponentToStaticMarkup(ReactDescriptor descriptor)
 ```
 
-Similar to `renderComponentToString`, except this doesn't create extra DOM attributes such as `data-react-id`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
+Similar to `renderComponentToString`, except this doesn't create extra DOM attributes that React uses internally, such as `data-react-id`. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
 
 
 ### React.DOM
