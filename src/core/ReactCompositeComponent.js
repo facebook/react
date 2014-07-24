@@ -446,10 +446,11 @@ function validateLifeCycleOnReplaceState(instance) {
       compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
     'replaceState(...): Can only update a mounted or mounting component.'
   );
-  invariant(compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE,
+  invariant(
+    ReactCurrentOwner.current == null,
     'replaceState(...): Cannot update during an existing state transition ' +
-    '(such as within `render`). This could potentially cause an infinite ' +
-    'loop so it is forbidden.'
+    '(such as within `render`). Render methods should be a pure function ' +
+    'of props and state.'
   );
   invariant(compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
     'replaceState(...): Cannot update while unmounting component. This ' +
@@ -647,19 +648,19 @@ function createChainedFunction(one, two) {
  * Top Row: ReactComponent.ComponentLifeCycle
  * Low Row: ReactComponent.CompositeLifeCycle
  *
- * +-------+------------------------------------------------------+--------+
- * |  UN   |                    MOUNTED                           |   UN   |
- * |MOUNTED|                                                      | MOUNTED|
- * +-------+------------------------------------------------------+--------+
- * |       ^--------+   +------+   +------+   +------+   +--------^        |
- * |       |        |   |      |   |      |   |      |   |        |        |
- * |    0--|MOUNTING|-0-|RECEIV|-0-|RECEIV|-0-|RECEIV|-0-|   UN   |--->0   |
- * |       |        |   |PROPS |   | PROPS|   | STATE|   |MOUNTING|        |
- * |       |        |   |      |   |      |   |      |   |        |        |
- * |       |        |   |      |   |      |   |      |   |        |        |
- * |       +--------+   +------+   +------+   +------+   +--------+        |
- * |       |                                                      |        |
- * +-------+------------------------------------------------------+--------+
+ * +-------+---------------------------------+--------+
+ * |  UN   |             MOUNTED             |   UN   |
+ * |MOUNTED|                                 | MOUNTED|
+ * +-------+---------------------------------+--------+
+ * |       ^--------+   +-------+   +--------^        |
+ * |       |        |   |       |   |        |        |
+ * |    0--|MOUNTING|-0-|RECEIVE|-0-|   UN   |--->0   |
+ * |       |        |   |PROPS  |   |MOUNTING|        |
+ * |       |        |   |       |   |        |        |
+ * |       |        |   |       |   |        |        |
+ * |       +--------+   +-------+   +--------+        |
+ * |       |                                 |        |
+ * +-------+---------------------------------+--------+
  */
 var CompositeLifeCycle = keyMirror({
   /**
@@ -676,12 +677,7 @@ var CompositeLifeCycle = keyMirror({
    * Components that are mounted and receiving new props respond to state
    * changes differently.
    */
-  RECEIVING_PROPS: null,
-  /**
-   * Components that are mounted and receiving new state are guarded against
-   * additional state changes.
-   */
-  RECEIVING_STATE: null
+  RECEIVING_PROPS: null
 });
 
 /**
@@ -1020,51 +1016,47 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_STATE;
+    this._compositeLifeCycleState = null;
 
     var nextState = this._pendingState || this.state;
     this._pendingState = null;
 
-    try {
-      var shouldUpdate =
-        this._pendingForceUpdate ||
-        !this.shouldComponentUpdate ||
-        this.shouldComponentUpdate(nextProps, nextState, nextContext);
+    var shouldUpdate =
+      this._pendingForceUpdate ||
+      !this.shouldComponentUpdate ||
+      this.shouldComponentUpdate(nextProps, nextState, nextContext);
 
-      if (__DEV__) {
-        if (typeof shouldUpdate === "undefined") {
-          console.warn(
-            (this.constructor.displayName || 'ReactCompositeComponent') +
-            '.shouldComponentUpdate(): Returned undefined instead of a ' +
-            'boolean value. Make sure to return true or false.'
-          );
-        }
-      }
-
-      if (shouldUpdate) {
-        this._pendingForceUpdate = false;
-        // Will set `this.props`, `this.state` and `this.context`.
-        this._performComponentUpdate(
-          nextDescriptor,
-          nextProps,
-          nextState,
-          nextContext,
-          transaction
+    if (__DEV__) {
+      if (typeof shouldUpdate === "undefined") {
+        console.warn(
+          (this.constructor.displayName || 'ReactCompositeComponent') +
+          '.shouldComponentUpdate(): Returned undefined instead of a ' +
+          'boolean value. Make sure to return true or false.'
         );
-      } else {
-        // If it's determined that a component should not update, we still want
-        // to set props and state.
-        this._descriptor = nextDescriptor;
-        this.props = nextProps;
-        this.state = nextState;
-        this.context = nextContext;
-
-        // Owner cannot change because shouldUpdateReactComponent doesn't allow
-        // it. TODO: Remove this._owner completely.
-        this._owner = nextDescriptor._owner;
       }
-    } finally {
-      this._compositeLifeCycleState = null;
+    }
+
+    if (shouldUpdate) {
+      this._pendingForceUpdate = false;
+      // Will set `this.props`, `this.state` and `this.context`.
+      this._performComponentUpdate(
+        nextDescriptor,
+        nextProps,
+        nextState,
+        nextContext,
+        transaction
+      );
+    } else {
+      // If it's determined that a component should not update, we still want
+      // to set props and state.
+      this._descriptor = nextDescriptor;
+      this.props = nextProps;
+      this.state = nextState;
+      this.context = nextContext;
+
+      // Owner cannot change because shouldUpdateReactComponent doesn't allow
+      // it. TODO: Remove this._owner completely.
+      this._owner = nextDescriptor._owner;
     }
   },
 
@@ -1205,10 +1197,10 @@ var ReactCompositeComponentMixin = {
         'components.'
     );
     invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING &&
+      ReactCurrentOwner.current == null,
       'forceUpdate(...): Cannot force an update while unmounting component ' +
-      'or during an existing state transition (such as within `render`).'
+      'or within a `render` function.'
     );
     this._pendingForceUpdate = true;
     ReactUpdates.enqueueUpdate(this, callback);
