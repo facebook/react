@@ -1,7 +1,7 @@
 ---
-baseurl: /react
+baseurl: "/react"
 url: http://facebook.github.io
-permalink: /blog/:year/:month/:day/:title.html
+permalink: "/blog/:year/:month/:day/:title.html"
 exclude:
 - Gemfile
 - Gemfile.lock
@@ -13,9 +13,9 @@ redcarpet:
 pygments: true
 name: React
 markdown: redcarpet
-react_version: 0.11.0
+react_version: 0.11.1
 description: A JavaScript library for building user interfaces
 relative_permalinks: true
 paginate: 5
-paginate_path: /blog/page:num/
+paginate_path: "/blog/page:num/"
 timezone: America/Los_Angeles
