@@ -18,6 +18,10 @@
 
 "use strict";
 
+// TODO: Move this elsewhere - it only exists in open source until a better
+// solution is found.
+require('Object.es6');
+
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
@@ -26,6 +30,7 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDescriptor = require('ReactDescriptor');
+var ReactDescriptorValidator = require('ReactDescriptorValidator');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
@@ -41,6 +46,14 @@ var onlyChild = require('onlyChild');
 
 ReactDefaultInjection.inject();
 
+var createDescriptor = ReactDescriptor.createDescriptor;
+var createFactory = ReactDescriptor.createFactory;
+
+if (__DEV__) {
+  createDescriptor = ReactDescriptorValidator.createDescriptor;
+  createFactory = ReactDescriptorValidator.createFactory;
+}
+
 var React = {
   Children: {
     map: ReactChildren.map,
@@ -54,10 +67,8 @@ var React = {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
-  createDescriptor: function(type, props, children) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return type.apply(null, args);
-  },
+  createDescriptor: createDescriptor,
+  createFactory: createFactory,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   renderComponent: ReactPerf.measure(
@@ -126,6 +137,6 @@ if (__DEV__) {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = '0.11.0-rc1';
+React.version = '0.12.0-alpha';
 
 module.exports = React;

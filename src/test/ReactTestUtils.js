@@ -238,9 +238,10 @@ var ReactTestUtils = {
    * @return {object} the ReactTestUtils object (for chaining)
    */
   mockComponent: function(module, mockTagName) {
+    mockTagName = mockTagName || module.mockTagName || "div";
+
     var ConvenienceConstructor = React.createClass({
       render: function() {
-        var mockTagName = mockTagName || module.mockTagName || "div";
         return ReactDOM[mockTagName](null, this.props.children);
       }
     });

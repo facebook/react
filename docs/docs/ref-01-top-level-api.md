@@ -53,10 +53,6 @@ boolean unmountComponentAtNode(DOMElement container)
 
 Remove a mounted React component from the DOM and clean up its event handlers and state. If no component was mounted in the container, calling this function does nothing. Returns `true` if a component was unmounted and `false` if there was no component to unmount.
 
-> Note:
->
-> This method was called `React.unmountAndReleaseReactRootNode` until v0.5. It still works in v0.5 but will be removed in future versions.
-
 
 ### React.renderComponentToString
 
@@ -116,6 +112,14 @@ React.Children.forEach(object children, function fn [, object context])
 ```
 
 Like `React.Children.map()` but does not return an object.
+
+#### React.Children.count
+
+```javascript
+number React.Children.count(object children)
+```
+
+Return the total number of components in `children`, equal to the number of times that a callback passed to `map` or `forEach` would be invoked.
 
 #### React.Children.only
 

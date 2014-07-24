@@ -1,3 +1,54 @@
+## 0.11.0 (July 17, 2014)
+
+### React Core
+
+#### Breaking Changes
+* `getDefaultProps()` is now called once per class and shared across all instances
+
+#### New Features
+* Rendering to `null`
+* Keyboard events include normalized `e.key` and `e.getModifierState()` properties
+* New normalized `onBeforeInput` event
+* `React.Children.count` has been added as a helper for counting the number of children
+
+#### Bug Fixes
+
+* Re-renders are batched in more cases
+* Events: `e.view` properly normalized
+* Added Support for more HTML attributes (`coords`, `crossOrigin`, `download`, `hrefLang`, `mediaGroup`, `muted`, `scrolling`, `shape`, `srcSet`, `start`, `useMap`)
+* Improved SVG support
+  * Changing `className` on a mounted SVG component now works correctly
+  * Added support for elements `mask` and `tspan`
+  * Added support for attributes `dx`, `dy`, `fillOpacity`, `fontFamily`, `fontSize`, `markerEnd`, `markerMid`, `markerStart`, `opacity`, `patternContentUnits`, `patternUnits`, `preserveAspectRatio`, `strokeDasharray`, `strokeOpacity`
+* CSS property names with vendor prefixes (`Webkit`, `ms`, `Moz`, `O`) are now handled properly
+* Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)
+* `img` event listeners are now unbound properly, preventing the error "Two valid but unequal nodes with the same `data-reactid`"
+* Added explicit warning when missing polyfills
+
+### React With Addons
+* PureRenderMixin: a mixin which helps optimize "pure" components
+* Perf: a new set of tools to help with performance analysis
+* Update: New `$apply` command to transform values
+* TransitionGroup bug fixes with null elements, Android
+
+### React NPM Module
+* Now includes the pre-built packages under `dist/`.
+* `envify` is properly listed as a dependency instead of a peer dependency
+
+### JSX
+* Added support for namespaces, eg `<Components.Checkbox />`
+* JSXTransformer
+  * Enable the same `harmony` features available in the command line with `<script type="text/jsx;harmony=true">`
+  * Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)
+  * Fixed a bug preventing sourcemaps from working in Firefox
+
+### React Tools Module
+* Improved readme with usage and API information
+* Improved ES6 transforms available with `--harmony` option
+* Added `--source-map-inline` option to the `jsx` executable
+* New `transformWithDetails` API which gives access to the raw sourcemap data
+
+
 ## 0.10.0 (March 21, 2014)
 
 ### React Core

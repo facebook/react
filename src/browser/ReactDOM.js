@@ -21,6 +21,7 @@
 
 var ReactDescriptor = require('ReactDescriptor');
 var ReactDescriptorValidator = require('ReactDescriptorValidator');
+var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
 var ReactDOMComponent = require('ReactDOMComponent');
 
 var mergeInto = require('mergeInto');
@@ -49,15 +50,14 @@ function createDOMComponentClass(omitClose, tag) {
   Constructor.prototype.constructor = Constructor;
   Constructor.displayName = tag;
 
-  var ConvenienceConstructor = ReactDescriptor.createFactory(Constructor);
-
   if (__DEV__) {
-    return ReactDescriptorValidator.createFactory(
-      ConvenienceConstructor
+    return ReactLegacyDescriptor.wrapFactory(
+      ReactDescriptorValidator.createFactory(Constructor)
     );
   }
-
-  return ConvenienceConstructor;
+  return ReactLegacyDescriptor.wrapFactory(
+    ReactDescriptor.createFactory(Constructor)
+  );
 }
 
 /**

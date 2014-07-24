@@ -1,7 +1,7 @@
 {
   "name": "react-tools",
   "description": "A set of complementary tools to React, including the JSX transformer.",
-  "version": "0.11.0-rc1",
+  "version": "0.12.0-alpha",
   "keywords": [
     "react",
     "jsx",
@@ -31,7 +31,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "commoner": "^0.9.4",
+    "commoner": "^0.9.6",
     "esprima-fb": "^4001.3001.0-dev-harmony-fb",
     "jstransform": "^6.0.1"
   },

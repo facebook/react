@@ -183,7 +183,7 @@ var ReactTransitionGroup = React.createClass({
         );
       }
     }
-    return this.transferPropsTo(this.props.component(null, childrenToRender));
+    return this.props.component(this.props, childrenToRender);
   }
 });
 

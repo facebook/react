@@ -19,6 +19,7 @@
 
 "use strict";
 
+var ReactDescriptor = require('ReactDescriptor');
 var ReactPropTransferer = require('ReactPropTransferer');
 
 var keyOf = require('keyOf');
@@ -38,7 +39,7 @@ var CHILDREN_PROP = keyOf({children: null});
 function cloneWithProps(child, props) {
   if (__DEV__) {
     warning(
-      !child.props.ref,
+      !child.ref,
       'You are calling cloneWithProps() on a child with a ref. This is ' +
       'dangerous because you\'re creating a new child which will not be ' +
       'added as a ref to its parent.'
@@ -55,7 +56,7 @@ function cloneWithProps(child, props) {
 
   // The current API doesn't retain _owner and _context, which is why this
   // doesn't use ReactDescriptor.cloneAndReplaceProps.
-  return child.constructor(newProps);
+  return ReactDescriptor.createDescriptor(child.type, newProps);
 }
 
 module.exports = cloneWithProps;

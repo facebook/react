@@ -53,7 +53,7 @@ function createFullPageComponent(componentClass) {
     },
 
     render: function() {
-      return this.transferPropsTo(componentClass(null, this.props.children));
+      return componentClass(this.props);
     }
   });
 

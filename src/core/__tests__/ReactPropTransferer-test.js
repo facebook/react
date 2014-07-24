@@ -28,13 +28,18 @@ var TestComponent;
 describe('ReactPropTransferer', function() {
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
+
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
 
+    // We expect to get a warning from transferPropsTo since it's deprecated
+    spyOn(console, 'warn');
+
     TestComponent = React.createClass({
       render: function() {
-        return this.transferPropsTo(
+        var result = this.transferPropsTo(
           <input
             className="textinput"
             style={{display: 'block', color: 'green'}}
@@ -42,6 +47,8 @@ describe('ReactPropTransferer', function() {
             value=""
           />
         );
+        expect(console.warn).toHaveBeenCalled();
+        return result;
       }
     });
   });
@@ -157,7 +164,7 @@ describe('ReactPropTransferer', function() {
     );
   });
 
-  it('should not use the default when a prop is transfered', function() {
+  it('uses the default instead of the transferred prop (regress)', function() {
 
     var Child = React.createClass({
 
@@ -168,7 +175,7 @@ describe('ReactPropTransferer', function() {
       },
 
       render: function() {
-        expect(this.props.x).toBe(5);
+        expect(this.props.x).toBe(2);
         return <div />;
       }
 

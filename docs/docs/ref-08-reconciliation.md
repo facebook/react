@@ -85,7 +85,7 @@ The previous component is now operational. Its `render()` method is called and t
 
 ### Problematic Case
 
-In order to do children reconciliation, React adopts a very naive approach. It goes over the list of children both at the same time and whenever there's a difference generates a mutation.
+In order to do children reconciliation, React adopts a very naive approach. It goes over both lists of children at the same time and generates a mutation whenever there's a difference.
 
 For example if you add an element at the end:
 
