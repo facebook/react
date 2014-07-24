@@ -1,9 +1,27 @@
+## 0.11.1 (July 24, 2014)
+
+### React Core
+
+#### Bug Fixes
+* `setState` can be called inside `componentWillMount` in non-DOM environments
+* `SyntheticMouseEvent.getEventModifierState` correctly renamed to `getModifierState`
+* `getModifierState` correctly returns a `boolean`
+* `getModifierState` is now correctly case sensitive
+* Empty Text node used in IE8 `innerHTML` workaround is now removed, fixing rerendering in certain cases
+
+### JSX
+* Fix duplicate variable declaration in JSXTransformer (caused issues in some browsers)
+
+
 ## 0.11.0 (July 17, 2014)
 
 ### React Core
 
 #### Breaking Changes
 * `getDefaultProps()` is now called once per class and shared across all instances
+* `MyComponent()` now returns a descriptor, not an instance
+* `React.isValidComponent` and `React.PropTypes.component` validate *descriptors*, not component instances
+* Custom `propType` validators should return an `Error` instead of logging directly
 
 #### New Features
 * Rendering to `null`
