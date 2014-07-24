@@ -1265,9 +1265,7 @@ var ReactCompositeComponentMixin = {
    */
   _bindAutoBindMethod: function(method) {
     var component = this;
-    var boundMethod = function() {
-      return method.apply(component, arguments);
-    };
+    var boundMethod = method.bind(component);
     if (__DEV__) {
       boundMethod.__reactBoundContext = component;
       boundMethod.__reactBoundMethod = method;
