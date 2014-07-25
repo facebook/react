@@ -239,12 +239,12 @@ describe('ReactDescriptor', function() {
     expect(ReactDescriptor.isValidDescriptor(Component)).toEqual(false);
   });
 
-  it('warns but allow a plain function to be immediately invoked', function() {
+  it('warns but allow a plain function in a factory to be invoked', function() {
     spyOn(console, 'warn');
     // This is a temporary helper to allow JSX with plain functions.
     // This allow you to track down these callers and replace them with regular
     // function calls.
-    var factory = ReactDescriptor.createFactory(function (x) {
+    var factory = React.createFactory(function (x) {
       return 21 + x;
     });
     expect(factory(21)).toBe(42);

@@ -46,11 +46,17 @@ var onlyChild = require('onlyChild');
 
 ReactDefaultInjection.inject();
 
-var createDescriptor = ReactDescriptor.createDescriptor;
+// TODO: Restore the real create descriptor
+// var createDescriptor = ReactDescriptor.createDescriptor;
+var createDescriptor = function(type, props, children) {
+  // Because of issues with mocks, we temporarily execute the factory function
+  var args = Array.prototype.slice.call(arguments, 1);
+  return type.apply(null, args);
+};
 var createFactory = ReactDescriptor.createFactory;
 
 if (__DEV__) {
-  createDescriptor = ReactDescriptorValidator.createDescriptor;
+  // createDescriptor = ReactDescriptorValidator.createDescriptor;
   createFactory = ReactDescriptorValidator.createFactory;
 }
 

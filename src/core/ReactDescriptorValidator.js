@@ -229,6 +229,12 @@ var ReactDescriptorValidator = {
   createDescriptor: function(type, props, children) {
     var descriptor = ReactDescriptor.createDescriptor.apply(this, arguments);
 
+    // The result can be nullish if a mock or a custom function is used.
+    // TODO: Drop this when these are no longer allowed as the type argument.
+    if (descriptor == null) {
+      return descriptor;
+    }
+
     for (var i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], type);
     }
