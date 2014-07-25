@@ -23,6 +23,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 var ReactDescriptor = require('ReactDescriptor');
+var ReactNode = require('ReactNode');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -47,6 +48,7 @@ var ReactTextComponent = function(descriptor) {
 };
 
 mixInto(ReactTextComponent, ReactComponent.Mixin);
+mixInto(ReactTextComponent, ReactNode.Mixin);
 mixInto(ReactTextComponent, ReactBrowserComponentMixin);
 mixInto(ReactTextComponent, {
 
@@ -60,9 +62,10 @@ mixInto(ReactTextComponent, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth) {
+  mountComponent: function(parentNode, rootID, transaction, mountDepth) {
     ReactComponent.Mixin.mountComponent.call(
       this,
+      parentNode,
       rootID,
       transaction,
       mountDepth

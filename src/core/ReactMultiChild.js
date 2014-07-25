@@ -200,6 +200,7 @@ var ReactMultiChild = {
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + name;
           var mountImage = childInstance.mountComponent(
+            this.getClosestNode(),
             rootID,
             transaction,
             this._mountDepth + 1
@@ -397,6 +398,7 @@ var ReactMultiChild = {
       // Inlined for performance, see `ReactInstanceHandles.createReactID`.
       var rootID = this._rootNodeID + name;
       var mountImage = child.mountComponent(
+        this.getClosestNode(),
         rootID,
         transaction,
         this._mountDepth + 1

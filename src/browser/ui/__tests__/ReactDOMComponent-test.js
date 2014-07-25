@@ -333,7 +333,7 @@ describe('ReactDOMComponent', function() {
           _owner: null,
           _context: null
         });
-        return stubComponent.mountComponent('test', transaction, 0);
+        return stubComponent.mountComponent(null, 'test', transaction, 0);
       };
     });
 

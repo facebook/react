@@ -27,6 +27,7 @@ var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
+var ReactNode = require('ReactNode');
 var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -83,7 +84,7 @@ function putListener(id, registrationName, listener, transaction) {
 
 /**
  * @constructor ReactDOMComponent
- * @extends ReactComponent
+ * @extends ReactNodeComponent
  * @extends ReactMultiChild
  */
 function ReactDOMComponent(tag, omitClose) {
@@ -107,9 +108,10 @@ ReactDOMComponent.Mixin = {
   mountComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(parentNode, rootID, transaction, mountDepth) {
       ReactComponent.Mixin.mountComponent.call(
         this,
+        parentNode,
         rootID,
         transaction,
         mountDepth
@@ -412,6 +414,7 @@ ReactDOMComponent.Mixin = {
 
 mixInto(ReactDOMComponent, ReactComponent.Mixin);
 mixInto(ReactDOMComponent, ReactDOMComponent.Mixin);
+mixInto(ReactDOMComponent, ReactNode.Mixin);
 mixInto(ReactDOMComponent, ReactMultiChild.Mixin);
 mixInto(ReactDOMComponent, ReactBrowserComponentMixin);
 
