@@ -38,6 +38,8 @@
   "devDependencies": {
     "benchmark": "~1.0.0",
     "browserify": "^4.1.10",
+    "bundle-collapser": "zpao/bundle-collapser#dereq",
+    "concat-stream": "^1.4.6",
     "coverify": "~1.0.4",
     "envify": "^2.0.0",
     "es3ify": "~0.1.2",

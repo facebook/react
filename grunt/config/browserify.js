@@ -64,7 +64,8 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
-  after: [es3ify.transform, simpleBannerify]
+  after: [es3ify.transform, simpleBannerify],
+  collapseRequires: true
 };
 
 var min = _.merge({}, basic, {
@@ -81,7 +82,8 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [es3ify.transform, simpleBannerify]
+  after: [es3ify.transform, simpleBannerify],
+  collapseRequires: true
 };
 
 var addons = {
@@ -93,7 +95,8 @@ var addons = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [es3ify.transform, simpleBannerify]
+  after: [es3ify.transform, simpleBannerify],
+  collapseRequires: true
 };
 
 var addonsMin = _.merge({}, addons, {

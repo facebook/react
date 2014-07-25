@@ -1,6 +1,8 @@
 'use strict';
 
 var browserify = require('browserify');
+var collapse = require('bundle-collapser');
+var concat = require('concat-stream');
 var grunt = require('grunt');
 
 module.exports = function() {
@@ -58,11 +60,27 @@ module.exports = function() {
       done();
     }
 
-    config.after.forEach(function(fn) {
-      src = fn.call(_this, src);
+    // Run afters, then write the file. We wrap this up so we can collapse all
+    // of our requires before any afters to keep browserifying-ish code together.
+    function next(src) {
+      config.after.forEach(function(fn) {
+        src = fn.call(_this, src);
+      });
+
+      grunt.file.write(config.outfile, src);
+      done();
+    }
+
+    var writeFromStream = concat(function(srcBuf) {
+      next(srcBuf.toString());
     });
 
-    grunt.file.write(config.outfile, src);
-    done();
+    if (config.collapseRequires) {
+      // TODO: browserify 5.x doesn't derequire by default, update accordingly.
+      collapse(src, '_dereq_').pipe(writeFromStream);
+    } else {
+      next(src);
+    }
+
   });
 };
