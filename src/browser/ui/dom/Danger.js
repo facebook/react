@@ -178,8 +178,11 @@ var Danger = {
       'server rendering. See renderComponentToString().'
     );
 
-    var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
-    oldChild.parentNode.replaceChild(newChild, oldChild);
+    var newChild = createNodesFromMarkup(markup, emptyFunction)[0],
+        parentNode = oldChild.parentNode,
+        adoptedNewChild = parentNode.ownerDocument.adoptNode(newChild, true);
+
+    parentNode.replaceChild(adoptedNewChild, oldChild);
   }
 
 };

@@ -18,7 +18,37 @@
 
 "use strict";
 
-var ExecutionEnvironment = require('ExecutionEnvironment');
+var ExecutionEnvironment = require('ExecutionEnvironment'),
+    domParser = new DOMParser(),
+    svgNodes = {
+      circle: true,
+      defs: true,
+      ellipse: true,
+      g: true,
+      line: true,
+      linearGradient: true,
+      mask: true,
+      path: true,
+      pattern: true,
+      polygon: true,
+      polyline: true,
+      radialGradient: true,
+      rect: true,
+      stop: true,
+      svg: true,
+      text: true,
+      tspan: true
+    };
+
+function setInnerSVG(node, text) {
+    var toParse =  '<svg xmlns="http://www.w3.org/2000/svg">' + text + '</svg>',
+    parsed = domParser.parseFromString(toParse, 'application/xml'),
+    newNode = node.ownerDocument.adoptNode(parsed.documentElement, true);
+
+    //TODO: check that it works everywhere
+    node.innerHTML = '';
+    node.appendChild(newNode);
+}
 
 /**
  * Set the innerHTML property of a node, ensuring that whitespace is preserved
@@ -29,7 +59,11 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
  * @internal
  */
 var setInnerHTML = function(node, html) {
-  node.innerHTML = html;
+  if (svgNodes[node.nodeName]) {
+      setInnerSVG(node, html);
+  } else {
+      node.innerHTML = html;
+  }
 };
 
 if (ExecutionEnvironment.canUseDOM) {

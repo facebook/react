@@ -46,8 +46,10 @@ function insertChildAt(parentNode, childNode, index) {
   // rely exclusively on `insertBefore(node, null)` instead of also using
   // `appendChild(node)`. However, using `undefined` is not allowed by all
   // browsers so we must replace it with `null`.
+  var newChildNode = parentNode.ownerDocument.adoptNode(childNode, true);
+
   parentNode.insertBefore(
-    childNode,
+    newChildNode,
     parentNode.childNodes[index] || null
   );
 }
