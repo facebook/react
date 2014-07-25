@@ -7,8 +7,58 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.11.1</title>
+				<description>&lt;p&gt;Today we&amp;#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&amp;#39;ve begun upgrading.&lt;/p&gt;
+
+&lt;p&gt;The first of these is the most major and resulted in a regression with the use of &lt;code&gt;setState&lt;/code&gt; inside &lt;code&gt;componentWillMount&lt;/code&gt; when using React on the server. These &lt;code&gt;setState&lt;/code&gt; calls are batched into the initial render. A change we made to our batching code resulted in this path hitting DOM specific code when run server-side, in turn throwing an error as &lt;code&gt;document&lt;/code&gt; is not defined.&lt;/p&gt;
+
+&lt;p&gt;There are several fixes we&amp;#39;re including in v0.11.1 that are focused around the newly supported &lt;code&gt;event.getModifierState()&lt;/code&gt; function. We made some adjustments to improve this cross-browser standardization.&lt;/p&gt;
+
+&lt;p&gt;The final fix we&amp;#39;re including is to better support a workaround for some IE8 behavior. The edge-case bug we&amp;#39;re fixing was also present in v0.9 and v0.10, so while it wasn&amp;#39;t a short-term regression, we wanted to make sure we support IE8 to the best of our abilities.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;d also like to call out a couple additional breaking changes that we failed to originally mention in the release notes for v0.11. We updated that blog post and the changelog, so we encourage you to go read about the changes around &lt;a href=&quot;/react/blog/2014/07/17/react-v0.11.html#descriptors&quot;&gt;Descriptors&lt;/a&gt; and &lt;a href=&quot;/react/blog/2014/07/17/react-v0.11.html#prop-type-validation&quot;&gt;Prop Type Validation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.1.js&quot;&gt;http://fb.me/react-0.11.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.1.min.js&quot;&gt;http://fb.me/react-0.11.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.1.js&quot;&gt;http://fb.me/react-with-addons-0.11.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.1.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.1.js&quot;&gt;http://fb.me/JSXTransformer-0.11.1.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; can be called inside &lt;code&gt;componentWillMount&lt;/code&gt; in non-DOM environments&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SyntheticMouseEvent.getEventModifierState&lt;/code&gt; correctly renamed to &lt;code&gt;getModifierState&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;getModifierState&lt;/code&gt; correctly returns a &lt;code&gt;boolean&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;getModifierState&lt;/code&gt; is now correctly case sensitive&lt;/li&gt;
+&lt;li&gt;Empty Text node used in IE8 &lt;code&gt;innerHTML&lt;/code&gt; workaround is now removed, fixing rerendering in certain cases&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsxtransformer&quot;&gt;&lt;/a&gt;JSXTransformer &lt;a class=&quot;hash-link&quot; href=&quot;#jsxtransformer&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Fix duplicate variable declaration (caused issues in some browsers)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-07-24T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/07/24/react-v0.11.1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/24/react-v0.11.1.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.11</title>
-				<description>&lt;p&gt;We&amp;#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using &lt;code&gt;jsx --harmony&lt;/code&gt;, fixed a small regression with &lt;code&gt;statics&lt;/code&gt;, and made sure we actually exposed the new API we said we were shipping: &lt;code&gt;React.Children.count&lt;/code&gt;.&lt;/p&gt;
+				<description>&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; We missed a few important changes in our initial post and changelog. We&amp;#39;ve updated this post with details about &lt;a href=&quot;#descriptors&quot;&gt;Descriptors&lt;/a&gt; and &lt;a href=&quot;#prop-type-validation&quot;&gt;Prop Type Validation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;We&amp;#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using &lt;code&gt;jsx --harmony&lt;/code&gt;, fixed a small regression with &lt;code&gt;statics&lt;/code&gt;, and made sure we actually exposed the new API we said we were shipping: &lt;code&gt;React.Children.count&lt;/code&gt;.&lt;/p&gt;
 
 &lt;p&gt;This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.&lt;/p&gt;
 
@@ -78,9 +128,18 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;Keyboard and mouse events also now include a normalized &lt;code&gt;e.getModifierState()&lt;/code&gt; that works consistently across browsers.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;descriptors&quot;&gt;&lt;/a&gt;Descriptors &lt;a class=&quot;hash-link&quot; href=&quot;#descriptors&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In our &lt;a href=&quot;http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html#clone-on-mount&quot;&gt;v0.10 release notes&lt;/a&gt;, we called out that we were deprecating the existing behavior of the component function call (eg &lt;code&gt;component = MyComponent(props, ...children)&lt;/code&gt; or &lt;code&gt;component = &amp;lt;MyComponent prop={...}/&amp;gt;&lt;/code&gt;). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg &lt;code&gt;component.setProps(...)&lt;/code&gt;). This no longer works. &lt;code&gt;component&lt;/code&gt; in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.&lt;/p&gt;
+
+&lt;p&gt;Along with this change to descriptors, &lt;code&gt;React.isValidComponent&lt;/code&gt; and &lt;code&gt;React.PropTypes.component&lt;/code&gt; now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of &lt;code&gt;MyComponent()&lt;/code&gt;, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&amp;#39;re working to make sure we are consistent with our terminology.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;prop-type-validation&quot;&gt;&lt;/a&gt;Prop Type Validation &lt;a class=&quot;hash-link&quot; href=&quot;#prop-type-validation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Previously &lt;code&gt;React.PropTypes&lt;/code&gt; validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply &lt;code&gt;console.log&lt;/code&gt; your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (&lt;em&gt;not throw&lt;/em&gt;) an &lt;code&gt;Error&lt;/code&gt; object. We then log the &lt;code&gt;error.message&lt;/code&gt; property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an &lt;code&gt;Error&lt;/code&gt; with your message instead.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;getDefaultProps()&lt;/code&gt; is now called once per class and shared across all instances&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;MyComponent()&lt;/code&gt; now returns a descriptor, not an instance&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; and &lt;code&gt;React.PropTypes.component&lt;/code&gt; validate &lt;em&gt;descriptors&lt;/em&gt;, not component instances.&lt;/li&gt;
+&lt;li&gt;Custom &lt;code&gt;propType&lt;/code&gt; validators should return an &lt;code&gt;Error&lt;/code&gt; instead of logging directly&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
 &lt;ul&gt;
@@ -580,88 +639,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-03-19T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #18</title>
-				<description>&lt;p&gt;In this Round-up, we are taking a few closer looks at React&amp;#39;s interplay with different frameworks and architectures.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;little-framework-big-splash&quot;&gt;&lt;/a&gt;&amp;quot;Little framework BIG splash&amp;quot; &lt;a class=&quot;hash-link&quot; href=&quot;#little-framework-big-splash&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Let&amp;#39;s start with yet another refreshing introduction to React: Craig Savolainen (&lt;a href=&quot;https://twitter.com/maedhr&quot;&gt;@maedhr&lt;/a&gt;) walks through some first steps, demonstrating &lt;a href=&quot;http://infinitemonkeys.influitive.com/little-framework-big-splash&quot;&gt;how to build a Google Maps component&lt;/a&gt; using React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;architecting-your-app-with-react&quot;&gt;&lt;/a&gt;Architecting your app with react &lt;a class=&quot;hash-link&quot; href=&quot;#architecting-your-app-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Brandon Konkle (&lt;a href=&quot;https://twitter.com/bkonkle&quot;&gt;@bkonkle&lt;/a&gt;)
-&lt;a href=&quot;http://lincolnloop.com/blog/architecting-your-app-react-part-1/&quot;&gt;Architecting your app with react&lt;/a&gt;
-We&amp;#39;re looking forward to part 2!&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;React is not a full MVC framework, and this is actually one of its strengths. Many who adopt React choose to do so alongside their favorite MVC framework, like Backbone. React has no opinions about routing or syncing data, so you can easily use your favorite tools to handle those aspects of your frontend application. You&amp;#39;ll often see React used to manage specific parts of an application&amp;#39;s UI and not others. React really shines, however, when you fully embrace its strategies and make it the core of your application&amp;#39;s interface.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://lincolnloop.com/blog/architecting-your-app-react-part-1/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs.-async-dom-manipulation&quot;&gt;&lt;/a&gt;React vs. async DOM manipulation &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs.-async-dom-manipulation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Eliseu Monar (&lt;a href=&quot;https://twitter.com/eliseumds&quot;&gt;@eliseumds&lt;/a&gt;)&amp;#39;s post &amp;quot;&lt;a href=&quot;http://eliseumds.tumblr.com/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering&quot;&gt;ReactJS vs async concurrent rendering&lt;/a&gt;&amp;quot; is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-scala-and-the-play-framework&quot;&gt;&lt;/a&gt;React, Scala and the Play Framework &lt;a class=&quot;hash-link&quot; href=&quot;#react-scala-and-the-play-framework&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://matthiasnehlsen.com/&quot;&gt;Matthias Nehlsen&lt;/a&gt; wrote a detailed introductory piece on &lt;a href=&quot;http://matthiasnehlsen.com/blog/2014/01/05/play-framework-and-facebooks-react-library/&quot;&gt;React and the Play Framework&lt;/a&gt;, including a helpful architectural diagram of a typical React app.&lt;/p&gt;
-
-&lt;p&gt;Nehlsen&amp;#39;s React frontend is the second implementation of his chat application&amp;#39;s frontend, following an AngularJS version. Both implementations are functionally equivalent and offer some perspective on differences between the two frameworks.&lt;/p&gt;
-
-&lt;p&gt;In &lt;a href=&quot;http://matthiasnehlsen.com/blog/2014/01/24/scala-dot-js-and-reactjs/&quot;&gt;another article&lt;/a&gt;, he walks us through the process of using React with scala.js to implement app-wide undo functionality.&lt;/p&gt;
-
-&lt;p&gt;Also check out his &lt;a href=&quot;http://m.ustream.tv/recorded/42780242&quot;&gt;talk&lt;/a&gt; at Ping Conference 2014, in which he walks through a lot of the previously content in great detail.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-backbone&quot;&gt;&lt;/a&gt;React and Backbone &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-backbone&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The folks over at &lt;a href=&quot;https://venmo.com/&quot;&gt;Venmo&lt;/a&gt; are using React in conjunction with Backbone.
-Thomas Boyt (&lt;a href=&quot;https://twitter.com/thomasaboyt&quot;&gt;@thomasaboyt&lt;/a&gt;) wrote &lt;a href=&quot;http://www.thomasboyt.com/2013/12/17/using-reactjs-as-a-backbone-view.html&quot;&gt;this detailed piece&lt;/a&gt; about why React and Backbone are &amp;quot;a fantastic pairing&amp;quot;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-vs.-ember&quot;&gt;&lt;/a&gt;React vs. Ember &lt;a class=&quot;hash-link&quot; href=&quot;#react-vs.-ember&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Eric Berry (&lt;a href=&quot;https://twitter.com/coderberry&quot;&gt;@coderberry&lt;/a&gt;) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: &lt;a href=&quot;http://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/&quot;&gt;&amp;quot;Facebook React vs. Ember&amp;quot;&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-plain-old-html&quot;&gt;&lt;/a&gt;React and plain old HTML &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-plain-old-html&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Daniel Lo Nigro (&lt;a href=&quot;https://twitter.com/Daniel15&quot;&gt;@Daniel15&lt;/a&gt;) created &lt;a href=&quot;https://github.com/reactjs/react-magic&quot;&gt;React-Magic&lt;/a&gt;, which leverages React to ajaxify plain old html pages and even &lt;a href=&quot;http://stuff.dan.cx/facebook/react-hacks/magic/red.php&quot;&gt;allows CSS transitions between pageloads&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;React-Magic intercepts all navigation (link clicks and form posts) and loads the requested page via an AJAX request. React is then used to &amp;quot;diff&amp;quot; the old HTML with the new HTML, and only update the parts of the DOM that have been changed.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/reactjs/react-magic&quot;&gt;Check out the project on GitHub...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;On a related note, &lt;a href=&quot;https://turbo-react.herokuapp.com/&quot;&gt;Reactize&lt;/a&gt; by Ross Allen (&lt;a href=&quot;https://twitter.com/ssorallen&quot;&gt;@ssorallen&lt;/a&gt;) is a similarly awesome project: A wrapper for Rails&amp;#39; &lt;a href=&quot;https://github.com/rails/turbolinks/&quot;&gt;Turbolinks&lt;/a&gt;, which seems to have inspired John Lynch (&lt;a href=&quot;https://twitter.com/johnrlynch&quot;&gt;@johnrlynch&lt;/a&gt;) to then create &lt;a href=&quot;http://www.rigelgroupllc.com/blog/2014/01/12/react-jsx-transformer-in-rails-middleware/&quot;&gt;a server-rendered version using the JSX transformer in Rails middleware&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-object.observe&quot;&gt;&lt;/a&gt;React and Object.observe &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-object.observe&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Check out &lt;a href=&quot;https://github.com/fdecampredon&quot;&gt;François de Campredon&lt;/a&gt;&amp;#39;s implementation of &lt;a href=&quot;https://github.com/fdecampredon/react-observe-todomvc/&quot;&gt;TodoMVC based on React and ES6&amp;#39;s Object.observe&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-angular&quot;&gt;&lt;/a&gt;React and Angular &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-angular&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Ian Bicking (&lt;a href=&quot;https://twitter.com/ianbicking&quot;&gt;@ianbicking&lt;/a&gt;) of Mozilla Labs &lt;a href=&quot;https://plus.google.com/+IanBicking/posts/Qj8R5SWAsfE&quot;&gt;explains why he &amp;quot;decided to go with React instead of Angular.js&amp;quot;&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;ng-react-update&quot;&gt;&lt;/a&gt;ng-React Update &lt;a class=&quot;hash-link&quot; href=&quot;#ng-react-update&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/davidchang&quot;&gt;David Chang&lt;/a&gt; works through some performance improvements of his &lt;a href=&quot;https://github.com/davidchang/ngReact&quot;&gt;ngReact&lt;/a&gt; project. His post &lt;a href=&quot;http://davidandsuzi.com/ngreact-update/&quot;&gt;&amp;quot;ng-React Update - React 0.9 and Angular Track By&amp;quot;&lt;/a&gt; includes some helpful advice on boosting render performance for Angular components.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Angular gives you a ton of functionality out of the box - a full MV* framework - and I am a big fan, but I&amp;#39;ll admit that you need to know how to twist the right knobs to get performance.&lt;/p&gt;
-
-&lt;p&gt;That said, React gives you a very strong view component out of the box with the performance baked right in. Try as I did, I couldn&amp;#39;t actually get it any faster. So pretty impressive stuff.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://davidandsuzi.com/ngreact-update/&quot;&gt;Read the full post...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;React was also recently mentioned at ng-conf, where the Angular team commented on React&amp;#39;s concept of the virtual DOM:&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/srt3OBP2kGc?start=113&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-web-components&quot;&gt;&lt;/a&gt;React and Web Components &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-web-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Jonathan Krause (&lt;a href=&quot;https://twitter.com/jonykrause&quot;&gt;@jonykrause&lt;/a&gt;) offers his thoughts regarding &lt;a href=&quot;http://jonykrau.se/posts/the-value-of-react&quot;&gt;parallels between React and Web Components&lt;/a&gt;, highlighting the value of React&amp;#39;s ability to render pages on the server practically for free.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;immutable-react&quot;&gt;&lt;/a&gt;Immutable React &lt;a class=&quot;hash-link&quot; href=&quot;#immutable-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://pk11.kinja.com/&quot;&gt;Peter Hausel&lt;/a&gt; shows how to build a Wikipedia auto-complete demo based on immutable data structures (similar to &lt;a href=&quot;https://npmjs.org/package/mori&quot;&gt;mori&lt;/a&gt;), really taking advantage of the framework&amp;#39;s one-way reactive data binding:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Its truly reactive design makes DOM updates finally sane and when combined with persistent data structures one can experience JavaScript development like it was never done before.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://tech.kinja.com/immutable-react-1495205675&quot;&gt;Read the full post&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;d3-and-react&quot;&gt;&lt;/a&gt;D3 and React &lt;a class=&quot;hash-link&quot; href=&quot;#d3-and-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://10consulting.com/&quot;&gt;Ben Smith&lt;/a&gt; built some great SVG-based charting components using a little less of D3 and a little more of React: &lt;a href=&quot;http://10consulting.com/2014/02/19/d3-plus-reactjs-for-charting/&quot;&gt;D3 and React - the future of charting components?&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;om-and-react&quot;&gt;&lt;/a&gt;Om and React &lt;a class=&quot;hash-link&quot; href=&quot;#om-and-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Josh Haberman (&lt;a href=&quot;https://twitter.com/JoshHaberman&quot;&gt;@joshhaberman&lt;/a&gt;) discusses performance differences between React, Om and traditional MVC frameworks in &amp;quot;&lt;a href=&quot;http://blog.reverberate.org/2014/02/on-future-of-javascript-mvc-frameworks.html&quot;&gt;A closer look at OM vs React performance&lt;/a&gt;&amp;quot;.&lt;/p&gt;
-
-&lt;p&gt;Speaking of Om: &lt;a href=&quot;https://github.com/sgrove/omchaya&quot;&gt;Omchaya&lt;/a&gt; by Sean Grove (&lt;a href=&quot;https://twitter.com/sgrove&quot;&gt;@sgrove&lt;/a&gt;) is a neat Cljs/Om example project.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;div&gt;&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Worked for 2 hours on a [@react_js](https://twitter.com/react_js) app sans internet. Love that I could get stuff done with it without googling every question.&lt;/p&gt;&amp;mdash; John Shimek (@varikin) &lt;a href=&quot;https://twitter.com/varikin/status/436606891657949185&quot;&gt;February 20, 2014&lt;/a&gt;&lt;/blockquote&gt;&lt;/div&gt;
-</description>
-				<pubDate>2014-03-14T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/14/community-roundup-18.html</guid>
 			</item>
 		
 	</channel>

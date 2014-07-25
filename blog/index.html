@@ -63,6 +63,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2014/07/24/react-v0.11.1.html">React v0.11.1</a></li>
+      
         <li><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></li>
       
         <li><a href="/react/blog/2014/07/13/react-v0.11-rc1.html">React v0.11 RC</a></li>
@@ -81,8 +83,6 @@
       
         <li><a href="/react/blog/2014/03/19/react-v0.10-rc1.html">React v0.10 RC</a></li>
       
-        <li><a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -91,11 +91,62 @@
   <div class="inner-content">
     
       <div class="post-list-item">
+        <h1><a href="/react/blog/2014/07/24/react-v0.11.1.html">React v0.11.1</a></h1>
+        <p class="meta">July 24, 2014 by Paul O’Shannessy</p>
+        <hr />
+        <div class="post">
+         <p>Today we&#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&#39;ve begun upgrading.</p>
+
+<p>The first of these is the most major and resulted in a regression with the use of <code>setState</code> inside <code>componentWillMount</code> when using React on the server. These <code>setState</code> calls are batched into the initial render. A change we made to our batching code resulted in this path hitting DOM specific code when run server-side, in turn throwing an error as <code>document</code> is not defined.</p>
+
+<p>There are several fixes we&#39;re including in v0.11.1 that are focused around the newly supported <code>event.getModifierState()</code> function. We made some adjustments to improve this cross-browser standardization.</p>
+
+<p>The final fix we&#39;re including is to better support a workaround for some IE8 behavior. The edge-case bug we&#39;re fixing was also present in v0.9 and v0.10, so while it wasn&#39;t a short-term regression, we wanted to make sure we support IE8 to the best of our abilities.</p>
+
+<p>We&#39;d also like to call out a couple additional breaking changes that we failed to originally mention in the release notes for v0.11. We updated that blog post and the changelog, so we encourage you to go read about the changes around <a href="/react/blog/2014/07/17/react-v0.11.html#descriptors">Descriptors</a> and <a href="/react/blog/2014/07/17/react-v0.11.html#prop-type-validation">Prop Type Validation</a>.</p>
+
+<p>The release is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-0.11.1.js">http://fb.me/react-0.11.1.js</a><br>
+Minified build for production: <a href="http://fb.me/react-0.11.1.min.js">http://fb.me/react-0.11.1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.11.1.js">http://fb.me/react-with-addons-0.11.1.js</a><br>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.11.1.min.js">http://fb.me/react-with-addons-0.11.1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="http://fb.me/JSXTransformer-0.11.1.js">http://fb.me/JSXTransformer-0.11.1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.11.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li><code>setState</code> can be called inside <code>componentWillMount</code> in non-DOM environments</li>
+<li><code>SyntheticMouseEvent.getEventModifierState</code> correctly renamed to <code>getModifierState</code></li>
+<li><code>getModifierState</code> correctly returns a <code>boolean</code></li>
+<li><code>getModifierState</code> is now correctly case sensitive</li>
+<li>Empty Text node used in IE8 <code>innerHTML</code> workaround is now removed, fixing rerendering in certain cases</li>
+</ul>
+<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+<ul>
+<li>Fix duplicate variable declaration (caused issues in some browsers)</li>
+</ul>
+
+        </div>
+      </div>
+    
+      <div class="post-list-item">
         <h1><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></h1>
         <p class="meta">July 17, 2014 by Paul O’Shannessy</p>
         <hr />
         <div class="post">
-         <p>We&#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using <code>jsx --harmony</code>, fixed a small regression with <code>statics</code>, and made sure we actually exposed the new API we said we were shipping: <code>React.Children.count</code>.</p>
+         <p><strong>Update:</strong> We missed a few important changes in our initial post and changelog. We&#39;ve updated this post with details about <a href="#descriptors">Descriptors</a> and <a href="#prop-type-validation">Prop Type Validation</a>.</p>
+
+<hr>
+
+<p>We&#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using <code>jsx --harmony</code>, fixed a small regression with <code>statics</code>, and made sure we actually exposed the new API we said we were shipping: <code>React.Children.count</code>.</p>
 
 <p>This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.</p>
 
@@ -165,9 +216,18 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0.mi
 <span class="p">},</span>
 </code></pre></div>
 <p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
+<h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
+<p>In our <a href="http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html#clone-on-mount">v0.10 release notes</a>, we called out that we were deprecating the existing behavior of the component function call (eg <code>component = MyComponent(props, ...children)</code> or <code>component = &lt;MyComponent prop={...}/&gt;</code>). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg <code>component.setProps(...)</code>). This no longer works. <code>component</code> in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.</p>
+
+<p>Along with this change to descriptors, <code>React.isValidComponent</code> and <code>React.PropTypes.component</code> now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of <code>MyComponent()</code>, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&#39;re working to make sure we are consistent with our terminology.</p>
+<h2><a class="anchor" name="prop-type-validation"></a>Prop Type Validation <a class="hash-link" href="#prop-type-validation">#</a></h2>
+<p>Previously <code>React.PropTypes</code> validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply <code>console.log</code> your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (<em>not throw</em>) an <code>Error</code> object. We then log the <code>error.message</code> property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an <code>Error</code> with your message instead.</p>
 <h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
 <ul>
 <li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
+<li><code>MyComponent()</code> now returns a descriptor, not an instance</li>
+<li><code>React.isValidComponent</code> and <code>React.PropTypes.component</code> validate <em>descriptors</em>, not component instances.</li>
+<li>Custom <code>propType</code> validators should return an <code>Error</code> instead of logging directly</li>
 </ul>
 <h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
 <ul>
@@ -427,26 +487,6 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0-rc
 <p>Fast forward one year, React has strongly <a href="https://news.ycombinator.com/item?id=7489959">grown in popularity</a>. Special acknowledgments go to Khan Academy, the ClojureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&#39;d also like to thank all the <a href="https://github.com/facebook/react/graphs/contributors">individual contributors</a> who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&#39;s possible to achieve when we rethink about current “best practices”.</p>
 
 <p>Here’s to another year!</p>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a></h1>
-        <p class="meta">May  6, 2014 by Bill Fisher and Jing Chen</p>
-        <hr />
-        <div class="post">
-         <p>We recently spoke at one of f8&#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:</p>
-
-<figure><iframe width="560" height="315" src="//www.youtube.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
-
-<p>To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.</p>
-
-<p>In Flux, the Dispatcher is a singleton that directs the flow of data and ensures that updates do not cascade. As an application grows, the Dispatcher becomes more vital, as it can also manage dependencies between stores by invoking the registered callbacks in a specific order.</p>
-
-<p>When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.</p>
-
-<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/react/tree/master/examples/todomvc-flux">example of this architecture</a> is available, along with more <a href="http://facebook.github.io/react/docs/flux-overview.html">detailed documentation</a> and a <a href="http://facebook.github.io/react/docs/flux-todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
 
         </div>
       </div>

@@ -440,12 +440,19 @@
     <p><code>React.addons</code> is where we park some useful utilities for building React apps. <strong>These should be considered experimental</strong> but will eventually be rolled into core or a blessed utilities library:</p>
 
 <ul>
-<li><a href="animation.html"><code>ReactTransitions</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
-<li><a href="two-way-binding-helpers.html"><code>ReactLink</code></a>, to simplify the coordination between user&#39;s form input data and and the component&#39;s state.</li>
-<li><a href="class-name-manipulation.html"><code>classSet()</code></a>, for manipulating the DOM <code>class</code> string a bit more cleanly.</li>
-<li><a href="test-utils.html"><code>ReactTestUtils</code></a>, simple helpers for writing test cases (unminified build only).</li>
-<li><a href="clone-with-props.html"><code>cloneWithProps()</code></a>, to make shallow copies of React components and change their props.</li>
-<li><a href="update.html"><code>update()</code></a>, a helper function that makes dealing with immutable data in JavaScript easier.</li>
+<li><a href="animation.html"><code>TransitionGroup</code> and <code>CSSTransitionGroup</code></a>, for dealing with animations and transitions that are usually not simple to implement, such as before a component&#39;s removal.</li>
+<li><a href="two-way-binding-helpers.html"><code>LinkedStateMixin</code></a>, to simplify the coordination between user&#39;s form input data and the component&#39;s state.</li>
+<li><a href="class-name-manipulation.html"><code>classSet</code></a>, for manipulating the DOM <code>class</code> string a bit more cleanly.</li>
+<li><a href="test-utils.html"><code>TestUtils</code></a>, simple helpers for writing test cases (unminified build only).</li>
+<li><a href="clone-with-props.html"><code>cloneWithProps</code></a>, to make shallow copies of React components and change their props.</li>
+<li><a href="update.html"><code>update</code></a>, a helper function that makes dealing with immutable data in JavaScript easier.</li>
+</ul>
+
+<p>The add-ons below are in the development (unminified) version of React only:</p>
+
+<ul>
+<li><a href="pure-render-mixin.html"><code>PureRenderMixin</code></a>, a performance booster under certain situations.</li>
+<li><a href="perf.html"><code>Perf</code></a>, for measuring performance and giving you hint where to optimize.</li>
 </ul>
 
 <p>To get the add-ons, use <code>react-with-addons.js</code> (and its minified counterpart) rather than the common <code>react.js</code>.</p>

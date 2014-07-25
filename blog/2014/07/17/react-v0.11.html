@@ -63,6 +63,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2014/07/24/react-v0.11.1.html">React v0.11.1</a></li>
+      
         <li><a href="/react/blog/2014/07/17/react-v0.11.html" class="active">React v0.11</a></li>
       
         <li><a href="/react/blog/2014/07/13/react-v0.11-rc1.html">React v0.11 RC</a></li>
@@ -81,8 +83,6 @@
       
         <li><a href="/react/blog/2014/03/19/react-v0.10-rc1.html">React v0.10 RC</a></li>
       
-        <li><a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
@@ -95,7 +95,11 @@
     <hr>
 
     <div class="post">
-      <p>We&#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using <code>jsx --harmony</code>, fixed a small regression with <code>statics</code>, and made sure we actually exposed the new API we said we were shipping: <code>React.Children.count</code>.</p>
+      <p><strong>Update:</strong> We missed a few important changes in our initial post and changelog. We&#39;ve updated this post with details about <a href="#descriptors">Descriptors</a> and <a href="#prop-type-validation">Prop Type Validation</a>.</p>
+
+<hr>
+
+<p>We&#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using <code>jsx --harmony</code>, fixed a small regression with <code>statics</code>, and made sure we actually exposed the new API we said we were shipping: <code>React.Children.count</code>.</p>
 
 <p>This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.</p>
 
@@ -165,9 +169,18 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0.mi
 <span class="p">},</span>
 </code></pre></div>
 <p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
+<h2><a class="anchor" name="descriptors"></a>Descriptors <a class="hash-link" href="#descriptors">#</a></h2>
+<p>In our <a href="http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html#clone-on-mount">v0.10 release notes</a>, we called out that we were deprecating the existing behavior of the component function call (eg <code>component = MyComponent(props, ...children)</code> or <code>component = &lt;MyComponent prop={...}/&gt;</code>). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg <code>component.setProps(...)</code>). This no longer works. <code>component</code> in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.</p>
+
+<p>Along with this change to descriptors, <code>React.isValidComponent</code> and <code>React.PropTypes.component</code> now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of <code>MyComponent()</code>, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&#39;re working to make sure we are consistent with our terminology.</p>
+<h2><a class="anchor" name="prop-type-validation"></a>Prop Type Validation <a class="hash-link" href="#prop-type-validation">#</a></h2>
+<p>Previously <code>React.PropTypes</code> validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply <code>console.log</code> your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (<em>not throw</em>) an <code>Error</code> object. We then log the <code>error.message</code> property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an <code>Error</code> with your message instead.</p>
 <h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
 <ul>
 <li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
+<li><code>MyComponent()</code> now returns a descriptor, not an instance</li>
+<li><code>React.isValidComponent</code> and <code>React.PropTypes.component</code> validate <em>descriptors</em>, not component instances.</li>
+<li>Custom <code>propType</code> validators should return an <code>Error</code> instead of logging directly</li>
 </ul>
 <h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
 <ul>

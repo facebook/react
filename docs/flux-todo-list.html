@@ -477,21 +477,6 @@
 <span class="kd">var</span> <span class="nx">_callbacks</span> <span class="o">=</span> <span class="p">[];</span>
 <span class="kd">var</span> <span class="nx">_promises</span> <span class="o">=</span> <span class="p">[];</span>
 
-<span class="cm">/**</span>
-<span class="cm"> * Add a promise to the queue of callback invocation promises.</span>
-<span class="cm"> * @param {function} callback The Store&#39;s registered callback.</span>
-<span class="cm"> * @param {object} payload The data from the Action.</span>
-<span class="cm"> */</span>
-<span class="kd">var</span> <span class="nx">_addPromise</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">_promises</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nx">callback</span><span class="p">(</span><span class="nx">payload</span><span class="p">))</span> <span class="p">{</span>
-      <span class="nx">resolve</span><span class="p">(</span><span class="nx">payload</span><span class="p">);</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-      <span class="nx">reject</span><span class="p">(</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Dispatcher callback unsuccessful&#39;</span><span class="p">));</span>
-    <span class="p">}</span>
-  <span class="p">}));</span>
-<span class="p">};</span>
-
 <span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{};</span>
 <span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nx">merge</span><span class="p">(</span><span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
 

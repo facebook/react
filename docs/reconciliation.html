@@ -486,7 +486,7 @@ renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span cla
 
 <p>The previous component is now operational. Its <code>render()</code> method is called and the diff algorithm restarts with the new result and the previous result.</p>
 <h2><a class="anchor" name="list-wise-diff"></a>List-wise diff <a class="hash-link" href="#list-wise-diff">#</a></h2><h3><a class="anchor" name="problematic-case"></a>Problematic Case <a class="hash-link" href="#problematic-case">#</a></h3>
-<p>In order to do children reconciliation, React adopts a very naive approach. It goes over the list of children both at the same time and whenever there&#39;s a difference generates a mutation.</p>
+<p>In order to do children reconciliation, React adopts a very naive approach. It goes over both lists of children at the same time and generates a mutation whenever there&#39;s a difference.</p>
 
 <p>For example if you add an element at the end:</p>
 <div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
