@@ -1159,16 +1159,25 @@ var ReactCompositeComponentMixin = {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
         var prevComponentID = prevComponentInstance._rootNodeID;
-        prevComponentInstance.unmountComponent();
-        this._renderedComponent = instantiateReactComponent(nextDescriptor);
-        var nextMarkup = this._renderedComponent.mountComponent(
-          thisID,
-          transaction,
-          this._mountDepth + 1
-        );
+
+        // This callback pattern is a temporary workaround until a refactor is
+        // carried out. The problem it solves is that even though prevComponent
+        // was unmounted (and its ID purged), its ID would later be used for
+        // dangerouslyReplaceNodeWithMarkupByID.
+        var thisComponent = this;
         ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
           prevComponentID,
-          nextMarkup
+          function() {
+            prevComponentInstance.unmountComponent();
+            thisComponent._renderedComponent =
+              instantiateReactComponent(nextDescriptor);
+            var nextMarkup = thisComponent._renderedComponent.mountComponent(
+              thisID,
+              transaction,
+              thisComponent._mountDepth + 1
+            );
+            return nextMarkup;
+          }
         );
       }
     }

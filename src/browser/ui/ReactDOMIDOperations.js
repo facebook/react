@@ -161,9 +161,13 @@ var ReactDOMIDOperations = {
   dangerouslyReplaceNodeWithMarkupByID: ReactPerf.measure(
     'ReactDOMIDOperations',
     'dangerouslyReplaceNodeWithMarkupByID',
-    function(id, markup) {
+    function(id, markupCallback) {
       var node = ReactMount.getNode(id);
-      DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
+      var markup = markupCallback();
+      DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(
+        node,
+        markup
+      );
     }
   ),
 
