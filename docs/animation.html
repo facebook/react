@@ -500,7 +500,33 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
+<p>Although in the example above we rendered a list of items into <code>ReactCSSTransitionGroup</code>, the children of <code>ReactCSSTransitionGroup</code> can be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element, with the new element animating in while the current animates out. For example, we can implement a simple image carousel like this:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+
+<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">imageSrc</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;carousel&quot;</span><span class="o">&gt;</span>
+</span><span class="hll">          <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">imageSrc</span><span class="p">}</span> <span class="o">/&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>You must provide <a href="/react/docs/multiple-components.html#dynamic-children">the <code>key</code> attribute</a> for all children of <code>ReactCSSTransitionGroup</code>, even if rendering a single item. This is how React will determine which children have entered, left, or stayed.</p>
+</blockquote>
+<h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
 <p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactCSSTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactCSSTransitionGroup</code> to disable these animations.</p>
 
 <blockquote>
