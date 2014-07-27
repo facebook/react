@@ -8,28 +8,28 @@ It's an exciting time for React as there are now more commits from open source c
 
 ## Atom moves to React
 
-[Atom, GitHub's code editor, is now using React](http://blog.atom.io/2014/07/02/moving-atom-to-react.html) to build the editing experience. They did the move in order to improve performance. By default, React helped them eliminate unnecessary reflows. Then, they were able to architecture the rendering pipeline in order to minimize repaint with hardware acceleration. This is a testament that React's architecture is viable for high performant applications.
+[Atom, GitHub's code editor, is now using React](http://blog.atom.io/2014/07/02/moving-atom-to-react.html) to build the editing experience. They did the move in order to improve performance. By default, React helped them eliminate unnecessary reflows. Then, they were able to architect the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React's architecture is viable for high performant applications.
 
 [<img src="http://blog.atom.io/img/posts/gpu-cursor-move.gif" style="width: 100%;" />](http://blog.atom.io/2014/07/02/moving-atom-to-react.html)
 
 
 ## Why Does React Scale?
 
-At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design decisions of the API that makes it scale for large number of developers. If you don't have 20 minutes, take a look at the [annotated slides](https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014).
+At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design decisions of the API that makes it scale to a large number of developers. If you don't have 20 minutes, take a look at the [annotated slides](https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014).
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
 
 
 ## Live Editing
 
-The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
+The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
 
 <iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 
 ## ReactIntl Mixin by Yahoo
 
-There's a couple of React-related projects that recently appeared on Yahoo's GitHub. The first one is an [internationalization mixin](https://github.com/yahoo/react-intl). That's exciting to see them contributing.
+There's a couple of React-related projects that recently appeared on Yahoo's GitHub. The first one is an [internationalization mixin](https://github.com/yahoo/react-intl). It's exciting to see them contributing.
 
 ```javascript
 var MyComponent = React.createClass({
@@ -52,7 +52,7 @@ React.renderComponent(
 
 ## Thinking and Learning React
 
-Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about Routing, dispatch, touchable component and basic animations. 
+Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about routing, event dispatch, touchable components, and basic animations. 
 
 
 ## London React Meetup
@@ -61,12 +61,12 @@ If you missed the last [London React Meetup](http://www.meetup.com/London-React-
 
 - What's new in React 0.11 and how to improve performance by guaranteeing immutability
 - State handling in React with Morearty.JS
-- React on Rails - How to use React with Ruby on Rails, to build isomorphic apps
-- Building an isomorphic, real time to do list with moped and node.js
+- React on Rails - How to use React with Ruby on Rails to build isomorphic apps
+- Building an isomorphic, real-time to-do list with moped and node.js
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
 
-On a related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Francisco/events/195518392/) is going to be from Prezi: [“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”](https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135). While not in React, their tech is really awesome and share a lot of the design principles and perf optimizations.
+On a related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Francisco/events/195518392/) is going to be from Prezi: [“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”](https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135). While not in React, their tech is really awesome and shares a lot of React's design principles and perf optimizations.
 
 
 ## Using React and KendoUI Together
@@ -78,7 +78,7 @@ One of the strength of React is that it plays nicely with other libraries. Jim C
 
 ## Acorn JSX
 
-Ingvar Stepanyan extended Acorn JavaScript parser to support JSX. The result is a [JSX parser](https://github.com/RReverser/acorn-jsx) that's 1.5-2x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things. It's always a good thing to get competition on performance!
+Ingvar Stepanyan extended the Acorn JavaScript parser to support JSX. The result is a [JSX parser](https://github.com/RReverser/acorn-jsx) that's 1.5–2.0x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things, but it's always a good thing to get competition on performance!
 
 
 ## ReactScriptLoader
