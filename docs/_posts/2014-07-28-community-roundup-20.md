@@ -4,32 +4,32 @@ layout: post
 author: Lou Husson
 ---
 
-It's an exciting time for React as there are now more commits from open source contributors than Facebook engineers! Keep up the good work :)
+It's an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)
 
 ## Atom moves to React
 
-[Atom, GitHub's code editor, is now using React](http://blog.atom.io/2014/07/02/moving-atom-to-react.html) to build the editing experience. They did the move in order to improve performance. By default, React helped them eliminate unnecessary reflows. Then, they were able to architect the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React's architecture is viable for high performant applications.
+[Atom, GitHub's code editor, is now using React](http://blog.atom.io/2014/07/02/moving-atom-to-react.html) to build the editing experience. They made the move in order to improve performance. By default, React helped them eliminate unnecessary reflows, enabling them to focus on architecting the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React's architecture is perfect for high performant applications.
 
 [<img src="http://blog.atom.io/img/posts/gpu-cursor-move.gif" style="width: 100%;" />](http://blog.atom.io/2014/07/02/moving-atom-to-react.html)
 
 
 ## Why Does React Scale?
 
-At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design decisions of the API that makes it scale to a large number of developers. If you don't have 20 minutes, take a look at the [annotated slides](https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014).
+At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design decisions made in the API that allows it to scale to a large number of developers. If you don't have 20 minutes, take a look at the [annotated slides](https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014).
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
 
 
 ## Live Editing
 
-The best feature of React is that it provides foundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
+One of the best features of React is that it provides the foundations to implement concepts that were otherwise extremely difficult, like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
 
 <iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
 
 ## ReactIntl Mixin by Yahoo
 
-There's a couple of React-related projects that recently appeared on Yahoo's GitHub. The first one is an [internationalization mixin](https://github.com/yahoo/react-intl). It's exciting to see them contributing.
+There are a couple of React-related projects that recently appeared on Yahoo's GitHub, the first one being an  [internationalization mixin](https://github.com/yahoo/react-intl). It's great to see them getting excitied about React and contributing back to the community.
 
 ```javascript
 var MyComponent = React.createClass({
@@ -57,7 +57,7 @@ Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused 
 
 ## London React Meetup
 
-If you missed the last [London React Meetup](http://www.meetup.com/London-React-User-Group/events/191406572/), the video is available. Lots of great content. 
+If you missed the last [London React Meetup](http://www.meetup.com/London-React-User-Group/events/191406572/), the video is available, with lots of great content. 
 
 - What's new in React 0.11 and how to improve performance by guaranteeing immutability
 - State handling in React with Morearty.JS
@@ -66,12 +66,12 @@ If you missed the last [London React Meetup](http://www.meetup.com/London-React-
 
 <iframe width="650" height="315" src="//www.youtube.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
 
-On a related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Francisco/events/195518392/) is going to be from Prezi: [“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”](https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135). While not in React, their tech is really awesome and shares a lot of React's design principles and perf optimizations.
+In related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Francisco/events/195518392/) will be from Prezi: [“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”](https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135). While not in React, their tech is really awesome and shares a lot of React's design principles and perf optimizations.
 
 
 ## Using React and KendoUI Together
 
-One of the strength of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write [React component adapters for KendoUI](http://www.ifandelse.com/using-reactjs-and-kendoui-together/).
+One of the strengths of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write [React component adapters for KendoUI](http://www.ifandelse.com/using-reactjs-and-kendoui-together/).
 
 <figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="/react/img/blog/kendoui.png" /></a></figure>
 
