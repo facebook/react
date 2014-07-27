@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Use React and JSX in Ruby on Rails</title>
+  <title>React | React v0.11.1</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Use React and JSX in Ruby on Rails">
+  <meta property="og:title" content="React | React v0.11.1">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2013/07/30/use-react-and-jsx-in-ruby-on-rails.html">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/07/25/react-v0.11.1.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -65,7 +65,7 @@
       
         <li><a href="/react/blog/2014/07/28/community-roundup-20.html">Community Round-up #20</a></li>
       
-        <li><a href="/react/blog/2014/07/25/react-v0.11.1.html">React v0.11.1</a></li>
+        <li><a href="/react/blog/2014/07/25/react-v0.11.1.html" class="active">React v0.11.1</a></li>
       
         <li><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></li>
       
@@ -89,39 +89,50 @@
 </div>
 
   <div class="inner-content">
-    <h1>Use React and JSX in Ruby on Rails</h1>
-    <p class="meta">July 30, 2013 by Paul O'Shannessy</p>
+    <h1>React v0.11.1</h1>
+    <p class="meta">July 25, 2014 by Paul O’Shannessy</p>
 
     <hr>
 
     <div class="post">
-      <p>Today we&#39;re releasing a gem to make it easier to use React and JSX in Ruby on Rails applications: <a href="https://github.com/facebook/react-rails">react-rails</a>.</p>
+      <p>Today we&#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&#39;ve begun upgrading.</p>
 
-<p>This gem has 2 primary purposes:</p>
+<p>The first of these is the most major and resulted in a regression with the use of <code>setState</code> inside <code>componentWillMount</code> when using React on the server. These <code>setState</code> calls are batched into the initial render. A change we made to our batching code resulted in this path hitting DOM specific code when run server-side, in turn throwing an error as <code>document</code> is not defined.</p>
 
-<ol>
-<li>To package <code>react.js</code> in a way that&#39;s easy to use and easy to update.</li>
-<li>To allow you to write JSX without an external build step to transform that into JS.</li>
-</ol>
-<h2><a class="anchor" name="packaging-react.js"></a>Packaging react.js <a class="hash-link" href="#packaging-react.js">#</a></h2>
-<p>To make <code>react.js</code> available for use client-side, simply add <code>react</code> to your manifest, and declare the variant you&#39;d like to use in your environment. When you use <code>:production</code>, the minified and optimized <code>react.min.js</code> will be used instead of the development version. For example:</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="c1"># config/environments/development.rb</span>
+<p>There are several fixes we&#39;re including in v0.11.1 that are focused around the newly supported <code>event.getModifierState()</code> function. We made some adjustments to improve this cross-browser standardization.</p>
 
-<span class="no">MyApp</span><span class="o">::</span><span class="no">Application</span><span class="o">.</span><span class="n">configure</span> <span class="k">do</span>
-  <span class="n">config</span><span class="o">.</span><span class="n">react</span><span class="o">.</span><span class="n">variant</span> <span class="o">=</span> <span class="ss">:development</span>
-  <span class="c1"># use :production in production.rb</span>
-<span class="k">end</span>
-</code></pre></div><div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// app/assets/javascript/application.js</span>
+<p>The final fix we&#39;re including is to better support a workaround for some IE8 behavior. The edge-case bug we&#39;re fixing was also present in v0.9 and v0.10, so while it wasn&#39;t a short-term regression, we wanted to make sure we support IE8 to the best of our abilities.</p>
 
-<span class="c1">//= require react</span>
-</code></pre></div><h2><a class="anchor" name="writing-jsx"></a>Writing JSX <a class="hash-link" href="#writing-jsx">#</a></h2>
-<p>When you name your file with <code>myfile.js.jsx</code>, <code>react-rails</code> will automatically try to transform that file. For the time being, we still require that you include the docblock at the beginning of the file. For example, this file will get transformed on request.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">)</span>
-</code></pre></div><h2><a class="anchor" name="asset-pipeline"></a>Asset Pipeline <a class="hash-link" href="#asset-pipeline">#</a></h2>
-<p><code>react-rails</code> takes advantage of the <a href="http://guides.rubyonrails.org/asset_pipeline.html">asset pipeline</a> that was introduced in Rails 3.1. A very important part of that pipeline is the <code>assets:precompile</code> Rake task. <code>react-rails</code> will ensure that your JSX files will be transformed into regular JS before all of your assets are minified and packaged.</p>
-<h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
-<p>Installation follows the same process you&#39;re familiar with. You can install it globally with <code>gem install react-rails</code>, though we suggest you add the dependency to your <code>Gemfile</code> directly.</p>
+<p>We&#39;d also like to call out a couple additional breaking changes that we failed to originally mention in the release notes for v0.11. We updated that blog post and the changelog, so we encourage you to go read about the changes around <a href="/react/blog/2014/07/17/react-v0.11.html#descriptors">Descriptors</a> and <a href="/react/blog/2014/07/17/react-v0.11.html#prop-type-validation">Prop Type Validation</a>.</p>
+
+<p>The release is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-0.11.1.js">http://fb.me/react-0.11.1.js</a><br>
+Minified build for production: <a href="http://fb.me/react-0.11.1.min.js">http://fb.me/react-0.11.1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.11.1.js">http://fb.me/react-with-addons-0.11.1.js</a><br>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.11.1.min.js">http://fb.me/react-with-addons-0.11.1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="http://fb.me/JSXTransformer-0.11.1.js">http://fb.me/JSXTransformer-0.11.1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.11.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li><code>setState</code> can be called inside <code>componentWillMount</code> in non-DOM environments</li>
+<li><code>SyntheticMouseEvent.getEventModifierState</code> correctly renamed to <code>getModifierState</code></li>
+<li><code>getModifierState</code> correctly returns a <code>boolean</code></li>
+<li><code>getModifierState</code> is now correctly case sensitive</li>
+<li>Empty Text node used in IE8 <code>innerHTML</code> workaround is now removed, fixing rerendering in certain cases</li>
+</ul>
+<h3><a class="anchor" name="jsxtransformer"></a>JSXTransformer <a class="hash-link" href="#jsxtransformer">#</a></h3>
+<ul>
+<li>Fix duplicate variable declaration (caused issues in some browsers)</li>
+</ul>
 
     </div>
 

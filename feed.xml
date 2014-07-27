@@ -7,6 +7,92 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #20</title>
+				<description>&lt;p&gt;It&amp;#39;s an exciting time for React as there are now more commits from open source contributors than Facebook engineers! Keep up the good work :)&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;atom-moves-to-react&quot;&gt;&lt;/a&gt;Atom moves to React &lt;a class=&quot;hash-link&quot; href=&quot;#atom-moves-to-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;http://blog.atom.io/2014/07/02/moving-atom-to-react.html&quot;&gt;Atom, GitHub&amp;#39;s code editor, is now using React&lt;/a&gt; to build the editing experience. They did the move in order to improve performance. By default, React helped them eliminate unnecessary reflows. Then, they were able to architecture the rendering pipeline in order to minimize repaint with hardware acceleration. This is a testament that React&amp;#39;s architecture is viable for high performant applications.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://blog.atom.io/2014/07/02/moving-atom-to-react.html&quot;&gt;&lt;img src=&quot;http://blog.atom.io/img/posts/gpu-cursor-move.gif&quot; style=&quot;width: 100%;&quot; /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-does-react-scale&quot;&gt;&lt;/a&gt;Why Does React Scale? &lt;a class=&quot;hash-link&quot; href=&quot;#why-does-react-scale&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;At the last &lt;a href=&quot;http://2014.jsconf.us/&quot;&gt;JSConf.us&lt;/a&gt;, Vjeux talked about the design decisions of the API that makes it scale for large number of developers. If you don&amp;#39;t have 20 minutes, take a look at the &lt;a href=&quot;https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014&quot;&gt;annotated slides&lt;/a&gt;.&lt;/p&gt;
+
+&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/D-ioDiacTm8&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;live-editing&quot;&gt;&lt;/a&gt;Live Editing &lt;a class=&quot;hash-link&quot; href=&quot;#live-editing&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM like canvas... &lt;a href=&quot;https://twitter.com/dan_abramov&quot;&gt;Dan Abramov&lt;/a&gt; got hot code reloading working with webpack in order to &lt;a href=&quot;http://gaearon.github.io/react-hot-loader/&quot;&gt;live edit a React project&lt;/a&gt;!&lt;/p&gt;
+
+&lt;iframe src=&quot;//player.vimeo.com/video/100010922&quot; width=&quot;650&quot; height=&quot;315&quot; webkitallowfullscreen mozallowfullscreen allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactintl-mixin-by-yahoo&quot;&gt;&lt;/a&gt;ReactIntl Mixin by Yahoo &lt;a class=&quot;hash-link&quot; href=&quot;#reactintl-mixin-by-yahoo&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;There&amp;#39;s a couple of React-related projects that recently appeared on Yahoo&amp;#39;s GitHub. The first one is an &lt;a href=&quot;https://github.com/yahoo/react-intl&quot;&gt;internationalization mixin&lt;/a&gt;. That&amp;#39;s exciting to see them contributing.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ReactIntlMixin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;intlDate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1390518044403&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;hour&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;numeric&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;minute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;numeric&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/p&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;intlNumber&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;400&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;style&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;percent&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/p&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;locales&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;fr-FR&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getElementById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;example&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;thinking-and-learning-react&quot;&gt;&lt;/a&gt;Thinking and Learning React &lt;a class=&quot;hash-link&quot; href=&quot;#thinking-and-learning-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused application. She wrote a blog post &lt;a href=&quot;http://icelab.com.au/articles/thinking-and-learning-reactjs/&quot;&gt;“Thinking and Learning React.js”&lt;/a&gt; to share her experience with elements they had to use. You&amp;#39;ll learn about Routing, dispatch, touchable component and basic animations. &lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;london-react-meetup&quot;&gt;&lt;/a&gt;London React Meetup &lt;a class=&quot;hash-link&quot; href=&quot;#london-react-meetup&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;If you missed the last &lt;a href=&quot;http://www.meetup.com/London-React-User-Group/events/191406572/&quot;&gt;London React Meetup&lt;/a&gt;, the video is available. Lots of great content. &lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;What&amp;#39;s new in React 0.11 and how to improve performance by guaranteeing immutability&lt;/li&gt;
+&lt;li&gt;State handling in React with Morearty.JS&lt;/li&gt;
+&lt;li&gt;React on Rails - How to use React with Ruby on Rails, to build isomorphic apps&lt;/li&gt;
+&lt;li&gt;Building an isomorphic, real time to do list with moped and node.js&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/CP3lvm5Ppqo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;On a related news, the next &lt;a href=&quot;http://www.meetup.com/ReactJS-San-Francisco/events/195518392/&quot;&gt;React SF Meetup&lt;/a&gt; is going to be from Prezi: &lt;a href=&quot;https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135&quot;&gt;“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”&lt;/a&gt;. While not in React, their tech is really awesome and share a lot of the design principles and perf optimizations.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;using-react-and-kendoui-together&quot;&gt;&lt;/a&gt;Using React and KendoUI Together &lt;a class=&quot;hash-link&quot; href=&quot;#using-react-and-kendoui-together&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;One of the strength of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write &lt;a href=&quot;http://www.ifandelse.com/using-reactjs-and-kendoui-together/&quot;&gt;React component adapters for KendoUI&lt;/a&gt;.&lt;/p&gt;
+
+&lt;figure&gt;&lt;a href=&quot;http://www.ifandelse.com/using-reactjs-and-kendoui-together/&quot;&gt;&lt;img src=&quot;/react/img/blog/kendoui.png&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;acorn-jsx&quot;&gt;&lt;/a&gt;Acorn JSX &lt;a class=&quot;hash-link&quot; href=&quot;#acorn-jsx&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ingvar Stepanyan extended Acorn JavaScript parser to support JSX. The result is a &lt;a href=&quot;https://github.com/RReverser/acorn-jsx&quot;&gt;JSX parser&lt;/a&gt; that&amp;#39;s 1.5-2x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things. It&amp;#39;s always a good thing to get competition on performance!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactscriptloader&quot;&gt;&lt;/a&gt;ReactScriptLoader &lt;a class=&quot;hash-link&quot; href=&quot;#reactscriptloader&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Yariv Sadan created &lt;a href=&quot;https://github.com/yariv/ReactScriptLoader&quot;&gt;ReactScriptLoader&lt;/a&gt; to make it easier to write components that require an external script.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ReactScriptLoaderMixin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;getScriptURL&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;http://d3js.org/d3.v3.min.js&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;getInitialState&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;scriptLoading&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;scriptLoadError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;onScriptLoaded&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;scriptLoading&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;onScriptError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;scriptLoading&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;scriptLoadError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; 
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;scriptLoading&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Loading script...&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;scriptLoadError&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Loading failed&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;s1&quot;&gt;&amp;#39;Loading succeeded&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;message&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/span&amp;gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot; data-conversation=&quot;none&quot; lang=&quot;en&quot;&gt;&lt;p&gt;“&lt;a href=&quot;https://twitter.com/apphacker&quot;&gt;@apphacker&lt;/a&gt;: I take back the mean things I said about &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; I actually like it.” Summarizing the life of ReactJS in a single tweet.&lt;/p&gt;&amp;mdash; Jordan (@jordwalke) &lt;a href=&quot;https://twitter.com/jordwalke/statuses/490747339607265280&quot;&gt;July 20, 2014&lt;/a&gt;&lt;/blockquote&gt;
+</description>
+				<pubDate>2014-07-28T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/07/28/community-roundup-20.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/28/community-roundup-20.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.11.1</title>
 				<description>&lt;p&gt;Today we&amp;#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&amp;#39;ve begun upgrading.&lt;/p&gt;
 
@@ -47,9 +133,9 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;li&gt;Fix duplicate variable declaration (caused issues in some browsers)&lt;/li&gt;
 &lt;/ul&gt;
 </description>
-				<pubDate>2014-07-24T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/07/24/react-v0.11.1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/24/react-v0.11.1.html</guid>
+				<pubDate>2014-07-25T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/07/25/react-v0.11.1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/25/react-v0.11.1.html</guid>
 			</item>
 		
 			<item>
@@ -566,79 +652,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-03-21T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.10 RC</title>
-				<description>&lt;p&gt;&lt;a href=&quot;http://facebook.github.io/react/blog/2014/02/20/react-v0.9.html&quot;&gt;v0.9 has only been out for a month&lt;/a&gt;, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&amp;#39;t have a long list of changes to talk about.&lt;/p&gt;
-
-&lt;p&gt;The release candidate is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.10.0-rc1.js&quot;&gt;http://fb.me/react-0.10.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.10.0-rc1.min.js&quot;&gt;http://fb.me/react-0.10.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.10.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.10.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.10.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.10.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.10.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.10.0-rc1.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.10.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;clone-on-mount&quot;&gt;&lt;/a&gt;Clone On Mount &lt;a class=&quot;hash-link&quot; href=&quot;#clone-on-mount&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (&lt;code&gt;React.DOM.div()&lt;/code&gt;, &lt;code&gt;MyComponent()&lt;/code&gt;) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.&lt;/p&gt;
-
-&lt;p&gt;In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on &lt;a href=&quot;http://fb.me/react-warning-descriptors&quot;&gt;this page&lt;/a&gt;. Most of the time you can solve your pattern by using refs.&lt;/p&gt;
-
-&lt;p&gt;Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;js language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// This is a common pattern. However instance here really refers to a&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// &amp;quot;descriptor&amp;quot;, not necessarily the mounted instance.&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// The change here is very simple. The return value of renderComponent will be&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// the mounted instance.&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;instance&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;instance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.&lt;/p&gt;
-
-&lt;p&gt;The plan for v0.11 is that we will go fully to &amp;quot;descriptors&amp;quot;. Method calls on the return value of &lt;code&gt;MyComponent()&lt;/code&gt; will fail hard.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Added warnings to help migrate towards descriptors&lt;/li&gt;
-&lt;li&gt;Made it possible to server render without React-related markup (&lt;code&gt;data-reactid&lt;/code&gt;, &lt;code&gt;data-react-checksum&lt;/code&gt;). This DOM will not be mountable by React. &lt;a href=&quot;/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup&quot;&gt;Read the docs for &lt;code&gt;React.renderComponentToStaticMarkup&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Added support for more attributes:
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;srcSet&lt;/code&gt; for &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; to specify images at different pixel ratios&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;textAnchor&lt;/code&gt; for SVG&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Ensure all void elements don’t insert a closing tag into the markup.&lt;/li&gt;
-&lt;li&gt;Ensure &lt;code&gt;className={false}&lt;/code&gt; behaves consistently&lt;/li&gt;
-&lt;li&gt;Ensure &lt;code&gt;this.refs&lt;/code&gt; is defined, even if no refs are specified.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;addons&quot;&gt;&lt;/a&gt;Addons &lt;a class=&quot;hash-link&quot; href=&quot;#addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;update&lt;/code&gt; function to deal with immutable data. &lt;a href=&quot;/react/docs/update.html&quot;&gt;Read the docs&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;react-tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added an option argument to &lt;code&gt;transform&lt;/code&gt; function. The only option supported is &lt;code&gt;harmony&lt;/code&gt;, which behaves the same as &lt;code&gt;jsx --harmony&lt;/code&gt; on the command line. This uses the ES6 transforms from &lt;a href=&quot;https://github.com/facebook/jstransform&quot;&gt;jstransform&lt;/a&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-03-19T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/03/19/react-v0.10-rc1.html</guid>
 			</item>
 		
 	</channel>

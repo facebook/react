@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #20</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #20">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/07/28/community-roundup-20.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2014/07/28/community-roundup-20.html" class="active">Community Round-up #20</a></li>
+      
+        <li><a href="/react/blog/2014/07/25/react-v0.11.1.html">React v0.11.1</a></li>
+      
+        <li><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></li>
+      
+        <li><a href="/react/blog/2014/07/13/react-v0.11-rc1.html">React v0.11 RC</a></li>
+      
+        <li><a href="/react/blog/2014/06/27/community-roundup-19.html">Community Round-up #19</a></li>
+      
+        <li><a href="/react/blog/2014/05/29/one-year-of-open-source-react.html">One Year of Open-Source React</a></li>
+      
+        <li><a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a></li>
+      
+        <li><a href="/react/blog/2014/04/04/reactnet.html">Use React and JSX in ASP.NET MVC</a></li>
+      
+        <li><a href="/react/blog/2014/03/28/the-road-to-1.0.html">The Road to 1.0</a></li>
+      
+        <li><a href="/react/blog/2014/03/21/react-v0.10.html">React v0.10</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #20</h1>
+    <p class="meta">July 28, 2014 by Lou Husson</p>
+
+    <hr>
+
+    <div class="post">
+      <p>It&#39;s an exciting time for React as there are now more commits from open source contributors than Facebook engineers! Keep up the good work :)</p>
+<h2><a class="anchor" name="atom-moves-to-react"></a>Atom moves to React <a class="hash-link" href="#atom-moves-to-react">#</a></h2>
+<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html">Atom, GitHub&#39;s code editor, is now using React</a> to build the editing experience. They did the move in order to improve performance. By default, React helped them eliminate unnecessary reflows. Then, they were able to architecture the rendering pipeline in order to minimize repaint with hardware acceleration. This is a testament that React&#39;s architecture is viable for high performant applications.</p>
+
+<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html"><img src="http://blog.atom.io/img/posts/gpu-cursor-move.gif" style="width: 100%;" /></a></p>
+<h2><a class="anchor" name="why-does-react-scale"></a>Why Does React Scale? <a class="hash-link" href="#why-does-react-scale">#</a></h2>
+<p>At the last <a href="http://2014.jsconf.us/">JSConf.us</a>, Vjeux talked about the design decisions of the API that makes it scale for large number of developers. If you don&#39;t have 20 minutes, take a look at the <a href="https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014">annotated slides</a>.</p>
+
+<iframe width="650" height="315" src="//www.youtube.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
+<h2><a class="anchor" name="live-editing"></a>Live Editing <a class="hash-link" href="#live-editing">#</a></h2>
+<p>The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM like canvas... <a href="https://twitter.com/dan_abramov">Dan Abramov</a> got hot code reloading working with webpack in order to <a href="http://gaearon.github.io/react-hot-loader/">live edit a React project</a>!</p>
+
+<iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+<h2><a class="anchor" name="reactintl-mixin-by-yahoo"></a>ReactIntl Mixin by Yahoo <a class="hash-link" href="#reactintl-mixin-by-yahoo">#</a></h2>
+<p>There&#39;s a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub. The first one is an <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. That&#39;s exciting to see them contributing.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactIntlMixin</span><span class="p">],</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlDate</span><span class="p">(</span><span class="mi">1390518044403</span><span class="p">,</span> <span class="p">{</span> <span class="nx">hour</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span><span class="p">,</span> <span class="nx">minute</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlNumber</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="p">{</span> <span class="nx">style</span><span class="o">:</span> <span class="s1">&#39;percent&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">locales</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;fr-FR&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="thinking-and-learning-react"></a>Thinking and Learning React <a class="hash-link" href="#thinking-and-learning-react">#</a></h2>
+<p>Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about Routing, dispatch, touchable component and basic animations. </p>
+<h2><a class="anchor" name="london-react-meetup"></a>London React Meetup <a class="hash-link" href="#london-react-meetup">#</a></h2>
+<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available. Lots of great content. </p>
+
+<ul>
+<li>What&#39;s new in React 0.11 and how to improve performance by guaranteeing immutability</li>
+<li>State handling in React with Morearty.JS</li>
+<li>React on Rails - How to use React with Ruby on Rails, to build isomorphic apps</li>
+<li>Building an isomorphic, real time to do list with moped and node.js</li>
+</ul>
+
+<iframe width="650" height="315" src="//www.youtube.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
+
+<p>On a related news, the next <a href="http://www.meetup.com/ReactJS-San-Francisco/events/195518392/">React SF Meetup</a> is going to be from Prezi: <a href="https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135">“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”</a>. While not in React, their tech is really awesome and share a lot of the design principles and perf optimizations.</p>
+<h2><a class="anchor" name="using-react-and-kendoui-together"></a>Using React and KendoUI Together <a class="hash-link" href="#using-react-and-kendoui-together">#</a></h2>
+<p>One of the strength of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write <a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/">React component adapters for KendoUI</a>.</p>
+
+<figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="/react/img/blog/kendoui.png" /></a></figure>
+<h2><a class="anchor" name="acorn-jsx"></a>Acorn JSX <a class="hash-link" href="#acorn-jsx">#</a></h2>
+<p>Ingvar Stepanyan extended Acorn JavaScript parser to support JSX. The result is a <a href="https://github.com/RReverser/acorn-jsx">JSX parser</a> that&#39;s 1.5-2x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things. It&#39;s always a good thing to get competition on performance!</p>
+<h2><a class="anchor" name="reactscriptloader"></a>ReactScriptLoader <a class="hash-link" href="#reactscriptloader">#</a></h2>
+<p>Yariv Sadan created <a href="https://github.com/yariv/ReactScriptLoader">ReactScriptLoader</a> to make it easier to write components that require an external script.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactScriptLoaderMixin</span><span class="p">],</span>
+  <span class="nx">getScriptURL</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="s1">&#39;http://d3js.org/d3.v3.min.js&#39;</span><span class="p">;</span>
+  <span class="p">},</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span> <span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">onScriptLoaded</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">onScriptError</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> 
+      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoading</span> <span class="o">?</span> <span class="s1">&#39;Loading script...&#39;</span> <span class="o">:</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoadError</span> <span class="o">?</span> <span class="s1">&#39;Loading failed&#39;</span> <span class="o">:</span>
+      <span class="s1">&#39;Loading succeeded&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/span&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div><h2><a class="anchor" name="random-tweet"></a>Random Tweet <a class="hash-link" href="#random-tweet">#</a></h2>
+<blockquote class="twitter-tweet" data-conversation="none" lang="en"><p>“<a href="https://twitter.com/apphacker">@apphacker</a>: I take back the mean things I said about <a href="https://twitter.com/reactjs">@reactjs</a> I actually like it.” Summarizing the life of ReactJS in a single tweet.</p>&mdash; Jordan (@jordwalke) <a href="https://twitter.com/jordwalke/statuses/490747339607265280">July 20, 2014</a></blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">&copy; 2014 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
