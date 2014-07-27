@@ -18,7 +18,7 @@
 
 &lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/D-ioDiacTm8&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;live-editing&quot;&gt;&lt;/a&gt;Live Editing &lt;a class=&quot;hash-link&quot; href=&quot;#live-editing&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... &lt;a href=&quot;https://twitter.com/dan_abramov&quot;&gt;Dan Abramov&lt;/a&gt; got hot code reloading working with webpack in order to &lt;a href=&quot;http://gaearon.github.io/react-hot-loader/&quot;&gt;live edit a React project&lt;/a&gt;!&lt;/p&gt;
+&lt;p&gt;The best feature of React is that it provides foundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... &lt;a href=&quot;https://twitter.com/dan_abramov&quot;&gt;Dan Abramov&lt;/a&gt; got hot code reloading working with webpack in order to &lt;a href=&quot;http://gaearon.github.io/react-hot-loader/&quot;&gt;live edit a React project&lt;/a&gt;!&lt;/p&gt;
 
 &lt;iframe src=&quot;//player.vimeo.com/video/100010922&quot; width=&quot;650&quot; height=&quot;315&quot; webkitallowfullscreen mozallowfullscreen allowfullscreen&gt;&lt;/iframe&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactintl-mixin-by-yahoo&quot;&gt;&lt;/a&gt;ReactIntl Mixin by Yahoo &lt;a class=&quot;hash-link&quot; href=&quot;#reactintl-mixin-by-yahoo&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
