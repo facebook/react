@@ -29,7 +29,7 @@ One of the best features of React is that it provides the foundations to impleme
 
 ## ReactIntl Mixin by Yahoo
 
-There are a couple of React-related projects that recently appeared on Yahoo's GitHub, the first one being an  [internationalization mixin](https://github.com/yahoo/react-intl). It's great to see them getting excitied about React and contributing back to the community.
+There are a couple of React-related projects that recently appeared on Yahoo's GitHub, the first one being an  [internationalization mixin](https://github.com/yahoo/react-intl). It's great to see them getting excited about React and contributing back to the community.
 
 ```javascript
 var MyComponent = React.createClass({
