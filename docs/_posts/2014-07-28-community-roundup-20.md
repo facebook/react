@@ -22,7 +22,7 @@ At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design d
 
 ## Live Editing
 
-The best feature of React is that it provides fundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
+The best feature of React is that it provides foundations to implement concepts that were otherwise extremely hard to like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... [Dan Abramov](https://twitter.com/dan_abramov) got hot code reloading working with webpack in order to [live edit a React project](http://gaearon.github.io/react-hot-loader/)!
 
 <iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 
