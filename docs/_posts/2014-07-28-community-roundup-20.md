@@ -52,7 +52,7 @@ React.renderComponent(
 
 ## Thinking and Learning React
 
-Josephine Hall, working at Ice Lab studio, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about routing, event dispatch, touchable components, and basic animations. 
+Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about routing, event dispatch, touchable components, and basic animations. 
 
 
 ## London React Meetup
