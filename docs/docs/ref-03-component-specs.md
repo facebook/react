@@ -121,6 +121,8 @@ componentDidMount()
 
 Invoked immediately after rendering occurs, only on the client (not on the server). At this point in the lifecycle, the component has a DOM representation which you can access via `this.getDOMNode()`.
 
+This does not mean that the DOM representation is part of the actual DOM yet. The DOM representation is not added to the actual DOM until all render methods are complete, which allows React to batch DOM updates to reduce reflows and increase browser performance.
+
 If you want to integrate with other JavaScript frameworks, set timers using `setTimeout` or `setInterval`, or send AJAX requests, perform those operations in this method.
 
 > Note:
