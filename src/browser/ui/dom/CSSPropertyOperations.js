@@ -32,8 +32,15 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
+var hasShorthandPropertyBug = false;
 var styleFloatAccessor = 'cssFloat';
 if (ExecutionEnvironment.canUseDOM) {
+  try {
+    // IE8 throws "Invalid argument." if resetting shorthand style properties.
+    document.createElement('div').style.font = '';
+  } catch (e) {
+    hasShorthandPropertyBug = true;
+  }
   // IE8 only supports accessing cssFloat (standard) as styleFloat
   if (document.documentElement.style.cssFloat === undefined) {
     styleFloatAccessor = 'styleFloat';
@@ -118,7 +125,7 @@ var CSSPropertyOperations = {
       }
       if (styleValue) {
         style[styleName] = styleValue;
-      } else {
+      } else if (hasShorthandPropertyBug) {
         var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
         if (expansion) {
           // Shorthand property that IE8 won't like unsetting, so unset each
@@ -129,6 +136,8 @@ var CSSPropertyOperations = {
         } else {
           style[styleName] = '';
         }
+      } else {
+        style[styleName] = '';
       }
     }
   }
