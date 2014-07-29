@@ -61,35 +61,22 @@ var CSSPropertyOperations = {
     return serialized || null;
   },
 
-  /**
-   * Sets the value for multiple styles on a node.  If a value is specified as
-   * '' (empty string), the corresponding style property will be unset.
-   *
-   * @param {DOMElement} node
-   * @param {object} styles
-   */
-  setValueForStyles: function(node, styles) {
+  deleteStyle: function(node, styleName) {
     var style = node.style;
-    for (var styleName in styles) {
-      if (!styles.hasOwnProperty(styleName)) {
-        continue;
+    var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
+    if (expansion) {
+      // Shorthand property that IE8 won't like unsetting, so unset each
+      // component to placate it
+      for (var individualStyleName in expansion) {
+        style[individualStyleName] = '';
       }
-      var styleValue = dangerousStyleValue(styleName, styles[styleName]);
-      if (styleValue) {
-        style[styleName] = styleValue;
-      } else {
-        var expansion = CSSProperty.shorthandPropertyExpansions[styleName];
-        if (expansion) {
-          // Shorthand property that IE8 won't like unsetting, so unset each
-          // component to placate it
-          for (var individualStyleName in expansion) {
-            style[individualStyleName] = '';
-          }
-        } else {
-          style[styleName] = '';
-        }
-      }
+    } else {
+      style[styleName] = '';
     }
+  },
+
+  setValueForStyle: function(node, value, styleName) {
+    node.style[styleName] = dangerousStyleValue(styleName, value);
   }
 
 };

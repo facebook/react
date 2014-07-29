@@ -23,8 +23,9 @@ var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactComponent = require('ReactComponent');
+var diffObjects = require('diffObjects');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
@@ -80,6 +81,13 @@ function putListener(id, registrationName, listener, transaction) {
   );
 }
 
+function updateStyle(key, prevObj, nextObj, id) {
+  ReactComponent.BackendIDOperations.updateStyleByID(id, nextObj[key], key);
+}
+
+function deleteStyle(key, prevObj, nextObj, id) {
+  ReactComponent.BackendIDOperations.deleteStyleByID(id, key);
+}
 
 /**
  * @constructor ReactDOMComponent
@@ -265,81 +273,59 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   _updateDOMProperties: function(lastProps, transaction) {
-    var nextProps = this.props;
-    var propKey;
-    var styleName;
-    var styleUpdates;
-    for (propKey in lastProps) {
-      if (nextProps.hasOwnProperty(propKey) ||
-         !lastProps.hasOwnProperty(propKey)) {
-        continue;
-      }
-      if (propKey === STYLE) {
-        var lastStyle = lastProps[propKey];
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            styleUpdates = styleUpdates || {};
-            styleUpdates[styleName] = '';
-          }
-        }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        deleteListener(this._rootNodeID, propKey);
-      } else if (
-          DOMProperty.isStandardName[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.deletePropertyByID(
-          this._rootNodeID,
-          propKey
-        );
-      }
+    diffObjects(
+      lastProps,
+      this.props,
+      this._deleteEachDOMProperty,
+      this._updateEachDOMProperty,
+      this._rootNodeID,
+      transaction
+    );
+  },
+
+  _deleteEachDOMProperty: function(propKey, prevObj, nextObj, id, transaction) {
+    if (propKey === STYLE) {
+      diffObjects(
+        prevObj[propKey],
+        null,
+        deleteStyle,
+        updateStyle,
+        id,
+        transaction
+      );
+    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      deleteListener(id, propKey);
+    } else if (
+        DOMProperty.isStandardName[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+      ReactComponent.BackendIDOperations.deletePropertyByID(id, propKey);
     }
-    for (propKey in nextProps) {
-      var nextProp = nextProps[propKey];
-      var lastProp = lastProps[propKey];
-      if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
-        continue;
-      }
-      if (propKey === STYLE) {
-        if (nextProp) {
-          nextProp = nextProps.style = merge(nextProp);
-        }
-        if (lastProp) {
-          // Unset styles on `lastProp` but not on `nextProp`.
-          for (styleName in lastProp) {
-            if (lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = '';
-            }
-          }
-          // Update styles that changed since `lastProp`.
-          for (styleName in nextProp) {
-            if (nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]) {
-              styleUpdates = styleUpdates || {};
-              styleUpdates[styleName] = nextProp[styleName];
-            }
-          }
-        } else {
-          // Relies on `updateStylesByID` not mutating `styleUpdates`.
-          styleUpdates = nextProp;
-        }
-      } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        putListener(this._rootNodeID, propKey, nextProp, transaction);
-      } else if (
-          DOMProperty.isStandardName[propKey] ||
-          DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.updatePropertyByID(
-          this._rootNodeID,
-          propKey,
-          nextProp
-        );
-      }
-    }
-    if (styleUpdates) {
-      ReactComponent.BackendIDOperations.updateStylesByID(
-        this._rootNodeID,
-        styleUpdates
+  },
+
+  _updateEachDOMProperty: function(propKey, prevObj, nextObj, id, transaction) {
+    var nextProp = nextObj[propKey];
+
+    if (propKey === STYLE) {
+      // Defensive copy, support the pattern where the user sets the style then
+      // mutates it.
+      nextProp = nextObj.style = merge(nextProp);
+      diffObjects(
+        prevObj[propKey],
+        nextProp,
+        deleteStyle,
+        updateStyle,
+        id,
+        transaction
+      );
+    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+      putListener(id, propKey, nextProp, transaction);
+    } else if (
+        DOMProperty.isStandardName[propKey] ||
+        DOMProperty.isCustomAttribute(propKey)) {
+      ReactComponent.BackendIDOperations.updatePropertyByID(
+        id,
+        propKey,
+        nextProp
       );
     }
   },
