@@ -19,146 +19,9 @@
 
 "use strict";
 
-var ReactComponent = require('ReactComponent');
-var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
-
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-
-/**
- * Updating children of a component may trigger recursive updates. The depth is
- * used to batch recursive updates to render markup more efficiently.
- *
- * @type {number}
- * @private
- */
-var updateDepth = 0;
-
-/**
- * Queue of update configuration objects.
- *
- * Each object has a `type` property that is in `ReactMultiChildUpdateTypes`.
- *
- * @type {array<object>}
- * @private
- */
-var updateQueue = [];
-
-/**
- * Queue of markup to be rendered.
- *
- * @type {array<string>}
- * @private
- */
-var markupQueue = [];
-
-/**
- * Enqueues markup to be rendered and inserted at a supplied index.
- *
- * @param {string} parentID ID of the parent component.
- * @param {string} markup Markup that renders into an element.
- * @param {number} toIndex Destination index.
- * @private
- */
-function enqueueMarkup(parentID, markup, toIndex) {
-  // NOTE: Null values reduce hidden classes.
-  updateQueue.push({
-    parentID: parentID,
-    parentNode: null,
-    type: ReactMultiChildUpdateTypes.INSERT_MARKUP,
-    markupIndex: markupQueue.push(markup) - 1,
-    textContent: null,
-    fromIndex: null,
-    toIndex: toIndex
-  });
-}
-
-/**
- * Enqueues moving an existing element to another index.
- *
- * @param {string} parentID ID of the parent component.
- * @param {number} fromIndex Source index of the existing element.
- * @param {number} toIndex Destination index of the element.
- * @private
- */
-function enqueueMove(parentID, fromIndex, toIndex) {
-  // NOTE: Null values reduce hidden classes.
-  updateQueue.push({
-    parentID: parentID,
-    parentNode: null,
-    type: ReactMultiChildUpdateTypes.MOVE_EXISTING,
-    markupIndex: null,
-    textContent: null,
-    fromIndex: fromIndex,
-    toIndex: toIndex
-  });
-}
-
-/**
- * Enqueues removing an element at an index.
- *
- * @param {string} parentID ID of the parent component.
- * @param {number} fromIndex Index of the element to remove.
- * @private
- */
-function enqueueRemove(parentID, fromIndex) {
-  // NOTE: Null values reduce hidden classes.
-  updateQueue.push({
-    parentID: parentID,
-    parentNode: null,
-    type: ReactMultiChildUpdateTypes.REMOVE_NODE,
-    markupIndex: null,
-    textContent: null,
-    fromIndex: fromIndex,
-    toIndex: null
-  });
-}
-
-/**
- * Enqueues setting the text content.
- *
- * @param {string} parentID ID of the parent component.
- * @param {string} textContent Text content to set.
- * @private
- */
-function enqueueTextContent(parentID, textContent) {
-  // NOTE: Null values reduce hidden classes.
-  updateQueue.push({
-    parentID: parentID,
-    parentNode: null,
-    type: ReactMultiChildUpdateTypes.TEXT_CONTENT,
-    markupIndex: null,
-    textContent: textContent,
-    fromIndex: null,
-    toIndex: null
-  });
-}
-
-/**
- * Processes any enqueued updates.
- *
- * @private
- */
-function processQueue() {
-  if (updateQueue.length) {
-    ReactComponent.BackendIDOperations.dangerouslyProcessChildrenUpdates(
-      updateQueue,
-      markupQueue
-    );
-    clearQueue();
-  }
-}
-
-/**
- * Clears any enqueued updates.
- *
- * @private
- */
-function clearQueue() {
-  updateQueue.length = 0;
-  markupQueue.length = 0;
-}
 
 /**
  * ReactMultiChild are capable of reconciling multiple children.
@@ -216,28 +79,19 @@ var ReactMultiChild = {
      * Replaces any rendered children with a text content string.
      *
      * @param {string} nextContent String of content.
+     * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    updateTextContent: function(nextContent) {
-      updateDepth++;
-      var errorThrown = true;
-      try {
-        var prevChildren = this._renderedChildren;
-        // Remove any rendered children.
-        for (var name in prevChildren) {
-          if (prevChildren.hasOwnProperty(name)) {
-            this._unmountChildByName(prevChildren[name], name);
-          }
-        }
-        // Set new text content.
-        this.setTextContent(nextContent);
-        errorThrown = false;
-      } finally {
-        updateDepth--;
-        if (!updateDepth) {
-          errorThrown ? clearQueue() : processQueue();
+    updateTextContent: function(nextContent, transaction) {
+      var prevChildren = this._renderedChildren;
+      // Remove any rendered children.
+      for (var name in prevChildren) {
+        if (prevChildren.hasOwnProperty(name)) {
+          this._unmountChildByName(prevChildren[name], name, transaction);
         }
       }
+      // Set new text content.
+      this.setTextContent(nextContent, transaction);
     },
 
     /**
@@ -248,17 +102,7 @@ var ReactMultiChild = {
      * @internal
      */
     updateChildren: function(nextNestedChildren, transaction) {
-      updateDepth++;
-      var errorThrown = true;
-      try {
-        this._updateChildren(nextNestedChildren, transaction);
-        errorThrown = false;
-      } finally {
-        updateDepth--;
-        if (!updateDepth) {
-          errorThrown ? clearQueue() : processQueue();
-        }
-      }
+      this._updateChildren(nextNestedChildren, transaction);
     },
 
     /**
@@ -289,7 +133,7 @@ var ReactMultiChild = {
         var prevDescriptor = prevChild && prevChild._descriptor;
         var nextDescriptor = nextChildren[name];
         if (shouldUpdateReactComponent(prevDescriptor, nextDescriptor)) {
-          this.moveChild(prevChild, nextIndex, lastIndex);
+          this.moveChild(prevChild, nextIndex, lastIndex, transaction);
           lastIndex = Math.max(prevChild._mountIndex, lastIndex);
           prevChild.receiveComponent(nextDescriptor, transaction);
           prevChild._mountIndex = nextIndex;
@@ -297,7 +141,7 @@ var ReactMultiChild = {
           if (prevChild) {
             // Update `lastIndex` before `_mountIndex` gets unset by unmounting.
             lastIndex = Math.max(prevChild._mountIndex, lastIndex);
-            this._unmountChildByName(prevChild, name);
+            this._unmountChildByName(prevChild, name, transaction);
           }
           // The child must be instantiated before it's mounted.
           var nextChildInstance = instantiateReactComponent(nextDescriptor);
@@ -311,7 +155,7 @@ var ReactMultiChild = {
       for (name in prevChildren) {
         if (prevChildren.hasOwnProperty(name) &&
             !(nextChildren && nextChildren[name])) {
-          this._unmountChildByName(prevChildren[name], name);
+          this._unmountChildByName(prevChildren[name], name, transaction);
         }
       }
     },
@@ -340,14 +184,19 @@ var ReactMultiChild = {
      * @param {ReactComponent} child Component to move.
      * @param {number} toIndex Destination index of the element.
      * @param {number} lastIndex Last index visited of the siblings of `child`.
+     * @param {ReactReconcileTransaction} transaction
      * @protected
      */
-    moveChild: function(child, toIndex, lastIndex) {
+    moveChild: function(child, toIndex, lastIndex, transaction) {
       // If the index of `child` is less than `lastIndex`, then it needs to
       // be moved. Otherwise, we do not need to move it because a child will be
       // inserted or moved before `child`.
       if (child._mountIndex < lastIndex) {
-        enqueueMove(this._rootNodeID, child._mountIndex, toIndex);
+        transaction.getMultiChildUpdateQueue().enqueueMove(
+          this._rootNodeID,
+          child._mountIndex,
+          toIndex
+        );
       }
     },
 
@@ -356,30 +205,43 @@ var ReactMultiChild = {
      *
      * @param {ReactComponent} child Component to create.
      * @param {string} mountImage Markup to insert.
+     * @param {ReactReconcileTransaction} transaction
      * @protected
      */
-    createChild: function(child, mountImage) {
-      enqueueMarkup(this._rootNodeID, mountImage, child._mountIndex);
+    createChild: function(child, mountImage, transaction) {
+      transaction.getMultiChildUpdateQueue().enqueueMarkup(
+        this._rootNodeID,
+        mountImage,
+        child._mountIndex
+      );
     },
 
     /**
      * Removes a child component.
      *
      * @param {ReactComponent} child Child to remove.
+     * @param {ReactReconcileTransaction} transaction
      * @protected
      */
-    removeChild: function(child) {
-      enqueueRemove(this._rootNodeID, child._mountIndex);
+    removeChild: function(child, transaction) {
+      transaction.getMultiChildUpdateQueue().enqueueRemove(
+        this._rootNodeID,
+        child._mountIndex
+      );
     },
 
     /**
      * Sets this text content string.
      *
      * @param {string} textContent Text content to set.
+     * @param {ReactReconcileTransaction} transaction
      * @protected
      */
-    setTextContent: function(textContent) {
-      enqueueTextContent(this._rootNodeID, textContent);
+    setTextContent: function(textContent, transaction) {
+      transaction.getMultiChildUpdateQueue().enqueueTextContent(
+        this._rootNodeID,
+        textContent
+      );
     },
 
     /**
@@ -402,7 +264,7 @@ var ReactMultiChild = {
         this._mountDepth + 1
       );
       child._mountIndex = index;
-      this.createChild(child, mountImage);
+      this.createChild(child, mountImage, transaction);
       this._renderedChildren = this._renderedChildren || {};
       this._renderedChildren[name] = child;
     },
@@ -414,10 +276,11 @@ var ReactMultiChild = {
      *
      * @param {ReactComponent} child Component to unmount.
      * @param {string} name Name of the child in `this._renderedChildren`.
+     * @param {ReactReconcileTransaction} transaction
      * @private
      */
-    _unmountChildByName: function(child, name) {
-      this.removeChild(child);
+    _unmountChildByName: function(child, name, transaction) {
+      this.removeChild(child, transaction);
       child._mountIndex = null;
       child.unmountComponent();
       delete this._renderedChildren[name];
