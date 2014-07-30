@@ -27,6 +27,8 @@ Merges nextState with the current state. This is the primary method you use to t
 > `setState()` does not immediately mutate `this.state` but creates a pending state transition. Accessing `this.state` after calling this method can potentially return the existing value.
 >
 > There is no guarantee of synchronous operation of calls to `setState` and calls may be batched for performance gains.
+>
+> `setState()` will always trigger a re-render unless conditional rendering logic is implemented in `shouldComponentUpdate()`. If mutable objects are being used and the logic cannot be implemented in `shouldComponentUpdate()`, calling `setState()` only when the new state differs from the previous state will avoid unnecessary re-renders.
 
 
 ### replaceState
