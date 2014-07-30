@@ -48,7 +48,9 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 * IRC - [#reactjs on freenode](http://webchat.freenode.net/?channels=reactjs)
 * Mailing list - [reactjs on Google Groups](http://groups.google.com/group/reactjs)
 
-## Coding Style
+## Style Guide
+
+### Code
 
 * Use semicolons;
 * Commas last,
@@ -58,6 +60,10 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 * 80 character line length
 * "Attractive"
 * Do not use the optional parameters of `setTimeout` and `setInterval`
+
+### Documentation
+
+* Do not wrap lines at 80 characters
 
 ## License
 
