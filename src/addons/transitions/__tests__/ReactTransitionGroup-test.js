@@ -209,4 +209,56 @@ describe('ReactTransitionGroup', function() {
       'didMount', 'didMount', 'willEnter', 'didEnter'
     ]);
   });
+
+  it('should trigger willEnter/Leave when the child count did not change',
+    function() {
+      var log = [];
+
+      var Child = React.createClass({
+        componentWillEnter: function(cb) {
+          log.push('willEnter');
+          cb();
+        },
+        componentWillLeave: function(cb) {
+          log.push('willLeave');
+          cb();
+        },
+        render: function() {
+          return <span />;
+        }
+      });
+
+      var Component = React.createClass({
+        render: function() {
+          var group;
+
+          if (this.props.nullChildren) {
+            group = <ReactTransitionGroup>{null}{null}</ReactTransitionGroup>;
+          } else {
+            group =
+              <ReactTransitionGroup>
+                <Child />
+                <Child />
+              </ReactTransitionGroup>;
+          }
+
+          return group;
+        }
+      });
+
+      React.renderComponent(<Component />, container);
+      expect(log.length).toBe(0);
+      React.renderComponent(<Component nullChildren={true} />, container);
+      expect(log).toEqual(['willLeave', 'willLeave']);
+
+      // phantomjs behaves differently than normal chrome. We can't directly
+      // update the component with nullChildren={false} to make the children
+      // reappear for some reason. It does works in normal chrome and ff.
+      var newContainer = document.createElement('div');
+      log = [];
+      React.renderComponent(<Component nullChildren={true} />, newContainer);
+      React.renderComponent(<Component />, newContainer);
+      expect(log).toEqual(['willEnter', 'willEnter']);
+    }
+  );
 });

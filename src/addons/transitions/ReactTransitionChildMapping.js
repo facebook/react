@@ -23,16 +23,31 @@ var ReactChildren = require('ReactChildren');
 
 var ReactTransitionChildMapping = {
   /**
-   * Given `this.props.children`, return an object mapping key to child. Just
-   * simple syntactic sugar around ReactChildren.map().
+   * Given `this.props.children`, return an object mapping key to child. `null`
+   * and `undefined` are stripped.
    *
    * @param {*} children `this.props.children`
    * @return {object} Mapping of key to child
    */
   getChildMapping: function(children) {
-    return ReactChildren.map(children, function(child) {
+    var mapping = ReactChildren.map(children, function(child) {
       return child;
     });
+
+    // We remove null children here so that `mergeChildMappings`'s merging can
+    // focus on its job of reasoning about old/new keys rather than checking the
+    // content that those keys carry. For the purpose of TransitionGroup, a null
+    // child is the same as not having a child.
+    for (var key in mapping) {
+      if (!mapping.hasOwnProperty(key)) {
+        continue;
+      }
+      if (mapping[key] == null) {
+        delete mapping[key];
+      }
+    }
+
+    return mapping;
   },
 
   /**

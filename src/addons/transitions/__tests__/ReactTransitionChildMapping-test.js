@@ -42,6 +42,19 @@ describe('ReactTransitionChildMapping', function() {
     });
   });
 
+  it('should special case getChildMapping with object with null values',
+    function() {
+      var two = <div key="two" />;
+      var component = <div>{null}{two}{null}</div>;
+
+      expect(
+        ReactTransitionChildMapping.getChildMapping(component.props.children)
+      ).toEqual({
+        '.$two': two
+      });
+    }
+  );
+
   it('should support mergeChildMappings for adding keys', function() {
     var prev = {
       one: true,
