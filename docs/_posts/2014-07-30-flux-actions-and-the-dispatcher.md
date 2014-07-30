@@ -24,6 +24,8 @@ Different actions are identified by a type attribute. When all of the stores rec
 
 Letting the stores update themselves eliminates many entanglements typically found in MVC applications, where cascading updates between models can lead to unstable state and make accurate testing very difficult. The objects within a Flux application are highly decoupled, and adhere very strongly to the [Law of Demeter](http://en.wikipedia.org/wiki/Law_of_Demeter), the principle that each object within a system should know as little as possible about the other objects in the system. This results in software that is more maintainable, adaptable, testable, and easier for new engineering team members to understand.
 
+<img src="/react/img/blog/flux-diagram.png" style="width: 100%;" />
+
 
 Why We Need a Dispatcher
 ------------------------
