@@ -303,18 +303,20 @@ ReactDOMComponent.Mixin = {
    *
    * @param {ReactReconcileTransaction} transaction
    * @param {ReactElement} prevElement
+   * @param {ReactElement} nextElement
    * @internal
    * @overridable
    */
   updateComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'updateComponent',
-    function(transaction, prevElement) {
+    function(transaction, prevElement, nextElement) {
       assertValidProps(this._currentElement.props);
       ReactComponent.Mixin.updateComponent.call(
         this,
         transaction,
-        prevElement
+        prevElement,
+        nextElement
       );
       this._updateDOMProperties(prevElement.props, transaction);
       this._updateDOMChildren(prevElement.props, transaction);

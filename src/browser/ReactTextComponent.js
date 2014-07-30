@@ -18,6 +18,7 @@ var ReactElement = require('ReactElement');
 
 var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
+var invariant = require('invariant');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -84,12 +85,22 @@ assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
   receiveComponent: function(nextComponent, transaction) {
     var nextProps = nextComponent.props;
     if (nextProps !== this.props) {
+      // TODO: Save this as pending props and use performUpdateIfNecessary
+      // and/or updateComponent to do the actual update for consistency with
+      // other component types?
       this.props = nextProps;
       ReactComponent.BackendIDOperations.updateTextContentByID(
         this._rootNodeID,
         nextProps
       );
     }
+  },
+
+  updateComponent: function() {
+    invariant(
+      false,
+      'ReactTextComponent: updateComponent() should never be called'
+    );
   }
 
 });

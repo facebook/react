@@ -1006,6 +1006,26 @@ var ReactCompositeComponentMixin = {
     }
   },
 
+  receiveComponent: function(nextElement, transaction) {
+    if (nextElement === this._currentElement &&
+        nextElement._owner != null) {
+      // Since elements are immutable after the owner is rendered,
+      // we can do a cheap identity compare here to determine if this is a
+      // superfluous reconcile. It's possible for state to be mutable but such
+      // change should trigger an update of the owner which would recreate
+      // the element. We explicitly check for the existence of an owner since
+      // it's possible for an element created outside a composite to be
+      // deeply mutated and reused.
+      return;
+    }
+
+    ReactComponent.Mixin.receiveComponent.call(
+      this,
+      nextElement,
+      transaction
+    );
+  },
+
   /**
    * If any of `_pendingElement`, `_pendingState`, or `_pendingForceUpdate`
    * is set, update the component.
@@ -1028,64 +1048,107 @@ var ReactCompositeComponentMixin = {
       return;
     }
 
-    var nextContext = this.context;
-    var nextProps = this.props;
-    var nextElement = this._currentElement;
+    var prevElement = this._currentElement;
+    var nextElement = prevElement;
     if (this._pendingElement != null) {
       nextElement = this._pendingElement;
-      nextContext = this._processContext(nextElement._context);
-      nextProps = this._processProps(nextElement.props);
       this._pendingElement = null;
-
-      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
-      if (this.componentWillReceiveProps) {
-        this.componentWillReceiveProps(nextProps, nextContext);
-      }
     }
 
-    this._compositeLifeCycleState = null;
+    this.updateComponent(
+      transaction,
+      prevElement,
+      nextElement
+    );
+  },
 
-    var nextState = this._pendingState || this.state;
-    this._pendingState = null;
+  /**
+   * Perform an update to a mounted component. The componentWillReceiveProps and
+   * shouldComponentUpdate methods are called, then (assuming the update isn't
+   * skipped) the remaining update lifecycle methods are called and the DOM
+   * representation is updated.
+   *
+   * By default, this implements React's rendering and reconciliation algorithm.
+   * Sophisticated clients may wish to override this.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactElement} prevParentElement
+   * @param {ReactElement} nextParentElement
+   * @internal
+   * @overridable
+   */
+  updateComponent: ReactPerf.measure(
+    'ReactCompositeComponent',
+    'updateComponent',
+    function(transaction, prevParentElement, nextParentElement) {
+      // Update refs regardless of what shouldComponentUpdate returns
+      ReactComponent.Mixin.updateComponent.call(
+        this,
+        transaction,
+        prevParentElement,
+        nextParentElement
+      );
 
-    var shouldUpdate =
-      this._pendingForceUpdate ||
-      !this.shouldComponentUpdate ||
-      this.shouldComponentUpdate(nextProps, nextState, nextContext);
+      var prevContext = this.context;
+      var prevProps = this.props;
+      var nextContext = prevContext;
+      var nextProps = prevProps;
+      // Distinguish between a props update versus a simple state update
+      if (prevParentElement !== nextParentElement) {
+        nextContext = this._processContext(nextParentElement._context);
+        nextProps = this._processProps(nextParentElement.props);
 
-    if (__DEV__) {
-      if (typeof shouldUpdate === "undefined") {
-        console.warn(
-          (this.constructor.displayName || 'ReactCompositeComponent') +
-          '.shouldComponentUpdate(): Returned undefined instead of a ' +
-          'boolean value. Make sure to return true or false.'
-        );
+        this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
+        if (this.componentWillReceiveProps) {
+          this.componentWillReceiveProps(nextProps, nextContext);
+        }
       }
-    }
 
-    if (shouldUpdate) {
+      this._compositeLifeCycleState = null;
+
+      var nextState = this._pendingState || this.state;
+      this._pendingState = null;
+
+      var shouldUpdate =
+        this._pendingForceUpdate ||
+        !this.shouldComponentUpdate ||
+        this.shouldComponentUpdate(nextProps, nextState, nextContext);
+
+      if (__DEV__) {
+        if (typeof shouldUpdate === "undefined") {
+          console.warn(
+            (this.constructor.displayName || 'ReactCompositeComponent') +
+            '.shouldComponentUpdate(): Returned undefined instead of a ' +
+            'boolean value. Make sure to return true or false.'
+          );
+        }
+      }
+
+      if (!shouldUpdate) {
+        // If it's determined that a component should not update, we still want
+        // to set props and state but we shortcut the rest of the update.
+        this._currentElement = nextParentElement;
+        this.props = nextProps;
+        this.state = nextState;
+        this.context = nextContext;
+
+        // Owner cannot change because shouldUpdateReactComponent doesn't allow
+        // it. TODO: Remove this._owner completely.
+        this._owner = nextParentElement._owner;
+
+        return;
+      }
+
       this._pendingForceUpdate = false;
       // Will set `this.props`, `this.state` and `this.context`.
       this._performComponentUpdate(
-        nextElement,
+        nextParentElement,
         nextProps,
         nextState,
         nextContext,
         transaction
       );
-    } else {
-      // If it's determined that a component should not update, we still want
-      // to set props and state.
-      this._currentElement = nextElement;
-      this.props = nextProps;
-      this.state = nextState;
-      this.context = nextContext;
-
-      // Owner cannot change because shouldUpdateReactComponent doesn't allow
-      // it. TODO: Remove this._owner completely.
-      this._owner = nextElement._owner;
-    }
-  },
+    }),
 
   /**
    * Merges new props and state, notifies delegate methods of update and
@@ -1105,7 +1168,6 @@ var ReactCompositeComponentMixin = {
     nextContext,
     transaction
   ) {
-    var prevElement = this._currentElement;
     var prevProps = this.props;
     var prevState = this.state;
     var prevContext = this.context;
@@ -1123,10 +1185,7 @@ var ReactCompositeComponentMixin = {
     // it. TODO: Remove this._owner completely.
     this._owner = nextElement._owner;
 
-    this.updateComponent(
-      transaction,
-      prevElement
-    );
+    this._updateRenderedComponent(transaction);
 
     if (this.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -1136,73 +1195,41 @@ var ReactCompositeComponentMixin = {
     }
   },
 
-  receiveComponent: function(nextElement, transaction) {
-    if (nextElement === this._currentElement &&
-        nextElement._owner != null) {
-      // Since elements are immutable after the owner is rendered,
-      // we can do a cheap identity compare here to determine if this is a
-      // superfluous reconcile. It's possible for state to be mutable but such
-      // change should trigger an update of the owner which would recreate
-      // the element. We explicitly check for the existence of an owner since
-      // it's possible for a element created outside a composite to be
-      // deeply mutated and reused.
-      return;
-    }
-
-    ReactComponent.Mixin.receiveComponent.call(
-      this,
-      nextElement,
-      transaction
-    );
-  },
-
   /**
-   * Updates the component's currently mounted DOM representation.
-   *
-   * By default, this implements React's rendering and reconciliation algorithm.
-   * Sophisticated clients may wish to override this.
+   * Call the component's `render` method and update the DOM accordingly.
    *
    * @param {ReactReconcileTransaction} transaction
-   * @param {ReactElement} prevElement
    * @internal
-   * @overridable
    */
-  updateComponent: ReactPerf.measure(
-    'ReactCompositeComponent',
-    'updateComponent',
-    function(transaction, prevParentElement) {
-      ReactComponent.Mixin.updateComponent.call(
-        this,
-        transaction,
-        prevParentElement
+  _updateRenderedComponent: function(transaction) {
+    var prevComponentInstance = this._renderedComponent;
+    var prevRenderedElement = prevComponentInstance._currentElement;
+    var nextRenderedElement = this._renderValidatedComponent();
+    if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
+      prevComponentInstance.receiveComponent(
+        nextRenderedElement,
+        transaction
       );
-
-      var prevComponentInstance = this._renderedComponent;
-      var prevElement = prevComponentInstance._currentElement;
-      var nextElement = this._renderValidatedComponent();
-      if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        prevComponentInstance.receiveComponent(nextElement, transaction);
-      } else {
-        // These two IDs are actually the same! But nothing should rely on that.
-        var thisID = this._rootNodeID;
-        var prevComponentID = prevComponentInstance._rootNodeID;
-        prevComponentInstance.unmountComponent();
-        this._renderedComponent = instantiateReactComponent(
-          nextElement,
-          this._currentElement.type
-        );
-        var nextMarkup = this._renderedComponent.mountComponent(
-          thisID,
-          transaction,
-          this._mountDepth + 1
-        );
-        ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
-          prevComponentID,
-          nextMarkup
-        );
-      }
+    } else {
+      // These two IDs are actually the same! But nothing should rely on that.
+      var thisID = this._rootNodeID;
+      var prevComponentID = prevComponentInstance._rootNodeID;
+      prevComponentInstance.unmountComponent();
+      this._renderedComponent = instantiateReactComponent(
+        nextRenderedElement,
+        this._currentElement.type
+      );
+      var nextMarkup = this._renderedComponent.mountComponent(
+        thisID,
+        transaction,
+        this._mountDepth + 1
+      );
+      ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+        prevComponentID,
+        nextMarkup
+      );
     }
-  ),
+  },
 
   /**
    * Forces an update. This should only be invoked when it is known with

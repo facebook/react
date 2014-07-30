@@ -323,7 +323,7 @@ var ReactComponent = {
       this.props = nextElement.props;
       this._owner = nextElement._owner;
       this._pendingElement = null;
-      this.updateComponent(transaction, prevElement);
+      this.updateComponent(transaction, prevElement, nextElement);
     },
 
     /**
@@ -331,11 +331,10 @@ var ReactComponent = {
      *
      * @param {ReactReconcileTransaction} transaction
      * @param {object} prevElement
+     * @param {object} nextElement
      * @internal
      */
-    updateComponent: function(transaction, prevElement) {
-      var nextElement = this._currentElement;
-
+    updateComponent: function(transaction, prevElement, nextElement) {
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`. We use the element instead

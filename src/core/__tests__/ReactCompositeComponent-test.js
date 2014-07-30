@@ -1483,4 +1483,40 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should update refs if shouldComponentUpdate gives false', function() {
+    var Static = React.createClass({
+      shouldComponentUpdate: function() {
+        return false;
+      },
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+    var Component = React.createClass({
+      render: function() {
+        if (this.props.flipped) {
+          return <div>
+            <Static ref="static0" key="B">B (ignored)</Static>
+            <Static ref="static1" key="A">A (ignored)</Static>
+          </div>;
+        } else {
+          return <div>
+            <Static ref="static0" key="A">A</Static>
+            <Static ref="static1" key="B">B</Static>
+          </div>;
+        }
+      }
+    });
+
+    var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
+    expect(comp.refs.static0.getDOMNode().textContent).toBe('A');
+    expect(comp.refs.static1.getDOMNode().textContent).toBe('B');
+
+    // When flipping the order, the refs should update even though the actual
+    // contents do not
+    comp.setProps({flipped: true});
+    expect(comp.refs.static0.getDOMNode().textContent).toBe('B');
+    expect(comp.refs.static1.getDOMNode().textContent).toBe('A');
+  });
+
 });
