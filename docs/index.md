@@ -17,8 +17,9 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. It can also
-        render on the server using Node.js &mdash; no heavy browser DOM required.
+        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. Render as
+        much as you want, the DOM will only be touched if it needs to change. It can also render on the
+        server using Node.js &mdash; no heavy browser DOM required.
       </p>
     </div>
     <div class="marketing-col">
