@@ -20,8 +20,9 @@
 
 var buffer = require('buffer');
 var docblock = require('jstransform/src/docblock');
-var transform = require('jstransform').transform;
-var visitors = require('./fbtransform/visitors');
+// var transform = require('jstransform').transform;
+// var visitors = require('./fbtransform/visitors');
+var ReactTools = require('react-tools');
 
 var headEl;
 var dummyAnchor;
@@ -41,17 +42,13 @@ var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
  * @return {object} object as returned from jstransform
  */
 function transformReact(source, options) {
-  // TODO: just use react-tools
-  var visitorList;
-  if (options && options.harmony) {
-    visitorList = visitors.getAllVisitors();
-  } else {
-    visitorList = visitors.transformVisitors.react;
-  }
-
-  return transform(visitorList, source, {
+  var opts = {
+    harmony: options && options.harmony,
     sourceMap: supportsAccessors
-  });
+  };
+
+  // Current API of this is { code: result }, so use transformWithDetails
+  return ReactTools.transformWithDetails(source, opts);
 }
 
 /**

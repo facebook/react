@@ -1,0 +1,55 @@
+{
+  "name": "react-tools",
+  "description": "A set of complementary tools to React, including the JSX transformer.",
+  "version": "0.12.0-alpha",
+  "keywords": [
+    "react",
+    "jsx",
+    "transformer",
+    "view"
+  ],
+  "homepage": "http://facebook.github.io/react",
+  "bugs": "https://github.com/facebook/react/issues",
+  "licenses": [
+    {
+      "type": "Apache-2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "files": [
+    "main.js",
+    "bin/jsx",
+    "lib/"
+  ],
+  "main": "main.js",
+  "bin": {
+    "jsx": "./bin/jsx"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react"
+  },
+  "dependencies": {
+    "commoner": "^0.9.6",
+    "esprima-fb": "^4001.3001.0-dev-harmony-fb",
+    "jstransform": "^6.0.1"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "preferGlobal": true,
+  "commonerConfig": {
+    "version": 4
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/grunt test"
+  },
+  "jest": {
+    "rootDir": "src",
+    "scriptPreprocessor": "../jest/preprocessor.js",
+    "setupEnvScriptFile": "../jest/environment.js",
+    "unmockedModulePathPatterns": [
+      ""
+    ]
+  }
+}

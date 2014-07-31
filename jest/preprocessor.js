@@ -1,6 +1,6 @@
 "use strict";
 
-var ReactTools = require('../main.js');
+var ReactTools = require('react-tools');
 
 module.exports = {
   process: function(src) {

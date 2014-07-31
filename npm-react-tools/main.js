@@ -1,6 +1,6 @@
 'use strict';
 
-var visitors = require('./vendor/fbtransform/visitors');
+var visitors = require('./lib/visitors');
 var transform = require('jstransform').transform;
 var Buffer = require('buffer').Buffer;
 
