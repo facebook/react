@@ -184,8 +184,21 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrow(
       'Invariant Violation: Component.render(): A valid ReactComponent must ' +
-      'be returned. You may have returned undefined, an array or some other ' +
-      'invalid object.'
+      'be returned. You have returned (Undefined) `undefined`'
+    );
+  });
+
+  it('should still throw when rendering to an array', () => {
+    var Component = React.createClass({
+      render: function() {
+        return [];
+      }
+    });
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrow(
+      'Invariant Violation: Component.render(): A valid ReactComponent must ' +
+      'be returned. You have returned (Array) ``'
     );
   });
 

@@ -1233,9 +1233,13 @@ var ReactCompositeComponentMixin = {
       }
       invariant(
         ReactDescriptor.isValidDescriptor(renderedComponent),
-        '%s.render(): A valid ReactComponent must be returned. You may have ' +
-          'returned undefined, an array or some other invalid object.',
-        this.constructor.displayName || 'ReactCompositeComponent'
+        '%s.render(): A valid ReactComponent must be returned. You have ' +
+          'returned (%s) `%s`',
+        this.constructor.displayName || 'ReactCompositeComponent',
+        renderedComponent === undefined 
+          ? 'Undefined' 
+          : Object.prototype.toString.call(renderedComponent).slice(8, -1),
+        renderedComponent
       );
       return renderedComponent;
     }
