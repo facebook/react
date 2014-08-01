@@ -30,11 +30,10 @@ var merge = require('merge');
 // Store a reference to the <select> `ReactDOMComponent`.
 var select = ReactDOM.select;
 
-function updateWithPendingValueIfMounted() {
+function forceUpdateIfMounted() {
   /*jshint validthis:true */
   if (this.isMounted()) {
-    this.setState({value: this._pendingValue});
-    this._pendingValue = 0;
+    this.forceUpdate();
   }
 }
 
@@ -95,6 +94,27 @@ function updateOptions(component, propValue) {
 }
 
 /**
+ * Return the current selection of the <select> element (array of option values
+ * if this.props.multiple, otherwise a single option value).
+ */
+function getSelectedValue(component) {
+  var node = component.getDOMNode();
+  var selectedValue;
+  if (component.props.multiple) {
+    selectedValue = [];
+    var options = node.options;
+    for (var i = 0, l = options.length; i < l; i++) {
+      if (options[i].selected) {
+        selectedValue.push(options[i].value);
+      }
+    }
+  } else {
+    selectedValue = node.value;
+  }
+  return selectedValue;
+}
+
+/**
  * Implements a <select> native component that allows optionally setting the
  * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
  * string. If `multiple` is true, the prop must be an array of strings.
@@ -127,20 +147,19 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     this._pendingValue = null;
   },
 
-  componentWillReceiveProps: function(nextProps) {
-    if (!this.props.multiple && nextProps.multiple) {
-      this.setState({value: [this.state.value]});
-    } else if (this.props.multiple && !nextProps.multiple) {
-      this.setState({value: this.state.value[0]});
-    }
-  },
-
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.onChange = this._handleChange;
     props.value = null;
+
+    // Avoid binding top-level events if only uncontrolled inputs are used
+    if (LinkedValueUtils.getValue(this) != null ||
+        LinkedValueUtils.getOnChange(this) != null) {
+      props.onChange = this._handleChange;
+    } else {
+      props.onChange = null;
+    }
 
     return select(props, this.props.children);
   },
@@ -149,13 +168,24 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     updateOptions(this, LinkedValueUtils.getValue(this));
   },
 
+  componentWillUpdate: function(nextProps) {
+    if (!this.props.multiple && nextProps.multiple) {
+      this._pendingValue = [getSelectedValue(this)];
+    } else if (this.props.multiple && !nextProps.multiple) {
+      this._pendingValue = getSelectedValue(this)[0];
+    }
+  },
+
   componentDidUpdate: function(prevProps) {
     var value = LinkedValueUtils.getValue(this);
     var prevMultiple = !!prevProps.multiple;
     var multiple = !!this.props.multiple;
-    if (value != null || prevMultiple !== multiple) {
+    if (value != null) {
       updateOptions(this, value);
+    } else if (prevMultiple !== multiple) {
+      updateOptions(this, this._pendingValue);
     }
+    this._pendingValue = null;
   },
 
   _handleChange: function(event) {
@@ -165,21 +195,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
       returnValue = onChange.call(this, event);
     }
 
-    var selectedValue;
-    if (this.props.multiple) {
-      selectedValue = [];
-      var options = event.target.options;
-      for (var i = 0, l = options.length; i < l; i++) {
-        if (options[i].selected) {
-          selectedValue.push(options[i].value);
-        }
-      }
-    } else {
-      selectedValue = event.target.value;
-    }
-
-    this._pendingValue = selectedValue;
-    ReactUpdates.setImmediate(updateWithPendingValueIfMounted, this);
+    ReactUpdates.setImmediate(forceUpdateIfMounted, this);
     return returnValue;
   }
 

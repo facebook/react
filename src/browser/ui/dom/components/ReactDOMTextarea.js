@@ -111,7 +111,14 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
 
     props.defaultValue = null;
     props.value = null;
-    props.onChange = this._handleChange;
+
+    // Avoid binding top-level events if only uncontrolled inputs are used
+    if (LinkedValueUtils.getValue(this) != null ||
+        LinkedValueUtils.getOnChange(this) != null) {
+      props.onChange = this._handleChange;
+    } else {
+      props.onChange = null;
+    }
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.

@@ -84,7 +84,21 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     var checked = LinkedValueUtils.getChecked(this);
     props.checked = checked != null ? checked : this.state.initialChecked;
 
-    props.onChange = this._handleChange;
+    // Skip attaching top-level event handlers to an uncontrolled input with no
+    // onChange handler -- in the case of radio buttons, we still need the
+    // handler even if this radio button is "uncontrolled" because clicking A in
+    //   <input type="radio" name="x" value="A" />
+    //   <input type="radio" name="x" value="B" checked={true} />
+    // shouldn't uncheck B. (If we had a "weak listen" operation that put the
+    // listener but didn't attach the handlers to the DOM, we could use that
+    // instead for uncontrolled radios.)
+    if (value != null || checked != null ||
+        LinkedValueUtils.getOnChange(this) != null ||
+        this.props.type === "radio") {
+      props.onChange = this._handleChange;
+    } else {
+      props.onChange = null;
+    }
 
     return input(props, this.props.children);
   },
