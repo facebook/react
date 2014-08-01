@@ -50,7 +50,7 @@ function renderComponentToString(component) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(component);
-      var markup = componentInstance.mountComponent(id, transaction, 0);
+      var markup = componentInstance.mountComponent(null, id, transaction, 0);
       return ReactMarkupChecksum.addChecksumToMarkup(markup);
     }, null);
   } finally {
@@ -76,7 +76,7 @@ function renderComponentToStaticMarkup(component) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(component);
-      return componentInstance.mountComponent(id, transaction, 0);
+      return componentInstance.mountComponent(null, id, transaction, 0);
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);
