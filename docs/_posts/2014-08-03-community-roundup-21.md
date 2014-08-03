@@ -20,7 +20,7 @@ React.renderComponent((
 ), document.body);
 ```
 
-## Going big with React
+## Going Big with React
 
 Areeb Malik, from Facebook, talks about his experience using React. "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale"
 
@@ -35,22 +35,22 @@ Areeb Malik, from Facebook, talks about his experience using React. "On paper, a
 
 [Craig McKeachie](http://www.funnyant.com/author/admin/) author of [Javascript Framework Guide](http://www.funnyant.com/javascript-framework-guide/) wrote an excellent news named ["What is React.js? Another Template Library?](http://www.funnyant.com/reactjs-what-is-it/)
 
-- Is React a Template Library?
-- Is React Similar to Web Components?
-- Are the Virtual DOM and Shadow DOM the Same?
-- Can React be used with other JavaScript MVC Frameworks?
-- Who Uses React.js?
-- Is React a Premature Optimization if you aren’t Facebook or Instagram?
-- Can I Work with Designers?
-- Will React Hurt my Search Engine Optimization (SEO)?
-- Is React a Framework for Building Applications or a Library with One Feature?
+- Is React a template library?
+- Is React similar to Web Components?
+- Are the Virtual DOM and Shadow DOM the same?
+- Can React be used with other JavaScript MVC frameworks?
+- Who uses React?
+- Is React a premature optimization if you aren’t Facebook or Instagram?
+- Can I work with designers?
+- Will React hurt my search engine optimizations (SEO)?
+- Is React a framework for building applications or a library with one feature?
 - Are components a better way to build an application?
 - Can I build something complex with React?
 
 
 ## Referencing Dynamic Children
 
-While Matt Zabriskie was working on [react-tabs](https://www.npmjs.org/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [referencing dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
+While Matt Zabriskie was working on [react-tabs](https://www.npmjs.org/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [refere dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
 
 ```javascript
 var App = React.createClass({
