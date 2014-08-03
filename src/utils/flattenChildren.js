@@ -23,6 +23,8 @@ var ReactTextComponent = require('ReactTextComponent');
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
+var previousName = null;
+
 /**
  * @param {function} traverseContext Context passed through traversal.
  * @param {?ReactComponent} child React child component.
@@ -43,15 +45,20 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
     var type = typeof child;
     var normalizedValue;
 
-    if (type === 'string') {
-      normalizedValue = ReactTextComponent(child);
-    } else if (type === 'number') {
-      normalizedValue = ReactTextComponent('' + child);
+    if (type === 'string' || type === 'number') {
+      var previousValue = result[previousName];
+      if (previousValue && previousValue.type === ReactTextComponent.type) {
+        normalizedValue = ReactTextComponent(previousValue.props + child);
+        name = previousName;
+      } else {
+        normalizedValue = ReactTextComponent('' + child);
+      }
     } else {
       normalizedValue = child;
     }
 
     result[name] = normalizedValue;
+    previousName = name;
   }
 }
 
@@ -66,6 +73,7 @@ function flattenChildren(children) {
   }
   var result = {};
   traverseAllChildren(children, flattenSingleChildIntoContext, result);
+  previousName = null;
   return result;
 }
 

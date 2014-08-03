@@ -128,31 +128,31 @@ describe('ReactMultiChildText', function() {
 
       // two adjacent values
       [true, 0], ['0'],
-      [0, 0], ['0', '0'],
-      [1.2, 0], ['1.2', '0'],
-      [0, ''], ['0', ''],
-      ['foo', 0], ['foo', '0'],
+      [0, 0], ['00'],
+      [1.2, 0], ['1.20'],
+      [0, ''], ['0'],
+      ['foo', 0], ['foo0'],
       [0, <div />], ['0', <div />],
 
       [true, 1.2], ['1.2'],
-      [1.2, 0], ['1.2', '0'],
-      [1.2, 1.2], ['1.2', '1.2'],
-      [1.2, ''], ['1.2', ''],
-      ['foo', 1.2], ['foo', '1.2'],
+      [1.2, 0], ['1.20'],
+      [1.2, 1.2], ['1.21.2'],
+      [1.2, ''], ['1.2'],
+      ['foo', 1.2], ['foo1.2'],
       [1.2, <div />], ['1.2', <div />],
 
       [true, ''], [''],
-      ['', 0], ['', '0'],
-      [1.2, ''], ['1.2', ''],
-      ['', ''], ['', ''],
-      ['foo', ''], ['foo', ''],
+      ['', 0], ['0'],
+      [1.2, ''], ['1.2'],
+      ['', ''], [''],
+      ['foo', ''], ['foo'],
       ['', <div />], ['', <div />],
 
       [true, 'foo'], ['foo'],
-      ['foo', 0], ['foo', '0'],
-      [1.2, 'foo'], ['1.2', 'foo'],
-      ['foo', ''], ['foo', ''],
-      ['foo', 'foo'], ['foo', 'foo'],
+      ['foo', 0], ['foo0'],
+      [1.2, 'foo'], ['1.2foo'],
+      ['foo', ''], ['foo'],
+      ['foo', 'foo'], ['foofoo'],
       ['foo', <div />], ['foo', <div />],
 
       // values separated by an element
@@ -161,48 +161,48 @@ describe('ReactMultiChildText', function() {
       ['', <div />, ''], ['', <div />, ''],
       ['foo', <div />, 'foo'], ['foo', <div />, 'foo'],
 
-      [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', <div />, 'foo', true], ['1.2', '', <div />, 'foo'],
-      ['', 'foo', <div />, true, 1.2], ['', 'foo', <div />, '1.2'],
+      [true, 1.2, <div />, '', 'foo'], ['1.2', <div />, 'foo'],
+      [1.2, '', <div />, 'foo', true], ['1.2', <div />, 'foo'],
+      ['', 'foo', <div />, true, 1.2], ['foo', <div />, '1.2'],
 
-      [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', true, <div />, 1.2, '', 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, 1.2, '', <div />, 'foo', true, 1.2], ['1.2', <div />, 'foo1.2'],
+      ['', 'foo', true, <div />, 1.2, '', 'foo'], ['foo', <div />, '1.2foo'],
 
       // values inside arrays
       [[true], [true]], [],
-      [[1.2], [1.2]], ['1.2', '1.2'],
-      [[''], ['']], ['', ''],
-      [['foo'], ['foo']], ['foo', 'foo'],
+      [[1.2], [1.2]], ['1.21.2'],
+      [[''], ['']], [''],
+      [['foo'], ['foo']], ['foofoo'],
       [[<div />], [<div />]], [<div />, <div />],
 
-      [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', [<div />, 'foo', true]], ['1.2', '', <div />, 'foo'],
-      ['', ['foo', <div />, true], 1.2], ['', 'foo', <div />, '1.2'],
+      [[true, 1.2, <div />], '', 'foo'], ['1.2', <div />, 'foo'],
+      [1.2, '', [<div />, 'foo', true]], ['1.2', <div />, 'foo'],
+      ['', ['foo', <div />, true], 1.2], ['foo', <div />, '1.2'],
 
-      [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, [1.2, '', <div />, 'foo'], true, 1.2], ['1.2', <div />, 'foo1.2'],
+      ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['foo', <div />, '1.2foo'],
 
       // values inside objects
       [{a: true}, {a: true}], [],
-      [{a: 1.2}, {a: 1.2}], ['1.2', '1.2'],
-      [{a: ''}, {a: ''}], ['', ''],
-      [{a: 'foo'}, {a: 'foo'}], ['foo', 'foo'],
+      [{a: 1.2}, {a: 1.2}], ['1.21.2'],
+      [{a: ''}, {a: ''}], [''],
+      [{a: 'foo'}, {a: 'foo'}], ['foofoo'],
       [{a: <div />}, {a: <div />}], [<div />, <div />],
 
-      [{a: true, b: 1.2, c: <div />}, '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', {a: <div />, b: 'foo', c: true}], ['1.2', '', <div />, 'foo'],
-      ['', {a: 'foo', b: <div />, c: true}, 1.2], ['', 'foo', <div />, '1.2'],
+      [{a: true, b: 1.2, c: <div />}, '', 'foo'], ['1.2', <div />, 'foo'],
+      [1.2, '', {a: <div />, b: 'foo', c: true}], ['1.2', <div />, 'foo'],
+      ['', {a: 'foo', b: <div />, c: true}, 1.2], ['foo', <div />, '1.2'],
 
-      [true, {a: 1.2, b: '', c: <div />, d: 'foo'}, true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', {a: true, b: <div />, c: 1.2, d: ''}, 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, {a: 1.2, b: '', c: <div />, d: 'foo'}, true, 1.2], ['1.2', <div />, 'foo1.2'],
+      ['', 'foo', {a: true, b: <div />, c: 1.2, d: ''}, 'foo'], ['foo', <div />, '1.2foo'],
 
       // values inside elements
-      [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
-      [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', '', <div />],
+      [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, 'foo'],
+      [1.2, '', <div>{<div />}{'foo'}{true}</div>], ['1.2', <div />],
       ['', <div>{'foo'}{<div />}{true}</div>, 1.2], ['', <div />, '1.2'],
 
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
-      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo']
+      ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['foo', <div />, 'foo']
     ]);
   });
 
