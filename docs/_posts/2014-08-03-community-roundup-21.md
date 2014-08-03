@@ -50,7 +50,7 @@ Areeb Malik, from Facebook, talks about his experience using React. "On paper, a
 
 ## Referencing Dynamic Children
 
-While Matt Zabriskie was working on [react-tabs](https://www.npmjs.org/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [refere dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
+While Matt Zabriskie was working on [react-tabs](https://www.npmjs.org/package/react-tabs) he discovered how to use React.Children.map and React.addons.cloneWithProps in order to [reference dynamic children](http://www.mattzabriskie.com/blog/react-referencing-dynamic-children).
 
 ```javascript
 var App = React.createClass({
