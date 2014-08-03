@@ -144,13 +144,11 @@ describe('ReactInstanceHandles', function() {
           ReactMount.getID(childNodeB) + ":junk"
         );
       }).toThrow(
-        'Invariant Violation: findComponentRoot(..., .0.1:0:junk): ' +
-        'Unable to find element. This probably means the DOM was ' +
-        'unexpectedly mutated (e.g., by the browser), usually due to ' +
-        'forgetting a <tbody> when using tables, nesting tags ' +
-        'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-        'parent. ' +
-        'Try inspecting the child nodes of the element with React ID `.0`.'
+        'Invariant Violation: findComponentRoot(..., .0.1:0:junk): Unable to ' +
+        'find element. This probably means the DOM was unexpectedly mutated ' +
+        '(e.g., by the browser), usually due to forgetting a <tbody> when ' +
+        'using tables, nesting tags like <form>, <p>, or <a>, or using ' +
+        'non-SVG elements in an <svg> parent. Unable to find target instance'
       );
     });
   });

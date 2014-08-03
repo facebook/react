@@ -79,11 +79,15 @@ function getID(node) {
     if (nodeCache.hasOwnProperty(id)) {
       var cached = nodeCache[id];
       if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
+        if (isValid(cached, id)) {
+          invariant(
+            false,
+            'ReactMount: Two valid but unequal nodes with the same `%s`: %s. ' +
+            '%s',
+            ATTR_NAME, id,
+            getFriendlyLocationForID(id)
+          );
+        }
 
         nodeCache[id] = node;
       }
@@ -143,11 +147,14 @@ function getNode(id) {
  */
 function isValid(node, id) {
   if (node) {
-    invariant(
-      internalGetID(node) === id,
-      'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
-    );
+    if (internalGetID(node) !== id) {
+      invariant(
+        false,
+        'ReactMount: Unexpected modification of `%s`. %s',
+        ATTR_NAME,
+        getFriendlyLocationForID(id)
+      );
+    }
 
     var container = ReactMount.findReactContainerForID(id);
     if (container && containsNode(container, node)) {
@@ -192,6 +199,118 @@ function findDeepestCachedAncestor(targetID) {
   var foundNode = deepestNodeSoFar;
   deepestNodeSoFar = null;
   return foundNode;
+}
+
+/**
+ * For DEV-use only!
+ * Finds all descendant instances between the current instance and the tagetID,
+ * also returns the provided instance.
+ */
+function findDescendantInstancesByID(instance, targetID) {
+  var result = false;
+  var nodeID = instance._rootNodeID;
+
+  if (nodeID === targetID) {
+    // `_rootNodeID` is owned by the ReactDOMComponent, but all
+    // ReactCompositeComponents before it are given the same ID, we want all.
+    if (instance._renderedComponent) {
+      result = findDescendantInstancesByID(
+        instance._renderedComponent,
+        targetID
+      );
+    }
+
+    result = result || [];
+  } else if (ReactInstanceHandles.isAncestorIDOf(nodeID, targetID)) {
+    if (instance._renderedComponent) {
+      // `instance` is a ReactCompositeComponent
+      result = findDescendantInstancesByID(
+        instance._renderedComponent,
+        targetID
+      );
+    } else if (instance._renderedChildren) {
+      // `instance` is a ReactDOMComponent (ReactMultiChild)
+      var children = instance._renderedChildren;
+
+      for (var key in children) {
+        result = findDescendantInstancesByID(
+          children[key],
+          targetID
+        );
+
+        // `targetID` found inside the current instance
+        if (result) {
+          break;
+        }
+      }
+    }
+  }
+
+  if (result) {
+    // `targetID` found, add instance to the front of the result.
+    result.unshift(instance);
+  }
+
+  return result;
+}
+
+/**
+ * For DEV-use only!
+ * Constructs a human friendly path from an array of parent instances.
+ */
+function getReadableInstancePath(instances) {
+  var path = [];
+  var instance;
+  var parentNodeID = '';
+
+  for (var i = 0; instance = instances[i]; i++) {
+    var displayName;
+
+    if (instance.tagName) {
+      // `instance` is a ReactDOMComponent
+      // Include the relative reactID with each `tagName`
+      displayName = (
+        instance.tagName.toUpperCase() +
+        instance._rootNodeID.substr(parentNodeID.length)
+      );
+
+      parentNodeID = instance._rootNodeID;
+    } else {
+      // `instance` is a React(Composite)Component
+      displayName = instance.constructor.displayName || 'Composite';
+
+      // Do not include internally overloaded ReactDOMComponents, they are an
+      // implementation detail and would only confuse the user.
+      if (displayName.substr(0, 8) === 'ReactDOM') {
+        continue;
+      }
+    }
+
+    path.push(displayName);
+  }
+
+  return path.join(' > ');
+}
+
+/**
+ * For DEV-use only!
+ * Returns a human friendly string for easily locating a target ID. For use in
+ * error messages involving a reactID.
+ */
+function getFriendlyLocationForID(targetID) {
+  var rootID = ReactInstanceHandles.getReactRootIDFromNodeID(targetID);
+  var rootInstance = instancesByReactRootID[rootID];
+  var instances = findDescendantInstancesByID(rootInstance, targetID);
+
+  if (!instances) {
+    // This should never occur unless React's internal state is corrupted.
+    return 'Unable to find target instance';
+  }
+
+  return (
+    'Inspect: ' +
+    getReadableInstancePath(instances)
+  );
 }
 
 /**
@@ -651,10 +770,9 @@ var ReactMount = {
       'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
       'usually due to forgetting a <tbody> when using tables, nesting tags ' +
       'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-      'parent. ' +
-      'Try inspecting the child nodes of the element with React ID `%s`.',
+      'parent. %s',
       targetID,
-      ReactMount.getID(ancestorNode)
+      getFriendlyLocationForID(targetID)
     );
   },
 
