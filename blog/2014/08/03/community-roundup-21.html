@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React | Community Round-up #21</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React | Community Round-up #21">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/08/03/community-roundup-21.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2014/08/03/community-roundup-21.html" class="active">Community Round-up #21</a></li>
+      
+        <li><a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">Flux: Actions and the Dispatcher</a></li>
+      
+        <li><a href="/react/blog/2014/07/28/community-roundup-20.html">Community Round-up #20</a></li>
+      
+        <li><a href="/react/blog/2014/07/25/react-v0.11.1.html">React v0.11.1</a></li>
+      
+        <li><a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a></li>
+      
+        <li><a href="/react/blog/2014/07/13/react-v0.11-rc1.html">React v0.11 RC</a></li>
+      
+        <li><a href="/react/blog/2014/06/27/community-roundup-19.html">Community Round-up #19</a></li>
+      
+        <li><a href="/react/blog/2014/05/29/one-year-of-open-source-react.html">One Year of Open-Source React</a></li>
+      
+        <li><a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a></li>
+      
+        <li><a href="/react/blog/2014/04/04/reactnet.html">Use React and JSX in ASP.NET MVC</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>Community Round-up #21</h1>
+    <p class="meta">August  3, 2014 by Lou Husson</p>
+
+    <hr>
+
+    <div class="post">
+      <h2><a class="anchor" name="react-router"></a>React Router <a class="hash-link" href="#react-router">#</a></h2>
+<p><a href="http://ryanflorence.com/">Ryan Florence</a> and <a href="http://twitter.com/mjackson">Michael Jackson</a> ported Ember&#39;s router to React in a project called <a href="https://github.com/rackt/react-router">React Router</a>. This is a very good example of both communities working together to make the web better!</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
+  <span class="o">&lt;</span><span class="nx">Routes</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;user&quot;</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/user/:userId&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">User</span><span class="p">}</span><span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Routes&gt;</span>
+<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="going-big-with-react"></a>Going Big with React <a class="hash-link" href="#going-big-with-react">#</a></h2>
+<p>Areeb Malik, from Facebook, talks about his experience using React. &quot;On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we&#39;ll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale&quot;</p>
+
+<p><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react"><img src="/react/img/blog/skills-matter.png" alt=""></a></p>
+
+<!--
+<iframe allowfullscreen="" data-progress="true" frameborder="0" height="390" id="vimeo-player" mozallowfullscreen="" src="//player.vimeo.com/video/100245392?api=1&amp;title=0" webkitallowfullscreen="" width="640"></iframe>
+-->
+<h2><a class="anchor" name="what-is-react"></a>What is React? <a class="hash-link" href="#what-is-react">#</a></h2>
+<p><a href="http://www.funnyant.com/author/admin/">Craig McKeachie</a> author of <a href="http://www.funnyant.com/javascript-framework-guide/">Javascript Framework Guide</a> wrote an excellent news named <a href="http://www.funnyant.com/reactjs-what-is-it/">&quot;What is React.js? Another Template Library?</a></p>
+
+<ul>
+<li>Is React a template library?</li>
+<li>Is React similar to Web Components?</li>
+<li>Are the Virtual DOM and Shadow DOM the same?</li>
+<li>Can React be used with other JavaScript MVC frameworks?</li>
+<li>Who uses React?</li>
+<li>Is React a premature optimization if you aren’t Facebook or Instagram?</li>
+<li>Can I work with designers?</li>
+<li>Will React hurt my search engine optimizations (SEO)?</li>
+<li>Is React a framework for building applications or a library with one feature?</li>
+<li>Are components a better way to build an application?</li>
+<li>Can I build something complex with React?</li>
+</ul>
+<h2><a class="anchor" name="referencing-dynamic-children"></a>Referencing Dynamic Children <a class="hash-link" href="#referencing-dynamic-children">#</a></h2>
+<p>While Matt Zabriskie was working on <a href="https://www.npmjs.org/package/react-tabs">react-tabs</a> he discovered how to use React.Children.map and React.addons.cloneWithProps in order to <a href="http://www.mattzabriskie.com/blog/react-referencing-dynamic-children">refere dynamic children</a>.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span>
+        <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;child-&#39;</span> <span class="o">+</span> <span class="nx">index</span>
+      <span class="p">});</span>
+    <span class="p">});</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div><h2><a class="anchor" name="jsx-with-sweet.js-using-readtables"></a>JSX with Sweet.js using Readtables <a class="hash-link" href="#jsx-with-sweet.js-using-readtables">#</a></h2>
+<p>Have you ever wondered how JSX was implemented? James Long wrote a very instructive blog post that explains how to <a href="http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables">compile JSX with Sweet.js using Readtables</a>.</p>
+
+<p><a href="http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables"><img src="/react/img/blog/sweet-jsx.png" alt=""></a></p>
+<h2><a class="anchor" name="first-look-getting-started-with-react"></a>First Look: Getting Started with React <a class="hash-link" href="#first-look-getting-started-with-react">#</a></h2>
+<p><a href="http://modernweb.com/authors/kirill-buga/">Kirill Buga</a> wrote an article on Modern Web explaining how <a href="http://modernweb.com/2014/07/23/getting-started-reactjs/">React is different from traditional MVC</a> used by most JavaScript applications</p>
+
+<figure><a href="http://modernweb.com/2014/07/23/getting-started-reactjs"><img src="/react/img/blog/first-look.png" /></a></figure>
+<h2><a class="anchor" name="react-draggable"></a>React Draggable <a class="hash-link" href="#react-draggable">#</a></h2>
+<p><a href="https://github.com/mzabriskie">Matt Zabriskie</a> released a <a href="https://github.com/mzabriskie/react-draggable">project</a> to make your react components draggable.</p>
+
+<p><a href="http://mzabriskie.github.io/react-draggable/example/"><img src="/react/img/blog/react-draggable.png" alt=""></a></p>
+<h2><a class="anchor" name="html-parser2-react"></a>HTML Parser2 React <a class="hash-link" href="#html-parser2-react">#</a></h2>
+<p><a href="http://browniefed.github.io/">Jason Brown</a> adapted htmlparser2 to React: <a href="https://www.npmjs.org/package/htmlparser2-react">htmlparser2-react</a>. That allows you to convert raw HTML to the virtual DOM.
+This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
+  <span class="s1">&#39;style=&quot;width:100%;height: 100%;&quot;&gt;&lt;article id=&quot;this-article&quot;&gt;&#39;</span> <span class="o">+</span>
+  <span class="s1">&#39;&lt;p&gt;hey this is a paragraph&lt;/p&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;&#39;</span> <span class="o">+</span>
+  <span class="s1">&#39;&lt;li&gt;3&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/article&gt;&lt;/div&gt;&#39;</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">parsedComponent</span> <span class="o">=</span> <span class="nx">reactParser</span><span class="p">(</span><span class="nx">html</span><span class="p">,</span> <span class="nx">React</span><span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="building-uis-with-react"></a>Building UIs with React <a class="hash-link" href="#building-uis-with-react">#</a></h2>
+<p>If you haven&#39;t yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!</p>
+
+<iframe width="650" height="315" src="//www.youtube.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
+<h2><a class="anchor" name="random-tweets"></a>Random Tweets <a class="hash-link" href="#random-tweets">#</a></h2>
+<blockquote class="twitter-tweet" lang="en"><p>We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs">@reactjs</a> code last week, our checkout process.&#10;&#10;<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/statuses/493852312604254208">July 28, 2014</a></blockquote>
+
+<blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/AirbnbNerds">@AirbnbNerds</a> just launched our first user-facing React.js feature to production! We love it so far. <a href="https://t.co/KtyudemcIW">https://t.co/KtyudemcIW</a> /<a href="https://twitter.com/floydophone">@floydophone</a></p>&mdash; spikebrehm (@spikebrehm) <a href="https://twitter.com/spikebrehm/statuses/491645223643013121">July 22, 2014</a></blockquote>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">&copy; 2014 Facebook Inc.</div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
