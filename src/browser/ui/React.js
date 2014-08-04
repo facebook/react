@@ -107,8 +107,8 @@ if (__DEV__) {
       window.top === window.self &&
       navigator.userAgent.indexOf('Chrome') > -1) {
     console.debug(
-      'Download the React DevTools for a better development experience: ' +
-      'http://fb.me/react-devtools'
+      'If you haven\'t already, download the React DevTools for a better ' +
+      'development experience: http://fb.me/react-devtools'
     );
 
     var expectedFeatures = [
