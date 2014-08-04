@@ -116,7 +116,7 @@ renderB: <div><span key="second">second</span><span key="first">first</span></di
 => [insertNode <span>second</span>]
 ```
 
-In practice, finding a key is not really hard. Most of the time, the element you are going to display already have a unique id. When it is not the case, you can hash some parts of the content to generate a key. Remember that the key only has to be unique among its sibling, not globally unique.
+In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that's not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. Remember that the key only has to be unique among its siblings, not globally unique.
 
 
 ## Trade-offs
