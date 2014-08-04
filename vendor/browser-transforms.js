@@ -18,7 +18,6 @@
 
 'use strict';
 
-var buffer = require('buffer');
 var docblock = require('jstransform/src/docblock');
 var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors');
@@ -32,6 +31,11 @@ var inlineScriptCount = 0;
 // throws when Object.prototype.__defineGetter__ is missing, so we skip building
 // the source map in that case.
 var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
+
+// All the modern browsers have built-in support for Base64 conversion.
+// IE<=9 doesn't have support for this but it doesn't support source maps
+// either, so we are fine with not generating inline maps for it.
+var supportsBase64 = typeof btoa !== 'undefined';
 
 /**
  * Run provided code through jstransform.
@@ -50,7 +54,7 @@ function transformReact(source, options) {
   }
 
   return transform(visitorList, source, {
-    sourceMap: supportsAccessors
+    sourceMap: supportsAccessors && supportsBase64
   });
 }
 
@@ -165,7 +169,7 @@ function transformCode(code, url, options) {
     return (
       transformed.code +
       '\n//# sourceMappingURL=data:application/json;base64,' +
-      buffer.Buffer(JSON.stringify(map)).toString('base64')
+      btoa(unescape(encodeURIComponent(JSON.stringify(map))))
     );
   } else {
     // TODO: warn that we found a script tag missing the docblock?
