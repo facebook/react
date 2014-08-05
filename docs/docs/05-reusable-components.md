@@ -134,10 +134,11 @@ var MyComponent = React.createClass({
   },
 
   render: function() {
-    return
+    return (
       <div>
         {this.props.children} // This must be exactly one element or it will throw.
-      </div>;
+      </div>
+    );
   }
 
 });
