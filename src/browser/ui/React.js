@@ -73,7 +73,8 @@ var React = {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
-  createDescriptor: createDescriptor,
+  createDescriptor: createDescriptor, // deprecated, will be removed next week
+  createElement: createDescriptor,
   createFactory: createFactory,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
