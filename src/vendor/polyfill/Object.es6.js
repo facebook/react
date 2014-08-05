@@ -19,6 +19,22 @@
 
 // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
 
+var hasEnumBug = !(
+  Object.prototype.propertyIsEnumerable.call(
+    { constructor : null },
+    "constructor"
+  )
+);
+var enumBuggyProperties = [
+  "constructor",
+  "hasOwnProperty",
+  "isPrototypeOf",
+  "propertyIsEnumerable",
+  "toLocaleString",
+  "toString",
+  "valueOf"
+];
+
 if (!Object.assign) {
   Object.assign = function(target, sources) {
     if (target == null) {
@@ -45,9 +61,26 @@ if (!Object.assign) {
           to[key] = from[key];
         }
       }
+
+      // IE8 has a buggy behaviour with the properties contained
+      // in `enumBuggyProperties`. Even if they are manually defined,
+      // the browser makes them non-enumerable by default
+
+      if(hasEnumBug) {
+        var index = -1;
+        var length = enumBuggyProperties.length;
+        var enumKey;
+
+        while(++index < length) {
+          enumKey = enumBuggyProperties[index];
+          if(!hasOwnProperty.call(from, enumKey)) {
+            continue;
+          }
+          to[enumKey] = from[enumKey];
+        }
+      }
     }
 
     return to;
   };
 }
-
