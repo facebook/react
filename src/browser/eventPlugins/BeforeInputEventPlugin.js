@@ -69,6 +69,9 @@ var eventTypes = {
 // Track characters inserted via keypress and composition events.
 var fallbackChars = null;
 
+// Track whether we've ever handled a keypress on the space key.
+var hasSpaceKeypress = false;
+
 /**
  * Return whether a native keypress event is assumed to be a command.
  * This is required because Firefox fires `keypress` events for key commands
@@ -138,7 +141,8 @@ var BeforeInputEventPlugin = {
             return;
           }
 
-          chars = String.fromCharCode(which);
+          hasSpaceKeypress = true;
+          chars = SPACEBAR_CHAR;
           break;
 
         case topLevelTypes.topTextInput:
@@ -146,8 +150,9 @@ var BeforeInputEventPlugin = {
           chars = nativeEvent.data;
 
           // If it's a spacebar character, assume that we have already handled
-          // it at the keypress level and bail immediately.
-          if (chars === SPACEBAR_CHAR) {
+          // it at the keypress level and bail immediately. Android Chrome
+          // doesn't give us keycodes, so we need to blacklist it.
+          if (chars === SPACEBAR_CHAR && hasSpaceKeypress) {
             return;
           }
 
