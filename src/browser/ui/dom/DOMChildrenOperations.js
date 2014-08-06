@@ -25,6 +25,8 @@ var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 var getTextContentAccessor = require('getTextContentAccessor');
 var invariant = require('invariant');
 
+var TEXT_NODE = 3;
+
 /**
  * The DOM property to use when setting text content.
  *
@@ -48,7 +50,7 @@ function insertChildAt(parentNode, childNode, index) {
   // browsers so we must replace it with `null`.
   parentNode.insertBefore(
     childNode,
-    parentNode.childNodes[index] || null
+    parentNode.children[index] || null
   );
 }
 
@@ -83,6 +85,16 @@ if (textContentAccessor === 'textContent') {
   };
 }
 
+function updateTextContentAfter(node, text) {
+  while (node.nextSibling && node.nextSibling.nodeType === TEXT_NODE) {
+    node.parentNode.removeChild(node.nextSibling);
+  }
+  if (text.length) {
+    var doc = node.ownerDocument || document;
+    node.parentNode.insertBefore(doc.createTextNode(text), node.nextSibling);
+  }
+}
+
 /**
  * Operations for updating with DOM children.
  */
@@ -90,7 +102,7 @@ var DOMChildrenOperations = {
 
   dangerouslyReplaceNodeWithMarkup: Danger.dangerouslyReplaceNodeWithMarkup,
 
-  updateTextContent: updateTextContent,
+  updateTextContentAfter: updateTextContentAfter,
 
   /**
    * Updates a component's children by processing a series of updates. The
@@ -111,7 +123,7 @@ var DOMChildrenOperations = {
       if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
-        var updatedChild = update.parentNode.childNodes[updatedIndex];
+        var updatedChild = update.parentNode.children[updatedIndex];
         var parentID = update.parentID;
 
         invariant(
@@ -140,7 +152,13 @@ var DOMChildrenOperations = {
     // Remove updated children first so that `toIndex` is consistent.
     if (updatedChildren) {
       for (var j = 0; j < updatedChildren.length; j++) {
-        updatedChildren[j].parentNode.removeChild(updatedChildren[j]);
+        var nodeToRemove = updatedChildren[j];
+        // Remove trailing text nodes, probably from ReactTextComponent
+        while (nodeToRemove.nextSibling &&
+               nodeToRemove.nextSibling.nodeType === TEXT_NODE) {
+          nodeToRemove.parentNode.removeChild(nodeToRemove.nextSibling);
+        }
+        nodeToRemove.parentNode.removeChild(nodeToRemove);
       }
     }
 

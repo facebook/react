@@ -135,18 +135,18 @@ var ReactDOMIDOperations = {
   ),
 
   /**
-   * Updates a DOM node's text content set by `props.content`.
+   * Updates the text content after a DOM node.
    *
    * @param {string} id ID of the node to update.
    * @param {string} content Text content.
    * @internal
    */
-  updateTextContentByID: ReactPerf.measure(
+  updateTextContentAfterByID: ReactPerf.measure(
     'ReactDOMIDOperations',
-    'updateTextContentByID',
+    'updateTextContentAfterByID',
     function(id, content) {
       var node = ReactMount.getNode(id);
-      DOMChildrenOperations.updateTextContent(node, content);
+      DOMChildrenOperations.updateTextContentAfter(node, content);
     }
   ),
 

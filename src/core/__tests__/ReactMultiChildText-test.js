@@ -28,6 +28,21 @@ var ReactTestUtils = require('ReactTestUtils');
 
 var reactComponentExpect = require('reactComponentExpect');
 
+var TEXT_NODE = 3;
+
+var assertTextNodeAfter = function(node, text) {
+  expect(node.tagName).toBe('SCRIPT');
+  if (text === '') {
+    expect(
+      !node.nextSibling ||
+      node.nextSibling.nodeType !== TEXT_NODE
+    ).toBe(true);
+  } else {
+    expect(node.nextSibling.nodeType).toBe(TEXT_NODE);
+    expect(node.nextSibling.nodeValue).toBe(text);
+  }
+};
+
 var assertNodeText = function(instance, text) {
   expect(instance.getDOMNode().childNodes.length).toBe(1);
   expect(instance.getDOMNode().innerHTML).toBe('' + text);
@@ -38,15 +53,16 @@ var assertEmptyNode = function(instance) {
 };
 
 var assertMultiChild = function(instance, textOne, textTwo) {
-  expect(instance.getDOMNode().childNodes.length).toBe(2);
+  expect(instance.getDOMNode().childNodes.length).toBe(
+    2 + (textOne === '' ? 0 : 1) + (textTwo === '' ? 0 : 1)
+  );
   var firstTextDOMNode =
     reactComponentExpect(instance)
       .expectRenderedChildAt(0)
       .toBeTextComponent()
       .instance()
       .getDOMNode();
-  expect(firstTextDOMNode.childNodes.length).toBe(textOne === '' ? 0 : 1);
-  expect(firstTextDOMNode.innerHTML).toBe('' + textOne);
+  assertTextNodeAfter(firstTextDOMNode, textOne);
 
   var secondTextDOMNode =
     reactComponentExpect(instance)
@@ -54,20 +70,18 @@ var assertMultiChild = function(instance, textOne, textTwo) {
       .toBeTextComponent()
       .instance()
       .getDOMNode();
-  expect(secondTextDOMNode.childNodes.length).toBe(textTwo === '' ? 0 : 1);
-  expect(secondTextDOMNode.innerHTML).toBe('' + textTwo);
+  assertTextNodeAfter(secondTextDOMNode, textTwo);
 };
 
 var assertSingleChild = function(instance, text) {
-  expect(instance.getDOMNode().childNodes.length).toBe(1);
+  expect(instance.getDOMNode().childNodes.length).toBe(2);
   var textDOMNode =
     reactComponentExpect(instance)
       .expectRenderedChildAt(0)
       .toBeTextComponent()
       .instance()
       .getDOMNode();
-  expect(textDOMNode.childNodes.length).toBe(1);
-  expect(textDOMNode.innerHTML).toBe('' + text);
+  assertTextNodeAfter(textDOMNode, text);
 };
 
 // Helpers

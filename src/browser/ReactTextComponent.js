@@ -33,8 +33,9 @@ var mixInto = require('mixInto');
  *  - When mounting text into the DOM, adjacent text nodes are merged.
  *  - Text nodes cannot be assigned a React root ID.
  *
- * This component is used to wrap strings in elements so that they can undergo
- * the same reconciliation that is applied to elements.
+ * This component is used to add a <script> tag before each text node so that
+ * they can undergo a reconciliation process similar to the one applied to
+ * elements.
  *
  * TODO: Investigate representing React components in the DOM with text nodes.
  *
@@ -71,16 +72,15 @@ mixInto(ReactTextComponent, {
     var escapedText = escapeTextForBrowser(this.props);
 
     if (transaction.renderToStaticMarkup) {
-      // Normally we'd wrap this in a `span` for the reasons stated above, but
-      // since this is a situation where React won't take over (static pages),
-      // we can simply return the text as it is.
+      // Normally we'd add a preceding `script` for the reasons stated above,
+      // but since this is a situation where React won't take over (static
+      // pages), we can simply return the text as it is.
       return escapedText;
     }
 
     return (
-      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
-        escapedText +
-      '</span>'
+      '<script ' + DOMPropertyOperations.createMarkupForID(rootID) +
+      '></script>' + escapedText
     );
   },
 
@@ -95,7 +95,7 @@ mixInto(ReactTextComponent, {
     var nextProps = nextComponent.props;
     if (nextProps !== this.props) {
       this.props = nextProps;
-      ReactComponent.BackendIDOperations.updateTextContentByID(
+      ReactComponent.BackendIDOperations.updateTextContentAfterByID(
         this._rootNodeID,
         nextProps
       );
