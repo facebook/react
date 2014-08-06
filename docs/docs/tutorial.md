@@ -50,6 +50,10 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
 
 For the remainder of this tutorial, we'll be writing our JavaScript code in this script tag.
 
+> Note:
+>
+> We included jQuery here because we want to simplify the code of our future ajax calls, but it's **NOT** mandatory for React to work.
+
 ### Your first component
 
 React is all about modular, composable components. For our comment box example, we'll have the following component structure:
