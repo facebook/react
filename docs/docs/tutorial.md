@@ -365,7 +365,21 @@ var CommentBox = React.createClass({
 
 `getInitialState()` executes exactly once during the lifecycle of the component and sets up the initial state of the component.
 
+#### A brief aside: running a server
+
+In the next step you're going to use AJAX to fetch data from a local server. You can use any HTTP server for this, but we suggest you use a simple server we've developed using Node.js, since this also supports POSTing new data, which is a requirement further on in the tutorial.
+
+Getting up and running with the Node.js server is pretty straightforward:
+
+1. Install Node.js, for example by [downloading an installer](http://nodejs.org/) or using your favorite package manager
+1. Download [the source for this tutorial](https://github.com/reactjs/react-tutorial) and copy `server.js` and `package.json` to the same directory as your HTML file
+1. In that directory, run `npm install` to install the required node modules
+1. Run `node server.js`
+
+Now you can visit [http://localhost:3000/template.html](http://localhost:3000/template.html) to run your React app. (Swap `template.html` for whatever you named your HTML file at the start of the tutorial if you used a different name.)
+
 #### Updating state
+
 When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:
 
 ```javascript
@@ -377,8 +391,6 @@ When the component is first created, we want to GET some JSON from the server an
 ```
 
 We'll use jQuery to help make an asynchronous request to the server.
-
-Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
 ```javascript{6-17}
 // tutorial13.js
