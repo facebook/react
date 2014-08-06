@@ -43,6 +43,7 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
 
+var deprecated = require('deprecated');
 var onlyChild = require('onlyChild');
 
 ReactDefaultInjection.inject();
@@ -63,6 +64,8 @@ createFactory = ReactLegacyElement.wrapCreateFactory(
   createFactory
 );
 
+var render = ReactPerf.measure('React', 'render', ReactMount.render);
+
 var React = {
   Children: {
     map: ReactChildren.map,
@@ -76,22 +79,16 @@ var React = {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
-  createDescriptor: createElement, // deprecated, will be removed next week
   createElement: createElement,
   createFactory: createFactory,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
-  renderComponent: ReactPerf.measure(
-    'React',
-    'renderComponent',
-    ReactMount.renderComponent
-  ),
-  renderComponentToString: ReactServerRendering.renderComponentToString,
-  renderComponentToStaticMarkup:
-    ReactServerRendering.renderComponentToStaticMarkup,
+  render: render,
+  renderToString: ReactServerRendering.renderToString,
+  renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   isValidClass: ReactLegacyElement.isValidFactory,
-  isValidComponent: ReactElement.isValidElement,
+  isValidElement: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
   __internals: {
     Component: ReactComponent,
@@ -102,7 +99,37 @@ var React = {
     Mount: ReactMount,
     MultiChild: ReactMultiChild,
     TextComponent: ReactTextComponent
-  }
+  },
+
+  // Deprecations (remove for 0.13)
+  renderComponent: deprecated(
+    'React',
+    'renderComponent',
+    'render',
+    this,
+    render
+  ),
+  renderComponentToString: deprecated(
+    'React',
+    'renderComponentToString',
+    'renderToString',
+    this,
+    ReactServerRendering.renderToString
+  ),
+  renderComponentToStaticMarkup: deprecated(
+    'React',
+    'renderComponentToStaticMarkup',
+    'renderToStaticMarkup',
+    this,
+    ReactServerRendering.renderToStaticMarkup
+  ),
+  isValidComponent: deprecated(
+    'React',
+    'isValidComponent',
+    'isValidElement',
+    this,
+    ReactElement.isValidElement
+  )
 };
 
 if (__DEV__) {
