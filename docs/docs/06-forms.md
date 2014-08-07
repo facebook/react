@@ -149,4 +149,4 @@ To make an uncontrolled component, `defaultValue` is used instead.
 
 > Note:
 >
-> You can pass an array into the `value` attribute, allowing you to select multiple options in a `select` tag: `<select multiple value="{['B', 'C']}">`.
+> You can pass an array into the `value` attribute, allowing you to select multiple options in a `select` tag: `<select multiple={true} value="{['B', 'C']}">`.
