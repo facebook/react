@@ -144,6 +144,25 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('green');
     });
 
+    it("should restore style of 'border' after 'borderColor' removal", function() {
+      var styles = { border: '4px solid red', borderColor: 'yellow' };
+      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+
+      var stubStyle = stub.getDOMNode().style;
+
+      stub.receiveComponent({props: { style: styles }}, transaction);
+      expect(stubStyle.borderWidth).toEqual('4px');
+      expect(stubStyle.borderStyle).toEqual('solid');
+      expect(stubStyle.borderColor).toEqual('yellow');
+
+      delete styles.borderColor;
+
+      stub.receiveComponent({props: { style: styles }}, transaction);
+      expect(stubStyle.borderWidth).toEqual('4px');
+      expect(stubStyle.borderStyle).toEqual('solid');
+      expect(stubStyle.borderColor).toEqual('red');
+    });
+
     it("should clear all the styles when removing 'style'", function() {
       var styles = {display: 'none', color: 'red'};
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
