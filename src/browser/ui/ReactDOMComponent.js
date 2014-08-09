@@ -46,6 +46,121 @@ var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
 
+var shorthandPropertyRelations = {
+  backgroundImage: {
+    background: true
+  },
+  backgroundPosition: {
+    background: true
+  },
+  backgroundRepeat: {
+    background: true
+  },
+  backgroundColor: {
+    background: true
+  },
+  borderWidth: {
+    border: true
+  },
+  borderStyle: {
+    border: true
+  },
+  borderColor: {
+    border: true
+  },
+  borderBottom: {
+    border: true
+  },
+  borderLeft: {
+    border: true
+  },
+  borderRight: {
+    border: true
+  },
+  borderTop: {
+    border: true
+  },
+  borderBottomWidth: {
+    borderWidth: true,
+    borderBottom: true,
+    border: true
+  },
+  borderBottomStyle: {
+    borderStyle: true,
+    borderBottom: true,
+    border: true
+  },
+  borderBottomColor: {
+    borderColor: true,
+    borderBottom: true,
+    border: true
+  },
+  borderLeftWidth: {
+    borderWidth: true,
+    borderLeft: true,
+    border: true
+  },
+  borderLeftStyle: {
+    borderStyle: true,
+    borderLeft: true,
+    border: true
+  },
+  borderLeftColor: {
+    borderColor: true,
+    borderLeft: true,
+    border: true
+  },
+  borderRightWidth: {
+    borderWidth: true,
+    borderRight: true,
+    border: true
+  },
+  borderRightStyle: {
+    borderStyle: true,
+    borderRight: true,
+    border: true
+  },
+  borderRightColor: {
+    borderColor: true,
+    borderRight: true,
+    border: true
+  },
+  borderTopWidth: {
+    borderWidth: true,
+    borderTop: true,
+    border: true
+  },
+  borderTopStyle: {
+    borderStyle: true,
+    borderTop: true,
+    border: true
+  },
+  borderTopColor: {
+    borderColor: true,
+    borderTop: true,
+    border: true
+  },
+  fontStyle: {
+    font: true
+  },
+  fontVariant: {
+    font: true
+  },
+  fontWeight: {
+    font: true
+  },
+  fontSize: {
+    font: true
+  },
+  lineHeight: {
+    font: true
+  },
+  fontFamily: {
+    font: true
+  }
+
+};
+
 /**
  * @param {?object} props
  */
@@ -310,6 +425,19 @@ ReactDOMComponent.Mixin = {
                 (!nextProp || !nextProp.hasOwnProperty(styleName))) {
               styleUpdates = styleUpdates || {};
               styleUpdates[styleName] = '';
+              // styleName (`borderColor`) removal should lead
+              // to relatedStyleName (`border`) restore.
+              if (nextProp) {
+                var related = shorthandPropertyRelations[styleName];
+                if (related) {
+                  for (var relatedStyleName in related) {
+                    if (nextProp.hasOwnProperty(relatedStyleName)) {
+                      styleUpdates[relatedStyleName] = nextProp[relatedStyleName];
+                      delete styleUpdates[styleName]; // no need to empty `borderColor`.
+                    }
+                  }
+                }
+              }
             }
           }
           // Update styles that changed since `lastProp`.
