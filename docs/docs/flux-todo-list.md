@@ -329,7 +329,7 @@ return (
   </section>
 ); 
 ``` 
-Now each TodoItem can display it's own text, and perform actions utilizing it's own ID. Explaining all the different actions that a TodoItem can invoke in the TodoMVC example goes beyond the scope of this article, but let's just take a look at the action that deletes one of the to-do items. Here is an abbreviated version of the TodoItem: 
+Now each TodoItem can display its own text, and perform actions utilizing its own ID. Explaining all the different actions that a TodoItem can invoke in the TodoMVC example goes beyond the scope of this article, but let's just take a look at the action that deletes one of the to-do items. Here is an abbreviated version of the TodoItem: 
 
 ```javascript
 /** @jsx React.DOM */ 
