@@ -76,19 +76,19 @@ Similar to `renderComponentToString`, except this doesn't create extra DOM attri
 ### React.isValidClass
 
 ```javascript
-boolean isValidClass(ReactClassDescriptor factory)
+boolean isValidClass(* factory)
 ```
 
-Verifies the factory is a React class. See `React.createClass`.
+Verifies the factory is a React class descriptor. See `React.createClass`.
 
 
 ### React.isValidComponent
 
 ```javascript
-boolean isValidComponent(ReactComponent object)
+boolean isValidComponent(* object)
 ```
 
-Verifies the object is a React component.
+Verifies the object is a React component descriptor.
 
 
 ### React.DOM
