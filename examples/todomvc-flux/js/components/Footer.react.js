@@ -34,7 +34,7 @@ var Footer = React.createClass({
     var total = Object.keys(allTodos).length;
 
     if (total === 0) {
-      return <noscript />;
+      return null;
     }
 
     var completed = 0;
