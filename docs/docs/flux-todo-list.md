@@ -325,7 +325,8 @@ for (var key in allTodos) {
  
 return ( 
   <section id="main"> 
-  <ul id="todo-list">{todos}</ul> 
+    <ul id="todo-list">{todos}</ul> 
+  </section>
 ); 
 ``` 
 Now each TodoItem can display it's own text, and perform actions utilizing it's own ID. Explaining all the different actions that a TodoItem can invoke in the TodoMVC example goes beyond the scope of this article, but let's just take a look at the action that deletes one of the to-do items. Here is an abbreviated version of the TodoItem: 
