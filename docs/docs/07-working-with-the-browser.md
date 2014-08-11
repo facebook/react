@@ -123,13 +123,10 @@ In addition to that philosophy, we've also taken the stance that we, as authors 
 * `Date.now`
 * `Function.prototype.bind`
 * `Object.keys`
-* `String.prototype.split`
-* `String.prototype.trim`
-
-`es5-sham.js`, also from [kriskowal's es5-shim](https://github.com/kriskowal/es5-shim), provides the following that React needs:
-
 * `Object.create`
 * `Object.freeze`
+* `String.prototype.split`
+* `String.prototype.trim`
 
 The unminified build of React needs the following from [paulmillr's console-polyfill](https://github.com/paulmillr/console-polyfill).
 
