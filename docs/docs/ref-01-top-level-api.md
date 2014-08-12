@@ -101,6 +101,8 @@ defineComponentMethod(string methodName, string policy)
 
 Define new method and its policy for all React components.
 
+** Note: See ReactSpecPolicy to find out what policies are available.
+
 
 ### React.Children
 
