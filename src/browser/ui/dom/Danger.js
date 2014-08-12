@@ -60,9 +60,10 @@ var Danger = {
   dangerouslyRenderMarkup: function(markupList) {
     invariant(
       ExecutionEnvironment.canUseDOM,
-      'dangerouslyRenderMarkup(...): Cannot render markup in a Worker ' +
-      'thread. This is likely a bug in the framework. Please report ' +
-      'immediately.'
+      'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
+      'thread. Make sure `window` and `document` are available globally ' +
+      'before requiring React when unit testing or use ' +
+      'React.renderComponentToString for server rendering.'
     );
     var nodeName;
     var markupByNodeName = {};
@@ -166,8 +167,9 @@ var Danger = {
     invariant(
       ExecutionEnvironment.canUseDOM,
       'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
-      'worker thread. This is likely a bug in the framework. Please report ' +
-      'immediately.'
+      'worker thread. Make sure `window` and `document` are available ' +
+      'globally before requiring React when unit testing or use ' +
+      'React.renderComponentToString for server rendering.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(
