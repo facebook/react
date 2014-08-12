@@ -29,6 +29,7 @@ var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactDefineComponentMethods = require('ReactDefineComponentMethods');
 var ReactDescriptor = require('ReactDescriptor');
 var ReactDescriptorValidator = require('ReactDescriptorValidator');
 var ReactDOM = require('ReactDOM');
@@ -99,7 +100,8 @@ var React = {
     Mount: ReactMount,
     MultiChild: ReactMultiChild,
     TextComponent: ReactTextComponent
-  }
+  },
+  defineComponentMethod: ReactDefineComponentMethods.define
 };
 
 if (__DEV__) {
