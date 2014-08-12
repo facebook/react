@@ -76,7 +76,7 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 ### SVG Attributes
 
 ```
-cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
+clipPath cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
 gradientUnits markerEnd markerMid markerStart offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
