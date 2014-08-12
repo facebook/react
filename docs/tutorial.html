@@ -477,6 +477,12 @@
 <span class="nt">&lt;/html&gt;</span>
 </code></pre></div>
 <p>For the remainder of this tutorial, we&#39;ll be writing our JavaScript code in this script tag.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>We included jQuery here because we want to simplify the code of our future ajax calls, but it&#39;s <strong>NOT</strong> mandatory for React to work.</p>
+</blockquote>
 <h3><a class="anchor" name="your-first-component"></a>Your first component <a class="hash-link" href="#your-first-component">#</a></h3>
 <p>React is all about modular, composable components. For our comment box example, we&#39;ll have the following component structure:</p>
 <div class="highlight"><pre><code class="text language-text" data-lang="text">- CommentBox
@@ -577,9 +583,9 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> component as both XML-like children and attributes. Data passed from parent to child is called <strong>props</strong>, short for properties.</p>
+<p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> components. For example, we passed <em>Pete Hunt</em> (via an attribute) and <em>This is one comment</em> (via an XML-like child node) to the first <code>Comment</code>. Data passed from parent to children components is called <strong>props</strong>, short for properties.</p>
 <h3><a class="anchor" name="using-props"></a>Using props <a class="hash-link" href="#using-props">#</a></h3>
-<p>Let&#39;s create the Comment component. It will read the data passed to it from the CommentList and render some markup:</p>
+<p>Let&#39;s create the Comment component. Using <strong>props</strong> we will be able to read the data passed to it from the <code>CommentList</code>, and render some markup:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial5.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -853,7 +859,7 @@
 <h5><a class="anchor" name="callbacks-as-props"></a>Callbacks as props <a class="hash-link" href="#callbacks-as-props">#</a></h5>
 <p>When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in <code>CommentBox</code> since <code>CommentBox</code> owns the state that represents the list of comments.</p>
 
-<p>We need to pass data from the child component to its parent. We do this by passing a <code>callback</code> in props from parent to child:</p>
+<p>We need to pass data from the child component back up to its parent. We do this in our parent&#39;s <code>render</code> method by passing a new callback (<code>handleCommentSubmit</code>) into the child, binding it to the child&#39;s <code>onCommentSubmit</code> event. Whenever the event is triggered, the callback will be invoked:</p>
 <div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

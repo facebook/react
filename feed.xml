@@ -139,7 +139,7 @@ This is not the intended way to use React but can be useful as last resort if yo
 
 &lt;iframe src=&quot;//player.vimeo.com/video/100010922&quot; width=&quot;650&quot; height=&quot;315&quot; webkitallowfullscreen mozallowfullscreen allowfullscreen&gt;&lt;/iframe&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactintl-mixin-by-yahoo&quot;&gt;&lt;/a&gt;ReactIntl Mixin by Yahoo &lt;a class=&quot;hash-link&quot; href=&quot;#reactintl-mixin-by-yahoo&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;There are a couple of React-related projects that recently appeared on Yahoo&amp;#39;s GitHub, the first one being an  &lt;a href=&quot;https://github.com/yahoo/react-intl&quot;&gt;internationalization mixin&lt;/a&gt;. It&amp;#39;s great to see them getting excitied about React and contributing back to the community.&lt;/p&gt;
+&lt;p&gt;There are a couple of React-related projects that recently appeared on Yahoo&amp;#39;s GitHub, the first one being an  &lt;a href=&quot;https://github.com/yahoo/react-intl&quot;&gt;internationalization mixin&lt;/a&gt;. It&amp;#39;s great to see them getting excited about React and contributing back to the community.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;javascript language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;mixins&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ReactIntlMixin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;],&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -617,7 +617,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;p&gt;When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&amp;#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&amp;#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.&lt;/p&gt;
 
-&lt;p&gt;Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An &lt;a href=&quot;https://github.com/facebook/react/tree/master/examples/todomvc-flux&quot;&gt;example of this architecture&lt;/a&gt; is available, along with more &lt;a href=&quot;http://facebook.github.io/react/docs/flux-overview.html&quot;&gt;detailed documentation&lt;/a&gt; and a &lt;a href=&quot;http://facebook.github.io/react/docs/flux-todo-list.html&quot;&gt;tutorial&lt;/a&gt;. Look for more examples to come in the future.&lt;/p&gt;
+&lt;p&gt;Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An &lt;a href=&quot;https://github.com/facebook/flux/tree/master/examples/flux-todomvc&quot;&gt;example of this architecture&lt;/a&gt; is available, along with more &lt;a href=&quot;http://facebook.github.io/react/docs/flux-overview.html&quot;&gt;detailed documentation&lt;/a&gt; and a &lt;a href=&quot;http://facebook.github.io/react/docs/flux-todo-list.html&quot;&gt;tutorial&lt;/a&gt;. Look for more examples to come in the future.&lt;/p&gt;
 </description>
 				<pubDate>2014-05-06T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/05/06/flux.html</link>
@@ -632,14 +632,16 @@ in .NET applications, focusing specifically on ASP.NET MVC web applications.
 It has several purposes:&lt;/p&gt;
 
 &lt;ul&gt;
-&lt;li&gt;&lt;p&gt;On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
-will be compiled and cached server-side.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;@Url.Content(&amp;quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Scripts&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;HelloWorld&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;JSX to JavaScript compilation via popular minification/combination libraries
+&lt;li&gt;On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
+will be compiled and cached server-side.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;html language-html&quot; data-lang=&quot;html&quot;&gt;   &lt;span class=&quot;nt&quot;&gt;&amp;lt;script &lt;/span&gt;&lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&amp;quot;@Url.Content(&amp;quot;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;Scripts&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;HelloWorld&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;jsx&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;quot;)&amp;quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&amp;lt;/script&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;JSX to JavaScript compilation via popular minification/combination libraries
 (Cassette and ASP.NET Bundling and Minification). This is suggested for
-production websites.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Server-side component rendering to make your initial render super fast.&lt;/p&gt;&lt;/li&gt;
+production websites.&lt;/li&gt;
+&lt;li&gt;Server-side component rendering to make your initial render super fast.&lt;/li&gt;
 &lt;/ul&gt;
 
 &lt;p&gt;Even though we are focusing on ASP.NET MVC, ReactJS.NET can also be used in

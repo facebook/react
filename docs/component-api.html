@@ -451,6 +451,8 @@
 <p><code>setState()</code> does not immediately mutate <code>this.state</code> but creates a pending state transition. Accessing <code>this.state</code> after calling this method can potentially return the existing value.</p>
 
 <p>There is no guarantee of synchronous operation of calls to <code>setState</code> and calls may be batched for performance gains.</p>
+
+<p><code>setState()</code> will always trigger a re-render unless conditional rendering logic is implemented in <code>shouldComponentUpdate()</code>. If mutable objects are being used and the logic cannot be implemented in <code>shouldComponentUpdate()</code>, calling <code>setState()</code> only when the new state differs from the previous state will avoid unnecessary re-renders.</p>
 </blockquote>
 <h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>

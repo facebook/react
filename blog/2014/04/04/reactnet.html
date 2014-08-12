@@ -101,14 +101,16 @@ in .NET applications, focusing specifically on ASP.NET MVC web applications.
 It has several purposes:</p>
 
 <ul>
-<li><p>On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
-will be compiled and cached server-side.</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;@Url.Content(&quot;</span><span class="err">/</span><span class="na">Scripts</span><span class="err">/</span><span class="na">HelloWorld</span><span class="err">.</span><span class="na">jsx</span><span class="err">&quot;)&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-</code></pre></div></li>
-<li><p>JSX to JavaScript compilation via popular minification/combination libraries
+<li>On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
+will be compiled and cached server-side.</li>
+</ul>
+<div class="highlight"><pre><code class="html language-html" data-lang="html">   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;@Url.Content(&quot;</span><span class="err">/</span><span class="na">Scripts</span><span class="err">/</span><span class="na">HelloWorld</span><span class="err">.</span><span class="na">jsx</span><span class="err">&quot;)&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<ul>
+<li>JSX to JavaScript compilation via popular minification/combination libraries
 (Cassette and ASP.NET Bundling and Minification). This is suggested for
-production websites.</p></li>
-<li><p>Server-side component rendering to make your initial render super fast.</p></li>
+production websites.</li>
+<li>Server-side component rendering to make your initial render super fast.</li>
 </ul>
 
 <p>Even though we are focusing on ASP.NET MVC, ReactJS.NET can also be used in
