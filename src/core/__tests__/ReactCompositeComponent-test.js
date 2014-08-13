@@ -688,7 +688,12 @@ describe('ReactCompositeComponent', function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: x'
+      'Tried to merge two objects with the same key: `x`. ' +
+      'This conflict may be due to a mixin; in particular, you may be using ' +
+      'a mixin with its own getDefaultProps() or getInitialState(). This ' +
+      'could result in both the mixin and base component (or another mixin) ' +
+      'returning an object (either from getDefaultProps() or ' +
+      'getInitialState()) with the same key.'
     );
   });
 

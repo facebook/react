@@ -592,7 +592,12 @@ function mergeObjectsWithNoDuplicateKeys(one, two) {
     invariant(
       one[key] === undefined,
       'mergeObjectsWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: %s',
+      'Tried to merge two objects with the same key: `%s`. ' +
+      'This conflict may be due to a mixin; in particular, you may be using ' +
+      'a mixin with its own getDefaultProps() or getInitialState(). This ' +
+      'could result in both the mixin and base component (or another mixin) ' +
+      'returning an object (either from getDefaultProps() or ' +
+      'getInitialState()) with the same key.',
       key
     );
     one[key] = value;
