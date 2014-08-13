@@ -23,6 +23,16 @@ task :update_version do
   end
 end
 
+desc "update acknowledgements list"
+task :update_acknowledgements do
+  authors = File.readlines('../AUTHORS').map {|author| author.gsub(/ <.*\n/,'')}
+  # split into cols here because nobody knows how to use liquid
+  # need to to_f because ruby will keep slice_size as int and round on its own
+  slice_size = (authors.size / 3.to_f).ceil
+  cols = authors.each_slice(slice_size).to_a
+  File.open('_data/acknowledgements.yml', 'w+') { |f| f.write(cols.to_yaml) }
+end
+
 desc "build into ../../react-gh-pages"
 task :release => [:update_version, :default] do
   system "jekyll build -d ../../react-gh-pages"
