@@ -1,7 +1,6 @@
 ---
 id: working-with-the-browser
 title: Working With the Browser
-layout: docs
 permalink: working-with-the-browser.html
 prev: forms.html
 next: more-about-refs.html

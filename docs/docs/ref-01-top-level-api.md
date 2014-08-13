@@ -1,7 +1,6 @@
 ---
 id: top-level-api
 title: Top-Level API
-layout: docs
 permalink: top-level-api.html
 next: component-api.html
 ---

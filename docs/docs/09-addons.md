@@ -1,7 +1,6 @@
 ---
 id: addons
 title: Add-ons
-layout: docs
 permalink: addons.html
 prev: tooling-integration.html
 next: animation.html

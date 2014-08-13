@@ -1,7 +1,6 @@
 ---
 id: tutorial
 title: Tutorial
-layout: docs
 prev: getting-started.html
 next: thinking-in-react.html
 ---

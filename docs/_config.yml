@@ -15,6 +15,11 @@ defaults:
     type: post
   values:
     layout: post
+- scope:
+    path: docs
+    type: page
+  values:
+    layout: docs
 exclude:
 - Gemfile
 - Gemfile.lock

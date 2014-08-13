@@ -1,7 +1,6 @@
 ---
 id: thinking-in-react
 title: Thinking in React
-layout: docs
 prev: tutorial.html
 next: videos.html
 ---
