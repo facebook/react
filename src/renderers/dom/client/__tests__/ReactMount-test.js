@@ -224,4 +224,24 @@ describe('ReactMount', function() {
     expect(console.error.mock.calls.length).toBe(1);
     expect(console.error.mock.calls[0][0]).toContain('two copies of React');
   });
+
+  it('should warn if render removes React-rendered children', function() {
+    var container = document.createElement('container');
+    var Component = React.createClass({
+      render: function() {
+        return <div><div /></div>;
+      },
+    });
+    React.render(<Component />, container);
+
+    // Test that blasting away children throws a warning
+    spyOn(console, 'error');
+    var rootNode = container.firstChild;
+    React.render(<span />, rootNode);
+    expect(console.error.callCount).toBe(1);
+    expect(console.error.mostRecentCall.args[0]).toBe(
+      'Warning: renderComponent(...): Replacing React-rendered children ' +
+      'with a new root component.'
+    );
+  });
 });

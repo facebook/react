@@ -587,8 +587,16 @@ var ReactMount = {
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
       reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
+    var containerHasNonRootReactChild =
+      ReactMount.hasNonRootReactChild(container);
 
     if (__DEV__) {
+      warning(
+        !containerHasNonRootReactChild,
+        'renderComponent(...): Replacing React-rendered children with a new ' +
+        'root component.'
+      );
+
       if (!containerHasReactMarkup || reactRootElement.nextSibling) {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
@@ -601,13 +609,15 @@ var ReactMount = {
             );
             break;
           }
-
           rootElementSibling = rootElementSibling.nextSibling;
         }
       }
     }
 
-    var shouldReuseMarkup = containerHasReactMarkup && !prevComponent;
+    var shouldReuseMarkup =
+      containerHasReactMarkup &&
+      !prevComponent &&
+      !containerHasNonRootReactChild;
     var component = ReactMount._renderNewRootComponent(
       nextWrappedElement,
       container,
@@ -697,6 +707,28 @@ var ReactMount = {
     var reactRootID = getReactRootID(container);
     var component = instancesByReactRootID[reactRootID];
     if (!component) {
+      // Check if the node being unmounted was rendered by React, but isn't a
+      // root node.
+      var containerHasNonRootReactChild = ReactMount.hasNonRootReactChild(
+        container);
+
+      // Check if the container itself is a React root node.
+      var containerID = ReactMount.getID(container);
+      var containerRootID = ReactInstanceHandles.getReactRootIDFromNodeID(
+        containerID);
+      var isContainerReactRoot =
+        containerID && containerRootID && containerID === containerRootID;
+
+      if (__DEV__) {
+        warning(
+          !containerHasNonRootReactChild,
+          'unmountComponentAtNode(): The node you\'re attempting to unmount ' +
+          'is not a valid React root node, and thus cannot be unmounted.%s',
+          (isContainerReactRoot ? ' You may have passed in a React root ' +
+            'node as argument, rather than its container.' : '')
+        );
+      }
+
       return false;
     }
     ReactUpdates.batchedUpdates(
@@ -779,6 +811,22 @@ var ReactMount = {
     }
     var id = ReactMount.getID(node);
     return id ? id.charAt(0) === SEPARATOR : false;
+  },
+
+  /**
+   * True if the supplied DOM node has a direct React-rendered child that is
+   * not a React root element. Useful for warning in renderComponent`,
+   * `unmountComponentAtNode`, etc.
+   *
+   * @param {?DOMElement} node The candidate DOM node.
+   * @return {boolean} True if the DOM element contains a direct child that was
+   * rendered by React but is not a root element.
+   * @internal
+   */
+  hasNonRootReactChild: function(node) {
+    var reactRootID = getReactRootID(node);
+    return reactRootID ? reactRootID !==
+      ReactInstanceHandles.getReactRootIDFromNodeID(reactRootID) : false;
   },
 
   /**
