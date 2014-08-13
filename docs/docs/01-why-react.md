@@ -1,7 +1,6 @@
 ---
 id: why-react
 title: Why React?
-layout: docs
 permalink: why-react.html
 next: displaying-data.html
 ---

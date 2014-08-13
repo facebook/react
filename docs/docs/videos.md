@@ -1,7 +1,6 @@
 ---
 id: videos
 title: Videos
-layout: docs
 permalink: videos.html
 prev: thinking-in-react.html
 next: complementary-tools.html

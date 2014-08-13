@@ -12,7 +12,6 @@ build/
 docs/code
 docs/_site
 docs/.sass-cache
-docs/css/react.css
 docs/js/*
 docs/downloads
 examples/shared/*.js

@@ -1,8 +1,8 @@
 ---
 id: getting-started
 title: Getting Started
-layout: docs
 next: tutorial.html
+redirect_from: "docs/index.html"
 ---
 
 ## JSFiddle

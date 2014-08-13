@@ -1,7 +1,6 @@
 ---
 id: reusable-components
 title: Reusable Components
-layout: docs
 permalink: reusable-components.html
 prev: multiple-components.html
 next: forms.html

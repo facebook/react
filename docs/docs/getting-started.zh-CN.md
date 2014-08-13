@@ -1,7 +1,6 @@
 ---
 id: getting-started-zh-CN
 title: 入门教程
-layout: docs
 next: tutorial.html
 ---
 

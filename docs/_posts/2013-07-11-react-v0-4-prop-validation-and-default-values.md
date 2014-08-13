@@ -1,6 +1,5 @@
 ---
 title: "New in React v0.4: Prop Validation and Default Values"
-layout: post
 author: Paul O'Shannessy
 ---
 

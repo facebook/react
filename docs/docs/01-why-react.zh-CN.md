@@ -1,7 +1,6 @@
 ---
 id: why-react-zh-CN
 title: 为什么使用 React?
-layout: docs
 permalink: why-react-zh-CN.html
 next: displaying-data.html
 ---

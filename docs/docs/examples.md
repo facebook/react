@@ -1,7 +1,6 @@
 ---
 id: examples
 title: Examples
-layout: docs
 permalink: examples.html
 prev: complementary-tools.html
 ---
