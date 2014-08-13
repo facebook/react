@@ -341,7 +341,7 @@
         
           <li>
             <a href="/react/docs/flux-todo-list.html">
-              Flux Todo List
+              Flux TodoMVC Tutorial
             </a>
             
           </li>
@@ -496,16 +496,14 @@
 <p>It&#39;s as simple as:</p>
 
 <ol>
-<li>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</li>
-</ol>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+<li><p>Assign a <code>ref</code> attribute to anything returned from <code>render</code> such as:</p>
+<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+</code></pre></div></li>
+<li><p>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</p>
+<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
 </code></pre></div>
-<ol>
-<li>In some other code (typically event handler code), access the <strong>backing instance</strong> via <code>this.refs</code> as in:</li>
+<p>You can access the component&#39;s DOM node directly by calling <code>this.refs.myInput.getDOMNode()</code>.</p></li>
 </ol>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
-</code></pre></div>
-<p>You can access the component&#39;s DOM node directly by calling <code>this.refs.myInput.getDOMNode()</code>.</p>
 <h2><a class="anchor" name="completing-the-example"></a>Completing the Example <a class="hash-link" href="#completing-the-example">#</a></h2><div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
     <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
       <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
