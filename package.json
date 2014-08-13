@@ -72,7 +72,7 @@
   },
   "preferGlobal": true,
   "commonerConfig": {
-    "version": 4
+    "version": 5
   },
   "scripts": {
     "test": "./node_modules/.bin/grunt test"
