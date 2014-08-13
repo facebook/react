@@ -1317,9 +1317,33 @@ describe('ReactCompositeComponent', function() {
       });
     }).toThrow(
       'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
-      'define `abc` on your component more than once, but that is only ' +
-      'supported for functions, which are chained together. This conflict ' +
-      'may be due to a mixin.'
+      'define `abc` on your component more than once. This conflict may be ' +
+      'due to a mixin.'
+    );
+  });
+
+  it("should throw if mixins override functions in statics", function() {
+    expect(function() {
+      var Mixin = {
+        statics: {
+          abc: function() { console.log('foo'); }
+        }
+      };
+      React.createClass({
+        mixins: [Mixin],
+
+        statics: {
+          abc: function() { console.log('bar'); }
+        },
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'define `abc` on your component more than once. This conflict may be ' +
+      'due to a mixin.'
     );
   });
 
