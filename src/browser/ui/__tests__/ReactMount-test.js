@@ -114,4 +114,26 @@ describe('ReactMount', function() {
 
     expect(instance1 === instance2).toBe(true);
   });
+
+  it('should warn if render removes React-rendered children', function() {
+    var container = document.createElement('container');
+    var Component = React.createClass({
+      render: function() {
+        return <div>
+          <div />
+        </div>;
+      }
+    });
+    React.renderComponent(<Component />, container);
+
+    // Test that blasting away children throws a warning
+    spyOn(console, 'warn');
+    var rootNode = container.firstChild;
+    React.renderComponent(<span />, rootNode);
+    expect(console.warn.callCount).toBe(1);
+    expect(console.warn.mostRecentCall.args[0]).toBe(
+      'Warning: renderComponent(...): Replacing React-rendered children ' +
+      'with a new root component.'
+    );
+  });
 });

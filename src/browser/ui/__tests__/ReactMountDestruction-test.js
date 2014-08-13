@@ -52,4 +52,51 @@ describe('ReactMount', function() {
     React.unmountComponentAtNode(secondRootDiv);
     expect(secondRootDiv.firstChild).toBeNull();
   });
+
+  it("should warn when unmounting a non-container root node", function() {
+    var mainContainerDiv = document.createElement('div');
+
+    var component = (
+      <div>
+        <div />
+      </div>
+    );
+    React.renderComponent(component, mainContainerDiv);
+
+    // Test that unmounting at a root node gives a helpful warning
+    var rootDiv = mainContainerDiv.firstChild;
+    spyOn(console, 'warn');
+    React.unmountComponentAtNode(rootDiv);
+    expect(console.warn.callCount).toBe(1);
+    expect(console.warn.mostRecentCall.args[0]).toBe(
+      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
+      'unmount is not a valid React root node, and thus cannot be ' +
+      'unmounted. You may have passed in a React root node as argument, ' +
+      'rather than its container.'
+    );
+  });
+
+  it("should warn when unmounting a non-container, non-root node", function() {
+    var mainContainerDiv = document.createElement('div');
+
+    var component = (
+      <div>
+        <div>
+          <div />
+        </div>
+      </div>
+    );
+    React.renderComponent(component, mainContainerDiv);
+
+    // Test that unmounting at a non-root node gives a different warning
+    var nonRootDiv = mainContainerDiv.firstChild.firstChild;
+    spyOn(console, 'warn');
+    React.unmountComponentAtNode(nonRootDiv);
+    expect(console.warn.callCount).toBe(1);
+    expect(console.warn.mostRecentCall.args[0]).toBe(
+      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
+      'unmount is not a valid React root node, and thus cannot be ' +
+      'unmounted.'
+    );
+  });
 });
