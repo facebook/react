@@ -120,7 +120,7 @@
 </blockquote>
 <h2><a class="anchor" name="react--socket.io"></a>React + Socket.io <a class="hash-link" href="#react--socket.io">#</a></h2>
 <p><a href="http://enome.be/nl">Geert Pasteels</a> made a small experiment with Socket.io. He wrote a very small mixin that synchronizes React state with the server. Just include this mixin to your React component and it is now live!</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">);</span>
   <span class="p">}</span>
@@ -139,7 +139,7 @@
 <p><a href="https://github.com/Enome/react.io">Check it out on GitHub...</a></p>
 <h2><a class="anchor" name="cssobjectify"></a>cssobjectify <a class="hash-link" href="#cssobjectify">#</a></h2>
 <p><a href="http://andreypopp.com/">Andrey Popp</a> implemented a source transform that takes a CSS file and converts it to JSON. This integrates pretty nicely with React.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
 <span class="nx">MyComponent</span> <span class="p">{</span>
   <span class="nx">font</span><span class="o">-</span><span class="nx">size</span><span class="o">:</span> <span class="mi">12</span><span class="nx">px</span><span class="p">;</span>
   <span class="nx">background</span><span class="o">-</span><span class="nx">color</span><span class="o">:</span> <span class="nx">red</span><span class="p">;</span>

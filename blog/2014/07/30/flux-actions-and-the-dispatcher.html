@@ -109,7 +109,7 @@
 
 <p><img src="/react/img/blog/flux-diagram.png" style="width: 100%;" /></p>
 <h2><a class="anchor" name="why-we-need-a-dispatcher"></a>Why We Need a Dispatcher <a class="hash-link" href="#why-we-need-a-dispatcher">#</a></h2>
-<p>As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &quot;I need to wait for Store B to finish processing this action.&quot; The dispatcher provides this functionality through its waitFor() method.  </p>
+<p>As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &quot;I need to wait for Store B to finish processing this action.&quot; The dispatcher provides this functionality through its waitFor() method.</p>
 
 <p>The dispatch() method provides a simple, synchronous iteration through the callbacks, invoking each in turn. When waitFor() is encountered within one of the callbacks, execution of that callback stops and waitFor() provides us with a new iteration cycle over the dependencies. After the entire set of dependencies have been fulfilled, the original callback then continues to execute.</p>
 

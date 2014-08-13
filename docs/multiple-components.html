@@ -442,7 +442,7 @@
 <p>By building modular components that reuse other components with well-defined interfaces, you get much of the same benefits that you get by using functions or classes. Specifically you can <em>separate the different concerns</em> of your app however you please simply by building new components. By building a custom component library for your application, you are expressing your UI in a way that best fits your domain.</p>
 <h2><a class="anchor" name="composition-example"></a>Composition Example <a class="hash-link" href="#composition-example">#</a></h2>
 <p>Let&#39;s create a simple Avatar component which shows a profile picture and username using the Facebook Graph API.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -483,12 +483,12 @@
 <p>It&#39;s important to draw a distinction between the owner-ownee relationship and the parent-child relationship. The owner-ownee relationship is specific to React, while the parent-child relationship is simply the one you know and love from the DOM. In the example above, <code>Avatar</code> owns the <code>div</code>, <code>ProfilePic</code> and <code>ProfileLink</code> instances, and <code>div</code> is the <strong>parent</strong> (but not owner) of the <code>ProfilePic</code> and <code>ProfileLink</code> instances.</p>
 <h2><a class="anchor" name="children"></a>Children <a class="hash-link" href="#children">#</a></h2>
 <p>When you create a React component instance, you can include additional React components or JavaScript expressions between the opening and closing tags like this:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">Parent</span><span class="o">&gt;&lt;</span><span class="nx">Child</span> <span class="o">/&gt;&lt;</span><span class="err">/Parent&gt;</span>
 </code></pre></div>
 <p><code>Parent</code> can read its children by accessing the special <code>this.props.children</code> prop. <strong><code>this.props.children</code> is an opaque data structure:</strong> use the <a href="/react/docs/top-level-api.html#react.children">React.Children utilities</a> to manipulate them.</p>
 <h3><a class="anchor" name="child-reconciliation"></a>Child Reconciliation <a class="hash-link" href="#child-reconciliation">#</a></h3>
 <p><strong>Reconciliation is the process by which React updates the DOM with each new render pass.</strong> In general, children are reconciled according to the order in which they are rendered. For example, suppose two render passes generate the following respective markup:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">// Render Pass 1
+<div class="highlight"><pre><code class="language-html" data-lang="html">// Render Pass 1
 <span class="nt">&lt;Card&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
@@ -503,7 +503,7 @@
 <p>For most components, this is not a big deal. However, for stateful components that maintain data in <code>this.state</code> across render passes, this can be very problematic.</p>
 
 <p>In most cases, this can be sidestepped by hiding elements instead of destroying them:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html">// Render Pass 1
+<div class="highlight"><pre><code class="language-html" data-lang="html">// Render Pass 1
 <span class="nt">&lt;Card&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 1<span class="nt">&lt;/p&gt;</span>
   <span class="nt">&lt;p&gt;</span>Paragraph 2<span class="nt">&lt;/p&gt;</span>
@@ -515,7 +515,7 @@
 <span class="nt">&lt;/Card&gt;</span>
 </code></pre></div><h3><a class="anchor" name="dynamic-children"></a>Dynamic Children <a class="hash-link" href="#dynamic-children">#</a></h3>
 <p>The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a <code>key</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">results</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">;</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">ol</span><span class="o">&gt;</span>
@@ -529,7 +529,7 @@
 <p>When React reconciles the keyed children, it will ensure that any child with <code>key</code> will be reordered (instead of clobbered) or destroyed (instead of reused).</p>
 
 <p>You can also key children by passing an object. The object keys will be used as <code>key</code> for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order <strong>except</strong> for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">{};</span>
 
     <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">results</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span> <span class="p">{</span>

@@ -97,7 +97,7 @@
     <div class="post">
       <h2><a class="anchor" name="react-router"></a>React Router <a class="hash-link" href="#react-router">#</a></h2>
 <p><a href="http://ryanflorence.com/">Ryan Florence</a> and <a href="http://twitter.com/mjackson">Michael Jackson</a> ported Ember&#39;s router to React in a project called <a href="https://github.com/rackt/react-router">React Router</a>. This is a very good example of both communities working together to make the web better!</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
   <span class="o">&lt;</span><span class="nx">Routes</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
       <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
@@ -133,7 +133,7 @@
 </ul>
 <h2><a class="anchor" name="referencing-dynamic-children"></a>Referencing Dynamic Children <a class="hash-link" href="#referencing-dynamic-children">#</a></h2>
 <p>While Matt Zabriskie was working on <a href="https://www.npmjs.org/package/react-tabs">react-tabs</a> he discovered how to use React.Children.map and React.addons.cloneWithProps in order to <a href="http://www.mattzabriskie.com/blog/react-referencing-dynamic-children">reference dynamic children</a>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span>
@@ -158,7 +158,7 @@
 <h2><a class="anchor" name="html-parser2-react"></a>HTML Parser2 React <a class="hash-link" href="#html-parser2-react">#</a></h2>
 <p><a href="http://browniefed.github.io/">Jason Brown</a> adapted htmlparser2 to React: <a href="https://www.npmjs.org/package/htmlparser2-react">htmlparser2-react</a>. That allows you to convert raw HTML to the virtual DOM.
 This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
   <span class="s1">&#39;style=&quot;width:100%;height: 100%;&quot;&gt;&lt;article id=&quot;this-article&quot;&gt;&#39;</span> <span class="o">+</span>
   <span class="s1">&#39;&lt;p&gt;hey this is a paragraph&lt;/p&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;&#39;</span> <span class="o">+</span>
   <span class="s1">&#39;&lt;li&gt;3&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/article&gt;&lt;/div&gt;&#39;</span><span class="p">;</span>

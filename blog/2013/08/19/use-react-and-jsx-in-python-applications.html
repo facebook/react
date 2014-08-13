@@ -98,7 +98,7 @@
       <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
 <h2><a class="anchor" name="usage"></a>Usage <a class="hash-link" href="#usage">#</a></h2>
 <p>Transform your JSX files via the provided <code>jsx</code> module:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
 
 <span class="c"># For multiple paths, use the JSXTransformer class.</span>
 <span class="n">transformer</span> <span class="o">=</span> <span class="n">jsx</span><span class="o">.</span><span class="n">JSXTransformer</span><span class="p">()</span>
@@ -109,21 +109,21 @@
 <span class="n">jsx</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&#39;path/to/input/file.jsx&#39;</span><span class="p">,</span> <span class="s">&#39;path/to/output/file.js&#39;</span><span class="p">)</span>
 </code></pre></div>
 <p>For full paths to React files, use the <code>source</code> module:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
 
 <span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
 <span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="django"></a>Django <a class="hash-link" href="#django">#</a></h2>
 <p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
   <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
 <p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">$ pip install PyReact
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ pip install PyReact
 </code></pre></div>
 <p>Alternatively, add it into your <code>requirements</code> file:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">PyReact==0.1.1
+<div class="highlight"><pre><code class="language-text" data-lang="text">PyReact==0.1.1
 </code></pre></div>
 <p><strong>Dependencies</strong>: PyReact uses <a href="https://github.com/doloopwhile/PyExecJS">PyExecJS</a> to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&#39;re on a different platform, we recommend <a href="https://code.google.com/p/pyv8/">PyV8</a>.</p>
 

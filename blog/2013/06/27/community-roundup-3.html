@@ -113,14 +113,14 @@
 
 <blockquote>
 <p>Grunt task for compiling Facebook React&#39;s .jsx templates into .js</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">grunt</span><span class="p">.</span><span class="nx">initConfig</span><span class="p">({</span>
   <span class="nx">react</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">app</span><span class="o">:</span> <span class="p">{</span>
       <span class="nx">options</span><span class="o">:</span> <span class="p">{</span> <span class="nx">extension</span><span class="o">:</span> <span class="s1">&#39;js&#39;</span> <span class="p">},</span>
       <span class="nx">files</span><span class="o">:</span> <span class="p">{</span> <span class="s1">&#39;path/to/output/dir&#39;</span><span class="o">:</span> <span class="s1">&#39;path/to/jsx/templates/dir&#39;</span> <span class="p">}</span>
 </code></pre></div>
 <p>It also works great with <code>grunt-browserify</code>!</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">browserify</span><span class="o">:</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">browserify</span><span class="o">:</span> <span class="p">{</span>
   <span class="nx">options</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">transform</span><span class="o">:</span> <span class="p">[</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;grunt-react&#39;</span><span class="p">).</span><span class="nx">browserify</span> <span class="p">]</span>
   <span class="p">},</span>
@@ -151,7 +151,7 @@
 
 <blockquote>
 <p>Multiple people asked what&#39;s the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I&#39;m not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">{</span><span class="nx">div</span><span class="p">,</span> <span class="nx">h3</span><span class="p">,</span> <span class="nx">textarea</span><span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span><span class="nx">div</span><span class="p">,</span> <span class="nx">h3</span><span class="p">,</span> <span class="nx">textarea</span><span class="p">}</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span>
 <span class="p">(</span><span class="nx">div</span> <span class="p">{</span><span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;MarkdownEditor&#39;</span><span class="p">},</span> <span class="p">[</span>
   <span class="p">(</span><span class="nx">h3</span> <span class="p">{},</span> <span class="s1">&#39;Input&#39;</span><span class="p">),</span>
   <span class="p">(</span><span class="nx">textarea</span> <span class="p">{</span><span class="nx">onKeyUp</span><span class="o">:</span> <span class="err">@</span><span class="nx">handleKeyUp</span><span class="p">,</span> <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;textarea&#39;</span><span class="p">},</span>

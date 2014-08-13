@@ -114,7 +114,7 @@
 
 <blockquote>
 <p>We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">componentWillUpdate: function() {
+<div class="highlight"><pre><code class="language-text" data-lang="text">componentWillUpdate: function() {
   var node = this.getDOMNode();
   this.shouldScrollBottom =
     (node.scrollTop + node.offsetHeight) === node.scrollHeight;
@@ -158,7 +158,7 @@ componentDidUpdate: function() {
 </blockquote>
 <h2><a class="anchor" name="hoodie-react-todomvc"></a>Hoodie React TodoMVC <a class="hash-link" href="#hoodie-react-todomvc">#</a></h2>
 <p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
+<div class="highlight"><pre><code class="language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
 </code></pre></div>
 <p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
 <h2><a class="anchor" name="jsx-compiler"></a>JSX Compiler <a class="hash-link" href="#jsx-compiler">#</a></h2>

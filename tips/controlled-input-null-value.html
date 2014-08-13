@@ -438,7 +438,7 @@
 <p>You might have run into a problem where <code>value</code> is specified, but the input can still be changed without consent. In this case, you might have accidentally set <code>value</code> to <code>undefined</code> or <code>null</code>.</p>
 
 <p>The snippet below shows this phenomenon; after a second, the text becomes editable.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;hi&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 

@@ -116,7 +116,7 @@
 <p>This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.</p>
 
 <p>The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MeteorMixin</span><span class="p">],</span>
 
  <span class="nx">getMeteorState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

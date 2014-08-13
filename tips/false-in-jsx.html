@@ -436,15 +436,15 @@
     <p>Here&#39;s how <code>false</code> renders in different contexts:</p>
 
 <p>Renders as <code>id=&quot;false&quot;</code>:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>String <code>&quot;false&quot;</code> as input value:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>No child:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;, mountNode);</span>
 </code></pre></div>
 <p>The reason why this one doesn&#39;t render as the string <code>&quot;false&quot;</code> as a <code>div</code> child is to allow the more common use-case: <code>&lt;div&gt;{x &gt; 1 &amp;&amp; &#39;You have more than one item&#39;}&lt;/div&gt;</code>.</p>

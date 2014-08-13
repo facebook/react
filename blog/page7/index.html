@@ -123,7 +123,7 @@
 <figure><iframe src="http://www.slideshare.net/slideshow/embed_code/26589373" width="550" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
 <h2><a class="anchor" name="pump---clojure-bindings-for-react"></a>Pump - Clojure bindings for React <a class="hash-link" href="#pump---clojure-bindings-for-react">#</a></h2>
 <p><a href="http://solovyov.net/">Alexander Solovyov</a> has been working on React bindings for ClojureScript. This is really exciting as it is using &quot;native&quot; ClojureScript data structures.</p>
-<div class="highlight"><pre><code class="ruby language-ruby" data-lang="ruby"><span class="p">(</span><span class="n">ns</span> <span class="n">your</span><span class="o">.</span><span class="n">app</span>
+<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="p">(</span><span class="n">ns</span> <span class="n">your</span><span class="o">.</span><span class="n">app</span>
   <span class="p">(</span><span class="ss">:require</span><span class="o">-</span><span class="n">macros</span> <span class="o">[</span><span class="n">pump</span><span class="o">.</span><span class="n">def</span><span class="o">-</span><span class="n">macros</span> <span class="ss">:refer</span> <span class="o">[</span><span class="n">defr</span><span class="o">]]</span><span class="p">)</span>
   <span class="p">(</span><span class="ss">:require</span> <span class="o">[</span><span class="n">pump</span><span class="o">.</span><span class="n">core</span><span class="o">]</span><span class="p">))</span>
 
@@ -140,7 +140,7 @@
 
 <blockquote>
 <p>A wrapper around JSHint to allow linting of files containg JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">npm install -g jsxhint
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install -g jsxhint
 </code></pre></div>
 <p><a href="https://github.com/CondeNast/JSXHint">Check it out on GitHub...</a></p>
 </blockquote>
@@ -164,7 +164,7 @@
 <p>React is all about components. So let&#39;s build one.</p>
 
 <p>Let&#39;s call it Table (to avoid any confusion what the component is about).</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Table</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Table</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="cm">/*stuff goeth here*/</span>
 <span class="p">});</span>
 </code></pre></div>
@@ -264,7 +264,7 @@
 <p>This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.</p>
 
 <p>The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MeteorMixin</span><span class="p">],</span>
 
  <span class="nx">getMeteorState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -328,7 +328,7 @@
          <p>Today we&#39;re happy to announce the initial release of <a href="https://github.com/facebook/react-python">PyReact</a>, which makes it easier to use React and JSX in your Python applications. It&#39;s designed to provide an API to transform your JSX files into JavaScript, as well as provide access to the latest React source files.</p>
 <h2><a class="anchor" name="usage"></a>Usage <a class="hash-link" href="#usage">#</a></h2>
 <p>Transform your JSX files via the provided <code>jsx</code> module:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">jsx</span>
 
 <span class="c"># For multiple paths, use the JSXTransformer class.</span>
 <span class="n">transformer</span> <span class="o">=</span> <span class="n">jsx</span><span class="o">.</span><span class="n">JSXTransformer</span><span class="p">()</span>
@@ -339,21 +339,21 @@
 <span class="n">jsx</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="s">&#39;path/to/input/file.jsx&#39;</span><span class="p">,</span> <span class="s">&#39;path/to/output/file.js&#39;</span><span class="p">)</span>
 </code></pre></div>
 <p>For full paths to React files, use the <code>source</code> module:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">react</span> <span class="kn">import</span> <span class="n">source</span>
 
 <span class="c"># path_for raises IOError if the file doesn&#39;t exist.</span>
 <span class="n">react_js</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">path_for</span><span class="p">(</span><span class="s">&#39;react.min.js&#39;</span><span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="django"></a>Django <a class="hash-link" href="#django">#</a></h2>
 <p>PyReact includes a JSX compiler for <a href="https://github.com/cyberdelia/django-pipeline">django-pipeline</a>. Add it to your project&#39;s pipeline settings like this:</p>
-<div class="highlight"><pre><code class="python language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
+<div class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">PIPELINE_COMPILERS</span> <span class="o">=</span> <span class="p">(</span>
   <span class="s">&#39;react.utils.pipeline.JSXCompiler&#39;</span><span class="p">,</span>
 <span class="p">)</span>
 </code></pre></div><h2><a class="anchor" name="installation"></a>Installation <a class="hash-link" href="#installation">#</a></h2>
 <p>PyReact is hosted on PyPI, and can be installed with <code>pip</code>:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">$ pip install PyReact
+<div class="highlight"><pre><code class="language-text" data-lang="text">$ pip install PyReact
 </code></pre></div>
 <p>Alternatively, add it into your <code>requirements</code> file:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">PyReact==0.1.1
+<div class="highlight"><pre><code class="language-text" data-lang="text">PyReact==0.1.1
 </code></pre></div>
 <p><strong>Dependencies</strong>: PyReact uses <a href="https://github.com/doloopwhile/PyExecJS">PyExecJS</a> to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&#39;re on a different platform, we recommend <a href="https://code.google.com/p/pyv8/">PyV8</a>.</p>
 
@@ -376,7 +376,7 @@
 
 <blockquote>
 <p>Browserify v2 transform for <code>text/jsx</code>. Basic usage is:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">% browserify -t reactify main.jsx
+<div class="highlight"><pre><code class="language-text" data-lang="text">% browserify -t reactify main.jsx
 </code></pre></div>
 <p><code>reactify</code> transform activates for files with either <code>.jsx</code> extension or <code>/** @jsx React.DOM */</code> pragma as a first line for any <code>.js</code> file.</p>
 
@@ -384,7 +384,7 @@
 </blockquote>
 <h2><a class="anchor" name="react-integration-with-este"></a>React Integration with Este <a class="hash-link" href="#react-integration-with-este">#</a></h2>
 <p><a href="http://daniel.steigerwald.cz/">Daniel Steigerwald</a> is now using React within <a href="https://github.com/steida/este">Este</a>, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.</p>
-<div class="highlight"><pre><code class="coffeescript language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
   <span class="nv">render: </span><span class="nf">-&gt;</span>
     <span class="nx">@div</span> <span class="p">[</span>
       <span class="nx">este</span><span class="p">.</span><span class="nx">demos</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">todoList</span> <span class="s">&#39;items&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
@@ -396,7 +396,7 @@
           <span class="s">&#39;value&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span>
           <span class="s">&#39;autoFocus&#39;</span><span class="o">:</span> <span class="kc">true</span>
           <span class="s">&#39;ref&#39;</span><span class="o">:</span> <span class="s">&#39;textInput&#39;</span>
-        <span class="nx">@button</span> <span class="s">&quot;Add </span><span class="err">#</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
+        <span class="nx">@button</span> <span class="s">&quot;Add #</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
       <span class="p">]</span>
     <span class="p">]</span>
 </code></pre></div>

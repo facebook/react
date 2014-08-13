@@ -434,7 +434,7 @@
     <h1>Shorthand for Specifying Pixel Values in style props</h1>
     <div class="subHeader"></div>
     <p>When specifying a pixel value for your inline <code>style</code> prop, React automatically appends the string &quot;px&quot; for you after your number value, so this works:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">divStyle</span> <span class="o">=</span> <span class="p">{</span><span class="nx">height</span><span class="o">:</span> <span class="mi">10</span><span class="p">};</span> <span class="c1">// rendered as &quot;height:10px&quot;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">divStyle</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>

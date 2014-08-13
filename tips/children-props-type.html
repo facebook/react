@@ -434,7 +434,7 @@
     <h1>Type of the Children props</h1>
     <div class="subHeader"></div>
     <p>Usually, a component&#39;s children (<code>this.props.children</code>) is an array of components:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -452,7 +452,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>However, when there is only a single child, <code>this.props.children</code> will be the single child component itself <em>without the array wrapper</em>. This saves an array allocation.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>

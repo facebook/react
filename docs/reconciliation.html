@@ -455,12 +455,12 @@
 <p>In order to do a tree diff, we first need to be able to diff two nodes. There are three different cases being handled.</p>
 <h3><a class="anchor" name="different-node-types"></a>Different Node Types <a class="hash-link" href="#different-node-types">#</a></h3>
 <p>If the node type is different, React is going to treat them as two different sub-trees, throw away the first one and build/insert the second one. </p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>
 =&gt; [removeNode <span class="nt">&lt;div</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>]
 </code></pre></div>
 <p>The same logic is used for custom components. If they are not of the same type, React is not going to even try at matching what they render. It is just going to remove the first one from the DOM and insert the second one.</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>
 =&gt; [removeNode <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>]
 </code></pre></div>
@@ -471,12 +471,12 @@ renderB: <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>
 <p>As a corollary, if there is a <code>&lt;Header&gt;</code> element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.</p>
 <h3><a class="anchor" name="dom-nodes"></a>DOM Nodes <a class="hash-link" href="#dom-nodes">#</a></h3>
 <p>When comparing two DOM nodes, we look at the attributes of both and can decide which of them changed in linear time.</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;before&quot;</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;before&quot;</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;after&quot;</span> <span class="nt">/&gt;</span>
 =&gt; [replaceAttribute id &quot;after&quot;]
 </code></pre></div>
 <p>Instead of treating style as an opaque string, a key-value object is used instead. This lets us update only the properties that changed.</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">{{color:</span> <span class="err">&#39;red&#39;}}</span> <span class="nt">/&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">{{color:</span> <span class="err">&#39;red&#39;}}</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span class="s">{{fontWeight:</span> <span class="err">&#39;bold&#39;}}</span> <span class="nt">/&gt;</span>
 =&gt; [removeStyle color], [addStyle font-weight &#39;bold&#39;]
 </code></pre></div>
@@ -489,19 +489,19 @@ renderB: <span class="nt">&lt;div</span> <span class="na">style=</span><span cla
 <p>In order to do children reconciliation, React adopts a very naive approach. It goes over both lists of children at the same time and generates a mutation whenever there&#39;s a difference.</p>
 
 <p>For example if you add an element at the end:</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 =&gt; [insertNode <span class="nt">&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;</span>]
 </code></pre></div>
 <p>Inserting an element at the beginning is problematic. React is going to see that both nodes are spans and therefore run into a mutation mode.</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 renderB: <span class="nt">&lt;div&gt;&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 =&gt; [replaceAttribute textContent &#39;second&#39;], [insertNode <span class="nt">&lt;span&gt;</span>first<span class="nt">&lt;/span&gt;</span>]
 </code></pre></div>
 <p>There are many algorithms that attempt to find the minimum sets of operations to transform a list of elements. <a href="http://en.wikipedia.org/wiki/Levenshtein_distance">Levenshtein distance</a> can find the minimum using single element insertion, deletion and substitution in O(n<sup>2</sup>). Even if we were to use Levenshtein, this doesn&#39;t find when a node has moved into another position and algorithms to do that have much worse complexity.</p>
 <h3><a class="anchor" name="keys"></a>Keys <a class="hash-link" href="#keys">#</a></h3>
 <p>In order to solve this seemingly intractable issue, an optional attribute has been introduced. You can provide for each child a key that is going to be used to do the matching. If you specify a key, React is now able to find insertion, deletion, substitution and moves in O(n) using a hash table.</p>
-<div class="highlight"><pre><code class="xml language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
+<div class="highlight"><pre><code class="language-xml" data-lang="xml">renderA: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 renderB: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;second&quot;</span><span class="nt">&gt;</span>second<span class="nt">&lt;/span&gt;&lt;span</span> <span class="na">key=</span><span class="s">&quot;first&quot;</span><span class="nt">&gt;</span>first<span class="nt">&lt;/span&gt;&lt;/div&gt;</span>
 =&gt; [insertNode <span class="nt">&lt;span&gt;</span>second<span class="nt">&lt;/span&gt;</span>]
 </code></pre></div>

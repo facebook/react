@@ -450,7 +450,7 @@ with React.</p>
 <h2><a class="anchor" name="why-jsx"></a>Why JSX? <a class="hash-link" href="#why-jsx">#</a></h2>
 <p>React works out of the box without JSX. Simply construct your markup using the
 functions on <code>React.DOM</code>. For example, here&#39;s how to construct a simple link:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">a</span><span class="p">({</span><span class="nx">href</span><span class="o">:</span> <span class="s1">&#39;http://facebook.github.io/react&#39;</span><span class="p">},</span> <span class="s1">&#39;React&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">link</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">a</span><span class="p">({</span><span class="nx">href</span><span class="o">:</span> <span class="s1">&#39;http://facebook.github.io/react&#39;</span><span class="p">},</span> <span class="s1">&#39;React&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p>We recommend using JSX for many reasons:</p>
 
@@ -462,7 +462,7 @@ functions on <code>React.DOM</code>. For example, here&#39;s how to construct a 
 <h2><a class="anchor" name="the-transform"></a>The Transform <a class="hash-link" href="#the-transform">#</a></h2>
 <p>JSX transforms from an XML-like syntax into native JavaScript. XML elements and
 attributes are transformed into function calls and objects, respectively.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="c1">// Output (JS):</span>
@@ -471,7 +471,7 @@ attributes are transformed into function calls and objects, respectively.</p>
 <p>Notice that in order to use <code>&lt;Nav /&gt;</code>, the <code>Nav</code> variable must be in scope.</p>
 
 <p>JSX also allows specifying children using XML syntax:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">,</span> <span class="nx">Profile</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">,</span> <span class="nx">Profile</span><span class="p">;</span>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="o">&gt;&lt;</span><span class="nx">Profile</span><span class="o">&gt;</span><span class="nx">click</span><span class="o">&lt;</span><span class="err">/Profile&gt;&lt;/Nav&gt;;</span>
 <span class="c1">// Output (JS):</span>
@@ -502,12 +502,12 @@ React in mind. The two valid uses of JSX are:</p>
 </ul>
 <h3><a class="anchor" name="react-dom-components"></a>React DOM Components <a class="hash-link" href="#react-dom-components">#</a></h3>
 <p>To construct a <code>&lt;div&gt;</code> is to create a variable that refers to <code>React.DOM.div</code>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;appClass&quot;</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">React</span><span class="o">!&lt;</span><span class="err">/div&gt;;</span>
 </code></pre></div><h3><a class="anchor" name="react-composite-components"></a>React Composite Components <a class="hash-link" href="#react-composite-components">#</a></h3>
 <p>To construct an instance of a composite component, create a variable that
 references the class.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
 <p>JSX will infer the component&#39;s name from the variable assignment and specify
@@ -527,7 +527,7 @@ as XML attribute names. Instead, React DOM components expect attributes like
 (e.g. <code>var div, span, h1, h2, ...</code>). JSX provides a convenience to address this
 problem by allowing you to specify a variable in an <code>@jsx</code> docblock field. JSX
 will use that field to find DOM components.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/**</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
 <span class="cm"> * @jsx React.DOM</span>
 <span class="cm"> */</span>
 <span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
@@ -546,19 +546,19 @@ used elements. In general, JSX has no notion of the DOM.</p>
 <h2><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h2><h3><a class="anchor" name="attribute-expressions"></a>Attribute Expressions <a class="hash-link" href="#attribute-expressions">#</a></h3>
 <p>To use a JavaScript expression as an attribute value, wrap the expression in a
 pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</code>).</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="c1">// Output (JS):</span>
 <span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="nx">Person</span><span class="p">({</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span>
 </code></pre></div><h3><a class="anchor" name="child-expressions"></a>Child Expressions <a class="hash-link" href="#child-expressions">#</a></h3>
 <p>Likewise, JavaScript expressions may be used to express children:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
 <span class="c1">// Output (JS):</span>
 <span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">Container</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">Nav</span><span class="p">(</span><span class="kc">null</span><span class="p">)</span> <span class="o">:</span> <span class="nx">Login</span><span class="p">(</span><span class="kc">null</span><span class="p">));</span>
 </code></pre></div><h3><a class="anchor" name="comments"></a>Comments <a class="hash-link" href="#comments">#</a></h3>
 <p>It&#39;s easy to add comments within your JSX; they&#39;re just JS expressions. You just need to be careful to put <code>{}</code> around the comments when you are within the children section of a tag.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
     <span class="p">{</span><span class="cm">/* child comment, put {} around */</span><span class="p">}</span>
     <span class="o">&lt;</span><span class="nx">Person</span>

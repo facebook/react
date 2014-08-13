@@ -132,7 +132,7 @@
 <p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
 
 <p>A basic example from github:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;header&gt;</span>
@@ -144,7 +144,7 @@
     <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;</span>place holder<span class="nt">&lt;/div&gt;</span>
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="nv">...</span>
+</code></pre></div><div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="nv">...</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">my-nav-item</span> <span class="p">[[</span><span class="nv">caption</span> <span class="nv">func</span><span class="p">]]</span>
   <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:.nav-item</span><span class="p">]</span>

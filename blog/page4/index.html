@@ -121,19 +121,19 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0.min
 <p>We&#39;ve also made several other improvements and a few breaking changes; the full changelog is provided below.</p>
 <h2><a class="anchor" name="jsx-whitespace"></a>JSX Whitespace <a class="hash-link" href="#jsx-whitespace">#</a></h2>
 <p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
   Monkeys:
   {listOfMonkeys} {submitButton}
 <span class="nt">&lt;/div&gt;</span>
 </code></pre></div>
 <p>In v0.8 and below, it was transformed to the following:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
   <span class="s2">&quot; Monkeys: &quot;</span><span class="p">,</span>
   <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="nx">submitButton</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>In v0.9, it will be transformed to this JS instead:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
 <span class="hll">  <span class="s2">&quot;Monkeys:&quot;</span><span class="p">,</span>
 </span><span class="hll">  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="nx">submitButton</span>
 </span><span class="p">)</span>
@@ -251,19 +251,19 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
 <h2><a class="anchor" name="upgrade-notes"></a>Upgrade Notes <a class="hash-link" href="#upgrade-notes">#</a></h2>
 <p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
   Monkeys:
   {listOfMonkeys} {submitButton}
 <span class="nt">&lt;/div&gt;</span>
 </code></pre></div>
 <p>In v0.8 and below, it was transformed to the following:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
   <span class="s2">&quot; Monkeys: &quot;</span><span class="p">,</span>
   <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="nx">submitButton</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>In v0.9, it will be transformed to this JS instead:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
 <span class="hll">  <span class="s2">&quot;Monkeys:&quot;</span><span class="p">,</span>
 </span><span class="hll">  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="nx">submitButton</span>
 </span><span class="p">)</span>
@@ -461,7 +461,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
 
 <p>A basic example from github:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
 <span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
   <span class="nt">&lt;body&gt;</span>
     <span class="nt">&lt;header&gt;</span>
@@ -473,7 +473,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
     <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;</span>place holder<span class="nt">&lt;/div&gt;</span>
   <span class="nt">&lt;/body&gt;</span>
 <span class="nt">&lt;/html&gt;</span>
-</code></pre></div><div class="highlight"><pre><code class="clojure language-clojure" data-lang="clojure"><span class="nv">...</span>
+</code></pre></div><div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="nv">...</span>
 
 <span class="p">(</span><span class="kd">defn </span><span class="nv">my-nav-item</span> <span class="p">[[</span><span class="nv">caption</span> <span class="nv">func</span><span class="p">]]</span>
   <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:.nav-item</span><span class="p">]</span>
@@ -558,7 +558,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <p><a href="http://selem.im">Selem Delul</a> bundled the <a href="http://facebook.github.io/react/docs/tutorial.html">React Tutorial</a> into a rails app. This is a good example on how to get started with a rails project.</p>
 
 <blockquote>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">git clone https://github.com/necrodome/react-rails-tutorial
+<div class="highlight"><pre><code class="language-text" data-lang="text">git clone https://github.com/necrodome/react-rails-tutorial
 cd react-rails-tutorial
 bundle install
 rake db:migrate
@@ -576,7 +576,7 @@ rails s
 <p><a href="http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/">Check out the blog post...</a></p>
 <h2><a class="anchor" name="react-infinite-scroll"></a>React Infinite Scroll <a class="hash-link" href="#react-infinite-scroll">#</a></h2>
 <p><a href="https://twitter.com/guillaumervls">Guillaume Rivals</a> implemented an InfiniteScroll component. This is a good example of a React component that has a simple yet powerful API.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">InfiniteScroll</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">InfiniteScroll</span>
   <span class="nx">pageStart</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
   <span class="nx">loadMore</span><span class="o">=</span><span class="p">{</span><span class="nx">loadFunc</span><span class="p">}</span>
   <span class="nx">hasMore</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span> <span class="o">||</span> <span class="kc">false</span><span class="p">}</span>

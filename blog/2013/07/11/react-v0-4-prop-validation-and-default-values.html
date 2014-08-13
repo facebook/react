@@ -100,7 +100,7 @@
 <p>Oftentimes you want to validate your <code>props</code> before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your <code>render</code> or <code>componentWillReceiveProps</code> functions, but that gets clunky fast.</p>
 
 <p>React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="c1">// An optional string prop named &quot;description&quot;.</span>
     <span class="nx">description</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
@@ -115,7 +115,7 @@
 <span class="p">});</span>
 </code></pre></div><h2><a class="anchor" name="default-values"></a>Default Values <a class="hash-link" href="#default-values">#</a></h2>
 <p>One common pattern we&#39;ve seen with our React code is to do something like this:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="s1">&#39;default value&#39;</span><span class="p">;</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
@@ -123,7 +123,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Do this for a few <code>props</code> across a few components and now you have a lot of redundant code. Starting with React v0.4, you can provide default values in a declarative way:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span>
       <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;default value&#39;</span>

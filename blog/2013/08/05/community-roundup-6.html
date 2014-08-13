@@ -104,7 +104,7 @@
 
 <blockquote>
 <p>Browserify v2 transform for <code>text/jsx</code>. Basic usage is:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">% browserify -t reactify main.jsx
+<div class="highlight"><pre><code class="language-text" data-lang="text">% browserify -t reactify main.jsx
 </code></pre></div>
 <p><code>reactify</code> transform activates for files with either <code>.jsx</code> extension or <code>/** @jsx React.DOM */</code> pragma as a first line for any <code>.js</code> file.</p>
 
@@ -112,7 +112,7 @@
 </blockquote>
 <h2><a class="anchor" name="react-integration-with-este"></a>React Integration with Este <a class="hash-link" href="#react-integration-with-este">#</a></h2>
 <p><a href="http://daniel.steigerwald.cz/">Daniel Steigerwald</a> is now using React within <a href="https://github.com/steida/este">Este</a>, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.</p>
-<div class="highlight"><pre><code class="coffeescript language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
   <span class="nv">render: </span><span class="nf">-&gt;</span>
     <span class="nx">@div</span> <span class="p">[</span>
       <span class="nx">este</span><span class="p">.</span><span class="nx">demos</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">todoList</span> <span class="s">&#39;items&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
@@ -124,7 +124,7 @@
           <span class="s">&#39;value&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span>
           <span class="s">&#39;autoFocus&#39;</span><span class="o">:</span> <span class="kc">true</span>
           <span class="s">&#39;ref&#39;</span><span class="o">:</span> <span class="s">&#39;textInput&#39;</span>
-        <span class="nx">@button</span> <span class="s">&quot;Add </span><span class="err">#</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
+        <span class="nx">@button</span> <span class="s">&quot;Add #</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
       <span class="p">]</span>
     <span class="p">]</span>
 </code></pre></div>

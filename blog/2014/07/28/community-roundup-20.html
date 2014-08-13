@@ -110,7 +110,7 @@
 <iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 <h2><a class="anchor" name="reactintl-mixin-by-yahoo"></a>ReactIntl Mixin by Yahoo <a class="hash-link" href="#reactintl-mixin-by-yahoo">#</a></h2>
 <p>There are a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub, the first one being an  <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. It&#39;s great to see them getting excited about React and contributing back to the community.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactIntlMixin</span><span class="p">],</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -127,9 +127,9 @@
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="thinking-and-learning-react"></a>Thinking and Learning React <a class="hash-link" href="#thinking-and-learning-react">#</a></h2>
-<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations. </p>
+<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations.</p>
 <h2><a class="anchor" name="london-react-meetup"></a>London React Meetup <a class="hash-link" href="#london-react-meetup">#</a></h2>
-<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content. </p>
+<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content.</p>
 
 <ul>
 <li>What&#39;s new in React 0.11 and how to improve performance by guaranteeing immutability</li>
@@ -149,7 +149,7 @@
 <p>Ingvar Stepanyan extended the Acorn JavaScript parser to support JSX. The result is a <a href="https://github.com/RReverser/acorn-jsx">JSX parser</a> that&#39;s 1.5–2.0x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things, but it&#39;s always a good thing to get competition on performance!</p>
 <h2><a class="anchor" name="reactscriptloader"></a>ReactScriptLoader <a class="hash-link" href="#reactscriptloader">#</a></h2>
 <p>Yariv Sadan created <a href="https://github.com/yariv/ReactScriptLoader">ReactScriptLoader</a> to make it easier to write components that require an external script.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactScriptLoaderMixin</span><span class="p">],</span>
   <span class="nx">getScriptURL</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="s1">&#39;http://d3js.org/d3.v3.min.js&#39;</span><span class="p">;</span>
@@ -164,7 +164,7 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> 
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoading</span> <span class="o">?</span> <span class="s1">&#39;Loading script...&#39;</span> <span class="o">:</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoadError</span> <span class="o">?</span> <span class="s1">&#39;Loading failed&#39;</span> <span class="o">:</span>
       <span class="s1">&#39;Loading succeeded&#39;</span><span class="p">;</span>

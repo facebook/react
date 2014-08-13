@@ -434,7 +434,7 @@
     <h1>If-Else in JSX</h1>
     <div class="subHeader"></div>
     <p><code>if-else</code> statements don&#39;t work inside JSX. This is because JSX is just syntactic sugar for function calls and object construction. Take this basic example:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="c1">// This JSX:</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;msg&quot;</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
@@ -443,7 +443,7 @@
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span><span class="s2">&quot;msg&quot;</span><span class="p">},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">),</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>This means that <code>if</code> statements don&#39;t fit in. Take this example:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="c1">// This JSX:</span>
 <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;</span>
@@ -452,7 +452,7 @@
 <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">({</span><span class="nx">id</span><span class="o">:</span> <span class="k">if</span> <span class="p">(</span><span class="nx">condition</span><span class="p">)</span> <span class="p">{</span> <span class="s1">&#39;msg&#39;</span> <span class="p">}},</span> <span class="s2">&quot;Hello World!&quot;</span><span class="p">);</span>
 </code></pre></div>
 <p>That&#39;s not valid JS. You probably want to make use of a ternary expression:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="nx">condition</span> <span class="o">?</span> <span class="s1">&#39;msg&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
 </code></pre></div>

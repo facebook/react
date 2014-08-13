@@ -97,7 +97,7 @@
         <div class="post">
          <h2><a class="anchor" name="react-router"></a>React Router <a class="hash-link" href="#react-router">#</a></h2>
 <p><a href="http://ryanflorence.com/">Ryan Florence</a> and <a href="http://twitter.com/mjackson">Michael Jackson</a> ported Ember&#39;s router to React in a project called <a href="https://github.com/rackt/react-router">React Router</a>. This is a very good example of both communities working together to make the web better!</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
   <span class="o">&lt;</span><span class="nx">Routes</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
       <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
@@ -133,7 +133,7 @@
 </ul>
 <h2><a class="anchor" name="referencing-dynamic-children"></a>Referencing Dynamic Children <a class="hash-link" href="#referencing-dynamic-children">#</a></h2>
 <p>While Matt Zabriskie was working on <a href="https://www.npmjs.org/package/react-tabs">react-tabs</a> he discovered how to use React.Children.map and React.addons.cloneWithProps in order to <a href="http://www.mattzabriskie.com/blog/react-referencing-dynamic-children">reference dynamic children</a>.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
       <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span>
@@ -158,7 +158,7 @@
 <h2><a class="anchor" name="html-parser2-react"></a>HTML Parser2 React <a class="hash-link" href="#html-parser2-react">#</a></h2>
 <p><a href="http://browniefed.github.io/">Jason Brown</a> adapted htmlparser2 to React: <a href="https://www.npmjs.org/package/htmlparser2-react">htmlparser2-react</a>. That allows you to convert raw HTML to the virtual DOM.
 This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
   <span class="s1">&#39;style=&quot;width:100%;height: 100%;&quot;&gt;&lt;article id=&quot;this-article&quot;&gt;&#39;</span> <span class="o">+</span>
   <span class="s1">&#39;&lt;p&gt;hey this is a paragraph&lt;/p&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;&#39;</span> <span class="o">+</span>
   <span class="s1">&#39;&lt;li&gt;3&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/article&gt;&lt;/div&gt;&#39;</span><span class="p">;</span>
@@ -194,7 +194,7 @@ This is not the intended way to use React but can be useful as last resort if yo
 
 <p><img src="/react/img/blog/flux-diagram.png" style="width: 100%;" /></p>
 <h2><a class="anchor" name="why-we-need-a-dispatcher"></a>Why We Need a Dispatcher <a class="hash-link" href="#why-we-need-a-dispatcher">#</a></h2>
-<p>As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &quot;I need to wait for Store B to finish processing this action.&quot; The dispatcher provides this functionality through its waitFor() method.  </p>
+<p>As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &quot;I need to wait for Store B to finish processing this action.&quot; The dispatcher provides this functionality through its waitFor() method.</p>
 
 <p>The dispatch() method provides a simple, synchronous iteration through the callbacks, invoking each in turn. When waitFor() is encountered within one of the callbacks, execution of that callback stops and waitFor() provides us with a new iteration cycle over the dependencies. After the entire set of dependencies have been fulfilled, the original callback then continues to execute.</p>
 
@@ -229,7 +229,7 @@ This is not the intended way to use React but can be useful as last resort if yo
 <iframe src="//player.vimeo.com/video/100010922" width="650" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
 <h2><a class="anchor" name="reactintl-mixin-by-yahoo"></a>ReactIntl Mixin by Yahoo <a class="hash-link" href="#reactintl-mixin-by-yahoo">#</a></h2>
 <p>There are a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub, the first one being an  <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. It&#39;s great to see them getting excited about React and contributing back to the community.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactIntlMixin</span><span class="p">],</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -246,9 +246,9 @@ This is not the intended way to use React but can be useful as last resort if yo
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
 <span class="p">);</span>
 </code></pre></div><h2><a class="anchor" name="thinking-and-learning-react"></a>Thinking and Learning React <a class="hash-link" href="#thinking-and-learning-react">#</a></h2>
-<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations. </p>
+<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations.</p>
 <h2><a class="anchor" name="london-react-meetup"></a>London React Meetup <a class="hash-link" href="#london-react-meetup">#</a></h2>
-<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content. </p>
+<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content.</p>
 
 <ul>
 <li>What&#39;s new in React 0.11 and how to improve performance by guaranteeing immutability</li>
@@ -268,7 +268,7 @@ This is not the intended way to use React but can be useful as last resort if yo
 <p>Ingvar Stepanyan extended the Acorn JavaScript parser to support JSX. The result is a <a href="https://github.com/RReverser/acorn-jsx">JSX parser</a> that&#39;s 1.5–2.0x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things, but it&#39;s always a good thing to get competition on performance!</p>
 <h2><a class="anchor" name="reactscriptloader"></a>ReactScriptLoader <a class="hash-link" href="#reactscriptloader">#</a></h2>
 <p>Yariv Sadan created <a href="https://github.com/yariv/ReactScriptLoader">ReactScriptLoader</a> to make it easier to write components that require an external script.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactScriptLoaderMixin</span><span class="p">],</span>
   <span class="nx">getScriptURL</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="s1">&#39;http://d3js.org/d3.v3.min.js&#39;</span><span class="p">;</span>
@@ -283,7 +283,7 @@ This is not the intended way to use React but can be useful as last resort if yo
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span> 
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoading</span> <span class="o">?</span> <span class="s1">&#39;Loading script...&#39;</span> <span class="o">:</span>
       <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoadError</span> <span class="o">?</span> <span class="s1">&#39;Loading failed&#39;</span> <span class="o">:</span>
       <span class="s1">&#39;Loading succeeded&#39;</span><span class="p">;</span>
@@ -376,7 +376,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0.mi
 <p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
 <h2><a class="anchor" name="rendering-to-null"></a>Rendering to <code>null</code> <a class="hash-link" href="#rendering-to-null">#</a></h2>
 <p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to write meaningful code. Returning <code>null</code> is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// Before</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">visible</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">/&gt;</span><span class="p">;</span>
@@ -393,7 +393,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0.mi
 <span class="p">}</span>
 </code></pre></div><h2><a class="anchor" name="jsx-namespacing"></a>JSX Namespacing <a class="hash-link" href="#jsx-namespacing">#</a></h2>
 <p>Another feature request we&#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as <code>&lt;Namespace.Component/&gt;</code>.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// Before</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
 <span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">UILayout</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">UIButton</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span><span class="p">;</span>
@@ -411,7 +411,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.11.0.mi
 <span class="p">}</span>
 </code></pre></div><h2><a class="anchor" name="improved-keyboard-event-normalization"></a>Improved keyboard event normalization <a class="hash-link" href="#improved-keyboard-event-normalization">#</a></h2>
 <p>Keyboard events now contain a normalized <code>e.key</code> value according to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#keys-special">DOM Level 3 Events spec</a>, allowing you to write simpler key handling code that works in all browsers, such as:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;Enter&#39;</span><span class="p">)</span> <span class="p">{</span>
     <span class="c1">// Handle enter key</span>
   <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="p">{</span>

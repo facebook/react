@@ -115,19 +115,19 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.9.0-rc1
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
 <h2><a class="anchor" name="upgrade-notes"></a>Upgrade Notes <a class="hash-link" href="#upgrade-notes">#</a></h2>
 <p>In addition to the changes to React core listed below, we&#39;ve made a small change to the way JSX interprets whitespace to make things more consistent. With this release, space between two components on the same line will be preserved, while a newline separating a text node from a tag will be eliminated in the output. Consider the code:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;div&gt;</span>
   Monkeys:
   {listOfMonkeys} {submitButton}
 <span class="nt">&lt;/div&gt;</span>
 </code></pre></div>
 <p>In v0.8 and below, it was transformed to the following:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
   <span class="s2">&quot; Monkeys: &quot;</span><span class="p">,</span>
   <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="nx">submitButton</span>
 <span class="p">)</span>
 </code></pre></div>
 <p>In v0.9, it will be transformed to this JS instead:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span>
 <span class="hll">  <span class="s2">&quot;Monkeys:&quot;</span><span class="p">,</span>
 </span><span class="hll">  <span class="nx">listOfMonkeys</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="nx">submitButton</span>
 </span><span class="p">)</span>

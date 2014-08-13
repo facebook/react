@@ -458,7 +458,7 @@
 <p><a href="https://github.com/reactjs/react-tutorial">It&#39;s all on GitHub.</a></p>
 <h3><a class="anchor" name="getting-started"></a>Getting started <a class="hash-link" href="#getting-started">#</a></h3>
 <p>For this tutorial we&#39;ll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
@@ -485,13 +485,13 @@
 </blockquote>
 <h3><a class="anchor" name="your-first-component"></a>Your first component <a class="hash-link" href="#your-first-component">#</a></h3>
 <p>React is all about modular, composable components. For our comment box example, we&#39;ll have the following component structure:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">- CommentBox
+<div class="highlight"><pre><code class="language-text" data-lang="text">- CommentBox
   - CommentList
     - Comment
   - CommentForm
 </code></pre></div>
 <p>Let&#39;s build the <code>CommentBox</code> component, which is just a simple <code>&lt;div&gt;</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial1.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial1.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -507,7 +507,7 @@
 <span class="p">);</span>
 </code></pre></div><h4><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h4>
 <p>The first thing you&#39;ll notice is the XML-ish syntax in your JavaScript. We have a simple precompiler that translates the syntactic sugar to this plain JavaScript:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial1-raw.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s1">&#39;CommentBox&#39;</span><span class="p">,</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -533,7 +533,7 @@
 <p><code>React.renderComponent()</code> instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.</p>
 <h2><a class="anchor" name="composing-components"></a>Composing components <a class="hash-link" href="#composing-components">#</a></h2>
 <p>Let&#39;s build skeletons for <code>CommentList</code> and <code>CommentForm</code> which will, again, be simple <code>&lt;div&gt;</code>s:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial2.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -555,7 +555,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Next, update the <code>CommentBox</code> component to use its new friends:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial3.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial3.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -571,7 +571,7 @@
 <p>Notice how we&#39;re mixing HTML tags and components we&#39;ve built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to &quot;React.DOM.tagName&quot; expressions and leave everything else alone. This is to prevent the pollution of the global namespace.</p>
 <h3><a class="anchor" name="component-properties"></a>Component Properties <a class="hash-link" href="#component-properties">#</a></h3>
 <p>Let&#39;s create our third component, <code>Comment</code>. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let&#39;s add some comments to the <code>CommentList</code>:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial4.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -586,7 +586,7 @@
 <p>Note that we have passed some data from the parent <code>CommentList</code> component to the child <code>Comment</code> components. For example, we passed <em>Pete Hunt</em> (via an attribute) and <em>This is one comment</em> (via an XML-like child node) to the first <code>Comment</code>. Data passed from parent to children components is called <strong>props</strong>, short for properties.</p>
 <h3><a class="anchor" name="using-props"></a>Using props <a class="hash-link" href="#using-props">#</a></h3>
 <p>Let&#39;s create the Comment component. Using <strong>props</strong> we will be able to read the data passed to it from the <code>CommentList</code>, and render some markup:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial5.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial5.js</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -605,7 +605,7 @@
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
 <p>First, add the third-party <strong>Showdown</strong> library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
-<div class="highlight"><pre><code class="html language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.11.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -615,7 +615,7 @@
 </span><span class="nt">&lt;/head&gt;</span>
 </code></pre></div>
 <p>Next, let&#39;s convert the comment text to Markdown and output it:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial6.js</span>
 <span class="hll"><span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Showdown</span><span class="p">.</span><span class="nx">converter</span><span class="p">();</span>
 </span><span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -635,7 +635,7 @@
 <p>But there&#39;s a problem! Our rendered comments look like this in the browser: &quot;<code>&lt;p&gt;</code>This is <code>&lt;em&gt;</code>another<code>&lt;/em&gt;</code> comment<code>&lt;/p&gt;</code>&quot;. We want those tags to actually render as HTML.</p>
 
 <p>That&#39;s React protecting you from an XSS attack. There&#39;s a way to get around it but the framework warns you not to use it:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial7.js</span>
 <span class="kd">var</span> <span class="nx">converter</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Showdown</span><span class="p">.</span><span class="nx">converter</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">Comment</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -656,14 +656,14 @@
 <p><strong>Remember:</strong> by using this feature you&#39;re relying on Showdown to be secure.</p>
 <h3><a class="anchor" name="hook-up-the-data-model"></a>Hook up the data model <a class="hash-link" href="#hook-up-the-data-model">#</a></h3>
 <p>So far we&#39;ve been inserting the comments directly in the source code. Instead, let&#39;s render a blob of JSON data into the comment list. Eventually this will come from the server, but for now, write it in your source:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial8.js</span>
 <span class="kd">var</span> <span class="nx">data</span> <span class="o">=</span> <span class="p">[</span>
   <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
   <span class="p">{</span><span class="nx">author</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
 <span class="p">];</span>
 </code></pre></div>
 <p>We need to get this data into <code>CommentList</code> in a modular way. Modify <code>CommentBox</code> and the <code>renderComponent()</code> call to pass this data into the <code>CommentList</code> via props:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial9.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial9.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -682,7 +682,7 @@
 <span class="p">);</span>
 </code></pre></div>
 <p>Now that the data is available in the <code>CommentList</code>, let&#39;s render the comments dynamically:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial10.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial10.js</span>
 <span class="kd">var</span> <span class="nx">CommentList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="kd">var</span> <span class="nx">commentNodes</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">data</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span> <span class="p">(</span><span class="nx">comment</span><span class="p">)</span> <span class="p">{</span>
@@ -703,7 +703,7 @@
 <p>That&#39;s it!</p>
 <h3><a class="anchor" name="fetching-from-the-server"></a>Fetching from the server <a class="hash-link" href="#fetching-from-the-server">#</a></h3>
 <p>Let&#39;s replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial11.js</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
 <span class="hll">  <span class="o">&lt;</span><span class="nx">CommentBox</span> <span class="nx">url</span><span class="o">=</span><span class="s2">&quot;comments.json&quot;</span> <span class="o">/&gt;</span><span class="p">,</span>
 </span>  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;content&#39;</span><span class="p">)</span>
@@ -716,7 +716,7 @@
 <p><code>render()</code> methods are written declaratively as functions of <code>this.props</code> and <code>this.state</code>. The framework guarantees the UI is always consistent with the inputs.</p>
 
 <p>When the server fetches data, we will be changing the comment data we have. Let&#39;s add an array of comment data to the <code>CommentBox</code> component as its state:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial12.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial12.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span><span class="hll">    <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
@@ -735,7 +735,7 @@
 <p><code>getInitialState()</code> executes exactly once during the lifecycle of the component and sets up the initial state of the component.</p>
 <h4><a class="anchor" name="updating-state"></a>Updating state <a class="hash-link" href="#updating-state">#</a></h4>
 <p>When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial13.json</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.json</span>
 <span class="p">[</span>
   <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Pete Hunt&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;This is one comment&quot;</span><span class="p">},</span>
   <span class="p">{</span><span class="s2">&quot;author&quot;</span><span class="o">:</span> <span class="s2">&quot;Jordan Walke&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="o">:</span> <span class="s2">&quot;This is *another* comment&quot;</span><span class="p">}</span>
@@ -744,7 +744,7 @@
 <p>We&#39;ll use jQuery to help make an asynchronous request to the server.</p>
 
 <p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run <code>python -m SimpleHTTPServer</code> in your application&#39;s directory.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
@@ -773,7 +773,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Here, <code>componentDidMount</code> is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to <code>this.setState()</code>. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial14.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial14.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span>    <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -813,7 +813,7 @@
 <p>All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the <code>comments.json</code> file; within 2 seconds, the changes will show!</p>
 <h3><a class="anchor" name="adding-new-comments"></a>Adding new comments <a class="hash-link" href="#adding-new-comments">#</a></h3>
 <p>Now it&#39;s time to build the form. Our <code>CommentForm</code> component should ask the user for their name and comment text and send a request to the server to save the comment.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial15.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -827,7 +827,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Let&#39;s make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let&#39;s listen for the form&#39;s submit event and clear it.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial16.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial16.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 </span><span class="hll">    <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
@@ -860,7 +860,7 @@
 <p>When a user submits a comment, we will need to refresh the list of comments to include the new one. It makes sense to do all of this logic in <code>CommentBox</code> since <code>CommentBox</code> owns the state that represents the list of comments.</p>
 
 <p>We need to pass data from the child component back up to its parent. We do this in our parent&#39;s <code>render</code> method by passing a new callback (<code>handleCommentSubmit</code>) into the child, binding it to the child&#39;s <code>onCommentSubmit</code> event. Whenever the event is triggered, the callback will be invoked:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial17.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -896,7 +896,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Let&#39;s call the callback from the <code>CommentForm</code> when the user submits the form:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial18.js</span>
 <span class="kd">var</span> <span class="nx">CommentForm</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleSubmit</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">author</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span><span class="p">.</span><span class="nx">trim</span><span class="p">();</span>
@@ -918,7 +918,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial19.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>
@@ -965,7 +965,7 @@
 <span class="p">});</span>
 </code></pre></div><h3><a class="anchor" name="optimization-optimistic-updates"></a>Optimization: optimistic updates <a class="hash-link" href="#optimization-optimistic-updates">#</a></h3>
 <p>Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial20.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">loadCommentsFromServer</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">$</span><span class="p">.</span><span class="nx">ajax</span><span class="p">({</span>

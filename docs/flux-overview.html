@@ -493,7 +493,7 @@ Views ---> (actions) ----> Dispatcher ---> (registered callback) ---> Stores ---
 <p>As mentioned earlier, the dispatcher is also able to manage dependencies between stores. This functionality is available through the <code>waitFor()</code> method within the Dispatcher class.  We did not need to use this method within the extremely simple <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">TodoMVC application</a>, but we have included it <a href="https://github.com/facebook/flux/blob/master/examples/flux-todomvc/js/dispatcher/Dispatcher.js#L110">in the example dispatcher</a> as an example of what a dispatcher should be able to do in a larger, more complex application.</p>
 
 <p>Within the TodoStore&#39;s registered callback we could explicitly wait for any dependencies to first update before moving forward:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="k">case</span> <span class="s1">&#39;TODO_CREATE&#39;</span><span class="o">:</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">case</span> <span class="s1">&#39;TODO_CREATE&#39;</span><span class="o">:</span>
   <span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">waitFor</span><span class="p">([</span>
     <span class="nx">PrependedTextStore</span><span class="p">.</span><span class="nx">dispatcherIndex</span><span class="p">,</span>
     <span class="nx">YetAnotherStore</span><span class="p">.</span><span class="nx">dispatcherIndex</span>

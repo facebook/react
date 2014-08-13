@@ -119,7 +119,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.10.0-rc
 <p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="http://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
 
 <p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
 <span class="c1">// &quot;descriptor&quot;, not necessarily the mounted instance.</span>
 <span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">);</span>

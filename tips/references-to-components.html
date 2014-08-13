@@ -434,12 +434,12 @@
     <h1>References to Components</h1>
     <div class="subHeader"></div>
     <p>If you&#39;re using React components in a larger non-React application or transitioning your code to React, you may need to keep references to components. <code>React.renderComponent</code> returns a reference to the mounted component:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">myContainer</span><span class="p">);</span>
 </code></pre></div>
 <p>Keep in mind, however, that the &quot;constructor&quot; of a component doesn&#39;t return a component instance! It&#39;s just a <strong>descriptor</strong>: a lightweight representation that tells React what the mounted component should look like.</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">myComponent</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span> <span class="c1">// This is just a descriptor.</span>
 

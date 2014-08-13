@@ -100,7 +100,7 @@
 <p>If you take a look at most of our current examples, you&#39;ll see us using <code>React.autoBind</code> for event handlers. This is used in place of <code>Function.prototype.bind</code>. Remember that in JS, <a href="http://bonsaiden.github.io/JavaScript-Garden/#function.this">function calls are late-bound</a>. That means that if you simply pass a function around, the <code>this</code> used inside won&#39;t necessarily be the <code>this</code> you expect. <code>Function.prototype.bind</code> creates a new, properly bound, function so that when called, <code>this</code> is exactly what you expect it to be.</p>
 
 <p>Before we launched React, we would write this:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -108,7 +108,7 @@
 <span class="p">});</span>
 </code></pre></div>
 <p>We wrote <code>React.autoBind</code> as a way to cache the function creation and save on memory usage. Since <code>render</code> can get called multiple times, if you used <code>this.onClick.bind(this)</code> you would actually create a new function on each pass. With React v0.3 you were able to write this instead:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">autoBind</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">}),</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -118,7 +118,7 @@
 <p>After using <code>React.autoBind</code> for a few weeks, we realized that there were very few times that we didn&#39;t want that behavior. So we made it the default! Now all methods defined within <code>React.createClass</code> will already be bound to the correct instance.</p>
 
 <p>Starting with v0.4 you can just write this:</p>
-<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
 <span class="hll">  <span class="nx">onClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">event</span><span class="p">)</span> <span class="p">{</span><span class="cm">/* do something with this */</span><span class="p">},</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
 <span class="hll">    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>

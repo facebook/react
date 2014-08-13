@@ -444,7 +444,7 @@
 <p>The TodoMVC example has all this built into it as well, but if you&#39;re starting with react-boilerplate make sure you edit your package.json file to match the file structure and dependencies described in the TodoMVC example&#39;s <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/package.json">package.json</a>, or else your code won&#39;t match up with the explanations below.</p>
 <h2><a class="anchor" name="source-code-structure"></a>Source Code Structure <a class="hash-link" href="#source-code-structure">#</a></h2>
 <p>The resulting index.js file may be used as the entry point into our app, but we&#39;ll put most of our code in a &#39;js&#39; directory. Let&#39;s let Browserify do its thing, and now we&#39;ll open a new tab in Terminal (or a GUI file browser) to look at the directory. It should look something like this:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">myapp
+<div class="highlight"><pre><code class="language-text" data-lang="text">myapp
   |
   + ...
   + js
@@ -455,7 +455,7 @@
   + ...
 </code></pre></div>
 <p>Next we&#39;ll dive into the js directory, and layout our application&#39;s primary directory structure:</p>
-<div class="highlight"><pre><code class="text language-text" data-lang="text">myapp
+<div class="highlight"><pre><code class="language-text" data-lang="text">myapp
   |
   + ...
   + js
@@ -471,7 +471,7 @@
   + ...
 </code></pre></div><h2><a class="anchor" name="creating-a-dispatcher"></a>Creating a Dispatcher <a class="hash-link" href="#creating-a-dispatcher">#</a></h2>
 <p>Now we are ready to create a dispatcher. Here is an naive example of a Dispatcher class, written with JavaScript promises, polyfilled with Jake Archibald&#39;s <a href="https://github.com/jakearchibald/ES6-Promises">ES6-Promises</a> module.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;es6-promise&#39;</span><span class="p">).</span><span class="nx">Promise</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;es6-promise&#39;</span><span class="p">).</span><span class="nx">Promise</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">merge</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">_callbacks</span> <span class="o">=</span> <span class="p">[];</span>
@@ -523,7 +523,7 @@
 <p>The public API of this basic Dispatcher consists of only two methods: register() and dispatch(). We&#39;ll use register() within our stores to register each store&#39;s callback. We&#39;ll use dispatch() within our actions to trigger the invocation of the callbacks.</p>
 
 <p>Now we are all set to create a dispatcher that is more specific to our app, which we&#39;ll call AppDispatcher.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Dispatcher&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Dispatcher&#39;</span><span class="p">);</span>
 
 <span class="kd">var</span> <span class="nx">merge</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
 
@@ -548,7 +548,7 @@
 <p>Now we&#39;ve created an implementation that is a bit more specific to our needs, with a helper function we can use in the actions coming from our views&#39; event handlers. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.</p>
 <h2><a class="anchor" name="creating-stores"></a>Creating Stores <a class="hash-link" href="#creating-stores">#</a></h2>
 <p>We can use Node&#39;s EventEmitter to get started with a store. We need EventEmitter to broadcast the &#39;change&#39; event to our controller-views. So let&#39;s take a look at what that looks like. I&#39;ve omitted some of the code for the sake of brevity, but for the full version see <a href="https://github.com/Facebook/flux/blob/master/examples/flux-todomvc/js/stores/TodoStore.js">TodoStore.js</a> in the TodoMVC example code.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">AppDispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../dispatcher/AppDispatcher&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">AppDispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../dispatcher/AppDispatcher&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">EventEmitter</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;events&#39;</span><span class="p">).</span><span class="nx">EventEmitter</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">TodoConstants</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../constants/TodoConstants&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">merge</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
@@ -640,7 +640,7 @@
 <p>Another important part is the registration of the store&#39;s callback with the dispatcher. We pass in our payload handling callback to the dispatcher and preserve the index that this store has in the dispatcher&#39;s registry. The callback function currently only handles two actionTypes, but later we can add as many as we need.</p>
 <h2><a class="anchor" name="listening-to-changes-with-a-controller-view"></a>Listening to Changes with a Controller-View <a class="hash-link" href="#listening-to-changes-with-a-controller-view">#</a></h2>
 <p>We need a React component near the top of our component hierarchy to listen for changes in the store. In a larger app, we would have more of these listening components, perhaps one for every section of the page. In Facebook&#39;s Ads Creation Tool, we have many of these controller-like views, each governing a specific section of the UI. In the Lookback Video Editor, we only had two: one for the animated preview and one for the image selection interface. Here&#39;s one for our TodoMVC example. Again, this is slightly abbreviated, but for the full code you can take a look at the TodoMVC example&#39;s <a href="https://github.com/facebook/flux/blob/master/examples/flux-todomvc/js/components/TodoApp.react.js">TodoApp.react.js</a></p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">Footer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Footer.react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">Header</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Header.react&#39;</span><span class="p">);</span>
@@ -697,7 +697,7 @@
 <p>The Header component contains the primary text input for the application, but it does not need to know the state of the store. The MainSection and Footer do need this data, so we pass it down to them.</p>
 <h2><a class="anchor" name="more-views"></a>More Views <a class="hash-link" href="#more-views">#</a></h2>
 <p>At a high level, the React component hierarchy of the app looks like this:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">TodoApp</span><span class="o">&gt;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">TodoApp</span><span class="o">&gt;</span>
   <span class="o">&lt;</span><span class="nx">Header</span><span class="o">&gt;</span>
     <span class="o">&lt;</span><span class="nx">TodoTextInput</span> <span class="o">/&gt;</span>
 
@@ -711,7 +711,7 @@
 </code></pre></div>
 <p>If a TodoItem is in edit mode, it will also render a TodoTextInput as a child. Let&#39;s take a look at how some of these components display the data they receive as props, and how they communicate through actions with the dispatcher.
 The MainSection needs to iterate over the collection of to-do items it received from TodoApp to create the list of TodoItems. In the component&#39;s render() method, we can do that iteration like so:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">allTodos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">allTodos</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">allTodos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">allTodos</span><span class="p">;</span>
 
 <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">key</span> <span class="k">in</span> <span class="nx">allTodos</span><span class="p">)</span> <span class="p">{</span>
   <span class="nx">todos</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">TodoItem</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">key</span><span class="p">}</span> <span class="nx">todo</span><span class="o">=</span><span class="p">{</span><span class="nx">allTodos</span><span class="p">[</span><span class="nx">key</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">);</span>
@@ -724,7 +724,7 @@ The MainSection needs to iterate over the collection of to-do items it received 
 <span class="p">);</span>
 </code></pre></div>
 <p>Now each TodoItem can display its own text, and perform actions utilizing its own ID. Explaining all the different actions that a TodoItem can invoke in the TodoMVC example goes beyond the scope of this article, but let&#39;s just take a look at the action that deletes one of the to-do items. Here is an abbreviated version of the TodoItem:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">TodoActions</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../actions/TodoActions&#39;</span><span class="p">);</span>
@@ -765,7 +765,7 @@ The MainSection needs to iterate over the collection of to-do items it received 
 <p>As you&#39;ll see below, with every change to the input, React expects us to update the state of the component. So when we are finally ready to save the text inside the input, we will put the value held in the component&#39;s state in the action&#39;s payload. This is UI state, rather than application state, and keeping that distinction in mind is a good guide for where state should live. All application state should live in the store, while components occasionally hold on to UI state. Ideally, React components preserve as little state as possible.</p>
 
 <p>Because TodoTextInput is being used in multiple places within our application, with different behaviors, we&#39;ll need to pass the onSave method in as a prop from the component&#39;s parent. This allows onSave to invoke different actions depending on where it is used.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">ReactPropTypes</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">;</span>
@@ -842,7 +842,7 @@ The MainSection needs to iterate over the collection of to-do items it received 
 </code></pre></div>
 <p>The Header passes in the onSave method as a prop to allow the TodoTextInput to create new
 to-do items:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">TodoActions</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../actions/TodoActions&#39;</span><span class="p">);</span>
@@ -883,7 +883,7 @@ to-do items:</p>
 <p>In a different context, such as in editing mode for an existing to-do item, we might pass an onSave callback that invokes <code>TodoActions.update(text)</code> instead.</p>
 <h2><a class="anchor" name="creating-semantic-actions"></a>Creating Semantic Actions <a class="hash-link" href="#creating-semantic-actions">#</a></h2>
 <p>Here is the basic code for the two actions we used above in our views:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/**</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
 <span class="cm"> * TodoActions</span>
 <span class="cm"> */</span>
 
@@ -919,7 +919,7 @@ to-do items:</p>
 <p>As you can see, we really would not need to have the helpers AppDispatcher.handleViewAction() or TodoActions.create(). We could, in theory, call AppDispatcher.dispatch() directly and provide a payload. But as our application grows, having these helpers keeps the code clean and semantic. It&#39;s just a lot cleaner to write TodoActions.destroy(id) instead of writing a whole lot of things that our TodoItem shouldn&#39;t have to know about.</p>
 
 <p>The payload produced by the TodoActions.create() will look like:</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="p">{</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
   <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
   <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;TODO_CREATE&#39;</span><span class="p">,</span>
@@ -930,7 +930,7 @@ to-do items:</p>
 <p>This payload is provided to the TodoStore through its registered callback. The TodoStore then broadcasts the &#39;change&#39; event, and the MainSection responds by fetching the new collection of to-do items from the TodoStore and changing its state. This change in state causes the TodoApp component to call its own render() method, and the render() method of all of its descendents.</p>
 <h2><a class="anchor" name="start-me-up"></a>Start Me Up <a class="hash-link" href="#start-me-up">#</a></h2>
 <p>The bootstrap file of our application is app.js. It simply takes the TodoApp component and renders it in the root element of the application.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
 
@@ -944,7 +944,7 @@ to-do items:</p>
 <p>As I said previously, our Dispatcher implementation is a bit naive. It&#39;s pretty good, but it will not suffice for most applications. We need a way to be able to manage dependencies between Stores. Let&#39;s add that functionality with a waitFor() method within the main body of the Dispatcher class.</p>
 
 <p>We&#39;ll need another public method, waitFor(). Note that it returns a Promise that can in turn be returned from the Store callback.</p>
-<div class="highlight"><pre><code class="javascript language-javascript" data-lang="javascript">  <span class="cm">/**</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="cm">/**</span>
 <span class="cm">   * @param  {array} promisesIndexes</span>
 <span class="cm">   * @param  {function} callback</span>
 <span class="cm">   */</span>
