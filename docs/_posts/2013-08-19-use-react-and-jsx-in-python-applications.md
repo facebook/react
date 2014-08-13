@@ -1,6 +1,5 @@
 ---
 title: "Use React and JSX in Python Applications"
-layout: post
 author: Kunal Mehta
 ---
 

@@ -1,6 +1,5 @@
 ---
 title: "Use React and JSX in Ruby on Rails"
-layout: post
 author: Paul O'Shannessy
 ---
 

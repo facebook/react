@@ -9,6 +9,12 @@ relative_permalinks: true
 paginate: 5
 timezone: America/Los_Angeles
 highlighter: pygments
+defaults:
+- scope:
+    path: ''
+    type: post
+  values:
+    layout: post
 exclude:
 - Gemfile
 - Gemfile.lock
