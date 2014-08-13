@@ -3,6 +3,7 @@ id: top-level-api
 title: Top-Level API
 permalink: top-level-api.html
 next: component-api.html
+redirect_from: "/docs/reference.html"
 ---
 
 ## React

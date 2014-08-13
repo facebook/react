@@ -6,6 +6,9 @@ gem 'rake'
 # 2.0 includes sass processing
 gem 'jekyll', '~>2.0'
 
+# Auto redirect pages
+gem 'jekyll-redirect-from'
+
 # JSON
 gem 'json'
 
