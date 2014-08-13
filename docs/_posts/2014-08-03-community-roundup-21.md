@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #21"
-layout: post
 author: Lou Husson
 ---
 

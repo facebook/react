@@ -1,6 +1,5 @@
 ---
 title: "Thinking in React"
-layout: post
 author: Pete Hunt
 ---
 

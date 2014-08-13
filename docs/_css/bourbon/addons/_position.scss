@@ -1,9 +1,11 @@
-@mixin position ($position: relative, $coordinates: 0 0 0 0) {
+@mixin position ($position: relative, $coordinates: null null null null) {
 
   @if type-of($position) == list {
     $coordinates: $position;
     $position: relative;
   }
+
+  $coordinates: unpack($coordinates);
 
   $top: nth($coordinates, 1);
   $right: nth($coordinates, 2);
@@ -12,31 +14,19 @@
 
   position: $position;
 
-  @if $top == auto {
-    top: $top;
-  }
-  @else if not(unitless($top)) {
+  @if ($top and $top == auto) or (type-of($top) == number) {
     top: $top;
   }
 
-  @if $right == auto {
-    right: $right;
-  }
-  @else if not(unitless($right)) {
+  @if ($right and $right == auto) or (type-of($right) == number) {
     right: $right;
   }
 
-  @if $bottom == auto {
-    bottom: $bottom;
-  }
-  @else if not(unitless($bottom)) {
+  @if ($bottom and $bottom == auto) or (type-of($bottom) == number) {
     bottom: $bottom;
   }
 
-  @if $left == auto {
-    left: $left;
-  }
-  @else if not(unitless($left)) {
+  @if ($left and $left == auto) or (type-of($left) == number) {
     left: $left;
   }
 }

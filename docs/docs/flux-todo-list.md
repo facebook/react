@@ -1,7 +1,6 @@
 ---
 id: flux-todo-list
 title: Flux TodoMVC Tutorial
-layout: docs
 prev: flux-overview.html
 ---
 

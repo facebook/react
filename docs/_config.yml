@@ -1,21 +1,37 @@
 ---
-baseurl: "/react"
+name: React
+description: A JavaScript library for building user interfaces
 url: http://facebook.github.io
+baseurl: "/react"
 permalink: "/blog/:year/:month/:day/:title.html"
+paginate_path: "/blog/page:num/"
+relative_permalinks: true
+paginate: 5
+timezone: America/Los_Angeles
+highlighter: pygments
+defaults:
+- scope:
+    path: ''
+    type: post
+  values:
+    layout: post
+- scope:
+    path: docs
+    type: page
+  values:
+    layout: docs
 exclude:
 - Gemfile
 - Gemfile.lock
 - README.md
 - Rakefile
+markdown: redcarpet
 redcarpet:
   extensions:
   - fenced_code_blocks
-pygments: true
-name: React
-markdown: redcarpet
+sass:
+  style: :compressed
+  sass_dir: _css
+gems:
+- jekyll-redirect-from
 react_version: 0.11.1
-description: A JavaScript library for building user interfaces
-relative_permalinks: true
-paginate: 5
-paginate_path: "/blog/page:num/"
-timezone: America/Los_Angeles

@@ -1,5 +1,10 @@
 @mixin hide-text {
-  color:            transparent;
-  font:             0/0 a;
-  text-shadow:      none;
+  overflow: hidden;
+
+  &:before {
+    content: "";
+    display: block;
+    width: 0;
+    height: 100%;
+  }
 }

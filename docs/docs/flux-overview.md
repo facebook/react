@@ -1,7 +1,6 @@
 ---
 id: flux-overview
 title: Flux Application Architecture
-layout: docs
 next: flux-todo-list.html
 ---
 

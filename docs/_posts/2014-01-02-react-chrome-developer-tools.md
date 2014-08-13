@@ -1,6 +1,5 @@
 ---
 title: "React Chrome Developer Tools"
-layout: post
 author: Sebastian Markbåge
 ---
 

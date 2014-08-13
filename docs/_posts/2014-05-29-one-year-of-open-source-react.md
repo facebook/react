@@ -1,6 +1,5 @@
 ---
 title: "One Year of Open-Source React"
-layout: post
 author: Cheng Lou
 ---
 

@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #11"
-layout: post
 author: Vjeux
 ---
 

@@ -1,7 +1,6 @@
 ---
 id: tags-and-attributes
 title: Tags and Attributes
-layout: docs
 permalink: tags-and-attributes.html
 prev: component-specs.html
 next: events.html

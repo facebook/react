@@ -1,0 +1,10 @@
+// Font feature settings mixin and property default.
+// Examples: @include font-feature-settings("liga");
+//           @include font-feature-settings("lnum" false);
+//           @include font-feature-settings("pnum" 1, "kern" 0);
+//           @include font-feature-settings("ss01", "ss02");
+
+@mixin font-feature-settings($settings...) {
+  @if length($settings) == 0 { $settings: none; }
+  @include prefixer(font-feature-settings, $settings, webkit moz ms spec);
+}

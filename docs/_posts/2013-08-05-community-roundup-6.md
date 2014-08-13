@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #6"
-layout: post
 author: Vjeux
 ---
 
@@ -58,7 +57,7 @@ este.demos.react.todoApp = este.react.create (`/** @lends {React.ReactComponent.
 [Zaim Bakar](http://zaim.github.io/) shared his boilerplate to get started with Stylus CSS processor.
 
 > This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.
-> 
+>
 > - Very minimal HTML boilerplate
 > - Uses Stylus, with nib included
 > - Uses two build targets:

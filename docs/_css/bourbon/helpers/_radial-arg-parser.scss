@@ -22,7 +22,7 @@
           $pos: $pos nth($value, $i);
         }
       }
-      $G1: false;
+      $G1: null;
     }
 
     // If not spec calculate correct values
@@ -38,7 +38,7 @@
           $pos: $value;
 
           @if $pos == $G1 {
-            $G1: false;
+            $G1: null;
           }
         }
 
@@ -55,11 +55,11 @@
           $shape-size: $value;
 
           @if $value == $G1 {
-            $G1: false;
+            $G1: null;
           }
 
           @else if $value == $G2 {
-            $G2: false;
+            $G2: null;
           }
         }
       }

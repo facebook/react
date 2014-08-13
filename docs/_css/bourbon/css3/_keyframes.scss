@@ -8,36 +8,28 @@
 
   @if $original-prefix-for-webkit {
     @include disable-prefix-for-all();
-    $prefix-for-webkit: true;
+    $prefix-for-webkit: true !global;
     @-webkit-keyframes #{$name} {
       @content;
     }
   }
   @if $original-prefix-for-mozilla {
     @include disable-prefix-for-all();
-    $prefix-for-mozilla: true;
+    $prefix-for-mozilla: true !global;
     @-moz-keyframes #{$name} {
       @content;
     }
   }
-  @if $original-prefix-for-opera {
-    @include disable-prefix-for-all();
-    $prefix-for-opera: true;
-    @-o-keyframes #{$name} {
-      @content;
-    }
-  }
+
+  $prefix-for-webkit:    $original-prefix-for-webkit    !global;
+  $prefix-for-mozilla:   $original-prefix-for-mozilla   !global;
+  $prefix-for-microsoft: $original-prefix-for-microsoft !global;
+  $prefix-for-opera:     $original-prefix-for-opera     !global;
+  $prefix-for-spec:      $original-prefix-for-spec      !global;
+
   @if $original-prefix-for-spec {
-    @include disable-prefix-for-all();
-    $prefix-for-spec: true;
     @keyframes #{$name} {
       @content;
     }
   }
-
-  $prefix-for-webkit:    $original-prefix-for-webkit;
-  $prefix-for-mozilla:   $original-prefix-for-mozilla;
-  $prefix-for-microsoft: $original-prefix-for-microsoft;
-  $prefix-for-opera:     $original-prefix-for-opera;
-  $prefix-for-spec:      $original-prefix-for-spec;
 }

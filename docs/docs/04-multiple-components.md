@@ -1,7 +1,6 @@
 ---
 id: multiple-components
 title: Multiple Components
-layout: docs
 permalink: multiple-components.html
 prev: interactivity-and-dynamic-uis.html
 next: reusable-components.html

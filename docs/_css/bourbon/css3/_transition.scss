@@ -1,16 +1,59 @@
 // Shorthand mixin. Supports multiple parentheses-deliminated values for each variable.
-// Example: @include transition (all, 2.0s, ease-in-out);
-//          @include transition ((opacity, width), (1.0s, 2.0s), ease-in, (0, 2s));
-//          @include transition ($property:(opacity, width), $delay: (1.5s, 2.5s));
+// Example: @include transition (all 2s ease-in-out);
+//          @include transition (opacity 1s ease-in 2s, width 2s ease-out);
+//          @include transition-property (transform, opacity);
 
 @mixin transition ($properties...) {
-  @if length($properties) >= 1 {
-    @include prefixer(transition, $properties, webkit moz spec);
+  // Fix for vendor-prefix transform property
+  $needs-prefixes: false;
+  $webkit: ();
+  $moz: ();
+  $spec: ();
+
+  // Create lists for vendor-prefixed transform
+  @each $list in $properties {
+    @if nth($list, 1) == "transform" {
+      $needs-prefixes: true;
+      $list1: -webkit-transform;
+      $list2: -moz-transform;
+      $list3: ();
+
+      @each $var in $list {
+        $list3: join($list3, $var);
+
+        @if $var != "transform" {
+          $list1: join($list1, $var);
+          $list2: join($list2, $var);
+        }
+      }
+
+      $webkit: append($webkit, $list1);
+         $moz: append($moz,    $list2);
+        $spec: append($spec,   $list3);
+    }
+
+    // Create lists for non-prefixed transition properties
+    @else {
+      $webkit:  append($webkit, $list, comma);
+      $moz:     append($moz,    $list, comma);
+      $spec:    append($spec,   $list, comma);
+    }
   }
 
+  @if $needs-prefixes {
+    -webkit-transition: $webkit;
+       -moz-transition: $moz;
+            transition: $spec;
+  }
   @else {
-    $properties: all 0.15s ease-out 0;
-    @include prefixer(transition, $properties, webkit moz spec);
+    @if length($properties) >= 1 {
+      @include prefixer(transition, $properties, webkit moz spec);
+    }
+
+    @else {
+      $properties: all 0.15s ease-out 0s;
+      @include prefixer(transition, $properties, webkit moz spec);
+    }
   }
 }
 

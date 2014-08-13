@@ -1,7 +1,6 @@
 ---
 id: forms
 title: Forms
-layout: docs
 permalink: forms.html
 prev: reusable-components.html
 next: working-with-the-browser.html
