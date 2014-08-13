@@ -2,19 +2,13 @@ require('rubygems')
 require('json')
 require('yaml')
 
-desc "generate css from sass"
-task :css do
-  system "sass --style=compressed _css/react.scss css/react.css"
-end
-
 desc "generate js from jsx"
 task :js do
   system "../bin/jsx _js js"
 end
 
-desc "watch css & js"
+desc "watch js"
 task :watch do
-  Process.spawn "sass --style=compressed --watch _css/react.scss:css/react.css"
   Process.spawn "../bin/jsx --watch _js js"
   Process.waitall
 end
@@ -34,4 +28,4 @@ task :release => [:update_version, :default] do
   system "jekyll build -d ../../react-gh-pages"
 end
 
-task :default => [:css, :js]
+task :default => [:js]

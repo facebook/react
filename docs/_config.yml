@@ -10,7 +10,7 @@ exclude:
 redcarpet:
   extensions:
   - fenced_code_blocks
-pygments: true
+highlighter: pygments
 name: React
 markdown: redcarpet
 react_version: 0.11.1
@@ -19,3 +19,6 @@ relative_permalinks: true
 paginate: 5
 paginate_path: "/blog/page:num/"
 timezone: America/Los_Angeles
+sass:
+  style: :compressed
+  sass_dir: _css
