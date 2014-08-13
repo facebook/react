@@ -1,0 +1,31 @@
+// Private function for linear-gradient-parser
+@function _linear-side-corner-parser($image, $first-val, $prefix, $suffix, $has-multiple-vals) {
+  $val-1: str-slice($first-val, 0, $has-multiple-vals - 1 );
+  $val-2: str-slice($first-val, $has-multiple-vals + 1, str-length($first-val));
+  $val-3: null;
+  $has-val-3: str-index($val-2, " ");
+
+  @if $has-val-3 {
+    $val-3: str-slice($val-2, $has-val-3 + 1, str-length($val-2));
+    $val-2: str-slice($val-2, 0, $has-val-3 - 1);
+  }
+
+  $pos: _position-flipper($val-1) _position-flipper($val-2) _position-flipper($val-3);
+  $pos: unquote($pos + "");
+
+  // Use old spec for webkit
+  @if $val-1 == "to" {
+    @return (
+      webkit-image: -webkit- + $prefix + $pos + $suffix,
+      spec-image: $image
+    );
+  }
+
+  // Bring the code up to spec
+  @else {
+    @return (
+      webkit-image: -webkit- + $image,
+      spec-image: $prefix + "to " + $pos + $suffix
+    );
+  }
+}

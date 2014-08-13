@@ -1,0 +1,50 @@
+@function _radial-gradient-parser($image) {
+  $image: unquote($image);
+  $gradients: ();
+  $start: str-index($image, "(");
+  $end: str-index($image, ",");
+  $first-val: str-slice($image, $start + 1, $end - 1);
+
+  $prefix: str-slice($image, 0, $start);
+  $suffix: str-slice($image, $end, str-length($image));
+
+  $is-spec-syntax: str-index($first-val, "at");
+
+  @if $is-spec-syntax and $is-spec-syntax > 1 {
+    $keyword: str-slice($first-val, 1, $is-spec-syntax - 2);
+    $pos: str-slice($first-val, $is-spec-syntax + 3, str-length($first-val));
+    $pos: append($pos, $keyword, comma);
+
+    $gradients: (
+      webkit-image: -webkit- + $prefix + $pos + $suffix,
+      spec-image: $image
+    )
+  }
+
+  @else if $is-spec-syntax == 1 {
+    $pos: str-slice($first-val, $is-spec-syntax + 3, str-length($first-val));
+
+    $gradients: (
+      webkit-image: -webkit- + $prefix + $pos + $suffix,
+      spec-image: $image
+    )
+  }
+
+  @else if str-index($image, "cover") or str-index($image, "contain") {
+    @warn "Radial-gradient needs to be updated to conform to latest spec.";
+
+    $gradients: (
+      webkit-image: null,
+      spec-image: $image
+    )
+  }
+
+  @else {
+    $gradients: (
+      webkit-image: -webkit- + $image,
+      spec-image: $image
+    )
+  }
+
+  @return $gradients;
+}

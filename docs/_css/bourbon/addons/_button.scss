@@ -1,38 +1,51 @@
-@mixin button ($style: simple, $base-color: #4294f0) {
+@mixin button ($style: simple, $base-color: #4294f0, $text-size: inherit, $padding: 7px 18px) {
 
-  @if type-of($style) == color {
+  @if type-of($style) == string and type-of($base-color) == color {
+    @include buttonstyle($style, $base-color, $text-size, $padding);
+  }
+
+  @if type-of($style) == string and type-of($base-color) == number {
+    $padding: $text-size;
+    $text-size: $base-color;
+    $base-color: #4294f0;
+
+    @if $padding == inherit {
+      $padding: 7px 18px;
+    }
+
+    @include buttonstyle($style, $base-color, $text-size, $padding);
+  }
+
+  @if type-of($style) == color and type-of($base-color) == color {
     $base-color: $style;
     $style: simple;
+    @include buttonstyle($style, $base-color, $text-size, $padding);
   }
 
-  // Grayscale button
-  @if $base-color == grayscale($base-color) {
-    @if $style == simple {
-      @include simple($base-color, $grayscale: true);
+  @if type-of($style) == color and type-of($base-color) == number {
+    $padding: $text-size;
+    $text-size: $base-color;
+    $base-color: $style;
+    $style: simple;
+
+    @if $padding == inherit {
+      $padding: 7px 18px;
     }
 
-    @else if $style == shiny {
-      @include shiny($base-color, $grayscale: true);
-    }
-
-    @else if $style == pill {
-      @include pill($base-color, $grayscale: true);
-    }
+    @include buttonstyle($style, $base-color, $text-size, $padding);
   }
 
-  // Colored button
-  @else {
-    @if $style == simple {
-      @include simple($base-color);
+  @if type-of($style) == number {
+    $padding: $base-color;
+    $text-size: $style;
+    $base-color: #4294f0;
+    $style: simple;
+
+    @if $padding == #4294f0 {
+      $padding: 7px 18px;
     }
 
-    @else if $style == shiny {
-      @include shiny($base-color);
-    }
-
-    @else if $style == pill {
-      @include pill($base-color);
-    }
+    @include buttonstyle($style, $base-color, $text-size, $padding);
   }
 
   &:disabled {
@@ -42,16 +55,55 @@
 }
 
 
+// Selector Style Button
+//************************************************************************//
+@mixin buttonstyle($type, $b-color, $t-size, $pad) {
+  // Grayscale button
+  @if $type == simple and $b-color == grayscale($b-color) {
+    @include simple($b-color, true, $t-size, $pad);
+  }
+
+  @if $type == shiny and $b-color == grayscale($b-color) {
+    @include shiny($b-color, true, $t-size, $pad);
+  }
+
+  @if $type == pill and $b-color == grayscale($b-color) {
+    @include pill($b-color, true, $t-size, $pad);
+  }
+
+  @if $type == flat and $b-color == grayscale($b-color) {
+    @include flat($b-color, true, $t-size, $pad);
+  }
+
+  // Colored button
+  @if $type == simple {
+    @include simple($b-color, false, $t-size, $pad);
+  }
+
+  @else if $type == shiny {
+    @include shiny($b-color, false, $t-size, $pad);
+  }
+
+  @else if $type == pill {
+    @include pill($b-color, false, $t-size, $pad);
+  }
+
+  @else if $type == flat {
+    @include flat($b-color, false, $t-size, $pad);
+  }
+}
+
+
 // Simple Button
 //************************************************************************//
-@mixin simple($base-color, $grayscale: false) {
+@mixin simple($base-color, $grayscale: false, $textsize: inherit, $padding: 7px 18px) {
   $color:         hsl(0, 0, 100%);
   $border:        adjust-color($base-color, $saturation:  9%,  $lightness: -14%);
   $inset-shadow:  adjust-color($base-color, $saturation: -8%,  $lightness:  15%);
   $stop-gradient: adjust-color($base-color, $saturation:  9%,  $lightness: -11%);
   $text-shadow:   adjust-color($base-color, $saturation:  15%, $lightness: -18%);
 
-  @if lightness($base-color) > 70% {
+  @if is-light($base-color) {
     $color:       hsl(0, 0, 20%);
     $text-shadow: adjust-color($base-color, $saturation: 10%, $lightness: 4%);
   }
@@ -68,10 +120,10 @@
   box-shadow: inset 0 1px 0 0 $inset-shadow;
   color: $color;
   display: inline-block;
-  font-size: 11px;
+  font-size: $textsize;
   font-weight: bold;
   @include linear-gradient ($base-color, $stop-gradient);
-  padding: 7px 18px;
+  padding: $padding;
   text-decoration: none;
   text-shadow: 0 1px 0 $text-shadow;
   background-clip: padding-box;
@@ -92,7 +144,8 @@
     @include linear-gradient ($base-color-hover, $stop-gradient-hover);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled),
+  &:focus:not(:disabled) {
     $border-active:       adjust-color($base-color, $saturation: 9%, $lightness: -14%);
     $inset-shadow-active: adjust-color($base-color, $saturation: 7%, $lightness: -17%);
 
@@ -102,14 +155,14 @@
     }
 
     border: 1px solid $border-active;
-    box-shadow: inset 0 0 8px 4px $inset-shadow-active, inset 0 0 8px 4px $inset-shadow-active, 0 1px 1px 0 #eee;
+    box-shadow: inset 0 0 8px 4px $inset-shadow-active, inset 0 0 8px 4px $inset-shadow-active;
   }
 }
 
 
 // Shiny Button
 //************************************************************************//
-@mixin shiny($base-color, $grayscale: false) {
+@mixin shiny($base-color, $grayscale: false, $textsize: inherit, $padding: 7px 18px) {
   $color:         hsl(0, 0, 100%);
   $border:        adjust-color($base-color, $red: -117, $green: -111, $blue: -81);
   $border-bottom: adjust-color($base-color, $red: -126, $green: -127, $blue: -122);
@@ -119,7 +172,7 @@
   $text-shadow:   adjust-color($base-color, $red: -140, $green: -141, $blue: -114);
   $third-stop:    adjust-color($base-color, $red: -86,  $green: -75,  $blue: -48);
 
-  @if lightness($base-color) > 70% {
+  @if is-light($base-color) {
     $color:       hsl(0, 0, 20%);
     $text-shadow: adjust-color($base-color, $saturation: 10%, $lightness: 4%);
   }
@@ -140,10 +193,10 @@
   box-shadow: inset 0 1px 0 0 $inset-shadow;
   color: $color;
   display: inline-block;
-  font-size: 14px;
+  font-size: $textsize;
   font-weight: bold;
   @include linear-gradient(top, $base-color 0%, $second-stop 50%, $third-stop 50%, $fourth-stop 100%);
-  padding: 8px 20px;
+  padding: $padding;
   text-align: center;
   text-decoration: none;
   text-shadow: 0 -1px 1px $text-shadow;
@@ -168,21 +221,22 @@
                                   $fourth-stop-hover 100%);
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled),
+  &:focus:not(:disabled) {
     $inset-shadow-active: adjust-color($base-color, $red: -111, $green: -116, $blue: -122);
 
     @if $grayscale == true {
       $inset-shadow-active: grayscale($inset-shadow-active);
     }
 
-    box-shadow: inset 0 0 20px 0 $inset-shadow-active, 0 1px 0 #fff;
+    box-shadow: inset 0 0 20px 0 $inset-shadow-active;
   }
 }
 
 
 // Pill Button
 //************************************************************************//
-@mixin pill($base-color, $grayscale: false) {
+@mixin pill($base-color, $grayscale: false, $textsize: inherit, $padding: 7px 18px) {
   $color:         hsl(0, 0, 100%);
   $border-bottom: adjust-color($base-color, $hue:  8, $saturation: -11%, $lightness: -26%);
   $border-sides:  adjust-color($base-color, $hue:  4, $saturation: -21%, $lightness: -21%);
@@ -191,7 +245,7 @@
   $stop-gradient: adjust-color($base-color, $hue:  8, $saturation:  14%, $lightness: -10%);
   $text-shadow:   adjust-color($base-color, $hue:  5, $saturation: -19%, $lightness: -15%);
 
-  @if lightness($base-color) > 70% {
+  @if is-light($base-color) {
     $color:       hsl(0, 0, 20%);
     $text-shadow: adjust-color($base-color, $saturation: 10%, $lightness: 4%);
   }
@@ -208,14 +262,14 @@
   border: 1px solid $border-top;
   border-color: $border-top $border-sides $border-bottom;
   border-radius: 16px;
-  box-shadow: inset 0 1px 0 0 $inset-shadow, 0 1px 2px 0 #b3b3b3;
+  box-shadow: inset 0 1px 0 0 $inset-shadow;
   color: $color;
   display: inline-block;
-  font-size: 11px;
+  font-size: $textsize;
   font-weight: normal;
   line-height: 1;
   @include linear-gradient ($base-color, $stop-gradient);
-  padding: 5px 16px;
+  padding: $padding;
   text-align: center;
   text-decoration: none;
   text-shadow: 0 -1px 1px $text-shadow;
@@ -249,7 +303,8 @@
     background-clip: padding-box;
   }
 
-  &:active:not(:disabled) {
+  &:active:not(:disabled),
+  &:focus:not(:disabled) {
     $active-color:         adjust-color($base-color, $hue: 4,  $saturation: -12%,  $lightness: -10%);
     $border-active:        adjust-color($base-color, $hue: 6,  $saturation: -2.5%, $lightness: -30%);
     $border-bottom-active: adjust-color($base-color, $hue: 11, $saturation:  6%,   $lightness: -31%);
@@ -267,7 +322,53 @@
     background: $active-color;
     border: 1px solid $border-active;
     border-bottom: 1px solid $border-bottom-active;
-    box-shadow: inset 0 0 6px 3px $inset-shadow-active, 0 1px 0 0 #fff;
+    box-shadow: inset 0 0 6px 3px $inset-shadow-active;
     text-shadow: 0 -1px 1px $text-shadow-active;
+  }
+}
+
+
+
+// Flat Button
+//************************************************************************//
+@mixin flat($base-color, $grayscale: false, $textsize: inherit, $padding: 7px 18px) {
+  $color:         hsl(0, 0, 100%);
+
+  @if is-light($base-color) {
+    $color:       hsl(0, 0, 20%);
+  }
+
+  background-color: $base-color;
+  border-radius: 3px;
+  border: none;
+  color: $color;
+  display: inline-block;
+  font-size: inherit;
+  font-weight: bold;
+  padding: 7px 18px;
+  text-decoration: none;
+  background-clip: padding-box;
+
+  &:hover:not(:disabled){
+    $base-color-hover:    adjust-color($base-color, $saturation: 4%, $lightness: 5%);
+
+    @if $grayscale == true {
+      $base-color-hover: grayscale($base-color-hover);
+    }
+
+    background-color: $base-color-hover;
+    cursor: pointer;
+  }
+
+  &:active:not(:disabled),
+  &:focus:not(:disabled) {
+    $base-color-active: adjust-color($base-color, $saturation: -4%, $lightness: -5%);
+
+    @if $grayscale == true {
+      $base-color-active: grayscale($base-color-active);
+    }
+
+    background-color: $base-color-active;
+    cursor: pointer;
   }
 }

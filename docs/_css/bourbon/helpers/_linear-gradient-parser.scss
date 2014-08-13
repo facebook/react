@@ -1,0 +1,41 @@
+@function _linear-gradient-parser($image) {
+  $image: unquote($image);
+  $gradients: ();
+  $start: str-index($image, "(");
+  $end: str-index($image, ",");
+  $first-val: str-slice($image, $start + 1, $end - 1);
+
+  $prefix: str-slice($image, 0, $start);
+  $suffix: str-slice($image, $end, str-length($image));
+
+  $has-multiple-vals: str-index($first-val, " ");
+  $has-single-position: unquote(_position-flipper($first-val) + "");
+  $has-angle: _is-num(str-slice($first-val, 0, 0));
+
+  @if $has-multiple-vals {
+    $gradients: _linear-side-corner-parser($image, $first-val, $prefix, $suffix, $has-multiple-vals);
+  }
+
+  @else if $has-single-position != "" {
+    $pos: unquote($has-single-position + "");
+
+    $gradients: (
+      webkit-image: -webkit- + $image,
+      spec-image: $prefix + "to " + $pos + $suffix
+    );
+  }
+
+  @else if $has-angle {
+    // Rotate degree for webkit
+    $gradients: _linear-angle-parser($image, $first-val, $prefix, $suffix);
+  }
+
+  @else {
+    $gradients: (
+      webkit-image: -webkit- + $image,
+      spec-image: $image
+    );
+  }
+
+  @return $gradients;
+}
