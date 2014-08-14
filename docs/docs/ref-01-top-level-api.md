@@ -73,6 +73,23 @@ string renderComponentToStaticMarkup(ReactComponent component)
 
 Similar to `renderComponentToString`, except this doesn't create extra DOM attributes such as `data-react-id`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
 
+### React.isValidClass
+
+```javascript
+boolean isValidClass(* factory)
+```
+
+Verifies the factory is a React class descriptor. See `React.createClass`.
+
+
+### React.isValidComponent
+
+```javascript
+boolean isValidComponent(* object)
+```
+
+Verifies the object is a React component descriptor.
+
 
 ### React.DOM
 
