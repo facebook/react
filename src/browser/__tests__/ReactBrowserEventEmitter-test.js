@@ -253,7 +253,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should stopPropagation if false is returned', function() {
+  it('should continue to propagate if false is returned', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -264,14 +264,10 @@ describe('ReactBrowserEventEmitter', function() {
       ON_CLICK_KEY,
       recordID.bind(null, getID(PARENT))
     );
-    ReactBrowserEventEmitter.putListener(
-      getID(GRANDPARENT),
-      ON_CLICK_KEY,
-      recordID.bind(null, getID(GRANDPARENT))
-    );
     ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(1);
+    expect(idCallOrder.length).toBe(2);
     expect(idCallOrder[0]).toBe(getID(CHILD));
+    expect(idCallOrder[1]).toBe(getID(PARENT));
   });
 
   /**

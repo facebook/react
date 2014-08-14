@@ -10,6 +10,10 @@ next: dom-differences.html
 
 Your event handlers will be passed instances of `SyntheticEvent`, a cross-browser wrapper around the browser's native event. It has the same interface as the browser's native event, including `stopPropagation()` and `preventDefault()`, except the events work identically across all browsers.
 
+> Note:
+>
+> Prior to v0.12, event handlers could return `false` to stop propagation. This behavior is no longer supported; instead, `stopPropagation()` and `preventDefault()` should be triggered manually.
+
 If you find that you need the underlying browser event for some reason, simply use the `nativeEvent` attribute to get it. Every `SyntheticEvent` object has the following attributes:
 
 ```javascript
@@ -111,7 +115,7 @@ onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
-Properties: 
+Properties:
 
 ```javascript
 boolean altKey

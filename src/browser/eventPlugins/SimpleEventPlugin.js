@@ -300,22 +300,6 @@ var SimpleEventPlugin = {
   eventTypes: eventTypes,
 
   /**
-   * Same as the default implementation, except cancels the event when return
-   * value is false.
-   *
-   * @param {object} Event to be dispatched.
-   * @param {function} Application-level callback.
-   * @param {string} domID DOM ID to pass to the callback.
-   */
-  executeDispatch: function(event, listener, domID) {
-    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
-    if (returnValue === false) {
-      event.stopPropagation();
-      event.preventDefault();
-    }
-  },
-
-  /**
    * @param {string} topLevelType Record from `EventConstants`.
    * @param {DOMEventTarget} topLevelTarget The listening component root node.
    * @param {string} topLevelTargetID ID of `topLevelTarget`.
