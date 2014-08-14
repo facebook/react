@@ -59,7 +59,7 @@
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
     "populist": "~0.1.6",
-    "recast": "~0.5.6",
+    "recast": "^0.6.10",
     "sauce-tunnel": "~1.1.0",
     "semver": "^2.3.0",
     "tmp": "~0.0.18",
