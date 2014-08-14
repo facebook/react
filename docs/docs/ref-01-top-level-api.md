@@ -110,6 +110,17 @@ initializeTouchEvents(boolean shouldUseTouch)
 Configure React's event system to handle touch events on mobile devices.
 
 
+### React.defineComponentMethod
+
+```javascript
+defineComponentMethod(string methodName, string policy)
+```
+
+Define new method and its policy for all React components.
+
+** Note: See ReactSpecPolicy to find out what policies are available.
+
+
 ### React.Children
 
 `React.Children` provides utilities for dealing with the `this.props.children` opaque data structure.
