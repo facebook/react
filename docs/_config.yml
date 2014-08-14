@@ -34,4 +34,4 @@ sass:
   sass_dir: _css
 gems:
 - jekyll-redirect-from
-react_version: 0.12.0-alpha
+react_version: 0.11.1

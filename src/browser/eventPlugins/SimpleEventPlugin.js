@@ -34,6 +34,7 @@ var SyntheticWheelEvent = require('SyntheticWheelEvent');
 var getEventCharCode = require('getEventCharCode');
 
 var invariant = require('invariant');
+var monitorCodeUse = require('monitorCodeUse');
 var keyOf = require('keyOf');
 
 var topLevelTypes = EventConstants.topLevelTypes;
@@ -298,6 +299,30 @@ for (var topLevelType in topLevelEventsToDispatchConfig) {
 var SimpleEventPlugin = {
 
   eventTypes: eventTypes,
+
+ /**
+  * Same as the default implementation, except cancels the event when return
+  * value is false. This behavior will be disabled in a future release.
+  *
+  * @param {object} Event to be dispatched.
+  * @param {function} Application-level callback.
+  * @param {string} domID DOM ID to pass to the callback.
+  */
+  executeDispatch: function(event, listener, domID) {
+    var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
+    if (returnValue === false) {
+      if (__DEV__) {
+        monitorCodeUse('react_event_return_false');
+        console.warn(
+          'Returning `false` from an event handler will be deprecated in a ' +
+          'future release. Instead, manually call stopPropagation() ' +
+          'and preventDefault().'
+        );
+      }
+      event.stopPropagation();
+      event.preventDefault();
+    }
+  },
 
   /**
    * @param {string} topLevelType Record from `EventConstants`.

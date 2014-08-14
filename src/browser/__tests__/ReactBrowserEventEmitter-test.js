@@ -253,7 +253,7 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
-  it('should continue to propagate if false is returned', function() {
+  it('should stopPropagation if false is returned, but warn', function() {
     ReactBrowserEventEmitter.putListener(
       getID(CHILD),
       ON_CLICK_KEY,
@@ -264,10 +264,21 @@ describe('ReactBrowserEventEmitter', function() {
       ON_CLICK_KEY,
       recordID.bind(null, getID(PARENT))
     );
+    ReactBrowserEventEmitter.putListener(
+      getID(GRANDPARENT),
+      ON_CLICK_KEY,
+      recordID.bind(null, getID(GRANDPARENT))
+    );
+    spyOn(console, 'warn');
     ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(2);
+    expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(getID(CHILD));
-    expect(idCallOrder[1]).toBe(getID(PARENT));
+    expect(console.warn.calls.length).toEqual(1);
+    expect(console.warn.calls[0].args[0]).toBe(
+      'Returning `false` from an event handler will be deprecated in a ' +
+      'future release. Instead, manually call stopPropagation() and ' +
+      'preventDefault().'
+    );
   });
 
   /**
