@@ -43,19 +43,18 @@ function _assertSingleLink(input) {
 function _assertValueLink(input) {
   _assertSingleLink(input);
   invariant(
-    input.props.value == null && input.props.onChange == null,
-    'Cannot provide a valueLink and a value or onChange event. If you want ' +
-    'to use value or onChange, you probably don\'t want to use valueLink.'
+    input.props.value == null,
+    'Cannot provide a valueLink and a value. If you want to use value, you ' +
+    'probably don\'t want to use valueLink.'
   );
 }
 
 function _assertCheckedLink(input) {
   _assertSingleLink(input);
   invariant(
-    input.props.checked == null && input.props.onChange == null,
-    'Cannot provide a checkedLink and a checked property or onChange event. ' +
-    'If you want to use checked or onChange, you probably don\'t want to ' +
-    'use checkedLink'
+    input.props.checked == null,
+    'Cannot provide a checkedLink and a checked property. If you want to use ' +
+    'checked, you probably don\'t want to use checkedLink.'
   );
 }
 
@@ -65,6 +64,9 @@ function _assertCheckedLink(input) {
 function _handleLinkedValueChange(e) {
   /*jshint validthis:true */
   this.props.valueLink.requestChange(e.target.value);
+  if (this.props.onChange) {
+    this.props.onChange(e);
+  }
 }
 
 /**
@@ -73,6 +75,9 @@ function _handleLinkedValueChange(e) {
 function _handleLinkedCheckChange(e) {
   /*jshint validthis:true */
   this.props.checkedLink.requestChange(e.target.checked);
+  if (this.props.onChange) {
+    this.props.onChange(e);
+  }
 }
 
 /**

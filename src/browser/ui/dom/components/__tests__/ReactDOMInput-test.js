@@ -272,12 +272,11 @@ describe('ReactDOMInput', function() {
         type="text"
         valueLink={link}
         value="test"
-        onChange={emptyFunction}
       />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
     instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
 
   });
 
@@ -355,13 +354,12 @@ describe('ReactDOMInput', function() {
         type="checkbox"
         checkedLink={link}
         checked="false"
-        onChange={emptyFunction}
       />;
     expect(React.renderComponent.bind(React, instance, node)).toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
 
   });
 
