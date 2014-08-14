@@ -1272,6 +1272,29 @@ describe('ReactCompositeComponent', function() {
     expect(Component.pqr()).toBe(Component.type);
   });
 
+  it('should throw if a reserved property is in statics', function() {
+    expect(function() {
+      React.createClass({
+        statics: {
+          getDefaultProps: function() {
+            return {
+              foo: 0
+            };
+          }
+        },
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
+      'the "statics" key. Define it as an instance property instead; it ' +
+      'will still be accessible on the constructor.'
+    );
+  });
+
   it('should support statics in mixins', function() {
     var Mixin = {
       statics: {
