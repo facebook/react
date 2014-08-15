@@ -90,12 +90,20 @@ var LinkedValueUtils = {
             props.disabled) {
           return;
         }
-        return new Error(
-          'You provided a `value` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultValue`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
-        );
+
+        if ('onChange' in props) {
+          return new Error(
+            'You provided a non function value for a `onChange` handler. (' +
+            'check the spelling of the function name you used).'
+          );
+        } else {
+          return new Error(
+            'You provided a `value` prop to a form field without an ' +
+            '`onChange` handler. This will render a read-only field. If ' +
+            'the field should be mutable use `defaultValue`. Otherwise, ' +
+            'set either `onChange` or `readOnly`.'
+          );
+        }
       },
       checked: function(props, propName, componentName) {
         if (!props[propName] ||
@@ -104,12 +112,20 @@ var LinkedValueUtils = {
             props.disabled) {
           return;
         }
-        return new Error(
-          'You provided a `checked` prop to a form field without an ' +
-          '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultChecked`. Otherwise, ' +
-          'set either `onChange` or `readOnly`.'
-        );
+
+        if ('onChange' in props) {
+          return new Error(
+            'You provided a non function value for a `onChange` handler. (' +
+            'check the spelling of the function name you used).'
+          );
+        } else {
+          return new Error(
+            'You provided a `checked` prop to a form field without an ' +
+            '`onChange` handler. This will render a read-only field. If ' +
+            'the field should be mutable use `defaultChecked`. Otherwise, ' +
+            'set either `onChange` or `readOnly`.'
+          );
+        }
       },
       onChange: ReactPropTypes.func
     }

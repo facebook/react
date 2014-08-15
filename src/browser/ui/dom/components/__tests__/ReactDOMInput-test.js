@@ -250,6 +250,12 @@ describe('ReactDOMInput', function() {
         node
       );
       expect(console.warn.mock.calls.length).toBe(2);
+
+      React.renderComponent(
+        <input type="text" value="zoink" onChange={undefined} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(3);
     } finally {
       console.warn = oldWarn;
     }
@@ -333,6 +339,12 @@ describe('ReactDOMInput', function() {
         node
       );
       expect(console.warn.mock.calls.length).toBe(2);
+
+      React.renderComponent(
+        <input type="checkbox" checked="false" onChange={undefined} />,
+        node
+      );
+      expect(console.warn.mock.calls.length).toBe(3);
     } finally {
       console.warn = oldWarn;
     }
