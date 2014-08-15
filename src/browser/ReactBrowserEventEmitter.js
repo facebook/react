@@ -25,8 +25,10 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
+var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var merge = require('merge');
+var warning = require('warning');
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -83,9 +85,7 @@ var merge = require('merge');
  *    React Core     .  General Purpose Event Plugin System
  */
 
-var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
-var reactTopListenersCounter = 0;
 
 // For events like 'submit' which don't consistently bubble (which we trap at a
 // lower node than `document`), binding at `document` would cause duplicate
@@ -130,19 +130,28 @@ var topEventMapping = {
   topWheel: 'wheel'
 };
 
-/**
- * To ensure no conflicts with other potential React instances on the page
- */
-var topListenersIDKey = "_reactListenersID" + String(Math.random()).slice(2);
+// TODO: (chenglou) Alternatively, we could use an internal
+// map<IDOfRootNodeInsideContainer, map<eventRegistrationName, eventPlugin>>
+var eventsKey = '_reactEvents';
 
-function getListeningForDocument(mountAt) {
+function getListenedEvents(mountAt) {
   // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
   // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
-    mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  if (!Object.prototype.hasOwnProperty.call(mountAt, eventsKey)) {
+    mountAt[eventsKey] = {};
   }
-  return alreadyListeningTo[mountAt[topListenersIDKey]];
+  return mountAt[eventsKey];
+}
+
+function removeListenedEvents(mountAt) {
+  if (!Object.prototype.hasOwnProperty.call(mountAt, eventsKey)) {
+    warning(
+      true,
+      'Tried to remove a React root level listener, but it was not found.'
+    );
+    return;
+  }
+  delete mountAt[eventsKey];
 }
 
 /**
@@ -196,7 +205,7 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
   },
 
   /**
-   * We listen for bubbled touch events on the document object.
+   * We listen for bubbled touch events on a root container.
    *
    * Firefox v8.01 (and possibly others) exhibited strange behavior when
    * mounting `onmousemove` events at some node that was not the document
@@ -216,28 +225,29 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    * @param {object} contentDocumentHandle Document which owns the container
    */
-  listenTo: function(registrationName, contentDocumentHandle) {
-    var mountAt = contentDocumentHandle;
-    var isListening = getListeningForDocument(mountAt);
-    var dependencies = EventPluginRegistry.
-      registrationNameDependencies[registrationName];
+  listenTo: function(registrationName, mountAt) {
+    var events = getListenedEvents(mountAt);
+    var dependencies =
+      EventPluginRegistry.registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
     for (var i = 0, l = dependencies.length; i < l; i++) {
+      // `events` is a mapping of dependency -> event. The map does two
+      // things: store the fact that a dependency has already been registered,
+      // and store the event for later removal when the node's unmounted.
       var dependency = dependencies[i];
-      if (!(
-            isListening.hasOwnProperty(dependency) &&
-            isListening[dependency]
-          )) {
+      var event;
+
+      if (!events.hasOwnProperty(dependency) || events[dependency] == null) {
         if (dependency === topLevelTypes.topWheel) {
           if (isEventSupported('wheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topWheel,
               'wheel',
               mountAt
             );
           } else if (isEventSupported('mousewheel')) {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topWheel,
               'mousewheel',
               mountAt
@@ -245,7 +255,7 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
           } else {
             // Firefox needs to capture a different mouse scroll event.
             // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topWheel,
               'DOMMouseScroll',
               mountAt
@@ -254,28 +264,29 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
         } else if (dependency === topLevelTypes.topScroll) {
 
           if (isEventSupported('scroll', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            event = ReactBrowserEventEmitter.trapCapturedEvent(
               topLevelTypes.topScroll,
               'scroll',
               mountAt
             );
           } else {
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topScroll,
               'scroll',
-              ReactBrowserEventEmitter.ReactEventListener.WINDOW_HANDLE
+              ReactBrowserEventEmitter.WINDOW_HANDLE
             );
           }
         } else if (dependency === topLevelTypes.topFocus ||
             dependency === topLevelTypes.topBlur) {
+          var event2;
 
           if (isEventSupported('focus', true)) {
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            event = ReactBrowserEventEmitter.trapCapturedEvent(
               topLevelTypes.topFocus,
               'focus',
               mountAt
             );
-            ReactBrowserEventEmitter.ReactEventListener.trapCapturedEvent(
+            event2 = ReactBrowserEventEmitter.trapCapturedEvent(
               topLevelTypes.topBlur,
               'blur',
               mountAt
@@ -283,12 +294,12 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topFocus,
               'focusin',
               mountAt
             );
-            ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+            event2 = ReactBrowserEventEmitter.trapBubbledEvent(
               topLevelTypes.topBlur,
               'focusout',
               mountAt
@@ -296,19 +307,40 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
           }
 
           // to make sure blur and focus event listeners are only attached once
-          isListening[topLevelTypes.topBlur] = true;
-          isListening[topLevelTypes.topFocus] = true;
+          events[topLevelTypes.topFocus] = event;
+          events[topLevelTypes.topBlur] = event2;
         } else if (topEventMapping.hasOwnProperty(dependency)) {
-          ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
+          event = ReactBrowserEventEmitter.trapBubbledEvent(
             dependency,
             topEventMapping[dependency],
             mountAt
           );
         }
-
-        isListening[dependency] = true;
+        // As mentioned above, events like `submit` don't bubble to document and
+        // thus are not attached to it. In that case, there's no `event` (and a
+        // `remove`) to store. We'll put a `true` placeholder here.
+        events[dependency] = event || true;
       }
     }
+  },
+
+  removeListenedEvents: function(container) {
+    var events = getListenedEvents(container);
+    if (!events) {
+      // Might be that no event was (lazily) added in the first place.
+      return;
+    }
+    for (var key in events) {
+      if (!events.hasOwnProperty(key)) {
+        continue;
+      }
+      if (events[key].remove) {
+        // See `listenTo`. The event might be a `true` placeholder for things
+        // like `onSubmit`.
+        events[key].remove();
+      }
+    }
+    removeListenedEvents(container);
   },
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {

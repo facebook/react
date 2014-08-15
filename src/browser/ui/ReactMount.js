@@ -461,6 +461,8 @@ var ReactMount = {
     if (!component) {
       return false;
     }
+
+    ReactBrowserEventEmitter.removeListenedEvents(container);
     ReactMount.unmountComponentFromNode(component, container);
     delete instancesByReactRootID[reactRootID];
     delete containersByReactRootID[reactRootID];

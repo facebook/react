@@ -19,14 +19,15 @@
 "use strict";
 
 require('mock-modules')
-    .dontMock('EventPluginHub')
-    .dontMock('ReactMount')
-    .dontMock('ReactBrowserEventEmitter')
-    .dontMock('ReactInstanceHandles')
-    .dontMock('EventPluginHub')
-    .dontMock('TapEventPlugin')
-    .dontMock('TouchEventUtils')
-    .dontMock('keyOf');
+  .dontMock('EventListener')
+  .dontMock('EventPluginHub')
+  .dontMock('keyOf')
+  .dontMock('ReactBrowserEventEmitter')
+  .dontMock('ReactEventListener')
+  .dontMock('ReactInstanceHandles')
+  .dontMock('ReactMount')
+  .dontMock('TapEventPlugin')
+  .dontMock('TouchEventUtils');
 
 
 var keyOf = require('keyOf');
@@ -373,26 +374,47 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder.length).toBe(0);
   });
 
+  it('should attach the event to the root container', function() {
+    var div = document.createElement('div');
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, div);
+    expect(div._reactEvents.topClick.remove).toBeDefined();
+  });
+
+  it('should be able to remove listeners on the root container', function() {
+    var div = document.createElement('div');
+    spyOn(div, 'removeEventListener').andCallThrough();
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, div);
+    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, div);
+    ReactBrowserEventEmitter.removeListenedEvents(div);
+    // Once for click, 7 times for change.
+    expect(div.removeEventListener.argsForCall.length).toBe(8);
+    expect(div._reactEvents).toBe(undefined);
+  });
+
+
   it('should listen to events only once', function() {
-    spyOn(EventListener, 'listen');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    spyOn(EventListener, 'listen').andCallThrough();
+    var div = document.createElement('div');
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, div);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, div);
     expect(EventListener.listen.callCount).toBe(1);
   });
 
   it('should work with event plugins without dependencies', function() {
     spyOn(EventListener, 'listen');
 
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    var div = document.createElement('div');
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, div);
 
     expect(EventListener.listen.argsForCall[0][1]).toBe('click');
   });
 
   it('should work with event plugins with dependencies', function() {
-    spyOn(EventListener, 'listen');
-    spyOn(EventListener, 'capture');
+    spyOn(EventListener, 'listen').andCallThrough();
+    spyOn(EventListener, 'capture').andCallThrough();
 
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    var div = document.createElement('div');
+    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, div);
 
     var setEventListeners = [];
     var listenCalls = EventListener.listen.argsForCall;
@@ -405,7 +427,7 @@ describe('ReactBrowserEventEmitter', function() {
     }
 
     var module =
-          ReactBrowserEventEmitter.registrationNameModules[ON_CHANGE_KEY];
+      ReactBrowserEventEmitter.registrationNameModules[ON_CHANGE_KEY];
     var dependencies = module.eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
