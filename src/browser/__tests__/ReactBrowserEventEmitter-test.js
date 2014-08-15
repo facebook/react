@@ -275,9 +275,9 @@ describe('ReactBrowserEventEmitter', function() {
     expect(idCallOrder[0]).toBe(getID(CHILD));
     expect(console.warn.calls.length).toEqual(1);
     expect(console.warn.calls[0].args[0]).toBe(
-      'Returning `false` from an event handler will be deprecated in a ' +
-      'future release. Instead, manually call e.stopPropagation() or ' +
-      'e.preventDefault(), as appropriate.'
+      'Returning `false` from an event handler is deprecated and will ' +
+      'be ignored in a future release. Instead, manually call ' +
+      'e.stopPropagation() or e.preventDefault(), as appropriate.'
     );
   });
 

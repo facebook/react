@@ -310,15 +310,18 @@ var SimpleEventPlugin = {
    */
   executeDispatch: function(event, listener, domID) {
     var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
-    if (returnValue === false) {
-      if (__DEV__) {
+    if (__DEV__) {
+      if (typeof returnValue === 'boolean') {
         monitorCodeUse('react_event_return_false');
         console.warn(
-          'Returning `false` from an event handler will be deprecated in a ' +
-          'future release. Instead, manually call e.stopPropagation() or ' +
-          'e.preventDefault(), as appropriate.'
+          'Returning `false` from an event handler is deprecated and will ' +
+          'be ignored in a future release. Instead, manually call ' +
+          'e.stopPropagation() or e.preventDefault(), as appropriate.'
         );
       }
+    }
+
+    if (returnValue === false) {
       event.stopPropagation();
       event.preventDefault();
     }
