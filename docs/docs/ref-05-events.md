@@ -29,7 +29,7 @@ String type
 
 > Note:
 >
-> As of v0.12, returning `false` from an event handler will no longer stop event propagation. Instead, `stopPropagation()` and `preventDefault()` should be triggered manually.
+> As of v0.12, returning `false` from an event handler will no longer stop event propagation. Instead, `e.stopPropagation()` or `e.preventDefault()` should be triggered manually, as appropriate.
 
 
 ## Supported Events
