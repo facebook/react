@@ -42,15 +42,16 @@ var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
  */
 function transformReact(source, options) {
   // TODO: just use react-tools
+  options = options || {};
   var visitorList;
-  if (options && options.harmony) {
+  if (options.harmony) {
     visitorList = visitors.getAllVisitors();
   } else {
     visitorList = visitors.transformVisitors.react;
   }
 
   return transform(visitorList, source, {
-    sourceMap: supportsAccessors
+    sourceMap: supportsAccessors && options.sourceMap
   });
 }
 
@@ -250,11 +251,11 @@ function loadScripts(scripts) {
   }
 
   scripts.forEach(function(script, i) {
-    var options;
+    var options = {
+      sourceMap: true
+    };
     if (/;harmony=true(;|$)/.test(script.type)) {
-      options = {
-        harmony: true
-      };
+      options.harmony = true
     }
 
     // script.async is always true for non-javascript script tags
