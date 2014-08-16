@@ -76,7 +76,7 @@ There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here
 
 ```
 cx cy d dx dy fill fillOpacity fontFamily fontSize fx fy gradientTransform
-gradientUnits markerEnd markerMid markerStart offset opacity
+gradientUnits markerEnd markerMid markerStart maskUnits maskContentUnits offset opacity
 patternContentUnits patternUnits points preserveAspectRatio r rx ry
 spreadMethod stopColor stopOpacity stroke strokeDasharray strokeLinecap
 strokeOpacity strokeWidth textAnchor transform version viewBox x1 x2 x y1 y2 y
