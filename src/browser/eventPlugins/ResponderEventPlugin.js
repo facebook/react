@@ -23,7 +23,7 @@ var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
 
-var accumulate = require('accumulate');
+var accumulateInto = require('accumulateInto');
 var keyOf = require('keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
@@ -212,7 +212,7 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(terminateEvent);
-      extracted = accumulate(extracted, [grantEvent, terminateEvent]);
+      extracted = accumulateInto(extracted, [grantEvent, terminateEvent]);
       responderID = wantsResponderID;
     } else {
       var rejectEvent = SyntheticEvent.getPooled(
@@ -221,10 +221,10 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(rejectEvent);
-      extracted = accumulate(extracted, rejectEvent);
+      extracted = accumulateInto(extracted, rejectEvent);
     }
   } else {
-    extracted = accumulate(extracted, grantEvent);
+    extracted = accumulateInto(extracted, grantEvent);
     responderID = wantsResponderID;
   }
   return extracted;
@@ -288,7 +288,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       if (transfer) {
-        extracted = accumulate(extracted, transfer);
+        extracted = accumulateInto(extracted, transfer);
       }
     }
     // Now that we know the responder is set correctly, we can dispatch
@@ -303,7 +303,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(gesture);
-      extracted = accumulate(extracted, gesture);
+      extracted = accumulateInto(extracted, gesture);
     }
     if (type === eventTypes.responderRelease) {
       responderID = null;

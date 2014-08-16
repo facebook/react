@@ -21,7 +21,7 @@
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 
-var accumulate = require('accumulate');
+var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 
 var PropagationPhases = EventConstants.PropagationPhases;
@@ -52,8 +52,9 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
   var listener = listenerAtPhase(domID, event, phase);
   if (listener) {
-    event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-    event._dispatchIDs = accumulate(event._dispatchIDs, domID);
+    event._dispatchListeners =
+      accumulateInto(event._dispatchListeners, listener);
+    event._dispatchIDs = accumulateInto(event._dispatchIDs, domID);
   }
 }
 
@@ -85,8 +86,9 @@ function accumulateDispatches(id, ignoredDirection, event) {
     var registrationName = event.dispatchConfig.registrationName;
     var listener = getListener(id, registrationName);
     if (listener) {
-      event._dispatchListeners = accumulate(event._dispatchListeners, listener);
-      event._dispatchIDs = accumulate(event._dispatchIDs, id);
+      event._dispatchListeners =
+        accumulateInto(event._dispatchListeners, listener);
+      event._dispatchIDs = accumulateInto(event._dispatchIDs, id);
     }
   }
 }
