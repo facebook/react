@@ -73,7 +73,7 @@ Dispatcher.prototype = merge(Dispatcher.prototype, {
 
   /**
    * dispatch
-   * @param  {object} payload The data from the action.
+   * @param {object} payload The data from the action.
    */
   dispatch: function(payload) {
     // First create array of promises for callbacks to reference.
@@ -116,7 +116,7 @@ var AppDispatcher = merge(Dispatcher.prototype, {
   /**
    * A bridge function between the views and the dispatcher, marking the action
    * as a view action.  Another variant here could be handleServerAction.
-   * @param  {object} action The data coming from the view.
+   * @param {object} action The data coming from the view.
    */
   handleViewAction: function(action) {
     this.dispatch({
@@ -513,7 +513,7 @@ var TodoConstants = require('../constants/TodoConstants');
 var TodoActions = {
 
   /**
-   * @param  {string} text
+   * @param {string} text
    */
   create: function(text) {
     AppDispatcher.handleViewAction({
@@ -523,7 +523,7 @@ var TodoActions = {
   },
 
   /**
-   * @param  {string} id
+   * @param {string} id
    */
   destroy: function(id) {
     AppDispatcher.handleViewAction({
@@ -580,8 +580,8 @@ We'll need another public method, waitFor(). Note that it returns a Promise that
 
 ```javascript
   /**
-   * @param  {array} promisesIndexes
-   * @param  {function} callback
+   * @param {array} promisesIndexes
+   * @param {function} callback
    */
   waitFor: function(promiseIndexes, callback) {
     var selectedPromises = promiseIndexes.map(function(index) {
