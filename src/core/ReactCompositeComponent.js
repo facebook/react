@@ -466,6 +466,10 @@ function validateLifeCycleOnReplaceState(instance) {
  * specification keys when building `ReactCompositeComponent` classses.
  */
 function mixSpecIntoComponent(Constructor, spec) {
+  if (!spec) {
+    return;
+  }
+
   invariant(
     !ReactDescriptor.isValidFactory(spec),
     'ReactCompositeComponent: You\'re attempting to ' +
@@ -483,7 +487,7 @@ function mixSpecIntoComponent(Constructor, spec) {
   // chaining order is applied to methods with DEFINE_MANY policy, whether
   // mixins are listed before or after these methods in the spec.
   if (spec.hasOwnProperty(MIXINS_KEY)) {
-    RESERVED_SPEC_KEYS.mixins(ConvenienceConstructor, spec.mixins);
+    RESERVED_SPEC_KEYS.mixins(Constructor, spec.mixins);
   }
 
   for (var name in spec) {
