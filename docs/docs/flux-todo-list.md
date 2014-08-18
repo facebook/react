@@ -196,7 +196,7 @@ var TodoStore = merge(EventEmitter.prototype, {
    */
   removeChangeListener: function(callback) {
     this.removeListener(CHANGE_EVENT, callback);
-  }
+  },
 
   dispatcherIndex: AppDispatcher.register(function(payload) {
     var action = payload.action;
