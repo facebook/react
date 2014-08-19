@@ -56,7 +56,7 @@ var EnterLeaveEventPlugin = {
    * For almost every interaction we care about, there will be both a top-level
    * `mouseover` and `mouseout` event that occurs. Only use `mouseout` so that
    * we do not extract duplicate events. However, moving the mouse into the
-   * browser from outside will not fire a `mouseout` event. In this case, we use
+   * element from outside will not fire a `mouseout` event. In this case, we use
    * the `mouseover` top-level event.
    *
    * @param {string} topLevelType Record from `EventConstants`.
@@ -71,14 +71,20 @@ var EnterLeaveEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
-    if (topLevelType === topLevelTypes.topMouseOver &&
-        (nativeEvent.relatedTarget || nativeEvent.fromElement)) {
-      return null;
-    }
     if (topLevelType !== topLevelTypes.topMouseOut &&
         topLevelType !== topLevelTypes.topMouseOver) {
-      // Must not be a mouse in or mouse out - ignoring.
+      // Unrelated event.
       return null;
+    }
+
+    if (topLevelType === topLevelTypes.topMouseOver) {
+      // `fromElement`/`toElement` are IE's equivalent of `relatedTarget`.
+      var relatedTarget = nativeEvent.relatedTarget || nativeEvent.fromElement;
+      // See docblock above. Ignore all `mouseover` unless they come from
+      // outside of the top-level event listening container.
+      if (relatedTarget && ReactMount.getFirstReactDOM(relatedTarget) != null) {
+        return null;
+      }
     }
 
     var win;
