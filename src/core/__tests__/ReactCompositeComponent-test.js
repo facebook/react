@@ -555,7 +555,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should warn about unexpected props', function() {
     var Component = React.createClass({
-
+      propTypes: {},
       render: function() {
         return <span>{this.props.prop}</span>;
       }
