@@ -25,3 +25,4 @@ prev: complementary-tools.html
 * **[Khan Academy question editor](https://github.com/khan/perseus)** (Browse their GitHub account for many more production apps!)
 * **[github-issue-viewer](https://github.com/jaredly/github-issues-viewer)**
 * **[hn-react](https://github.com/prabirshrestha/hn-react)** Dead-simple Hacker News client.
+* **[2048-react](https://github.com/IvanVergiliev/2048-react)** A clone of the 2048 game.
