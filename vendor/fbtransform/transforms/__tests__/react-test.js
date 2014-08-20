@@ -15,6 +15,9 @@
  *
  * @emails jeffmo@fb.com
  */
+
+/*jshint evil:true, unused:false*/
+
 "use strict";
 
 require('mock-modules').autoMockOff();
@@ -42,19 +45,18 @@ describe('react jsx', function() {
   var y = 789012;
   var z = 345678;
 
-  var HEADER =
-    '/**\n' +
-    ' * @jsx React.DOM\n' +
-    ' */\n';
-
   var expectObjectAssign = function(code) {
     var Component = jest.genMockFunction();
     var Child = jest.genMockFunction();
     var objectAssignMock = jest.genMockFunction();
     Object.assign = objectAssignMock;
-    eval(transform(HEADER + code).code);
+    eval(transform(code).code);
     return expect(objectAssignMock);
   }
+
+  var React = {
+    createElement: jest.genMockFunction()
+  };
 
   it('should convert simple tags', function() {
     var code = [
@@ -63,7 +65,7 @@ describe('react jsx', function() {
     ].join('\n');
     var result = [
       '/**@jsx React.DOM*/',
-      'var x = React.DOM.div(null);'
+      'var x = React.createElement(React.DOM.div, null);'
     ].join('\n');
 
     expect(transform(code).code).toEqual(result);
@@ -76,7 +78,7 @@ describe('react jsx', function() {
     ].join('\n');
     var result = [
       '/**@jsx React.DOM*/',
-      'var x = React.DOM.div(null, "text");'
+      'var x = React.createElement(React.DOM.div, null, "text");'
     ].join('\n');
 
     expect(transform(code).code).toEqual(result);
@@ -93,10 +95,12 @@ describe('react jsx', function() {
     ].join('\n');
     var result = [
       '/**@jsx React.DOM*/',
-      'var x = React.DOM.div(null, ',
-      '  React.DOM.div(null, React.DOM.br(null)), ',
-      '  Component(null, foo, React.DOM.br(null), bar), ',
-      '  React.DOM.br(null)',
+      'var x = React.createElement(React.DOM.div, null, ',
+      '  React.createElement(React.DOM.div, null, ' +
+        'React.createElement(React.DOM.br, null)), ',
+      '  React.createElement(Component, null, foo, ' +
+        'React.createElement(React.DOM.br, null), bar), ',
+      '  React.createElement(React.DOM.br, null)',
       ');'
     ].join('\n');
 
@@ -113,8 +117,8 @@ describe('react jsx', function() {
     ].join('\n');
     var result = [
       '/**@jsx React.DOM*/',
-      'var x = React.DOM.div(null, ',
-      '  Component(null)',
+      'var x = React.createElement(React.DOM.div, null, ',
+      '  React.createElement(Component, null)',
       ');'
     ].join('\n');
 
@@ -129,7 +133,7 @@ describe('react jsx', function() {
     ].join('\n');
     result = [
       '/**@jsx React.DOM*/',
-      'var x = React.DOM.div(null, ',
+      'var x = React.createElement(React.DOM.div, null, ',
       '  this.props.children',
       ');'
     ].join('\n');
@@ -144,7 +148,7 @@ describe('react jsx', function() {
     ].join('\n');
     result = [
       '/**@jsx React.DOM*/',
-      'var x = Composite(null, ',
+      'var x = React.createElement(Composite, null, ',
       '  this.props.children',
       ');'
     ].join('\n');
@@ -159,8 +163,8 @@ describe('react jsx', function() {
     ].join('\n');
     result = [
       '/**@jsx React.DOM*/',
-      'var x = Composite(null, ',
-      '  Composite2(null)',
+      'var x = React.createElement(Composite, null, ',
+      '  React.createElement(Composite2, null)',
       ');'
     ].join('\n');
     expect(transform(code).code).toEqual(result);
@@ -190,7 +194,7 @@ describe('react jsx', function() {
     var result = [
       '/**@jsx React.DOM*/',
       'var x =',
-      '  React.DOM.div({',
+      '  React.createElement(React.DOM.div, {',
       '    attr1: ',
       '      "foo" + "bar", ',
       '    ',
@@ -235,14 +239,14 @@ describe('react jsx', function() {
       ' * @jsx React.DOM',
       ' */',
       'var x = (',
-      '  React.DOM.div(null, ',
+      '  React.createElement(React.DOM.div, null, ',
       '    /* A comment at the beginning */',
       '    /* A second comment at the beginning */',
-      '    React.DOM.span(null',
+      '    React.createElement(React.DOM.span, null',
       '      /* A nested comment */',
       '    ), ',
       '    /* A sandwiched comment */',
-      '    React.DOM.br(null)',
+      '    React.createElement(React.DOM.br, null)',
       '    /* A comment at the end */',
       '    /* A second comment at the end */',
       '  )',
@@ -273,11 +277,11 @@ describe('react jsx', function() {
       ' * @jsx React.DOM',
       ' */',
       'var x = (',
-      '  React.DOM.div({',
+      '  React.createElement(React.DOM.div, {',
       '    /* a multi-line',
       '       comment */',
       '    attr1: "foo"}, ',
-      '    React.DOM.span({// a double-slash comment',
+      '    React.createElement(React.DOM.span, {// a double-slash comment',
       '      attr2: "bar"}',
       '    )',
       '  )',
@@ -298,7 +302,7 @@ describe('react jsx', function() {
       '/**',
       ' * @jsx React.DOM',
       ' */',
-      'React.DOM.div(null, "\u00A0");'
+      'React.createElement(React.DOM.div, null, "\u00A0");'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);
@@ -315,59 +319,29 @@ describe('react jsx', function() {
       '/**',
       ' * @jsx React.DOM',
       ' */',
-      'React.DOM.div(null, "\u00A0 ");'
+      'React.createElement(React.DOM.div, null, "\u00A0 ");'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);
   });
 
   it('should handle hasOwnProperty correctly', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<hasOwnProperty>testing</hasOwnProperty>;'
-    ].join('\n');
-    var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'hasOwnProperty(null, "testing");'
-    ].join('\n');
+    var code = '<hasOwnProperty>testing</hasOwnProperty>;';
+    var result = 'React.createElement(hasOwnProperty, null, "testing");';
 
     expect(transform(code).code).toBe(result);
   });
 
   it('should allow constructor as prop', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<Component constructor="foo" />;'
-    ].join('\n');
-    var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'Component({constructor: "foo"});'
-    ].join('\n');
+    var code = '<Component constructor="foo" />;';
+    var result = 'React.createElement(Component, {constructor: "foo"});';
 
     expect(transform(code).code).toBe(result);
   });
 
   it('should allow JS namespacing', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<Namespace.Component />;'
-    ].join('\n');
-    var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'Namespace.Component(null);'
-    ].join('\n');
+    var code = '<Namespace.Component />;';
+    var result = 'React.createElement(Namespace.Component, null);';
 
     expect(transform(code).code).toBe(result);
   });
@@ -383,7 +357,7 @@ describe('react jsx', function() {
       '/**',
       ' * @jsx React.DOM',
       ' */',
-      'Namespace.DeepNamespace.Component(null);'
+      'React.createElement(Namespace.DeepNamespace.Component, null);'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);
@@ -401,10 +375,12 @@ describe('react jsx', function() {
   });
 
   it('wraps props in Object.assign for spread attributes', function() {
-    var code = HEADER +
-      '<Component { ... x } y\n={2 } z />';
-    var result = HEADER +
-      'Component(Object.assign({},   x , {y: \n2, z: true}))';
+    var code =
+      '<Component { ... x } y\n' +
+      '={2 } z />';
+    var result =
+      'React.createElement(Component, Object.assign({},   x , {y: \n' +
+      '2, z: true}))';
 
     expect(transform(code).code).toBe(result);
   });
@@ -420,7 +396,7 @@ describe('react jsx', function() {
       '/**',
       ' * @jsx React.DOM',
       ' */',
-      'React.DOM[\'font-face\'](null);'
+      'React.createElement(React.DOM[\'font-face\'], null);'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);

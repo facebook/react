@@ -69,6 +69,13 @@ function visitReactTag(traverse, object, path, state) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
   }
 
+  var isReact = jsxObjIdent !== 'JSXDOM';
+
+  // We assume that the React runtime is already in scope
+  if (isReact) {
+    utils.append('React.createElement(', state);
+  }
+
   // Only identifiers can be fallback tags or need quoting. We don't need to
   // handle quoting for other types.
   var didAddTag = false;
@@ -106,7 +113,11 @@ function visitReactTag(traverse, object, path, state) {
     utils.catchup(nameObject.range[1], state);
   }
 
-  utils.append('(', state);
+  if (isReact) {
+    utils.append(', ', state);
+  } else {
+    utils.append('(', state);
+  }
 
   var hasAttributes = attributesObject.length;
 
@@ -278,9 +289,7 @@ function visitReactTag(traverse, object, path, state) {
 }
 
 visitReactTag.test = function(object, path, state) {
-  // only run react when react @jsx namespace is specified in docblock
-  var jsx = utils.getDocblock(state).jsx;
-  return object.type === Syntax.XJSElement && jsx && jsx.length;
+  return object.type === Syntax.XJSElement;
 };
 
 exports.visitorList = [
