@@ -19,20 +19,4 @@
 
 "use strict";
 
-/**
- * Shallow merges two structures by mutating the first parameter.
- *
- * @param {object|function} one Object to be merged into.
- * @param {?object} two Optional object with properties to merge from.
- * @return {object|function} The first argument coerced into an object.
- */
-function mergeInto(one, two) {
-  if (two != null) {
-    return Object.assign(one, two);
-  } else {
-    // This ensures that we throw the right error if one is of the wrong type
-    return Object.assign(one);
-  }
-}
-
-module.exports = mergeInto;
+module.exports = Object.assign;
