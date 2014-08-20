@@ -31,12 +31,19 @@ function warnForLegacyFactoryCall() {
     return;
   }
   var owner = ReactCurrentOwner.current;
-  var name = owner && owner.constructor ? owner.constructor.displayName : 'N/A';
+  var name = owner && owner.constructor ? owner.constructor.displayName : '';
+  if (!name) {
+    name = 'Something';
+  }
   if (legacyFactoryLogs.hasOwnProperty(name)) {
     return;
   }
   legacyFactoryLogs[name] = true;
-  // TODO: Warn for this.
+  warning(
+    false,
+    name + ' is calling a React component directly. ' +
+    'Use a factory or JSX instead. See: http://fb.me/react-legacyfactory'
+  );
   monitorCodeUse('react_legacy_factory_call', { name: name });
 }
 
