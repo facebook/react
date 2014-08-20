@@ -35,6 +35,7 @@ var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
@@ -46,19 +47,21 @@ var onlyChild = require('onlyChild');
 
 ReactDefaultInjection.inject();
 
-// TODO: Restore the real create descriptor
-// var createDescriptor = ReactDescriptor.createDescriptor;
-var createDescriptor = function(type, props, children) {
-  // Because of issues with mocks, we temporarily execute the factory function
-  var args = Array.prototype.slice.call(arguments, 1);
-  return type.apply(null, args);
-};
+var createDescriptor = ReactDescriptor.createDescriptor;
 var createFactory = ReactDescriptor.createFactory;
 
 if (__DEV__) {
-  // createDescriptor = ReactDescriptorValidator.createDescriptor;
+  createDescriptor = ReactDescriptorValidator.createDescriptor;
   createFactory = ReactDescriptorValidator.createFactory;
 }
+
+// TODO: Drop legacy descriptors once classes no longer export these factories
+createDescriptor = ReactLegacyDescriptor.wrapCreateDescriptor(
+  createDescriptor
+);
+createFactory = ReactLegacyDescriptor.wrapCreateFactory(
+  createFactory
+);
 
 var React = {
   Children: {

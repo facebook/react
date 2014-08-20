@@ -18,9 +18,56 @@
 
 "use strict";
 
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDescriptor = require('ReactDescriptor');
 
 var invariant = require('invariant');
+var monitorCodeUse = require('monitorCodeUse');
+var warning = require('warning');
+
+var legacyFactoryLogs = {};
+function warnForLegacyFactoryCall() {
+  if (!ReactLegacyDescriptorFactory._isLegacyCallWarningEnabled) {
+    return;
+  }
+  var owner = ReactCurrentOwner.current;
+  var name = owner && owner.constructor ? owner.constructor.displayName : 'N/A';
+  if (legacyFactoryLogs.hasOwnProperty(name)) {
+    return;
+  }
+  legacyFactoryLogs[name] = true;
+  // TODO: Warn for this.
+  monitorCodeUse('react_legacy_factory_call', { name: name });
+}
+
+function warnForPlainFunctionType(type) {
+  var isReactClass =
+    typeof type.prototype.mountComponent === 'function' &&
+    typeof type.prototype.receiveComponent === 'function';
+  if (isReactClass) {
+    warning(
+      false,
+      'Did not expect to get a React class here. Use `Component` instead ' +
+      'of `Component.type` or `this.constructor`.'
+    );
+  } else {
+    if (!type._reactWarnedForThisType) {
+      try {
+        type._reactWarnedForThisType = true;
+      } catch (x) {
+        // just incase this is a frozen object or some special object
+      }
+      monitorCodeUse('react_non_component_in_jsx', { name: type.name });
+    }
+    // TODO: This pattern is heavily used by ReactMenu and therefore we
+    // cannot yet warn without spamming users too much.
+    // warning(
+    //   false,
+    //   'This JSX uses a plain function. Only React components are ' +
+    //   'valid in React\'s JSX transform.'
+    // );
+  }
+}
 
 /**
  * Transfer static properties from the source to the target. Functions are
@@ -50,7 +97,67 @@ function proxyStaticMethods(target, source) {
   }
 }
 
+// We use an object instead of a boolean because booleans are ignored by our
+// mocking libraries when these factories gets mocked.
+var LEGACY_MARKER = {};
+
 var ReactLegacyDescriptorFactory = {};
+
+ReactLegacyDescriptorFactory.wrapCreateFactory = function(createFactory) {
+  var legacyCreateFactory = function(type) {
+    if (typeof type !== 'function') {
+      // Non-function types cannot be legacy factories
+      return createFactory(type);
+    }
+
+    if (type.isReactLegacyFactory) {
+      // This is probably a legacy factory created by ReactCompositeComponent.
+      // We unwrap it to get to the underlying class.
+      return createFactory(type.type);
+    }
+
+    if (__DEV__) {
+      warnForPlainFunctionType(type);
+    }
+
+    // Unless it's a legacy factory, then this is probably a plain function,
+    // that is expecting to be invoked by JSX. We can just return it as is.
+    return type;
+  };
+  return legacyCreateFactory;
+};
+
+ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
+  var legacyCreateDescriptor = function(type, props, children) {
+    if (typeof type !== 'function') {
+      // Non-function types cannot be legacy factories
+      return createDescriptor.apply(this, arguments);
+    }
+
+    if (type.isReactLegacyFactory) {
+      // This is probably a legacy factory created by ReactCompositeComponent.
+      // We unwrap it to get to the underlying class.
+      if (type._isMockFunction) {
+        // If this is a mock function, people will expect it to be called. We
+        // will actually call the original mock factory function instead. This
+        // future proofs unit testing that assume that these are classes.
+        type.type._mockedReactClassConstructor = type;
+      }
+      var args = Array.prototype.slice.call(arguments, 0);
+      args[0] = type.type;
+      return createDescriptor.apply(this, args);
+    }
+
+    if (__DEV__) {
+      warnForPlainFunctionType(type);
+    }
+
+    // This is being called with a plain function we should invoke it
+    // immediately as if this was used with legacy JSX.
+    return type.apply(null, Array.prototype.slice.call(arguments, 1));
+  };
+  return legacyCreateDescriptor;
+};
 
 ReactLegacyDescriptorFactory.wrapFactory = function(factory) {
   invariant(
@@ -58,14 +165,18 @@ ReactLegacyDescriptorFactory.wrapFactory = function(factory) {
     'This is suppose to accept a descriptor factory'
   );
   var legacyDescriptorFactory = function(config, children) {
-    // This factory should not be called when the new JSX transform is in place.
-    // TODO: Warning - Use JSX instead of direct function calls.
+    // This factory should not be called when JSX is used. Use JSX instead.
+    if (__DEV__) {
+      warnForLegacyFactoryCall();
+    }
     return factory.apply(this, arguments);
   };
   proxyStaticMethods(legacyDescriptorFactory, factory.type);
-  legacyDescriptorFactory.isReactLegacyFactory = true;
+  legacyDescriptorFactory.isReactLegacyFactory = LEGACY_MARKER;
   legacyDescriptorFactory.type = factory.type;
   return legacyDescriptorFactory;
 };
+
+ReactLegacyDescriptorFactory._isLegacyCallWarningEnabled = true;
 
 module.exports = ReactLegacyDescriptorFactory;

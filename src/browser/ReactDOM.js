@@ -43,8 +43,8 @@ var mapObject = require('mapObject');
  * @private
  */
 function createDOMComponentClass(omitClose, tag) {
-  var Constructor = function(descriptor) {
-    this.construct(descriptor);
+  var Constructor = function(props) {
+    // This constructor and it's argument is currently used by mocks.
   };
   Constructor.prototype = new ReactDOMComponent(tag, omitClose);
   Constructor.prototype.constructor = Constructor;
