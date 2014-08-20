@@ -21,6 +21,7 @@
 
 // Defeat circular references by requiring this directly.
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactDescriptor = require('ReactDescriptor');
 
 var invariant = require('invariant');
 
@@ -36,6 +37,8 @@ var invariant = require('invariant');
  * @return {function} convenience constructor of new component
  */
 function createFullPageComponent(componentClass) {
+  var elementFactory = ReactDescriptor.createFactory(componentClass.type);
+
   var FullPageComponent = ReactCompositeComponent.createClass({
     displayName: 'ReactFullPageComponent' + (
       componentClass.type.displayName || ''
@@ -53,7 +56,7 @@ function createFullPageComponent(componentClass) {
     },
 
     render: function() {
-      return componentClass(this.props);
+      return elementFactory(this.props);
     }
   });
 

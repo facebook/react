@@ -22,13 +22,14 @@ var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
 var merge = require('merge');
 
-// Store a reference to the <select> `ReactDOMComponent`.
-var select = ReactDOM.select;
+// Store a reference to the <select> `ReactDOMComponent`. TODO: use string
+var select = ReactDescriptor.createFactory(ReactDOM.select.type);
 
 function updateWithPendingValueIfMounted() {
   /*jshint validthis:true */

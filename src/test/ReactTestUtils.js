@@ -241,7 +241,11 @@ var ReactTestUtils = {
 
     var ConvenienceConstructor = React.createClass({
       render: function() {
-        return ReactDOM[mockTagName](null, this.props.children);
+        return React.createElement(
+          ReactDOM[mockTagName], // TODO: Replace this with just a string
+          null,
+          this.props.children
+        );
       }
     });
 

@@ -21,8 +21,12 @@
 
 var React = require('React');
 
-var ReactTransitionGroup = require('ReactTransitionGroup');
-var ReactCSSTransitionGroupChild = require('ReactCSSTransitionGroupChild');
+var ReactTransitionGroup = React.createFactory(
+  require('ReactTransitionGroup')
+);
+var ReactCSSTransitionGroupChild = React.createFactory(
+  require('ReactCSSTransitionGroupChild')
+);
 
 var merge = require('merge');
 

@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ReactDescriptor = require('ReactDescriptor');
+
 var invariant = require('invariant');
 
 var component;
@@ -27,7 +29,7 @@ var nullComponentIdsRegistry = {};
 
 var ReactEmptyComponentInjection = {
   injectEmptyComponent: function(emptyComponent) {
-    component = emptyComponent;
+    component = ReactDescriptor.createFactory(emptyComponent.type);
   }
 };
 
