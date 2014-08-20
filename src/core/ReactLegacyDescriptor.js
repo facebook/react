@@ -49,6 +49,7 @@ function warnForLegacyFactoryCall() {
 
 function warnForPlainFunctionType(type) {
   var isReactClass =
+    type.prototype &&
     typeof type.prototype.mountComponent === 'function' &&
     typeof type.prototype.receiveComponent === 'function';
   if (isReactClass) {
