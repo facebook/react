@@ -20,7 +20,7 @@
 
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 
-var accumulate = require('accumulate');
+var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
 
@@ -36,7 +36,8 @@ var LocalEventTrapMixin = {
       handlerBaseName,
       this.getDOMNode()
     );
-    this._localEventListeners = accumulate(this._localEventListeners, listener);
+    this._localEventListeners =
+      accumulateInto(this._localEventListeners, listener);
   },
 
   // trapCapturedEvent would look nearly identical. We don't implement that
