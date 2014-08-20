@@ -312,8 +312,11 @@ var SimpleEventPlugin = {
     var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
     if (__DEV__) {
       if (typeof returnValue === 'boolean') {
+        var eventHandlerName = (listener.__reactBoundContext &&
+          listener.__reactBoundContext.constructor.displayName) ||
+          '<<anonymous>>';
         monitorCodeUse('react_event_return_false', {
-          eventHandlerName: listener.__reactBoundMethod.displayName
+          eventHandlerName: eventHandlerName
         });
         console.warn(
           'Returning `false` from an event handler is deprecated and will ' +
