@@ -199,7 +199,22 @@ function validateChildKeys(component, parentType) {
  * @private
  */
 function checkPropTypes(componentName, propTypes, props, location) {
-  for (var propName in propTypes) {
+  var propName;
+  for (propName in props) {
+    if (props.hasOwnProperty(propName) &&
+        !propTypes.hasOwnProperty(propName)) {
+      var message = location.substring(0,1).toUpperCase() +
+          location.substring(1) + " `" + propName +
+          "` was not expected in " + ("`" + componentName + "`.");
+      loggedTypeFailures[message] = true;
+      monitorCodeUse(
+        'react_failed_descriptor_type_check',
+        { message: message }
+      );
+    }
+  }
+
+  for (propName in propTypes) {
     if (propTypes.hasOwnProperty(propName)) {
       var error;
       // Prop type validation may throw. In case they do, we don't want to

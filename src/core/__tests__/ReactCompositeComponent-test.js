@@ -553,6 +553,22 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.mock.calls.length).toBe(2);
   });
 
+  it('should warn about unexpected props', function() {
+    var Component = React.createClass({
+      propTypes: {},
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<Component prop={42} />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Prop `prop` was not expected in `Component`.'
+    );
+  });
+
   it('should throw on invalid prop types', function() {
     expect(function() {
       React.createClass({

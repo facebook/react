@@ -987,7 +987,19 @@ var ReactCompositeComponentMixin = {
     // TODO: Stop validating prop types here and only use the descriptor
     // validation.
     var componentName = this.constructor.displayName;
-    for (var propName in propTypes) {
+    var propName;
+
+    for (propName in props) {
+      if (props.hasOwnProperty(propName) &&
+          !propTypes.hasOwnProperty(propName)) {
+        var message = location.substring(0,1).toUpperCase() +
+            location.substring(1) + " `" + propName +
+            "` was not expected in " + ("`" + componentName + "`.");
+        warning(false, message);
+      }
+    }
+
+    for (propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error =
           propTypes[propName](props, propName, componentName, location);
