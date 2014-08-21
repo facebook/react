@@ -56,11 +56,10 @@ describe('ReactMount', function() {
   it("should warn when unmounting a non-container root node", function() {
     var mainContainerDiv = document.createElement('div');
 
-    var component = (
+    var component =
       <div>
         <div />
-      </div>
-    );
+      </div>;
     React.renderComponent(component, mainContainerDiv);
 
     // Test that unmounting at a root node gives a helpful warning
@@ -79,13 +78,12 @@ describe('ReactMount', function() {
   it("should warn when unmounting a non-container, non-root node", function() {
     var mainContainerDiv = document.createElement('div');
 
-    var component = (
+    var component =
       <div>
         <div>
           <div />
         </div>
-      </div>
-    );
+      </div>;
     React.renderComponent(component, mainContainerDiv);
 
     // Test that unmounting at a non-root node gives a different warning

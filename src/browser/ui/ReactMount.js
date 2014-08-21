@@ -370,8 +370,8 @@ var ReactMount = {
     var reactRootElement = getReactRootElementInContainer(container);
     var containerHasReactMarkup =
       reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
-    var containerHasNonRootReactChild = ReactMount.hasNonRootReactChild(
-      container);
+    var containerHasNonRootReactChild =
+      ReactMount.hasNonRootReactChild(container);
 
     if (__DEV__) {
       warning(
@@ -381,7 +381,9 @@ var ReactMount = {
       );
     }
 
-    var shouldReuseMarkup = containerHasReactMarkup && !prevComponent &&
+    var shouldReuseMarkup =
+      containerHasReactMarkup &&
+      !prevComponent &&
       !containerHasNonRootReactChild;
 
     var component = ReactMount._renderNewRootComponent(

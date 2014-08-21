@@ -119,9 +119,7 @@ describe('ReactMount', function() {
     var container = document.createElement('container');
     var Component = React.createClass({
       render: function() {
-        return <div>
-          <div />
-        </div>;
+        return <div><div /></div>;
       }
     });
     React.renderComponent(<Component />, container);
