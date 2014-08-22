@@ -142,8 +142,6 @@ class Dispatcher {
 }
 ```
 
-We use register() to register a store's callback with the dispatcher, and dispatch() to invoke all of callbacks we previously registered.  A data payload (the action) is the sole argument provided to the callback.
-
 Now we are all set to create a dispatcher that is more specific to our app, which we'll call AppDispatcher.
 
 ```javascript
