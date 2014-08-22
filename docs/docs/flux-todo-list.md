@@ -46,63 +46,103 @@ myapp
   + ...
 ```
 
-Creating a Dispatcher
----------------------
 
-Now we are ready to create a dispatcher. Here is an naive example of a Dispatcher class, written with JavaScript promises, polyfilled with Jake Archibald's [ES6-Promises](https://github.com/jakearchibald/ES6-Promises) module.
+Using the Dispatcher
+--------------------
 
-```javascript
-var Promise = require('es6-promise').Promise;
-var merge = require('react/lib/merge');
+We'll use the dispatcher from the [Flux GitHub repository](https://github.com/facebook/flux), but let's go over how to get it into our project, how it works and how we'll use it.
 
-var _callbacks = [];
-var _promises = [];
+The dispatcher's source code is written in [ECMAScript6](https://github.com/lukehoban/es6features), the future version of JavaScript.  To use the future of JS in today's browser's we need to transpile it back to a version of JS that browsers can use.  We perform this build step, transpiling from ES6 into common JavaScript, using npm.
 
-var Dispatcher = function() {};
-Dispatcher.prototype = merge(Dispatcher.prototype, {
+You can get up and running with the dispatcher in a variety of ways, but perhaps the simplest is to use [Michael Jackson](https://twitter.com/mjackson)'s npm module version of the Flux project, called [react-dispatcher](https://www.npmjs.org/package/react-dispatcher):
 
-  /**
-   * Register a Store's callback so that it may be invoked by an action.
-   * @param {function} callback The callback to be registered.
-   * @return {number} The index of the callback within the _callbacks array.
-   */
-  register: function(callback) {
-    _callbacks.push(callback);
-    return _callbacks.length - 1; // index
-  },
-
-  /**
-   * dispatch
-   * @param {object} payload The data from the action.
-   */
-  dispatch: function(payload) {
-    // First create array of promises for callbacks to reference.
-    var resolves = [];
-    var rejects = [];
-    _promises = _callbacks.map(function(_, i) {
-      return new Promise(function(resolve, reject) {
-        resolves[i] = resolve;
-        rejects[i] = reject;
-      });
-    });
-    // Dispatch to callbacks and resolve/reject promises.
-    _callbacks.forEach(function(callback, i) {
-      // Callback can return an obj, to resolve, or a promise, to chain.
-      // See waitFor() for why this might be useful.
-      Promise.resolve(callback(payload)).then(function() {
-        resolves[i](payload);
-      }, function() {
-        rejects[i](new Error('Dispatcher callback unsuccessful'));
-      });
-    });
-    _promises = [];
-  }
-});
-
-module.exports = Dispatcher;
+```
+npm install react-dispatcher
 ```
 
-The public API of this basic Dispatcher consists of only two methods: register() and dispatch(). We'll use register() within our stores to register each store's callback. We'll use dispatch() within our actions to trigger the invocation of the callbacks.
+Afterward, you can require the dispatcher in your project's modules like so:
+
+```javascript
+var Dispatcher = require('Flux').Dispatcher;
+```
+
+Alternatively, you can clone the Flux repo, run the Gulp-based build script with `npm install`, and then simply copy the dispatcher and invariant modules located inside flux/lib/ to the dispatcher directory for your project.  This the what we did in the [example code](https://github.com/facebook/flux/tree/master/examples/flux-todomvc/js/dispatcher).
+
+The two most important methods that the dispatcher exposes publically are register() and dispatch().  We'll use register() within our stores to register each store's callback. We'll use dispatch() within our action creators to trigger the invocation of the callbacks.
+
+```javascript
+class Dispatcher {
+  constructor() {
+    this._callbacks = {};
+    this._isPending = {};
+    this._isHandled = {};
+    this._isDispatching = false;
+    this._pendingPayload = null;
+  }
+
+  /**
+   * Registers a callback to be invoked with every dispatched payload.
+   *
+   * @param {function} callback
+   * @return {string}
+   */
+  register(callback) {
+    var id = _prefix + _lastID++;
+    this._callbacks[id] = callback;
+    return id;
+  }
+
+  // ...
+
+  /**
+   * Dispatches a payload to all registered callbacks.
+   *
+   * @param {object} payload
+   */
+  dispatch(payload) {
+    invariant(
+      !this._isDispatching,
+      'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
+    );
+    this._startDispatching(payload);
+    try {
+      for (var id in this._callbacks) {
+        if (this._isPending[id]) {
+          continue;
+        }
+        this._invokeCallback(id);
+      }
+    } finally {
+      this._stopDispatching();
+    }
+  }
+
+  // ...
+
+  _invokeCallback(id) {
+    this._isPending[id] = true;
+    this._callbacks[id](this._pendingPayload);
+    this._isHandled[id] = true;
+  }
+
+  _startDispatching(payload) {
+    for (var id in this._callbacks) {
+      this._isPending[id] = false;
+      this._isHandled[id] = false;
+    }
+    this._pendingPayload = payload;
+    this._isDispatching = true;
+  }
+
+  _stopDispatching() {
+    this._pendingPayload = null;
+    this._isDispatching = false;
+  }
+
+}
+```
+
+We use register() to register a store's callback with the dispatcher, and dispatch() to invoke all of callbacks we previously registered.  A data payload (the action) is the sole argument provided to the callback.
 
 Now we are all set to create a dispatcher that is more specific to our app, which we'll call AppDispatcher.
 
@@ -130,7 +170,9 @@ var AppDispatcher = merge(Dispatcher.prototype, {
 module.exports = AppDispatcher;
 ```
 
-Now we've created an implementation that is a bit more specific to our needs, with a helper function we can use in the actions coming from our views' event handlers. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.
+Now we've created an implementation that is a bit more specific to our needs, with a helper function we can use when we create actions. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.  
+
+You don't actually need to create an AppDispatcher in every application, but we wanted to show it here as an example.
 
 
 Creating Stores
@@ -372,7 +414,7 @@ Text input, on the other hand, is just a bit more complicated because we need to
 
 As you'll see below, with every change to the input, React expects us to update the state of the component. So when we are finally ready to save the text inside the input, we will put the value held in the component's state in the action's payload. This is UI state, rather than application state, and keeping that distinction in mind is a good guide for where state should live. All application state should live in the store, while components occasionally hold on to UI state. Ideally, React components preserve as little state as possible.
 
-Because TodoTextInput is being used in multiple places within our application, with different behaviors, we'll need to pass the onSave method in as a prop from the component's parent. This allows onSave to invoke different actions depending on where it is used.
+Because TodoTextInput is being used in multiple places within our application, with different behaviors, we'll need to pass the onSave method in as a prop from the component's parent. This allows onSave to invoke different action creator methods depending on where it is used.
 
 ```javascript
 /** @jsx React.DOM */
@@ -497,10 +539,10 @@ module.exports = Header;
 In a different context, such as in editing mode for an existing to-do item, we might pass an onSave callback that invokes `TodoActions.update(text)` instead.
 
 
-Creating Semantic Actions
--------------------------
+Creating Actions with Semantic Methods
+--------------------------------------
 
-Here is the basic code for the two actions we used above in our views:
+Here is the basic code for the two action creator methods we used above in our views:
 
 ```javascript
 /**
@@ -571,27 +613,56 @@ React.renderComponent(
 );
 ```
 
-Adding Dependency Management to the Dispatcher
+Dependency Management in the Dispatcher
 ----------------------------------------------
 
-As I said previously, our Dispatcher implementation is a bit naive. It's pretty good, but it will not suffice for most applications. We need a way to be able to manage dependencies between Stores. Let's add that functionality with a waitFor() method within the main body of the Dispatcher class.
+As our application grows beyond this simple application to contain multiple stores, we'll need a way to be able to manage dependencies between them. That is, Store A might need to derive data based on Store B's data, so Store A would need Store B to update itself first.  This functionality is available with the Dispatcher's waitFor() method.
 
-We'll need another public method, waitFor(). Note that it returns a Promise that can in turn be returned from the Store callback.
+We would call waitFor() within the store's registered callback like so:
 
 ```javascript
-  /**
-   * @param {array} promisesIndexes
-   * @param {function} callback
-   */
-  waitFor: function(promiseIndexes, callback) {
-    var selectedPromises = promiseIndexes.map(function(index) {
-      return _promises[index];
-    });
-    return Promise.all(selectedPromises).then(callback);
-  }
+Dispatcher.waitFor([StoreB.dispatcherIndex, StoreC.dispatcherIndex]);
+// now do things, knowing that both StoreB and StoreC have updated
 ```
 
-Now within the TodoStore callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur.  A more robust dispatcher is required to flag this scenario with warnings in the console.
+In the source code, you can see that we are interupting the synchronous iteration over the callbacks and starting a new iteration of callbacks based on the array of dispatcherIndexes passed into waitFor().
+
+```javascript
+/**
+ * Waits for the callbacks specified to be invoked before continuing execution
+ * of the current callback. This method should only be used by a callback in
+ * response to a dispatched payload.
+ *
+ * @param {array<string>} ids
+ */
+waitFor(ids) {
+  invariant(
+    this._isDispatching,
+    'Dispatcher.waitFor(...): Must be invoked while dispatching.'
+  );
+  for (var ii = 0; ii < ids.length; ii++) {
+    var id = ids[ii];
+    if (this._isPending[id]) {
+      invariant(
+        this._isHandled[id],
+        'Dispatcher.waitFor(...): Circular dependency detected while ' +
+        'waiting for `%s`.',
+        id
+      );
+      continue;
+    }
+    invariant(
+      this._callbacks[id],
+      'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
+      id
+    );
+    this._invokeCallback(id);
+  }
+}
+```
+
+Now within the store's callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur. To help prevent this situation, the dispatcher will throw an error in the brwoser console if we accidentally have two stores that are waiting for each other. 
+
 
 The Future of Flux
 ------------------
