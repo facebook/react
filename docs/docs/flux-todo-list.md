@@ -52,7 +52,7 @@ Using the Dispatcher
 
 We'll use the dispatcher from the [Flux GitHub repository](https://github.com/facebook/flux), but let's go over how to get it into our project, how it works and how we'll use it.
 
-The dispatcher's source code is written in [ECMAScript6](https://github.com/lukehoban/es6features), the future version of JavaScript.  To use the future of JS in today's browser's we need to transpile it back to a version of JS that browsers can use.  We perform this build step, transpiling from ES6 into common JavaScript, using npm.
+The dispatcher's source code is written in [ECMAScript 6](https://github.com/lukehoban/es6features), the future version of JavaScript.  To use the future of JS in today's browser's we need to transpile it back to a version of JS that browsers can use.  We perform this build step, transpiling from ES6 into common JavaScript, using npm.
 
 You can get up and running with the dispatcher in a variety of ways, but perhaps the simplest is to use [Michael Jackson](https://twitter.com/mjackson)'s npm module version of the Flux project, called [react-dispatcher](https://www.npmjs.org/package/react-dispatcher):
 
@@ -172,7 +172,7 @@ module.exports = AppDispatcher;
 
 Now we've created an implementation that is a bit more specific to our needs, with a helper function we can use when we create actions. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.  
 
-You don't actually need to create an AppDispatcher in every application, but we wanted to show it here as an example.
+You don't actually need to create an AppDispatcher in every application, but we wanted to show it here as an example.  The creation of the AppDispatcher allows us to extend the functionality of the Dispatcher.  In this application, for example, we have provided metadata about the source of the action outside of the action itself.
 
 
 Creating Stores
@@ -661,7 +661,7 @@ waitFor(ids) {
 }
 ```
 
-Now within the store's callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur. To help prevent this situation, the dispatcher will throw an error in the brwoser console if we accidentally have two stores that are waiting for each other. 
+Now within the store's callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur. To help prevent this situation, the dispatcher will throw an error in the browser console if we accidentally have two stores that are waiting for each other. 
 
 
 The Future of Flux
