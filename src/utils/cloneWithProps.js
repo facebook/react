@@ -37,14 +37,12 @@ var CHILDREN_PROP = keyOf({children: null});
  * @return {object} a clone of child with props merged in.
  */
 function cloneWithProps(child, props) {
-  if (__DEV__) {
-    warning(
-      !child.ref,
-      'You are calling cloneWithProps() on a child with a ref. This is ' +
-      'dangerous because you\'re creating a new child which will not be ' +
-      'added as a ref to its parent.'
-    );
-  }
+  warning(
+    !child.ref,
+    'You are calling cloneWithProps() on a child with a ref. This is ' +
+    'dangerous because you\'re creating a new child which will not be ' +
+    'added as a ref to its parent.'
+  );
 
   var newProps = ReactPropTransferer.mergeProps(props, child.props);
 
