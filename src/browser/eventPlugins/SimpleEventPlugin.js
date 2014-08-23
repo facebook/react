@@ -35,6 +35,7 @@ var getEventCharCode = require('getEventCharCode');
 
 var invariant = require('invariant');
 var keyOf = require('keyOf');
+var warning = require('warning');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -309,15 +310,13 @@ var SimpleEventPlugin = {
    */
   executeDispatch: function(event, listener, domID) {
     var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
-    if (__DEV__) {
-      if (typeof returnValue === 'boolean') {
-        console.warn(
-          'Returning `false` from an event handler is deprecated and will ' +
-          'be ignored in a future release. Instead, manually call ' +
-          'e.stopPropagation() or e.preventDefault(), as appropriate.'
-        );
-      }
-    }
+
+    warning(
+      typeof returnValue !== 'boolean',
+      'Returning `false` from an event handler is deprecated and will be ' +
+      'ignored in a future release. Instead, manually call ' +
+      'e.stopPropagation() or e.preventDefault(), as appropriate.'
+    );
 
     if (returnValue === false) {
       event.stopPropagation();
