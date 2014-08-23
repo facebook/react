@@ -146,13 +146,11 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
     if (!isReactClass) {
       // This is being called with a plain function we should invoke it
       // immediately as if this was used with legacy JSX.
-      if (__DEV__) {
-        warning(
-          false,
-          'This JSX uses a plain function. Only React components are valid in' +
-          'JSX.'
-        );
-      }
+      warning(
+        false,
+        'This JSX uses a plain function. Only React components are valid in' +
+        'JSX.'
+      );
       var args = Array.prototype.slice.call(arguments, 1);
       return type.apply(null, args);
     }
