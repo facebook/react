@@ -26,18 +26,12 @@ describe('ReactMount', function() {
     var mainContainerDiv = document.createElement('div');
     document.documentElement.appendChild(mainContainerDiv);
 
-    var instanceOne = (
-      <div className="firstReactDiv">
-      </div>
-    );
+    var instanceOne = <div className="firstReactDiv" />;
     var firstRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(firstRootDiv);
     React.renderComponent(instanceOne, firstRootDiv);
 
-    var instanceTwo = (
-      <div className="secondReactDiv">
-      </div>
-    );
+    var instanceTwo = <div className="secondReactDiv" />;
     var secondRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(secondRootDiv);
     React.renderComponent(instanceTwo, secondRootDiv);
