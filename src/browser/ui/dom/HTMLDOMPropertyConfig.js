@@ -157,6 +157,8 @@ var HTMLDOMPropertyConfig = {
     /**
      * Non-standard Properties
      */
+    srcObject: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    mozSrcObject: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
     autoCapitalize: null, // Supported in Mobile Safari for keyboard hints
     autoCorrect: null, // Supported in Mobile Safari for keyboard hints
     itemProp: MUST_USE_ATTRIBUTE, // Microdata: http://schema.org/docs/gs.html
