@@ -22,6 +22,7 @@ var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactDescriptor = require('ReactDescriptor');
+var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
 
@@ -31,6 +32,10 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
+
+var createDescriptor = ReactLegacyDescriptor.wrapCreateDescriptor(
+  ReactDescriptor.createDescriptor
+);
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
@@ -392,7 +397,8 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   constructAndRenderComponent: function(constructor, props, container) {
-    return ReactMount.renderComponent(constructor(props), container);
+    var descriptor = createDescriptor(constructor, props);
+    return ReactMount.renderComponent(descriptor, container);
   },
 
   /**

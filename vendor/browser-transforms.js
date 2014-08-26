@@ -42,15 +42,16 @@ var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
  */
 function transformReact(source, options) {
   // TODO: just use react-tools
+  options = options || {};
   var visitorList;
-  if (options && options.harmony) {
+  if (options.harmony) {
     visitorList = visitors.getAllVisitors();
   } else {
     visitorList = visitors.transformVisitors.react;
   }
 
   return transform(visitorList, source, {
-    sourceMap: supportsAccessors
+    sourceMap: supportsAccessors && options.sourceMap
   });
 }
 
@@ -198,7 +199,7 @@ function run(code, url, options) {
  * @param {function} callback Function to call with the content of url
  * @internal
  */
-function load(url, callback) {
+function load(url, successCallback, errorCallback) {
   var xhr;
   xhr = window.ActiveXObject ? new window.ActiveXObject('Microsoft.XMLHTTP')
                              : new XMLHttpRequest();
@@ -212,8 +213,9 @@ function load(url, callback) {
   xhr.onreadystatechange = function() {
     if (xhr.readyState === 4) {
       if (xhr.status === 0 || xhr.status === 200) {
-        callback(xhr.responseText, url);
+        successCallback(xhr.responseText);
       } else {
+        errorCallback();
         throw new Error("Could not load " + url);
       }
     }
@@ -230,10 +232,8 @@ function load(url, callback) {
  * @internal
  */
 function loadScripts(scripts) {
-  var result = scripts.map(function() {
-    return false;
-  });
-  var count = result.length;
+  var result = [];
+  var count = scripts.length;
 
   function check() {
     var script, i;
@@ -241,43 +241,59 @@ function loadScripts(scripts) {
     for (i = 0; i < count; i++) {
       script = result[i];
 
-      if (script && !script.executed) {
-        run(script.content, script.url, script.options);
+      if (script.loaded && !script.executed) {
         script.executed = true;
-      } else if (!script) {
+        run(script.content, script.url, script.options);
+      } else if (!script.loaded && !script.error && !script.async) {
         break;
       }
     }
   }
 
   scripts.forEach(function(script, i) {
-    var options;
+    var options = {
+      sourceMap: true
+    };
     if (/;harmony=true(;|$)/.test(script.type)) {
-      options = {
-        harmony: true
-      };
+      options.harmony = true
     }
 
+    // script.async is always true for non-javascript script tags
+    var async = script.hasAttribute('async');
+
     if (script.src) {
-      load(script.src, function(content, url) {
-        result[i] = {
-          executed: false,
-          content: content,
-          url: url,
-          options: options
-        };
+      result[i] = {
+        async: async,
+        error: false,
+        executed: false,
+        content: null,
+        loaded: false,
+        url: script.src,
+        options: options
+      };
+
+      load(script.src, function(content) {
+        result[i].loaded = true;
+        result[i].content = content;
+        check();
+      }, function() {
+        result[i].error = true;
         check();
       });
     } else {
       result[i] = {
+        async: async,
+        error: false,
         executed: false,
         content: script.innerHTML,
+        loaded: true,
         url: null,
         options: options
       };
-      check();
     }
   });
+
+  check();
 }
 
 /**

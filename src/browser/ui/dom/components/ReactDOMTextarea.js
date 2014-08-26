@@ -23,6 +23,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
@@ -31,8 +32,8 @@ var merge = require('merge');
 
 var warning = require('warning');
 
-// Store a reference to the <textarea> `ReactDOMComponent`.
-var textarea = ReactDOM.textarea;
+// Store a reference to the <textarea> `ReactDOMComponent`. TODO: use string
+var textarea = ReactDescriptor.createFactory(ReactDOM.textarea.type);
 
 function forceUpdateIfMounted() {
   /*jshint validthis:true */

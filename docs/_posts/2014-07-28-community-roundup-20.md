@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #20"
-layout: post
 author: Lou Husson
 ---
 
@@ -52,12 +51,12 @@ React.renderComponent(
 
 ## Thinking and Learning React
 
-Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about routing, event dispatch, touchable components, and basic animations. 
+Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post [“Thinking and Learning React.js”](http://icelab.com.au/articles/thinking-and-learning-reactjs/) to share her experience with elements they had to use. You'll learn about routing, event dispatch, touchable components, and basic animations.
 
 
 ## London React Meetup
 
-If you missed the last [London React Meetup](http://www.meetup.com/London-React-User-Group/events/191406572/), the video is available, with lots of great content. 
+If you missed the last [London React Meetup](http://www.meetup.com/London-React-User-Group/events/191406572/), the video is available, with lots of great content.
 
 - What's new in React 0.11 and how to improve performance by guaranteeing immutability
 - State handling in React with Morearty.JS
@@ -101,7 +100,7 @@ var Foo = React.createClass({
     this.setState({scriptLoading: false, scriptLoadError: true});
   },
   render: function() {
-    var message = 
+    var message =
       this.state.scriptLoading ? 'Loading script...' :
       this.state.scriptLoadError ? 'Loading failed' :
       'Loading succeeded';

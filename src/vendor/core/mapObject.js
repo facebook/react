@@ -16,37 +16,43 @@
  * @providesModule mapObject
  */
 
-"use strict";
+'use strict';
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
- * For each key/value pair, invokes callback func and constructs a resulting
- * object which contains, for every key in obj, values that are the result of
- * of invoking the function:
+ * Executes the provided `callback` once for each enumerable own property in the
+ * object and constructs a new object from the results. The `callback` is
+ * invoked with three arguments:
  *
- *   func(value, key, iteration)
+ *  - the property value
+ *  - the property name
+ *  - the object being traversed
  *
- * Grepable names:
+ * Properties that are added after the call to `mapObject` will not be visited
+ * by `callback`. If the values of existing properties are changed, the value
+ * passed to `callback` will be the value at the time `mapObject` visits them.
+ * Properties that are deleted before being visited are not visited.
  *
- *   function objectMap()
- *   function objMap()
+ * @grep function objectMap()
+ * @grep function objMap()
  *
- * @param {?object} obj Object to map keys over
- * @param {function} func Invoked for each key/val pair.
- * @param {?*} context
- * @return {?object} Result of mapping or null if obj is falsey
+ * @param {?object} object
+ * @param {function} callback
+ * @param {*} context
+ * @return {?object}
  */
-function mapObject(obj, func, context) {
-  if (!obj) {
+function mapObject(object, callback, context) {
+  if (!object) {
     return null;
   }
-  var i = 0;
-  var ret = {};
-  for (var key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      ret[key] = func.call(context, obj[key], key, i++);
+  var result = {};
+  for (var name in object) {
+    if (hasOwnProperty.call(object, name)) {
+      result[name] = callback.call(context, object[name], name, object);
     }
   }
-  return ret;
+  return result;
 }
 
 module.exports = mapObject;

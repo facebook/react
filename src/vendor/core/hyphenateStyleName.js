@@ -26,11 +26,11 @@ var msPattern = /^ms-/;
 /**
  * Hyphenates a camelcased CSS property name, for example:
  *
- *   > hyphenate('backgroundColor')
+ *   > hyphenateStyleName('backgroundColor')
  *   < "background-color"
- *   > hyphenate('MozTransition')
+ *   > hyphenateStyleName('MozTransition')
  *   < "-moz-transition"
- *   > hyphenate('msTransition')
+ *   > hyphenateStyleName('msTransition')
  *   < "-ms-transition"
  *
  * As Modernizr suggests (http://modernizr.com/docs/#prefixed), an `ms` prefix

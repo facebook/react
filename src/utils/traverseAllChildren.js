@@ -18,6 +18,7 @@
 
 "use strict";
 
+var ReactDescriptor = require('ReactDescriptor');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactTextComponent = require('ReactTextComponent');
 
@@ -126,8 +127,7 @@ var traverseAllChildrenImpl =
         // All of the above are perceived as null.
         callback(traverseContext, null, storageName, indexSoFar);
         subtreeCount = 1;
-      } else if (children.type && children.type.prototype &&
-                 children.type.prototype.mountComponentIntoNode) {
+      } else if (ReactDescriptor.isValidDescriptor(children)) {
         callback(traverseContext, children, storageName, indexSoFar);
         subtreeCount = 1;
       } else {

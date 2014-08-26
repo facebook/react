@@ -42,8 +42,8 @@ var mixInto = require('mixInto');
  * @extends ReactComponent
  * @internal
  */
-var ReactTextComponent = function(descriptor) {
-  this.construct(descriptor);
+var ReactTextComponent = function(props) {
+  // This constructor and it's argument is currently used by mocks.
 };
 
 mixInto(ReactTextComponent, ReactComponent.Mixin);

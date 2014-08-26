@@ -87,19 +87,12 @@ function visitReactDisplayName(traverse, object, path, state) {
   }
 }
 
-/**
- * Will only run on @jsx files for now.
- */
 visitReactDisplayName.test = function(object, path, state) {
-  if (utils.getDocblock(state).jsx) {
-    return (
-      object.type === Syntax.AssignmentExpression ||
-      object.type === Syntax.Property ||
-      object.type === Syntax.VariableDeclarator
-    );
-  } else {
-    return false;
-  }
+  return (
+    object.type === Syntax.AssignmentExpression ||
+    object.type === Syntax.Property ||
+    object.type === Syntax.VariableDeclarator
+  );
 };
 
 exports.visitorList = [

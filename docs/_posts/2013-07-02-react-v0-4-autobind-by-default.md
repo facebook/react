@@ -1,6 +1,5 @@
 ---
 title: "New in React v0.4: Autobind by Default"
-layout: post
 author: Paul O'Shannessy
 ---
 

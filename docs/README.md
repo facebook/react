@@ -32,8 +32,8 @@ Use Jekyll to serve the website locally (by default, at `http://localhost:4000`)
 
 ```sh
 $ cd react/docs
-$ rake
-$ jekyll serve -w
+$ bundle exec rake
+$ bundle exec jekyll serve -w
 $ open http://localhost:4000/react/
 ```
 
@@ -43,10 +43,9 @@ If you want to modify the CSS or JS, use [Rake](http://rake.rubyforge.org/) to c
 
 ```sh
 $ cd react/docs
-$ rake watch # Automatically compiles as needed.
-# rake         Manually compile CSS and JS.
-# rake css     Manually compile CSS, only.
-# rake js      Manually compile JS, only.
+$ bundle exec rake watch # Automatically compiles as needed.
+# bundle exec rake         Manually compile CSS and JS.
+# bundle exec rake js      Manually compile JS, only.
 ```
 
 ## Afterthoughts
@@ -56,6 +55,12 @@ $ rake watch # Automatically compiles as needed.
 The easiest way to do this is to have a separate clone of this repository, checked out to the `gh-pages` branch. We have a build step that expects this to be in a directory named `react-gh-pages` at the same depth as `react`. Then it's just a matter of running `grunt docs`, which will compile the site and copy it out to this repository. From there you can check it in.
 
 **Note:** This should only be done for new releases. You should create a tag corresponding to the release tag in the main repository.
+
+We also have a rake task that does the same thing (without creating commits). It expects the directory structure mentioned above.
+
+```sh
+$ bundle exec rake release
+```
 
 ### Removing the Jekyll / Ruby Dependency
 

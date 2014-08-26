@@ -13,6 +13,7 @@ module.exports = function() {
     "--cache-dir", ".module-cache",
     "--relativize",
     "--follow-requires",
+    "--use-provides-module",
     config.sourceDir,
     config.outputDir
   ];

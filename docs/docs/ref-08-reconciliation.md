@@ -1,7 +1,6 @@
 ---
 id: reconciliation
 title: Reconciliation
-layout: docs
 permalink: reconciliation.html
 prev: special-non-dom-attributes.html
 ---
@@ -129,5 +128,5 @@ Because we rely on two heuristics, if the assumptions behind them are not met, p
 
 1. The algorithm will not try to match sub-trees of different components classes. If you see yourself alternating between two components classes with very similar output, you may want to make it the same class. In practice, we haven't found this to be an issue.
 
-2. If you don't provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to chose the key, they have the ability to shoot themselves in the foot.
+2. If you don't provide stable keys (by using Math.random() for example), all the sub-trees are going to be re-rendered every single time. By giving the users the choice to choose the key, they have the ability to shoot themselves in the foot.
 

@@ -131,33 +131,9 @@ if (__DEV__) {
   defineMutationMembrane(ReactDescriptor.prototype);
 }
 
+ReactDescriptor.prototype._isReactDescriptor = true;
+
 ReactDescriptor.createDescriptor = function(type, config, children) {
-  if (type.isReactLegacyFactory) {
-    // This is probably a legacy factory created by ReactCompositeComponent.
-    // We unwrap it to get to the underlying class.
-    // TODO: Drop this check when we drop ReactLegacyDescriptor.
-    type = type.type;
-  }
-
-  if (typeof type === 'function') {
-    var isReactClass =
-      typeof type.prototype.mountComponent === 'function' &&
-      typeof type.prototype.receiveComponent === 'function';
-    if (!isReactClass) {
-      // This is being called with a plain function we should invoke it
-      // immediately as if this was used with legacy JSX.
-      if (__DEV__) {
-        warning(
-          false,
-          'This JSX uses a plain function. Only React components are valid in' +
-          'JSX.'
-        );
-      }
-      var args = Array.prototype.slice.call(arguments, 1);
-      return type.apply(null, args);
-    }
-  }
-
   var propName;
 
   // Reserved names are extracted
@@ -212,12 +188,6 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
 };
 
 ReactDescriptor.createFactory = function(type) {
-  if (type.isReactLegacyFactory) {
-    // This is probably a legacy factory created by ReactCompositeComponent.
-    // We unwrap it to get to the underlying class.
-    // TODO: Drop this check when we drop ReactLegacyDescriptor.
-    type = type.type;
-  }
   var factory = ReactDescriptor.createDescriptor.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
   // easily accessed on descriptors. E.g. <Foo />.type === Foo.type.
@@ -264,7 +234,17 @@ ReactDescriptor.isValidFactory = function(factory) {
  * @final
  */
 ReactDescriptor.isValidDescriptor = function(object) {
-  return object instanceof ReactDescriptor;
+  // ReactTestUtils is often used outside of beforeEach where as React is
+  // within it. This leads to two different instances of React on the same
+  // page. To identify a descriptor from a different React instance we use
+  // a flag instead of an instanceof check.
+  var isDescriptor = !!(object && object._isReactDescriptor);
+  // if (isDescriptor && !(object instanceof ReactDescriptor)) {
+  // This is an indicator that you're using multiple versions of React at the
+  // same time. This will screw with ownership and stuff. Fix it, please.
+  // TODO: We could possibly warn here.
+  // }
+  return isDescriptor;
 };
 
 module.exports = ReactDescriptor;

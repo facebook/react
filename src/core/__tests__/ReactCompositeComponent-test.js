@@ -98,7 +98,8 @@ describe('ReactCompositeComponent', function() {
         console.log(this.getDOMNode());
       },
       render: function() {
-        return this.state.component ? this.state.component() : null;
+        var component = this.state.component;
+        return component ? <component /> : null;
       }
     });
 
@@ -448,7 +449,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var inputProps = {};
-    var instance1 = Component(inputProps);
+    var instance1 = <Component {...inputProps} />;
     instance1 = ReactTestUtils.renderIntoDocument(instance1);
     expect(instance1.props.prop).toBe('testKey');
 
@@ -688,7 +689,10 @@ describe('ReactCompositeComponent', function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: x'
+      'Tried to merge two objects with the same key: `x`. This conflict ' +
+      'may be due to a mixin; in particular, this may be caused by two ' +
+      'getInitialState() or getDefaultProps() methods returning objects ' +
+      'with clashing keys.'
     );
   });
 
@@ -976,7 +980,7 @@ describe('ReactCompositeComponent', function() {
         'because the function is expected to return a value.'
       );
 
-      NamedComponent(); // Shut up lint
+      <NamedComponent />; // Shut up lint
     } finally {
       console.warn = warn;
     }

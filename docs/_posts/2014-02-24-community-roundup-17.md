@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #17"
-layout: post
 author: Jonas Gebhardt
 ---
 

@@ -49,7 +49,7 @@ var testAllPermutations = function(testCases) {
 
 var renderChildren = function(children) {
   return ReactTestUtils.renderIntoDocument(
-    React.DOM.div({children: children})
+    <div>{children}</div>
   );
 };
 

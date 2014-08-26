@@ -213,8 +213,9 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
  */
 function testPropsSequence(sequence) {
   var i;
-  var parentInstance =
-      ReactTestUtils.renderIntoDocument(FriendsStatusDisplay(sequence[0]));
+  var parentInstance = ReactTestUtils.renderIntoDocument(
+    <FriendsStatusDisplay {...sequence[0]} />
+  );
   var statusDisplays = parentInstance.getStatusDisplays();
   var lastInternalStates = getInteralStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
@@ -243,8 +244,9 @@ describe('ReactMultiChildReconcile', function() {
       }
     };
 
-    var parentInstance =
-        ReactTestUtils.renderIntoDocument(FriendsStatusDisplay(props));
+    var parentInstance = ReactTestUtils.renderIntoDocument(
+      <FriendsStatusDisplay {...props} />
+    );
     var statusDisplays = parentInstance.getStatusDisplays();
     var startingInternalState = statusDisplays.jcw.getInternalState();
 

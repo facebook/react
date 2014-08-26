@@ -31,7 +31,6 @@ var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var mergeInto = require('mergeInto');
-var copyProperties = require('copyProperties');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -242,12 +241,18 @@ var ReactTestUtils = {
 
     var ConvenienceConstructor = React.createClass({
       render: function() {
-        return ReactDOM[mockTagName](null, this.props.children);
+        return React.createElement(
+          ReactDOM[mockTagName], // TODO: Replace this with just a string
+          null,
+          this.props.children
+        );
       }
     });
 
-    copyProperties(module, ConvenienceConstructor);
     module.mockImplementation(ConvenienceConstructor);
+
+    module.type = ConvenienceConstructor.type;
+    module.isReactLegacyFactory = true;
 
     return this;
   },

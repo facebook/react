@@ -1,0 +1,13 @@
+// Programatically determines whether a color is light or dark
+// Returns a boolean
+// More details here http://robots.thoughtbot.com/closer-look-color-lightness
+
+@function is-light($hex-color) {
+  $-local-red: red(rgba($hex-color, 1.0));
+  $-local-green: green(rgba($hex-color, 1.0));
+  $-local-blue: blue(rgba($hex-color, 1.0));
+
+  $-local-lightness: ($-local-red * 0.2126 + $-local-green * 0.7152 + $-local-blue * 0.0722) / 255;
+
+  @return $-local-lightness > .6;
+}

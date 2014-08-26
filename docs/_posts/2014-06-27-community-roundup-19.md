@@ -1,6 +1,5 @@
 ---
 title: "Community Round-up #19"
-layout: post
 author: Cheng Lou
 ---
 

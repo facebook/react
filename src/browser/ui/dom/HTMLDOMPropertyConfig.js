@@ -70,6 +70,7 @@ var HTMLDOMPropertyConfig = {
     cellSpacing: null,
     charSet: MUST_USE_ATTRIBUTE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    classID: MUST_USE_ATTRIBUTE,
     // To set className on SVG elements, it's necessary to use .setAttribute;
     // this works on HTML elements too in all browsers except IE8. Conveniently,
     // IE8 doesn't support SVG and so we can simply use the attribute in
@@ -164,6 +165,7 @@ var HTMLDOMPropertyConfig = {
     property: null // Supports OG in meta tags
   },
   DOMAttributeNames: {
+    classID: 'classid',
     className: 'class',
     htmlFor: 'for',
     httpEquiv: 'http-equiv'

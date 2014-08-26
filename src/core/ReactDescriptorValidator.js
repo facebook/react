@@ -260,12 +260,6 @@ var ReactDescriptorValidator = {
   },
 
   createFactory: function(type) {
-    if (type.isReactLegacyFactory) {
-      // This is probably a legacy factory created by ReactCompositeComponent.
-      // We unwrap it to get to the underlying class.
-      // TODO: Drop this check when we drop ReactLegacyDescriptor.
-      type = type.type;
-    }
     var validatedFactory = ReactDescriptorValidator.createDescriptor.bind(
       null,
       type

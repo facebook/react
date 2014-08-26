@@ -31,7 +31,7 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "commoner": "^0.9.6",
+    "commoner": "^0.10.0",
     "esprima-fb": "^4001.3001.0-dev-harmony-fb",
     "jstransform": "^6.0.1"
   },
@@ -59,7 +59,7 @@
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
     "populist": "~0.1.6",
-    "recast": "~0.5.6",
+    "recast": "^0.6.10",
     "sauce-tunnel": "~1.1.0",
     "semver": "^2.3.0",
     "tmp": "~0.0.18",
@@ -75,7 +75,8 @@
     "version": 4
   },
   "scripts": {
-    "test": "./node_modules/.bin/grunt test"
+    "test": "./node_modules/.bin/grunt test",
+    "jest": "jest"
   },
   "jest": {
     "rootDir": "src",

@@ -26,14 +26,7 @@
  * @return {object} The shallow extension of one by two.
  */
 var merge = function(one, two) {
-  var result = {};
-  if (one != null) {
-    Object.assign(result, one);
-  }
-  if (two != null) {
-    Object.assign(result, two);
-  }
-  return result;
+  return Object.assign({}, one, two);
 };
 
 module.exports = merge;

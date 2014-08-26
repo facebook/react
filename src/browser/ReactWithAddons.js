@@ -31,6 +31,7 @@ var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
 var ReactTransitionGroup = require('ReactTransitionGroup');
+var ReactUpdates = require('ReactUpdates');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
@@ -42,6 +43,7 @@ React.addons = {
   PureRenderMixin: ReactComponentWithPureRenderMixin,
   TransitionGroup: ReactTransitionGroup,
 
+  batchedUpdates: ReactUpdates.batchedUpdates,
   classSet: cx,
   cloneWithProps: cloneWithProps,
   update: update
@@ -53,4 +55,3 @@ if (__DEV__) {
 }
 
 module.exports = React;
-
