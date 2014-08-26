@@ -120,9 +120,9 @@ var HTMLDOMPropertyConfig = {
     name: null,
     noValidate: HAS_BOOLEAN_VALUE,
     pattern: null,
+    paused: HAS_BOOLEAN_VALUE,
     placeholder: null,
     playBackRate: MUST_USE_PROPERTY | HAS_NUMERIC_VALUE,
-    playing: HAS_BOOLEAN_VALUE,
     poster: null,
     preload: null,
     radioGroup: null,
@@ -183,10 +183,8 @@ var HTMLDOMPropertyConfig = {
     autoCorrect: 'autocorrect',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
-    crossOrigin: 'crossorigin',
     encType: 'enctype',
     hrefLang: 'hreflang',
-    mediaGroup: 'mediagroup',
     playBackRate: 'playbackRate',
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
@@ -195,11 +193,12 @@ var HTMLDOMPropertyConfig = {
     srcSet: 'srcset'
   },
   DOMMutationMethods: {
-    playing: function(node, value) {
+    paused: function(node, value) {
       if (value === true) {
-        node.play();
-      } else {
         node.pause();
+      }
+      if (value === false) {
+        node.play();
       }
     }
   }
