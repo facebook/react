@@ -85,6 +85,7 @@ var HTMLDOMPropertyConfig = {
     controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     coords: null,
     crossOrigin: null,
+    currentTime: MUST_USE_PROPERTY | HAS_POSITIVE_NUMERIC_VALUE,
     data: null, // For `<object />` acts as `src`.
     dateTime: MUST_USE_ATTRIBUTE,
     defer: HAS_BOOLEAN_VALUE,
@@ -104,6 +105,7 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: null,
     icon: null,
     id: MUST_USE_PROPERTY,
+    kind: null,
     label: null,
     lang: null,
     list: null,
@@ -119,6 +121,8 @@ var HTMLDOMPropertyConfig = {
     noValidate: HAS_BOOLEAN_VALUE,
     pattern: null,
     placeholder: null,
+    playBackRate: MUST_USE_PROPERTY | HAS_NUMERIC_VALUE,
+    playing: HAS_BOOLEAN_VALUE,
     poster: null,
     preload: null,
     radioGroup: null,
@@ -140,7 +144,9 @@ var HTMLDOMPropertyConfig = {
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
     src: null,
+    srcLang: null,
     srcDoc: MUST_USE_PROPERTY,
+    srcObject: MUST_USE_PROPERTY,
     srcSet: null,
     start: HAS_NUMERIC_VALUE,
     step: null,
@@ -151,6 +157,7 @@ var HTMLDOMPropertyConfig = {
     type: null,
     useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    volume: MUST_USE_PROPERTY | HAS_POSITIVE_NUMERIC_VALUE,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
 
@@ -176,12 +183,25 @@ var HTMLDOMPropertyConfig = {
     autoCorrect: 'autocorrect',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
+    crossOrigin: 'crossorigin',
     encType: 'enctype',
     hrefLang: 'hreflang',
+    mediaGroup: 'mediagroup',
+    playBackRate: 'playbackRate',
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
+    srcLang: 'srclang',
     srcSet: 'srcset'
+  },
+  DOMMutationMethods: {
+    playing: function(node, value) {
+      if (value === true) {
+        node.play();
+      } else {
+        node.pause();
+      }
+    }
   }
 };
 
