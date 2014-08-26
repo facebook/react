@@ -280,6 +280,65 @@ describe('ReactPropTypes', function() {
     });
   });
 
+  describe('Component Class', function() {
+    beforeEach(function() {
+      Component = React.createClass({
+        propTypes: {
+          label: PropTypes.componentClass.isRequired
+        },
+
+        render: function() {
+          var Label = this.props.label
+
+          if (Label) {
+              return <div><Label /></div>;
+          } else {
+            return null;
+          }
+        }
+      });
+      spyOn(console, 'warn');
+    });
+
+    it('should support component classes', () => {
+      typeCheckPass(PropTypes.componentClass, React.DOM.div);
+    });
+
+    it('should not support multiple component classes or scalar values', () => {
+      var message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
+        'expected a React class.';
+      typeCheckFail(PropTypes.componentClass, [React.DOM.div, React.DOM.div], message);
+      typeCheckFail(PropTypes.componentClass, <div />, message);
+      typeCheckFail(PropTypes.componentClass, 123, message);
+      typeCheckFail(PropTypes.componentClass, 'foo', message);
+      typeCheckFail(PropTypes.componentClass, false, message);
+    });
+
+    it('should be able to define a single child as label', () => {
+      var instance = <Component label={React.DOM.div} />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.warn.argsForCall.length).toBe(0);
+    });
+
+    it('should warn when passing no label and isRequired is set', () => {
+      var instance = <Component />;
+      instance = ReactTestUtils.renderIntoDocument(instance);
+
+      expect(console.warn.argsForCall.length).toBe(1);
+    });
+
+    it("should be implicitly optional and not warn without values", function() {
+      typeCheckPass(PropTypes.component, null);
+      typeCheckPass(PropTypes.component, undefined);
+    });
+
+    it("should warn for missing required values", function() {
+      typeCheckFail(PropTypes.component.isRequired, null, requiredMessage);
+      typeCheckFail(PropTypes.component.isRequired, undefined, requiredMessage);
+    });
+  });
+
   describe('Instance Types', function() {
     it("should warn for invalid instances", function() {
       function Person() {}
