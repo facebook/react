@@ -1276,6 +1276,29 @@ describe('ReactCompositeComponent', function() {
     expect(Component.pqr()).toBe(Component.type);
   });
 
+  it('should throw if a reserved property is in statics', function() {
+    expect(function() {
+      React.createClass({
+        statics: {
+          getDefaultProps: function() {
+            return {
+              foo: 0
+            };
+          }
+        },
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
+      'the "statics" key. Define it as an instance property instead; it ' +
+      'will still be accessible on the constructor.'
+    );
+  });
+
   it('should support statics in mixins', function() {
     var Mixin = {
       statics: {
@@ -1321,9 +1344,33 @@ describe('ReactCompositeComponent', function() {
       });
     }).toThrow(
       'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
-      'define `abc` on your component more than once, but that is only ' +
-      'supported for functions, which are chained together. This conflict ' +
-      'may be due to a mixin.'
+      'define `abc` on your component more than once. This conflict may be ' +
+      'due to a mixin.'
+    );
+  });
+
+  it("should throw if mixins override functions in statics", function() {
+    expect(function() {
+      var Mixin = {
+        statics: {
+          abc: function() { console.log('foo'); }
+        }
+      };
+      React.createClass({
+        mixins: [Mixin],
+
+        statics: {
+          abc: function() { console.log('bar'); }
+        },
+
+        render: function() {
+          return <span />;
+        }
+      });
+    }).toThrow(
+      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'define `abc` on your component more than once. This conflict may be ' +
+      'due to a mixin.'
     );
   });
 
