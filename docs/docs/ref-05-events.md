@@ -27,6 +27,10 @@ Date timeStamp
 String type
 ```
 
+> Note:
+>
+> As of v0.12, returning `false` from an event handler will no longer stop event propagation. Instead, `e.stopPropagation()` or `e.preventDefault()` should be triggered manually, as appropriate.
+
 
 ## Supported Events
 
@@ -111,7 +115,7 @@ onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
-Properties: 
+Properties:
 
 ```javascript
 boolean altKey
