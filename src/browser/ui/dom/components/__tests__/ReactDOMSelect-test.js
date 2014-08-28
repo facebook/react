@@ -34,9 +34,9 @@ describe('ReactDOMSelect', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should allow setting `defaultValue`', function() {
+  it('should allow setting `initialValue`', function() {
     var stub =
-      <select defaultValue="giraffe">
+      <select initialValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -46,14 +46,14 @@ describe('ReactDOMSelect', function() {
 
     expect(node.value).toBe('giraffe');
 
-    // Changing `defaultValue` should do nothing.
-    stub.setProps({defaultValue: 'gorilla'});
+    // Changing `initialValue` should do nothing.
+    stub.setProps({initialValue: 'gorilla'});
     expect(node.value).toEqual('giraffe');
   });
 
-  it('should not control when using `defaultValue`', function() {
+  it('should not control when using `initialValue`', function() {
     var stub =
-      <select defaultValue="giraffe">
+      <select initialValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -69,9 +69,9 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('monkey');
   });
 
-  it('should allow setting `defaultValue` with multiple', function() {
+  it('should allow setting `initialValue` with multiple', function() {
     var stub =
-      <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
+      <select multiple={true} initialValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -83,8 +83,8 @@ describe('ReactDOMSelect', function() {
     expect(node.options[1].selected).toBe(true);  // giraffe
     expect(node.options[2].selected).toBe(true);  // gorilla
 
-    // Changing `defaultValue` should do nothing.
-    stub.setProps({defaultValue: ['monkey']});
+    // Changing `initialValue` should do nothing.
+    stub.setProps({initialValue: ['monkey']});
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -177,7 +177,7 @@ describe('ReactDOMSelect', function() {
 
   it('should allow switching to multiple', function() {
     var stub =
-      <select defaultValue="giraffe">
+      <select initialValue="giraffe">
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -190,7 +190,7 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(false);  // gorilla
 
     // When making it multiple, giraffe should still be selected
-    stub.setProps({multiple: true, defaultValue: null});
+    stub.setProps({multiple: true, initialValue: null});
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -199,7 +199,7 @@ describe('ReactDOMSelect', function() {
 
   it('should allow switching from multiple', function() {
     var stub =
-      <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
+      <select multiple={true} initialValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
         <option value="giraffe">A giraffe!</option>
         <option value="gorilla">A gorilla!</option>
@@ -213,7 +213,7 @@ describe('ReactDOMSelect', function() {
 
     // When removing multiple, giraffe should still be selected (but gorilla
     // will no longer be)
-    stub.setProps({multiple: false, defaultValue: null});
+    stub.setProps({multiple: false, initialValue: null});
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe

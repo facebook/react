@@ -41,7 +41,7 @@ var ReactDOMOption = ReactCompositeComponent.createClass({
     if (__DEV__) {
       warning(
         this.props.selected == null,
-        'Use the `defaultValue` or `value` props on <select> instead of ' +
+        'Use the `initialValue` or `value` props on <select> instead of ' +
         'setting `selected` on <option>.'
       );
     }

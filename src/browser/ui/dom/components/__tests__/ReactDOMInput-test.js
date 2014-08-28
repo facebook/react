@@ -35,38 +35,38 @@ describe('ReactDOMInput', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('should display `defaultValue` of number 0', function() {
-    var stub = <input type="text" defaultValue={0} />;
+  it('should display `initialValue` of number 0', function() {
+    var stub = <input type="text" initialValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('0');
   });
 
-  it('should display "true" for `defaultValue` of `true`', function() {
-    var stub = <input type="text" defaultValue={true} />;
+  it('should display "true" for `initialValue` of `true`', function() {
+    var stub = <input type="text" initialValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('true');
   });
 
-  it('should display "false" for `defaultValue` of `false`', function() {
-    var stub = <input type="text" defaultValue={false} />;
+  it('should display "false" for `initialValue` of `false`', function() {
+    var stub = <input type="text" initialValue={false} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+  it('should display "foobar" for `initialValue` of `objToString`', function() {
     var objToString = {
       toString: function() {
         return "foobar";
       }
     };
 
-    var stub = <input type="text" defaultValue={objToString} />;
+    var stub = <input type="text" initialValue={objToString} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = stub.getDOMNode();
 
@@ -168,7 +168,7 @@ describe('ReactDOMInput', function() {
                 ref="c"
                 type="radio"
                 name="fruit"
-                defaultChecked={true}
+                initialChecked={true}
                 onChange={emptyFunction}
               />
             </form>

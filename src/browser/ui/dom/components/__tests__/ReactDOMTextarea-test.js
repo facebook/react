@@ -43,42 +43,42 @@ describe('ReactDOMTextarea', function() {
     };
   });
 
-  it('should allow setting `defaultValue`', function() {
-    var stub = <textarea defaultValue="giraffe" />;
+  it('should allow setting `initialValue`', function() {
+    var stub = <textarea initialValue="giraffe" />;
     stub = renderTextarea(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('giraffe');
 
-    // Changing `defaultValue` should do nothing.
-    stub.replaceProps({defaultValue: 'gorilla'});
+    // Changing `initialValue` should do nothing.
+    stub.replaceProps({initialValue: 'gorilla'});
     expect(node.value).toEqual('giraffe');
   });
 
-  it('should display `defaultValue` of number 0', function() {
-    var stub = <textarea defaultValue={0} />;
+  it('should display `initialValue` of number 0', function() {
+    var stub = <textarea initialValue={0} />;
     stub = renderTextarea(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('0');
   });
 
-  it('should display "false" for `defaultValue` of `false`', function() {
-    var stub = <textarea type="text" defaultValue={false} />;
+  it('should display "false" for `initialValue` of `false`', function() {
+    var stub = <textarea type="text" initialValue={false} />;
     stub = renderTextarea(stub);
     var node = stub.getDOMNode();
 
     expect(node.value).toBe('false');
   });
 
-  it('should display "foobar" for `defaultValue` of `objToString`', function() {
+  it('should display "foobar" for `initialValue` of `objToString`', function() {
     var objToString = {
       toString: function() {
         return "foobar";
       }
     };
 
-    var stub = <textarea type="text" defaultValue={objToString} />;
+    var stub = <textarea type="text" initialValue={objToString} />;
     stub = renderTextarea(stub);
     var node = stub.getDOMNode();
 
@@ -160,7 +160,7 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toBe('0');
   });
 
-  it('should treat children like `defaultValue`', function() {
+  it('should treat children like `initialValue`', function() {
     spyOn(console, 'warn');
 
     var stub = <textarea>giraffe</textarea>;
@@ -170,7 +170,7 @@ describe('ReactDOMTextarea', function() {
     expect(console.warn.argsForCall.length).toBe(1);
     expect(node.value).toBe('giraffe');
 
-    // Changing children should do nothing, it functions like `defaultValue`.
+    // Changing children should do nothing, it functions like `initialValue`.
     stub.replaceProps({children: 'gorilla'});
     expect(node.value).toEqual('giraffe');
   });
