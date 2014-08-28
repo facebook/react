@@ -56,7 +56,7 @@ var ReactPerf = {
         }
         return func.apply(this, arguments);
       };
-      wrapper.displayName = objName + '.' + fnName;
+      wrapper.displayName = objName + '_' + fnName;
       return wrapper;
     }
     return func;
