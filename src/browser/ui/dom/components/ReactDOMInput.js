@@ -45,7 +45,7 @@ function forceUpdateIfMounted() {
 
 /**
  * Implements an <input> native component that allows setting these optional
- * props: `checked`, `value`, `defaultChecked`, and `defaultValue`.
+ * props: `checked`, `value`, `initialChecked`, and `initialValue`.
  *
  * If `checked` or `value` are not supplied (or null/undefined), user actions
  * that affect the checked state or value will trigger updates to the element.
@@ -54,8 +54,8 @@ function forceUpdateIfMounted() {
  * trigger updates to the element. Instead, the props must change in order for
  * the rendered element to be updated.
  *
- * The rendered element will be initialized as unchecked (or `defaultChecked`)
- * with an empty value (or `defaultValue`).
+ * The rendered element will be initialized as unchecked (or `initialChecked`)
+ * with an empty value (or `initialValue`).
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
@@ -65,10 +65,10 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
+    var initialValue = this.props.initialValue;
     return {
-      initialChecked: this.props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null
+      initialChecked: this.props.initialChecked || false,
+      initialValue: initialValue != null ? initialValue : null
     };
   },
 
@@ -76,8 +76,8 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.defaultChecked = null;
-    props.defaultValue = null;
+    props.initialChecked = null;
+    props.initialValue = null;
 
     var value = LinkedValueUtils.getValue(this);
     props.value = value != null ? value : this.state.initialValue;

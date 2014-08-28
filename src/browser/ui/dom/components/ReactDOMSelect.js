@@ -40,7 +40,7 @@ function updateWithPendingValueIfMounted() {
 }
 
 /**
- * Validation function for `value` and `defaultValue`.
+ * Validation function for `value` and `initialValue`.
  * @private
  */
 function selectValueType(props, propName, componentName) {
@@ -97,7 +97,7 @@ function updateOptions(component, propValue) {
 
 /**
  * Implements a <select> native component that allows optionally setting the
- * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
+ * props `value` and `initialValue`. If `multiple` is false, the prop must be a
  * string. If `multiple` is true, the prop must be an array of strings.
  *
  * If `value` is not supplied (or null/undefined), user actions that change the
@@ -107,7 +107,7 @@ function updateOptions(component, propValue) {
  * update in response to user actions. Instead, the `value` prop must change in
  * order for the rendered options to update.
  *
- * If `defaultValue` is provided, any options with the supplied values will be
+ * If `initialValue` is provided, any options with the supplied values will be
  * selected.
  */
 var ReactDOMSelect = ReactCompositeComponent.createClass({
@@ -116,12 +116,12 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   propTypes: {
-    defaultValue: selectValueType,
+    initialValue: selectValueType,
     value: selectValueType
   },
 
   getInitialState: function() {
-    return {value: this.props.defaultValue || (this.props.multiple ? [] : '')};
+    return {value: this.props.initialValue || (this.props.multiple ? [] : '')};
   },
 
   componentWillMount: function() {

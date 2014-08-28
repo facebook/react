@@ -146,7 +146,7 @@ var DOMPropertyInjection = {
     }
   }
 };
-var defaultValueCache = {};
+var initialValueCache = {};
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -275,11 +275,11 @@ var DOMProperty = {
    * TODO: Is it better to grab all the possible properties when creating an
    * element to avoid having to create the same element twice?
    */
-  getDefaultValueForProperty: function(nodeName, prop) {
-    var nodeDefaults = defaultValueCache[nodeName];
+  getinitialValueForProperty: function(nodeName, prop) {
+    var nodeDefaults = initialValueCache[nodeName];
     var testElement;
     if (!nodeDefaults) {
-      defaultValueCache[nodeName] = nodeDefaults = {};
+      initialValueCache[nodeName] = nodeDefaults = {};
     }
     if (!(prop in nodeDefaults)) {
       testElement = document.createElement(nodeName);

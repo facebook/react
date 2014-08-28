@@ -44,7 +44,7 @@ function forceUpdateIfMounted() {
 
 /**
  * Implements a <textarea> native component that allows setting `value`, and
- * `defaultValue`. This differs from the traditional DOM API because value is
+ * `initialValue`. This differs from the traditional DOM API because value is
  * usually set as PCDATA children.
  *
  * If `value` is not supplied (or null/undefined), user actions that affect the
@@ -55,7 +55,7 @@ function forceUpdateIfMounted() {
  * order for the rendered element to be updated.
  *
  * The rendered element will be initialized with an empty value, the prop
- * `defaultValue` if specified, or the children content (deprecated).
+ * `initialValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMTextarea',
@@ -63,20 +63,20 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
+    var initialValue = this.props.initialValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
     var children = this.props.children;
     if (children != null) {
       if (__DEV__) {
         warning(
           false,
-          'Use the `defaultValue` or `value` props instead of setting ' +
+          'Use the `initialValue` or `value` props instead of setting ' +
           'children on <textarea>.'
         );
       }
       invariant(
-        defaultValue == null,
-        'If you supply `defaultValue` on a <textarea>, do not pass children.'
+        initialValue == null,
+        'If you supply `initialValue` on a <textarea>, do not pass children.'
       );
       if (Array.isArray(children)) {
         invariant(
@@ -86,10 +86,10 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
         children = children[0];
       }
 
-      defaultValue = '' + children;
+      initialValue = '' + children;
     }
-    if (defaultValue == null) {
-      defaultValue = '';
+    if (initialValue == null) {
+      initialValue = '';
     }
     var value = LinkedValueUtils.getValue(this);
     return {
@@ -97,7 +97,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       // `textContent` (unnecessary since we update value).
       // The initial value can be a boolean or object so that's why it's
       // forced to be a string.
-      initialValue: '' + (value != null ? value : defaultValue)
+      initialValue: '' + (value != null ? value : initialValue)
     };
   },
 
@@ -110,7 +110,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
       '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
     );
 
-    props.defaultValue = null;
+    props.initialValue = null;
     props.value = null;
     props.onChange = this._handleChange;
 

@@ -93,7 +93,7 @@ var LinkedValueUtils = {
         return new Error(
           'You provided a `value` prop to a form field without an ' +
           '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultValue`. Otherwise, ' +
+          'the field should be mutable use `initialValue`. Otherwise, ' +
           'set either `onChange` or `readOnly`.'
         );
       },
@@ -107,7 +107,7 @@ var LinkedValueUtils = {
         return new Error(
           'You provided a `checked` prop to a form field without an ' +
           '`onChange` handler. This will render a read-only field. If ' +
-          'the field should be mutable use `defaultChecked`. Otherwise, ' +
+          'the field should be mutable use `initialChecked`. Otherwise, ' +
           'set either `onChange` or `readOnly`.'
         );
       },

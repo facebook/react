@@ -179,13 +179,13 @@ var DOMPropertyOperations = {
         node.removeAttribute(DOMProperty.getAttributeName[name]);
       } else {
         var propName = DOMProperty.getPropertyName[name];
-        var defaultValue = DOMProperty.getDefaultValueForProperty(
+        var initialValue = DOMProperty.getinitialValueForProperty(
           node.nodeName,
           propName
         );
         if (!DOMProperty.hasSideEffects[name] ||
-            ('' + node[propName]) !== defaultValue) {
-          node[propName] = defaultValue;
+            ('' + node[propName]) !== initialValue) {
+          node[propName] = initialValue;
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
