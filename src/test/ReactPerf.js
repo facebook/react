@@ -47,7 +47,7 @@ var ReactPerf = {
   measure: function(objName, fnName, func) {
     if (__DEV__) {
       var measuredFunc = null;
-      return function() {
+      var wrapper = function() {
         if (ReactPerf.enableMeasure) {
           if (!measuredFunc) {
             measuredFunc = ReactPerf.storedMeasure(objName, fnName, func);
@@ -56,6 +56,8 @@ var ReactPerf = {
         }
         return func.apply(this, arguments);
       };
+      wrapper.displayName = objName + '.' + fnName;
+      return wrapper;
     }
     return func;
   },
