@@ -44,7 +44,7 @@ function warnForLegacyFactoryCall() {
     name + ' is calling a React component directly. ' +
     'Use a factory or JSX instead. See: http://fb.me/react-legacyfactory'
   );
-  monitorCodeUse('react_legacy_factory_call', { name: name });
+  monitorCodeUse('react_legacy_factory_call', { version: 1, name: name });
 }
 
 function warnForPlainFunctionType(type) {
