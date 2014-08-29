@@ -248,11 +248,10 @@ describe('ReactDescriptor', function() {
       return 21 + x;
     });
     expect(factory(21)).toBe(42);
-    // TODO: This warning is temporarily disabled
-    expect(console.warn.argsForCall.length).toBe(0);
-    // expect(console.warn.argsForCall[0][0]).toContain(
-    //   'This JSX uses a plain function.'
-    // );
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'This JSX uses a plain function.'
+    );
   });
 
   it('warns but allow a plain function to be immediately invoked', function() {
@@ -261,11 +260,10 @@ describe('ReactDescriptor', function() {
       return 21 + x + y;
     }, 11, 10);
     expect(result).toBe(42);
-    // TODO: This warning is temporarily disabled
-    expect(console.warn.argsForCall.length).toBe(0);
-    // expect(console.warn.argsForCall[0][0]).toContain(
-    //   'This JSX uses a plain function.'
-    // );
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'This JSX uses a plain function.'
+    );
   });
 
   it('warns but does not fail on undefined results', function() {
@@ -273,11 +271,10 @@ describe('ReactDescriptor', function() {
     var fn = function () { };
     var result = React.createDescriptor(fn, 1, 2, null);
     expect(result).toBe(undefined);
-    // TODO: This warning is temporarily disabled
-    expect(console.warn.argsForCall.length).toBe(0);
-    // expect(console.warn.argsForCall[0][0]).toContain(
-    //   'This JSX uses a plain function.'
-    // );
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'This JSX uses a plain function.'
+    );
   });
 
 

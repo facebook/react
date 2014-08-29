@@ -65,15 +65,16 @@ function warnForPlainFunctionType(type) {
       } catch (x) {
         // just incase this is a frozen object or some special object
       }
-      monitorCodeUse('react_non_component_in_jsx', { name: type.name });
+      monitorCodeUse(
+        'react_non_component_in_jsx',
+        { version: 2, name: type.name }
+      );
     }
-    // TODO: This pattern is heavily used by ReactMenu and therefore we
-    // cannot yet warn without spamming users too much.
-    // warning(
-    //   false,
-    //   'This JSX uses a plain function. Only React components are ' +
-    //   'valid in React\'s JSX transform.'
-    // );
+    warning(
+      false,
+      'This JSX uses a plain function. Only React components are ' +
+      'valid in React\'s JSX transform.'
+    );
   }
 }
 
