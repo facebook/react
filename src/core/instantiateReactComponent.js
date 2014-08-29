@@ -26,62 +26,6 @@ var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 
 /**
- * Given `type` and `props` invoke the type function and create an instance from
- * it. For the normal case it just runs the constructor. For mocks we need to
- * invoke the convenience constructor and resolve that into an instance.
- *
- * @param {function} type
- * @param {*} props
- * @return {object} A new instance of `type`.
- * @protected
- */
-function createInstance(type, props) {
-  if (__DEV__) {
-    if (type._mockedReactClassConstructor) {
-      // If this is a mocked class, we treat the legacy factory as if it was the
-      // class constructor for future proofing unit tests. Because this might
-      // be mocked as a legacy factory, we ignore any warnings triggerd by
-      // this temporary hack.
-      ReactLegacyDescriptor._isLegacyCallWarningEnabled = false;
-      var instance;
-      try {
-        instance = new type._mockedReactClassConstructor(props);
-      } finally {
-        ReactLegacyDescriptor._isLegacyCallWarningEnabled = true;
-      }
-
-      // If the mock implementation was a legacy factory, then it returns a
-      // descriptor. We need to turn this into a real component instance.
-      if (ReactDescriptor.isValidDescriptor(instance)) {
-        type = instance.type;
-        props = instance.props;
-        instance = new type(props);
-      }
-
-      var render = instance.render;
-      if (!render) {
-        // For auto-mocked factories, the prototype isn't shimmed and therefore
-        // there is no render function on the instance. We replace the whole
-        // component with an empty component instance instead.
-        var descriptor = ReactEmptyComponent.getEmptyComponent();
-        type = descriptor.type;
-        props = descriptor.props;
-        instance = new type(props);
-      } else if (render._isMockFunction && !render._getMockImplementation()) {
-        // Auto-mocked components may have a prototype with a mocked render
-        // function. For those, we'll need to mock the result of the render
-        // since we consider undefined to be invalid results from render.
-        render.mockImplementation(
-          ReactEmptyComponent.getEmptyComponent
-        );
-      }
-    }
-  }
-  // Normal case for non-mocks
-  return new type(props);
-}
-
-/**
  * Given a `componentDescriptor` create an instance that will actually be
  * mounted.
  *
@@ -90,6 +34,8 @@ function createInstance(type, props) {
  * @protected
  */
 function instantiateReactComponent(descriptor) {
+  var instance;
+
   if (__DEV__) {
     warning(
       descriptor && (typeof descriptor.type === 'function' ||
@@ -98,9 +44,52 @@ function instantiateReactComponent(descriptor) {
       // Not really strings yet, but as soon as I solve the cyclic dep, they
       // will be allowed here.
     );
+
+    // Resolve mock instances
+    if (descriptor.type._mockedReactClassConstructor) {
+      // If this is a mocked class, we treat the legacy factory as if it was the
+      // class constructor for future proofing unit tests. Because this might
+      // be mocked as a legacy factory, we ignore any warnings triggerd by
+      // this temporary hack.
+      ReactLegacyDescriptor._isLegacyCallWarningEnabled = false;
+      try {
+        instance = new descriptor.type._mockedReactClassConstructor(
+          descriptor.props
+        );
+      } finally {
+        ReactLegacyDescriptor._isLegacyCallWarningEnabled = true;
+      }
+
+      // If the mock implementation was a legacy factory, then it returns a
+      // descriptor. We need to turn this into a real component instance.
+      if (ReactDescriptor.isValidDescriptor(instance)) {
+        instance = new instance.type(instance.props);
+      }
+
+      var render = instance.render;
+      if (!render) {
+        // For auto-mocked factories, the prototype isn't shimmed and therefore
+        // there is no render function on the instance. We replace the whole
+        // component with an empty component instance instead.
+        descriptor = ReactEmptyComponent.getEmptyComponent();
+        instance = new descriptor.type(descriptor.props);
+        instance.construct(descriptor);
+        return instance;
+      } else if (render._isMockFunction && !render._getMockImplementation()) {
+        // Auto-mocked components may have a prototype with a mocked render
+        // function. For those, we'll need to mock the result of the render
+        // since we consider undefined to be invalid results from render.
+        render.mockImplementation(
+          ReactEmptyComponent.getEmptyComponent
+        );
+      }
+      instance.construct(descriptor);
+      return instance;
+    }
   }
 
-  var instance = createInstance(descriptor.type, descriptor.props);
+  // Normal case for non-mocks
+  instance = new descriptor.type(descriptor.props);
 
   if (__DEV__) {
     warning(
@@ -114,6 +103,7 @@ function instantiateReactComponent(descriptor) {
   // This actually sets up the internal instance. This will become decoupled
   // from the public instance in a future diff.
   instance.construct(descriptor);
+
   return instance;
 }
 
