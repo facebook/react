@@ -81,9 +81,11 @@ if (__DEV__) {
     }
     Object.freeze(object); // First freeze the object.
     for (var prop in object) {
-      var field = object[prop];
-      if (object.hasOwnProperty(prop) && shouldRecurseFreeze(field)) {
-        deepFreeze(field);
+      if (object.hasOwnProperty(prop)) {
+        var field = object[prop];
+        if (shouldRecurseFreeze(field)) {
+          deepFreeze(field);
+        }
       }
     }
   };
