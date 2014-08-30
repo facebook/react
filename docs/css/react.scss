@@ -144,14 +144,13 @@ h1, h2, h3, h4, h5, h6 {
     color: #00d8ff;
     font-size: 24px;
     line-height: $navHeight;
+    height: $navHeight;
+    display: inline-block;
   }
 
   .nav-logo {
-    @include retina-image('../img/logo_small', 38px 38px);
     vertical-align: middle;
     display: inline-block;
-    width: 38px;
-    height: 38px;
   }
 
   ul {
