@@ -79,11 +79,11 @@
     "jest": "jest"
   },
   "jest": {
-    "rootDir": "src",
-    "scriptPreprocessor": "../jest/preprocessor.js",
-    "setupEnvScriptFile": "../jest/environment.js",
-    "unmockedModulePathPatterns": [
-      ""
-    ]
+    "rootDir": "",
+    "scriptPreprocessor": "jest/preprocessor.js",
+    "setupEnvScriptFile": "jest/environment.js",
+    "modulePathIgnorePatterns": ["/build/", "/node_modules/"],
+    "testPathIgnorePatterns": ["/build/", "/node_modules/"],
+    "unmockedModulePathPatterns": [""]
   }
 }
