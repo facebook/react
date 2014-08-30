@@ -244,27 +244,37 @@ ReactDOMComponent.Mixin = {
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction) {
+    var prefix = '';
+    if (this._tag === 'listing' ||
+        this._tag === 'pre' ||
+        this._tag === 'textarea') {
+      // Add an initial newline because browsers ignore the first newline in
+      // a <listing>, <pre>, or <textarea> as an "authoring convenience" -- see
+      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody.
+      prefix = '\n';
+    }
+
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = this.props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return innerHTML.__html;
+        return prefix + innerHTML.__html;
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
       var childrenToUse = contentToUse != null ? null : this.props.children;
       if (contentToUse != null) {
-        return escapeTextForBrowser(contentToUse);
+        return prefix + escapeTextForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction
         );
-        return mountImages.join('');
+        return prefix + mountImages.join('');
       }
     }
-    return '';
+    return prefix;
   },
 
   receiveComponent: function(nextElement, transaction) {
