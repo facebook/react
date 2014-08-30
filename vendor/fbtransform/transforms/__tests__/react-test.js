@@ -379,8 +379,21 @@ describe('react jsx', function() {
       '<Component { ... x } y\n' +
       '={2 } z />';
     var result =
-      'React.createElement(Component, Object.assign({},   x , {y: \n' +
+      'React.createElement(Component, Object.assign({},    x , {y: \n' +
       '2, z: true}))';
+
+    expect(transform(code).code).toBe(result);
+  });
+
+  it('adds appropriate newlines when using spread attribute', function() {
+    var code =
+      '<Component\n' +
+      '  {...this.props}\n' +
+      '  sound="moo" />';
+    var result =
+      'React.createElement(Component, Object.assign({}, \n' +
+      '  this.props, \n' +
+      '  {sound: "moo"}))';
 
     expect(transform(code).code).toBe(result);
   });
