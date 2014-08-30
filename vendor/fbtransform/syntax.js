@@ -18,7 +18,7 @@ function transformAll(source, options, excludes) {
 
   // The typechecker transform must run in a second pass in order to operate on
   // the entire source code -- so exclude it from the first pass
-  var visitorsList = visitors.getVisitorsList(excludes.concat('typechecker'));
+  var visitorsList = visitors.getAllVisitors(excludes.concat('typechecker'));
   source = transform(visitorsList, source, options);
   if (excludes.indexOf('typechecks') == -1 && /@typechecks/.test(source.code)) {
     source = transform(
