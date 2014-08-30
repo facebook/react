@@ -56,7 +56,12 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var activeClassName = className + '-active';
     var noEventTimeout = null;
 
-    var endListener = function() {
+    var endListener = function(ev) {
+      // ignore events originating from children
+      if (ev && ev.target !== node) {
+          return;
+      }
+
       if (__DEV__) {
         clearTimeout(noEventTimeout);
       }
