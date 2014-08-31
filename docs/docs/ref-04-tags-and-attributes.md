@@ -59,7 +59,7 @@ className cols colSpan content contentEditable contextMenu controls coords
 crossOrigin data dateTime defer dir disabled download draggable encType form
 formNoValidate frameBorder height hidden href hrefLang htmlFor httpEquiv icon
 id label lang list loop max maxLength mediaGroup method min multiple muted
-name noValidate pattern placeholder poster preload radioGroup readOnly rel
+name noValidate open pattern placeholder poster preload radioGroup readOnly rel
 required role rows rowSpan sandbox scope scrollLeft scrolling scrollTop
 seamless selected shape size span spellCheck src srcDoc srcSet start step
 style tabIndex target title type useMap value width wmode
