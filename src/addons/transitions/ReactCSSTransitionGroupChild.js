@@ -56,7 +56,12 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var activeClassName = className + '-active';
     var noEventTimeout = null;
 
-    var endListener = function() {
+    var endListener = function(e) {
+      // Prevent end events bubbled from nested nodes
+      if (e.target !== node) {
+        return;
+      }
+
       if (__DEV__) {
         clearTimeout(noEventTimeout);
       }
