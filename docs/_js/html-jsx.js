@@ -79,6 +79,8 @@ var HELLO_COMPONENT = "\
             codeText={HELLO_COMPONENT}
             renderCode={true}
             transformer={this.convertToJSX}
+            showCompiledJSTab={false}
+            editorTabTitle="Live HTML Editor"
             />
         </div>
       );
