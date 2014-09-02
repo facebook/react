@@ -79,6 +79,8 @@ var ReactPlayground = React.createClass({
     codeText: React.PropTypes.string.isRequired,
     transformer: React.PropTypes.func,
     renderCode: React.PropTypes.bool,
+    showCompiledJSTab: React.PropTypes.bool,
+    editorTabTitle: React.PropTypes.string
   },
 
   getDefaultProps: function() {
@@ -86,6 +88,7 @@ var ReactPlayground = React.createClass({
       transformer: function(code) {
         return JSXTransformer.transform(code).code;
       },
+      editorTabTitle: 'Live JSX Editor',
       showCompiledJSTab: true
     };
   },
@@ -150,7 +153,7 @@ var ReactPlayground = React.createClass({
       <div
         className={JSXTabClassName}
         onClick={this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}>
-          Live JSX Editor
+          {this.props.editorTabTitle}
       </div>
 
     return (
