@@ -176,7 +176,9 @@ var HTMLDOMPropertyConfig = {
     autoCorrect: 'autocorrect',
     autoFocus: 'autofocus',
     autoPlay: 'autoplay',
-    encType: 'enctype',
+    // `encoding` is equivalent to `enctype`, IE8 lacks an `enctype` setter.
+    // http://www.w3.org/TR/html5/forms.html#dom-fs-encoding
+    encType: 'encoding',
     hrefLang: 'hreflang',
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
