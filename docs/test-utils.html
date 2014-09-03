@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Test Utilities</title>
+  <title>Test Utilities | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Test Utilities">
+  <meta property="og:title" content="Test Utilities | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/test-utils.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -42,7 +42,7 @@
     <div class="nav-main">
       <div class="wrap">
         <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
           React
         </a>
         <ul class="nav-site">
@@ -455,9 +455,9 @@
 <h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span><span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span> <span class="nx">string</span><span class="o">?</span> <span class="nx">tagName</span><span class="p">)</span>
 </code></pre></div>
 <p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
-<h3><a class="anchor" name="iscomponentoftype"></a>isComponentOfType <a class="hash-link" href="#iscomponentoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isComponentOfType</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="isdescriptoroftype"></a>isDescriptorOfType <a class="hash-link" href="#isdescriptoroftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDescriptorOfType</span><span class="p">(</span><span class="nx">ReactDescriptor</span> <span class="nx">descriptor</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
 </code></pre></div>
-<p>Returns true if <code>instance</code> is an instance of a React <code>componentClass</code>.</p>
+<p>Returns true if <code>descriptor</code> is an instance of a React <code>componentClass</code>.</p>
 <h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns true if <code>instance</code> is a DOM component (such as a <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code>).</p>

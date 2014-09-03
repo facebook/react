@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Flux TodoMVC Tutorial</title>
+  <title>Flux TodoMVC Tutorial | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Flux TodoMVC Tutorial">
+  <meta property="og:title" content="Flux TodoMVC Tutorial | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/flux-todo-list.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -42,7 +42,7 @@
     <div class="nav-main">
       <div class="wrap">
         <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
           React
         </a>
         <ul class="nav-site">
@@ -469,59 +469,90 @@
     + bundle.js
   + index.html
   + ...
-</code></pre></div><h2><a class="anchor" name="creating-a-dispatcher"></a>Creating a Dispatcher <a class="hash-link" href="#creating-a-dispatcher">#</a></h2>
-<p>Now we are ready to create a dispatcher. Here is an naive example of a Dispatcher class, written with JavaScript promises, polyfilled with Jake Archibald&#39;s <a href="https://github.com/jakearchibald/ES6-Promises">ES6-Promises</a> module.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Promise</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;es6-promise&#39;</span><span class="p">).</span><span class="nx">Promise</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">merge</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="using-the-dispatcher"></a>Using the Dispatcher <a class="hash-link" href="#using-the-dispatcher">#</a></h2>
+<p>We&#39;ll use the dispatcher from the <a href="https://github.com/facebook/flux">Flux GitHub repository</a>, but let&#39;s go over how to get it into our project, how it works and how we&#39;ll use it.</p>
 
-<span class="kd">var</span> <span class="nx">_callbacks</span> <span class="o">=</span> <span class="p">[];</span>
-<span class="kd">var</span> <span class="nx">_promises</span> <span class="o">=</span> <span class="p">[];</span>
+<p>The dispatcher&#39;s source code is written in <a href="https://github.com/lukehoban/es6features">ECMAScript 6</a>, the future version of JavaScript.  To use the future of JS in today&#39;s browser&#39;s we need to transpile it back to a version of JS that browsers can use.  We perform this build step, transpiling from ES6 into common JavaScript, using npm.</p>
 
-<span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{};</span>
-<span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span> <span class="o">=</span> <span class="nx">merge</span><span class="p">(</span><span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">prototype</span><span class="p">,</span> <span class="p">{</span>
-
-  <span class="cm">/**</span>
-<span class="cm">   * Register a Store&#39;s callback so that it may be invoked by an action.</span>
-<span class="cm">   * @param {function} callback The callback to be registered.</span>
-<span class="cm">   * @return {number} The index of the callback within the _callbacks array.</span>
-<span class="cm">   */</span>
-  <span class="nx">register</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">callback</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// index</span>
-  <span class="p">},</span>
-
-  <span class="cm">/**</span>
-<span class="cm">   * dispatch</span>
-<span class="cm">   * @param  {object} payload The data from the action.</span>
-<span class="cm">   */</span>
-  <span class="nx">dispatch</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// First create array of promises for callbacks to reference.</span>
-    <span class="kd">var</span> <span class="nx">resolves</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="kd">var</span> <span class="nx">rejects</span> <span class="o">=</span> <span class="p">[];</span>
-    <span class="nx">_promises</span> <span class="o">=</span> <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">_</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="k">new</span> <span class="nx">Promise</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">resolve</span><span class="p">,</span> <span class="nx">reject</span><span class="p">)</span> <span class="p">{</span>
-        <span class="nx">resolves</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">resolve</span><span class="p">;</span>
-        <span class="nx">rejects</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="o">=</span> <span class="nx">reject</span><span class="p">;</span>
-      <span class="p">});</span>
-    <span class="p">});</span>
-    <span class="c1">// Dispatch to callbacks and resolve/reject promises.</span>
-    <span class="nx">_callbacks</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
-      <span class="c1">// Callback can return an obj, to resolve, or a promise, to chain.</span>
-      <span class="c1">// See waitFor() for why this might be useful.</span>
-      <span class="nx">Promise</span><span class="p">.</span><span class="nx">resolve</span><span class="p">(</span><span class="nx">callback</span><span class="p">(</span><span class="nx">payload</span><span class="p">)).</span><span class="nx">then</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">resolves</span><span class="p">[</span><span class="nx">i</span><span class="p">](</span><span class="nx">payload</span><span class="p">);</span>
-      <span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-        <span class="nx">rejects</span><span class="p">[</span><span class="nx">i</span><span class="p">](</span><span class="k">new</span> <span class="nb">Error</span><span class="p">(</span><span class="s1">&#39;Dispatcher callback unsuccessful&#39;</span><span class="p">));</span>
-      <span class="p">});</span>
-    <span class="p">});</span>
-    <span class="nx">_promises</span> <span class="o">=</span> <span class="p">[];</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Dispatcher</span><span class="p">;</span>
+<p>You can get up and running with the dispatcher in a variety of ways, but perhaps the simplest is to use <a href="https://twitter.com/mjackson">Michael Jackson</a>&#39;s npm module version of the Flux project, called <a href="https://www.npmjs.org/package/react-dispatcher">react-dispatcher</a>:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">npm install react-dispatcher
 </code></pre></div>
-<p>The public API of this basic Dispatcher consists of only two methods: register() and dispatch(). We&#39;ll use register() within our stores to register each store&#39;s callback. We&#39;ll use dispatch() within our actions to trigger the invocation of the callbacks.</p>
+<p>Afterward, you can require the dispatcher in your project&#39;s modules like so:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;Flux&#39;</span><span class="p">).</span><span class="nx">Dispatcher</span><span class="p">;</span>
+</code></pre></div>
+<p>Alternatively, you can clone the Flux repo, run the Gulp-based build script with <code>npm install</code>, and then simply copy the dispatcher and invariant modules located inside flux/lib/ to the dispatcher directory for your project.  This the what we did in the <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/js/dispatcher">example code</a>.</p>
 
+<p>The two most important methods that the dispatcher exposes publically are register() and dispatch().  We&#39;ll use register() within our stores to register each store&#39;s callback. We&#39;ll use dispatch() within our action creators to trigger the invocation of the callbacks.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Dispatcher</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isPending</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isHandled</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isDispatching</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_pendingPayload</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="cm">/**</span>
+<span class="cm">   * Registers a callback to be invoked with every dispatched payload.</span>
+<span class="cm">   *</span>
+<span class="cm">   * @param {function} callback</span>
+<span class="cm">   * @return {string}</span>
+<span class="cm">   */</span>
+  <span class="nx">register</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">_prefix</span> <span class="o">+</span> <span class="nx">_lastID</span><span class="o">++</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="nx">callback</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nx">id</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="c1">// ...</span>
+
+  <span class="cm">/**</span>
+<span class="cm">   * Dispatches a payload to all registered callbacks.</span>
+<span class="cm">   *</span>
+<span class="cm">   * @param {object} payload</span>
+<span class="cm">   */</span>
+  <span class="nx">dispatch</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+    <span class="nx">invariant</span><span class="p">(</span>
+      <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">_isDispatching</span><span class="p">,</span>
+      <span class="s1">&#39;Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.&#39;</span>
+    <span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_startDispatching</span><span class="p">(</span><span class="nx">payload</span><span class="p">);</span>
+    <span class="k">try</span> <span class="p">{</span>
+      <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">id</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_isPending</span><span class="p">[</span><span class="nx">id</span><span class="p">])</span> <span class="p">{</span>
+          <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">_invokeCallback</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span> <span class="k">finally</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_stopDispatching</span><span class="p">();</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+
+  <span class="c1">// ...</span>
+
+  <span class="nx">_invokeCallback</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isPending</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span><span class="p">[</span><span class="nx">id</span><span class="p">](</span><span class="k">this</span><span class="p">.</span><span class="nx">_pendingPayload</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isHandled</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">_startDispatching</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">id</span> <span class="k">in</span> <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_isPending</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_isHandled</span><span class="p">[</span><span class="nx">id</span><span class="p">]</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_pendingPayload</span> <span class="o">=</span> <span class="nx">payload</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isDispatching</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">_stopDispatching</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_pendingPayload</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isDispatching</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="p">}</span>
+
+<span class="p">}</span>
+</code></pre></div>
 <p>Now we are all set to create a dispatcher that is more specific to our app, which we&#39;ll call AppDispatcher.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Dispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./Dispatcher&#39;</span><span class="p">);</span>
 
@@ -532,7 +563,7 @@
   <span class="cm">/**</span>
 <span class="cm">   * A bridge function between the views and the dispatcher, marking the action</span>
 <span class="cm">   * as a view action.  Another variant here could be handleServerAction.</span>
-<span class="cm">   * @param  {object} action The data coming from the view.</span>
+<span class="cm">   * @param {object} action The data coming from the view.</span>
 <span class="cm">   */</span>
   <span class="nx">handleViewAction</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">action</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">dispatch</span><span class="p">({</span>
@@ -545,7 +576,9 @@
 
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">AppDispatcher</span><span class="p">;</span>
 </code></pre></div>
-<p>Now we&#39;ve created an implementation that is a bit more specific to our needs, with a helper function we can use in the actions coming from our views&#39; event handlers. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.</p>
+<p>Now we&#39;ve created an implementation that is a bit more specific to our needs, with a helper function we can use when we create actions. We might expand on this later to provide a separate helper for server updates, but for now this is all we need.  </p>
+
+<p>You don&#39;t actually need to create an AppDispatcher in every application, but we wanted to show it here as an example.  The creation of the AppDispatcher allows us to extend the functionality of the Dispatcher.  In this application, for example, we have provided metadata about the source of the action outside of the action itself.</p>
 <h2><a class="anchor" name="creating-stores"></a>Creating Stores <a class="hash-link" href="#creating-stores">#</a></h2>
 <p>We can use Node&#39;s EventEmitter to get started with a store. We need EventEmitter to broadcast the &#39;change&#39; event to our controller-views. So let&#39;s take a look at what that looks like. I&#39;ve omitted some of the code for the sake of brevity, but for the full version see <a href="https://github.com/Facebook/flux/blob/master/examples/flux-todomvc/js/stores/TodoStore.js">TodoStore.js</a> in the TodoMVC example code.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">AppDispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../dispatcher/AppDispatcher&#39;</span><span class="p">);</span>
@@ -605,7 +638,7 @@
 <span class="cm">   */</span>
   <span class="nx">removeChangeListener</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="nx">CHANGE_EVENT</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
-  <span class="p">}</span>
+  <span class="p">},</span>
 
   <span class="nx">dispatcherIndex</span><span class="o">:</span> <span class="nx">AppDispatcher</span><span class="p">.</span><span class="nx">register</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">payload</span><span class="p">)</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">action</span> <span class="o">=</span> <span class="nx">payload</span><span class="p">.</span><span class="nx">action</span><span class="p">;</span>
@@ -764,7 +797,7 @@ The MainSection needs to iterate over the collection of to-do items it received 
 
 <p>As you&#39;ll see below, with every change to the input, React expects us to update the state of the component. So when we are finally ready to save the text inside the input, we will put the value held in the component&#39;s state in the action&#39;s payload. This is UI state, rather than application state, and keeping that distinction in mind is a good guide for where state should live. All application state should live in the store, while components occasionally hold on to UI state. Ideally, React components preserve as little state as possible.</p>
 
-<p>Because TodoTextInput is being used in multiple places within our application, with different behaviors, we&#39;ll need to pass the onSave method in as a prop from the component&#39;s parent. This allows onSave to invoke different actions depending on where it is used.</p>
+<p>Because TodoTextInput is being used in multiple places within our application, with different behaviors, we&#39;ll need to pass the onSave method in as a prop from the component&#39;s parent. This allows onSave to invoke different action creator methods depending on where it is used.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
 
 <span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
@@ -881,8 +914,8 @@ to-do items:</p>
 <span class="nx">module</span><span class="p">.</span><span class="nx">exports</span> <span class="o">=</span> <span class="nx">Header</span><span class="p">;</span>
 </code></pre></div>
 <p>In a different context, such as in editing mode for an existing to-do item, we might pass an onSave callback that invokes <code>TodoActions.update(text)</code> instead.</p>
-<h2><a class="anchor" name="creating-semantic-actions"></a>Creating Semantic Actions <a class="hash-link" href="#creating-semantic-actions">#</a></h2>
-<p>Here is the basic code for the two actions we used above in our views:</p>
+<h2><a class="anchor" name="creating-actions-with-semantic-methods"></a>Creating Actions with Semantic Methods <a class="hash-link" href="#creating-actions-with-semantic-methods">#</a></h2>
+<p>Here is the basic code for the two action creator methods we used above in our views:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
 <span class="cm"> * TodoActions</span>
 <span class="cm"> */</span>
@@ -893,7 +926,7 @@ to-do items:</p>
 <span class="kd">var</span> <span class="nx">TodoActions</span> <span class="o">=</span> <span class="p">{</span>
 
   <span class="cm">/**</span>
-<span class="cm">   * @param  {string} text</span>
+<span class="cm">   * @param {string} text</span>
 <span class="cm">   */</span>
   <span class="nx">create</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">text</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">AppDispatcher</span><span class="p">.</span><span class="nx">handleViewAction</span><span class="p">({</span>
@@ -903,7 +936,7 @@ to-do items:</p>
   <span class="p">},</span>
 
   <span class="cm">/**</span>
-<span class="cm">   * @param  {string} id</span>
+<span class="cm">   * @param {string} id</span>
 <span class="cm">   */</span>
   <span class="nx">destroy</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">id</span><span class="p">)</span> <span class="p">{</span>
     <span class="nx">AppDispatcher</span><span class="p">.</span><span class="nx">handleViewAction</span><span class="p">({</span>
@@ -940,22 +973,47 @@ to-do items:</p>
   <span class="o">&lt;</span><span class="nx">TodoApp</span> <span class="o">/&gt;</span><span class="p">,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;todoapp&#39;</span><span class="p">)</span>
 <span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="adding-dependency-management-to-the-dispatcher"></a>Adding Dependency Management to the Dispatcher <a class="hash-link" href="#adding-dependency-management-to-the-dispatcher">#</a></h2>
-<p>As I said previously, our Dispatcher implementation is a bit naive. It&#39;s pretty good, but it will not suffice for most applications. We need a way to be able to manage dependencies between Stores. Let&#39;s add that functionality with a waitFor() method within the main body of the Dispatcher class.</p>
+</code></pre></div><h2><a class="anchor" name="dependency-management-in-the-dispatcher"></a>Dependency Management in the Dispatcher <a class="hash-link" href="#dependency-management-in-the-dispatcher">#</a></h2>
+<p>As our application grows beyond this simple application to contain multiple stores, we&#39;ll need a way to be able to manage dependencies between them. That is, Store A might need to derive data based on Store B&#39;s data, so Store A would need Store B to update itself first.  This functionality is available with the Dispatcher&#39;s waitFor() method.</p>
 
-<p>We&#39;ll need another public method, waitFor(). Note that it returns a Promise that can in turn be returned from the Store callback.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="cm">/**</span>
-<span class="cm">   * @param  {array} promisesIndexes</span>
-<span class="cm">   * @param  {function} callback</span>
-<span class="cm">   */</span>
-  <span class="nx">waitFor</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">promiseIndexes</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">selectedPromises</span> <span class="o">=</span> <span class="nx">promiseIndexes</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="nx">_promises</span><span class="p">[</span><span class="nx">index</span><span class="p">];</span>
-    <span class="p">});</span>
-    <span class="k">return</span> <span class="nx">Promise</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span><span class="nx">selectedPromises</span><span class="p">).</span><span class="nx">then</span><span class="p">(</span><span class="nx">callback</span><span class="p">);</span>
-  <span class="p">}</span>
+<p>We would call waitFor() within the store&#39;s registered callback like so:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Dispatcher</span><span class="p">.</span><span class="nx">waitFor</span><span class="p">([</span><span class="nx">StoreB</span><span class="p">.</span><span class="nx">dispatcherIndex</span><span class="p">,</span> <span class="nx">StoreC</span><span class="p">.</span><span class="nx">dispatcherIndex</span><span class="p">]);</span>
+<span class="c1">// now do things, knowing that both StoreB and StoreC have updated</span>
 </code></pre></div>
-<p>Now within the TodoStore callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur.  A more robust dispatcher is required to flag this scenario with warnings in the console.</p>
+<p>In the source code, you can see that we are interupting the synchronous iteration over the callbacks and starting a new iteration of callbacks based on the array of dispatcherIndexes passed into waitFor().</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
+<span class="cm"> * Waits for the callbacks specified to be invoked before continuing execution</span>
+<span class="cm"> * of the current callback. This method should only be used by a callback in</span>
+<span class="cm"> * response to a dispatched payload.</span>
+<span class="cm"> *</span>
+<span class="cm"> * @param {array&lt;string&gt;} ids</span>
+<span class="cm"> */</span>
+<span class="nx">waitFor</span><span class="p">(</span><span class="nx">ids</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">invariant</span><span class="p">(</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isDispatching</span><span class="p">,</span>
+    <span class="s1">&#39;Dispatcher.waitFor(...): Must be invoked while dispatching.&#39;</span>
+  <span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">ii</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">ii</span> <span class="o">&lt;</span> <span class="nx">ids</span><span class="p">.</span><span class="nx">length</span><span class="p">;</span> <span class="nx">ii</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">id</span> <span class="o">=</span> <span class="nx">ids</span><span class="p">[</span><span class="nx">ii</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_isPending</span><span class="p">[</span><span class="nx">id</span><span class="p">])</span> <span class="p">{</span>
+      <span class="nx">invariant</span><span class="p">(</span>
+        <span class="k">this</span><span class="p">.</span><span class="nx">_isHandled</span><span class="p">[</span><span class="nx">id</span><span class="p">],</span>
+        <span class="s1">&#39;Dispatcher.waitFor(...): Circular dependency detected while &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;waiting for `%s`.&#39;</span><span class="p">,</span>
+        <span class="nx">id</span>
+      <span class="p">);</span>
+      <span class="k">continue</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nx">invariant</span><span class="p">(</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_callbacks</span><span class="p">[</span><span class="nx">id</span><span class="p">],</span>
+      <span class="s1">&#39;Dispatcher.waitFor(...): `%s` does not map to a registered callback.&#39;</span><span class="p">,</span>
+      <span class="nx">id</span>
+    <span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_invokeCallback</span><span class="p">(</span><span class="nx">id</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Now within the store&#39;s callback we can explicitly wait for any dependencies to first update before moving forward.  However, if Store A waits for Store B, and B waits for A, then a circular dependency will occur. To help prevent this situation, the dispatcher will throw an error in the browser console if we accidentally have two stores that are waiting for each other. </p>
 <h2><a class="anchor" name="the-future-of-flux"></a>The Future of Flux <a class="hash-link" href="#the-future-of-flux">#</a></h2>
 <p>A lot of people ask if Facebook will release Flux as an open source framework. Really, Flux is just an architecture, not a framework.  But perhaps a Flux boilerplate project might make sense, if there is enough interest. Please let us know if you&#39;d like to see us do this.</p>
 

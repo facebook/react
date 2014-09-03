@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Top-Level API</title>
+  <title>Top-Level API | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Top-Level API">
+  <meta property="og:title" content="Top-Level API | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/top-level-api.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -42,7 +42,7 @@
     <div class="nav-main">
       <div class="wrap">
         <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
           React
         </a>
         <ul class="nav-site">
@@ -474,6 +474,12 @@ existing DOM node without overwriting the existing children.</p>
 <h3><a class="anchor" name="react.rendercomponenttostaticmarkup"></a>React.renderComponentToStaticMarkup <a class="hash-link" href="#react.rendercomponenttostaticmarkup">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">string</span> <span class="nx">renderComponentToStaticMarkup</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
 </code></pre></div>
 <p>Similar to <code>renderComponentToString</code>, except this doesn&#39;t create extra DOM attributes such as <code>data-react-id</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
+<h3><a class="anchor" name="react.isvalidclass"></a>React.isValidClass <a class="hash-link" href="#react.isvalidclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidClass</span><span class="p">(</span><span class="o">*</span> <span class="nx">factory</span><span class="p">)</span>
+</code></pre></div>
+<p>Verifies the factory is a React class descriptor. See <code>React.createClass</code>.</p>
+<h3><a class="anchor" name="react.isvalidcomponent"></a>React.isValidComponent <a class="hash-link" href="#react.isvalidcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isValidComponent</span><span class="p">(</span><span class="o">*</span> <span class="nx">object</span><span class="p">)</span>
+</code></pre></div>
+<p>Verifies the object is a React component descriptor.</p>
 <h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
 <p><code>React.DOM</code> provides all of the standard HTML tags needed to build a React app. You generally don&#39;t use it directly; instead, just include it as part of the <code>/** @jsx React.DOM */</code> docblock.</p>
 <h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>

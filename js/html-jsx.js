@@ -78,7 +78,9 @@ var HELLO_COMPONENT = "\
           ReactPlayground({
             codeText: HELLO_COMPONENT, 
             renderCode: true, 
-            transformer: this.convertToJSX}
+            transformer: this.convertToJSX, 
+            showCompiledJSTab: false, 
+            editorTabTitle: "Live HTML Editor"}
             )
         )
       );

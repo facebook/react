@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React | Animation</title>
+  <title>Animation | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React | Animation">
+  <meta property="og:title" content="Animation | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/animation.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -42,7 +42,7 @@
     <div class="nav-main">
       <div class="wrap">
         <a class="nav-home" href="/react/index.html">
-          <img class="nav-logo" alt="" src="/react/img/logo_small.png" width="38" height="38">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
           React
         </a>
         <ul class="nav-site">
@@ -500,6 +500,25 @@
 <span class="nc">.example-leave.example-leave-active</span> <span class="p">{</span>
   <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="o">.</span><span class="m">01</span><span class="p">;</span>
 <span class="p">}</span>
+</code></pre></div><h3><a class="anchor" name="animation-group-must-be-mounted-to-work"></a>Animation Group Must Be Mounted To Work <a class="hash-link" href="#animation-group-must-be-mounted-to-work">#</a></h3>
+<p>In order for it to apply transitions to its children, the <code>ReactCSSTransitionGroup</code> must already be mounted in the DOM. The example below would not work, because the <code>ReactCSSTransitionGroup</code> is being mounted along with the new item, instead of the new item being mounted within it. Compare this to the <a href="#getting-started">Getting Started</a> section above to see the difference.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">item</span><span class="p">,</span> <span class="nx">i</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleRemove</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="nx">i</span><span class="p">)}</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">ReactCSSTransitionGroup</span> <span class="nx">transitionName</span><span class="o">=</span><span class="s2">&quot;example&quot;</span><span class="o">&gt;</span>
+            <span class="p">{</span><span class="nx">item</span><span class="p">}</span>
+          <span class="o">&lt;</span><span class="err">/ReactCSSTransitionGroup&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="p">);</span>
+    <span class="p">},</span> <span class="k">this</span><span class="p">);</span>
+    <span class="k">return</span> <span class="p">(</span>
+<span class="hll">      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+</span><span class="hll">        <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
+</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
 <p>Although in the example above we rendered a list of items into <code>ReactCSSTransitionGroup</code>, the children of <code>ReactCSSTransitionGroup</code> can be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element, with the new element animating in while the current animates out. For example, we can implement a simple image carousel like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>

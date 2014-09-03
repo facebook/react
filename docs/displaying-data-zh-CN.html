@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Performance Tools | React</title>
+  <title>显示数据 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Performance Tools | React">
+  <meta property="og:title" content="显示数据 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/perf.html">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/displaying-data-zh-CN.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -253,7 +253,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/perf.html" class="active">
+                    <a href="/react/docs/perf.html">
                       Performance Tools
                     </a>
                   </li>
@@ -432,69 +432,85 @@
 
   <div class="inner-content">
     <h1>
-      Performance Tools
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.8-perf.md" target="_blank">Edit on GitHub</a>
+      显示数据
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>React is usually quite fast out of the box. However, in situations where you need to squeeze every ounce of performance out of your app, it provides a <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> hook where you can add optimization hints to React&#39;s diff algorithm.</p>
+    <p>通过用户界面，最基础可以做的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。</p>
+<h2><a class="anchor" name=""></a>开始 <a class="hash-link" href="#">#</a></h2>
+<p>让我们看一个非常简单的例子。新建一个名为 <code>hello-react.html</code> 的文件，代码内容如下：</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;head&gt;</span>
+    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.11.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.11.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+  <span class="nt">&lt;/head&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
 
-<p>In addition to giving you an overview of your app&#39;s overall performance, ReactPerf is a profiling tool that tells you exactly where you need to put these hooks.</p>
+      <span class="c1">// ** 在这里替换成你的代码 **</span>
+
+    <span class="nt">&lt;/script&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<p>在接下去的文档中，我们只关注 JavaScript 代码，假设我们把代码插入到上面那个模板中。用下面的代码替换掉上面用来占位的注释。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
+
+<span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
+        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
+        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
+      <span class="o">&lt;</span><span class="err">/p&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
+    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+  <span class="p">);</span>
+<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
+</code></pre></div><h2><a class="anchor" name="-reactive-updates"></a>被动更新 (Reactive Updates) <a class="hash-link" href="#-reactive-updates">#</a></h2>
+<p>在浏览器中打开 <code>hello-react.html</code> ，在输入框输入你的名字。你会发现 React 在用户界面中只改变了时间， 任何你在输入框输入的内容一直保留着，即使你没有写任何代码来完成这个功能。React 为你解决了这个问题，做了正确的事。</p>
+
+<p>我们想到的方法是除非不得不操作 DOM ，React 是不会去操作 DOM 的。<strong>它用一种更快的内置仿造的 DOM 来操作差异，为你计算出出效率最高的 DOM 改变</strong>。</p>
+
+<p>对这个组件的输入称为 <code>props</code> - &quot;properties&quot;的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 <strong><code>this.props</code> 是只读的</strong>。</p>
+<h2><a class="anchor" name=""></a>组件就像是函数 <a class="hash-link" href="#">#</a></h2>
+<p>React 组件非常简单。你可以认为它们就是简单的函数，接受 <code>props</code> 和 <code>state</code> (后面会讨论) 作为参数，然后渲染出 HTML。正是应为它们是这么的简单，这使得它们非常容易理解。</p>
 
 <blockquote>
-<p>Note:</p>
+<p>注意:</p>
 
-<p>The dev build of React is slower than the prod build, due to all the extra logic for providing, for example, React&#39;s friendly console warnings (stripped away in the prod build). Therefore, the profiler only serves to indicate the <em>relatively</em> expensive parts of your app.</p>
+<p><strong>只有一个限制</strong>: React 组件只能渲染单个根节点。如果你想要返回多个节点，它们<em>必须</em>被包含在同一个节点里。</p>
 </blockquote>
-<h2><a class="anchor" name="general-api"></a>General API <a class="hash-link" href="#general-api">#</a></h2>
-<p>The <code>Perf</code> object documented here is exposed as <code>React.addons.Perf</code> when using the <code>react-with-addons.js</code> build in development mode.</p>
-<h3><a class="anchor" name="perf.start-and-perf.stop"></a><code>Perf.start()</code> and <code>Perf.stop()</code> <a class="hash-link" href="#perf.start-and-perf.stop">#</a></h3>
-<p>Start/stop the measurement. The React operations in-between are recorded for analyses below. Operations that took an insignificant amount of time are ignored.</p>
-<h3><a class="anchor" name="perf.printinclusivemeasurements"></a><code>Perf.printInclusive(measurements)</code> <a class="hash-link" href="#perf.printinclusivemeasurements">#</a></h3>
-<p>Prints the overall time taken. If no argument&#39;s passed, defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:</p>
+<h2><a class="anchor" name="jsx-"></a>JSX 语法 <a class="hash-link" href="#jsx-">#</a></h2>
+<p>我们坚信组件是正确方法去做关注分离，而不是通过“模板”和“展示逻辑”。我们认为标签和生成它的代码是紧密相连的。此外，展示逻辑通常是很复杂的，通过模板语言实现这些逻辑会产生大量代码。</p>
 
-<p><img src="/react/img/docs/perf-inclusive.png" alt=""></p>
-<h3><a class="anchor" name="perf.printexclusivemeasurements"></a><code>Perf.printExclusive(measurements)</code> <a class="hash-link" href="#perf.printexclusivemeasurements">#</a></h3>
-<p>&quot;Exclusive&quot; times don&#39;t include the times taken to mount the components: processing props, <code>getInitialState</code>, call <code>componentWillMount</code> and <code>componentDidMount</code>, etc.</p>
+<p>我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。为了使这变得更简单，我们做了一个非常简单、<strong>可选</strong>类似 HTML 语法 ，通过函数调用即可生成模板的编译器，称为 JSX。</p>
 
-<p><img src="/react/img/docs/perf-exclusive.png" alt=""></p>
-<h3><a class="anchor" name="perf.printwastedmeasurements"></a><code>Perf.printWasted(measurements)</code> <a class="hash-link" href="#perf.printwastedmeasurements">#</a></h3>
-<p><strong>The most useful part of the profiler</strong>.</p>
+<p><strong>JSX 让你可以用 HTML 语法去写 JavaScript 函数调用</strong> 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： <code>React.DOM.a({href: &#39;http://facebook.github.io/react/&#39;}, &#39;Hello React!&#39;)</code>。通过 JSX 这就变成了 <code>&lt;a href=&quot;http://facebook.github.io/react/&quot;&gt;Hello React!&lt;/a&gt;</code>。我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以<strong>JSX 不是必须用的。</strong></p>
 
-<p>&quot;Wasted&quot; time is spent on components that didn&#39;t actually render anything, e.g. the render stayed the same, so the DOM wasn&#39;t touched.</p>
+<p>JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 <a href="/react/docs/jsx-in-depth.html">深入理解 JSX</a>。或者直接使用<a href="/react/jsx-compiler.html">在线 JSX 编译器</a>观察变化过程。</p>
 
-<p><img src="/react/img/docs/perf-wasted.png" alt=""></p>
-<h3><a class="anchor" name="perf.printdommeasurements"></a><code>Perf.printDOM(measurements)</code> <a class="hash-link" href="#perf.printdommeasurements">#</a></h3>
-<p>Prints the underlying DOM manipulations, e.g. &quot;set innerHTML&quot; and &quot;remove&quot;.</p>
+<p>JSX 类似于 HTML，但不是完全一样。参考<a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> 学习关键区别。</p>
 
-<p><img src="/react/img/docs/perf-dom.png" alt=""></p>
-<h2><a class="anchor" name="advanced-api"></a>Advanced API <a class="hash-link" href="#advanced-api">#</a></h2>
-<p>The above print methods use <code>Perf.getLastMeasurements()</code> to pretty-print the result.</p>
-<h3><a class="anchor" name="perf.getlastmeasurements"></a><code>Perf.getLastMeasurements()</code> <a class="hash-link" href="#perf.getlastmeasurements">#</a></h3>
-<p>Get the measurements array from the last start-stop session. The array contains objects, each of which looks like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
-  <span class="c1">// The term &quot;inclusive&quot; and &quot;exclusive&quot; are explained below</span>
-  <span class="s2">&quot;exclusive&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// &#39;.0.0&#39; is the React ID of the node</span>
-  <span class="s2">&quot;inclusive&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.0670000008540228</span><span class="p">,</span> <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.3259999939473346</span><span class="p">},</span>
-  <span class="s2">&quot;render&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mf">0.036999990697950125</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mf">0.010000003385357559</span><span class="p">},</span>
-  <span class="c1">// Number of instances</span>
-  <span class="s2">&quot;counts&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="mi">1</span><span class="p">},</span>
-  <span class="c1">// DOM touches</span>
-  <span class="s2">&quot;writes&quot;</span><span class="o">:</span> <span class="p">{},</span>
-  <span class="c1">// Extra debugging info</span>
-  <span class="s2">&quot;displayNames&quot;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;&lt;root&gt;&quot;</span><span class="p">},</span>
-    <span class="s2">&quot;.0.0&quot;</span><span class="o">:</span> <span class="p">{</span><span class="s2">&quot;current&quot;</span><span class="o">:</span> <span class="s2">&quot;Box&quot;</span><span class="p">,</span> <span class="s2">&quot;owner&quot;</span><span class="o">:</span> <span class="s2">&quot;App&quot;</span><span class="p">}</span>
-  <span class="p">},</span>
-  <span class="s2">&quot;totalTime&quot;</span><span class="o">:</span> <span class="mf">0.48499999684281647</span>
-<span class="p">}</span>
-</code></pre></div>
+<p>最简单开始学习 JSX 的方法就是使用浏览器端的 <code>JSXTransformer</code>。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 <a href="http://npmjs.org/package/react-tools">react-tools</a> 包来预编译你的代码。</p>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/pure-render-mixin.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/why-react-zh-CN.html">&larr; Prev</a>
       
+      
+        <a class="docs-next" href="/react/docs/jsx-in-depth.html">Next &rarr;</a>
       
     </div>
   </div>
