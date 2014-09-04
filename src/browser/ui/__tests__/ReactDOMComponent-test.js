@@ -117,11 +117,11 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should remove attributes", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
+      var stub = ReactTestUtils.renderIntoDocument(<div role='abc' />);
 
-      expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
+      expect(stub.getDOMNode().hasAttribute('role')).toBe(true);
       stub.receiveComponent({props: {}}, transaction);
-      expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
+      expect(stub.getDOMNode().hasAttribute('role')).toBe(false);
     });
 
     it("should remove properties", function() {
@@ -186,28 +186,6 @@ describe('ReactDOMComponent', function() {
       expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
       stub.receiveComponent({props: {children: 'adieu'}}, transaction);
       expect(stub.getDOMNode().innerHTML).toEqual('adieu');
-    });
-
-    it("should not incur unnecessary DOM mutations", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
-
-      var node = stub.getDOMNode();
-      var nodeValue = ''; // node.value always returns undefined
-      var nodeValueSetter = mocks.getMockFunction();
-      Object.defineProperty(node, 'value', {
-        get: function() {
-          return nodeValue;
-        },
-        set: nodeValueSetter.mockImplementation(function(newValue) {
-          nodeValue = newValue;
-        })
-      });
-
-      stub.receiveComponent({props: {value: ''}}, transaction);
-      expect(nodeValueSetter.mock.calls.length).toBe(0);
-
-      stub.receiveComponent({props: {}}, transaction);
-      expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
   });
 

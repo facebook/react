@@ -146,6 +146,8 @@ var DOMPropertyInjection = {
     }
   }
 };
+
+var hasPropertyAccessorCache = {};
 var defaultValueCache = {};
 
 /**
@@ -265,6 +267,26 @@ var DOMProperty = {
       }
     }
     return false;
+  },
+
+  hasPropertyAccessor: function(nodeName, name) {
+    if (DOMProperty.mustUseProperty[name]) {
+      return true;
+    }
+    if (DOMProperty.mustUseAttribute[name]) {
+      return false;
+    }
+    var prop = DOMProperty.getPropertyName[name];
+    var nodeHasPropertyAccessors = hasPropertyAccessorCache[nodeName];
+    var testElement;
+    if (!nodeHasPropertyAccessors) {
+      hasPropertyAccessorCache[nodeName] = nodeHasPropertyAccessors = {};
+    }
+    if (!(prop in nodeHasPropertyAccessors)) {
+      testElement = document.createElement(nodeName);
+      nodeHasPropertyAccessors[prop] = prop in testElement;
+    }
+    return nodeHasPropertyAccessors[prop];
   },
 
   /**
