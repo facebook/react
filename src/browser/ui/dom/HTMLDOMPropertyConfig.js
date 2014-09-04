@@ -56,6 +56,7 @@ var HTMLDOMPropertyConfig = {
      * Standard Properties
      */
     accept: null,
+    acceptCharset: null,
     accessKey: null,
     action: null,
     allowFullScreen: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
@@ -167,6 +168,7 @@ var HTMLDOMPropertyConfig = {
     property: null // Supports OG in meta tags
   },
   DOMAttributeNames: {
+    acceptCharset: 'accept-charset',
     className: 'class',
     htmlFor: 'for',
     httpEquiv: 'http-equiv'
