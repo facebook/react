@@ -37,7 +37,7 @@ function shallowEqual(objA, objB) {
       return false;
     }
   }
-  // Test for B'a keys missing from A.
+  // Test for B's keys missing from A.
   for (key in objB) {
     if (objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)) {
       return false;
