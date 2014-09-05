@@ -363,6 +363,25 @@ describe('react jsx', function() {
     expect(transform(code).code).toBe(result);
   });
 
+  it('wraps sequence expressions in expression containers', function() {
+    var code = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      '<Component attr={1, 2} />;',
+      '<Component>{1, 2}</Component>;'
+    ];
+    var result = [
+      '/**',
+      ' * @jsx React.DOM',
+      ' */',
+      'React.createElement(Component, {attr: (1, 2)});',
+      'React.createElement(Component, null, (1, 2));'
+    ];
+
+    expect(transform(code).code).toBe(result);
+  });
+
   it('should disallow XML namespacing', function() {
     var code = [
       '/**',

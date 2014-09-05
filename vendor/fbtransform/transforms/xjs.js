@@ -220,7 +220,18 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
   // Plus 1 to skip `{`.
   utils.move(object.range[0] + 1, state);
+
+  var needsParenthesis = object.expression.type === Syntax.SequenceExpression;
+
+  if (needsParenthesis) {
+    utils.append('(', state);
+  }
+
   traverse(object.expression, path, state);
+
+  if (needsParenthesis) {
+    utils.append(')', state);
+  }
 
   if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
