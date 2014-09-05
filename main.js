@@ -31,16 +31,17 @@ module.exports = {
 
 function innerTransform(input, options) {
   options = options || {};
-  var visitorList = getVisitors(options.harmony);
-  return transform(visitorList, input, options);
-}
 
-function getVisitors(harmony) {
-  if (harmony) {
-    return visitors.getAllVisitors();
-  } else {
-    return visitors.transformVisitors.react;
+  var visitorSets = ['react'];
+  if (options.harmony) {
+    visitorSets.push('harmony');
   }
+  if (options.stripTypes) {
+    visitorSets.push('type-annotations');
+  }
+
+  var visitorList = visitors.getVisitorsBySet(visitorSets);
+  return transform(visitorList, input, options);
 }
 
 function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
