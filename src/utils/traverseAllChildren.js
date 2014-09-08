@@ -127,39 +127,32 @@ var traverseAllChildrenImpl =
         // All of the above are perceived as null.
         callback(traverseContext, null, storageName, indexSoFar);
         subtreeCount = 1;
-      } else if (ReactDescriptor.isValidDescriptor(children)) {
+      } else if (type === 'string' || type === 'number' ||
+                 ReactDescriptor.isValidDescriptor(children)) {
         callback(traverseContext, children, storageName, indexSoFar);
         subtreeCount = 1;
-      } else {
-        if (type === 'object') {
-          invariant(
-            !children || children.nodeType !== 1,
-            'traverseAllChildren(...): Encountered an invalid child; DOM ' +
-            'elements are not valid children of React components.'
-          );
-          for (var key in children) {
-            if (children.hasOwnProperty(key)) {
-              subtreeCount += traverseAllChildrenImpl(
-                children[key],
-                (
-                  nameSoFar + (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
-                  wrapUserProvidedKey(key) + SUBSEPARATOR +
-                  getComponentKey(children[key], 0)
-                ),
-                indexSoFar + subtreeCount,
-                callback,
-                traverseContext
-              );
-            }
+      } else if (type === 'object') {
+        invariant(
+          !children || children.nodeType !== 1,
+          'traverseAllChildren(...): Encountered an invalid child; DOM ' +
+          'elements are not valid children of React components.'
+        );
+        for (var key in children) {
+          if (children.hasOwnProperty(key)) {
+            var nextName = (
+              nameSoFar + (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+              wrapUserProvidedKey(key) + SUBSEPARATOR +
+              getComponentKey(children[key], 0)
+            );
+            var nextIndex = indexSoFar + subtreeCount;
+            subtreeCount += traverseAllChildrenImpl(
+              children[key],
+              nextName,
+              nextIndex,
+              callback,
+              traverseContext
+            );
           }
-        } else if (type === 'string') {
-          var normalizedText = ReactTextComponent(children);
-          callback(traverseContext, normalizedText, storageName, indexSoFar);
-          subtreeCount += 1;
-        } else if (type === 'number') {
-          var normalizedNumber = ReactTextComponent('' + children);
-          callback(traverseContext, normalizedNumber, storageName, indexSoFar);
-          subtreeCount += 1;
         }
       }
     }
