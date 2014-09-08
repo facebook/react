@@ -253,10 +253,9 @@ describe('DOMPropertyOperations', function() {
       // Suppose 'foobar' is a property that corresponds to the underlying
       // 'className' property:
       DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
-        DOMPropertyNames: {
-          foobar: 'className'
-        }
+        Properties: {foobar: null},
+        DOMAttributeNames: {foobar: 'class'},
+        DOMPropertyNames: {foobar: 'className'}
       });
 
       DOMPropertyOperations.setValueForProperty(

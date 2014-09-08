@@ -137,19 +137,21 @@ var DOMPropertyOperations = {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(name, value)) {
         this.deleteValueForProperty(node, name);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-        node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
       } else {
         var propName = DOMProperty.getPropertyName[name];
-        // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
-        // property type before comparing; only `value` does and is string.
-        if (!DOMProperty.hasSideEffects[name] ||
-            ('' + node[propName]) !== ('' + value)) {
-          // Contrary to `setAttribute`, object properties are properly
-          // `toString`ed by IE8/9.
-          node[propName] = value;
+        if (DOMProperty.hasPropertyAccessor(node.nodeName, propName)) {
+          // Must explicitly cast values for HAS_SIDE_EFFECTS-properties to the
+          // property type before comparing; only `value` does and is string.
+          if (!DOMProperty.hasSideEffects[name] ||
+              ('' + node[propName]) !== ('' + value)) {
+            // Contrary to `setAttribute`, object properties are properly
+            // `toString`ed by IE8/9.
+            node[propName] = value;
+          }
+        } else {
+          // `setAttribute` with objects becomes only `[object]` in IE8/9,
+          // ('' + value) makes it output the correct toString()-value.
+          node.setAttribute(DOMProperty.getAttributeName[name], '' + value);
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
@@ -175,17 +177,19 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod[name];
       if (mutationMethod) {
         mutationMethod(node, undefined);
-      } else if (DOMProperty.mustUseAttribute[name]) {
-        node.removeAttribute(DOMProperty.getAttributeName[name]);
       } else {
         var propName = DOMProperty.getPropertyName[name];
-        var defaultValue = DOMProperty.getDefaultValueForProperty(
-          node.nodeName,
-          propName
-        );
-        if (!DOMProperty.hasSideEffects[name] ||
-            ('' + node[propName]) !== defaultValue) {
-          node[propName] = defaultValue;
+        if (DOMProperty.hasPropertyAccessor(node.nodeName, propName)) {
+          var defaultValue = DOMProperty.getDefaultValueForProperty(
+            node.nodeName,
+            propName
+          );
+          if (!DOMProperty.hasSideEffects[name] ||
+              ('' + node[propName]) !== defaultValue) {
+            node[propName] = defaultValue;
+          }
+        } else {
+          node.removeAttribute(DOMProperty.getAttributeName[name]);
         }
       }
     } else if (DOMProperty.isCustomAttribute(name)) {
