@@ -143,6 +143,7 @@ var ReactDOM = mapObject({
   output: false,
   p: false,
   param: true,
+  picture: false,
   pre: false,
   progress: false,
   q: false,
