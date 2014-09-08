@@ -35,6 +35,14 @@ var setInnerHTML = function(node, html) {
   node.innerHTML = html;
 };
 
+if (document.contentType === "application/xhtml+xml") {
+  // XML mode: Turn HTML into valid XML before setting innerHTML
+  setInnerHTML = function(node, html) {
+    var dom = new DOMParser().parseFromString(html, 'text/html');
+    node.innerHTML = new XMLSerializer().serializeToString(dom);
+  };
+}
+
 if (ExecutionEnvironment.canUseDOM) {
   // IE8: When updating a just created node with innerHTML only leading
   // whitespace is removed. When updating an existing node with innerHTML
