@@ -85,6 +85,7 @@ var HTMLDOMPropertyConfig = {
     controls: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     coords: null,
     crossOrigin: null,
+    currentTime: MUST_USE_PROPERTY | HAS_POSITIVE_NUMERIC_VALUE,
     data: null, // For `<object />` acts as `src`.
     dateTime: MUST_USE_ATTRIBUTE,
     defer: HAS_BOOLEAN_VALUE,
@@ -104,6 +105,7 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: null,
     icon: null,
     id: MUST_USE_PROPERTY,
+    kind: null,
     label: null,
     lang: null,
     list: null,
@@ -119,7 +121,9 @@ var HTMLDOMPropertyConfig = {
     noValidate: HAS_BOOLEAN_VALUE,
     open: null,
     pattern: null,
+    paused: HAS_BOOLEAN_VALUE,
     placeholder: null,
+    playbackRate: MUST_USE_PROPERTY | HAS_NUMERIC_VALUE,
     poster: null,
     preload: null,
     radioGroup: null,
@@ -141,7 +145,9 @@ var HTMLDOMPropertyConfig = {
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: null,
     src: null,
+    srcLang: null,
     srcDoc: MUST_USE_PROPERTY,
+    srcObject: MUST_USE_PROPERTY,
     srcSet: null,
     start: HAS_NUMERIC_VALUE,
     step: null,
@@ -152,6 +158,7 @@ var HTMLDOMPropertyConfig = {
     type: null,
     useMap: null,
     value: MUST_USE_PROPERTY | HAS_SIDE_EFFECTS,
+    volume: MUST_USE_PROPERTY | HAS_POSITIVE_NUMERIC_VALUE,
     width: MUST_USE_ATTRIBUTE,
     wmode: MUST_USE_ATTRIBUTE,
 
@@ -182,7 +189,18 @@ var HTMLDOMPropertyConfig = {
     radioGroup: 'radiogroup',
     spellCheck: 'spellcheck',
     srcDoc: 'srcdoc',
+    srcLang: 'srclang',
     srcSet: 'srcset'
+  },
+  DOMMutationMethods: {
+    paused: function(node, value) {
+      if (value === true) {
+        node.pause();
+      }
+      if (value === false) {
+        node.play();
+      }
+    }
   }
 };
 
