@@ -7,7 +7,7 @@ var BootstrapButton = React.createClass({
     // transferPropsTo() is smart enough to merge classes provided
     // to this component.
     return this.transferPropsTo(
-      <a href="javascript:;" role="button" className="btn">
+      <a href="javascript:;" role="button" className="btn btn-primary">
         {this.props.children}
       </a>
     );
@@ -53,22 +53,28 @@ var BootstrapModal = React.createClass({
     }
 
     return (
-      <div className="modal hide fade">
-        <div className="modal-header">
-          <button
-            type="button"
-            className="close"
-            onClick={this.handleCancel}
-            dangerouslySetInnerHTML={{__html: '&times'}}
-          />
-          <h3>{this.props.title}</h3>
-        </div>
-        <div className="modal-body">
-          {this.props.children}
-        </div>
-        <div className="modal-footer">
-          {cancelButton}
-          {confirmButton}
+      <div className="modal fade">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <button 
+                type="button"
+                className="close"
+                onClick={this.handleCancel}
+                dangerouslySetInnerHTML={{__html: '&times'}}
+              />
+              <h3>{this.props.title}</h3>
+            </div>
+
+            <div className="modal-body">
+              {this.props.children}
+            </div>
+
+            <div className="modal-footer">
+              {cancelButton}
+              {confirmButton}
+            </div>
+          </div>
         </div>
       </div>
     );
