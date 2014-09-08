@@ -40,7 +40,7 @@ if (ExecutionEnvironment.canUseDOM) {
     // XML mode: Turn HTML into valid XML before setting innerHTML
     setInnerHTML = function(node, html) {
       var dom = new DOMParser().parseFromString(html, 'text/html');
-      node.innerHTML = new XMLSerializer().serializeToString(dom).body;
+      node.innerHTML = new XMLSerializer().serializeToString(dom.body).replace(/^<body[^>]*>/, '').replace(/<\/body>$/, '');
     };
   }
   else if (document.xmlVersion) {
@@ -48,7 +48,7 @@ if (ExecutionEnvironment.canUseDOM) {
     setInnerHTML = function(node, html) {
       var dom = document.implementation.createHTMLDocument('');
       dom.body.innerHTML = html;
-      node.innerHTML = new XMLSerializer().serializeToString(dom.body);
+      node.innerHTML = new XMLSerializer().serializeToString(dom.body).replace(/^<body[^>]*>/, '').replace(/<\/body>$/, '');
     };
   }
   // IE8: When updating a just created node with innerHTML only leading
