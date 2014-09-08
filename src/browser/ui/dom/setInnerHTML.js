@@ -40,7 +40,7 @@ if (ExecutionEnvironment.canUseDOM) {
     // XML mode: Turn HTML into valid XML before setting innerHTML
     setInnerHTML = function(node, html) {
       var dom = new DOMParser().parseFromString(html, 'text/html');
-      node.innerHTML = new XMLSerializer().serializeToString(dom);
+      node.innerHTML = new XMLSerializer().serializeToString(dom).body;
     };
   }
   else if (document.xmlVersion) {
