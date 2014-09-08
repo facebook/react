@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0d
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -35,15 +35,14 @@ var setInnerHTML = function(node, html) {
   node.innerHTML = html;
 };
 
-if (document.contentType === "application/xhtml+xml") {
-  // XML mode: Turn HTML into valid XML before setting innerHTML
-  setInnerHTML = function(node, html) {
-    var dom = new DOMParser().parseFromString(html, 'text/html');
-    node.innerHTML = new XMLSerializer().serializeToString(dom);
-  };
-}
-
 if (ExecutionEnvironment.canUseDOM) {
+  if (document.contentType === "application/xhtml+xml") {
+    // XML mode: Turn HTML into valid XML before setting innerHTML
+    setInnerHTML = function(node, html) {
+      var dom = new DOMParser().parseFromString(html, 'text/html');
+      node.innerHTML = new XMLSerializer().serializeToString(dom);
+    };
+  }
   // IE8: When updating a just created node with innerHTML only leading
   // whitespace is removed. When updating an existing node with innerHTML
   // whitespace in root TextNodes is also collapsed.
