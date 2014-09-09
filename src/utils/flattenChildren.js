@@ -18,6 +18,8 @@
 
 "use strict";
 
+var ReactTextComponent = require('ReactTextComponent');
+
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
 
@@ -38,7 +40,18 @@ function flattenSingleChildIntoContext(traverseContext, child, name) {
     name
   );
   if (keyUnique && child != null) {
-    result[name] = child;
+    var type = typeof child;
+    var normalizedValue;
+
+    if (type === 'string') {
+      normalizedValue = ReactTextComponent(child);
+    } else if (type === 'number') {
+      normalizedValue = ReactTextComponent('' + child);
+    } else {
+      normalizedValue = child;
+    }
+
+    result[name] = normalizedValue;
   }
 }
 

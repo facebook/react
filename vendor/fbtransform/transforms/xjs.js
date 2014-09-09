@@ -108,6 +108,7 @@ var knownTags = {
   param: true,
   path: true,
   pattern: false,
+  picture: true,
   polygon: true,
   polyline: true,
   pre: true,

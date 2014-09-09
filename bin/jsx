@@ -12,13 +12,17 @@ require('commoner').version(
   '--harmony',
   'Turns on JS transformations such as ES6 Classes etc.'
 ).option(
+  '--strip-types',
+  'Strips out type annotations.'
+).option(
   '--source-map-inline',
   'Embed inline sourcemap in transformed source'
 ).process(function(id, source) {
   // This is where JSX, ES6, etc. desugaring happens.
   var options = {
     harmony: this.options.harmony,
-    sourceMap: this.options.sourceMapInline
+    sourceMap: this.options.sourceMapInline,
+    stripTypes: this.options.stripTypes
   };
   return transform(source, options);
 });

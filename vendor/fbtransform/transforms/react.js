@@ -142,16 +142,17 @@ function visitReactTag(traverse, object, path, state) {
     var isLast = index === attributesObject.length - 1;
 
     if (attr.type === Syntax.XJSSpreadAttribute) {
-      // Plus 1 to skip `{`.
-      utils.move(attr.range[0] + 1, state);
-
       // Close the previous object or initial object
       if (!previousWasSpread) {
         utils.append('}, ', state);
       }
 
+
       // Move to the expression start, ignoring everything except parenthesis
       // and whitespace.
+      utils.catchup(attr.range[0], state, stripNonWhiteParen);
+      // Plus 1 to skip `{`.
+      utils.move(attr.range[0] + 1, state);
       utils.catchup(attr.argument.range[0], state, stripNonWhiteParen);
 
       traverse(attr.argument, path, state);
