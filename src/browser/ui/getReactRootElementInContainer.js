@@ -33,7 +33,7 @@ function getReactRootElementInContainer(container) {
   if (container.nodeType === DOC_NODE_TYPE) {
     return container.documentElement;
   } else {
-    return container.firstChild;
+    return container.firstElementChild;
   }
 }
 
