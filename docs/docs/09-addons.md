@@ -22,4 +22,4 @@ The add-ons below are in the development (unminified) version of React only:
 
 To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`.
 
-If using require in node, then use `require('react/addons')`.
+When using the react package from npm, just simply `require('react/addons')` instead of `require('react')` to get React with all of the addons.
