@@ -31,9 +31,11 @@ var ReactPerf = require('ReactPerf');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
+var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var monitorCodeUse = require('monitorCodeUse');
 
 var deleteListener = ReactBrowserEventEmitter.deleteListener;
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -66,6 +68,15 @@ function assertValidProps(props) {
 }
 
 function putListener(id, registrationName, listener, transaction) {
+  if (__DEV__) {
+    // IE8 has no API for event capturing and the `onScroll` event doesn't
+    // bubble.
+    if (registrationName === 'onScroll' &&
+        !isEventSupported('scroll', true)) {
+      monitorCodeUse('react_no_scroll_event');
+      console.warn('This browser doesn\'t support the `onScroll` event');
+    }
+  }
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?

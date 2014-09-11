@@ -24,8 +24,6 @@ var EventPluginUtils = require('EventPluginUtils');
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
-var isEventSupported = require('isEventSupported');
-var monitorCodeUse = require('monitorCodeUse');
 
 /**
  * Internal store for event listeners
@@ -159,15 +157,6 @@ var EventPluginHub = {
       registrationName, typeof listener
     );
 
-    if (__DEV__) {
-      // IE8 has no API for event capturing and the `onScroll` event doesn't
-      // bubble.
-      if (registrationName === 'onScroll' &&
-          !isEventSupported('scroll', true)) {
-        monitorCodeUse('react_no_scroll_event');
-        console.warn('This browser doesn\'t support the `onScroll` event');
-      }
-    }
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[id] = listener;
