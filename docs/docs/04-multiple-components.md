@@ -133,6 +133,46 @@ The situation gets more complicated when the children are shuffled around (as in
 
 When React reconciles the keyed children, it will ensure that any child with `key` will be reordered (instead of clobbered) or destroyed (instead of reused).
 
+The `key` should *always* be supplied directly to the components in the array, not to the container HTML child of each component in the array:
+
+```javascript
+// WRONG!
+var ListItemWrapper = React.createClass({
+  render: function() {
+    return <li key={this.props.data.id}>{this.props.data.text}</li>;
+  }
+});
+var MyComponent = React.createClass({
+  render: function() {
+    return (
+      <ul>
+        {this.props.results.map(function(result) {
+          return <ListItemWrapper data={result}/>;
+        })}
+      </ul>
+    );
+  }
+});
+
+// Correct :)
+var ListItemWrapper = React.createClass({
+  render: function() {
+    return <li>{this.props.data.text}</li>;
+  }
+});
+var MyComponent = React.createClass({
+  render: function() {
+    return (
+      <ul>
+        {this.props.results.map(function(result) {
+           return <ListItemWrapper key={result.id} data={result}/>;
+        })}
+      </ul>
+    );
+  }
+});
+```
+
 You can also key children by passing an object. The object keys will be used as `key` for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order **except** for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:
 
 ```javascript
