@@ -418,4 +418,26 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('onScroll warning', function() {
+    it('should warn about the `onScroll` issue when unsupported (IE8)', () => {
+      // Mock this here so we can mimic IE8 support. We require isEventSupported
+      // before React so it's pre-mocked before React qould require it.
+      require('mock-modules')
+        .dumpCache()
+        .mock('isEventSupported');
+      var isEventSupported = require('isEventSupported');
+      isEventSupported.mockReturnValueOnce(false);
+
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+
+      spyOn(console, 'warn');
+      ReactTestUtils.renderIntoDocument(<div onScroll={function(){}} />);
+      expect(console.warn.callCount).toBe(1);
+      expect(console.warn.mostRecentCall.args[0]).toBe(
+        'This browser doesn\'t support the `onScroll` event'
+      );
+    });
+  });
+
 });
