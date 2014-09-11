@@ -38,8 +38,20 @@ var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
 
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 ReactDefaultInjection.inject();
+
+// Specifying arguments isn't necessary since we just use apply anyway, but it
+// makes it clear for those actually consuming this API.
+function createDescriptor(type, props, children) {
+  var args = Array.prototype.slice.call(arguments, 1);
+  return type.apply(null, args);
+}
+
+if (__DEV__) {
+  var _warnedForDeprecation = false;
+}
 
 var React = {
   Children: {
@@ -54,10 +66,18 @@ var React = {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
-  createDescriptor: function(type, props, children) {
-    var args = Array.prototype.slice.call(arguments, 1);
-    return type.apply(null, args);
+  createDescriptor: function() {
+    if (__DEV__) {
+      warning(
+        _warnedForDeprecation,
+        'React.createDescriptor is deprecated and will be removed in the ' +
+        'next version of React. Use React.createElement instead.'
+      );
+      _warnedForDeprecation = true;
+    }
+    return createDescriptor.apply(this, arguments);
   },
+  createElement: createDescriptor,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   renderComponent: ReactPerf.measure(
