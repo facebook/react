@@ -19,14 +19,14 @@
 
 "use strict";
 
-var EventConstants = require('EventConstants');
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var TouchEventUtils = require('TouchEventUtils');
-var ViewportMetrics = require('ViewportMetrics');
+var EventConstants = require('react/lib/EventConstants');
+var EventPluginUtils = require('react/lib/EventPluginUtils');
+var EventPropagators = require('react/lib/EventPropagators');
+var SyntheticUIEvent = require('react/lib/SyntheticUIEvent');
+var TouchEventUtils = require('./TouchEventUtils');
+var ViewportMetrics = require('react/lib/ViewportMetrics');
 
-var keyOf = require('keyOf');
+var keyOf = require('react/lib/keyOf');
 var topLevelTypes = EventConstants.topLevelTypes;
 
 var isStartish = EventPluginUtils.isStartish;
