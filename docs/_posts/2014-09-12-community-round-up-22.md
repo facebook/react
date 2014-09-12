@@ -51,9 +51,9 @@ var translated = (
 <figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
 
 
-## IntegratedCSS
+## React Style
 
-After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: [IntegratedCSS](https://github.com/SanderSpies/IntegratedCSS). It seems weird at first but this is the direction where React is heading.
+After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: [IntegratedCSS](https://github.com/SanderSpies/react-style). It seems weird at first but this is the direction where React is heading.
 
 ```javascript
 var Button = React.createClass({
