@@ -1,5 +1,5 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013 Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@
 
 "use strict";
 
-var EventConstants = require('EventConstants');
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticEvent = require('SyntheticEvent');
+var EventConstants = require('react/lib/EventConstants');
+var EventPluginUtils = require('react/lib/EventPluginUtils');
+var EventPropagators = require('react/lib/EventPropagators');
+var SyntheticEvent = require('react/lib/SyntheticEvent');
 
-var accumulateInto = require('accumulateInto');
-var keyOf = require('keyOf');
+var accumulate = require('react/lib/accumulate');
+var keyOf = require('react/lib/keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
 var isMoveish = EventPluginUtils.isMoveish;
@@ -212,7 +212,7 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(terminateEvent);
-      extracted = accumulateInto(extracted, [grantEvent, terminateEvent]);
+      extracted = accumulate(extracted, [grantEvent, terminateEvent]);
       responderID = wantsResponderID;
     } else {
       var rejectEvent = SyntheticEvent.getPooled(
@@ -221,10 +221,10 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(rejectEvent);
-      extracted = accumulateInto(extracted, rejectEvent);
+      extracted = accumulate(extracted, rejectEvent);
     }
   } else {
-    extracted = accumulateInto(extracted, grantEvent);
+    extracted = accumulate(extracted, grantEvent);
     responderID = wantsResponderID;
   }
   return extracted;
@@ -288,7 +288,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       if (transfer) {
-        extracted = accumulateInto(extracted, transfer);
+        extracted = accumulate(extracted, transfer);
       }
     }
     // Now that we know the responder is set correctly, we can dispatch
@@ -303,7 +303,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(gesture);
-      extracted = accumulateInto(extracted, gesture);
+      extracted = accumulate(extracted, gesture);
     }
     if (type === eventTypes.responderRelease) {
       responderID = null;
