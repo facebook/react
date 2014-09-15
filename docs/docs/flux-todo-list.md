@@ -54,10 +54,12 @@ We'll use the dispatcher from the [Flux GitHub repository](https://github.com/fa
 
 The dispatcher's source code is written in [ECMAScript 6](https://github.com/lukehoban/es6features), the future version of JavaScript.  To use the future of JS in today's browser's we need to transpile it back to a version of JS that browsers can use.  We perform this build step, transpiling from ES6 into common JavaScript, using npm.
 
-You can get up and running with the dispatcher in a variety of ways, but perhaps the simplest is to use [Michael Jackson](https://twitter.com/mjackson)'s npm module version of the Flux project, called [react-dispatcher](https://www.npmjs.org/package/react-dispatcher):
+> Note: [Michael Jackson](https://twitter.com/mjackson)'s npm module version of the Flux project, called [react-dispatcher](https://www.npmjs.org/package/react-dispatcher) is now deprecated. 
+
+Use Facebook's [flux](https://www.npmjs.org/package/flux) to get disaptcher up and running:
 
 ```
-npm install react-dispatcher
+npm install flux
 ```
 
 Afterward, you can require the dispatcher in your project's modules like so:
