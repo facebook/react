@@ -67,8 +67,12 @@ var translateToKey = {
   40: 'ArrowDown',
   45: 'Insert',
   46: 'Delete',
+  91: 'Meta', // Left Command on Mac
+  93: 'Meta', // Right Command on Mac
   112: 'F1', 113: 'F2', 114: 'F3', 115: 'F4', 116: 'F5', 117: 'F6',
   118: 'F7', 119: 'F8', 120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
+  124: 'F13', 125: 'F14', 126: 'F15', 127: 'F16', 128: 'F17', 129: 'F18',
+  130: 'F19',
   144: 'NumLock',
   145: 'ScrollLock',
   224: 'Meta'
