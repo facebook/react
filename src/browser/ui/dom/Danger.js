@@ -111,12 +111,13 @@ var Danger = {
       );
 
       // IE6/IE7 fix: hasAttribute isn't available
-      // using typeof renderNode[RESULT_INDEX_ATTR] instead
+      // using getAttributeNode instead
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
         if (renderNode.hasAttribute &&
             renderNode.hasAttribute(RESULT_INDEX_ATTR) ||
-            typeof renderNode[RESULT_INDEX_ATTR] !== 'undefined') {
+            renderNode.getAttributeNode &&
+            renderNode.getAttributeNode(RESULT_INDEX_ATTR) !== null) {
 
           resultIndex = +renderNode.getAttribute(RESULT_INDEX_ATTR);
           renderNode.removeAttribute(RESULT_INDEX_ATTR);

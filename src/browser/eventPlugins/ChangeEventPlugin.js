@@ -252,7 +252,7 @@ function handlePropertyChange(nativeEvent) {
     // IE6/IE7 shim
     var timediff = new Date() - activeElementEventTime;
     activeElementEventTime = null;
-    if (timediff < 100) {
+    if (timediff < 1500) {
       manualDispatchChangeEvent(nativeEvent);
     }
   }
