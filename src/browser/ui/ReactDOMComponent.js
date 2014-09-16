@@ -33,7 +33,7 @@ var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
-var merge = require('merge');
+var flattenStyle = require('flattenStyle');
 var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
 
@@ -163,7 +163,7 @@ ReactDOMComponent.Mixin = {
       } else {
         if (propKey === STYLE) {
           if (propValue) {
-            propValue = props.style = merge(props.style);
+            propValue = props.style = flattenStyle(props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
@@ -312,7 +312,7 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
-          nextProp = nextProps.style = merge(nextProp);
+          nextProp = nextProps.style = flattenStyle(nextProp);
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
