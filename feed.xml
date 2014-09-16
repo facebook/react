@@ -7,6 +7,61 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.11.2</title>
+				<description>&lt;p&gt;Today we&amp;#39;re releasing React v0.11.2 to add a few small features.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;re adding support for two more DOM elements, &lt;code&gt;&amp;lt;dialog&amp;gt;&lt;/code&gt; and &lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt;, as well as the associated attributes needed to use these elements: &lt;code&gt;open&lt;/code&gt;, &lt;code&gt;media&lt;/code&gt;, and &lt;code&gt;sizes&lt;/code&gt;. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&amp;#39;re making them available to everybody.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing &lt;code&gt;React.createDescriptor&lt;/code&gt; with &lt;code&gt;React.createElement&lt;/code&gt;. &lt;code&gt;createDescriptor&lt;/code&gt; will continue to work with a warning and will be gone in v0.12. Chances are that this won&amp;#39;t affect anybody.&lt;/p&gt;
+
+&lt;p&gt;And lastly, on the heels of announcing Flow at &lt;a href=&quot;http://atscaleconference.com/&quot;&gt;@Scale&lt;/a&gt; yesterday, we&amp;#39;re adding the ability to strip TypeScript-like type annotations as part of the &lt;code&gt;jsx&lt;/code&gt; transform. To use, simply use the &lt;code&gt;--strip-types&lt;/code&gt; flag on the command line, or set &lt;code&gt;stripTypes&lt;/code&gt; in the &lt;code&gt;options&lt;/code&gt; object when calling the API. We&amp;#39;ll be talking about Flow more in the coming months. But for now, it&amp;#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.&lt;/p&gt;
+
+&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.2.js&quot;&gt;http://fb.me/react-0.11.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.2.min.js&quot;&gt;http://fb.me/react-0.11.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.2.js&quot;&gt;http://fb.me/react-with-addons-0.11.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.2.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.2.js&quot;&gt;http://fb.me/JSXTransformer-0.11.2.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for &lt;code&gt;&amp;lt;dialog&amp;gt;&lt;/code&gt; element and associated &lt;code&gt;open&lt;/code&gt; attribute&lt;/li&gt;
+&lt;li&gt;Added support for &lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt; element and associated &lt;code&gt;media&lt;/code&gt; and &lt;code&gt;sizes&lt;/code&gt; attributes&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;React.createElement&lt;/code&gt; API in preparation for React v0.12
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.createDescriptor&lt;/code&gt; has been deprecated as a result&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt; is now parsed into &lt;code&gt;React.DOM.picture&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Update &lt;code&gt;esprima&lt;/code&gt; and &lt;code&gt;jstransform&lt;/code&gt; for correctness fixes&lt;/li&gt;
+&lt;li&gt;The &lt;code&gt;jsx&lt;/code&gt; executable now exposes a &lt;code&gt;--strip-types&lt;/code&gt; flag which can be used to remove TypeScript-like type annotations
+
+&lt;ul&gt;
+&lt;li&gt;This option is also exposed to &lt;code&gt;require(&amp;#39;react-tools&amp;#39;).transform&lt;/code&gt; as &lt;code&gt;stripTypes&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-09-16T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #22</title>
 				<description>&lt;p&gt;This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!&lt;/p&gt;
 
@@ -692,23 +747,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-06-27T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/06/27/community-roundup-19.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/06/27/community-roundup-19.html</guid>
-			</item>
-		
-			<item>
-				<title>One Year of Open-Source React</title>
-				<description>&lt;p&gt;Today marks the one-year open-source anniversary of React.&lt;/p&gt;
-
-&lt;p&gt;It’s been a crazy ride. 2.3k commits and 1.5k issues and pull requests later, we’re approaching version 1.0 and nearing 7k Github stars, with big names such as Khan Academy, New York Times, and Airbnb (and naturally, Facebook and Instagram) using React in production, and many more developers blogging their success stories with it. The &lt;a href=&quot;http://facebook.github.io/react/blog/2014/03/28/the-road-to-1.0.html&quot;&gt;roadmap&lt;/a&gt; gives a glimpse into the future of the library; exciting stuff lies ahead!&lt;/p&gt;
-
-&lt;p&gt;Every success has its story. React was born out of our frustration at existing solutions for building UIs. When it was first suggested at Facebook, few people thought that functionally re-rendering everything and diffing the results could ever perform well. However, support grew after we built the first implementation and people wrote their first components. When we open-sourced React, the initial reception was &lt;a href=&quot;http://www.reddit.com/r/programming/comments/1fak87/react_facebooks_latest_javascript_client_library/&quot;&gt;similarly skeptical&lt;/a&gt;. It challenges many pre-established conventions and received mostly disapproving first-impressions, intermingled with positive ones that often were votes of confidence in Facebook’s engineering capabilities. On an open, competitive platform such as the web, it&amp;#39;s been hard to convince people to try React. &lt;a href=&quot;http://facebook.github.io/react/docs/jsx-in-depth.html&quot;&gt;JSX&lt;/a&gt;, in particular, filtered out a huge chunk of potential early adopters.&lt;/p&gt;
-
-&lt;p&gt;Fast forward one year, React has strongly &lt;a href=&quot;https://news.ycombinator.com/item?id=7489959&quot;&gt;grown in popularity&lt;/a&gt;. Special acknowledgments go to Khan Academy, the ClojureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&amp;#39;d also like to thank all the &lt;a href=&quot;https://github.com/facebook/react/graphs/contributors&quot;&gt;individual contributors&lt;/a&gt; who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&amp;#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&amp;#39;s possible to achieve when we rethink about current “best practices”.&lt;/p&gt;
-
-&lt;p&gt;Here’s to another year!&lt;/p&gt;
-</description>
-				<pubDate>2014-05-29T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/05/29/one-year-of-open-source-react.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/05/29/one-year-of-open-source-react.html</guid>
 			</item>
 		
 	</channel>
