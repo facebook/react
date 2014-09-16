@@ -23,9 +23,9 @@
               "resolved": "https://registry.npmjs.org/jsonparse/-/jsonparse-0.0.5.tgz"
             },
             "through": {
-              "version": "2.3.4",
-              "from": "through@~2.3.4",
-              "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+              "version": "2.3.6",
+              "from": "through@>=2.2.7 <3",
+              "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
             }
           }
         },
@@ -57,9 +57,9 @@
               }
             },
             "through": {
-              "version": "2.3.4",
+              "version": "2.3.6",
               "from": "through@~2.3.4",
-              "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+              "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
             },
             "combine-source-map": {
               "version": "0.3.0",
@@ -243,9 +243,9 @@
           "resolved": "https://registry.npmjs.org/deps-sort/-/deps-sort-0.1.2.tgz",
           "dependencies": {
             "through": {
-              "version": "2.3.4",
+              "version": "2.3.6",
               "from": "through@~2.3.4",
-              "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+              "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
             },
             "JSONStream": {
               "version": "0.6.4",
@@ -266,7 +266,7 @@
             },
             "minimist": {
               "version": "0.0.10",
-              "from": "minimist@~0.0.1",
+              "from": "minimist@~0.0.7",
               "resolved": "https://registry.npmjs.org/minimist/-/minimist-0.0.10.tgz"
             }
           }
@@ -410,9 +410,9 @@
               "from": "process@~0.6.0"
             },
             "through": {
-              "version": "2.3.4",
+              "version": "2.3.6",
               "from": "through@~2.3.4",
-              "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+              "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
             }
           }
         },
@@ -432,9 +432,9 @@
                   "resolved": "https://registry.npmjs.org/jsonparse/-/jsonparse-0.0.5.tgz"
                 },
                 "through": {
-                  "version": "2.3.4",
+                  "version": "2.3.6",
                   "from": "through@>=2.2.7 <3",
-                  "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+                  "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
                 }
               }
             },
@@ -537,9 +537,9 @@
               "resolved": "https://registry.npmjs.org/stream-combiner/-/stream-combiner-0.1.0.tgz",
               "dependencies": {
                 "through": {
-                  "version": "2.3.4",
+                  "version": "2.3.6",
                   "from": "through@~2.3.4",
-                  "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+                  "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
                 }
               }
             },
@@ -678,7 +678,7 @@
           "dependencies": {
             "readable-stream": {
               "version": "1.1.13",
-              "from": "readable-stream@>=1.1.13-1 <1.2.0-0",
+              "from": "readable-stream@~1.1.9",
               "resolved": "https://registry.npmjs.org/readable-stream/-/readable-stream-1.1.13.tgz",
               "dependencies": {
                 "core-util-is": {
@@ -782,9 +782,9 @@
               }
             },
             "through": {
-              "version": "2.3.4",
+              "version": "2.3.6",
               "from": "through@~2.3.4",
-              "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+              "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
             }
           }
         },
@@ -1014,9 +1014,9 @@
           }
         },
         "through": {
-          "version": "2.3.4",
+          "version": "2.3.6",
           "from": "through@~2.3.4",
-          "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+          "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
         }
       }
     },
@@ -1038,9 +1038,9 @@
           }
         },
         "through": {
-          "version": "2.3.4",
+          "version": "2.3.6",
           "from": "through@~2.3.4",
-          "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+          "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
         },
         "esprima-fb": {
           "version": "3001.1.0-dev-harmony-fb",
@@ -1106,9 +1106,9 @@
           }
         },
         "through": {
-          "version": "2.3.4",
+          "version": "2.3.6",
           "from": "through@~2.3.4",
-          "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+          "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
         }
       }
     },
@@ -2426,7 +2426,7 @@
             },
             "inherits": {
               "version": "1.0.0",
-              "from": "inherits@1",
+              "from": "inherits@~1.0.0",
               "resolved": "https://registry.npmjs.org/inherits/-/inherits-1.0.0.tgz"
             },
             "once": {
@@ -2618,7 +2618,7 @@
         },
         "rimraf": {
           "version": "2.2.8",
-          "from": "rimraf@~2.2.8",
+          "from": "rimraf@~2.2.1",
           "resolved": "https://registry.npmjs.org/rimraf/-/rimraf-2.2.8.tgz"
         },
         "which": {
@@ -2992,9 +2992,9 @@
           }
         },
         "through": {
-          "version": "2.3.4",
+          "version": "2.3.6",
           "from": "through@~2.3.4",
-          "resolved": "https://registry.npmjs.org/through/-/through-2.3.4.tgz"
+          "resolved": "https://registry.npmjs.org/through/-/through-2.3.6.tgz"
         }
       }
     },
@@ -3046,7 +3046,7 @@
               "dependencies": {
                 "bl": {
                   "version": "0.9.3",
-                  "from": "bl@~0.9.0",
+                  "from": "bl@^0.9.0",
                   "resolved": "https://registry.npmjs.org/bl/-/bl-0.9.3.tgz"
                 },
                 "end-of-stream": {
