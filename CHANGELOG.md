@@ -1,3 +1,24 @@
+## 0.11.2 (September 16, 2014)
+
+### React Core
+
+#### New Features
+
+* Added support for `<dialog>` element and associated `open` attribute
+* Added support for `<picture>` element and associated `media` and `sizes` attributes
+* Added `React.createElement` API in preparation for React v0.12
+  * `React.createDescriptor` has been deprecated as a result
+
+### JSX
+
+* `<picture>` is now parsed into `React.DOM.picture`
+
+### React Tools
+
+* Update `esprima` and `jstransform` for correctness fixes
+* The `jsx` executable now exposes a `--strip-types` flag which can be used to remove TypeScript-like type annotations
+  * This option is also exposed to `require('react-tools').transform` as `stripTypes`
+
 ## 0.11.1 (July 24, 2014)
 
 ### React Core
