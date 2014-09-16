@@ -33,15 +33,6 @@ describe('EventPluginHub', function() {
     isEventSupported.mockReturnValueOnce(false);
   });
 
-  it('should warn about the `onScroll` issue on IE8', function() {
-    spyOn(console, 'warn');
-    EventPluginHub.putListener(1, 'onScroll', function(){});
-    expect(console.warn.callCount).toBe(1);
-    expect(console.warn.mostRecentCall.args[0]).toBe(
-      'This browser doesn\'t support the `onScroll` event'
-    );
-  });
-
   it("should prevent non-function listeners", function() {
     expect(function() {
       EventPluginHub.putListener(1, 'onClick', 'not a function');

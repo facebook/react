@@ -158,6 +158,28 @@ describe('DOMPropertyOperations', function() {
       )).toBe('');
     });
 
+    it('should create markup for numeric properties', function() {
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'start',
+        5
+      )).toBe('start="5"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'start',
+        0
+      )).toBe('start="0"');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'size',
+        0
+      )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'size',
+        1
+      )).toBe('size="1"');
+    });
+
   });
 
   describe('setValueForProperty', function() {

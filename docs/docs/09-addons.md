@@ -21,3 +21,5 @@ The add-ons below are in the development (unminified) version of React only:
 - [`Perf`](perf.html), for measuring performance and giving you hint where to optimize.
 
 To get the add-ons, use `react-with-addons.js` (and its minified counterpart) rather than the common `react.js`.
+
+When using the react package from npm, just simply `require('react/addons')` instead of `require('react')` to get React with all of the addons.
