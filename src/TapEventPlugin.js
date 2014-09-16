@@ -32,12 +32,24 @@ var topLevelTypes = EventConstants.topLevelTypes;
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
 
+var isTouch = function(topLevelType) {
+  var touchTypes = [
+    topLevelTypes.topTouchCancel,
+    topLevelTypes.topTouchEnd,
+    topLevelTypes.topTouchStart,
+    topLevelTypes.topTouchMove
+  ];
+  return touchTypes.indexOf(topLevelType) >= 0;
+}
+
 /**
  * Number of pixels that are tolerated in between a `touchStart` and `touchEnd`
  * in order to still be considered a 'tap' event.
  */
 var tapMoveThreshold = 10;
+var ignoreMouseThreshold = 750;
 var startCoords = {x: null, y: null};
+var lastTouchEvent = null;
 
 var Axis = {
   x: {page: 'pageX', client: 'clientX', envScroll: 'currentPageScrollLeft'},
@@ -92,6 +104,8 @@ var TapEventPlugin = {
 
   tapMoveThreshold: tapMoveThreshold,
 
+  ignoreMouseThreshold: ignoreMouseThreshold,
+
   eventTypes: eventTypes,
 
   /**
@@ -107,6 +121,15 @@ var TapEventPlugin = {
       topLevelTarget,
       topLevelTargetID,
       nativeEvent) {
+
+    if (isTouch(topLevelType)) {
+      lastTouchEvent = nativeEvent.timeStamp;
+    } else {
+      if (lastTouchEvent && (nativeEvent.timeStamp - lastTouchEvent) < ignoreMouseThreshold) {
+        return null;
+      }
+    }
+
     if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
       return null;
     }
