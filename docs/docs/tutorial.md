@@ -560,7 +560,7 @@ var CommentBox = React.createClass({
 
 Let's call the callback from the `CommentForm` when the user submits the form:
 
-```javascript{10}
+```javascript{17}
 // tutorial18.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
