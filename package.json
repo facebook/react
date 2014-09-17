@@ -19,7 +19,7 @@
     "300ms"
   ],
   "peerDependencies": {
-    "react": "~0.9"
+    "react": "~0.11"
   },
   "bugs": "https://github.com/facebook/react/issues",
   "licenses": [
