@@ -180,7 +180,7 @@ var CommentList = React.createClass({
 });
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. Data passed from parent to children components is called **props**, short for properties.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. Data passed from parent to children components are called **props**, short for properties.
 
 ### Using props
 
