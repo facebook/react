@@ -90,19 +90,23 @@ var ReactDefaultPerf = {
     );
   },
 
-  printWasted: function(measurements) {
-    measurements = measurements || ReactDefaultPerf._allMeasurements;
+  getMeasurementsSummaryMap: function(measurements){
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
       true
     );
-    console.table(summary.map(function(item) {
+    return summary.map(function(item) {
       return {
         'Owner > component': item.componentName,
         'Wasted time (ms)': item.time,
         'Instances': item.count
       };
-    }));
+    });
+  },
+
+  printWasted: function(measurements) {
+    measurements = measurements || ReactDefaultPerf._allMeasurements;
+    console.table(ReactDefaultPerf.getMeasurementsSummaryMap(measurements));
     console.log(
       'Total time:',
       ReactDefaultPerfAnalysis.getTotalTime(measurements).toFixed(2) + ' ms'
