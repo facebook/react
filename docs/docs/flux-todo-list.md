@@ -57,7 +57,7 @@ The dispatcher's source code is written in [ECMAScript 6](https://github.com/luk
 You can get up and running with the dispatcher in a variety of ways, but perhaps the simplest is to use [Michael Jackson](https://twitter.com/mjackson)'s npm module version of the Flux project, called [react-dispatcher](https://www.npmjs.org/package/react-dispatcher):
 
 ```
-npm install react-dispatcher
+npm install flux
 ```
 
 Afterward, you can require the dispatcher in your project's modules like so:
