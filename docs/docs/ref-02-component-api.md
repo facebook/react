@@ -8,7 +8,7 @@ next: component-specs.html
 
 ## ReactComponent
 
-Component classes created by `React.createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
+Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as `this`. The only way to get a handle to a React Component instance outside of React is by storing the return value of `React.renderComponent`. Inside other Components, you may use [refs](/react/docs/more-about-refs.html) to achieve the same result.
 
 
 ### setState
