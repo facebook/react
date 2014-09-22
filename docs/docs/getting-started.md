@@ -57,6 +57,8 @@ React.renderComponent(
   document.getElementById('example')
 );
 ```
+> ```/** @jsx React.DOM */``` is must, or jsx would not convert.
+
 Then reference it from `helloworld.html`:
 
 ```html{10}
