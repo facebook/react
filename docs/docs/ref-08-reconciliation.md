@@ -122,7 +122,7 @@ In practice, finding a key is not really hard. Most of the time, the element you
 
 It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action, the end-result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
 
-In the current implementation, you can express the fact that a sub-tree has been moved between siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.
+In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.
 
 Because we rely on two heuristics, if the assumptions behind them are not met, performance will suffer.
 
