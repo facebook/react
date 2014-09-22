@@ -27,3 +27,4 @@ prev: complementary-tools.html
 * **[github-issue-viewer](https://github.com/jaredly/github-issues-viewer)**
 * **[hn-react](https://github.com/prabirshrestha/hn-react)** Dead-simple Hacker News client.
 * **[2048-react](https://github.com/IvanVergiliev/2048-react)** A clone of the 2048 game.
+* **[Git-Trash](https://github.com/kureikain/git-trash/)** A way to remove junk/dead/fork repository on Github quickly.
