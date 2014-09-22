@@ -1,6 +1,6 @@
 {
   "name": "react-tap-event-plugin",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Facebook's TapEventPlugin, temporarily available on npm until its made public in their repo",
   "main": "src/injectTapEventPlugin.js",
   "files": ["src/"],
@@ -9,19 +9,20 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/zilverline/react.git"
+    "url": "git://github.com/zilverline/react-tap-event-plugin.git"
   },
   "keywords": [
     "TapEventPlugin",
     "react",
     "touch",
     "delay",
-    "300ms"
+    "300ms",
+    "react-tap-event-plugin"
   ],
   "peerDependencies": {
     "react": "~0.11"
   },
-  "bugs": "https://github.com/zilverline/react/issues",
+  "bugs": "https://github.com/zilverline/react-tap-event-plugin/issues",
   "licenses": [
     {
       "type": "Apache-2.0",
