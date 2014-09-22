@@ -1,14 +1,26 @@
 {
-  "name": "react-tools",
-  "description": "A set of complementary tools to React, including the JSX transformer.",
-  "version": "0.12.0-alpha",
+  "name": "react-tap-event-plugin",
+  "version": "0.1.0",
+  "description": "Facebook's TapEventPlugin, temporarily available on npm until its made public in their repo",
+  "main": "src/injectTapEventPlugin.js",
+  "files": ["src/"],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/appsforartists/react-tap-event-plugin.git"
+  },
   "keywords": [
+    "TapEventPlugin",
     "react",
-    "jsx",
-    "transformer",
-    "view"
+    "touch",
+    "delay",
+    "300ms"
   ],
-  "homepage": "http://facebook.github.io/react",
+  "peerDependencies": {
+    "react": "~0.11"
+  },
   "bugs": "https://github.com/facebook/react/issues",
   "licenses": [
     {
@@ -16,74 +28,5 @@
       "url": "http://www.apache.org/licenses/LICENSE-2.0"
     }
   ],
-  "files": [
-    "main.js",
-    "bin/jsx",
-    "src/",
-    "vendor/fbtransform/"
-  ],
-  "main": "main.js",
-  "bin": {
-    "jsx": "./bin/jsx"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/facebook/react"
-  },
-  "dependencies": {
-    "commoner": "^0.10.0",
-    "esprima-fb": "^4001.3001.0-dev-harmony-fb",
-    "jstransform": "^6.0.1"
-  },
-  "devDependencies": {
-    "benchmark": "~1.0.0",
-    "browserify": "^4.1.10",
-    "coverify": "~1.0.4",
-    "envify": "^2.0.0",
-    "es3ify": "~0.1.2",
-    "es5-shim": "^4.0.0",
-    "grunt": "~0.4.2",
-    "grunt-cli": "~0.1.9",
-    "grunt-compare-size": "~0.4.0",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-compress": "^0.9.1",
-    "grunt-contrib-connect": "~0.6.0",
-    "grunt-contrib-copy": "~0.5.0",
-    "grunt-contrib-jshint": "^0.10.0",
-    "gzip-js": "~0.3.2",
-    "jasmine-tapreporter": "~0.2.2",
-    "jest-cli": "~0.1.5",
-    "lodash": "~2.4.1",
-    "microtime": "^0.6.0",
-    "optimist": "~0.6.0",
-    "phantomjs": "~1.9",
-    "platform": "^1.1.0",
-    "populist": "~0.1.6",
-    "recast": "^0.6.10",
-    "sauce-tunnel": "~1.1.0",
-    "semver": "^2.3.0",
-    "tmp": "~0.0.18",
-    "uglify-js": "~2.4.0",
-    "uglifyify": "^2.4.0",
-    "wd": "~0.2.6"
-  },
-  "engines": {
-    "node": ">=0.10.0"
-  },
-  "preferGlobal": true,
-  "commonerConfig": {
-    "version": 4
-  },
-  "scripts": {
-    "test": "./node_modules/.bin/grunt test",
-    "jest": "jest"
-  },
-  "jest": {
-    "rootDir": "src",
-    "scriptPreprocessor": "../jest/preprocessor.js",
-    "setupEnvScriptFile": "../jest/environment.js",
-    "unmockedModulePathPatterns": [
-      ""
-    ]
-  }
+  "homepage": "http://facebook.github.io/react"
 }
