@@ -115,7 +115,7 @@ function inject() {
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
 
   if (__DEV__) {
-    var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';
+    var url = (ExecutionEnvironment.canUseDOM && location.href) || '';
     if ((/[?&]react_perf\b/).test(url)) {
       var ReactDefaultPerf = require('ReactDefaultPerf');
       ReactDefaultPerf.start();

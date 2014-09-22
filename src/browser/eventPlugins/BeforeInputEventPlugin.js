@@ -37,7 +37,6 @@ var canUseTextInputEvent = (
  * text input events. Rely on keypress instead.
  */
 function isPresto() {
-  var opera = window.opera;
   return (
     typeof opera === 'object' &&
     typeof opera.version === 'function' &&

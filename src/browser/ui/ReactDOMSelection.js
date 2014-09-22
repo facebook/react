@@ -70,7 +70,7 @@ function getIEOffsets(node) {
  * @return {?object}
  */
 function getModernOffsets(node) {
-  var selection = window.getSelection && window.getSelection();
+  var selection = window.getSelection && getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -164,7 +164,7 @@ function setModernOffsets(node, offsets) {
     return;
   }
 
-  var selection = window.getSelection();
+  var selection = getSelection();
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
   var end = typeof offsets.end === 'undefined' ?
