@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/appsforartists/react-tap-event-plugin.git"
+    "url": "git://github.com/zilverline/react.git"
   },
   "keywords": [
     "TapEventPlugin",
@@ -21,7 +21,7 @@
   "peerDependencies": {
     "react": "~0.11"
   },
-  "bugs": "https://github.com/facebook/react/issues",
+  "bugs": "https://github.com/zilverline/react/issues",
   "licenses": [
     {
       "type": "Apache-2.0",
