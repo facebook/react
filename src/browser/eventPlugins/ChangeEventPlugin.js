@@ -57,7 +57,9 @@ var activeElement = null;
 var activeElementID = null;
 var activeElementValue = null;
 var activeElementValueProp = null;
-var activeElementEventTime = null;
+var activeElementChangeEventTime = null;
+var activeElementMouseEventTime = null;
+var activeElementKeyEventTime = null;
 
 /**
  * SECTION: handle `change` event
@@ -187,11 +189,37 @@ function startWatchingForValueChange(target, targetID) {
     Object.defineProperty(activeElement, 'value', newValueProp);
   } else {
     // IE6/IE7 shim
-    activeElement.attachEvent('onmouseup', handleUserInput);
-    activeElement.attachEvent('onkeypress', handleUserInput);
-    activeElement.attachEvent('oncut', handleUserInput);
-    activeElement.attachEvent('onpaste', handleUserInput);
-  }  
+    // possible cases:
+    // 1. keyboard key press (keydown, keypress, CHANGE, keyup)
+    // 2. keyboard backspace (keydown, CHANGE, keyup)
+    // 3. keyboard delete (keydown, CHANGE, keyup)
+    // 4. select text and press key on keyboard (keydown, keypress,
+    //    CHANGE[w/o selected text], CHANGE[with new char], keyup)
+    // 5. keyboard ctrl+x (keydown, cut, CHANGE, keyup)
+    // 6. keyboard ctrl+v (keydown, paste, CHANGE, keyup)
+    // 7. mouse paste (contextmenu, paste, CHANGE)
+    // 8. mouse cut (contextmenu, cut, CHANGE)
+    // 9. mouse delete all (mousedown, mouseup, CHANGE)
+    // 10. keyboard ctrl+z (keydown, CHANGE, select, keyup)
+    // 11. keyboard ctrl+y (keydown, CHANGE, select, keyup)
+    // 12. mouse context menu undo (contextmenu, CHANGE)
+    // 13. mouse context menu redo (contextmenu, CHANGE)
+    // 14. mouse context menu delete (contextmenu, CHANGE)
+    //
+    // for keyboard:
+    //   change -> save timestamp (only if value chage)
+    //   keyup -> fire dispatch and timediff < 500
+    // for mouse:
+    //   contextmenu, paste, cut, mouseup -> save timestamp
+    //   change -> fire dispatch (only if value chaged and timediff < 500)
+    //    activeElement.attachEvent('onkeyup', handleKeyUp);
+    activeElement.attachEvent('onkeyup', handleKeyUp);
+    activeElement.attachEvent('onkeydown', handleKeydown);
+    activeElement.attachEvent('oncut', handleMouseInput);
+    activeElement.attachEvent('onpaste', handleMouseInput);
+    activeElement.attachEvent('oncontextmenu', handleMouseInput);
+    activeElement.attachEvent('onmouseup', handleMouseInput);
+  } 
   activeElement.attachEvent('onpropertychange', handlePropertyChange);
 }
 
@@ -212,10 +240,15 @@ function stopWatchingForValueChange() {
 
   // IE6/IE7 shim
   if (typeof activeElement['constructor'] === 'undefined') {
-    activeElement.detachEvent('onmouseup', handleUserInput);
-    activeElement.detachEvent('onkeypress', handleUserInput);
-    activeElement.detachEvent('oncut', handleUserInput);
-    activeElement.detachEvent('onpaste', handleUserInput);
+    activeElement.detachEvent('onkeyup', handleKeyUp);
+    activeElement.detachEvent('onkeydown', handleKeydown);
+    activeElement.detachEvent('oncut', handleMouseInput);
+    activeElement.detachEvent('onpaste', handleMouseInput);
+    activeElement.detachEvent('oncontextmenu', handleMouseInput);
+    activeElement.detachEvent('onmouseup', handleMouseInput);
+    activeElementChangeEventTime = null;
+    activeElementMouseEventTime = null;
+    activeElementKeyEventTime = null;
   }
 
   activeElement = null;
@@ -225,11 +258,23 @@ function stopWatchingForValueChange() {
 }
 
 /**
- * IE6/IE7 shim: save datetime of user input to distinguish value change made
- * from JS and value change made by user input by time diff
+ * IE6/IE7 shim: save keydown event time to distinguish from cut&paste generated
+ * by mouse
  */
-function handleUserInput(nativeEvent) {
-  activeElementEventTime = new Date();
+function handleKeydown(nativeEvent) {
+  activeElementKeyEventTime = new Date();
+}
+
+/**
+ * IE6/IE7 shim: save timestamp of mouse generated cut&paste events
+ */
+function handleMouseInput(nativeEvent) {
+  activeElementMouseEventTime = null;
+  if (!activeElementKeyEventTime ||
+    (new Date() - activeElementKeyEventTime) > 500) {
+    activeElementMouseEventTime = new Date();
+  }
+  activeElementKeyEventTime = null;
 }
 
 /**
@@ -248,13 +293,31 @@ function handlePropertyChange(nativeEvent) {
 
   if (typeof activeElement['constructor'] !== 'undefined') {
     manualDispatchChangeEvent(nativeEvent);
-  } else if (activeElementEventTime) {
+  } else {
     // IE6/IE7 shim
-    var timediff = new Date() - activeElementEventTime;
-    activeElementEventTime = null;
-    if (timediff < 1500) {
-      manualDispatchChangeEvent(nativeEvent);
+    if (activeElementMouseEventTime) {
+      // for mouse event dispatch
+      var timediff = new Date() - activeElementMouseEventTime;
+      activeElementMouseEventTime = null;
+      if (timediff < 500) {
+        manualDispatchChangeEvent(nativeEvent);
+        return;
+      }
     }
+    // for keyboard events save timestamp
+    activeElementChangeEventTime = new Date();
+  }
+}
+
+/**
+ * IE6/IE7 shim: dispatch user event by keyup
+ */
+function handleKeyUp(nativeEvent) {
+  if (!activeElementChangeEventTime) return;
+  var timediff = new Date() - activeElementChangeEventTime;
+  activeElementChangeEventTime = null;
+  if (timediff < 500) {
+    manualDispatchChangeEvent(nativeEvent);
   }
 }
 
