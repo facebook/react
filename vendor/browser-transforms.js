@@ -312,6 +312,10 @@ function runScripts() {
     }
   }
 
+  if (jsxScripts.length < 1) {
+    return;
+  }
+
   console.warn(
     'You are using the in-browser JSX transformer. Be sure to precompile ' +
     'your JSX for production - ' +
