@@ -67,6 +67,7 @@ React is all about modular, composable components. For our comment box example, 
 Let's build the `CommentBox` component, which is just a simple `<div>`:
 
 ```javascript
+/** @jsx React.DOM */
 // tutorial1.js
 var CommentBox = React.createClass({
   render: function() {
@@ -121,6 +122,7 @@ You do not have to return basic HTML. You can return a tree of components that y
 Let's build skeletons for `CommentList` and `CommentForm` which will, again, be simple `<div>`s:
 
 ```javascript
+/** @jsx React.DOM */
 // tutorial2.js
 var CommentList = React.createClass({
   render: function() {
@@ -146,6 +148,7 @@ var CommentForm = React.createClass({
 Next, update the `CommentBox` component to use its new friends:
 
 ```javascript{6-8}
+/** @jsx React.DOM */
 // tutorial3.js
 var CommentBox = React.createClass({
   render: function() {
@@ -167,6 +170,7 @@ Notice how we're mixing HTML tags and components we've built. HTML components ar
 Let's create our third component, `Comment`. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let's add some comments to the `CommentList`:
 
 ```javascript{6-7}
+/** @jsx React.DOM */
 // tutorial4.js
 var CommentList = React.createClass({
   render: function() {
@@ -187,6 +191,7 @@ Note that we have passed some data from the parent `CommentList` component to th
 Let's create the Comment component. Using **props** we will be able to read the data passed to it from the `CommentList`, and render some markup:
 
 ```javascript
+/** @jsx React.DOM */
 // tutorial5.js
 var Comment = React.createClass({
   render: function() {
@@ -224,6 +229,7 @@ First, add the third-party **Showdown** library to your application. This is a J
 Next, let's convert the comment text to Markdown and output it:
 
 ```javascript{2,10}
+/** @jsx React.DOM */
 // tutorial6.js
 var converter = new Showdown.converter();
 var Comment = React.createClass({
@@ -247,6 +253,7 @@ But there's a problem! Our rendered comments look like this in the browser: "`<p
 That's React protecting you from an XSS attack. There's a way to get around it but the framework warns you not to use it:
 
 ```javascript{5,11}
+/** @jsx React.DOM */
 // tutorial7.js
 var converter = new Showdown.converter();
 var Comment = React.createClass({
@@ -273,6 +280,7 @@ This is a special API that intentionally makes it difficult to insert raw HTML, 
 So far we've been inserting the comments directly in the source code. Instead, let's render a blob of JSON data into the comment list. Eventually this will come from the server, but for now, write it in your source:
 
 ```javascript
+/** @jsx React.DOM */
 // tutorial8.js
 var data = [
   {author: "Pete Hunt", text: "This is one comment"},
@@ -283,6 +291,7 @@ var data = [
 We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `renderComponent()` call to pass this data into the `CommentList` via props:
 
 ```javascript{7,15}
+/** @jsx React.DOM */
 // tutorial9.js
 var CommentBox = React.createClass({
   render: function() {
@@ -305,6 +314,7 @@ React.renderComponent(
 Now that the data is available in the `CommentList`, let's render the comments dynamically:
 
 ```javascript{4-10,13}
+/** @jsx React.DOM */
 // tutorial10.js
 var CommentList = React.createClass({
   render: function() {
@@ -331,6 +341,7 @@ That's it!
 Let's replace the hard-coded data with some dynamic data from the server. We will remove the data prop and replace it with a URL to fetch:
 
 ```javascript{3}
+/** @jsx React.DOM */
 // tutorial11.js
 React.renderComponent(
   <CommentBox url="comments.json" />,
@@ -349,6 +360,7 @@ So far, each component has rendered itself once based on its props. `props` are 
 When the server fetches data, we will be changing the comment data we have. Let's add an array of comment data to the `CommentBox` component as its state:
 
 ```javascript{3-5,10}
+/** @jsx React.DOM */
 // tutorial12.js
 var CommentBox = React.createClass({
   getInitialState: function() {
@@ -372,6 +384,7 @@ var CommentBox = React.createClass({
 When the component is first created, we want to GET some JSON from the server and update the state to reflect the latest data. In a real application this would be a dynamic endpoint, but for this example, we will use a static JSON file to keep things simple:
 
 ```javascript
+/** @jsx React.DOM */
 // tutorial13.json
 [
   {"author": "Pete Hunt", "text": "This is one comment"},
@@ -384,6 +397,7 @@ We'll use jQuery to help make an asynchronous request to the server.
 Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
 
 ```javascript{6-17}
+/** @jsx React.DOM */
 // tutorial13.js
 var CommentBox = React.createClass({
   getInitialState: function() {
@@ -416,6 +430,7 @@ var CommentBox = React.createClass({
 Here, `componentDidMount` is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
 ```javascript{3,19-20,34}
+/** @jsx React.DOM */
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -462,6 +477,7 @@ All we have done here is move the AJAX call to a separate method and call it whe
 Now it's time to build the form. Our `CommentForm` component should ask the user for their name and comment text and send a request to the server to save the comment.
 
 ```javascript{5-9}
+/** @jsx React.DOM */
 // tutorial15.js
 var CommentForm = React.createClass({
   render: function() {
@@ -479,6 +495,7 @@ var CommentForm = React.createClass({
 Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
 ```javascript{3-14,17-19}
+/** @jsx React.DOM */
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
@@ -522,6 +539,7 @@ When a user submits a comment, we will need to refresh the list of comments to i
 We need to pass data from the child component back up to its parent. We do this in our parent's `render` method by passing a new callback (`handleCommentSubmit`) into the child, binding it to the child's `onCommentSubmit` event. Whenever the event is triggered, the callback will be invoked:
 
 ```javascript{15-17,30}
+/** @jsx React.DOM */
 // tutorial17.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -561,6 +579,7 @@ var CommentBox = React.createClass({
 Let's call the callback from the `CommentForm` when the user submits the form:
 
 ```javascript{10}
+/** @jsx React.DOM */
 // tutorial18.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
@@ -590,6 +609,7 @@ var CommentForm = React.createClass({
 Now that the callbacks are in place, all we have to do is submit to the server and refresh the list:
 
 ```javascript{16-27}
+/** @jsx React.DOM */
 // tutorial19.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -642,6 +662,7 @@ var CommentBox = React.createClass({
 Our application is now feature complete but it feels slow to have to wait for the request to complete before your comment appears in the list. We can optimistically add this comment to the list to make the app feel faster.
 
 ```javascript{16-18}
+/** @jsx React.DOM */
 // tutorial20.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
