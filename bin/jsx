@@ -1,28 +1,194 @@
 #!/usr/bin/env node
 // -*- mode: js -*-
-"use strict";
 
+var chokidar = require('chokidar');
+var fs = require('fs');
+var glob = require('glob');
+var mkdirp = require('mkdirp').sync;
+var optimist = require('optimist');
+var path = require('path');
 var transform = require('../main').transform;
+var VERSION = require('../package.json').version;
 
-require('commoner').version(
-  require('../package.json').version
-).resolve(function(id) {
-  return this.readModuleP(id);
-}).option(
-  '--harmony',
-  'Turns on JS transformations such as ES6 Classes etc.'
-).option(
-  '--strip-types',
-  'Strips out type annotations.'
-).option(
-  '--source-map-inline',
-  'Embed inline sourcemap in transformed source'
-).process(function(id, source) {
-  // This is where JSX, ES6, etc. desugaring happens.
-  var options = {
-    harmony: this.options.harmony,
-    sourceMap: this.options.sourceMapInline,
-    stripTypes: this.options.stripTypes
-  };
-  return transform(source, options);
-});
+function handleChange(exitOnError, args, changedPath) {
+  var startTime = Date.now();
+  var src = path.resolve(args.argv._[0]);
+  var dest = path.resolve(args.argv._[1]);
+
+  var absoluteChangedPath = path.resolve(changedPath);
+  var newExt = 'js';
+  if (args.argv.extension[0] === '.') {
+    newExt = '.js';
+  }
+  var changedDest = absoluteChangedPath.replace(src, dest).replace(args.argv.extension, newExt);
+  fs.readFile(absoluteChangedPath, {encoding: 'utf8'}, function(err, changedSrc) {
+    if (err) {
+      console.error(err);
+      if (exitOnError) {
+        process.exit(exitOnError);
+      }
+      return;
+    }
+
+    try {
+      var transformedSrc = transform(changedSrc);
+    } catch (e) {
+      console.error('[' + new Date() + '] *** ERROR TRANSFORMING ' + JSON.stringify(absoluteChangedPath) + ':');
+      console.error('  ' + e.toString());
+      if (exitOnError) {
+        process.exit(exitOnError);
+      }
+      return;
+    }
+
+    mkdirp(path.dirname(changedDest));
+    fs.writeFile(changedDest, transformedSrc, {encoding: 'utf8'}, function(err) {
+      if (err) {
+        console.error(err);
+        if (exitOnError) {
+          process.exit(exitOnError);
+        }
+      }
+
+      if (args.argv.s) {
+        return;
+      }
+
+      var duration = Date.now() - startTime;
+      console.log(
+        '[' + new Date() + '] ' + JSON.stringify(absoluteChangedPath) + ' -> ' + JSON.stringify(changedDest) + ' (' + duration.toFixed(0) + ' ms)'
+      );
+    });
+  });
+}
+
+function main() {
+  var args = optimist
+    .usage(
+      'jsxc ' + VERSION + ': Convert files containing JSX syntax to regular JavaScript.\n' +
+      'Usage:\n' +
+      '  $0 [src file] [dest file] (convert a single file)\n' +
+      '  $0 [src file] (convert a single file and print to stdout)\n' +
+      '  $0 - (convert stdin and print to stdout)\n' +
+      '  $0 [src dir] [dest dir] (convert all files in src dir and write to dest dir)\n' +
+      '  $0 --extension .jsx [src dir] [src dir] (convert all .jsx files in src dir to .js)' +
+      '  $0 --watch [src dir] [dest dir] (watch src dir and place converted files in dest dir)\n' +
+      '  $0 --extension .jsx --watch [src dir] [src dir] (watch all .jsx files in src dir and convert to .js)'
+    )
+    .alias('w', 'watch')
+    .boolean('w')
+    .describe('w', 'Watch a directory for changes')
+    .alias('e', 'extension')
+    .string('e')
+    .default('e', '.js')
+    .describe('e', 'Extension of files containing JSX syntax')
+    .alias('s', 'silent')
+    .boolean('s')
+    .describe('s', 'Don\'t display non-error logging')
+    .default('s', false)
+    .boolean('a')
+    .alias('a', 'harmony')
+    .describe('a', 'Enable ES6 features')
+    .alias('h', 'help')
+    .boolean('h')
+    .describe('h', 'Show this help message');
+
+  if (args.argv.h || args.argv._.length === 0 || args.argv._.length > 2) {
+    console.error(args.help());
+    process.exit(1);
+  }
+
+  if (args.argv._.length === 1) {
+    if (args.argv._[0] === '-') {
+      // read from stdin
+      var buf = '';
+      process.stdin.resume();
+      process.stdin.setEncoding('utf8');
+      process.stdin.on('data', function(chunk) {
+        buf += chunk;
+      });
+      process.stdin.on('end', function() {
+        process.stdout.write(transform(buf, {harmony: args.argv.a}));
+        process.exit(0);
+      });
+    } else {
+      process.stdout.write(
+        transform(
+          fs.readFileSync(args.argv._[0], {encoding: 'utf8'}),
+          {harmony: args.argv.a}
+        )
+      );
+      process.exit(0);
+    }
+  } else if (args.argv.watch) {
+    if (!args.argv._.length === 2) {
+      console.error(args.help());
+      process.exit(1);
+    }
+    if (!fs.existsSync(args.argv._[0]) ||
+        !fs.lstatSync(args.argv._[0]).isDirectory()) {
+      console.error('ERROR: ' + JSON.stringify(args.argv._[0]) + ' must be an existing directory');
+      process.exit(1);
+    }
+
+    var watcher = chokidar.watch(args.argv._[0], {
+      ignored: function(path) {
+        try {
+          if (fs.lstatSync(path).isDirectory()) {
+            return false;
+          }
+        } catch (e) {
+          // ignore files you can't stat
+        }
+        return path.slice(path.length - args.argv.extension.length) !== args.argv.extension;
+      },
+      persistent: args.argv.w
+    });
+
+    watcher.on('add', handleChange.bind(null, false, args));
+    watcher.on('change', handleChange.bind(null, false, args));
+    watcher.on('error', function(err) {
+      console.error(err);
+    });
+  } else {
+    if (!fs.existsSync(args.argv._[0])) {
+      console.error('ERROR: ' + JSON.stringify(args.argv._[0]) + ' must exist');
+      process.exit(1);
+    }
+
+    if (!fs.existsSync(args.argv._[1])) {
+      console.error('ERROR: ' + JSON.stringify(args.argv._[1]) + ' must exist');
+      process.exit(1);
+    }
+
+    var srcDir = fs.lstatSync(args.argv._[0]).isDirectory();
+    var destDir = fs.lstatSync(args.argv._[1]).isDirectory();
+    if (srcDir !== destDir) {
+      console.error(args.help());
+      process.exit(1);
+    }
+
+    if (!srcDir) {
+      var transformedSrc = transform(
+        fs.readFileSync(args.argv._[0], {encoding: 'utf8'}),
+        {harmony: args.argv.a}
+      );
+      fs.writeFileSync(args.argv._[1], transformedSrc, {encoding: 'utf8'});
+      process.exit(0);
+    } else {
+      var newExt = 'js';
+      if (args.argv.extension[0] === '.') {
+        newExt = '.js';
+      }
+      glob(path.join(args.argv._[0], '**', '*' + args.argv.extension), {}, function(err, files) {
+        if (err) {
+          console.error(err);
+          process.exit(1);
+        }
+        files.forEach(handleChange.bind(null, 2, args));
+      });
+    }
+  }
+}
+
+main();

@@ -26,8 +26,11 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "commoner": "^0.10.0",
+    "chokidar": "~0.8.0",
     "esprima-fb": "^6001.1.0-dev-harmony-fb",
+    "glob": "~3.2.7",
+    "mkdirp": "~0.3.5",
+    "optimist": "~0.6.0",
     "jstransform": "^6.3.2"
   },
   "devDependencies": {
