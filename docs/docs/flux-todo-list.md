@@ -349,6 +349,7 @@ At a high level, the React component hierarchy of the app looks like this:
         <TodoItem />
       </ul>
     </MainSection>
+  </Header>
 
 </TodoApp>
 ```

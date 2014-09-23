@@ -27,6 +27,7 @@ This package installs a `jsx` executable that can be used to transform JSX into 
       --output-charset <utf8 | win1252 | ...>  Charset of output (default: utf8)
       --harmony                                Turns on JS transformations such as ES6 Classes etc.
       --source-map-inline                      Embed inline sourcemap in transformed source
+      --strip-types                            Strips out type annotations
 
 ## API
 
@@ -37,6 +38,7 @@ option | values | default
 `sourceMap` | `true`: append inline source map at the end of the transformed source | `false`
 `harmony` | `true`: enable ES6 features | `false`
 `filename` | the output filename for the source map | `"source.js"`
+`stripTypes` | `true`: strips out type annotations | `false`
 
 ```js
 var reactTools = require('react-tools');
