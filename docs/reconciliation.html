@@ -509,7 +509,7 @@ renderB: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span
 <h2><a class="anchor" name="trade-offs"></a>Trade-offs <a class="hash-link" href="#trade-offs">#</a></h2>
 <p>It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action, the end-result would be the same. We are regularly refining the heuristics in order to make common use cases faster.</p>
 
-<p>In the current implementation, you can express the fact that a sub-tree has been moved between siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.</p>
+<p>In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.</p>
 
 <p>Because we rely on two heuristics, if the assumptions behind them are not met, performance will suffer.</p>
 

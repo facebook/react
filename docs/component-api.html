@@ -438,7 +438,7 @@
     <div class="subHeader"></div>
 
     <h2><a class="anchor" name="reactcomponent"></a>ReactComponent <a class="hash-link" href="#reactcomponent">#</a></h2>
-<p>Component classes created by <code>React.createClass()</code> return instances of <code>ReactComponent</code> when called. Most of the time when you&#39;re using React you&#39;re either creating or consuming these component objects.</p>
+<p>Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as <code>this</code>. The only way to get a handle to a React Component instance outside of React is by storing the return value of <code>React.renderComponent</code>. Inside other Components, you may use <a href="/react/docs/more-about-refs.html">refs</a> to achieve the same result.</p>
 <h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once <code>setState</code> is completed and the component is re-rendered.</p>

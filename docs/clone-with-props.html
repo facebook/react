@@ -447,7 +447,8 @@
 <p><code>cloneWithProps</code> does not transfer the <code>key</code> prop to the cloned component. If you wish to preserve the key, add it to the <code>extraProps</code> object:
 <code>js
 var clonedComponent = cloneWithProps(originalComponent, { key : originalComponent.props.key });
-</code></p>
+</code>
+<code>ref</code> is another prop that is not preserved either.</p>
 </blockquote>
 
 
