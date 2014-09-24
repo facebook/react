@@ -1,6 +1,6 @@
 # Welcome to React!
 
-You've just downloaded the React starter kit...Congratulations!
+You've just downloaded the React starter kit... Congratulations!
 
 To begin, check out the `examples/` directory for a bunch of examples, or check out [Getting Started](http://facebook.github.io/react/docs/getting-started.html) for more information.
 
