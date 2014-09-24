@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Blog | React</title>
+  <title>Testing Flux Applications | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Blog | React">
+  <meta property="og:title" content="Testing Flux Applications | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/index.html">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/09/24/testing-flux-applications.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -63,7 +63,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2014/09/24/testing-flux-applications.html">Testing Flux Applications</a></li>
+        <li><a href="/react/blog/2014/09/24/testing-flux-applications.html" class="active">Testing Flux Applications</a></li>
       
         <li><a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a></li>
       
@@ -89,13 +89,13 @@
 </div>
 
   <div class="inner-content">
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/09/24/testing-flux-applications.html">Testing Flux Applications</a></h1>
-        <p class="meta">September 24, 2014 by Bill Fisher</p>
-        <hr />
-        <div class="post">
-         <p><a href="http://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="http://facebook.github.io/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="http://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="http://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="http://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
+    <h1>Testing Flux Applications</h1>
+    <p class="meta">September 24, 2014 by Bill Fisher</p>
+
+    <hr>
+
+    <div class="post">
+      <p><a href="http://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="http://facebook.github.io/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="http://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="http://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="http://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
 <h2><a class="anchor" name="testing-with-jest"></a>Testing with Jest <a class="hash-link" href="#testing-with-jest">#</a></h2>
 <p>For a unit test to operate on a truly isolated <em>unit</em> of the application, we need to mock every module except the one we are testing. Jest makes the mocking of other parts of a Flux application trivial. To illustrate testing with Jest, we&#39;ll return to our <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example TodoMVC application</a>.</p>
 
@@ -359,267 +359,9 @@
 <li><a href="http://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
 </ul>
 
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a></h1>
-        <p class="meta">September 16, 2014 by Paul O’Shannessy</p>
-        <hr />
-        <div class="post">
-         <p>Today we&#39;re releasing React v0.11.2 to add a few small features.</p>
-
-<p>We&#39;re adding support for two more DOM elements, <code>&lt;dialog&gt;</code> and <code>&lt;picture&gt;</code>, as well as the associated attributes needed to use these elements: <code>open</code>, <code>media</code>, and <code>sizes</code>. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&#39;re making them available to everybody.</p>
-
-<p>We&#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing <code>React.createDescriptor</code> with <code>React.createElement</code>. <code>createDescriptor</code> will continue to work with a warning and will be gone in v0.12. Chances are that this won&#39;t affect anybody.</p>
-
-<p>And lastly, on the heels of announcing Flow at <a href="http://atscaleconference.com/">@Scale</a> yesterday, we&#39;re adding the ability to strip TypeScript-like type annotations as part of the <code>jsx</code> transform. To use, simply use the <code>--strip-types</code> flag on the command line, or set <code>stripTypes</code> in the <code>options</code> object when calling the API. We&#39;ll be talking about Flow more in the coming months. But for now, it&#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-0.11.2.js">http://fb.me/react-0.11.2.js</a><br>
-Minified build for production: <a href="http://fb.me/react-0.11.2.min.js">http://fb.me/react-0.11.2.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-with-addons-0.11.2.js">http://fb.me/react-with-addons-0.11.2.js</a><br>
-Minified build for production: <a href="http://fb.me/react-with-addons-0.11.2.min.js">http://fb.me/react-with-addons-0.11.2.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="http://fb.me/JSXTransformer-0.11.2.js">http://fb.me/JSXTransformer-0.11.2.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.11.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
-<ul>
-<li>Added support for <code>&lt;dialog&gt;</code> element and associated <code>open</code> attribute</li>
-<li>Added support for <code>&lt;picture&gt;</code> element and associated <code>media</code> and <code>sizes</code> attributes</li>
-<li>Added <code>React.createElement</code> API in preparation for React v0.12
-
-<ul>
-<li><code>React.createDescriptor</code> has been deprecated as a result</li>
-</ul></li>
-</ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
-<ul>
-<li><code>&lt;picture&gt;</code> is now parsed into <code>React.DOM.picture</code></li>
-</ul>
-<h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3>
-<ul>
-<li>Update <code>esprima</code> and <code>jstransform</code> for correctness fixes</li>
-<li>The <code>jsx</code> executable now exposes a <code>--strip-types</code> flag which can be used to remove TypeScript-like type annotations
-
-<ul>
-<li>This option is also exposed to <code>require(&#39;react-tools&#39;).transform</code> as <code>stripTypes</code></li>
-</ul></li>
-</ul>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/09/12/community-round-up-22.html">Community Round-up #22</a></h1>
-        <p class="meta">September 12, 2014 by Lou Husson</p>
-        <hr />
-        <div class="post">
-         <p>This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!</p>
-
-<table><tr><td>
-<blockquote width="300" class="twitter-tweet" data-cards="hidden" lang="en"><p>Our friends at <a href="https://twitter.com/Yahoo">@yahoo</a> talk about migrating Yahoo! Mail from YUI to ReactJS at the next <a href="https://twitter.com/hashtag/ReactJS?src=hash">#ReactJS</a> meetup! <a href="http://t.co/Cu2AaE0sVE">http://t.co/Cu2AaE0sVE</a></p>&mdash; Facebook Open Source (@fbOpenSource) <a href="https://twitter.com/fbOpenSource/status/510258065900572672">September 12, 2014</a></blockquote>
-</td><td valign="top">
-<blockquote width="300" class="twitter-tweet" lang="en"><p>I guess <a href="https://twitter.com/reactjs">@reactjs</a> is getting into Firefox :-) Thanks <a href="https://twitter.com/n1k0">@n1k0</a> ! <a href="https://t.co/kipfUS0hu4">https://t.co/kipfUS0hu4</a></p>&mdash; David Bruant (@DavidBruant) <a href="https://twitter.com/DavidBruant/status/484956929933213696">July 4, 2014</a></blockquote>
-</td></tr><tr><td>
-<blockquote width="300" class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/AirbnbNerds">@AirbnbNerds</a> just launched our first user-facing React.js feature to production! We love it so far. <a href="https://t.co/KtyudemcIW">https://t.co/KtyudemcIW</a> /<a href="https://twitter.com/floydophone">@floydophone</a></p>&mdash; spikebrehm (@spikebrehm) <a href="https://twitter.com/spikebrehm/statuses/491645223643013121">July 22, 2014</a></blockquote>
-</td><td>
-<blockquote width="300" class="twitter-tweet" lang="en"><p>We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs">@reactjs</a> code last week, our checkout process.&#10;&#10;<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/statuses/493852312604254208">July 28, 2014</a></blockquote>
-</td></tr></table>
-<h2><a class="anchor" name="reacts-architecture"></a>React&#39;s Architecture <a class="hash-link" href="#reacts-architecture">#</a></h2>
-<p><a href="http://blog.vjeux.com/">Vjeux</a>, from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the <a href="https://speakerdeck.com/vjeux/oscon-react-architecture">annotated slides</a> or <a href="http://thenewstack.io/author/chrisdawson/">Chris Dawson</a>&#39;s notes titled <a href="http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/">JavaScript’s History and How it Led To React</a>.</p>
-
-<iframe width="650" height="315" src="//www.youtube.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="v8-optimizations"></a>v8 optimizations <a class="hash-link" href="#v8-optimizations">#</a></h2>
-<p>Jakob Kummerow landed <a href="http://www.chromium.org/developers/speed-hall-of-fame#TOC-2014-06-18">two optimizations to V8</a> specifically targeted at optimizing React. That&#39;s really exciting to see browser vendors helping out on performance!</p>
-<h2><a class="anchor" name="reusable-components-by-khan-academy"></a>Reusable Components by Khan Academy <a class="hash-link" href="#reusable-components-by-khan-academy">#</a></h2>
-<p><a href="https://www.khanacademy.org/">Khan Academy</a> released <a href="http://khan.github.io/react-components/">many high quality standalone components</a> they are using. This is a good opportunity to see what React code used in production look like.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">TeX</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-components/js/tex.jsx&#39;</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">TeX</span><span class="o">&gt;</span><span class="err">\</span><span class="nx">nabla</span> <span class="err">\</span><span class="nx">cdot</span> <span class="nx">E</span> <span class="o">=</span> <span class="mi">4</span> <span class="err">\</span><span class="nx">pi</span> <span class="err">\</span><span class="nx">rho</span><span class="o">&lt;</span><span class="err">/TeX&gt;, domNode);</span>
-
-<span class="kd">var</span> <span class="nx">translated</span> <span class="o">=</span> <span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">$_</span> <span class="nx">first</span><span class="o">=</span><span class="s2">&quot;Motoko&quot;</span> <span class="nx">last</span><span class="o">=</span><span class="s2">&quot;Kusanagi&quot;</span><span class="o">&gt;</span>
-    <span class="nx">Hello</span><span class="p">,</span> <span class="o">%</span><span class="p">(</span><span class="nx">first</span><span class="p">)</span><span class="nx">s</span> <span class="o">%</span><span class="p">(</span><span class="nx">last</span><span class="p">)</span><span class="nx">s</span><span class="o">!</span>
-  <span class="o">&lt;</span><span class="err">/$_&gt;</span>
-<span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="react--browserify--gulp"></a>React + Browserify + Gulp <a class="hash-link" href="#react--browserify--gulp">#</a></h2>
-<p><a href="http://truongtx.me/">Trường</a> wrote a little guide to help your <a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/">getting started using React, Browserify and Gulp</a>.</p>
-
-<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
-<h2><a class="anchor" name="react-style"></a>React Style <a class="hash-link" href="#react-style">#</a></h2>
-<p>After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: <a href="https://github.com/SanderSpies/react-style">IntegratedCSS</a>. It seems weird at first but this is the direction where React is heading.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">normalStyle</span><span class="o">:</span> <span class="nx">ReactStyle</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span> <span class="nx">backgroundColor</span><span class="o">:</span> <span class="nx">vars</span><span class="p">.</span><span class="nx">orange</span> <span class="p">};</span>
-  <span class="p">}),</span>
-  <span class="nx">activeStyle</span><span class="o">:</span> <span class="nx">ReactStyle</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">active</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="p">{</span> <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="nx">padding</span><span class="o">:</span> <span class="s1">&#39;10px&#39;</span> <span class="p">};</span>
-    <span class="p">}</span>
-  <span class="p">}),</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">styles</span><span class="o">=</span><span class="p">{[</span><span class="k">this</span><span class="p">.</span><span class="nx">normalStyle</span><span class="p">(),</span> <span class="k">this</span><span class="p">.</span><span class="nx">activeStyle</span><span class="p">()]}</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">m</span> <span class="nx">styled</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="virtual-dom-in-elm"></a>Virtual DOM in Elm <a class="hash-link" href="#virtual-dom-in-elm">#</a></h2>
-<p><a href="http://evan.czaplicki.us">Evan Czaplicki</a> explains how Elm implements the idea of a Virtual DOM and a diffing algorithm. This is great to see React ideas spread to other languages.</p>
-
-<blockquote>
-<p>Performance is a good hook, but the real benefit is that this approach leads to code that is easier to understand and maintain. In short, it becomes very simple to create reusable HTML widgets and abstract out common patterns. This is why people with larger code bases should be interested in virtual DOM approaches.</p>
-
-<p><a href="http://elm-lang.org/blog/Blazing-Fast-Html.elm">Read the full article</a></p>
-</blockquote>
-<h2><a class="anchor" name="components-tutorial"></a>Components Tutorial <a class="hash-link" href="#components-tutorial">#</a></h2>
-<p>If you are getting started with React, <a href="http://www.joemaddalone.com/">Joe Maddalone</a> made a good tutorial on how to build your first component.</p>
-
-<iframe width="650" height="200" src="//www.youtube.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="saving-time-amp-staying-sane"></a>Saving time &amp; staying sane? <a class="hash-link" href="#saving-time-amp-staying-sane">#</a></h2>
-<p>When <a href="http://http://kentwilliam.com/">Kent William Innholt</a> who works at <a href="http://mpath.com/">M&gt;Path</a> summed up his experience using React in an <a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">article</a>.</p>
-
-<blockquote>
-<p>We&#39;re building an ambitious new web app, where the UI complexity represents most of the app&#39;s complexity overall. It includes a tremendous amount of UI widgets as well as a lot rules on what-to-show-when. This is exactly the sort of situation React.js was built to simplify.</p>
-
-<ul>
-<li><strong>Big win</strong>: Tighter coupling of markup and behavior</li>
-<li><strong>Jury&#39;s still out</strong>: CSS lives outside React.js</li>
-<li><strong>Big win</strong>: Cascading updates and functional thinking</li>
-<li><strong>Jury&#39;s still out</strong>: Verbose propagation</li>
-</ul>
-
-<p><a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">Read the article...</a></p>
-</blockquote>
-<h2><a class="anchor" name="weather"></a>Weather <a class="hash-link" href="#weather">#</a></h2>
-<p>To finish this round-up, Andrew Gleave made a page that displays the <a href="https://github.com/andrewgleave/react-weather">Weather</a>. It&#39;s great to see that React is also used for small prototypes.</p>
-
-<figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/09/03/introducing-the-jsx-specification.html">Introducing the JSX Specification</a></h1>
-        <p class="meta">September  3, 2014 by Sebastian Markbåge</p>
-        <hr />
-        <div class="post">
-         <p>At Facebook we&#39;ve been using JSX for a long time. We originally introduced it to the world last year alongside React, but we actually used it in another form before that to create native DOM nodes. We&#39;ve also seen some similar efforts grow out of our work in order to be used with other libraries and in interesting ways. At this point React JSX is just one of many implementations.</p>
-
-<p>In order to make it easier to implement new versions and to make sure that the syntax remains compatible, we&#39;re now formalizing the syntax of JSX in a stand-alone spec without any semantic meaning. It&#39;s completely stand-alone from React itself.</p>
-
-<p>Read the spec now at <a href="http://facebook.github.io/jsx/">http://facebook.github.io/jsx/</a>.</p>
-
-<p>This is not a proposal to be standardized in ECMAScript. It&#39;s just a reference document that transpiler writers and syntax highlighters can agree on. It&#39;s currently in a draft stage and will probably continue to be a living document.</p>
-
-<p>Feel free to <a href="https://github.com/facebook/jsx/issues/new">open an Issue</a> or Pull Request if you find something wrong.</p>
-
-        </div>
-      </div>
-    
-      <div class="post-list-item">
-        <h1><a href="/react/blog/2014/08/03/community-roundup-21.html">Community Round-up #21</a></h1>
-        <p class="meta">August  3, 2014 by Lou Husson</p>
-        <hr />
-        <div class="post">
-         <h2><a class="anchor" name="react-router"></a>React Router <a class="hash-link" href="#react-router">#</a></h2>
-<p><a href="http://ryanflorence.com/">Ryan Florence</a> and <a href="http://twitter.com/mjackson">Michael Jackson</a> ported Ember&#39;s router to React in a project called <a href="https://github.com/rackt/react-router">React Router</a>. This is a very good example of both communities working together to make the web better!</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">((</span>
-  <span class="o">&lt;</span><span class="nx">Routes</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">App</span><span class="p">}</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;about&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">About</span><span class="p">}</span><span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;users&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">Users</span><span class="p">}</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">Route</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;user&quot;</span> <span class="nx">path</span><span class="o">=</span><span class="s2">&quot;/user/:userId&quot;</span> <span class="nx">handler</span><span class="o">=</span><span class="p">{</span><span class="nx">User</span><span class="p">}</span><span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/Route&gt;</span>
-    <span class="o">&lt;</span><span class="err">/Route&gt;</span>
-  <span class="o">&lt;</span><span class="err">/Routes&gt;</span>
-<span class="p">),</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="going-big-with-react"></a>Going Big with React <a class="hash-link" href="#going-big-with-react">#</a></h2>
-<p>Areeb Malik, from Facebook, talks about his experience using React. &quot;On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we&#39;ll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale&quot;</p>
-
-<p><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react"><img src="/react/img/blog/skills-matter.png" alt=""></a></p>
-
-<!--
-<iframe allowfullscreen="" data-progress="true" frameborder="0" height="390" id="vimeo-player" mozallowfullscreen="" src="//player.vimeo.com/video/100245392?api=1&amp;title=0" webkitallowfullscreen="" width="640"></iframe>
--->
-<h2><a class="anchor" name="what-is-react"></a>What is React? <a class="hash-link" href="#what-is-react">#</a></h2>
-<p><a href="http://www.funnyant.com/author/admin/">Craig McKeachie</a> author of <a href="http://www.funnyant.com/javascript-framework-guide/">Javascript Framework Guide</a> wrote an excellent news named <a href="http://www.funnyant.com/reactjs-what-is-it/">&quot;What is React.js? Another Template Library?</a></p>
-
-<ul>
-<li>Is React a template library?</li>
-<li>Is React similar to Web Components?</li>
-<li>Are the Virtual DOM and Shadow DOM the same?</li>
-<li>Can React be used with other JavaScript MVC frameworks?</li>
-<li>Who uses React?</li>
-<li>Is React a premature optimization if you aren’t Facebook or Instagram?</li>
-<li>Can I work with designers?</li>
-<li>Will React hurt my search engine optimizations (SEO)?</li>
-<li>Is React a framework for building applications or a library with one feature?</li>
-<li>Are components a better way to build an application?</li>
-<li>Can I build something complex with React?</li>
-</ul>
-<h2><a class="anchor" name="referencing-dynamic-children"></a>Referencing Dynamic Children <a class="hash-link" href="#referencing-dynamic-children">#</a></h2>
-<p>While Matt Zabriskie was working on <a href="https://www.npmjs.org/package/react-tabs">react-tabs</a> he discovered how to use React.Children.map and React.addons.cloneWithProps in order to <a href="http://www.mattzabriskie.com/blog/react-referencing-dynamic-children">reference dynamic children</a>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="nx">index</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span>
-        <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;child-&#39;</span> <span class="o">+</span> <span class="nx">index</span>
-      <span class="p">});</span>
-    <span class="p">});</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div><h2><a class="anchor" name="jsx-with-sweet.js-using-readtables"></a>JSX with Sweet.js using Readtables <a class="hash-link" href="#jsx-with-sweet.js-using-readtables">#</a></h2>
-<p>Have you ever wondered how JSX was implemented? James Long wrote a very instructive blog post that explains how to <a href="http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables">compile JSX with Sweet.js using Readtables</a>.</p>
-
-<p><a href="http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables"><img src="/react/img/blog/sweet-jsx.png" alt=""></a></p>
-<h2><a class="anchor" name="first-look-getting-started-with-react"></a>First Look: Getting Started with React <a class="hash-link" href="#first-look-getting-started-with-react">#</a></h2>
-<p><a href="http://modernweb.com/authors/kirill-buga/">Kirill Buga</a> wrote an article on Modern Web explaining how <a href="http://modernweb.com/2014/07/23/getting-started-reactjs/">React is different from traditional MVC</a> used by most JavaScript applications</p>
-
-<figure><a href="http://modernweb.com/2014/07/23/getting-started-reactjs"><img src="/react/img/blog/first-look.png" /></a></figure>
-<h2><a class="anchor" name="react-draggable"></a>React Draggable <a class="hash-link" href="#react-draggable">#</a></h2>
-<p><a href="https://github.com/mzabriskie">Matt Zabriskie</a> released a <a href="https://github.com/mzabriskie/react-draggable">project</a> to make your react components draggable.</p>
-
-<p><a href="http://mzabriskie.github.io/react-draggable/example/"><img src="/react/img/blog/react-draggable.png" alt=""></a></p>
-<h2><a class="anchor" name="html-parser2-react"></a>HTML Parser2 React <a class="hash-link" href="#html-parser2-react">#</a></h2>
-<p><a href="http://browniefed.github.io/">Jason Brown</a> adapted htmlparser2 to React: <a href="https://www.npmjs.org/package/htmlparser2-react">htmlparser2-react</a>. That allows you to convert raw HTML to the virtual DOM.
-This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">html</span> <span class="o">=</span> <span class="s1">&#39;&lt;div data-id=&quot;1&quot; class=&quot;hey this is a class&quot; &#39;</span> <span class="o">+</span>
-  <span class="s1">&#39;style=&quot;width:100%;height: 100%;&quot;&gt;&lt;article id=&quot;this-article&quot;&gt;&#39;</span> <span class="o">+</span>
-  <span class="s1">&#39;&lt;p&gt;hey this is a paragraph&lt;/p&gt;&lt;div&gt;&lt;ul&gt;&lt;li&gt;1&lt;/li&gt;&lt;li&gt;2&lt;/li&gt;&#39;</span> <span class="o">+</span>
-  <span class="s1">&#39;&lt;li&gt;3&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;&lt;/article&gt;&lt;/div&gt;&#39;</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">parsedComponent</span> <span class="o">=</span> <span class="nx">reactParser</span><span class="p">(</span><span class="nx">html</span><span class="p">,</span> <span class="nx">React</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="building-uis-with-react"></a>Building UIs with React <a class="hash-link" href="#building-uis-with-react">#</a></h2>
-<p>If you haven&#39;t yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!</p>
-
-<iframe width="650" height="315" src="//www.youtube.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
-<h2><a class="anchor" name="random-tweets"></a>Random Tweets <a class="hash-link" href="#random-tweets">#</a></h2>
-<blockquote class="twitter-tweet" lang="en"><p>We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs">@reactjs</a> code last week, our checkout process.&#10;&#10;<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/statuses/493852312604254208">July 28, 2014</a></blockquote>
-
-<blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/AirbnbNerds">@AirbnbNerds</a> just launched our first user-facing React.js feature to production! We love it so far. <a href="https://t.co/KtyudemcIW">https://t.co/KtyudemcIW</a> /<a href="https://twitter.com/floydophone">@floydophone</a></p>&mdash; spikebrehm (@spikebrehm) <a href="https://twitter.com/spikebrehm/statuses/491645223643013121">July 22, 2014</a></blockquote>
-
-        </div>
-      </div>
-    
-
-    <div class="pagination">
-      
-      
-        <a href="/react/blog/page2/" class="next">
-          Next Page &raquo;
-        </a>
-      
     </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
   </div>
 </section>
 
