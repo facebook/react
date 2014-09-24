@@ -90,7 +90,7 @@ var ReactDefaultPerf = {
     );
   },
 
-  getMeasurementsSummaryMap: function(measurements){
+  getMeasurementsSummaryMap: function(measurements) {
     var summary = ReactDefaultPerfAnalysis.getInclusiveSummary(
       measurements,
       true
