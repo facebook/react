@@ -110,10 +110,14 @@ var Danger = {
         emptyFunction // Do nothing special with <script> tags.
       );
 
+      // IE6/IE7 fix: hasAttribute isn't available
+      // using getAttributeNode instead
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
         if (renderNode.hasAttribute &&
-            renderNode.hasAttribute(RESULT_INDEX_ATTR)) {
+            renderNode.hasAttribute(RESULT_INDEX_ATTR) ||
+            renderNode.getAttributeNode &&
+            renderNode.getAttributeNode(RESULT_INDEX_ATTR) !== null) {
 
           resultIndex = +renderNode.getAttribute(RESULT_INDEX_ATTR);
           renderNode.removeAttribute(RESULT_INDEX_ATTR);
