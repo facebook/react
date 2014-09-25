@@ -13,7 +13,7 @@ For a unit test to operate on a truly isolated _unit_ of the application, we nee
 
 The first steps toward working with Jest are as follows:
 
-1. Get the module depencies for the application installed by running `npm install`.
+1. Get the module dependencies for the application installed by running `npm install`.
 2. Create a directory `__tests__/` with a test file, in this case TodoStore-test.js
 3. Run `npm install jest-cli —save-dev`
 4. Add the following to your package.json
@@ -86,7 +86,7 @@ expect(all[keys[0]].text).toEqual('foo');
 Puting it All Together
 ----------------------
 
-The example Flux TodoMVC application has been updated with an example test for the TodoStore, but lets's look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store's registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.
+The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let's look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store's registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.
 
 ```javascript
 jest.dontMock('../TodoStore');
@@ -313,7 +313,7 @@ render: function() {
 },
 ```
 
-To learn how to test React components themselves, check out the [Jest tutorial for React](http://facebook.github.io/jest/docs/tutorial-react.html) and the [ReactTestUtils documenation](http://facebook.github.io/react/docs/test-utils.html).
+To learn how to test React components themselves, check out the [Jest tutorial for React](http://facebook.github.io/jest/docs/tutorial-react.html) and the [ReactTestUtils documentation](http://facebook.github.io/react/docs/test-utils.html).
 
 
 Further Reading
