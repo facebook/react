@@ -147,23 +147,19 @@ Now we are all set to create a dispatcher that is more specific to our app, whic
 ```javascript
 var Dispatcher = require('./Dispatcher');
 
-var merge = require('react/lib/merge');
+var AppDispatcher = new Dispatcher();
 
-var AppDispatcher = merge(Dispatcher.prototype, {
-
-  /**
+/**
    * A bridge function between the views and the dispatcher, marking the action
    * as a view action.  Another variant here could be handleServerAction.
    * @param {object} action The data coming from the view.
    */
-  handleViewAction: function(action) {
-    this.dispatch({
-      source: 'VIEW_ACTION',
-      action: action
-    });
-  }
-
-});
+AppDispatcher.handleViewAction = function(action) {
+  this.dispatch({
+    source: 'VIEW_ACTION',
+    action: action
+  });
+};
 
 module.exports = AppDispatcher;
 ```
