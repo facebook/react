@@ -168,7 +168,6 @@ var HTMLDOMPropertyConfig = {
     property: null // Supports OG in meta tags
   },
   DOMAttributeNames: {
-    classID: 'classid',
     className: 'class',
     htmlFor: 'for',
     httpEquiv: 'http-equiv'
