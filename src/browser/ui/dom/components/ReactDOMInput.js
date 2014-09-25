@@ -51,6 +51,22 @@ function forceUpdateIfMounted() {
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
+
+function getKeyForType(props) {
+  // Returning `'text'` makes sense but will throw in IE8 when mutated as an
+  // attribute and would cause a toggling attribute in other browsers.
+  // Ultimately very much an edge case, but `''` seems overall preferable.
+  return props.type != null ? props.type : '';
+}
+
+function getInitialState(props) {
+  var defaultValue = props.defaultValue;
+  return {
+    initialChecked: props.defaultChecked || false,
+    initialValue: defaultValue != null ? defaultValue : null
+  };
+}
+
 var ReactDOMInput = ReactClass.createClass({
   displayName: 'ReactDOMInput',
   tagName: 'INPUT',
@@ -58,16 +74,17 @@ var ReactDOMInput = ReactClass.createClass({
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
   getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
-    return {
-      initialChecked: this.props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null
-    };
+    return getInitialState(this.props);
   },
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = assign({}, this.props);
+
+    // IE8 does not support changing input `type`. IE does not remember
+    // `checked` if `type` isn't `checkbox` or `radio`. It's also really weird
+    // to reconcile inputs with different `type` as if they were the same.
+    props.key = getKeyForType(props);
 
     props.defaultChecked = null;
     props.defaultValue = null;
@@ -81,6 +98,12 @@ var ReactDOMInput = ReactClass.createClass({
     props.onChange = this._handleChange;
 
     return input(props, this.props.children);
+  },
+
+  componentWillReceiveProps: function(nextProps) {
+    if (getKeyForType(this.props) !== getKeyForType(nextProps)) {
+      this.replaceState(getInitialState(nextProps));
+    }
   },
 
   componentDidMount: function() {
