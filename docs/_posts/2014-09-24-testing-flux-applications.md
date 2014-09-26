@@ -83,7 +83,7 @@ var keys = Object.keys(all);
 expect(all[keys[0]].text).toEqual('foo');
 ```
 
-Puting it All Together
+Putting it All Together
 ----------------------
 
 The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let's look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store's registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.
