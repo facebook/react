@@ -604,17 +604,17 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
  * @param {object} two The second object
  * @return {object} one after it has been mutated to contain everything in two.
  */
-function mergeObjectsWithNoDuplicateKeys(one, two) {
+function mergeIntoWithNoDuplicateKeys(one, two) {
   invariant(
     one && two && typeof one === 'object' && typeof two === 'object',
-    'mergeObjectsWithNoDuplicateKeys(): Cannot merge non-objects'
+    'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
   );
 
   for (var key in two) {
     if (two.hasOwnProperty(key)) {
       invariant(
         one[key] === undefined,
-        'mergeObjectsWithNoDuplicateKeys(): ' +
+        'mergeIntoWithNoDuplicateKeys(): ' +
         'Tried to merge two objects with the same key: `%s`. This conflict ' +
         'may be due to a mixin; in particular, this may be caused by two ' +
         'getInitialState() or getDefaultProps() methods returning objects ' +
@@ -645,8 +645,8 @@ function createMergedResultFunction(one, two) {
       return a;
     }
     var c = {};
-    mergeObjectsWithNoDuplicateKeys(c, a);
-    mergeObjectsWithNoDuplicateKeys(c, b);
+    mergeIntoWithNoDuplicateKeys(c, a);
+    mergeIntoWithNoDuplicateKeys(c, b);
     return c;
   };
 }

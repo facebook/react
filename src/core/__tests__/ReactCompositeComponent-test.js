@@ -680,7 +680,7 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
-      'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
+      'Invariant Violation: mergeIntoWithNoDuplicateKeys(): ' +
       'Tried to merge two objects with the same key: `x`. This conflict ' +
       'may be due to a mixin; in particular, this may be caused by two ' +
       'getInitialState() or getDefaultProps() methods returning objects ' +
