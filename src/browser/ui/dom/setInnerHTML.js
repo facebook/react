@@ -62,8 +62,13 @@ if (ExecutionEnvironment.canUseDOM) {
       if (WHITESPACE_TEST.test(html) ||
           html[0] === '<' && NONVISIBLE_TEST.test(html)) {
         // Recover leading whitespace by temporarily prepending any character.
-        // \uFEFF has the potential advantage of being zero-width/invisible.
-        node.innerHTML = '\uFEFF' + html;
+        // \uFEFF (zero width no-break space) is deprecated by Unicode in favor
+        // of \u2060 (word joiner) which are theoretically favorable for being
+        // zero width/invisible. However, '\uFEFF' when double-uglified is
+        // stripped entirely and '\u2060' when uglified is decoded. Any imagined
+        // advantage of using a zero width/invisible char is not proven and not
+        // worth the apparent dangers associated with it. Use a safe ASCII char.
+        node.innerHTML = '!' + html;
 
         // deleteData leaves an empty `TextNode` which offsets the index of all
         // children. Definitely want to avoid this.
