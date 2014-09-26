@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMInput
+ * @providesModule ReactInput
  */
 
 "use strict";
 
-var AutoFocusMixin = require('AutoFocusMixin');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDescriptor = require('ReactDescriptor');
-var ReactDOM = require('ReactDOM');
+var ReactDOMInput = require('ReactDOMInput');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
-var invariant = require('invariant');
 var merge = require('merge');
 
 // Store a reference to the <input> `ReactDOMComponent`. TODO: use string
-var input = ReactDescriptor.createFactory(ReactDOM.input.type);
+var input = ReactDescriptor.createFactory(ReactDOMInput.type);
 
 var instancesByReactID = {};
 
@@ -59,16 +56,19 @@ function forceUpdateIfMounted() {
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
-var ReactDOMInput = ReactCompositeComponent.createClass({
-  displayName: 'ReactDOMInput',
+var ReactInput = ReactCompositeComponent.createClass({
+  displayName: 'ReactInput',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+  mixins: [LinkedValueUtils.Mixin],
 
   getInitialState: function() {
-    var defaultValue = this.props.defaultValue;
+    var checked = LinkedValueUtils.getChecked(this);
+    var value = LinkedValueUtils.getValue(this);
     return {
-      initialChecked: this.props.defaultChecked || false,
-      initialValue: defaultValue != null ? defaultValue : null
+      // We don't have to save the initial value, but do it to play nice if
+      // `ReactDOMInput` decides to use `shouldComponentUpdate`.
+      initialChecked: checked != null ? checked : this.props.defaultChecked,
+      initialValue: value != null ? value : this.props.defaultValue
     };
   },
 
@@ -76,18 +76,11 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.defaultChecked = null;
-    props.defaultValue = null;
-
-    var value = LinkedValueUtils.getValue(this);
-    props.value = value != null ? value : this.state.initialValue;
-
-    var checked = LinkedValueUtils.getChecked(this);
-    props.checked = checked != null ? checked : this.state.initialChecked;
-
+    props.initialChecked = this.state.initialChecked;
+    props.initialValue = this.state.initialValue;
     props.onChange = this._handleChange;
 
-    return input(props, this.props.children);
+    return input(props, props.children);
   },
 
   componentDidMount: function() {
@@ -103,19 +96,15 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
     var rootNode = this.getDOMNode();
-    if (this.props.checked != null) {
-      DOMPropertyOperations.setValueForProperty(
-        rootNode,
-        'checked',
-        this.props.checked || false
-      );
+
+    var checked = LinkedValueUtils.getValue(this);
+    if (checked != null) {
+      DOMPropertyOperations.setValueForProperty(rootNode, 'checked', checked);
     }
 
     var value = LinkedValueUtils.getValue(this);
     if (value != null) {
-      // Cast `value` to a string to ensure the value is set correctly. While
-      // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
+      DOMPropertyOperations.setValueForProperty(rootNode, 'value', value);
     }
   },
 
@@ -178,4 +167,4 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
 });
 
-module.exports = ReactDOMInput;
+module.exports = ReactInput;

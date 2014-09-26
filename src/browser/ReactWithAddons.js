@@ -38,6 +38,9 @@ var cloneWithProps = require('cloneWithProps');
 var update = require('update');
 
 React.addons = {
+  ReactTextarea: require('ReactTextarea'),
+  ReactSelect: require('ReactSelect'),
+  ReactInput: require('ReactInput'),
   CSSTransitionGroup: ReactCSSTransitionGroup,
   LinkedStateMixin: LinkedStateMixin,
   PureRenderMixin: ReactComponentWithPureRenderMixin,

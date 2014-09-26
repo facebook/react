@@ -13,23 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMSelect
+ * @providesModule ReactSelect
  */
 
 "use strict";
 
-var AutoFocusMixin = require('AutoFocusMixin');
+var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDescriptor = require('ReactDescriptor');
-var ReactDOM = require('ReactDOM');
+var ReactDOMSelect = require('ReactDOMSelect');
 var ReactUpdates = require('ReactUpdates');
 
 var merge = require('merge');
 
 // Store a reference to the <select> `ReactDOMComponent`. TODO: use string
-var select = ReactDescriptor.createFactory(ReactDOM.select.type);
+var select = ReactDescriptor.createFactory(ReactDOMSelect.type);
 
 function updateWithPendingValueIfMounted() {
   /*jshint validthis:true */
@@ -50,14 +49,14 @@ function selectValueType(props, propName, componentName) {
   if (props.multiple) {
     if (!Array.isArray(props[propName])) {
       return new Error(
-        `The \`${propName}\` prop supplied to <select> must be an array if ` +
+        `The \`${propName}\` prop supplied to <ReactSelect> must be an array if ` +
         `\`multiple\` is true.`
       );
     }
   } else {
     if (Array.isArray(props[propName])) {
       return new Error(
-        `The \`${propName}\` prop supplied to <select> must be a scalar ` +
+        `The \`${propName}\` prop supplied to <ReactSelect> must be a scalar ` +
         `value if \`multiple\` is false.`
       );
     }
@@ -110,10 +109,10 @@ function updateOptions(component, propValue) {
  * If `defaultValue` is provided, any options with the supplied values will be
  * selected.
  */
-var ReactDOMSelect = ReactCompositeComponent.createClass({
-  displayName: 'ReactDOMSelect',
+var ReactSelect = ReactCompositeComponent.createClass({
+  displayName: 'ReactSelect',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+  mixins: [LinkedValueUtils.Mixin],
 
   propTypes: {
     defaultValue: selectValueType,
@@ -140,10 +139,11 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    props.onChange = this._handleChange;
+    props.initialValue = null;
     props.value = null;
+    props.onChange = this._handleChange;
 
-    return select(props, this.props.children);
+    return select(props, props.children);
   },
 
   componentDidMount: function() {
@@ -186,4 +186,4 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
 });
 
-module.exports = ReactDOMSelect;
+module.exports = ReactSelect;
