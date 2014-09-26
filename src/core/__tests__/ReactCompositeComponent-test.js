@@ -688,6 +688,26 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should not mutate objects returned by getInitialState()', function() {
+    var Mixin = {
+      getInitialState: function() {
+        return Object.freeze({mixin: true});
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return Object.freeze({component: true});
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).not.toThrow();
+  });
+
   it('should work with object getInitialState() return values', function() {
     var Component = React.createClass({
       getInitialState: function() {

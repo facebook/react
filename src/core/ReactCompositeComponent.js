@@ -32,7 +32,6 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
 var monitorCodeUse = require('monitorCodeUse');
-var mapObject = require('mapObject');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -611,18 +610,20 @@ function mergeObjectsWithNoDuplicateKeys(one, two) {
     'mergeObjectsWithNoDuplicateKeys(): Cannot merge non-objects'
   );
 
-  mapObject(two, function(value, key) {
-    invariant(
-      one[key] === undefined,
-      'mergeObjectsWithNoDuplicateKeys(): ' +
-      'Tried to merge two objects with the same key: `%s`. This conflict ' +
-      'may be due to a mixin; in particular, this may be caused by two ' +
-      'getInitialState() or getDefaultProps() methods returning objects ' +
-      'with clashing keys.',
-      key
-    );
-    one[key] = value;
-  });
+  for (var key in two) {
+    if (two.hasOwnProperty(key)) {
+      invariant(
+        one[key] === undefined,
+        'mergeObjectsWithNoDuplicateKeys(): ' +
+        'Tried to merge two objects with the same key: `%s`. This conflict ' +
+        'may be due to a mixin; in particular, this may be caused by two ' +
+        'getInitialState() or getDefaultProps() methods returning objects ' +
+        'with clashing keys.',
+        key
+      );
+      one[key] = two[key];
+    }
+  }
   return one;
 }
 
@@ -643,7 +644,10 @@ function createMergedResultFunction(one, two) {
     } else if (b == null) {
       return a;
     }
-    return mergeObjectsWithNoDuplicateKeys(a, b);
+    var c = {};
+    mergeObjectsWithNoDuplicateKeys(c, a);
+    mergeObjectsWithNoDuplicateKeys(c, b);
+    return c;
   };
 }
 
