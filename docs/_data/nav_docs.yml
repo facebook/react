@@ -81,5 +81,7 @@
   items:
   - id: flux-overview
     title: Flux Overview
+    href: http://facebook.github.io/flux/docs/overview.html
   - id: flux-todo-list
     title: Flux TodoMVC Tutorial
+    href: http://facebook.github.io/flux/docs/todo-list.html

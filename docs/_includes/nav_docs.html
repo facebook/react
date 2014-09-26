@@ -6,16 +6,12 @@
       <ul>
         {% for item in section.items %}
           <li>
-            <a href="/react/docs/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>
-              {{ item.title }}
-            </a>
+            {{ item | sidebar_item_link}}
             {% if item.subitems %}
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    <a href="/react/docs/{{ subitem.id }}.html"{% if page.id == subitem.id %} class="active"{% endif %}>
-                      {{ subitem.title }}
-                    </a>
+                    {{ item | sidebar_item_link}}
                   </li>
                 {% endfor %}
               </ul>
