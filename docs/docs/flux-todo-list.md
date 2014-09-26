@@ -13,7 +13,7 @@ The TodoMVC example has all this built into it as well, but if you're starting w
 
 Source Code Structure
 ---------------------
-The resulting index.js file may be used as the entry point into our app, but we'll put most of our code in a 'js' directory. Let's let Browserify do its thing, and now we'll open a new tab in Terminal (or a GUI file browser) to look at the directory. It should look something like this:
+The index.html file may be used as the entry point into our app which loads the resulting bundle.js file, but we'll put most of our code in a 'js' directory. Let's let Browserify do its thing, and now we'll open a new tab in Terminal (or a GUI file browser) to look at the directory. It should look something like this:
 
 ```
 myapp
