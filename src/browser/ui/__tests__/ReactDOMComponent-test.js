@@ -157,7 +157,7 @@ describe('ReactDOMComponent', function() {
 
     it("should empty element when removing innerHTML", function() {
       var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: ':)'}} />
+        <div dangerouslySetInnerHTML=":)" />
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual(':)');
@@ -172,7 +172,7 @@ describe('ReactDOMComponent', function() {
 
       expect(stub.getDOMNode().innerHTML).toEqual('hello');
       stub.receiveComponent(
-        {props: {dangerouslySetInnerHTML: {__html: 'goodbye'}}},
+        {props: {dangerouslySetInnerHTML: 'goodbye'}},
         transaction
       );
       expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
@@ -180,11 +180,35 @@ describe('ReactDOMComponent', function() {
 
     it("should transition from innerHTML to string content", function() {
       var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+        <div dangerouslySetInnerHTML="bonjour" />
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
       stub.receiveComponent({props: {children: 'adieu'}}, transaction);
+      expect(stub.getDOMNode().innerHTML).toEqual('adieu');
+    });
+
+    it("should transition from innerHTML legacy object to string", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
+      stub.receiveComponent({
+        props: {dangerouslySetInnerHTML: 'adieu'}
+      }, transaction);
+      expect(stub.getDOMNode().innerHTML).toEqual('adieu');
+    });
+
+    it("should transition from innerHTML string to legacy object", function() {
+      var stub = ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetInnerHTML="bonjour" />
+      );
+
+      expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
+      stub.receiveComponent({
+        props: {dangerouslySetInnerHTML: {__html: 'adieu'}}
+      }, transaction);
       expect(stub.getDOMNode().innerHTML).toEqual('adieu');
     });
 
@@ -293,16 +317,41 @@ describe('ReactDOMComponent', function() {
       this.addMatchers({
         toHaveInnerhtml: function(html) {
           var expected = '^' + quoteRegexp(html) + '$';
-          return this.actual.match(new RegExp(expected));
+          return ('' + this.actual).match(new RegExp(expected));
         }
       });
     });
 
     it("should handle dangerouslySetInnerHTML", function() {
-      var innerHTML = {__html: 'testContent'};
       expect(
-        genMarkup({ dangerouslySetInnerHTML: innerHTML })
+        genMarkup({dangerouslySetInnerHTML: 'testContent'})
       ).toHaveInnerhtml('testContent');
+
+      expect(
+        genMarkup({dangerouslySetInnerHTML: false})
+      ).toHaveInnerhtml('false');
+
+      expect(
+        genMarkup({dangerouslySetInnerHTML: null})
+      ).toHaveInnerhtml('');
+    });
+
+    it("should support dangerouslySetInnerHTML legacy object", function() {
+      expect(
+        genMarkup({dangerouslySetInnerHTML: {__html: 'testContent'}})
+      ).toHaveInnerhtml('testContent');
+
+      expect(
+        genMarkup({dangerouslySetInnerHTML: {__html: ''}})
+      ).toHaveInnerhtml('');
+
+      expect(
+        genMarkup({dangerouslySetInnerHTML: {__html: false}})
+      ).toHaveInnerhtml('false');
+
+      expect(
+        genMarkup({dangerouslySetInnerHTML: {__html: null}})
+      ).toHaveInnerhtml('');
     });
   });
 
@@ -377,7 +426,7 @@ describe('ReactDOMComponent', function() {
 
       expect(function() {
         React.renderComponent(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
+          <div children="" dangerouslySetInnerHTML=""></div>,
           container
         );
       }).toThrow(

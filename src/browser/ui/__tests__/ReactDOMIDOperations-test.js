@@ -34,7 +34,7 @@ describe('ReactDOMIDOperations', function() {
       ReactDOMIDOperations.updatePropertyByID(
         'testID',
         keyOf({dangerouslySetInnerHTML: null}),
-        {__html: 'testContent'}
+        'testContent'
       );
     }).toThrow();
 
