@@ -47,7 +47,6 @@ var ReactTextComponent = function(props) {
 };
 
 mixInto(ReactTextComponent, ReactComponent.Mixin);
-mixInto(ReactTextComponent, ReactBrowserComponentMixin);
 mixInto(ReactTextComponent, {
 
   /**

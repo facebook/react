@@ -58,8 +58,9 @@ var updateChildren = function(d, children) {
 };
 
 var expectChildren = function(d, children) {
+  var textNode;
   if (typeof children === 'string') {
-    var textNode = d.getDOMNode().firstChild;
+    textNode = d.getDOMNode().firstChild;
 
     if (children === '') {
       expect(textNode != null).toBe(false);
@@ -75,13 +76,20 @@ var expectChildren = function(d, children) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        var textWrapperNode =
-          reactComponentExpect(d)
-            .expectRenderedChildAt(i)
-            .toBeTextComponent()
-            .instance();
+        reactComponentExpect(d)
+          .expectRenderedChildAt(i)
+          .toBeTextComponent()
+          .instance();
 
-        expectChildren(textWrapperNode, child);
+        textNode = d.getDOMNode().childNodes[i].firstChild;
+
+        if (child === '') {
+          expect(textNode != null).toBe(false);
+        } else {
+          expect(textNode != null).toBe(true);
+          expect(textNode.nodeType).toBe(3);
+          expect(textNode.data).toBe('' + child);
+        }
       } else {
         var elementDOMNode =
           reactComponentExpect(d)
