@@ -106,8 +106,9 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     var props = merge(this.props);
 
     invariant(
+      props.dangerousInnerHTML == null &&
       props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      '`dangerousInnerHTML` does not make sense on <textarea>.'
     );
 
     props.defaultValue = null;

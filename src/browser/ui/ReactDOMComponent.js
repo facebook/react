@@ -36,6 +36,7 @@ var keyOf = require('keyOf');
 var merge = require('merge');
 var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
+var warning = require('warning');
 
 var deleteListener = ReactBrowserEventEmitter.deleteListener;
 var listenTo = ReactBrowserEventEmitter.listenTo;
@@ -57,13 +58,25 @@ function assertValidProps(props) {
   }
   // Note the use of `==` which checks for null or undefined.
   invariant(
-    props.children == null || props.dangerouslySetInnerHTML == null,
-    'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
+    props.children == null || props.dangerousInnerHTML == null,
+    'Can only set one of `children` or `dangerousInnerHTML`.'
+  );
+  invariant(
+    props.dangerousInnerHTML == null || props.dangerouslySetInnerHTML == null,
+    'Can only set one of `dangerousInnerHTML` or `dangerouslySetInnerHTML`.'
   );
   invariant(
     props.style == null || typeof props.style === 'object',
     'The `style` prop expects a mapping from style properties to values, ' +
     'not a string.'
+  );
+}
+
+function warnForDeprecatedDangerouslySetInnerHTML(props) {
+  warning(
+    props.dangerouslySetInnerHTML == null,
+    '`dangerouslySetInnerHTML` is deprecated. Use ' +
+    '`dangerousInnerHTML` instead.'
   );
 }
 
@@ -194,7 +207,11 @@ ReactDOMComponent.Mixin = {
    */
   _createContentMarkup: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
-    var innerHTML = this.props.dangerouslySetInnerHTML;
+    var innerHTML = this.props.dangerousInnerHTML;
+    if (innerHTML == null) {
+      innerHTML = this.props.dangerouslySetInnerHTML;
+      warnForDeprecatedDangerouslySetInnerHTML(this.props);
+    }
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
         return innerHTML.__html;
@@ -371,11 +388,22 @@ ReactDOMComponent.Mixin = {
       CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
 
     var lastHtml =
-      lastProps.dangerouslySetInnerHTML &&
-      lastProps.dangerouslySetInnerHTML.__html;
+      lastProps.dangerousInnerHTML &&
+      lastProps.dangerousInnerHTML.__html;
     var nextHtml =
-      nextProps.dangerouslySetInnerHTML &&
-      nextProps.dangerouslySetInnerHTML.__html;
+      nextProps.dangerousInnerHTML &&
+      nextProps.dangerousInnerHTML.__html;
+
+    if (lastHtml == null) {
+      lastHtml =
+        lastProps.dangerouslySetInnerHTML &&
+        lastProps.dangerouslySetInnerHTML.__html;
+    }
+    if (nextHtml == null) {
+      nextHtml =
+        nextProps.dangerouslySetInnerHTML &&
+        nextProps.dangerouslySetInnerHTML.__html;
+    }
 
     // Note the use of `!=` which checks for null or undefined.
     var lastChildren = lastContent != null ? null : lastProps.children;
@@ -397,6 +425,9 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
+        if (lastHtml == null) {
+          warnForDeprecatedDangerouslySetInnerHTML(nextProps);
+        }
         ReactComponent.BackendIDOperations.updateInnerHTMLByID(
           this._rootNodeID,
           nextHtml

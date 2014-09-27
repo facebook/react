@@ -10,4 +10,4 @@ Beside [DOM differences](/react/docs/dom-differences.html), React offers some at
 
 - `key`: an optional, unique identifier. When your component shuffles around during `render` passes, it might be destroyed and recreated due to the diff algorithm. Assigning it a key that persists makes sure the component stays. See more [here](/react/docs/multiple-components.html#dynamic-children).
 - `ref`: see [here](/react/docs/more-about-refs.html).
-- `dangerouslySetInnerHTML`: takes an object with the key `__html` and a DOM string as value. This is mainly for cooperating with DOM string manipulation libraries. Refer to the last example on the front page.
+- `dangerousInnerHTML`: takes an object with the key `__html` and a DOM string as value. This is mainly for cooperating with DOM string manipulation libraries. Refer to the last example on the front page.
