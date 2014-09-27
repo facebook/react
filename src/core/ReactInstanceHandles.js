@@ -323,11 +323,7 @@ var ReactInstanceHandles = {
    */
   _getFirstCommonAncestorID: getFirstCommonAncestorID,
 
-  /**
-   * Exposed for unit testing.
-   * @private
-   */
-  _getNextDescendantID: getNextDescendantID,
+  getNextDescendantID: getNextDescendantID,
 
   isAncestorIDOf: isAncestorIDOf,
 

@@ -197,8 +197,10 @@ var GridViewTable = React.createClass({
 
   render: function(){
     return React.DOM.table(null,
-      this._renderRow(null, 0),
-      this.props.rows.map(this._renderRow, this)
+      React.DOM.tbody(null,
+        this._renderRow(null, 0),
+        this.props.rows.map(this._renderRow, this)
+      )
     );
   }
 

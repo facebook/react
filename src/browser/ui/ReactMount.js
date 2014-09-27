@@ -56,9 +56,6 @@ if (__DEV__) {
   var rootElementsByReactRootID = {};
 }
 
-// Used to store breadth-first search state in findComponentRoot.
-var findComponentRootReusableArray = [];
-
 /**
  * @param {DOMElement} container DOM element that may contain a React component.
  * @return {?string} A "reactRoot" ID, if a React component is rendered.
@@ -170,33 +167,6 @@ function isValid(node, id) {
  */
 function purgeID(id) {
   delete nodeCache[id];
-}
-
-var deepestNodeSoFar = null;
-function findDeepestCachedAncestorImpl(ancestorID) {
-  var ancestor = nodeCache[ancestorID];
-  if (ancestor && isValid(ancestor, ancestorID)) {
-    deepestNodeSoFar = ancestor;
-  } else {
-    // This node isn't populated in the cache, so presumably none of its
-    // descendants are. Break out of the loop.
-    return false;
-  }
-}
-
-/**
- * Return the deepest cached node whose ID is a prefix of `targetID`.
- */
-function findDeepestCachedAncestor(targetID) {
-  deepestNodeSoFar = null;
-  ReactInstanceHandles.traverseAncestors(
-    targetID,
-    findDeepestCachedAncestorImpl
-  );
-
-  var foundNode = deepestNodeSoFar;
-  deepestNodeSoFar = null;
-  return foundNode;
 }
 
 /**
@@ -587,81 +557,86 @@ var ReactMount = {
 
   /**
    * Finds a node with the supplied `targetID` inside of the supplied
-   * `ancestorNode`.  Exploits the ID naming scheme to perform the search
-   * quickly.
+   * `ancestorNode`.  Exploits the ID naming scheme to perform the search quickly.
    *
    * @param {DOMEventTarget} ancestorNode Search from this root.
    * @pararm {string} targetID ID of the DOM representation of the component.
    * @return {DOMEventTarget} DOM node with the supplied `targetID`.
    * @internal
    */
-  findComponentRoot: function(ancestorNode, targetID) {
-    var firstChildren = findComponentRootReusableArray;
-    var childIndex = 0;
+  findComponentRoot: function(searchNode, targetID) {
+    var ancestorNode = searchNode;
+    var ancestorID = getID(ancestorNode);
+    var nextDescendantID, nextDescendantNode;
 
-    var deepestAncestor = findDeepestCachedAncestor(targetID) || ancestorNode;
+    // Skip already cached IDs to the first uncached ID or targetID is found.
+    while (ancestorID !== targetID) {
+      nextDescendantID =
+        ReactInstanceHandles.getNextDescendantID(ancestorID, targetID);
+      nextDescendantNode = nodeCache[nextDescendantID];
 
-    firstChildren[0] = deepestAncestor.firstChild;
-    firstChildren.length = 1;
-
-    while (childIndex < firstChildren.length) {
-      var child = firstChildren[childIndex++];
-      var targetChild;
-
-      while (child) {
-        var childID = ReactMount.getID(child);
-        if (childID) {
-          // Even if we find the node we're looking for, we finish looping
-          // through its siblings to ensure they're cached so that we don't have
-          // to revisit this node again. Otherwise, we make n^2 calls to getID
-          // when visiting the many children of a single node in order.
-
-          if (targetID === childID) {
-            targetChild = child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-          }
-
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
-          firstChildren.push(child.firstChild);
-        }
-
-        child = child.nextSibling;
+      // ID not found in cache.
+      if (!nextDescendantNode ||
+          !isValid(nextDescendantNode, nextDescendantID)) {
+        break;
       }
 
-      if (targetChild) {
-        // Emptying firstChildren/findComponentRootReusableArray is
-        // not necessary for correctness, but it helps the GC reclaim
-        // any nodes that were left at the end of the search.
-        firstChildren.length = 0;
-
-        return targetChild;
-      }
+      ancestorNode = nextDescendantNode;
+      ancestorID = nextDescendantID;
     }
 
-    firstChildren.length = 0;
+    // Update the cache with getID for all siblings of the first child. Then
+    // simply get the next descendant node from the cache.
+    while (ancestorID !== targetID) {
+      var childNode = ancestorNode.firstChild;
 
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables, nesting tags ' +
-      'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-      'parent. ' +
-      'Try inspecting the child nodes of the element with React ID `%s`.',
-      targetID,
-      ReactMount.getID(ancestorNode)
-    );
+      while (childNode) {
+        // Populate cache with all siblings.
+        var childID = getID(childNode);
+
+        if (!childID) {
+          invariant(
+            false,
+            'findComponentRoot(..., %s): Found element without a React ID. ' +
+            'This probably means the DOM was unexpectedly mutated (e.g., ' +
+            'by the browser), usually due to forgetting a <tbody> when ' +
+            'using tables, nesting tags like <form>, <p>, or <a>, or ' +
+            'using non-SVG elements in an <svg> parent. ' +
+            'Try inspecting the child nodes of the element with React ID ' +
+            '`%s`.',
+            targetID,
+            ancestorID
+          );
+        }
+
+        childNode = childNode.nextSibling;
+      }
+
+      // Get next descendant node from cache.
+      nextDescendantID =
+        ReactInstanceHandles.getNextDescendantID(ancestorID, targetID);
+      nextDescendantNode = nodeCache[nextDescendantID];
+
+      if (!nextDescendantNode) {
+        invariant(
+          false,
+          'findComponentRoot(..., %s): Unable to find element. ' +
+          'This probably means the DOM was unexpectedly mutated (e.g., ' +
+          'by the browser), usually due to forgetting a <tbody> when ' +
+          'using tables, nesting tags like <form>, <p>, or <a>, or ' +
+          'using non-SVG elements in an <svg> parent. ' +
+          'Try inspecting the child nodes of the element with React ID ' +
+          '`%s`.',
+          targetID,
+          ancestorID
+        );
+      }
+
+      ancestorNode = nextDescendantNode;
+      ancestorID = nextDescendantID;
+    }
+
+    return ancestorNode;
   },
 
 
