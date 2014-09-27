@@ -78,6 +78,7 @@ var knownTags = {
   i: true,
   iframe: true,
   img: true,
+  image: true,
   input: true,
   ins: true,
   kbd: true,
