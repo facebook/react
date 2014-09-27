@@ -39,6 +39,9 @@ var setInnerHTML = require('setInnerHTML');
 var INVALID_PROPERTY_ERRORS = {
   dangerouslySetInnerHTML:
     '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
+  dangerouslySetDefaultInnerHTML:
+    '`dangerouslySetDefaultInnerHTML` must be set using ' +
+    '`updateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
 };
 

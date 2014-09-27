@@ -220,6 +220,12 @@ describe('ReactMultiChildText', function() {
         <div dangerouslySetInnerHTML={{_html: 'abcdef'}}>ghjkl</div>
       );
     }).toThrow();
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(
+        <div dangerouslySetDefaultInnerHTML={{_html: 'abcdef'}}>ghjkl</div>
+      );
+    }).toThrow();
   });
 
   it('should render between nested components and inline children', function() {

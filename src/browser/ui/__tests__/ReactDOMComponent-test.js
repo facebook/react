@@ -341,9 +341,18 @@ describe('ReactDOMComponent', function() {
       expect(function() {
         mountComponent({ children: '', dangerouslySetInnerHTML: '' });
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Invariant Violation: Can only set `children` or ' +
+        '`props.dangerouslySetInnerHTML` and `dangerouslySetDefaultInnerHTML`.'
       );
+    });
+
+    it("should validate for both default and set innerHTML", function() {
+      expect(function() {
+        mountComponent({
+          dangerouslySetInnerHTML: '',
+          dangerouslySetDefaultInnerHTML: ''
+        });
+      }).not.toThrow();
     });
 
     it("should warn about contentEditable and children", function() {
@@ -381,9 +390,81 @@ describe('ReactDOMComponent', function() {
           container
         );
       }).toThrow(
-        'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        'Invariant Violation: Can only set `children` or ' +
+        '`props.dangerouslySetInnerHTML` and `dangerouslySetDefaultInnerHTML`.'
       );
+    });
+
+    it("should validate for both default and set innerHTML", function() {
+      React.renderComponent(<div></div>, container);
+
+      expect(function() {
+        React.renderComponent(
+          <div
+            dangerouslySetInnerHTML={{__html: ''}}
+            dangerouslySetDefaultInnerHTML={{__html: ''}}
+          />,
+          container
+        );
+      }).not.toThrow()
+    });
+
+    it("should not update children when adding dangerouslySetDefaultInnerHTML", function() {
+      var stub = React.renderComponent(
+        <div />,
+        container
+      );
+
+      React.renderComponent(
+        <div dangerouslySetDefaultInnerHTML={{__html: 'updated'}} />,
+        container
+      );
+
+      expect(stub.getDOMNode().innerHTML).toBe('');
+    });
+
+    it("should not update children when updating dangerouslySetDefaultInnerHTML", function() {
+      var stub = React.renderComponent(
+        <div dangerouslySetDefaultInnerHTML={{__html: 'default'}} />,
+        container
+      );
+
+      expect(stub.getDOMNode().innerHTML).toBe('default');
+
+      React.renderComponent(
+        <div dangerouslySetDefaultInnerHTML={{__html: 'updated'}} />,
+        container
+      );
+
+      expect(stub.getDOMNode().innerHTML).toBe('default');
+    });
+
+    it("should not clear children when removing dangerouslySetInnerHTML and dangerouslySetDefaultInnerHTML is set", function() {
+      var stub = React.renderComponent(
+        <div dangerouslySetInnerHTML={{__html: 'set'}} />,
+        container
+      );
+
+      React.renderComponent(
+        <div dangerouslySetDefaultInnerHTML={{__html: 'updated'}} />,
+        container
+      );
+
+      expect(stub.getDOMNode().innerHTML).toBe('set');
+    });
+
+    it("should clear children when removing dangerouslySetDefaultInnerHTML", function() {
+      var stub = React.renderComponent(
+        <div dangerouslySetDefaultInnerHTML={{__html: 'default'}} />,
+        container
+      );
+
+      React.renderComponent(
+        <div />,
+        container
+      );
+
+      expect(stub.getDOMNode().innerHTML).toBe('');
     });
 
     it("should warn about contentEditable and children", function() {

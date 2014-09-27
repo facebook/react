@@ -41,6 +41,7 @@ if (__DEV__) {
   var reactProps = {
     children: true,
     dangerouslySetInnerHTML: true,
+    dangerouslySetDefaultInnerHTML: true,
     key: true,
     ref: true
   };

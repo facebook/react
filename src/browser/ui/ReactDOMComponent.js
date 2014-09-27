@@ -57,8 +57,11 @@ function assertValidProps(props) {
   }
   // Note the use of `==` which checks for null or undefined.
   invariant(
-    props.children == null || props.dangerouslySetInnerHTML == null,
-    'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
+    props.children == null ||
+    props.dangerouslySetInnerHTML == null &&
+    props.dangerouslySetDefaultInnerHTML == null,
+    'Can only set `children` or `props.dangerouslySetInnerHTML` and ' +
+    '`dangerouslySetDefaultInnerHTML`.'
   );
   if (__DEV__) {
     if (props.contentEditable && props.children != null) {
@@ -67,6 +70,12 @@ function assertValidProps(props) {
         'React. It is now your responsibility to guarantee that none of those '+
         'nodes are unexpectedly modified or duplicated. This is probably not ' +
         'intentional.'
+      );
+    }
+    if (props.contentEditable && props.dangerouslySetInnerHTML != null) {
+      console.warn(
+        'A component is `contentEditable` and has `dangerouslySetInnerHTML` ' +
+        'set. It is preferable to use `dangerouslySetDefaultInnerHTML` instead.'
       );
     }
   }
@@ -205,6 +214,9 @@ ReactDOMComponent.Mixin = {
   _createContentMarkup: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = this.props.dangerouslySetInnerHTML;
+    if (innerHTML == null) {
+      innerHTML = this.props.dangerouslySetDefaultInnerHTML;
+    }
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
         return innerHTML.__html;
@@ -387,17 +399,26 @@ ReactDOMComponent.Mixin = {
       nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
+    var lastDefaultHtml =
+      lastProps.dangerouslySetDefaultInnerHTML &&
+      lastProps.dangerouslySetDefaultInnerHTML.__html;
+    var nextDefaultHtml =
+      nextProps.dangerouslySetDefaultInnerHTML &&
+      nextProps.dangerouslySetDefaultInnerHTML.__html;
+
     // Note the use of `!=` which checks for null or undefined.
     var lastChildren = lastContent != null ? null : lastProps.children;
     var nextChildren = nextContent != null ? null : nextProps.children;
 
-    // If we're switching from children to content/html or vice versa, remove
-    // the old content
-    var lastHasContentOrHtml = lastContent != null || lastHtml != null;
-    var nextHasContentOrHtml = nextContent != null || nextHtml != null;
+    var lastHasHtml = lastHtml != null || lastDefaultHtml != null;
+    var nextHasHtml = nextHtml != null || nextDefaultHtml != null;
+
     if (lastChildren != null && nextChildren == null) {
       this.updateChildren(null, transaction);
-    } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
+    } else if (lastContent != null && nextContent == null ||
+               lastHasHtml && !nextHasHtml) {
+      // If we're switching from children to content/html or vice versa, remove
+      // the old content
       this.updateTextContent('');
     }
 
