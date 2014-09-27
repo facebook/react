@@ -204,25 +204,28 @@ ReactDOMComponent.Mixin = {
    */
   _createContentMarkup: function(transaction) {
     // Intentional use of != to avoid catching zero/false.
-    var innerHTML = this.props.dangerouslySetInnerHTML;
-    if (innerHTML != null) {
-      if (innerHTML.__html != null) {
-        return innerHTML.__html;
+    var props = this.props;
+    var children = props.children;
+    if (children != null) {
+      var content = CONTENT_TYPES[typeof children] ? '' + children : null;
+      if (content) {
+        return escapeTextForBrowser(content);
       }
-    } else {
-      var contentToUse =
-        CONTENT_TYPES[typeof this.props.children] ? this.props.children : null;
-      var childrenToUse = contentToUse != null ? null : this.props.children;
-      if (contentToUse != null) {
-        return escapeTextForBrowser(contentToUse);
-      } else if (childrenToUse != null) {
-        var mountImages = this.mountChildren(
-          childrenToUse,
-          transaction
-        );
-        return mountImages.join('');
-      }
+
+      var mountImages = this.mountChildren(
+        children,
+        transaction
+      );
+      return mountImages.join('');
     }
+
+    var html =
+      props.dangerouslySetInnerHTML &&
+      props.dangerouslySetInnerHTML.__html;
+    if (html != null) {
+      return html;
+    }
+
     return '';
   },
 
@@ -375,10 +378,13 @@ ReactDOMComponent.Mixin = {
   _updateDOMChildren: function(lastProps, transaction) {
     var nextProps = this.props;
 
+    var lastChildren = lastProps.children;
+    var nextChildren = nextProps.children;
+
     var lastContent =
-      CONTENT_TYPES[typeof lastProps.children] ? lastProps.children : null;
+      CONTENT_TYPES[typeof lastChildren] ? '' + lastChildren : null;
     var nextContent =
-      CONTENT_TYPES[typeof nextProps.children] ? nextProps.children : null;
+      CONTENT_TYPES[typeof nextChildren] ? '' + nextChildren : null;
 
     var lastHtml =
       lastProps.dangerouslySetInnerHTML &&
@@ -387,23 +393,25 @@ ReactDOMComponent.Mixin = {
       nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
-    // Note the use of `!=` which checks for null or undefined.
-    var lastChildren = lastContent != null ? null : lastProps.children;
-    var nextChildren = nextContent != null ? null : nextProps.children;
-
     // If we're switching from children to content/html or vice versa, remove
     // the old content
-    var lastHasContentOrHtml = lastContent != null || lastHtml != null;
-    var nextHasContentOrHtml = nextContent != null || nextHtml != null;
     if (lastChildren != null && nextChildren == null) {
-      this.updateChildren(null, transaction);
-    } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
+      if (lastContent != null && nextContent == null) {
+        this.updateTextContent('');
+      } else {
+        this.updateChildren(null, transaction);
+      }
+    } else if (lastHtml != null && nextHtml == null) {
       this.updateTextContent('');
     }
 
-    if (nextContent != null) {
-      if (lastContent !== nextContent) {
-        this.updateTextContent('' + nextContent);
+    if (nextChildren != null) {
+      if (nextContent != null) {
+        if (lastContent !== nextContent) {
+          this.updateTextContent(nextContent);
+        }
+      } else {
+        this.updateChildren(nextChildren, transaction);
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
@@ -412,8 +420,6 @@ ReactDOMComponent.Mixin = {
           nextHtml
         );
       }
-    } else if (nextChildren != null) {
-      this.updateChildren(nextChildren, transaction);
     }
   },
 
