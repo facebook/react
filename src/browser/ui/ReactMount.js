@@ -610,29 +610,35 @@ var ReactMount = {
 
       while (child) {
         var childID = ReactMount.getID(child);
-        if (childID) {
-          // Even if we find the node we're looking for, we finish looping
-          // through its siblings to ensure they're cached so that we don't have
-          // to revisit this node again. Otherwise, we make n^2 calls to getID
-          // when visiting the many children of a single node in order.
 
-          if (targetID === childID) {
-            targetChild = child;
-          } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
-            // If we find a child whose ID is an ancestor of the given ID,
-            // then we can be sure that we only want to search the subtree
-            // rooted at this child, so we can throw out the rest of the
-            // search state.
-            firstChildren.length = childIndex = 0;
-            firstChildren.push(child.firstChild);
-          }
+        if (!childID) {
+          invariant(
+            false,
+            'findComponentRoot(..., %s): Encountered element without React ' +
+            'ID. ' +
+            'This probably means the DOM was unexpectedly mutated (e.g., by ' +
+            'the browser), usually due to forgetting a <tbody> when using ' +
+            'tables, nesting tags like <form>, <p>, or <a>, or using non-SVG ' +
+            'elements in an <svg> parent. ' +
+            'Try inspecting the child nodes of the element with React ID `%s`.',
+            targetID,
+            ReactMount.getID(ancestorNode)
+          );
+        }
 
-        } else {
-          // If this child had no ID, then there's a chance that it was
-          // injected automatically by the browser, as when a `<table>`
-          // element sprouts an extra `<tbody>` child as a side effect of
-          // `.innerHTML` parsing. Optimistically continue down this
-          // branch, but not before examining the other siblings.
+        // Even if we find the node we're looking for, we finish looping
+        // through its siblings to ensure they're cached so that we don't have
+        // to revisit this node again. Otherwise, we make n^2 calls to getID
+        // when visiting the many children of a single node in order.
+
+        if (targetID === childID) {
+          targetChild = child;
+        } else if (ReactInstanceHandles.isAncestorIDOf(childID, targetID)) {
+          // If we find a child whose ID is an ancestor of the given ID,
+          // then we can be sure that we only want to search the subtree
+          // rooted at this child, so we can throw out the rest of the
+          // search state.
+          firstChildren.length = childIndex = 0;
           firstChildren.push(child.firstChild);
         }
 
