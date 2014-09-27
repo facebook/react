@@ -30,7 +30,7 @@ thead time title tr track u ul var video wbr
 The following SVG elements are supported:
 
 ```
-circle clipPath defs ellipse g line linearGradient mask path pattern polygon polyline
+circle clipPath defs ellipse g image line linearGradient mask path pattern polygon polyline
 radialGradient rect stop svg text tspan
 ```
 
