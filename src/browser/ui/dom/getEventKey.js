@@ -79,6 +79,8 @@ var translateToKey = {
  * @return {string} Normalized `key` property.
  */
 function getEventKey(nativeEvent) {
+  var type = nativeEvent.type;
+
   if (nativeEvent.key) {
     // Normalize inconsistent values reported by browsers due to
     // implementations of a working draft specification.
@@ -87,19 +89,32 @@ function getEventKey(nativeEvent) {
     // printable characters (normalized to `Unidentified`), ignore it.
     var key = normalizeKey[nativeEvent.key] || nativeEvent.key;
     if (key !== 'Unidentified') {
-      return key;
+      // IE: `key` reports the character without modifier keys applied for
+      // `keydown` and `keyup`. (It seems only) IE supports the deprecated
+      // `char` which always reports the correct character or no character, but
+      // obviously does not include function keys. So ignore `key` if it is a
+      // character and `char` is supported, return `char` instead if set.
+      var char = nativeEvent.char;
+      if (char === undefined || key.length !== 1) {
+        return key;
+      }
+      if (char) {
+        return char;
+      }
     }
   }
+  // `keyIndentifier` could be used to polyfill `key` for WebKit, but it's
+  // extremely unreliable and can report wildly incorrect values at times.
 
   // Browser does not implement `key`, polyfill as much of it as we can.
-  if (nativeEvent.type === 'keypress') {
+  if (type === 'keypress') {
     var charCode = getEventCharCode(nativeEvent);
 
     // The enter-key is technically both printable and non-printable and can
     // thus be captured by `keypress`, no other non-printable key should.
     return charCode === 13 ? 'Enter' : String.fromCharCode(charCode);
   }
-  if (nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup') {
+  if (type === 'keydown' || type === 'keyup') {
     // While user keyboard layout determines the actual meaning of each
     // `keyCode` value, almost all function keys have a universal value.
     return translateToKey[nativeEvent.keyCode] || 'Unidentified';
