@@ -22,8 +22,9 @@
 var getEventCharCode = require('getEventCharCode');
 
 /**
- * Normalization of deprecated HTML5 `key` values
- * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
+ * Normalization of deprecated HTML5 `key` values. Most of these
+ * deprecated/invalid values are reported by FireFox.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent.key
  */
 var normalizeKey = {
   'Esc': 'Escape',
@@ -37,6 +38,22 @@ var normalizeKey = {
   'Menu': 'ContextMenu',
   'Apps': 'ContextMenu',
   'Scroll': 'ScrollLock',
+  'DeadGrave': 'Dead',
+  'DeadAcute': 'Dead',
+  'DeadCircumflex': 'Dead',
+  'DeadTilde': 'Dead',
+  'DeadMacron': 'Dead',
+  'DeadBreve': 'Dead',
+  'DeadAboveDot': 'Dead',
+  'DeadUmlaut': 'Dead',
+  'DeadAboveRing': 'Dead',
+  'DeadDoubleacute': 'Dead',
+  'DeadCaron': 'Dead',
+  'DeadCedilla': 'Dead',
+  'DeadOgonek': 'Dead',
+  'DeadIota': 'Dead',
+  'DeadVoicedSound': 'Dead',
+  'DeadSemivoicedSound': 'Dead',
   'MozPrintableKey': 'Unidentified'
 };
 
