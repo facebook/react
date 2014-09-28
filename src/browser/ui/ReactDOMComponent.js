@@ -50,11 +50,21 @@ var BackendIDOperations = null;
 /**
  * @param {?object} props
  */
-function assertValidProps(props) {
+function assertValidProps(component, props) {
   if (!props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
+  if (__DEV__) {
+    if (voidElementTags[component._tag]) {
+      warning(
+        props.children == null && props.dangerouslySetInnerHTML == null,
+        '%s is a void element tag and must not have `children` or ' +
+        'use `props.dangerouslySetInnerHTML`.',
+        component._tag
+      );
+    }
+  }
   if (props.dangerouslySetInnerHTML != null) {
     invariant(
       props.children == null,
@@ -134,6 +144,13 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
+// For HTML, certain tags cannot have children. This has the same purpose as
+// `omittedCloseTags` except that `menuitem` should still have its closing tag.
+
+var voidElementTags = assign({
+  'menuitem': true
+}, omittedCloseTags);
+
 // We accept any tag to be rendered but since this gets injected into abitrary
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
@@ -190,7 +207,7 @@ ReactDOMComponent.Mixin = {
    */
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
-    assertValidProps(this._currentElement.props);
+    assertValidProps(this, this._currentElement.props);
     var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
     return (
       this._createOpenTagMarkupAndPutListeners(transaction) +
@@ -312,7 +329,7 @@ ReactDOMComponent.Mixin = {
    * @overridable
    */
   updateComponent: function(transaction, prevElement, nextElement, context) {
-    assertValidProps(this._currentElement.props);
+    assertValidProps(this, this._currentElement.props);
     this._updateDOMProperties(prevElement.props, transaction);
     this._updateDOMChildren(prevElement.props, transaction, context);
   },

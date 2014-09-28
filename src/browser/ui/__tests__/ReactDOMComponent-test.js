@@ -303,11 +303,13 @@ describe('ReactDOMComponent', function() {
   });
 
   describe('mountComponent', function() {
+    var React;
     var mountComponent;
 
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
+      React = require('React');
       var ReactMultiChild = require('ReactMultiChild');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
@@ -328,6 +330,46 @@ describe('ReactDOMComponent', function() {
         });
         return stubComponent.mountComponent('test', transaction, {});
       };
+    });
+
+    it("should warn against children for void elements", function() {
+      spyOn(console, 'warn');
+
+      var container = document.createElement('div');
+
+      React.render(<input>children</input>, container);
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('void element');
+    });
+
+    it("should warn against dangerouslySetInnerHTML for void elements", function() {
+      spyOn(console, 'warn');
+
+      var container = document.createElement('div');
+
+      React.render(
+        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+        container
+      );
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('void element');
+    });
+
+    it("should treat menuitem as a void element but still create the closing tag", function() {
+      spyOn(console, 'warn');
+
+      var container = document.createElement('div');
+
+      React.render(<menuitem />, container);
+
+      expect(container.innerHTML).toContain('</menuitem>');
+
+      React.render(<menuitem>children</menuitem>, container);
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('void element');
     });
 
     it("should validate against multiple children props", function() {
@@ -394,6 +436,29 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       React = require('React');
       container = document.createElement('div');
+    });
+
+    it("should warn against children for void elements", function() {
+      spyOn(console, 'warn');
+
+      React.render(<input />, container);
+      React.render(<input>children</input>, container);
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('void element');
+    });
+
+    it("should warn against dangerouslySetInnerHTML for void elements", function() {
+      spyOn(console, 'warn');
+
+      React.render(<input />, container);
+      React.render(
+        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+        container
+      );
+
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('void element');
     });
 
     it("should validate against multiple children props", function() {
