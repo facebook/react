@@ -43,7 +43,7 @@ PooledClass.addPoolingTo(ForEachBookKeeping, twoArgumentPooler);
 function forEachSingleChild(traverseContext, child, name, i) {
   var forEachBookKeeping = traverseContext;
   forEachBookKeeping.forEachFunction.call(
-    forEachBookKeeping.forEachContext, child, i);
+    forEachBookKeeping.forEachContext, child, i, name);
 }
 
 /**
@@ -97,8 +97,12 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
   );
 
   if (keyUnique) {
-    var mappedChild =
-      mapBookKeeping.mapFunction.call(mapBookKeeping.mapContext, child, i);
+    var mappedChild = mapBookKeeping.mapFunction.call(
+      mapBookKeeping.mapContext,
+      child,
+      i,
+      name
+    );
     mapResult[name] = mappedChild;
   }
 }

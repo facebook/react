@@ -35,17 +35,18 @@ describe('ReactChildren', function() {
     });
 
     var simpleKid = <span key="simple" />;
+    var mappedKey = '.$simple';
 
     // First pass children into a component to fully simulate what happens when
     // using structures that arrive from transforms.
 
     var instance = <div>{simpleKid}</div>;
     ReactChildren.forEach(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
     callback.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
+    expect(mappedChildren[mappedKey]).toBe(simpleKid);
   });
 
   it('should treat single arrayless child as being in array', function() {
@@ -55,12 +56,14 @@ describe('ReactChildren', function() {
 
     var simpleKid = <span />;
     var instance = <div>{simpleKid}</div>;
+    var mappedKey = '.0';
+
     ReactChildren.forEach(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
     callback.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
+    expect(mappedChildren[mappedKey]).toBe(simpleKid);
   });
 
   it('should treat single child in array as expected', function() {
@@ -70,12 +73,14 @@ describe('ReactChildren', function() {
 
     var simpleKid = <span />;
     var instance = <div>{[simpleKid]}</div>;
+    var mappedKey = '.0';
+
     ReactChildren.forEach(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
     callback.reset();
     var mappedChildren = ReactChildren.map(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(simpleKid, 0);
-    expect(mappedChildren[Object.keys(mappedChildren)[0]]).toBe(simpleKid);
+    expect(callback).toHaveBeenCalledWith(simpleKid, 0, mappedKey);
+    expect(mappedChildren[mappedKey]).toBe(simpleKid);
   });
 
   it('should pass key to returned component', function() {
@@ -137,47 +142,39 @@ describe('ReactChildren', function() {
         index === 3 ? threeMapped : fourMapped;
     });
 
-    var instance = (
-      <div>
-        {zero}
-        {one}
-        {two}
-        {three}
-        {four}
-      </div>
-    );
+    var instance = <div>{zero}{one}{two}{three}{four}</div>;
+    var mappedKeys = ['.$keyZero', '.1', '.$keyTwo', '.3', '.$keyFour'];
 
     ReactChildren.forEach(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(zero, 0);
-    expect(callback).toHaveBeenCalledWith(one, 1);
-    expect(callback).toHaveBeenCalledWith(two, 2);
-    expect(callback).toHaveBeenCalledWith(three, 3);
-    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(zero, 0, mappedKeys[0]);
+    expect(callback).toHaveBeenCalledWith(one, 1, mappedKeys[1]);
+    expect(callback).toHaveBeenCalledWith(two, 2, mappedKeys[2]);
+    expect(callback).toHaveBeenCalledWith(three, 3, mappedKeys[3]);
+    expect(callback).toHaveBeenCalledWith(four, 4, mappedKeys[4]);
     callback.reset();
 
     var mappedChildren =
       ReactChildren.map(instance.props.children, callback);
-    var mappedKeys = Object.keys(mappedChildren);
-    expect(callback.calls.length).toBe(5);
-    expect(mappedKeys.length).toBe(5);
-    // Keys default to indices.
-    expect(mappedKeys).toEqual(
-      ['.$keyZero', '.1', '.$keyTwo', '.3', '.$keyFour']
-    );
+    var actualMappedKeys = Object.keys(mappedChildren);
 
-    expect(callback).toHaveBeenCalledWith(zero, 0);
+    expect(callback.calls.length).toBe(5);
+    expect(actualMappedKeys.length).toBe(5);
+    // Keys default to indices.
+    expect(actualMappedKeys).toEqual(mappedKeys);
+
+    expect(callback).toHaveBeenCalledWith(zero, 0, mappedKeys[0]);
     expect(mappedChildren[mappedKeys[0]]).toBe(zeroMapped);
 
-    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(one, 1, mappedKeys[1]);
     expect(mappedChildren[mappedKeys[1]]).toBe(oneMapped);
 
-    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(two, 2, mappedKeys[2]);
     expect(mappedChildren[mappedKeys[2]]).toBe(twoMapped);
 
-    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(three, 3, mappedKeys[3]);
     expect(mappedChildren[mappedKeys[3]]).toBe(threeMapped);
 
-    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(four, 4, mappedKeys[4]);
     expect(mappedChildren[mappedKeys[4]]).toBe(fourMapped);
   });
 
@@ -220,45 +217,47 @@ describe('ReactChildren', function() {
       }</div>
     );
 
-    ReactChildren.forEach(instance.props.children, callback);
-    expect(callback).toHaveBeenCalledWith(zero, 0);
-    expect(callback).toHaveBeenCalledWith(one, 1);
-    expect(callback).toHaveBeenCalledWith(two, 2);
-    expect(callback).toHaveBeenCalledWith(three, 3);
-    expect(callback).toHaveBeenCalledWith(four, 4);
-    expect(callback).toHaveBeenCalledWith(five, 5);
-    callback.reset();
-
-    var mappedChildren = ReactChildren.map(instance.props.children, callback);
-    var mappedKeys = Object.keys(mappedChildren);
-    expect(callback.calls.length).toBe(6);
-    expect(mappedKeys.length).toBe(6);
-    // Keys default to indices.
-    expect(mappedKeys).toEqual([
+    var mappedKeys = [
       '.0:$firstHalfKey:0:$keyZero',
       '.0:$firstHalfKey:0:1',
       '.0:$firstHalfKey:0:$keyTwo',
       '.0:$secondHalfKey:0:0',
       '.0:$secondHalfKey:0:$keyFour',
       '.0:$keyFive:$keyFiveInner'
-    ]);
+    ];
 
-    expect(callback).toHaveBeenCalledWith(zero, 0);
+    ReactChildren.forEach(instance.props.children, callback);
+    expect(callback).toHaveBeenCalledWith(zero, 0, mappedKeys[0]);
+    expect(callback).toHaveBeenCalledWith(one, 1, mappedKeys[1]);
+    expect(callback).toHaveBeenCalledWith(two, 2, mappedKeys[2]);
+    expect(callback).toHaveBeenCalledWith(three, 3, mappedKeys[3]);
+    expect(callback).toHaveBeenCalledWith(four, 4, mappedKeys[4]);
+    expect(callback).toHaveBeenCalledWith(five, 5, mappedKeys[5]);
+    callback.reset();
+
+    var mappedChildren = ReactChildren.map(instance.props.children, callback);
+    var actualMappedKeys = Object.keys(mappedChildren);
+    expect(callback.calls.length).toBe(6);
+    expect(actualMappedKeys.length).toBe(6);
+    // Keys default to indices.
+    expect(actualMappedKeys).toEqual(mappedKeys);
+
+    expect(callback).toHaveBeenCalledWith(zero, 0, mappedKeys[0]);
     expect(mappedChildren[mappedKeys[0]]).toBe(zeroMapped);
 
-    expect(callback).toHaveBeenCalledWith(one, 1);
+    expect(callback).toHaveBeenCalledWith(one, 1, mappedKeys[1]);
     expect(mappedChildren[mappedKeys[1]]).toBe(oneMapped);
 
-    expect(callback).toHaveBeenCalledWith(two, 2);
+    expect(callback).toHaveBeenCalledWith(two, 2, mappedKeys[2]);
     expect(mappedChildren[mappedKeys[2]]).toBe(twoMapped);
 
-    expect(callback).toHaveBeenCalledWith(three, 3);
+    expect(callback).toHaveBeenCalledWith(three, 3, mappedKeys[3]);
     expect(mappedChildren[mappedKeys[3]]).toBe(threeMapped);
 
-    expect(callback).toHaveBeenCalledWith(four, 4);
+    expect(callback).toHaveBeenCalledWith(four, 4, mappedKeys[4]);
     expect(mappedChildren[mappedKeys[4]]).toBe(fourMapped);
 
-    expect(callback).toHaveBeenCalledWith(five, 5);
+    expect(callback).toHaveBeenCalledWith(five, 5, mappedKeys[5]);
     expect(mappedChildren[mappedKeys[5]]).toBe(fiveMapped);
   });
 
