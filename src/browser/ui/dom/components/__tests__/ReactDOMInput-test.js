@@ -281,6 +281,50 @@ describe('ReactDOMInput', function() {
 
   });
 
+  it('should make radio input controlled with checkedLink', function() {
+    var RadioInput = React.createClass({
+      render: function () {
+        return (
+          <input
+            type="radio"
+            checkedLink={new ReactLink(false, emptyFunction)} />
+        );
+      }
+    });
+
+    var stub = ReactTestUtils.renderIntoDocument(<RadioInput />);
+    var radio = stub.getDOMNode();
+
+    expect(radio.checked).toBe(false);
+
+    radio.checked = true;
+    ReactTestUtils.Simulate.change(radio);
+
+    expect(radio.checked).toEqual(false);
+  });
+
+  it('should make text input controlled with valueLink', function() {
+    var TextInput = React.createClass({
+      render: function () {
+        return (
+          <input
+            type="text"
+            valueLink={new ReactLink('initial', emptyFunction)} />
+        );
+      }
+    });
+
+    var stub = ReactTestUtils.renderIntoDocument(<TextInput />);
+    var node = stub.getDOMNode();
+
+    expect(node.value).toEqual('initial');
+
+    node.value = 'something';
+    ReactTestUtils.Simulate.change(node);
+
+    expect(node.value).toEqual('initial');
+  });
+
   it('should support checkedLink', function() {
     var container = document.createElement('div');
     var link = new ReactLink(true, mocks.getMockFunction());
@@ -297,6 +341,28 @@ describe('ReactDOMInput', function() {
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual(false);
+  });
+
+  it('should make checkbox input controlled with checkedLink', function() {
+    var CheckboxInput = React.createClass({
+      render: function () {
+        return (
+          <input
+            type="checkbox"
+            checkedLink={new ReactLink(true, emptyFunction)} />
+        );
+      }
+    });
+
+    var stub = ReactTestUtils.renderIntoDocument(<CheckboxInput />);
+    var node = stub.getDOMNode();
+
+    expect(node.checked).toBe(true);
+
+    node.checked = false;
+    ReactTestUtils.Simulate.change(node);
+
+    expect(node.checked).toEqual(true);
   });
 
   it('should warn with checked and no onChange handler', function() {
