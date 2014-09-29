@@ -206,6 +206,7 @@ var injection = {
   }
 };
 
+ReactDOM.createDOMComponentClass = createDOMComponentClass;
 ReactDOM.injection = injection;
 
 module.exports = ReactDOM;
