@@ -83,6 +83,7 @@ var merge = require('merge');
  *    React Core     .  General Purpose Event Plugin System
  */
 
+var hasEventPageXY;
 var alreadyListeningTo = {};
 var isMonitoringScrollValue = false;
 var reactTopListenersCounter = 0;
@@ -331,12 +332,19 @@ var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
    * Listens to window scroll and resize events. We cache scroll values so that
    * application code can access them without triggering reflows.
    *
+   * ViewportMetrics is only used by SyntheticMouse/TouchEvent and only when
+   * pageX/pageY isn't supported (legacy browsers).
+   *
    * NOTE: Scroll events do not bubble.
    *
    * @see http://www.quirksmode.org/dom/events/scroll.html
    */
   ensureScrollValueMonitoring: function(){
-    if (!isMonitoringScrollValue) {
+    if (hasEventPageXY === undefined) {
+      hasEventPageXY =
+        document.createEvent && 'pageX' in document.createEvent('MouseEvent');
+    }
+    if (!hasEventPageXY && !isMonitoringScrollValue) {
       var refresh = ViewportMetrics.refreshScrollValues;
       ReactBrowserEventEmitter.ReactEventListener.monitorScrollValue(refresh);
       isMonitoringScrollValue = true;
