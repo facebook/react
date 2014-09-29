@@ -35,3 +35,13 @@ sass:
 gems:
 - jekyll-redirect-from
 react_version: 0.11.1
+description: A JavaScript library for building user interfaces
+relative_permalinks: true
+paginate: 5
+paginate_path: "/blog/page:num/"
+timezone: America/Los_Angeles
+lunr_search:
+  stopwords: stopwords.txt
+  excludes:
+  - \/blog
+  - \/downloads
