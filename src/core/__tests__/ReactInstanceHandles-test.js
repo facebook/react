@@ -103,25 +103,6 @@ describe('ReactInstanceHandles', function() {
       ).toBe(childNodeB);
     });
 
-    it('should work around unidentified nodes', function() {
-      var parentNode = document.createElement('div');
-      var childNodeA = document.createElement('div');
-      var childNodeB = document.createElement('div');
-      parentNode.appendChild(childNodeA);
-      parentNode.appendChild(childNodeB);
-
-      ReactMount.setID(parentNode, '.0');
-      // No ID on `childNodeA`.
-      ReactMount.setID(childNodeB, '.0.0:1');
-
-      expect(
-        ReactMount.findComponentRoot(
-          parentNode,
-          ReactMount.getID(childNodeB)
-        )
-      ).toBe(childNodeB);
-    });
-
     it('should throw if a rendered element cannot be found', function() {
       var parentNode = document.createElement('table');
       var childNodeA = document.createElement('tbody');
@@ -130,8 +111,8 @@ describe('ReactInstanceHandles', function() {
       childNodeA.appendChild(childNodeB);
 
       ReactMount.setID(parentNode, '.0');
-      // No ID on `childNodeA`, it was "rendered by the browser".
-      ReactMount.setID(childNodeB, '.0.1:0');
+      ReactMount.setID(childNodeA, '.0.1:0');
+      ReactMount.setID(childNodeB, '.0.1:0.0');
 
       expect(ReactMount.findComponentRoot(
         parentNode,
@@ -141,7 +122,7 @@ describe('ReactInstanceHandles', function() {
       expect(function() {
         ReactMount.findComponentRoot(
           parentNode,
-          ReactMount.getID(childNodeB) + ":junk"
+          ReactMount.getID(childNodeA) + ":junk"
         );
       }).toThrow(
         'Invariant Violation: findComponentRoot(..., .0.1:0:junk): ' +
@@ -326,7 +307,7 @@ describe('ReactInstanceHandles', function() {
     it("should return next descendent from window", function() {
       var parent = renderParentIntoDocument();
       expect(
-        ReactInstanceHandles._getNextDescendantID(
+        ReactInstanceHandles.getNextDescendantID(
           '',
           parent.refs.P_P1._rootNodeID
         )
@@ -334,13 +315,13 @@ describe('ReactInstanceHandles', function() {
     });
 
     it("should return window for next descendent towards window", function() {
-      expect(ReactInstanceHandles._getNextDescendantID('', '')).toBe('');
+      expect(ReactInstanceHandles.getNextDescendantID('', '')).toBe('');
     });
 
     it("should return self for next descendent towards self", function() {
       var parent = renderParentIntoDocument();
       expect(
-        ReactInstanceHandles._getNextDescendantID(
+        ReactInstanceHandles.getNextDescendantID(
           parent.refs.P_P1._rootNodeID,
           parent.refs.P_P1._rootNodeID
         )
