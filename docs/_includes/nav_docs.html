@@ -11,7 +11,7 @@
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    {{ item | sidebar_item_link}}
+                    {{ subitem | sidebar_item_link}}
                   </li>
                 {% endfor %}
               </ul>
