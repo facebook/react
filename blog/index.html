@@ -102,7 +102,7 @@
 <p>The first steps toward working with Jest are as follows:</p>
 
 <ol>
-<li>Get the module depencies for the application installed by running <code>npm install</code>.</li>
+<li>Get the module dependencies for the application installed by running <code>npm install</code>.</li>
 <li>Create a directory <code>__tests__/</code> with a test file, in this case TodoStore-test.js</li>
 <li>Run <code>npm install jest-cli —save-dev</code></li>
 <li>Add the following to your package.json</li>
@@ -153,8 +153,8 @@
 <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
 <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
 <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]].</span><span class="nx">text</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="puting-it-all-together"></a>Puting it All Together <a class="hash-link" href="#puting-it-all-together">#</a></h2>
-<p>The example Flux TodoMVC application has been updated with an example test for the TodoStore, but lets&#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.</p>
+</code></pre></div><h2><a class="anchor" name="putting-it-all-together"></a>Putting it All Together <a class="hash-link" href="#putting-it-all-together">#</a></h2>
+<p>The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let&#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;../TodoStore&#39;</span><span class="p">);</span>
 <span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
 
@@ -352,7 +352,7 @@
   <span class="p">);</span>
 <span class="p">},</span>
 </code></pre></div>
-<p>To learn how to test React components themselves, check out the <a href="http://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="http://facebook.github.io/react/docs/test-utils.html">ReactTestUtils documenation</a>.</p>
+<p>To learn how to test React components themselves, check out the <a href="http://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="http://facebook.github.io/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
 <h2><a class="anchor" name="further-reading"></a>Further Reading <a class="hash-link" href="#further-reading">#</a></h2>
 <ul>
 <li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>

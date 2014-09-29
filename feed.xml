@@ -15,7 +15,7 @@
 &lt;p&gt;The first steps toward working with Jest are as follows:&lt;/p&gt;
 
 &lt;ol&gt;
-&lt;li&gt;Get the module depencies for the application installed by running &lt;code&gt;npm install&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Get the module dependencies for the application installed by running &lt;code&gt;npm install&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;Create a directory &lt;code&gt;__tests__/&lt;/code&gt; with a test file, in this case TodoStore-test.js&lt;/li&gt;
 &lt;li&gt;Run &lt;code&gt;npm install jest-cli —save-dev&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;Add the following to your package.json&lt;/li&gt;
@@ -66,8 +66,8 @@
 &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;all&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TodoStore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getAll&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
 &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;keys&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;Object&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;keys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;expect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;all&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;keys&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]].&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;toEqual&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;puting-it-all-together&quot;&gt;&lt;/a&gt;Puting it All Together &lt;a class=&quot;hash-link&quot; href=&quot;#puting-it-all-together&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The example Flux TodoMVC application has been updated with an example test for the TodoStore, but lets&amp;#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&amp;#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;putting-it-all-together&quot;&gt;&lt;/a&gt;Putting it All Together &lt;a class=&quot;hash-link&quot; href=&quot;#putting-it-all-together&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let&amp;#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&amp;#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;jest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dontMock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;../TodoStore&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;nx&quot;&gt;jest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;dontMock&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react/lib/merge&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
@@ -265,7 +265,7 @@
   &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;To learn how to test React components themselves, check out the &lt;a href=&quot;http://facebook.github.io/jest/docs/tutorial-react.html&quot;&gt;Jest tutorial for React&lt;/a&gt; and the &lt;a href=&quot;http://facebook.github.io/react/docs/test-utils.html&quot;&gt;ReactTestUtils documenation&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;To learn how to test React components themselves, check out the &lt;a href=&quot;http://facebook.github.io/jest/docs/tutorial-react.html&quot;&gt;Jest tutorial for React&lt;/a&gt; and the &lt;a href=&quot;http://facebook.github.io/react/docs/test-utils.html&quot;&gt;ReactTestUtils documentation&lt;/a&gt;.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;further-reading&quot;&gt;&lt;/a&gt;Further Reading &lt;a class=&quot;hash-link&quot; href=&quot;#further-reading&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&quot;http://martinfowler.com/articles/mocksArentStubs.html&quot;&gt;Mocks Aren&amp;#39;t Stubs&lt;/a&gt; by Martin Fowler&lt;/li&gt;
