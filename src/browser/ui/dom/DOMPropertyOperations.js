@@ -86,8 +86,10 @@ var DOMPropertyOperations = {
    * @return {string} Markup string.
    */
   createMarkupForID: function(id) {
-    return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
-      escapeTextForBrowser(id) + '"';
+    return (
+      ' ' + processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
+      escapeTextForBrowser(id) + '"'
+    );
   },
 
   /**
@@ -101,25 +103,27 @@ var DOMPropertyOperations = {
     if (DOMProperty.isStandardName.hasOwnProperty(name) &&
         DOMProperty.isStandardName[name]) {
       if (shouldIgnoreValue(name, value)) {
-        return '';
+        return;
       }
       var attributeName = DOMProperty.getAttributeName[name];
       if (DOMProperty.hasBooleanValue[name] ||
           (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
         return escapeTextForBrowser(attributeName);
       }
-      return processAttributeNameAndPrefix(attributeName) +
-        escapeTextForBrowser(value) + '"';
+      return (
+        ' ' + processAttributeNameAndPrefix(attributeName) +
+        escapeTextForBrowser(value) + '"'
+      );
     } else if (DOMProperty.isCustomAttribute(name)) {
-      if (value == null) {
-        return '';
+      if (value != null) {
+        return (
+          ' ' + processAttributeNameAndPrefix(name) +
+          escapeTextForBrowser(value) + '"'
+        );
       }
-      return processAttributeNameAndPrefix(name) +
-        escapeTextForBrowser(value) + '"';
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }
-    return null;
   },
 
   /**

@@ -67,6 +67,7 @@ var TRANSACTION_WRAPPERS = [
 function ReactServerRenderingTransaction(renderToStaticMarkup) {
   this.reinitializeTransaction();
   this.renderToStaticMarkup = renderToStaticMarkup;
+  this.markupFragments = [];
   this.reactMountReady = CallbackQueue.getPooled(null);
   this.putListenerQueue = ReactPutListenerQueue.getPooled();
 }
@@ -103,6 +104,8 @@ var Mixin = {
 
     ReactPutListenerQueue.release(this.putListenerQueue);
     this.putListenerQueue = null;
+
+    this.markupFragments = [];
   }
 };
 
