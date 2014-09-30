@@ -180,7 +180,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
     }
 
     this._pendingValue = selectedValue;
-    ReactUpdates.setImmediate(updateWithPendingValueIfMounted, this);
+    ReactUpdates.asap(updateWithPendingValueIfMounted, this);
     return returnValue;
   }
 

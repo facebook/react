@@ -29,8 +29,8 @@ var mixInto = require('mixInto');
 var warning = require('warning');
 
 var dirtyComponents = [];
-var setImmediateCallbackQueue = CallbackQueue.getPooled();
-var setImmediateEnqueued = false;
+var asapCallbackQueue = CallbackQueue.getPooled();
+var asapEnqueued = false;
 
 var batchingStrategy = null;
 
@@ -172,18 +172,18 @@ var flushBatchedUpdates = ReactPerf.measure(
     // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
     // array and perform any updates enqueued by mount-ready handlers (i.e.,
     // componentDidUpdate) but we need to check here too in order to catch
-    // updates enqueued by setState callbacks and setImmediate calls.
-    while (dirtyComponents.length || setImmediateEnqueued) {
+    // updates enqueued by setState callbacks and asap calls.
+    while (dirtyComponents.length || asapEnqueued) {
       if (dirtyComponents.length) {
         var transaction = ReactUpdatesFlushTransaction.getPooled();
         transaction.perform(runBatchedUpdates, null, transaction);
         ReactUpdatesFlushTransaction.release(transaction);
       }
 
-      if (setImmediateEnqueued) {
-        setImmediateEnqueued = false;
-        var queue = setImmediateCallbackQueue;
-        setImmediateCallbackQueue = CallbackQueue.getPooled();
+      if (asapEnqueued) {
+        asapEnqueued = false;
+        var queue = asapCallbackQueue;
+        asapCallbackQueue = CallbackQueue.getPooled();
         queue.notifyAll();
         CallbackQueue.release(queue);
       }
@@ -237,14 +237,14 @@ function enqueueUpdate(component, callback) {
  * Enqueue a callback to be run at the end of the current batching cycle. Throws
  * if no updates are currently being performed.
  */
-function setImmediate(callback, context) {
+function asap(callback, context) {
   invariant(
     batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.setImmediate: Can\'t enqueue an immediate callback in a ' +
-    'context where updates are not being batched.'
+    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
+    'updates are not being batched.'
   );
-  setImmediateCallbackQueue.enqueue(callback, context);
-  setImmediateEnqueued = true;
+  asapCallbackQueue.enqueue(callback, context);
+  asapEnqueued = true;
 }
 
 var ReactUpdatesInjection = {
@@ -286,7 +286,7 @@ var ReactUpdates = {
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
-  setImmediate: setImmediate
+  asap: asap
 };
 
 module.exports = ReactUpdates;
