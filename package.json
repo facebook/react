@@ -32,8 +32,9 @@
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
-    "browserify": "^4.1.10",
+    "browserify": "^6.1.0",
     "coverify": "~1.0.4",
+    "derequire": "^1.2.0",
     "envify": "^3.0.0",
     "es3ify": "~0.1.2",
     "es5-shim": "^4.0.0",
