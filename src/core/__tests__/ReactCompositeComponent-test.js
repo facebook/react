@@ -945,6 +945,30 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
+  it('should warn when trying to directly set state via this.state', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    try {
+      var Component = React.createClass({
+        render: function() {
+          this.state = 'something';
+          return <div />;
+        }
+      });
+
+      var instance = ReactTestUtils.renderIntoDocument(<Component />);
+
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: this.state: Setting state directly from this.state is not ' +
+        'recommended. Instead, use this.setState().'
+      );
+    } finally {
+      console.warn = warn;
+    }
+  });
+
   it('should warn when mispelling shouldComponentUpdate', function() {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
