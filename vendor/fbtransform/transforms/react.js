@@ -57,8 +57,26 @@ function stripNonWhiteParen(value) {
   return value.replace(reNonWhiteParen, '');
 }
 
+function throwSyntaxError(object, message) {
+  var error = new SyntaxError(message);
+  error.lineNumber = object.loc.start.line;
+  error.column = object.loc.start.column;
+  throw error;
+}
+
 function visitReactTag(traverse, object, path, state) {
   var jsxObjIdent = utils.getDocblock(state).jsx;
+
+  // only run react when react @jsx namespace is specified in docblock
+  if (!jsxObjIdent) {
+    throwSyntaxError(object,
+      '/** @jsx */ namespace was not found, ' +
+      'not sure how to compile ' +
+      utils.getNodeSourceText(object, state) +
+      ' to JavaScript.'
+    );
+  }
+
   var openingElement = object.openingElement;
   var nameObject = openingElement.name;
   var attributesObject = openingElement.attributes;
@@ -66,7 +84,7 @@ function visitReactTag(traverse, object, path, state) {
   utils.catchup(openingElement.range[0], state, trimLeft);
 
   if (nameObject.type === Syntax.XJSNamespacedName && nameObject.namespace) {
-    throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
+    throwSyntaxError(nameObject, 'Namespace tags are not supported. ReactJSX is not XML.');
   }
 
   var isReact = jsxObjIdent !== 'JSXDOM';
@@ -98,7 +116,7 @@ function visitReactTag(traverse, object, path, state) {
     } else if (tagName !== quotedTagName) {
       // If we're in the case where we need to quote and but don't recognize the
       // tag, throw.
-      throw new Error(
+      throwSyntaxError(tagName,
         'Tags must be valid JS identifiers or a recognized special case. `<' +
         tagName + '>` is not one of them.'
       );
@@ -179,7 +197,7 @@ function visitReactTag(traverse, object, path, state) {
     }
 
     if (attr.name.namespace) {
-      throw new Error(
+      throwSyntaxError(attr.name.namespace,
          'Namespace attributes are not supported. ReactJSX is not XML.');
     }
     var name = attr.name.name;
