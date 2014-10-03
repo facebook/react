@@ -195,7 +195,7 @@ var ReactMultiChild = {
         if (children.hasOwnProperty(name)) {
           // The rendered children must be turned into instances as they're
           // mounted.
-          var childInstance = instantiateReactComponent(child);
+          var childInstance = instantiateReactComponent(child, null);
           children[name] = childInstance;
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + name;
@@ -300,7 +300,10 @@ var ReactMultiChild = {
             this._unmountChildByName(prevChild, name);
           }
           // The child must be instantiated before it's mounted.
-          var nextChildInstance = instantiateReactComponent(nextDescriptor);
+          var nextChildInstance = instantiateReactComponent(
+            nextDescriptor,
+            null
+          );
           this._mountChildByNameAtIndex(
             nextChildInstance, name, nextIndex, transaction
           );

@@ -307,7 +307,7 @@ var ReactMount = {
         'componentDidUpdate.'
       );
 
-      var componentInstance = instantiateReactComponent(nextComponent);
+      var componentInstance = instantiateReactComponent(nextComponent, null);
       var reactRootID = ReactMount._registerComponent(
         componentInstance,
         container

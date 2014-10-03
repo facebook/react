@@ -33,16 +33,14 @@ var invariant = require('invariant');
  * take advantage of React's reconciliation for styling and <title>
  * management. So we just document it and throw in dangerous cases.
  *
- * @param {function} componentClass convenience constructor to wrap
+ * @param {string} tag The tag to wrap
  * @return {function} convenience constructor of new component
  */
-function createFullPageComponent(componentClass) {
-  var elementFactory = ReactDescriptor.createFactory(componentClass.type);
+function createFullPageComponent(tag) {
+  var elementFactory = ReactDescriptor.createFactory(tag);
 
   var FullPageComponent = ReactCompositeComponent.createClass({
-    displayName: 'ReactFullPageComponent' + (
-      componentClass.type.displayName || ''
-    ),
+    displayName: 'ReactFullPageComponent' + tag,
 
     componentWillUnmount: function() {
       invariant(

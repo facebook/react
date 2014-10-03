@@ -793,7 +793,8 @@ var ReactCompositeComponentMixin = {
       }
 
       this._renderedComponent = instantiateReactComponent(
-        this._renderValidatedComponent()
+        this._renderValidatedComponent(),
+        this._descriptor.type // The wrapping type
       );
 
       // Done with mounting, `setState` will now trigger UI changes.
@@ -1185,7 +1186,10 @@ var ReactCompositeComponentMixin = {
         var thisID = this._rootNodeID;
         var prevComponentID = prevComponentInstance._rootNodeID;
         prevComponentInstance.unmountComponent();
-        this._renderedComponent = instantiateReactComponent(nextDescriptor);
+        this._renderedComponent = instantiateReactComponent(
+          nextDescriptor,
+          this._descriptor.type
+        );
         var nextMarkup = this._renderedComponent.mountComponent(
           thisID,
           transaction,

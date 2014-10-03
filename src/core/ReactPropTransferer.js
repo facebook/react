@@ -141,6 +141,8 @@ var ReactPropTransferer = {
         'don\'t own, %s. This usually means you are calling ' +
         'transferPropsTo() on a component passed in as props or children.',
         this.constructor.displayName,
+        typeof descriptor.type === 'string' ?
+        descriptor.type :
         descriptor.type.displayName
       );
 

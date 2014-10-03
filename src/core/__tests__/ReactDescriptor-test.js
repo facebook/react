@@ -297,4 +297,10 @@ describe('ReactDescriptor', function() {
     expect(typeof Component.specialType.isRequired).toBe("function");
   });
 
+  it('allows a DOM descriptor to be used with a string', function() {
+    var descriptor = React.createDescriptor('div', { className: 'foo' });
+    var instance = ReactTestUtils.renderIntoDocument(descriptor);
+    expect(instance.getDOMNode().tagName).toBe('DIV');
+  });
+
 });
