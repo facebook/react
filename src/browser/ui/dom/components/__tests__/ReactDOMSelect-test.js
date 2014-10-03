@@ -145,6 +145,28 @@ describe('ReactDOMSelect', function() {
     expect(node.options[2].selected).toBe(true);  // twelve
   });
 
+  it('should reset child options selected when they are changed and `defaultValue` is set', function() {
+    var stub =
+      <select multiple={true} defaultValue={["a", "b"]}>
+      </select>
+    stub = ReactTestUtils.renderIntoDocument(stub);
+
+    stub.setProps({
+      children: [
+        <option value="a">a</option>,
+        <option value="b">b</option>,
+        <option value="c">c</option>
+      ]
+    })
+
+    var node = stub.getDOMNode()
+
+    expect(node.options[0].selected).toBe(true);  // a
+    expect(node.options[1].selected).toBe(true);  // b
+    expect(node.options[2].selected).toBe(false);  // c
+
+  });
+
   it('should allow setting `value` with `objectToString`', function() {
     var objectToString = {
       animal: "giraffe",
