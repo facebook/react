@@ -23,6 +23,7 @@ var warning = require('warning');
 
 var ReactDescriptor = require('ReactDescriptor');
 var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
+var ReactNativeComponent = require('ReactNativeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 
 /**
@@ -30,10 +31,11 @@ var ReactEmptyComponent = require('ReactEmptyComponent');
  * mounted.
  *
  * @param {object} descriptor
- * @return {object} A new instance of componentDescriptor's constructor.
+ * @param {*} parentCompositeType The composite type that resolved this.
+ * @return {object} A new instance of the descriptor's constructor.
  * @protected
  */
-function instantiateReactComponent(descriptor) {
+function instantiateReactComponent(descriptor, parentCompositeType) {
   var instance;
 
   if (__DEV__) {
@@ -41,8 +43,6 @@ function instantiateReactComponent(descriptor) {
       descriptor && (typeof descriptor.type === 'function' ||
                      typeof descriptor.type === 'string'),
       'Only functions or strings can be mounted as React components.'
-      // Not really strings yet, but as soon as I solve the cyclic dep, they
-      // will be allowed here.
     );
 
     // Resolve mock instances
@@ -72,24 +72,32 @@ function instantiateReactComponent(descriptor) {
         // there is no render function on the instance. We replace the whole
         // component with an empty component instance instead.
         descriptor = ReactEmptyComponent.getEmptyComponent();
-        instance = new descriptor.type(descriptor.props);
+      } else {
+        if (render._isMockFunction && !render._getMockImplementation()) {
+          // Auto-mocked components may have a prototype with a mocked render
+          // function. For those, we'll need to mock the result of the render
+          // since we consider undefined to be invalid results from render.
+          render.mockImplementation(
+            ReactEmptyComponent.getEmptyComponent
+          );
+        }
         instance.construct(descriptor);
         return instance;
-      } else if (render._isMockFunction && !render._getMockImplementation()) {
-        // Auto-mocked components may have a prototype with a mocked render
-        // function. For those, we'll need to mock the result of the render
-        // since we consider undefined to be invalid results from render.
-        render.mockImplementation(
-          ReactEmptyComponent.getEmptyComponent
-        );
       }
-      instance.construct(descriptor);
-      return instance;
     }
   }
 
-  // Normal case for non-mocks
-  instance = new descriptor.type(descriptor.props);
+  // Special case string values
+  if (typeof descriptor.type === 'string') {
+    instance = ReactNativeComponent.createInstanceForTag(
+      descriptor.type,
+      descriptor.props,
+      parentCompositeType
+    );
+  } else {
+    // Normal case for non-mocks and non-strings
+    instance = new descriptor.type(descriptor.props);
+  }
 
   if (__DEV__) {
     warning(

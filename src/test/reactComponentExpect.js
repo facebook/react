@@ -106,7 +106,7 @@ mergeInto(reactComponentExpect.prototype, {
 
   toBeComponentOfType: function(convenienceConstructor) {
     expect(
-      this.instance().constructor === convenienceConstructor.type
+      this.instance()._descriptor.type === convenienceConstructor.type
     ).toBe(true);
     return this;
   },
@@ -126,7 +126,7 @@ mergeInto(reactComponentExpect.prototype, {
   toBeCompositeComponentWithType: function(convenienceConstructor) {
     this.toBeCompositeComponent();
     expect(
-      this.instance().constructor === convenienceConstructor.type
+      this.instance()._descriptor.type === convenienceConstructor.type
     ).toBe(true);
     return this;
   },

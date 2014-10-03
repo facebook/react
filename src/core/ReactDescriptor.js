@@ -222,10 +222,13 @@ ReactDescriptor.cloneAndReplaceProps = function(oldDescriptor, newProps) {
  * @public
  */
 ReactDescriptor.isValidFactory = function(factory) {
-  return typeof factory === 'function'  &&
-         typeof factory.type === 'function' &&
-         typeof factory.type.prototype.mountComponent === 'function' &&
-         typeof factory.type.prototype.receiveComponent === 'function';
+  return typeof factory === 'function' && (
+           typeof factory.type === 'string' || (
+             typeof factory.type === 'function' &&
+             typeof factory.type.prototype.mountComponent === 'function' &&
+             typeof factory.type.prototype.receiveComponent === 'function'
+           )
+         );
 };
 
 /**

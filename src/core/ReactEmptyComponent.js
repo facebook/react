@@ -29,7 +29,7 @@ var nullComponentIdsRegistry = {};
 
 var ReactEmptyComponentInjection = {
   injectEmptyComponent: function(emptyComponent) {
-    component = ReactDescriptor.createFactory(emptyComponent.type);
+    component = ReactDescriptor.createFactory(emptyComponent);
   }
 };
 
