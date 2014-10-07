@@ -244,4 +244,28 @@ describe('ReactDOMSelect', function() {
     expect(link.requestChange.mock.calls[0][0]).toEqual('gorilla');
 
   });
+
+  it('should support ReactLink and multiple', function() {
+    var link = new ReactLink(['monkey', 'gorilla'], mocks.getMockFunction());
+    var stub =
+      <select multiple={true} valueLink={link}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    stub = ReactTestUtils.renderIntoDocument(stub);
+    var node = stub.getDOMNode();
+
+    expect(node.options[0].selected).toBe(true);  // monkey
+    expect(node.options[1].selected).toBe(false); // giraffe
+    expect(node.options[2].selected).toBe(true);  // gorilla
+    expect(link.requestChange.mock.calls.length).toBe(0);
+
+    node.options[0].selected = false;
+    node.options[1].selected = true;
+    ReactTestUtils.Simulate.change(node);
+
+    expect(link.requestChange.mock.calls.length).toBe(1);
+    expect(link.requestChange.mock.calls[0][0]).toEqual(['giraffe', 'gorilla']);
+  });
 });
