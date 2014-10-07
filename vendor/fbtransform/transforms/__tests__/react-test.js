@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @emails jeffmo@fb.com
+ * @emails react-core
  */
 
 /*jshint evil:true, unused:false*/
@@ -59,34 +59,21 @@ describe('react jsx', function() {
   };
 
   it('should convert simple tags', function() {
-    var code = [
-      '/**@jsx React.DOM*/',
-      'var x = <div></div>;'
-    ].join('\n');
-    var result = [
-      '/**@jsx React.DOM*/',
-      'var x = React.createElement(React.DOM.div, null);'
-    ].join('\n');
+    var code = 'var x = <div></div>;';
+    var result = 'var x = React.createElement("div", null);';
 
     expect(transform(code).code).toEqual(result);
   });
 
   it('should convert simple text', function() {
-    var code = [
-      '/**@jsx React.DOM*/\n' +
-      'var x = <div>text</div>;'
-    ].join('\n');
-    var result = [
-      '/**@jsx React.DOM*/',
-      'var x = React.createElement(React.DOM.div, null, "text");'
-    ].join('\n');
+    var code = 'var x = <div>text</div>;';
+    var result = 'var x = React.createElement("div", null, "text");';
 
     expect(transform(code).code).toEqual(result);
   });
 
   it('should have correct comma in nested children', function() {
     var code = [
-      '/**@jsx React.DOM*/',
       'var x = <div>',
       '  <div><br /></div>',
       '  <Component>{foo}<br />{bar}</Component>',
@@ -94,13 +81,12 @@ describe('react jsx', function() {
       '</div>;'
     ].join('\n');
     var result = [
-      '/**@jsx React.DOM*/',
-      'var x = React.createElement(React.DOM.div, null, ',
-      '  React.createElement(React.DOM.div, null, ' +
-        'React.createElement(React.DOM.br, null)), ',
+      'var x = React.createElement("div", null, ',
+      '  React.createElement("div", null, ' +
+        'React.createElement("br", null)), ',
       '  React.createElement(Component, null, foo, ' +
-        'React.createElement(React.DOM.br, null), bar), ',
-      '  React.createElement(React.DOM.br, null)',
+        'React.createElement("br", null), bar), ',
+      '  React.createElement("br", null)',
       ');'
     ].join('\n');
 
@@ -110,14 +96,12 @@ describe('react jsx', function() {
   it('should avoid wrapping in extra parens if not needed', function() {
     // Try with a single composite child, wrapped in a div.
     var code = [
-      '/**@jsx React.DOM*/',
       'var x = <div>',
       '  <Component />',
       '</div>;'
     ].join('\n');
     var result = [
-      '/**@jsx React.DOM*/',
-      'var x = React.createElement(React.DOM.div, null, ',
+      'var x = React.createElement("div", null, ',
       '  React.createElement(Component, null)',
       ');'
     ].join('\n');
@@ -126,14 +110,12 @@ describe('react jsx', function() {
 
     // Try with a single interpolated child, wrapped in a div.
     code = [
-      '/**@jsx React.DOM*/',
       'var x = <div>',
       '  {this.props.children}',
       '</div>;'
     ].join('\n');
     result = [
-      '/**@jsx React.DOM*/',
-      'var x = React.createElement(React.DOM.div, null, ',
+      'var x = React.createElement("div", null, ',
       '  this.props.children',
       ');'
     ].join('\n');
@@ -141,13 +123,11 @@ describe('react jsx', function() {
 
     // Try with a single interpolated child, wrapped in a composite.
     code = [
-      '/**@jsx React.DOM*/',
       'var x = <Composite>',
       '  {this.props.children}',
       '</Composite>;'
     ].join('\n');
     result = [
-      '/**@jsx React.DOM*/',
       'var x = React.createElement(Composite, null, ',
       '  this.props.children',
       ');'
@@ -156,13 +136,11 @@ describe('react jsx', function() {
 
     // Try with a single composite child, wrapped in a composite.
     code = [
-      '/**@jsx React.DOM*/',
       'var x = <Composite>',
       '  <Composite2 />',
       '</Composite>;'
     ].join('\n');
     result = [
-      '/**@jsx React.DOM*/',
       'var x = React.createElement(Composite, null, ',
       '  React.createElement(Composite2, null)',
       ');'
@@ -172,7 +150,6 @@ describe('react jsx', function() {
 
   it('should insert commas after expressions before whitespace', function() {
     var code = [
-      '/**@jsx React.DOM*/',
       'var x =',
       '  <div',
       '    attr1={',
@@ -192,9 +169,8 @@ describe('react jsx', function() {
       '  </div>;'
     ].join('\n');
     var result = [
-      '/**@jsx React.DOM*/',
       'var x =',
-      '  React.createElement(React.DOM.div, {',
+      '  React.createElement("div", {',
       '    attr1: ',
       '      "foo" + "bar", ',
       '    ',
@@ -217,9 +193,6 @@ describe('react jsx', function() {
 
   it('should properly handle comments adjacent to children', function() {
     var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       'var x = (',
       '  <div>',
       '    {/* A comment at the beginning */}',
@@ -235,18 +208,15 @@ describe('react jsx', function() {
       ');'
     ].join('\n');
     var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       'var x = (',
-      '  React.createElement(React.DOM.div, null, ',
+      '  React.createElement("div", null, ',
       '    /* A comment at the beginning */',
       '    /* A second comment at the beginning */',
-      '    React.createElement(React.DOM.span, null',
+      '    React.createElement("span", null',
       '      /* A nested comment */',
       '    ), ',
       '    /* A sandwiched comment */',
-      '    React.createElement(React.DOM.br, null)',
+      '    React.createElement("br", null)',
       '    /* A comment at the end */',
       '    /* A second comment at the end */',
       '  )',
@@ -258,9 +228,6 @@ describe('react jsx', function() {
 
   it('should properly handle comments between props', function() {
     var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       'var x = (',
       '  <div',
       '    /* a multi-line',
@@ -273,15 +240,12 @@ describe('react jsx', function() {
       ');'
     ].join('\n');
     var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       'var x = (',
-      '  React.createElement(React.DOM.div, {',
+      '  React.createElement("div", {',
       '    /* a multi-line',
       '       comment */',
       '    attr1: "foo"}, ',
-      '    React.createElement(React.DOM.span, {// a double-slash comment',
+      '    React.createElement("span", {// a double-slash comment',
       '      attr2: "bar"}',
       '    )',
       '  )',
@@ -293,16 +257,10 @@ describe('react jsx', function() {
 
   it('should not strip tags with a single child of &nbsp;', function() {
     var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       '<div>&nbsp;</div>;'
     ].join('\n');
     var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'React.createElement(React.DOM.div, null, "\u00A0");'
+      'React.createElement("div", null, "\u00A0");'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);
@@ -310,16 +268,10 @@ describe('react jsx', function() {
 
   it('should not strip &nbsp; even coupled with other whitespace', function() {
     var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
       '<div>&nbsp; </div>;'
     ].join('\n');
     var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'React.createElement(React.DOM.div, null, "\u00A0 ");'
+      'React.createElement("div", null, "\u00A0 ");'
     ].join('\n');
 
     expect(transform(code).code).toBe(result);
@@ -327,9 +279,13 @@ describe('react jsx', function() {
 
   it('should handle hasOwnProperty correctly', function() {
     var code = '<hasOwnProperty>testing</hasOwnProperty>;';
-    var result = 'React.createElement(hasOwnProperty, null, "testing");';
+    // var result = 'React.createElement("hasOwnProperty", null, "testing");';
 
-    expect(transform(code).code).toBe(result);
+    // expect(transform(code).code).toBe(result);
+
+    // This is currently not supported, and will generate a string tag in
+    // a follow up.
+    expect(() => transform(code)).toThrow();
   });
 
   it('should allow constructor as prop', function() {
@@ -347,29 +303,15 @@ describe('react jsx', function() {
   });
 
   it('should allow deeper JS namespacing', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<Namespace.DeepNamespace.Component />;'
-    ].join('\n');
-    var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'React.createElement(Namespace.DeepNamespace.Component, null);'
-    ].join('\n');
+    var code = '<Namespace.DeepNamespace.Component />;';
+    var result =
+      'React.createElement(Namespace.DeepNamespace.Component, null);';
 
     expect(transform(code).code).toBe(result);
   });
 
   it('should disallow XML namespacing', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<Namespace:Component />;'
-    ].join('\n');
+    var code = '<Namespace:Component />;';
 
     expect(() => transform(code)).toThrow();
   });
@@ -399,18 +341,8 @@ describe('react jsx', function() {
   });
 
   it('should transform known hyphenated tags', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<font-face />;'
-    ].join('\n');
-    var result = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      'React.createElement(React.DOM[\'font-face\'], null);'
-    ].join('\n');
+    var code = '<font-face />;';
+    var result = 'React.createElement("font-face", null);';
 
     expect(transform(code).code).toBe(result);
   });
@@ -422,12 +354,7 @@ describe('react jsx', function() {
   });
 
   it('should throw for unknown hyphenated tags', function() {
-    var code = [
-      '/**',
-      ' * @jsx React.DOM',
-      ' */',
-      '<x-component />;'
-    ].join('\n');
+    var code = '<x-component />;';
 
     expect(() => transform(code)).toThrow();
   });
