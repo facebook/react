@@ -104,6 +104,21 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.lineHeight).toBe('');
     });
 
+    it("should update styles with nested arrays and holes", function() {
+      var style = [
+        null, undefined,
+        { display: 'block', color: 'red' },
+        false, '',
+        [ { color: 'blue', fontFamily: 'Arial' } ],
+        [ [], false ],
+      ];
+      var stub = ReactTestUtils.renderIntoDocument(<div style={style} />);
+      var stubStyle = stub.getDOMNode().style;
+      expect(stubStyle.display).toEqual('block');
+      expect(stubStyle.color).toEqual('blue');
+      expect(stubStyle.fontFamily).toEqual('Arial');
+    });
+
     it("should update styles if initially null", function() {
       var styles = null;
       var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
