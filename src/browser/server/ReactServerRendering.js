@@ -18,7 +18,7 @@
  */
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactServerRenderingTransaction =
@@ -33,7 +33,7 @@ var invariant = require('invariant');
  */
 function renderComponentToString(component) {
   invariant(
-    ReactDescriptor.isValidDescriptor(component),
+    ReactElement.isValidElement(component),
     'renderComponentToString(): You must pass a valid ReactComponent.'
   );
 
@@ -65,7 +65,7 @@ function renderComponentToString(component) {
  */
 function renderComponentToStaticMarkup(component) {
   invariant(
-    ReactDescriptor.isValidDescriptor(component),
+    ReactElement.isValidElement(component),
     'renderComponentToStaticMarkup(): You must pass a valid ReactComponent.'
   );
 

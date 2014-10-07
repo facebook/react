@@ -122,8 +122,8 @@ describe('ReactDOM', function() {
 
   it('allow React.DOM factories to be called without warnings', function() {
     spyOn(console, 'warn');
-    var descriptor = React.DOM.div();
-    expect(descriptor.type).toBe('div');
+    var element = React.DOM.div();
+    expect(element.type).toBe('div');
     expect(console.warn.argsForCall.length).toBe(0);
   });
 
@@ -139,8 +139,8 @@ describe('ReactDOM', function() {
 
   it('warns but allow dom factories to be used in createElement', function() {
     spyOn(console, 'warn');
-    var descriptor = React.createElement(React.DOM.div);
-    expect(descriptor.type).toBe('div');
+    var element = React.createElement(React.DOM.div);
+    expect(element.type).toBe('div');
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
       'Do not pass React.DOM.div'

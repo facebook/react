@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var invariant = require('invariant');
@@ -128,7 +128,7 @@ var traverseAllChildrenImpl =
         callback(traverseContext, null, storageName, indexSoFar);
         subtreeCount = 1;
       } else if (type === 'string' || type === 'number' ||
-                 ReactDescriptor.isValidDescriptor(children)) {
+                 ReactElement.isValidElement(children)) {
         callback(traverseContext, children, storageName, indexSoFar);
         subtreeCount = 1;
       } else if (type === 'object') {

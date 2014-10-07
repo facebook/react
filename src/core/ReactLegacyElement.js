@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactLegacyDescriptor
+ * @providesModule ReactLegacyElement
  */
 
 "use strict";
@@ -26,7 +26,7 @@ var warning = require('warning');
 
 var legacyFactoryLogs = {};
 function warnForLegacyFactoryCall() {
-  if (!ReactLegacyDescriptorFactory._isLegacyCallWarningEnabled) {
+  if (!ReactLegacyElementFactory._isLegacyCallWarningEnabled) {
     return;
   }
   var owner = ReactCurrentOwner.current;
@@ -118,9 +118,9 @@ function proxyStaticMethods(target, source) {
 var LEGACY_MARKER = {};
 var NON_LEGACY_MARKER = {};
 
-var ReactLegacyDescriptorFactory = {};
+var ReactLegacyElementFactory = {};
 
-ReactLegacyDescriptorFactory.wrapCreateFactory = function(createFactory) {
+ReactLegacyElementFactory.wrapCreateFactory = function(createFactory) {
   var legacyCreateFactory = function(type) {
     if (typeof type !== 'function') {
       // Non-function types cannot be legacy factories
@@ -154,11 +154,11 @@ ReactLegacyDescriptorFactory.wrapCreateFactory = function(createFactory) {
   return legacyCreateFactory;
 };
 
-ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
-  var legacyCreateDescriptor = function(type, props, children) {
+ReactLegacyElementFactory.wrapCreateElement = function(createElement) {
+  var legacyCreateElement = function(type, props, children) {
     if (typeof type !== 'function') {
       // Non-function types cannot be legacy factories
-      return createDescriptor.apply(this, arguments);
+      return createElement.apply(this, arguments);
     }
 
     var args;
@@ -172,7 +172,7 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
       }
       args = Array.prototype.slice.call(arguments, 0);
       args[0] = type.type;
-      return createDescriptor.apply(this, args);
+      return createElement.apply(this, args);
     }
 
     if (type.isReactLegacyFactory) {
@@ -186,7 +186,7 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
       }
       args = Array.prototype.slice.call(arguments, 0);
       args[0] = type.type;
-      return createDescriptor.apply(this, args);
+      return createElement.apply(this, args);
     }
 
     if (__DEV__) {
@@ -197,43 +197,43 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
     // immediately as if this was used with legacy JSX.
     return type.apply(null, Array.prototype.slice.call(arguments, 1));
   };
-  return legacyCreateDescriptor;
+  return legacyCreateElement;
 };
 
-ReactLegacyDescriptorFactory.wrapFactory = function(factory) {
+ReactLegacyElementFactory.wrapFactory = function(factory) {
   invariant(
     typeof factory === 'function',
-    'This is suppose to accept a descriptor factory'
+    'This is suppose to accept a element factory'
   );
-  var legacyDescriptorFactory = function(config, children) {
+  var legacyElementFactory = function(config, children) {
     // This factory should not be called when JSX is used. Use JSX instead.
     if (__DEV__) {
       warnForLegacyFactoryCall();
     }
     return factory.apply(this, arguments);
   };
-  proxyStaticMethods(legacyDescriptorFactory, factory.type);
-  legacyDescriptorFactory.isReactLegacyFactory = LEGACY_MARKER;
-  legacyDescriptorFactory.type = factory.type;
-  return legacyDescriptorFactory;
+  proxyStaticMethods(legacyElementFactory, factory.type);
+  legacyElementFactory.isReactLegacyFactory = LEGACY_MARKER;
+  legacyElementFactory.type = factory.type;
+  return legacyElementFactory;
 };
 
 // This is used to mark a factory that will remain. E.g. we're allowed to call
 // it as a function. However, you're not suppose to pass it to createElement
 // or createFactory, so it will warn you if you do.
-ReactLegacyDescriptorFactory.markNonLegacyFactory = function(factory) {
+ReactLegacyElementFactory.markNonLegacyFactory = function(factory) {
   factory.isReactNonLegacyFactory = NON_LEGACY_MARKER;
   return factory;
 };
 
 // Checks if a factory function is actually a legacy factory pretending to
 // be a class.
-ReactLegacyDescriptorFactory.isValidFactory = function(factory) {
+ReactLegacyElementFactory.isValidFactory = function(factory) {
   // TODO: This will be removed and moved into a class validator or something.
   return typeof factory === 'function' &&
     factory.isReactLegacyFactory === LEGACY_MARKER;
 };
 
-ReactLegacyDescriptorFactory._isLegacyCallWarningEnabled = true;
+ReactLegacyElementFactory._isLegacyCallWarningEnabled = true;
 
-module.exports = ReactLegacyDescriptorFactory;
+module.exports = ReactLegacyElementFactory;

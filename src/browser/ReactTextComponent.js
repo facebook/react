@@ -22,7 +22,7 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var mixInto = require('mixInto');
@@ -105,7 +105,7 @@ mixInto(ReactTextComponent, {
 
 var ReactTextComponentFactory = function(text) {
   // Bypass validation and configuration
-  return new ReactDescriptor(ReactTextComponent, null, null, null, null, text);
+  return new ReactElement(ReactTextComponent, null, null, null, null, text);
 };
 
 ReactTextComponentFactory.type = ReactTextComponent;

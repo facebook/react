@@ -23,7 +23,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
@@ -32,7 +32,7 @@ var invariant = require('invariant');
 var merge = require('merge');
 
 // Store a reference to the <input> `ReactDOMComponent`. TODO: use string
-var input = ReactDescriptor.createFactory(ReactDOM.input.type);
+var input = ReactElement.createFactory(ReactDOM.input.type);
 
 var instancesByReactID = {};
 

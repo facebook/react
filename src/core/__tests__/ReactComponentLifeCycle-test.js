@@ -103,10 +103,10 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    var descriptor = <StatefulComponent />;
-    var firstInstance = React.renderComponent(descriptor, container);
+    var element = <StatefulComponent />;
+    var firstInstance = React.renderComponent(element, container);
     React.unmountComponentAtNode(container);
-    var secondInstance = React.renderComponent(descriptor, container);
+    var secondInstance = React.renderComponent(element, container);
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -425,7 +425,7 @@ describe('ReactComponentLifeCycle', function() {
     instance.setProps({text: "dos", tooltipText: "two"});
   });
 
-  it('should not allow setProps() called on an unmounted descriptor',
+  it('should not allow setProps() called on an unmounted element',
      function() {
     var PropsToUpdate = React.createClass({
       render: function() {

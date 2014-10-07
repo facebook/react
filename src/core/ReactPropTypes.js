@@ -18,7 +18,7 @@
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
 var emptyFunction = require('emptyFunction');
@@ -160,7 +160,7 @@ function createArrayOfTypeChecker(typeChecker) {
 
 function createComponentTypeChecker() {
   function validate(props, propName, componentName, location) {
-    if (!ReactDescriptor.isValidDescriptor(props[propName])) {
+    if (!ReactElement.isValidElement(props[propName])) {
       var locationName = ReactPropTypeLocationNames[location];
       return new Error(
         `Invalid ${locationName} \`${propName}\` supplied to ` +
@@ -297,7 +297,7 @@ function isRenderable(propValue) {
       if (Array.isArray(propValue)) {
         return propValue.every(isRenderable);
       }
-      if (ReactDescriptor.isValidDescriptor(propValue)) {
+      if (ReactElement.isValidElement(propValue)) {
         return true;
       }
       for (var k in propValue) {

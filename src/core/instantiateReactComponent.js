@@ -21,48 +21,47 @@
 
 var warning = require('warning');
 
-var ReactDescriptor = require('ReactDescriptor');
-var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
+var ReactElement = require('ReactElement');
+var ReactLegacyElement = require('ReactLegacyElement');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 
 /**
- * Given a `componentDescriptor` create an instance that will actually be
- * mounted.
+ * Given an `element` create an instance that will actually be mounted.
  *
- * @param {object} descriptor
+ * @param {object} element
  * @param {*} parentCompositeType The composite type that resolved this.
- * @return {object} A new instance of the descriptor's constructor.
+ * @return {object} A new instance of the element's constructor.
  * @protected
  */
-function instantiateReactComponent(descriptor, parentCompositeType) {
+function instantiateReactComponent(element, parentCompositeType) {
   var instance;
 
   if (__DEV__) {
     warning(
-      descriptor && (typeof descriptor.type === 'function' ||
-                     typeof descriptor.type === 'string'),
+      element && (typeof element.type === 'function' ||
+                     typeof element.type === 'string'),
       'Only functions or strings can be mounted as React components.'
     );
 
     // Resolve mock instances
-    if (descriptor.type._mockedReactClassConstructor) {
+    if (element.type._mockedReactClassConstructor) {
       // If this is a mocked class, we treat the legacy factory as if it was the
       // class constructor for future proofing unit tests. Because this might
       // be mocked as a legacy factory, we ignore any warnings triggerd by
       // this temporary hack.
-      ReactLegacyDescriptor._isLegacyCallWarningEnabled = false;
+      ReactLegacyElement._isLegacyCallWarningEnabled = false;
       try {
-        instance = new descriptor.type._mockedReactClassConstructor(
-          descriptor.props
+        instance = new element.type._mockedReactClassConstructor(
+          element.props
         );
       } finally {
-        ReactLegacyDescriptor._isLegacyCallWarningEnabled = true;
+        ReactLegacyElement._isLegacyCallWarningEnabled = true;
       }
 
       // If the mock implementation was a legacy factory, then it returns a
-      // descriptor. We need to turn this into a real component instance.
-      if (ReactDescriptor.isValidDescriptor(instance)) {
+      // element. We need to turn this into a real component instance.
+      if (ReactElement.isValidElement(instance)) {
         instance = new instance.type(instance.props);
       }
 
@@ -71,7 +70,7 @@ function instantiateReactComponent(descriptor, parentCompositeType) {
         // For auto-mocked factories, the prototype isn't shimmed and therefore
         // there is no render function on the instance. We replace the whole
         // component with an empty component instance instead.
-        descriptor = ReactEmptyComponent.getEmptyComponent();
+        element = ReactEmptyComponent.getEmptyComponent();
       } else {
         if (render._isMockFunction && !render._getMockImplementation()) {
           // Auto-mocked components may have a prototype with a mocked render
@@ -81,22 +80,22 @@ function instantiateReactComponent(descriptor, parentCompositeType) {
             ReactEmptyComponent.getEmptyComponent
           );
         }
-        instance.construct(descriptor);
+        instance.construct(element);
         return instance;
       }
     }
   }
 
   // Special case string values
-  if (typeof descriptor.type === 'string') {
+  if (typeof element.type === 'string') {
     instance = ReactNativeComponent.createInstanceForTag(
-      descriptor.type,
-      descriptor.props,
+      element.type,
+      element.props,
       parentCompositeType
     );
   } else {
     // Normal case for non-mocks and non-strings
-    instance = new descriptor.type(descriptor.props);
+    instance = new element.type(element.props);
   }
 
   if (__DEV__) {
@@ -110,7 +109,7 @@ function instantiateReactComponent(descriptor, parentCompositeType) {
 
   // This actually sets up the internal instance. This will become decoupled
   // from the public instance in a future diff.
-  instance.construct(descriptor);
+  instance.construct(element);
 
   return instance;
 }

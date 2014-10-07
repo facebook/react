@@ -139,9 +139,9 @@ describe('ReactComponent', function() {
       }
     });
 
-    var descriptor = <Component />;
+    var element = <Component />;
 
-    var instance = ReactTestUtils.renderIntoDocument(descriptor);
+    var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
   });
 
