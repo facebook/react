@@ -318,8 +318,8 @@ describe('ReactDOMComponent', function() {
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var StubNativeComponent = function(descriptor) {
-        ReactComponent.Mixin.construct.call(this, descriptor);
+      var StubNativeComponent = function(element) {
+        ReactComponent.Mixin.construct.call(this, element);
       };
       mixInto(StubNativeComponent, ReactComponent.Mixin);
       mixInto(StubNativeComponent, ReactDOMComponent.Mixin);

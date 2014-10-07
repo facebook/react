@@ -42,7 +42,7 @@ describe('ReactMount', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument('div');
     }).toThrow(
-      'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
+      'Invariant Violation: renderComponent(): Invalid component element. ' +
       'Instead of passing an element string, make sure to instantiate it ' +
       'by passing it to React.createElement.'
     );
@@ -57,7 +57,7 @@ describe('ReactMount', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(Component);
     }).toThrow(
-      'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
+      'Invariant Violation: renderComponent(): Invalid component element. ' +
       'Instead of passing a component class, make sure to instantiate it ' +
       'by passing it to React.createElement.'
     );

@@ -35,7 +35,7 @@ function reactComponentExpect(instance) {
   this._instance = instance;
   expect(typeof instance).toBe('object');
   expect(typeof instance.constructor).toBe('function');
-  expect(ReactTestUtils.isDescriptor(instance)).toBe(false);
+  expect(ReactTestUtils.isElement(instance)).toBe(false);
 }
 
 mergeInto(reactComponentExpect.prototype, {
@@ -109,7 +109,7 @@ mergeInto(reactComponentExpect.prototype, {
                convenienceConstructor :
                convenienceConstructor.type;
     expect(
-      this.instance()._descriptor.type === type
+      this.instance()._currentElement.type === type
     ).toBe(true);
     return this;
   },
@@ -129,7 +129,7 @@ mergeInto(reactComponentExpect.prototype, {
   toBeCompositeComponentWithType: function(convenienceConstructor) {
     this.toBeCompositeComponent();
     expect(
-      this.instance()._descriptor.type === convenienceConstructor.type
+      this.instance()._currentElement.type === convenienceConstructor.type
     ).toBe(true);
     return this;
   },

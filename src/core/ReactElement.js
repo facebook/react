@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDescriptor
+ * @providesModule ReactElement
  */
 
 "use strict";
@@ -69,7 +69,7 @@ var useMutationMembrane = false;
  * Warn for mutations.
  *
  * @internal
- * @param {object} descriptor
+ * @param {object} element
  */
 function defineMutationMembrane(prototype) {
   try {
@@ -86,7 +86,7 @@ function defineMutationMembrane(prototype) {
 }
 
 /**
- * Base constructor for all React descriptors. This is only used to make this
+ * Base constructor for all React elements. This is only used to make this
  * work with a dynamic instanceof check. Nothing should live on this prototype.
  *
  * @param {*} type
@@ -95,13 +95,13 @@ function defineMutationMembrane(prototype) {
  * @params {*} props
  * @internal
  */
-var ReactDescriptor = function(type, key, ref, owner, context, props) {
-  // Built-in properties that belong on the descriptor
+var ReactElement = function(type, key, ref, owner, context, props) {
+  // Built-in properties that belong on the element
   this.type = type;
   this.key = key;
   this.ref = ref;
 
-  // Record the component responsible for creating this descriptor.
+  // Record the component responsible for creating this element.
   this._owner = owner;
 
   // TODO: Deprecate withContext, and then the context becomes accessible
@@ -128,12 +128,12 @@ var ReactDescriptor = function(type, key, ref, owner, context, props) {
 };
 
 if (__DEV__) {
-  defineMutationMembrane(ReactDescriptor.prototype);
+  defineMutationMembrane(ReactElement.prototype);
 }
 
-ReactDescriptor.prototype._isReactDescriptor = true;
+ReactElement.prototype._isReactElement = true;
 
-ReactDescriptor.createDescriptor = function(type, config, children) {
+ReactElement.createElement = function(type, config, children) {
   var propName;
 
   // Reserved names are extracted
@@ -177,7 +177,7 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
     }
   }
 
-  return new ReactDescriptor(
+  return new ReactElement(
     type,
     key,
     ref,
@@ -187,31 +187,31 @@ ReactDescriptor.createDescriptor = function(type, config, children) {
   );
 };
 
-ReactDescriptor.createFactory = function(type) {
-  var factory = ReactDescriptor.createDescriptor.bind(null, type);
+ReactElement.createFactory = function(type) {
+  var factory = ReactElement.createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
-  // easily accessed on descriptors. E.g. <Foo />.type === Foo.type.
+  // easily accessed on elements. E.g. <Foo />.type === Foo.type.
   // This should not be named `constructor` since this may not be the function
-  // that created the descriptor, and it may not even be a constructor.
+  // that created the element, and it may not even be a constructor.
   factory.type = type;
   return factory;
 };
 
-ReactDescriptor.cloneAndReplaceProps = function(oldDescriptor, newProps) {
-  var newDescriptor = new ReactDescriptor(
-    oldDescriptor.type,
-    oldDescriptor.key,
-    oldDescriptor.ref,
-    oldDescriptor._owner,
-    oldDescriptor._context,
+ReactElement.cloneAndReplaceProps = function(oldElement, newProps) {
+  var newElement = new ReactElement(
+    oldElement.type,
+    oldElement.key,
+    oldElement.ref,
+    oldElement._owner,
+    oldElement._context,
     newProps
   );
 
   if (__DEV__) {
     // If the key on the original is valid, then the clone is valid
-    newDescriptor._store.validated = oldDescriptor._store.validated;
+    newElement._store.validated = oldElement._store.validated;
   }
-  return newDescriptor;
+  return newElement;
 };
 
 /**
@@ -219,18 +219,18 @@ ReactDescriptor.cloneAndReplaceProps = function(oldDescriptor, newProps) {
  * @return {boolean} True if `object` is a valid component.
  * @final
  */
-ReactDescriptor.isValidDescriptor = function(object) {
+ReactElement.isValidElement = function(object) {
   // ReactTestUtils is often used outside of beforeEach where as React is
   // within it. This leads to two different instances of React on the same
-  // page. To identify a descriptor from a different React instance we use
+  // page. To identify a element from a different React instance we use
   // a flag instead of an instanceof check.
-  var isDescriptor = !!(object && object._isReactDescriptor);
-  // if (isDescriptor && !(object instanceof ReactDescriptor)) {
+  var isElement = !!(object && object._isReactElement);
+  // if (isElement && !(object instanceof ReactElement)) {
   // This is an indicator that you're using multiple versions of React at the
   // same time. This will screw with ownership and stuff. Fix it, please.
   // TODO: We could possibly warn here.
   // }
-  return isDescriptor;
+  return isElement;
 };
 
-module.exports = ReactDescriptor;
+module.exports = ReactElement;

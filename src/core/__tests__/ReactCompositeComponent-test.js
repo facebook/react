@@ -114,7 +114,7 @@ describe('ReactCompositeComponent', function() {
   it('should give context for PropType errors in nested components.', () => {
     // In this test, we're making sure that if a proptype error is found in a
     // component, we give a small hint as to which parent instantiated that
-    // component as per warnings about key usage in ReactDescriptorValidator.
+    // component as per warnings about key usage in ReactElementValidator.
     spyOn(console, 'warn');
     var MyComp = React.createClass({
       propTypes: {

@@ -29,13 +29,13 @@ var ReactComponent = require('ReactComponent');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDescriptor = require('ReactDescriptor');
-var ReactDescriptorValidator = require('ReactDescriptorValidator');
+var ReactElement = require('ReactElement');
+var ReactElementValidator = require('ReactElementValidator');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
-var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
+var ReactLegacyElement = require('ReactLegacyElement');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
@@ -47,19 +47,19 @@ var onlyChild = require('onlyChild');
 
 ReactDefaultInjection.inject();
 
-var createDescriptor = ReactDescriptor.createDescriptor;
-var createFactory = ReactDescriptor.createFactory;
+var createElement = ReactElement.createElement;
+var createFactory = ReactElement.createFactory;
 
 if (__DEV__) {
-  createDescriptor = ReactDescriptorValidator.createDescriptor;
-  createFactory = ReactDescriptorValidator.createFactory;
+  createElement = ReactElementValidator.createElement;
+  createFactory = ReactElementValidator.createFactory;
 }
 
-// TODO: Drop legacy descriptors once classes no longer export these factories
-createDescriptor = ReactLegacyDescriptor.wrapCreateDescriptor(
-  createDescriptor
+// TODO: Drop legacy elements once classes no longer export these factories
+createElement = ReactLegacyElement.wrapCreateElement(
+  createElement
 );
-createFactory = ReactLegacyDescriptor.wrapCreateFactory(
+createFactory = ReactLegacyElement.wrapCreateFactory(
   createFactory
 );
 
@@ -76,8 +76,8 @@ var React = {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
   createClass: ReactCompositeComponent.createClass,
-  createDescriptor: createDescriptor, // deprecated, will be removed next week
-  createElement: createDescriptor,
+  createDescriptor: createElement, // deprecated, will be removed next week
+  createElement: createElement,
   createFactory: createFactory,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
@@ -90,8 +90,8 @@ var React = {
   renderComponentToStaticMarkup:
     ReactServerRendering.renderComponentToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  isValidClass: ReactLegacyDescriptor.isValidFactory,
-  isValidComponent: ReactDescriptor.isValidDescriptor,
+  isValidClass: ReactLegacyElement.isValidFactory,
+  isValidComponent: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
   __internals: {
     Component: ReactComponent,

@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDescriptorValidator
+ * @providesModule ReactElementValidator
  */
 
 /**
- * ReactDescriptorValidator provides a wrapper around a descriptor factory
- * which validates the props passed to the descriptor. This is intended to be
+ * ReactElementValidator provides a wrapper around a element factory
+ * which validates the props passed to the element. This is intended to be
  * used only in DEV and could be replaced by a static type checker for languages
  * that support it.
  */
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
@@ -174,11 +174,11 @@ function validateChildKeys(component, parentType) {
   if (Array.isArray(component)) {
     for (var i = 0; i < component.length; i++) {
       var child = component[i];
-      if (ReactDescriptor.isValidDescriptor(child)) {
+      if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
     }
-  } else if (ReactDescriptor.isValidDescriptor(component)) {
+  } else if (ReactElement.isValidElement(component)) {
     // This component was passed in a valid location.
     component._store.validated = true;
   } else if (component && typeof component === 'object') {
@@ -216,7 +216,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         loggedTypeFailures[error.message] = true;
         // This will soon use the warning module
         monitorCodeUse(
-          'react_failed_descriptor_type_check',
+          'react_failed_element_type_check',
           { message: error.message }
         );
       }
@@ -224,15 +224,15 @@ function checkPropTypes(componentName, propTypes, props, location) {
   }
 }
 
-var ReactDescriptorValidator = {
+var ReactElementValidator = {
 
-  createDescriptor: function(type, props, children) {
-    var descriptor = ReactDescriptor.createDescriptor.apply(this, arguments);
+  createElement: function(type, props, children) {
+    var element = ReactElement.createElement.apply(this, arguments);
 
     // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
-    if (descriptor == null) {
-      return descriptor;
+    if (element == null) {
+      return element;
     }
 
     for (var i = 2; i < arguments.length; i++) {
@@ -244,7 +244,7 @@ var ReactDescriptorValidator = {
       checkPropTypes(
         name,
         type.propTypes,
-        descriptor.props,
+        element.props,
         ReactPropTypeLocations.prop
       );
     }
@@ -252,15 +252,15 @@ var ReactDescriptorValidator = {
       checkPropTypes(
         name,
         type.contextTypes,
-        descriptor._context,
+        element._context,
         ReactPropTypeLocations.context
       );
     }
-    return descriptor;
+    return element;
   },
 
   createFactory: function(type) {
-    var validatedFactory = ReactDescriptorValidator.createDescriptor.bind(
+    var validatedFactory = ReactElementValidator.createElement.bind(
       null,
       type
     );
@@ -270,4 +270,4 @@ var ReactDescriptorValidator = {
 
 };
 
-module.exports = ReactDescriptorValidator;
+module.exports = ReactElementValidator;

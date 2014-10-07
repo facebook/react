@@ -21,13 +21,13 @@
 var AutoFocusMixin = require('AutoFocusMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 
 var keyMirror = require('keyMirror');
 
 // Store a reference to the <button> `ReactDOMComponent`. TODO: use string
-var button = ReactDescriptor.createFactory(ReactDOM.button.type);
+var button = ReactElement.createFactory(ReactDOM.button.type);
 
 var mouseListenerNames = keyMirror({
   onClick: true,

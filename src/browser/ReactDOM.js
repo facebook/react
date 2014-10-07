@@ -19,26 +19,26 @@
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
-var ReactDescriptorValidator = require('ReactDescriptorValidator');
-var ReactLegacyDescriptor = require('ReactLegacyDescriptor');
+var ReactElement = require('ReactElement');
+var ReactElementValidator = require('ReactElementValidator');
+var ReactLegacyElement = require('ReactLegacyElement');
 
 var mapObject = require('mapObject');
 
 /**
- * Create a factory that creates HTML tag descriptors.
+ * Create a factory that creates HTML tag elements.
  *
  * @param {string} tag Tag name (e.g. `div`).
  * @private
  */
 function createDOMFactory(tag) {
   if (__DEV__) {
-    return ReactLegacyDescriptor.markNonLegacyFactory(
-      ReactDescriptorValidator.createFactory(tag)
+    return ReactLegacyElement.markNonLegacyFactory(
+      ReactElementValidator.createFactory(tag)
     );
   }
-  return ReactLegacyDescriptor.markNonLegacyFactory(
-    ReactDescriptor.createFactory(tag)
+  return ReactLegacyElement.markNonLegacyFactory(
+    ReactElement.createFactory(tag)
   );
 }
 

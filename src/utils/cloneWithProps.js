@@ -19,7 +19,7 @@
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactPropTransferer = require('ReactPropTransferer');
 
 var keyOf = require('keyOf');
@@ -55,8 +55,8 @@ function cloneWithProps(child, props) {
   }
 
   // The current API doesn't retain _owner and _context, which is why this
-  // doesn't use ReactDescriptor.cloneAndReplaceProps.
-  return ReactDescriptor.createDescriptor(child.type, newProps);
+  // doesn't use ReactElement.cloneAndReplaceProps.
+  return ReactElement.createElement(child.type, newProps);
 }
 
 module.exports = cloneWithProps;
