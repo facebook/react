@@ -135,7 +135,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
-    ReactUpdates.setImmediate(forceUpdateIfMounted, this);
+    ReactUpdates.asap(forceUpdateIfMounted, this);
     return returnValue;
   }
 

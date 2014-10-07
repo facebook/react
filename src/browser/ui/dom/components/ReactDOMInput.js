@@ -125,10 +125,10 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
-    // Here we use setImmediate to wait until all updates have propagated, which
+    // Here we use asap to wait until all updates have propagated, which
     // is important when using controlled components within layers:
     // https://github.com/facebook/react/issues/1698
-    ReactUpdates.setImmediate(forceUpdateIfMounted, this);
+    ReactUpdates.asap(forceUpdateIfMounted, this);
 
     var name = this.props.name;
     if (this.props.type === 'radio' && name != null) {
@@ -169,7 +169,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
         // If this is a controlled radio button group, forcing the input that
         // was previously checked to update will cause it to be come re-checked
         // as appropriate.
-        ReactUpdates.setImmediate(forceUpdateIfMounted, otherInstance);
+        ReactUpdates.asap(forceUpdateIfMounted, otherInstance);
       }
     }
 
