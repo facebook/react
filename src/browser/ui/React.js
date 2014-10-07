@@ -90,7 +90,7 @@ var React = {
   renderComponentToStaticMarkup:
     ReactServerRendering.renderComponentToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  isValidClass: ReactDescriptor.isValidFactory,
+  isValidClass: ReactLegacyDescriptor.isValidFactory,
   isValidComponent: ReactDescriptor.isValidDescriptor,
   withContext: ReactContext.withContext,
   __internals: {

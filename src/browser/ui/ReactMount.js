@@ -348,7 +348,7 @@ var ReactMount = {
         typeof nextDescriptor === 'string' ?
           ' Instead of passing an element string, make sure to instantiate ' +
           'it by passing it to React.createElement.' :
-        ReactDescriptor.isValidFactory(nextDescriptor) ?
+        ReactLegacyDescriptor.isValidFactory(nextDescriptor) ?
           ' Instead of passing a component class, make sure to instantiate ' +
           'it by passing it to React.createElement.' :
         // Check if it quacks like a descriptor

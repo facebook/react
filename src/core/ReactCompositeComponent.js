@@ -471,7 +471,7 @@ function mixSpecIntoComponent(Constructor, spec) {
   }
 
   invariant(
-    !ReactDescriptor.isValidFactory(spec),
+    !ReactLegacyDescriptor.isValidFactory(spec),
     'ReactCompositeComponent: You\'re attempting to ' +
     'use a component class as a mixin. Instead, just use a regular object.'
   );

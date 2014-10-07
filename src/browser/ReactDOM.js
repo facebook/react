@@ -33,11 +33,11 @@ var mapObject = require('mapObject');
  */
 function createDOMFactory(tag) {
   if (__DEV__) {
-    return ReactLegacyDescriptor.wrapFactory(
+    return ReactLegacyDescriptor.markNonLegacyFactory(
       ReactDescriptorValidator.createFactory(tag)
     );
   }
-  return ReactLegacyDescriptor.wrapFactory(
+  return ReactLegacyDescriptor.markNonLegacyFactory(
     ReactDescriptor.createFactory(tag)
   );
 }

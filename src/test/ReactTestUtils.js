@@ -23,7 +23,6 @@ var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactDescriptor = require('ReactDescriptor');
-var ReactDOM = require('ReactDOM');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
 var ReactTextComponent = require('ReactTextComponent');
@@ -242,7 +241,7 @@ var ReactTestUtils = {
     var ConvenienceConstructor = React.createClass({
       render: function() {
         return React.createElement(
-          ReactDOM[mockTagName], // TODO: Replace this with just a string
+          mockTagName,
           null,
           this.props.children
         );

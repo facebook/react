@@ -19,7 +19,6 @@
 "use strict";
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactDescriptor = require('ReactDescriptor');
 
 var invariant = require('invariant');
 var monitorCodeUse = require('monitorCodeUse');
@@ -78,6 +77,14 @@ function warnForPlainFunctionType(type) {
   }
 }
 
+function warnForNonLegacyFactory(type) {
+  warning(
+    false,
+    'Do not pass React.DOM.' + type.type + ' to JSX or createFactory. ' +
+    'Use the string "' + type + '" instead.'
+  );
+}
+
 /**
  * Transfer static properties from the source to the target. Functions are
  * rebound to have this reflect the original source.
@@ -109,6 +116,7 @@ function proxyStaticMethods(target, source) {
 // We use an object instead of a boolean because booleans are ignored by our
 // mocking libraries when these factories gets mocked.
 var LEGACY_MARKER = {};
+var NON_LEGACY_MARKER = {};
 
 var ReactLegacyDescriptorFactory = {};
 
@@ -117,6 +125,16 @@ ReactLegacyDescriptorFactory.wrapCreateFactory = function(createFactory) {
     if (typeof type !== 'function') {
       // Non-function types cannot be legacy factories
       return createFactory(type);
+    }
+
+    if (type.isReactNonLegacyFactory) {
+      // This is probably a factory created by ReactDOM we unwrap it to get to
+      // the underlying string type. It shouldn't have been passed here so we
+      // warn.
+      if (__DEV__) {
+        warnForNonLegacyFactory(type);
+      }
+      return createFactory(type.type);
     }
 
     if (type.isReactLegacyFactory) {
@@ -143,6 +161,20 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
       return createDescriptor.apply(this, arguments);
     }
 
+    var args;
+
+    if (type.isReactNonLegacyFactory) {
+      // This is probably a factory created by ReactDOM we unwrap it to get to
+      // the underlying string type. It shouldn't have been passed here so we
+      // warn.
+      if (__DEV__) {
+        warnForNonLegacyFactory(type);
+      }
+      args = Array.prototype.slice.call(arguments, 0);
+      args[0] = type.type;
+      return createDescriptor.apply(this, args);
+    }
+
     if (type.isReactLegacyFactory) {
       // This is probably a legacy factory created by ReactCompositeComponent.
       // We unwrap it to get to the underlying class.
@@ -152,7 +184,7 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
         // future proofs unit testing that assume that these are classes.
         type.type._mockedReactClassConstructor = type;
       }
-      var args = Array.prototype.slice.call(arguments, 0);
+      args = Array.prototype.slice.call(arguments, 0);
       args[0] = type.type;
       return createDescriptor.apply(this, args);
     }
@@ -170,7 +202,7 @@ ReactLegacyDescriptorFactory.wrapCreateDescriptor = function(createDescriptor) {
 
 ReactLegacyDescriptorFactory.wrapFactory = function(factory) {
   invariant(
-    ReactDescriptor.isValidFactory(factory),
+    typeof factory === 'function',
     'This is suppose to accept a descriptor factory'
   );
   var legacyDescriptorFactory = function(config, children) {
@@ -184,6 +216,22 @@ ReactLegacyDescriptorFactory.wrapFactory = function(factory) {
   legacyDescriptorFactory.isReactLegacyFactory = LEGACY_MARKER;
   legacyDescriptorFactory.type = factory.type;
   return legacyDescriptorFactory;
+};
+
+// This is used to mark a factory that will remain. E.g. we're allowed to call
+// it as a function. However, you're not suppose to pass it to createElement
+// or createFactory, so it will warn you if you do.
+ReactLegacyDescriptorFactory.markNonLegacyFactory = function(factory) {
+  factory.isReactNonLegacyFactory = NON_LEGACY_MARKER;
+  return factory;
+};
+
+// Checks if a factory function is actually a legacy factory pretending to
+// be a class.
+ReactLegacyDescriptorFactory.isValidFactory = function(factory) {
+  // TODO: This will be removed and moved into a class validator or something.
+  return typeof factory === 'function' &&
+    factory.isReactLegacyFactory === LEGACY_MARKER;
 };
 
 ReactLegacyDescriptorFactory._isLegacyCallWarningEnabled = true;

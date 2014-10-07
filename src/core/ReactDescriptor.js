@@ -215,23 +215,6 @@ ReactDescriptor.cloneAndReplaceProps = function(oldDescriptor, newProps) {
 };
 
 /**
- * Checks if a value is a valid descriptor constructor.
- *
- * @param {*}
- * @return {boolean}
- * @public
- */
-ReactDescriptor.isValidFactory = function(factory) {
-  return typeof factory === 'function' && (
-           typeof factory.type === 'string' || (
-             typeof factory.type === 'function' &&
-             typeof factory.type.prototype.mountComponent === 'function' &&
-             typeof factory.type.prototype.receiveComponent === 'function'
-           )
-         );
-};
-
-/**
  * @param {?object} object
  * @return {boolean} True if `object` is a valid component.
  * @final

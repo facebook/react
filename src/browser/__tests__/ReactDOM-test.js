@@ -25,7 +25,7 @@ var React = require('React');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactTestUtils = require('ReactTestUtils');
-var div = React.createFactory(ReactDOM.div); // TODO: use string
+var div = React.createFactory('div');
 
 describe('ReactDOM', function() {
   // TODO: uncomment this test once we can run in phantom, which
@@ -117,6 +117,33 @@ describe('ReactDOM', function() {
   });
 
   it('should be a valid class', function() {
-    expect(React.isValidClass(ReactDOM.div)).toBe(true);
+    expect(React.isValidClass(ReactDOM.div)).toBe(false);
+  });
+
+  it('allow React.DOM factories to be called without warnings', function() {
+    spyOn(console, 'warn');
+    var descriptor = React.DOM.div();
+    expect(descriptor.type).toBe('div');
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('warns but allow dom factories to be used in createFactory', function() {
+    spyOn(console, 'warn');
+    var factory = React.createFactory(React.DOM.div);
+    expect(factory().type).toBe('div');
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Do not pass React.DOM.div'
+    );
+  });
+
+  it('warns but allow dom factories to be used in createElement', function() {
+    spyOn(console, 'warn');
+    var descriptor = React.createElement(React.DOM.div);
+    expect(descriptor.type).toBe('div');
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Do not pass React.DOM.div'
+    );
   });
 });
