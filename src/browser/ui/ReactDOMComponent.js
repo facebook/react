@@ -37,16 +37,12 @@ var merge = require('merge');
 var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
 
-var deleteListener = ReactBrowserEventEmitter.deleteListener;
-var listenTo = ReactBrowserEventEmitter.listenTo;
 var registrationNameModules = ReactBrowserEventEmitter.registrationNameModules;
 
 // For quickly matching children type, to test if can be treated as content.
 var CONTENT_TYPES = {'string': true, 'number': true};
 
 var STYLE = keyOf({style: null});
-
-var ELEMENT_NODE_TYPE = 1;
 
 /**
  * @param {?object} props
@@ -89,10 +85,7 @@ function putListener(id, registrationName, listener, transaction) {
   }
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
-    var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
-      container;
-    listenTo(registrationName, doc);
+    ReactBrowserEventEmitter.listenTo(registrationName, container);
   }
   transaction.getPutListenerQueue().enqueuePutListener(
     id,
@@ -338,7 +331,7 @@ ReactDOMComponent.Mixin = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        deleteListener(this._rootNodeID, propKey);
+        ReactBrowserEventEmitter.deleteListener(this._rootNodeID, propKey);
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {

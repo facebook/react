@@ -3,6 +3,8 @@
  * @typechecks
  */
 
+'use strict';
+
 var emptyFunction = require('emptyFunction');
 
 /**
