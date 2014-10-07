@@ -98,8 +98,8 @@ describe('ReactCompositeComponent', function() {
         console.log(this.getDOMNode());
       },
       render: function() {
-        var component = this.state.component;
-        return component ? <component /> : null;
+        var Component = this.state.component;
+        return Component ? <Component /> : null;
       }
     });
 
