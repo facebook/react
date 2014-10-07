@@ -19,25 +19,13 @@
 "use strict";
 
 var AutoFocusMixin = require('AutoFocusMixin');
-var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDescriptor = require('ReactDescriptor');
 var ReactDOM = require('ReactDOM');
-var ReactUpdates = require('ReactUpdates');
-
-var merge = require('merge');
 
 // Store a reference to the <select> `ReactDOMComponent`. TODO: use string
 var select = ReactDescriptor.createFactory(ReactDOM.select.type);
-
-function updateWithPendingValueIfMounted() {
-  /*jshint validthis:true */
-  if (this.isMounted()) {
-    this.setState({value: this._pendingValue});
-    this._pendingValue = 0;
-  }
-}
 
 /**
  * Validation function for `value` and `defaultValue`.
@@ -65,37 +53,6 @@ function selectValueType(props, propName, componentName) {
 }
 
 /**
- * If `value` is supplied, updates <option> elements on mount and update.
- * @param {ReactComponent} component Instance of ReactDOMSelect
- * @param {?*} propValue For uncontrolled components, null/undefined. For
- * controlled components, a string (or with `multiple`, a list of strings).
- * @private
- */
-function updateOptions(component, propValue) {
-  var multiple = component.props.multiple;
-  var value = propValue != null ? propValue : component.state.value;
-  var options = component.getDOMNode().options;
-  var selectedValue, i, l;
-  if (multiple) {
-    selectedValue = {};
-    for (i = 0, l = value.length; i < l; ++i) {
-      selectedValue['' + value[i]] = true;
-    }
-  } else {
-    selectedValue = '' + value;
-  }
-  for (i = 0, l = options.length; i < l; i++) {
-    var selected = multiple ?
-      selectedValue.hasOwnProperty(options[i].value) :
-      options[i].value === selectedValue;
-
-    if (selected !== options[i].selected) {
-      options[i].selected = selected;
-    }
-  }
-}
-
-/**
  * Implements a <select> native component that allows optionally setting the
  * props `value` and `defaultValue`. If `multiple` is false, the prop must be a
  * string. If `multiple` is true, the prop must be an array of strings.
@@ -113,76 +70,47 @@ function updateOptions(component, propValue) {
 var ReactDOMSelect = ReactCompositeComponent.createClass({
   displayName: 'ReactDOMSelect',
 
-  mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
+  mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
 
   propTypes: {
-    defaultValue: selectValueType,
-    value: selectValueType
+    initialValue: selectValueType,
   },
 
   getInitialState: function() {
-    return {value: this.props.defaultValue || (this.props.multiple ? [] : '')};
+    return {
+      initialValue: this.props.initialValue
+    };
   },
 
-  componentWillMount: function() {
-    this._pendingValue = null;
-  },
+  componentDidMount: function() {
+    var value = this.state.initialValue;
+    if (value != null) {
+      var multiple = this.props.multiple;
+      var options = this.getDOMNode().options;
+      var selectedValue, i, l;
+      if (multiple) {
+        selectedValue = {};
+        for (i = 0, l = value.length; i < l; ++i) {
+          selectedValue['' + value[i]] = true;
+        }
+      } else {
+        selectedValue = '' + value;
+      }
+      for (i = 0, l = options.length; i < l; i++) {
+        var selected = multiple ?
+          selectedValue.hasOwnProperty(options[i].value) :
+          options[i].value === selectedValue;
 
-  componentWillReceiveProps: function(nextProps) {
-    if (!this.props.multiple && nextProps.multiple) {
-      this.setState({value: [this.state.value]});
-    } else if (this.props.multiple && !nextProps.multiple) {
-      this.setState({value: this.state.value[0]});
+        if (selected) {
+          options[i].selected = true;
+        }
+      }
     }
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
-
-    props.onChange = this._handleChange;
-    props.value = null;
-
-    return select(props, this.props.children);
+    return select(this.props, this.props.children);
   },
-
-  componentDidMount: function() {
-    updateOptions(this, LinkedValueUtils.getValue(this));
-  },
-
-  componentDidUpdate: function(prevProps) {
-    var value = LinkedValueUtils.getValue(this);
-    var prevMultiple = !!prevProps.multiple;
-    var multiple = !!this.props.multiple;
-    if (value != null || prevMultiple !== multiple) {
-      updateOptions(this, value);
-    }
-  },
-
-  _handleChange: function(event) {
-    var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this);
-    if (onChange) {
-      returnValue = onChange.call(this, event);
-    }
-
-    var selectedValue;
-    if (this.props.multiple) {
-      selectedValue = [];
-      var options = event.target.options;
-      for (var i = 0, l = options.length; i < l; i++) {
-        if (options[i].selected) {
-          selectedValue.push(options[i].value);
-        }
-      }
-    } else {
-      selectedValue = event.target.value;
-    }
-
-    this._pendingValue = selectedValue;
-    ReactUpdates.setImmediate(updateWithPendingValueIfMounted, this);
-    return returnValue;
-  }
 
 });
 

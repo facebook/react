@@ -13,24 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * @providesModule ReactDOMTextarea
+ * @providesModule ReactTextarea
  */
 
 "use strict";
 
-var AutoFocusMixin = require('AutoFocusMixin');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
+var DOMPropertyOperations = require('DOMPropertyOperations');
+var LinkedValueUtils = require('LinkedValueUtils');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactDescriptor = require('ReactDescriptor');
-var ReactDOM = require('ReactDOM');
+var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactUpdates = require('ReactUpdates');
 
-var invariant = require('invariant');
 var merge = require('merge');
 
-var warning = require('warning');
-
 // Store a reference to the <textarea> `ReactDOMComponent`. TODO: use string
-var textarea = ReactDescriptor.createFactory(ReactDOM.textarea.type);
+var textarea = ReactDescriptor.createFactory(ReactDOMTextarea.type);
+
+function forceUpdateIfMounted() {
+  /*jshint validthis:true */
+  if (this.isMounted()) {
+    this.forceUpdate();
+  }
+}
 
 /**
  * Implements a <textarea> native component that allows setting `value`, and
@@ -47,44 +52,51 @@ var textarea = ReactDescriptor.createFactory(ReactDOM.textarea.type);
  * The rendered element will be initialized with an empty value, the prop
  * `defaultValue` if specified, or the children content (deprecated).
  */
-var ReactDOMTextarea = ReactCompositeComponent.createClass({
-  displayName: 'ReactDOMTextarea',
+var ReactTextarea = ReactCompositeComponent.createClass({
+  displayName: 'ReactTextarea',
 
-  mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
+  mixins: [LinkedValueUtils.Mixin],
 
   getInitialState: function() {
+    var value = LinkedValueUtils.getValue(this);
     return {
-      // The initial value can be of any type, cast to string.
-      initialValue: '' + this.props.initialValue
+      // We don't have to save the initial value, but do it to play nice if
+      // `ReactDOMTextarea` decides to use `shouldComponentUpdate`.
+      initialValue: value != null ? value : this.props.defaultValue
     };
-  },
-
-  componentWillMount: function() {
-    if (__DEV__) {
-      if (this.props.children != null) {
-        warning(
-          false,
-          'Use the `defaultValue` property instead of setting children on ' +
-          '<textarea>.'
-        );
-      }
-    }
   },
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
     var props = merge(this.props);
 
-    invariant(
-      props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
-    );
+    props.initialValue = this.state.initialValue;
+    props.onChange = this._handleChange;
 
-    props.value = null;
-
-    return textarea(props, this.state.initialValue);
+    return textarea(props, props.children);
   },
+
+  componentDidUpdate: function(prevProps, prevState, prevContext) {
+    var value = LinkedValueUtils.getValue(this);
+    if (value != null) {
+      DOMPropertyOperations.setValueForProperty(
+        this.getDOMNode(),
+        'value',
+        value
+      );
+    }
+  },
+
+  _handleChange: function(event) {
+    var returnValue;
+    var onChange = LinkedValueUtils.getOnChange(this);
+    if (onChange) {
+      returnValue = onChange.call(this, event);
+    }
+    ReactUpdates.setImmediate(forceUpdateIfMounted, this);
+    return returnValue;
+  }
 
 });
 
-module.exports = ReactDOMTextarea;
+module.exports = ReactTextarea;
