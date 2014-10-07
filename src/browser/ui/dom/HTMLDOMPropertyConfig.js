@@ -108,6 +108,7 @@ var HTMLDOMPropertyConfig = {
     lang: null,
     list: null,
     loop: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    manifest: MUST_USE_ATTRIBUTE,
     max: null,
     maxLength: MUST_USE_ATTRIBUTE,
     media: MUST_USE_ATTRIBUTE,
