@@ -31,13 +31,10 @@
  * @protected
  */
 function shouldUpdateReactComponent(prevDescriptor, nextDescriptor) {
-  if (prevDescriptor && nextDescriptor &&
+  return (prevDescriptor && nextDescriptor &&
       prevDescriptor.type === nextDescriptor.type &&
       prevDescriptor.key === nextDescriptor.key &&
-      prevDescriptor._owner === nextDescriptor._owner) {
-    return true;
-  }
-  return false;
+      prevDescriptor._owner === nextDescriptor._owner);
 }
 
 module.exports = shouldUpdateReactComponent;
