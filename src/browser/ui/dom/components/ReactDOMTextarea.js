@@ -28,8 +28,6 @@ var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
-var merge = require('merge');
-
 var warning = require('warning');
 
 // Store a reference to the <textarea> `ReactDOMComponent`. TODO: use string
@@ -41,6 +39,7 @@ function forceUpdateIfMounted() {
     this.forceUpdate();
   }
 }
+var filterDisabledEvents = require('filterDisabledEvents');
 
 /**
  * Implements a <textarea> native component that allows setting `value`, and
@@ -103,7 +102,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
+    var props = filterDisabledEvents(this.props);
 
     invariant(
       props.dangerouslySetInnerHTML == null,
