@@ -345,9 +345,12 @@ var ReactMount = {
       ReactDescriptor.isValidDescriptor(nextDescriptor),
       'renderComponent(): Invalid component descriptor.%s',
       (
+        typeof nextDescriptor === 'string' ?
+          ' Instead of passing an element string, make sure to instantiate ' +
+          'it by passing it to React.createElement.' :
         ReactDescriptor.isValidFactory(nextDescriptor) ?
           ' Instead of passing a component class, make sure to instantiate ' +
-          'it first by calling it with props.' :
+          'it by passing it to React.createElement.' :
         // Check if it quacks like a descriptor
         typeof nextDescriptor.props !== "undefined" ?
           ' This may be caused by unintentionally loading two independent ' +

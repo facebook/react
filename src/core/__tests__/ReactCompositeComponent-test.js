@@ -196,11 +196,11 @@ describe('ReactCompositeComponent', function() {
     var instance1 =
       <TogglingComponent
         firstComponent={null}
-        secondComponent={React.DOM.div}
+        secondComponent={'div'}
       />;
     var instance2 =
       <TogglingComponent
-        firstComponent={React.DOM.div}
+        firstComponent={'div'}
         secondComponent={null}
       />;
 
@@ -223,11 +223,11 @@ describe('ReactCompositeComponent', function() {
       var instance1 =
         <TogglingComponent
           firstComponent={null}
-          secondComponent={React.DOM.script}
+          secondComponent={'script'}
         />;
       var instance2 =
         <TogglingComponent
-          firstComponent={React.DOM.script}
+          firstComponent={'script'}
           secondComponent={null}
         />;
 
@@ -264,13 +264,13 @@ describe('ReactCompositeComponent', function() {
 
       var instance1 =
         <TogglingComponent
-          firstComponent={React.DOM.div}
+          firstComponent={'div'}
           secondComponent={Child}
         />;
       var instance2 =
         <TogglingComponent
           firstComponent={Child}
-          secondComponent={React.DOM.div}
+          secondComponent={'div'}
         />;
 
       expect(function() {

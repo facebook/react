@@ -29,13 +29,13 @@ var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
   propTypes: {
-    component: React.PropTypes.func,
+    component: React.PropTypes.any,
     childFactory: React.PropTypes.func
   },
 
   getDefaultProps: function() {
     return {
-      component: React.DOM.span,
+      component: 'span',
       childFactory: emptyFunction.thatReturnsArgument
     };
   },

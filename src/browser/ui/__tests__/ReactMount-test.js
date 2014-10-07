@@ -38,15 +38,17 @@ describe('ReactMount', function() {
     });
   });
 
-  it('throws when given a factory', function() {
+  it('throws when given a string', function() {
     expect(function() {
-      ReactTestUtils.renderIntoDocument(React.DOM.div);
+      ReactTestUtils.renderIntoDocument('div');
     }).toThrow(
       'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
-      'Instead of passing a component class, make sure to instantiate it ' +
-      'first by calling it with props.'
+      'Instead of passing an element string, make sure to instantiate it ' +
+      'by passing it to React.createElement.'
     );
+  });
 
+  it('throws when given a factory', function() {
     var Component = React.createClass({
       render: function() {
         return <div />;
@@ -57,7 +59,7 @@ describe('ReactMount', function() {
     }).toThrow(
       'Invariant Violation: renderComponent(): Invalid component descriptor. ' +
       'Instead of passing a component class, make sure to instantiate it ' +
-      'first by calling it with props.'
+      'by passing it to React.createElement.'
     );
   });
 

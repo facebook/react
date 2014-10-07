@@ -94,7 +94,7 @@ var expectChildren = function(d, children) {
         var elementDOMNode =
           reactComponentExpect(d)
             .expectRenderedChildAt(i)
-            .toBeComponentOfType(React.DOM.div)
+            .toBeComponentOfType('div')
             .instance()
             .getDOMNode();
 

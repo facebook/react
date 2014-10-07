@@ -105,8 +105,11 @@ mergeInto(reactComponentExpect.prototype, {
   // Matchers ------------------------------------------------------------------
 
   toBeComponentOfType: function(convenienceConstructor) {
+    var type = typeof convenienceConstructor === 'string' ?
+               convenienceConstructor :
+               convenienceConstructor.type;
     expect(
-      this.instance()._descriptor.type === convenienceConstructor.type
+      this.instance()._descriptor.type === type
     ).toBe(true);
     return this;
   },
