@@ -146,7 +146,7 @@ var ReactCompositeComponentInterface = {
    * `this.props` if that prop is not specified (i.e. using an `in` check).
    *
    * This method is invoked before `getInitialState` and therefore cannot rely
-   * on `this.state` or use `this.setState`.
+   * on `this._state` or use `this.setState`.
    *
    * @return {object}
    * @optional
@@ -155,7 +155,7 @@ var ReactCompositeComponentInterface = {
 
   /**
    * Invoked once before the component is mounted. The return value will be used
-   * as the initial value of `this.state`.
+   * as the initial value of `this._state`.
    *
    *   getInitialState: function() {
    *     return {
@@ -176,7 +176,7 @@ var ReactCompositeComponentInterface = {
   getChildContext: SpecPolicy.DEFINE_MANY_MERGED,
 
   /**
-   * Uses props from `this.props` and state from `this.state` to render the
+   * Uses props from `this.props` and state from `this._state` to render the
    * structure of the component.
    *
    * No guarantees are made about when or how often this method is invoked, so
@@ -249,7 +249,7 @@ var ReactCompositeComponentInterface = {
    *
    *   shouldComponentUpdate: function(nextProps, nextState, nextContext) {
    *     return !equal(nextProps, this.props) ||
-   *       !equal(nextState, this.state) ||
+   *       !equal(nextState, this._state) ||
    *       !equal(nextContext, this.context);
    *   }
    *
@@ -263,7 +263,7 @@ var ReactCompositeComponentInterface = {
 
   /**
    * Invoked when the component is about to update due to a transition from
-   * `this.props`, `this.state` and `this.context` to `nextProps`, `nextState`
+   * `this.props`, `this._state` and `this.context` to `nextProps`, `nextState`
    * and `nextContext`.
    *
    * Use this as an opportunity to perform preparation before an update occurs.
@@ -722,7 +722,24 @@ var ReactCompositeComponentMixin = {
     ReactComponent.Mixin.construct.apply(this, arguments);
     ReactOwner.Mixin.construct.apply(this, arguments);
 
-    this.state = null;
+    Object.defineProperty(this, 'state', {
+      get: function () {
+        return this._state;
+      },
+
+      set: function (newState) {
+        if (__DEV__){
+          warning(
+            false,
+            'this.state: Setting state directly from this.state is not ' +
+            'recommended. Instead, use this.setState().'
+          );
+        }
+        this._state = newState;
+      }
+    });
+
+    this._state = null;
     this._pendingState = null;
 
     // This is the public post-processed context. The real context and pending
@@ -772,9 +789,9 @@ var ReactCompositeComponentMixin = {
       this.context = this._processContext(this._currentElement._context);
       this.props = this._processProps(this.props);
 
-      this.state = this.getInitialState ? this.getInitialState() : null;
+      this._state = this.getInitialState ? this.getInitialState() : null;
       invariant(
-        typeof this.state === 'object' && !Array.isArray(this.state),
+        typeof this._state === 'object' && !Array.isArray(this._state),
         '%s.getInitialState(): must return an object or null',
         this.constructor.displayName || 'ReactCompositeComponent'
       );
@@ -787,7 +804,7 @@ var ReactCompositeComponentMixin = {
         // When mounting, calls to `setState` by `componentWillMount` will set
         // `this._pendingState` without triggering a re-render.
         if (this._pendingState) {
-          this.state = this._pendingState;
+          this._state = this._pendingState;
           this._pendingState = null;
         }
       }
@@ -832,15 +849,15 @@ var ReactCompositeComponentMixin = {
     // Some existing components rely on this.props even after they've been
     // destroyed (in event handlers).
     // TODO: this.props = null;
-    // TODO: this.state = null;
+    // TODO: this._state = null;
   },
 
   /**
    * Sets a subset of the state. Always use this or `replaceState` to mutate
-   * state. You should treat `this.state` as immutable.
+   * state. You should treat `this._state` as immutable.
    *
-   * There is no guarantee that `this.state` will be immediately updated, so
-   * accessing `this.state` after calling this method may return the old value.
+   * There is no guarantee that `this._state` will be immediately updated, so
+   * accessing `this._state` after calling this method may return the old value.
    *
    * There is no guarantee that calls to `setState` will run synchronously,
    * as they may eventually be batched together.  You can provide an optional
@@ -866,17 +883,17 @@ var ReactCompositeComponentMixin = {
     }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
-      merge(this._pendingState || this.state, partialState),
+      merge(this._pendingState || this._state, partialState),
       callback
     );
   },
 
   /**
    * Replaces all of the state. Always use this or `setState` to mutate state.
-   * You should treat `this.state` as immutable.
+   * You should treat `this._state` as immutable.
    *
-   * There is no guarantee that `this.state` will be immediately updated, so
-   * accessing `this.state` after calling this method may return the old value.
+   * There is no guarantee that `this._state` will be immediately updated, so
+   * accessing `this._state` after calling this method may return the old value.
    *
    * @param {object} completeState Next state.
    * @param {?function} callback Called after state is updated.
@@ -1044,7 +1061,7 @@ var ReactCompositeComponentMixin = {
 
     this._compositeLifeCycleState = null;
 
-    var nextState = this._pendingState || this.state;
+    var nextState = this._pendingState || this._state;
     this._pendingState = null;
 
     var shouldUpdate =
@@ -1064,7 +1081,7 @@ var ReactCompositeComponentMixin = {
 
     if (shouldUpdate) {
       this._pendingForceUpdate = false;
-      // Will set `this.props`, `this.state` and `this.context`.
+      // Will set `this.props`, `this._state` and `this.context`.
       this._performComponentUpdate(
         nextElement,
         nextProps,
@@ -1077,7 +1094,7 @@ var ReactCompositeComponentMixin = {
       // to set props and state.
       this._currentElement = nextElement;
       this.props = nextProps;
-      this.state = nextState;
+      this._state = nextState;
       this.context = nextContext;
 
       // Owner cannot change because shouldUpdateReactComponent doesn't allow
@@ -1106,7 +1123,7 @@ var ReactCompositeComponentMixin = {
   ) {
     var prevElement = this._currentElement;
     var prevProps = this.props;
-    var prevState = this.state;
+    var prevState = this._state;
     var prevContext = this.context;
 
     if (this.componentWillUpdate) {
@@ -1115,7 +1132,7 @@ var ReactCompositeComponentMixin = {
 
     this._currentElement = nextElement;
     this.props = nextProps;
-    this.state = nextState;
+    this._state = nextState;
     this.context = nextContext;
 
     // Owner cannot change because shouldUpdateReactComponent doesn't allow
