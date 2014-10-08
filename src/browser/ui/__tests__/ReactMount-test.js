@@ -66,10 +66,10 @@ describe('ReactMount', function() {
     var container = document.createElement('container');
     document.documentElement.appendChild(container);
 
-    ReactMount.renderComponent(<div></div>, container);
+    ReactMount.render(<div></div>, container);
     expect(container.firstChild.nodeName).toBe('DIV');
 
-    ReactMount.renderComponent(<span></span>, container);
+    ReactMount.render(<span></span>, container);
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
@@ -90,19 +90,19 @@ describe('ReactMount', function() {
     expect(mockMount.mock.calls.length).toBe(0);
     expect(mockUnmount.mock.calls.length).toBe(0);
 
-    ReactMount.renderComponent(<Component text="orange" key="A" />, container);
+    ReactMount.render(<Component text="orange" key="A" />, container);
     expect(container.firstChild.innerHTML).toBe('orange');
     expect(mockMount.mock.calls.length).toBe(1);
     expect(mockUnmount.mock.calls.length).toBe(0);
 
     // If we change the key, the component is unmounted and remounted
-    ReactMount.renderComponent(<Component text="green" key="B" />, container);
+    ReactMount.render(<Component text="green" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('green');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
 
     // But if we don't change the key, the component instance is reused
-    ReactMount.renderComponent(<Component text="blue" key="B" />, container);
+    ReactMount.render(<Component text="blue" key="B" />, container);
     expect(container.firstChild.innerHTML).toBe('blue');
     expect(mockMount.mock.calls.length).toBe(2);
     expect(mockUnmount.mock.calls.length).toBe(1);
@@ -110,8 +110,8 @@ describe('ReactMount', function() {
 
   it('should reuse markup if rendering to the same target twice', function() {
     var container = document.createElement('container');
-    var instance1 = React.renderComponent(<div />, container);
-    var instance2 = React.renderComponent(<div />, container);
+    var instance1 = React.render(<div />, container);
+    var instance2 = React.render(<div />, container);
 
     expect(instance1 === instance2).toBe(true);
   });

@@ -34,14 +34,14 @@ describe('ReactComponent', function() {
     var container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function() {
-      React.renderComponent(<div></div>, [container]);
+      React.render(<div></div>, [container]);
     }).toThrow(
       'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'
     );
 
     expect(function() {
-      React.renderComponent(<div></div>, null);
+      React.render(<div></div>, null);
     }).toThrow(
       'Invariant Violation: _registerComponent(...): Target container ' +
       'is not a DOM element.'

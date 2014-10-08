@@ -226,7 +226,7 @@ describe('ReactDOMTextarea', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <textarea valueLink={link} />;
 
-    instance = React.renderComponent(instance, container);
+    instance = React.render(instance, container);
 
     expect(instance.getDOMNode().value).toBe('yolo');
     expect(link.value).toBe('yolo');

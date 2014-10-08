@@ -50,7 +50,7 @@ var ReactTestUtils = {
     // clean up, so we're going to stop honoring the name of this method
     // (and probably rename it eventually) if no problems arise.
     // document.documentElement.appendChild(div);
-    return React.renderComponent(instance, div);
+    return React.render(instance, div);
   },
 
   isElement: function(element) {

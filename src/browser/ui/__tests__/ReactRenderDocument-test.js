@@ -63,9 +63,9 @@ describe('rendering React components at document', function() {
       }
     });
 
-    var markup = React.renderComponentToString(<Root />);
+    var markup = React.renderToString(<Root />);
     testDocument = getTestDocument(markup);
-    var component = React.renderComponent(<Root />, testDocument);
+    var component = React.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     var componentID = ReactMount.getReactRootID(testDocument);
@@ -90,9 +90,9 @@ describe('rendering React components at document', function() {
       }
     });
 
-    var markup = React.renderComponentToString(<Root />);
+    var markup = React.renderToString(<Root />);
     testDocument = getTestDocument(markup);
-    React.renderComponent(<Root />, testDocument);
+    React.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     expect(function() {
@@ -135,16 +135,16 @@ describe('rendering React components at document', function() {
       }
     });
 
-    var markup = React.renderComponentToString(<Component />);
+    var markup = React.renderToString(<Component />);
     testDocument = getTestDocument(markup);
 
-    React.renderComponent(<Component />, testDocument);
+    React.render(<Component />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
     // Reactive update
     expect(function() {
-      React.renderComponent(<Component2 />, testDocument);
+      React.render(<Component2 />, testDocument);
     }).toThrow(UNMOUNT_INVARIANT_MESSAGE);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -168,12 +168,12 @@ describe('rendering React components at document', function() {
       }
     });
 
-    var markup = React.renderComponentToString(
+    var markup = React.renderToString(
       <Component text="Hello world" />
     );
     testDocument = getTestDocument(markup);
 
-    React.renderComponent(<Component text="Hello world" />, testDocument);
+    React.render(<Component text="Hello world" />, testDocument);
 
     expect(testDocument.body.innerHTML).toBe('Hello world');
   });
@@ -196,14 +196,14 @@ describe('rendering React components at document', function() {
       }
     });
 
-    var markup = React.renderComponentToString(
+    var markup = React.renderToString(
       <Component text="Goodbye world" />
     );
     testDocument = getTestDocument(markup);
 
     expect(function() {
       // Notice the text is different!
-      React.renderComponent(<Component text="Hello world" />, testDocument);
+      React.render(<Component text="Hello world" />, testDocument);
     }).toThrow(
       'Invariant Violation: ' +
       'You\'re trying to render a component to the document using ' +
@@ -238,7 +238,7 @@ describe('rendering React components at document', function() {
     });
 
     expect(function() {
-      React.renderComponent(<Component />, container);
+      React.render(<Component />, container);
     }).toThrow(
       'Invariant Violation: You\'re trying to render a component to the ' +
       'document but you didn\'t use server rendering. We can\'t do this ' +

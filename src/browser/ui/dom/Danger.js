@@ -63,7 +63,7 @@ var Danger = {
       'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
       'thread. Make sure `window` and `document` are available globally ' +
       'before requiring React when unit testing or use ' +
-      'React.renderComponentToString for server rendering.'
+      'React.renderToString for server rendering.'
     );
     var nodeName;
     var markupByNodeName = {};
@@ -169,7 +169,7 @@ var Danger = {
       'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
       'worker thread. Make sure `window` and `document` are available ' +
       'globally before requiring React when unit testing or use ' +
-      'React.renderComponentToString for server rendering.'
+      'React.renderToString for server rendering.'
     );
     invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
     invariant(

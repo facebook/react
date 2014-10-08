@@ -103,9 +103,9 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     var element = <StatefulComponent />;
-    var firstInstance = React.renderComponent(element, container);
+    var firstInstance = React.render(element, container);
     React.unmountComponentAtNode(container);
-    var secondInstance = React.renderComponent(element, container);
+    var secondInstance = React.render(element, container);
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -398,7 +398,7 @@ describe('ReactComponentLifeCycle', function() {
       updateTooltip: function() {
         // Even though this.props.tooltip has an owner, updating it shouldn't
         // throw here because it's mounted as a root component
-        React.renderComponent(this.props.tooltip, this.container);
+        React.render(this.props.tooltip, this.container);
       }
     });
     var Component = React.createClass({
@@ -414,7 +414,7 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.renderComponent(
+    var instance = React.render(
       <Component text="uno" tooltipText="one" />,
       container
     );
