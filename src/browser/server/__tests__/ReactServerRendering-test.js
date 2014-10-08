@@ -247,21 +247,7 @@ describe('ReactServerRendering', function() {
         )
       ).toThrow(
         'Invariant Violation: renderComponentToString(): You must pass ' +
-        'a valid ReactComponent.'
-      );
-    });
-
-    it('should provide guidance for breaking API changes', function() {
-      expect(
-        ReactServerRendering.renderComponentToString.bind(
-          ReactServerRendering,
-          <div />,
-          function(){}
-        )
-      ).toThrow(
-        'Invariant Violation: renderComponentToString(): This function ' +
-        'became synchronous and now returns the generated markup. Please ' +
-        'remove the second parameter.'
+        'a valid ReactElement.'
       );
     });
   });
@@ -373,7 +359,7 @@ describe('ReactServerRendering', function() {
         )
       ).toThrow(
         'Invariant Violation: renderComponentToStaticMarkup(): You must pass ' +
-        'a valid ReactComponent.'
+        'a valid ReactElement.'
       );
     });
 

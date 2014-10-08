@@ -28,19 +28,13 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
 /**
- * @param {ReactComponent} component
+ * @param {ReactElement} element
  * @return {string} the HTML markup
  */
-function renderComponentToString(component) {
+function renderComponentToString(element) {
   invariant(
-    ReactElement.isValidElement(component),
-    'renderComponentToString(): You must pass a valid ReactComponent.'
-  );
-
-  invariant(
-    !(arguments.length === 2 && typeof arguments[1] === 'function'),
-    'renderComponentToString(): This function became synchronous and now ' +
-    'returns the generated markup. Please remove the second parameter.'
+    ReactElement.isValidElement(element),
+    'renderComponentToString(): You must pass a valid ReactElement.'
   );
 
   var transaction;
@@ -49,7 +43,7 @@ function renderComponentToString(component) {
     transaction = ReactServerRenderingTransaction.getPooled(false);
 
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(component, null);
+      var componentInstance = instantiateReactComponent(element, null);
       var markup = componentInstance.mountComponent(id, transaction, 0);
       return ReactMarkupChecksum.addChecksumToMarkup(markup);
     }, null);
@@ -59,14 +53,14 @@ function renderComponentToString(component) {
 }
 
 /**
- * @param {ReactComponent} component
+ * @param {ReactElement} element
  * @return {string} the HTML markup, without the extra React ID and checksum
 * (for generating static pages)
  */
-function renderComponentToStaticMarkup(component) {
+function renderComponentToStaticMarkup(element) {
   invariant(
-    ReactElement.isValidElement(component),
-    'renderComponentToStaticMarkup(): You must pass a valid ReactComponent.'
+    ReactElement.isValidElement(element),
+    'renderComponentToStaticMarkup(): You must pass a valid ReactElement.'
   );
 
   var transaction;
@@ -75,7 +69,7 @@ function renderComponentToStaticMarkup(component) {
     transaction = ReactServerRenderingTransaction.getPooled(true);
 
     return transaction.perform(function() {
-      var componentInstance = instantiateReactComponent(component, null);
+      var componentInstance = instantiateReactComponent(element, null);
       return componentInstance.mountComponent(id, transaction, 0);
     }, null);
   } finally {
