@@ -28,8 +28,6 @@ var ReactCSSTransitionGroupChild = React.createFactory(
   require('ReactCSSTransitionGroupChild')
 );
 
-var merge = require('merge');
-
 var ReactCSSTransitionGroup = React.createClass({
   displayName: 'ReactCSSTransitionGroup',
 
@@ -63,7 +61,7 @@ var ReactCSSTransitionGroup = React.createClass({
   render: function() {
     return (
       ReactTransitionGroup(
-        merge(this.props, {childFactory: this._wrapChild})
+        Object.assign({}, this.props, {childFactory: this._wrapChild})
       )
     );
   }

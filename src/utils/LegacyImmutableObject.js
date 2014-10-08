@@ -21,8 +21,6 @@
 
 var invariant = require('invariant');
 var isNode = require('isNode');
-var merge = require('merge');
-var mergeInto = require('mergeInto');
 var mergeHelpers = require('mergeHelpers');
 
 var checkMergeObjectArgs = mergeHelpers.checkMergeObjectArgs;
@@ -51,7 +49,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
+    Object.assign(this, initialProperties);
     deepFreeze(this);
   };
 
@@ -100,7 +98,7 @@ if (__DEV__) {
    */
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
-    var totalNewFields = merge(immutableObject, put);
+    var totalNewFields = Object.assign({}, immutableObject, put);
     return new LegacyImmutableObject(totalNewFields);
   };
 
@@ -112,7 +110,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
+    Object.assign(this, initialProperties);
   };
 
   /**
@@ -126,7 +124,7 @@ if (__DEV__) {
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
     var newMap = new LegacyImmutableObject(immutableObject);
-    mergeInto(newMap, put);
+    Object.assign(newMap, put);
     return newMap;
   };
 }

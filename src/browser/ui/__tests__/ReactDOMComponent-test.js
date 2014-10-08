@@ -224,7 +224,6 @@ describe('ReactDOMComponent', function() {
       var ReactDefaultInjection = require('ReactDefaultInjection');
       ReactDefaultInjection.inject();
 
-      var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -232,7 +231,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -275,7 +274,6 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -283,7 +281,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactDOMComponent.Mixin);
+      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -312,7 +310,6 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var mixInto = require('mixInto');
       var ReactComponent = require('ReactComponent');
       var ReactMultiChild = require('ReactMultiChild');
       var ReactDOMComponent = require('ReactDOMComponent');
@@ -321,9 +318,9 @@ describe('ReactDOMComponent', function() {
       var StubNativeComponent = function(element) {
         ReactComponent.Mixin.construct.call(this, element);
       };
-      mixInto(StubNativeComponent, ReactComponent.Mixin);
-      mixInto(StubNativeComponent, ReactDOMComponent.Mixin);
-      mixInto(StubNativeComponent, ReactMultiChild.Mixin);
+      Object.assign(StubNativeComponent.prototype, ReactComponent.Mixin);
+      Object.assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
+      Object.assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();

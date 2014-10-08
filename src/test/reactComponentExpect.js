@@ -21,8 +21,6 @@
 
 var ReactTestUtils = require('ReactTestUtils');
 
-var mergeInto = require('mergeInto');
-
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpect) {
     return instance;
@@ -38,7 +36,7 @@ function reactComponentExpect(instance) {
   expect(ReactTestUtils.isElement(instance)).toBe(false);
 }
 
-mergeInto(reactComponentExpect.prototype, {
+Object.assign(reactComponentExpect.prototype, {
   // Getters -------------------------------------------------------------------
 
   /**

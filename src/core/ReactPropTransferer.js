@@ -21,7 +21,6 @@
 var emptyFunction = require('emptyFunction');
 var invariant = require('invariant');
 var joinClasses = require('joinClasses');
-var merge = require('merge');
 var warning = require('warning');
 
 var didWarn = false;
@@ -47,7 +46,7 @@ var transferStrategyMerge = createTransferStrategy(function(a, b) {
   // `merge` overrides the first object's (`props[key]` above) keys using the
   // second object's (`value`) keys. An object's style's existing `propA` would
   // get overridden. Flip the order here.
-  return merge(b, a);
+  return Object.assign({}, b, a);
 });
 
 /**
@@ -113,7 +112,7 @@ var ReactPropTransferer = {
    * @return {object} a new object containing both sets of props merged.
    */
   mergeProps: function(oldProps, newProps) {
-    return transferInto(merge(oldProps), newProps);
+    return transferInto(Object.assign({}, oldProps), newProps);
   },
 
   /**

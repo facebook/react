@@ -37,8 +37,6 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
-var merge = require('merge');
-var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
 var mapObject = require('mapObject');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -349,7 +347,8 @@ var RESERVED_SPEC_KEYS = {
       childContextTypes,
       ReactPropTypeLocations.childContext
     );
-    Constructor.childContextTypes = merge(
+    Constructor.childContextTypes = Object.assign(
+      {},
       Constructor.childContextTypes,
       childContextTypes
     );
@@ -360,7 +359,11 @@ var RESERVED_SPEC_KEYS = {
       contextTypes,
       ReactPropTypeLocations.context
     );
-    Constructor.contextTypes = merge(Constructor.contextTypes, contextTypes);
+    Constructor.contextTypes = Object.assign(
+      {},
+      Constructor.contextTypes,
+      contextTypes
+    );
   },
   /**
    * Special case getDefaultProps which should move into statics but requires
@@ -382,7 +385,11 @@ var RESERVED_SPEC_KEYS = {
       propTypes,
       ReactPropTypeLocations.prop
     );
-    Constructor.propTypes = merge(Constructor.propTypes, propTypes);
+    Constructor.propTypes = Object.assign(
+      {},
+      Constructor.propTypes,
+      propTypes
+    );
   },
   statics: function(Constructor, statics) {
     mixStaticSpecIntoComponent(Constructor, statics);
@@ -462,7 +469,7 @@ function validateLifeCycleOnReplaceState(instance) {
 }
 
 /**
- * Custom version of `mixInto` which handles policy validation and reserved
+ * Mixin helper which handles policy validation and reserved
  * specification keys when building `ReactCompositeComponent` classses.
  */
 function mixSpecIntoComponent(Constructor, spec) {
@@ -866,7 +873,7 @@ var ReactCompositeComponentMixin = {
     }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
-      merge(this._pendingState || this.state, partialState),
+      Object.assign({}, this._pendingState || this.state, partialState),
       callback
     );
   },
@@ -954,7 +961,7 @@ var ReactCompositeComponentMixin = {
           name
         );
       }
-      return merge(currentContext, childContext);
+      return Object.assign({}, currentContext, childContext);
     }
     return currentContext;
   },
@@ -1332,10 +1339,13 @@ var ReactCompositeComponentMixin = {
 };
 
 var ReactCompositeComponentBase = function() {};
-mixInto(ReactCompositeComponentBase, ReactComponent.Mixin);
-mixInto(ReactCompositeComponentBase, ReactOwner.Mixin);
-mixInto(ReactCompositeComponentBase, ReactPropTransferer.Mixin);
-mixInto(ReactCompositeComponentBase, ReactCompositeComponentMixin);
+Object.assign(
+  ReactCompositeComponentBase.prototype,
+  ReactComponent.Mixin,
+  ReactOwner.Mixin,
+  ReactPropTransferer.Mixin,
+  ReactCompositeComponentMixin
+);
 
 /**
  * Module for creating composite components.

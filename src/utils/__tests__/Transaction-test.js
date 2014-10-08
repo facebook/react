@@ -19,14 +19,12 @@
 "use strict";
 
 var Transaction;
-var mixInto;
 
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     Transaction = require('Transaction');
-    mixInto = require('mixInto');
   });
 
   /**
@@ -53,7 +51,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -102,7 +100,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -163,7 +161,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     // Now, none of the close/inits throw, but the operation we wrap will throw.
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -227,7 +225,7 @@ describe('Transaction', function() {
     var TestTransaction = function() {
       this.reinitializeTransaction();
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     var exceptionMsg = 'This exception should throw.';
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -256,7 +254,7 @@ describe('Transaction', function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    Object.assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -284,7 +282,7 @@ describe('Transaction', function() {
     var NestedTransaction = function() {
       this.reinitializeTransaction();
     };
-    mixInto(NestedTransaction, Transaction.Mixin);
+    Object.assign(NestedTransaction.prototype, Transaction.Mixin);
     NestedTransaction.prototype.getTransactionWrappers = function() {
       return [{
         initialize: function() {

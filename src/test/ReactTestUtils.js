@@ -29,8 +29,6 @@ var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
-var mergeInto = require('mergeInto');
-
 var topLevelTypes = EventConstants.topLevelTypes;
 
 function Event(suffix) {}
@@ -327,7 +325,7 @@ function makeSimulator(eventType) {
       ReactMount.getID(node),
       fakeNativeEvent
     );
-    mergeInto(event, eventData);
+    Object.assign(event, eventData);
     EventPropagators.accumulateTwoPhaseDispatches(event);
 
     ReactUpdates.batchedUpdates(function() {
@@ -383,7 +381,7 @@ buildSimulators();
 function makeNativeSimulator(eventType) {
   return function(domComponentOrNode, nativeEventData) {
     var fakeNativeEvent = new Event(eventType);
-    mergeInto(fakeNativeEvent, nativeEventData);
+    Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
         eventType,

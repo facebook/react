@@ -21,7 +21,6 @@
 var PooledClass = require('PooledClass');
 
 var invariant = require('invariant');
-var mixInto = require('mixInto');
 
 /**
  * A specialized pseudo-event module to help keep track of components waiting to
@@ -39,7 +38,7 @@ function CallbackQueue() {
   this._contexts = null;
 }
 
-mixInto(CallbackQueue, {
+Object.assign(CallbackQueue.prototype, {
 
   /**
    * Enqueues a callback to be invoked when `notifyAll` is invoked.

@@ -22,7 +22,6 @@ var ReactUpdates = require('ReactUpdates');
 var Transaction = require('Transaction');
 
 var emptyFunction = require('emptyFunction');
-var mixInto = require('mixInto');
 
 var RESET_BATCHED_UPDATES = {
   initialize: emptyFunction,
@@ -42,12 +41,15 @@ function ReactDefaultBatchingStrategyTransaction() {
   this.reinitializeTransaction();
 }
 
-mixInto(ReactDefaultBatchingStrategyTransaction, Transaction.Mixin);
-mixInto(ReactDefaultBatchingStrategyTransaction, {
-  getTransactionWrappers: function() {
-    return TRANSACTION_WRAPPERS;
+Object.assign(
+  ReactDefaultBatchingStrategyTransaction.prototype,
+  Transaction.Mixin,
+  {
+    getTransactionWrappers: function() {
+      return TRANSACTION_WRAPPERS;
+    }
   }
-});
+);
 
 var transaction = new ReactDefaultBatchingStrategyTransaction();
 

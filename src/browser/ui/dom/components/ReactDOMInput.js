@@ -29,7 +29,6 @@ var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
-var merge = require('merge');
 
 // Store a reference to the <input> `ReactDOMComponent`. TODO: use string
 var input = ReactElement.createFactory(ReactDOM.input.type);
@@ -74,7 +73,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
+    var props = Object.assign({}, this.props);
 
     props.defaultChecked = null;
     props.defaultValue = null;

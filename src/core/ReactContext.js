@@ -18,8 +18,6 @@
 
 "use strict";
 
-var merge = require('merge');
-
 /**
  * Keeps track of the current context.
  *
@@ -53,7 +51,7 @@ var ReactContext = {
   withContext: function(newContext, scopedCallback) {
     var result;
     var previousContext = ReactContext.current;
-    ReactContext.current = merge(previousContext, newContext);
+    ReactContext.current = Object.assign({}, previousContext, newContext);
     try {
       result = scopedCallback();
     } finally {

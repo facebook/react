@@ -26,8 +26,6 @@ var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
-var merge = require('merge');
-
 // Store a reference to the <select> `ReactDOMComponent`. TODO: use string
 var select = ReactElement.createFactory(ReactDOM.select.type);
 
@@ -138,7 +136,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
+    var props = Object.assign({}, this.props);
 
     props.onChange = this._handleChange;
     props.value = null;

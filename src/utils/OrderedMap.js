@@ -19,7 +19,6 @@
 "use strict";
 
 var invariant = require('invariant');
-var mixInto = require('mixInto');
 
 var PREFIX = 'key:';
 
@@ -483,7 +482,7 @@ var OrderedMapMethods = {
   }
 };
 
-mixInto(OrderedMapImpl, OrderedMapMethods);
+Object.assign(OrderedMapImpl.prototype, OrderedMapMethods);
 
 var OrderedMap = {
   from: function(orderedMap) {

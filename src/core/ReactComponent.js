@@ -24,7 +24,6 @@ var ReactUpdates = require('ReactUpdates');
 
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
-var merge = require('merge');
 
 /**
  * Every React component is in one of these life cycles.
@@ -151,7 +150,7 @@ var ReactComponent = {
       // element props.
       var element = this._pendingElement || this._currentElement;
       this.replaceProps(
-        merge(element.props, partialProps),
+        Object.assign({}, element.props, partialProps),
         callback
       );
     },
@@ -200,7 +199,7 @@ var ReactComponent = {
       var element = this._pendingElement || this._currentElement;
       this._pendingElement = ReactElement.cloneAndReplaceProps(
         element,
-        merge(element.props, partialProps)
+        Object.assign({}, element.props, partialProps)
       );
       ReactUpdates.enqueueUpdate(this, callback);
     },
