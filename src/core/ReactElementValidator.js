@@ -216,7 +216,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         loggedTypeFailures[error.message] = true;
         // This will soon use the warning module
         monitorCodeUse(
-          'react_failed_element_type_check',
+          'react_failed_descriptor_type_check',
           { message: error.message }
         );
       }
