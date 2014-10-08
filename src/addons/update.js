@@ -18,7 +18,6 @@
 
 "use strict";
 
-var copyProperties = require('copyProperties');
 var keyOf = require('keyOf');
 var invariant = require('invariant');
 
@@ -26,7 +25,7 @@ function shallowCopy(x) {
   if (Array.isArray(x)) {
     return x.concat();
   } else if (x && typeof x === 'object') {
-    return copyProperties(new x.constructor(), x);
+    return Object.assign(new x.constructor(), x);
   } else {
     return x;
   }
@@ -106,7 +105,7 @@ function update(value, spec) {
       COMMAND_MERGE,
       nextValue
     );
-    copyProperties(nextValue, spec[COMMAND_MERGE]);
+    Object.assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (spec.hasOwnProperty(COMMAND_PUSH)) {

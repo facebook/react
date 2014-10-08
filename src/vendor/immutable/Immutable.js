@@ -19,7 +19,6 @@
 var invariant = require('invariant');
 var isNode = require('isNode');
 var keyOf = require('keyOf');
-var mergeInto = require('mergeInto');
 
 var SECRET_KEY = keyOf({_DONT_EVER_TYPE_THIS_SECRET_KEY: null});
 
@@ -67,7 +66,7 @@ class Immutable {
   static mergeAllPropertiesInto(destination, propertyObjects) {
     var argLength = propertyObjects.length;
     for (var i = 0; i < argLength; i++) {
-      mergeInto(destination, propertyObjects[i]);
+      Object.assign(destination, propertyObjects[i]);
     }
   }
 

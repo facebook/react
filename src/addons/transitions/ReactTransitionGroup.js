@@ -23,7 +23,6 @@ var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
 var cloneWithProps = require('cloneWithProps');
 var emptyFunction = require('emptyFunction');
-var merge = require('merge');
 
 var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
@@ -159,7 +158,7 @@ var ReactTransitionGroup = React.createClass({
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      var newChildren = merge(this.state.children);
+      var newChildren = Object.assign({}, this.state.children);
       delete newChildren[key];
       this.setState({children: newChildren});
     }

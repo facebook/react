@@ -25,7 +25,6 @@ var ReactPerf = require('ReactPerf');
 var Transaction = require('Transaction');
 
 var invariant = require('invariant');
-var mixInto = require('mixInto');
 var warning = require('warning');
 
 var dirtyComponents = [];
@@ -80,8 +79,9 @@ function ReactUpdatesFlushTransaction() {
     ReactUpdates.ReactReconcileTransaction.getPooled();
 }
 
-mixInto(ReactUpdatesFlushTransaction, Transaction.Mixin);
-mixInto(ReactUpdatesFlushTransaction, {
+Object.assign(
+  ReactUpdatesFlushTransaction.prototype,
+  Transaction.Mixin, {
   getTransactionWrappers: function() {
     return TRANSACTION_WRAPPERS;
   },

@@ -99,7 +99,7 @@ function proxyStaticMethods(target, source) {
       if (typeof value === 'function') {
         var bound = value.bind(source);
         // Copy any properties defined on the function, such as `isRequired` on
-        // a PropTypes validator. (mergeInto refuses to work on functions.)
+        // a PropTypes validator.
         for (var k in value) {
           if (value.hasOwnProperty(k)) {
             bound[k] = value[k];

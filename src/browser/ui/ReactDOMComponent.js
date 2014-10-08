@@ -33,8 +33,6 @@ var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
-var merge = require('merge');
-var mixInto = require('mixInto');
 var monitorCodeUse = require('monitorCodeUse');
 
 var deleteListener = ReactBrowserEventEmitter.deleteListener;
@@ -207,7 +205,7 @@ ReactDOMComponent.Mixin = {
       } else {
         if (propKey === STYLE) {
           if (propValue) {
-            propValue = props.style = merge(props.style);
+            propValue = props.style = Object.assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
@@ -356,7 +354,7 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
-          nextProp = nextProps.style = merge(nextProp);
+          nextProp = nextProps.style = Object.assign({}, nextProp);
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
@@ -465,9 +463,12 @@ ReactDOMComponent.Mixin = {
 
 };
 
-mixInto(ReactDOMComponent, ReactComponent.Mixin);
-mixInto(ReactDOMComponent, ReactDOMComponent.Mixin);
-mixInto(ReactDOMComponent, ReactMultiChild.Mixin);
-mixInto(ReactDOMComponent, ReactBrowserComponentMixin);
+Object.assign(
+  ReactDOMComponent.prototype,
+  ReactComponent.Mixin,
+  ReactDOMComponent.Mixin,
+  ReactMultiChild.Mixin,
+  ReactBrowserComponentMixin
+);
 
 module.exports = ReactDOMComponent;

@@ -25,7 +25,6 @@ var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
 var emptyFunction = require('emptyFunction');
-var mixInto = require('mixInto');
 
 /**
  * Provides a `CallbackQueue` queue for collecting `onDOMReady` callbacks
@@ -107,8 +106,11 @@ var Mixin = {
 };
 
 
-mixInto(ReactServerRenderingTransaction, Transaction.Mixin);
-mixInto(ReactServerRenderingTransaction, Mixin);
+Object.assign(
+  ReactServerRenderingTransaction.prototype,
+  Transaction.Mixin,
+  Mixin
+);
 
 PooledClass.addPoolingTo(ReactServerRenderingTransaction);
 

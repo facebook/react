@@ -18,8 +18,6 @@
 
 "use strict";
 
-var merge = require('merge');
-
 describe('EventPluginRegistry', function() {
   var EventPluginRegistry;
   var createPlugin;
@@ -29,7 +27,7 @@ describe('EventPluginRegistry', function() {
     EventPluginRegistry._resetEventPlugins();
 
     createPlugin = function(properties) {
-      return merge({extractEvents: function() {}}, properties);
+      return Object.assign({extractEvents: function() {}}, properties);
     };
   });
 

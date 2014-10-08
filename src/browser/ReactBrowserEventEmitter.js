@@ -26,7 +26,6 @@ var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
 var isEventSupported = require('isEventSupported');
-var merge = require('merge');
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -155,7 +154,7 @@ function getListeningForDocument(mountAt) {
  *
  * @internal
  */
-var ReactBrowserEventEmitter = merge(ReactEventEmitterMixin, {
+var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
 
   /**
    * Injectable event backend

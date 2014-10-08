@@ -28,7 +28,6 @@ var ReactUpdates = require('ReactUpdates');
 
 var getEventTarget = require('getEventTarget');
 var getUnboundedScrollPosition = require('getUnboundedScrollPosition');
-var mixInto = require('mixInto');
 
 /**
  * Finds the parent React component of `node`.
@@ -54,7 +53,7 @@ function TopLevelCallbackBookKeeping(topLevelType, nativeEvent) {
   this.nativeEvent = nativeEvent;
   this.ancestors = [];
 }
-mixInto(TopLevelCallbackBookKeeping, {
+Object.assign(TopLevelCallbackBookKeeping.prototype, {
   destructor: function() {
     this.topLevelType = null;
     this.nativeEvent = null;

@@ -19,7 +19,6 @@
 "use strict";
 
 var invariant = require('invariant');
-var mergeInto = require('mergeInto');
 
 var genericComponentClass = null;
 // This registry keeps track of wrapper classes around native tags
@@ -34,7 +33,7 @@ var ReactNativeComponentInjection = {
   // This accepts a keyed object with classes as values. Each key represents a
   // tag. That particular tag will use this class instead of the generic one.
   injectComponentClasses: function(componentClasses) {
-    mergeInto(tagToComponentClass, componentClasses);
+    Object.assign(tagToComponentClass, componentClasses);
   }
 };
 

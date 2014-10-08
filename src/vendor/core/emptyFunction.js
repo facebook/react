@@ -16,8 +16,6 @@
  * @providesModule emptyFunction
  */
 
-var copyProperties = require('copyProperties');
-
 function makeEmptyFunction(arg) {
   return function() {
     return arg;
@@ -31,7 +29,7 @@ function makeEmptyFunction(arg) {
  */
 function emptyFunction() {}
 
-copyProperties(emptyFunction, {
+Object.assign(emptyFunction, {
   thatReturns: makeEmptyFunction,
   thatReturnsFalse: makeEmptyFunction(false),
   thatReturnsTrue: makeEmptyFunction(true),
