@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  * @emails react-core
- * @jsx React.DOM
  */
 
 "use strict";
