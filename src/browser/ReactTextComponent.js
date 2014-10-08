@@ -20,7 +20,6 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
 
