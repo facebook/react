@@ -27,6 +27,7 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
 
 var containsNode = require('containsNode');
+var deprecated = require('deprecated');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
@@ -204,7 +205,7 @@ function findDeepestCachedAncestor(targetID) {
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
  *
- *   ReactMount.renderComponent(
+ *   ReactMount.render(
  *     component,
  *     document.getElementById('container')
  *   );
@@ -340,7 +341,7 @@ var ReactMount = {
    * @param {?function} callback function triggered on completion
    * @return {ReactComponent} Component instance rendered in `container`.
    */
-  renderComponent: function(nextElement, container, callback) {
+  render: function(nextElement, container, callback) {
     invariant(
       ReactElement.isValidElement(nextElement),
       'renderComponent(): Invalid component element.%s',
@@ -401,7 +402,7 @@ var ReactMount = {
    */
   constructAndRenderComponent: function(constructor, props, container) {
     var element = createElement(constructor, props);
-    return ReactMount.renderComponent(element, container);
+    return ReactMount.render(element, container);
   },
 
   /**
@@ -682,5 +683,14 @@ var ReactMount = {
 
   purgeID: purgeID
 };
+
+// Deprecations (remove for 0.13)
+ReactMount.renderComponent = deprecated(
+  'ReactMount',
+  'renderComponent',
+  'render',
+  this,
+  ReactMount.render
+);
 
 module.exports = ReactMount;

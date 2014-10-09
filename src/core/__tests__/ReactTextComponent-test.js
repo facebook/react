@@ -29,7 +29,7 @@ describe('ReactTextComponent', function() {
     var ThisThingShouldBeEscaped = '">>> LULZ <<<"';
     var ThisThingWasBeEscaped = '&quot;&gt;&gt;&gt; LULZ &lt;&lt;&lt;&quot;';
     var thing = <div><span key={ThisThingShouldBeEscaped}>LULZ</span></div>;
-    var html = React.renderComponentToString(thing);
+    var html = React.renderToString(thing);
     expect(html).not.toContain(ThisThingShouldBeEscaped);
     expect(html).toContain(ThisThingWasBeEscaped);
   })

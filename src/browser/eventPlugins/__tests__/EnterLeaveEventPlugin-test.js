@@ -50,7 +50,7 @@ describe('EnterLeaveEventPlugin', function() {
     );
     iframeDocument.close();
 
-    var component = React.renderComponent(<div />, iframeDocument.body);
+    var component = React.render(<div />, iframeDocument.body);
     var div = component.getDOMNode();
 
     var extracted = EnterLeaveEventPlugin.extractEvents(

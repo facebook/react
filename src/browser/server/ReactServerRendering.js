@@ -31,10 +31,10 @@ var invariant = require('invariant');
  * @param {ReactElement} element
  * @return {string} the HTML markup
  */
-function renderComponentToString(element) {
+function renderToString(element) {
   invariant(
     ReactElement.isValidElement(element),
-    'renderComponentToString(): You must pass a valid ReactElement.'
+    'renderToString(): You must pass a valid ReactElement.'
   );
 
   var transaction;
@@ -55,12 +55,12 @@ function renderComponentToString(element) {
 /**
  * @param {ReactElement} element
  * @return {string} the HTML markup, without the extra React ID and checksum
-* (for generating static pages)
+ * (for generating static pages)
  */
-function renderComponentToStaticMarkup(element) {
+function renderToStaticMarkup(element) {
   invariant(
     ReactElement.isValidElement(element),
-    'renderComponentToStaticMarkup(): You must pass a valid ReactElement.'
+    'renderToStaticMarkup(): You must pass a valid ReactElement.'
   );
 
   var transaction;
@@ -78,6 +78,6 @@ function renderComponentToStaticMarkup(element) {
 }
 
 module.exports = {
-  renderComponentToString: renderComponentToString,
-  renderComponentToStaticMarkup: renderComponentToStaticMarkup
+  renderToString: renderToString,
+  renderToStaticMarkup: renderToStaticMarkup
 };

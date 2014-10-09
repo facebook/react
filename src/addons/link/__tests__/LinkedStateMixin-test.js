@@ -44,7 +44,7 @@ describe('LinkedStateMixin', function() {
       }
     });
     var container = document.createElement('div');
-    var component = React.renderComponent(<Component />, container);
+    var component = React.render(<Component />, container);
     var link = component.linkState('value');
     expect(component.state.value).toBe('initial value');
     expect(link.value).toBe('initial value');

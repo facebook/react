@@ -299,12 +299,12 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var markup = ReactServerRendering.renderComponentToString(<Parent />);
+    var markup = ReactServerRendering.renderToString(<Parent />);
     var container = document.createElement('div');
     container.innerHTML = markup;
 
     spyOn(console, 'warn');
-    React.renderComponent(<Parent />, container);
+    React.render(<Parent />, container);
     expect(console.warn).not.toHaveBeenCalled();
   });
 
@@ -468,13 +468,13 @@ describe('ReactCompositeComponent', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.renderComponent(
+    var instance = React.render(
       <Component fruit="mango" />,
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.renderComponent(<Component />, container);
+    React.render(<Component />, container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
@@ -616,7 +616,7 @@ describe('ReactCompositeComponent', function() {
     var instance = <Component />;
     expect(instance.forceUpdate).not.toBeDefined();
 
-    instance = React.renderComponent(instance, container);
+    instance = React.render(instance, container);
     expect(function() {
       instance.forceUpdate();
     }).not.toThrow();
@@ -876,7 +876,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    React.renderComponent(<Component />, container);
+    React.render(<Component />, container);
     React.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
 

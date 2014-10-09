@@ -78,7 +78,7 @@ describe('ReactTransitionGroup', function() {
       }
     });
 
-    var instance = React.renderComponent(<Component />, container);
+    var instance = React.render(<Component />, container);
     expect(log).toEqual(['didMount']);
 
     instance.setState({count: 2}, function() {
@@ -135,7 +135,7 @@ describe('ReactTransitionGroup', function() {
       }
     });
 
-    var instance = React.renderComponent(<Component />, container);
+    var instance = React.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);
@@ -194,7 +194,7 @@ describe('ReactTransitionGroup', function() {
       }
     });
 
-    var instance = React.renderComponent(<Component />, container);
+    var instance = React.render(<Component />, container);
     expect(log).toEqual(['didMount']);
     instance.setState({count: 2});
     expect(log).toEqual(['didMount', 'didMount', 'willEnter']);

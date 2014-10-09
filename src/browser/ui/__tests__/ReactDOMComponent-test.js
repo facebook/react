@@ -369,10 +369,10 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should validate against multiple children props", function() {
-      React.renderComponent(<div></div>, container);
+      React.render(<div></div>, container);
 
       expect(function() {
-        React.renderComponent(
+        React.render(
           <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
           container
         );
@@ -384,7 +384,7 @@ describe('ReactDOMComponent', function() {
 
     it("should warn about contentEditable and children", function() {
       spyOn(console, 'warn');
-      React.renderComponent(
+      React.render(
         <div contentEditable><div /></div>,
         container
       );
@@ -393,10 +393,10 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should validate against invalid styles", function() {
-      React.renderComponent(<div></div>, container);
+      React.render(<div></div>, container);
 
       expect(function() {
-        React.renderComponent(<div style={1}></div>, container);
+        React.render(<div style={1}></div>, container);
       }).toThrow(
         'Invariant Violation: The `style` prop expects a mapping from style ' +
         'properties to values, not a string.'
@@ -415,7 +415,7 @@ describe('ReactDOMComponent', function() {
 
       var callback = function() {};
       var instance = <div onClick={callback} />;
-      instance = React.renderComponent(instance, container);
+      instance = React.render(instance, container);
 
       var rootNode = instance.getDOMNode();
       var rootNodeID = ReactMount.getID(rootNode);

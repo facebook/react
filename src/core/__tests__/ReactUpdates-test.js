@@ -508,16 +508,16 @@ describe('ReactUpdates', function() {
 
     // Initial renders aren't batched together yet...
     ReactUpdates.batchedUpdates(function() {
-      React.renderComponent(<Component text="A1" />, containerA);
-      React.renderComponent(<Component text="B1" />, containerB);
+      React.render(<Component text="A1" />, containerA);
+      React.render(<Component text="B1" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
     ReactUpdates.batchedUpdates(function() {
-      React.renderComponent(<Component text="A2" />, containerA);
-      React.renderComponent(<Component text="B2" />, containerB);
+      React.render(<Component text="A2" />, containerA);
+      React.render(<Component text="B2" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
   });
@@ -743,8 +743,8 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    React.renderComponent(<A x={1} />, container);
-    React.renderComponent(<A x={2} />, container);
+    React.render(<A x={1} />, container);
+    React.render(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
 
@@ -769,7 +769,7 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    var component = React.renderComponent(<A />, container);
+    var component = React.render(<A />, container);
     component.forceUpdate();
     expect(callbackCount).toBe(2);
   });
@@ -803,7 +803,7 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    var component = React.renderComponent(<A />, container);
+    var component = React.render(<A />, container);
     component.setState({updates: 1});
     expect(log).toEqual([
       'render-0',

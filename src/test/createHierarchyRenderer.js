@@ -38,7 +38,7 @@ var React = require('React');
  *
  *   var instances = renderHierarchy(
  *     function(ComponentA[, ComponentB, ComponentC]) {
- *       React.renderComponent(<ComponentA />, ...);
+ *       React.render(<ComponentA />, ...);
  *     })
  *   );
  *   instances[0][0]; // First return value of first render method.

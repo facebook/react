@@ -31,7 +31,7 @@ describe('ReactMount', function() {
     );
     var firstRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(firstRootDiv);
-    React.renderComponent(instanceOne, firstRootDiv);
+    React.render(instanceOne, firstRootDiv);
 
     var instanceTwo = (
       <div className="secondReactDiv">
@@ -39,7 +39,7 @@ describe('ReactMount', function() {
     );
     var secondRootDiv = document.createElement('div');
     mainContainerDiv.appendChild(secondRootDiv);
-    React.renderComponent(instanceTwo, secondRootDiv);
+    React.render(instanceTwo, secondRootDiv);
 
     // Test that two react roots are rendered in isolation
     expect(firstRootDiv.firstChild.className).toBe('firstReactDiv');

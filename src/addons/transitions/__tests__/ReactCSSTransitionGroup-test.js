@@ -36,7 +36,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should warn after time with no transitionend', function() {
-    var a = React.renderComponent(
+    var a = React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
@@ -46,7 +46,7 @@ describe('ReactCSSTransitionGroup', function() {
 
     setTimeout.mock.calls.length = 0;
 
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
@@ -72,14 +72,14 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should keep both sets of DOM nodes around', function() {
-    var a = React.renderComponent(
+    var a = React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
     expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="two" id="two" />
       </ReactCSSTransitionGroup>,
@@ -91,7 +91,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should switch transitionLeave from false to true', function() {
-    var a = React.renderComponent(
+    var a = React.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -101,7 +101,7 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
     expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -111,7 +111,7 @@ describe('ReactCSSTransitionGroup', function() {
       container
     );
     expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup
           transitionName="yolo"
           transitionEnter={false}
@@ -126,7 +126,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should work with no children', function() {
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
       </ReactCSSTransitionGroup>,
       container
@@ -134,7 +134,7 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should work with a null child', function() {
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {[null]}
       </ReactCSSTransitionGroup>,
@@ -143,14 +143,14 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should transition from one to null', function() {
-    var a = React.renderComponent(
+    var a = React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,
       container
     );
     expect(a.getDOMNode().childNodes.length).toBe(1);
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {null}
       </ReactCSSTransitionGroup>,
@@ -163,14 +163,14 @@ describe('ReactCSSTransitionGroup', function() {
   });
 
   it('should transition from false to one', function() {
-    var a = React.renderComponent(
+    var a = React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         {false}
       </ReactCSSTransitionGroup>,
       container
     );
     expect(a.getDOMNode().childNodes.length).toBe(0);
-    React.renderComponent(
+    React.render(
       <ReactCSSTransitionGroup transitionName="yolo">
         <span key="one" id="one" />
       </ReactCSSTransitionGroup>,

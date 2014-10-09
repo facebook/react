@@ -51,7 +51,7 @@ describe('ReactIdentity', function() {
         }}
       </div>;
 
-    instance = React.renderComponent(instance, document.createElement('div'));
+    instance = React.render(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
     checkId(node.childNodes[0], '.0.$first:0');
@@ -67,7 +67,7 @@ describe('ReactIdentity', function() {
         <div key={123} />
       </div>;
 
-    instance = React.renderComponent(instance, document.createElement('div'));
+    instance = React.render(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
     checkId(node.childNodes[0], '.0.$apple');
@@ -91,7 +91,7 @@ describe('ReactIdentity', function() {
         <Wrapper><span key="chipmunk" /></Wrapper>
       </div>;
 
-    instance = React.renderComponent(instance, document.createElement('div'));
+    instance = React.render(instance, document.createElement('div'));
     var node = instance.getDOMNode();
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
 
@@ -118,7 +118,7 @@ describe('ReactIdentity', function() {
 
     });
 
-    var instance = React.renderComponent(<Wrapper />, container);
+    var instance = React.render(<Wrapper />, container);
     var span1 = instance.refs.span1;
     var span2 = instance.refs.span2;
 
@@ -189,7 +189,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.renderComponent(<TestContainer />, document.createElement('div'));
+      React.render(<TestContainer />, document.createElement('div'));
 
     }).not.toThrow();
   });
@@ -225,7 +225,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.renderComponent(<TestContainer />, document.createElement('div'));
+      React.render(<TestContainer />, document.createElement('div'));
 
     }).not.toThrow();
   });
@@ -252,7 +252,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.renderComponent(<TestContainer />, document.createElement('div'));
+      React.render(<TestContainer />, document.createElement('div'));
 
     }).not.toThrow();
   });
@@ -291,7 +291,7 @@ describe('ReactIdentity', function() {
 
     var wrapped = <TestContainer first={instance0} second={instance1} />;
 
-    wrapped = React.renderComponent(wrapped, document.createElement('div'));
+    wrapped = React.render(wrapped, document.createElement('div'));
 
     var beforeID = ReactMount.getID(wrapped.getDOMNode().firstChild);
 
@@ -311,7 +311,7 @@ describe('ReactIdentity', function() {
       </div>;
 
     expect(function() {
-      React.renderComponent(component, document.createElement('div'));
+      React.render(component, document.createElement('div'));
     }).not.toThrow();
   });
 
