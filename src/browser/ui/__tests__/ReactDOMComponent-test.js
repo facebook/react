@@ -156,7 +156,7 @@ describe('ReactDOMComponent', function() {
 
     it("should empty element when removing innerHTML", function() {
       var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: ':)'}} />
+        <div dangerousInnerHTML={{__html: ':)'}} />
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual(':)');
@@ -171,7 +171,7 @@ describe('ReactDOMComponent', function() {
 
       expect(stub.getDOMNode().innerHTML).toEqual('hello');
       stub.receiveComponent(
-        {props: {dangerouslySetInnerHTML: {__html: 'goodbye'}}},
+        {props: {dangerousInnerHTML: {__html: 'goodbye'}}},
         transaction
       );
       expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
@@ -179,7 +179,7 @@ describe('ReactDOMComponent', function() {
 
     it("should transition from innerHTML to string content", function() {
       var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+        <div dangerousInnerHTML={{__html: 'bonjour'}} />
       );
 
       expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
@@ -295,10 +295,10 @@ describe('ReactDOMComponent', function() {
       });
     });
 
-    it("should handle dangerouslySetInnerHTML", function() {
+    it("should handle dangerousInnerHTML", function() {
       var innerHTML = {__html: 'testContent'};
       expect(
-        genMarkup({ dangerouslySetInnerHTML: innerHTML })
+        genMarkup({ dangerousInnerHTML: innerHTML })
       ).toHaveInnerhtml('testContent');
     });
   });
@@ -335,10 +335,10 @@ describe('ReactDOMComponent', function() {
 
     it("should validate against multiple children props", function() {
       expect(function() {
-        mountComponent({ children: '', dangerouslySetInnerHTML: '' });
+        mountComponent({ children: '', dangerousInnerHTML: '' });
       }).toThrow(
         'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        '`dangerousInnerHTML`.'
       );
     });
 
@@ -373,12 +373,12 @@ describe('ReactDOMComponent', function() {
 
       expect(function() {
         React.renderComponent(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
+          <div children="" dangerousInnerHTML={{__html: ''}}></div>,
           container
         );
       }).toThrow(
         'Invariant Violation: Can only set one of `children` or ' +
-        '`props.dangerouslySetInnerHTML`.'
+        '`dangerousInnerHTML`.'
       );
     });
 

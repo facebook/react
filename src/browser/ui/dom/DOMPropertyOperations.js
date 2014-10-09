@@ -40,6 +40,7 @@ var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
 if (__DEV__) {
   var reactProps = {
     children: true,
+    dangerousInnerHTML: true,
     dangerouslySetInnerHTML: true,
     key: true,
     ref: true

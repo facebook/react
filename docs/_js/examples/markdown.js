@@ -25,7 +25,7 @@ var MarkdownEditor = React.createClass({\n\
         <h3>Output</h3>\n\
         <div\n\
           className=\"content\"\n\
-          dangerouslySetInnerHTML={{\n\
+          dangerousInnerHTML={{\n\
             __html: converter.makeHtml(this.state.value)\n\
           }}\n\
         />\n\
