@@ -93,6 +93,10 @@ grunt lint
 grunt clean
 ```
 
+### License
+
+React is [BSD licensed](./LICENSE). We also provide an additional [patent grant](./PATENTS).
+
 ### More…
 
 There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).

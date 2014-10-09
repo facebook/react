@@ -10,12 +10,7 @@
   ],
   "homepage": "http://facebook.github.io/react",
   "bugs": "https://github.com/facebook/react/issues",
-  "licenses": [
-    {
-      "type": "Apache-2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0"
-    }
-  ],
+  "license": "BSD-3-Clause",
   "files": [
     "main.js",
     "bin/jsx",
