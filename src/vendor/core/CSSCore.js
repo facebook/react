@@ -97,7 +97,7 @@ var CSSCore = {
    *
    * @param {DOMNode|DOMWindow} element the element to set the class on
    * @param {string} className the CSS className
-   * @returns {boolean} true if the element has the class, false if not
+   * @return {boolean} true if the element has the class, false if not
    */
   hasClass: function(element, className) {
     invariant(
