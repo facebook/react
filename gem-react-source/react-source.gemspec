@@ -9,7 +9,7 @@ package = JSON.parse(File.read('../../package.json'))
 gemspec = Gem::Specification.new do |s|
   s.name = 'react-source'
   s.version = package['version']
-  s.license = 'Apache-2.0'
+  s.license = 'BSD-3-Clause'
 
   s.homepage = 'https://github.com/facebook/react'
   s.summary = 'Ruby bridge to JSX & the React JavaScript library.'

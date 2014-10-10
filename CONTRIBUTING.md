@@ -67,4 +67,4 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 
 ## License
 
-By contributing to React, you agree that your contributions will be licensed under the [Apache License Version 2.0 (APLv2)](LICENSE).
+By contributing to React, you agree that your contributions will be licensed under its BSD license..

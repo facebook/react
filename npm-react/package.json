@@ -7,12 +7,7 @@
   ],
   "homepage": "https://github.com/facebook/react/tree/master/npm-react",
   "bugs": "https://github.com/facebook/react/issues?labels=react-core",
-  "licenses": [
-    {
-      "type": "Apache-2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0"
-    }
-  ],
+  "license": "BSD-3-Clause",
   "files": [
     "README.md",
     "addons.js",
