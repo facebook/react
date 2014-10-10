@@ -96,6 +96,10 @@ grunt clean
 
 React is [BSD licensed](./LICENSE). We also provide an additional [patent grant](./PATENTS).
 
+React documentation is [Creative Commons licensed](./LICENSE-docs).
+
+Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
+
 ### More…
 
 There's only so much we can cram in here. To read more about the community and guidelines for submitting pull requests, please read the [Contributing document](CONTRIBUTING.md).
