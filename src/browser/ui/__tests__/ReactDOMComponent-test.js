@@ -453,4 +453,28 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('tag sanitization', function() {
+    it('should throw when an invalid tag name is used', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+      var hackzor = React.createElement('script tag');
+      expect(
+        () => ReactTestUtils.renderIntoDocument(hackzor)
+      ).toThrow(
+        'Invariant Violation: Invalid tag: script tag'
+      );
+    });
+
+    it('should throw when an attack vector is used', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+      var hackzor = React.createElement('div><img /><div');
+      expect(
+        () => ReactTestUtils.renderIntoDocument(hackzor)
+      ).toThrow(
+        'Invariant Violation: Invalid tag: div><img /><div'
+      );
+    });
+
+  });
 });

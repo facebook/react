@@ -121,6 +121,21 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
+// We accept any tag to be rendered but since this gets injected into abitrary
+// HTML, we want to make sure that it's a safe tag.
+// http://www.w3.org/TR/REC-xml/#NT-Name
+
+var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+var validatedTagCache = {};
+var hasOwnProperty = {}.hasOwnProperty;
+
+function validateDangerousTag(tag) {
+  if (!hasOwnProperty.call(validatedTagCache, tag)) {
+    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    validatedTagCache[tag] = true;
+  }
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -137,7 +152,7 @@ var omittedCloseTags = {
  * @extends ReactMultiChild
  */
 function ReactDOMComponent(tag) {
-  // TODO: DANGEROUS this tag should be sanitized.
+  validateDangerousTag(tag);
   this._tag = tag;
   this.tagName = tag.toUpperCase();
 }
