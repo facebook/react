@@ -19,7 +19,6 @@
 'use strict';
 
 var buffer = require('buffer');
-var docblock = require('jstransform/src/docblock');
 var transform = require('jstransform').transform;
 var visitors = require('./fbtransform/visitors');
 
@@ -118,62 +117,53 @@ function createSourceCodeErrorMessage(code, e) {
  * @internal
  */
 function transformCode(code, url, options) {
-  var jsx = docblock.parseAsObject(docblock.extract(code)).jsx;
-
-  if (jsx) {
-    try {
-      var transformed = transformReact(code, options);
-    } catch(e) {
-      e.message += '\n    at ';
-      if (url) {
-        if ('fileName' in e) {
-          // We set `fileName` if it's supported by this error object and
-          // a `url` was provided.
-          // The error will correctly point to `url` in Firefox.
-          e.fileName = url;
-        }
-        e.message += url + ':' + e.lineNumber + ':' + e.column;
-      } else {
-        e.message += location.href;
+  try {
+    var transformed = transformReact(code, options);
+  } catch(e) {
+    e.message += '\n    at ';
+    if (url) {
+      if ('fileName' in e) {
+        // We set `fileName` if it's supported by this error object and
+        // a `url` was provided.
+        // The error will correctly point to `url` in Firefox.
+        e.fileName = url;
       }
-      e.message += createSourceCodeErrorMessage(code, e);
-      throw e;
+      e.message += url + ':' + e.lineNumber + ':' + e.column;
+    } else {
+      e.message += location.href;
     }
-
-    if (!transformed.sourceMap) {
-      return transformed.code;
-    }
-
-    var map = transformed.sourceMap.toJSON();
-    var source;
-    if (url == null) {
-      source = "Inline JSX script";
-      inlineScriptCount++;
-      if (inlineScriptCount > 1) {
-        source += ' (' + inlineScriptCount + ')';
-      }
-    } else if (dummyAnchor) {
-      // Firefox has problems when the sourcemap source is a proper URL with a
-      // protocol and hostname, so use the pathname. We could use just the
-      // filename, but hopefully using the full path will prevent potential
-      // issues where the same filename exists in multiple directories.
-      dummyAnchor.href = url;
-      source = dummyAnchor.pathname.substr(1);
-    }
-    map.sources = [source];
-    map.sourcesContent = [code];
-
-    return (
-      transformed.code +
-      '\n//# sourceMappingURL=data:application/json;base64,' +
-      buffer.Buffer(JSON.stringify(map)).toString('base64')
-    );
-  } else {
-    // TODO: warn that we found a script tag missing the docblock?
-    //       or warn and proceed anyway?
-    //       or warn, add it ourselves, and proceed anyway?
-    return code;
+    e.message += createSourceCodeErrorMessage(code, e);
+    throw e;
   }
+
+  if (!transformed.sourceMap) {
+    return transformed.code;
+  }
+
+  var map = transformed.sourceMap.toJSON();
+  var source;
+  if (url == null) {
+    source = "Inline JSX script";
+    inlineScriptCount++;
+    if (inlineScriptCount > 1) {
+      source += ' (' + inlineScriptCount + ')';
+    }
+  } else if (dummyAnchor) {
+    // Firefox has problems when the sourcemap source is a proper URL with a
+    // protocol and hostname, so use the pathname. We could use just the
+    // filename, but hopefully using the full path will prevent potential
+    // issues where the same filename exists in multiple directories.
+    dummyAnchor.href = url;
+    source = dummyAnchor.pathname.substr(1);
+  }
+  map.sources = [source];
+  map.sourcesContent = [code];
+
+  return (
+    transformed.code +
+    '\n//# sourceMappingURL=data:application/json;base64,' +
+    buffer.Buffer(JSON.stringify(map)).toString('base64')
+  );
 }
 
 
