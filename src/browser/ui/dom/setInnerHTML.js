@@ -49,7 +49,28 @@ if (ExecutionEnvironment.canUseDOM) {
   var testElement = document.createElement('div');
   testElement.innerHTML = ' ';
   if (testElement.innerHTML === '') {
+    var decoderElement = document.createElement('textarea');
     setInnerHTML = function(node, html) {
+      // Avoid manipulating child nodes of `script`, `style` and `title` as
+      // IE8 throws 'Unknown runtime error'.
+      switch (node.tagName) {
+        case 'SCRIPT':
+          node.text = html;
+          return;
+        case 'TITLE':
+          // As `title` is not a raw text element, entities musst be decoded.
+          // Safely parse using a textarea node.
+          var doc = node.ownerDocument || document;
+          decoderElement.innerHTML = html;
+          doc.title = decoderElement.value;
+          return;
+        case 'STYLE':
+          if ('styleSheet' in node) {
+            node.styleSheet.cssText = html;
+            return;
+          }
+      }
+
       // Magic theory: IE8 supposedly differentiates between added and updated
       // nodes when processing innerHTML, innerHTML on updated nodes suffers
       // from worse whitespace behavior. Re-adding a node like this triggers
