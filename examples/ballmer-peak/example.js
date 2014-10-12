@@ -11,7 +11,7 @@ function computeBallmerPeak(x) {
 }
 
 function percentage(x) {
-  return isNaN(x) ? 'N/A' : (100 - Math.round(pct * 100)) + '%';
+  return isNaN(x) ? 'N/A' : (100 - Math.round(x * 100)) + '%';
 }
 
 var BallmerPeakCalculator = React.createClass({
