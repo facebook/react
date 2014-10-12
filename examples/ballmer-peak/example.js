@@ -10,6 +10,10 @@ function computeBallmerPeak(x) {
   ) / 1.6;
 }
 
+function percentage(x) {
+  return isNaN(x) ? 'N/A' : (100 - Math.round(pct * 100)) + '%';
+}
+
 var BallmerPeakCalculator = React.createClass({
   getInitialState: function() {
     return {bac: 0};
@@ -18,12 +22,7 @@ var BallmerPeakCalculator = React.createClass({
     this.setState({bac: event.target.value});
   },
   render: function() {
-    var pct = computeBallmerPeak(this.state.bac);
-    if (isNaN(pct)) {
-      pct = 'N/A';
-    } else {
-      pct = (100 - Math.round(pct * 100)) + '%';
-    }
+    var pct = percentage(computeBallmerPeak(this.state.bac));
     return (
       <div>
         <img src="./ballmer_peak.png" />
