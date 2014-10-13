@@ -83,16 +83,6 @@ var React = {
   isValidClass: ReactLegacyElement.isValidFactory,
   isValidElement: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
-  __internals: {
-    Component: ReactComponent,
-    CurrentOwner: ReactCurrentOwner,
-    DOMComponent: ReactDOMComponent,
-    DOMPropertyOperations: DOMPropertyOperations,
-    InstanceHandles: ReactInstanceHandles,
-    Mount: ReactMount,
-    MultiChild: ReactMultiChild,
-    TextComponent: ReactTextComponent
-  },
 
   // Deprecations (remove for 0.13)
   renderComponent: deprecated(
@@ -125,18 +115,36 @@ var React = {
   )
 };
 
+// Inject the runtime into a devtools global hook regardless of browser.
+// Allows for debugging when the hook is injected on the page.
+if (
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
+  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
+    Component: ReactComponent,
+    CurrentOwner: ReactCurrentOwner,
+    DOMComponent: ReactDOMComponent,
+    DOMPropertyOperations: DOMPropertyOperations,
+    InstanceHandles: ReactInstanceHandles,
+    Mount: ReactMount,
+    MultiChild: ReactMultiChild,
+    TextComponent: ReactTextComponent
+  });
+}
+
 if (__DEV__) {
   var ExecutionEnvironment = require('ExecutionEnvironment');
   if (ExecutionEnvironment.canUseDOM && window.top === window.self) {
 
     // If we're in Chrome, look for the devtools marker and provide a download
     // link if not installed.
-    if (navigator.userAgent.indexOf('Chrome') > -1 &&
-        typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
-      console.debug(
-        'If you haven\'t already, download the React DevTools for a better ' +
-        'development experience: http://fb.me/react-devtools'
-      );
+    if (navigator.userAgent.indexOf('Chrome') > -1) {
+      if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+        console.debug(
+          'Download the React DevTools for a better development experience: ' +
+          'http://fb.me/react-devtools'
+        );
+      }
     }
 
     var expectedFeatures = [
