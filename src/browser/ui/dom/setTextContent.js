@@ -11,9 +11,9 @@
 
 'use strict';
 
+var Danger = require('Danger');
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var setInnerHTML = require('setInnerHTML');
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -32,7 +32,8 @@ var setTextContent = function(node, text) {
 if (ExecutionEnvironment.canUseDOM) {
   if (!('textContent' in document.documentElement)) {
     setTextContent = function(node, text) {
-      setInnerHTML(node, escapeTextContentForBrowser(text));
+      var html = escapeTextContentForBrowser(text);
+      Danger.dangerouslyUpdateInnerHTML(node, html);
     };
   }
 }

@@ -11,6 +11,7 @@
 
 'use strict';
 
+var Danger = require('Danger');
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -30,7 +31,6 @@ var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
-var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -854,7 +854,7 @@ var ReactMount = {
         'See React.renderToString() for server rendering.'
     );
 
-    setInnerHTML(container, markup);
+    Danger.dangerouslyUpdateInnerHTML(container, markup);
   },
 
   /**
