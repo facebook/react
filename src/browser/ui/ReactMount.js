@@ -30,6 +30,7 @@ var containsNode = require('containsNode');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
+var removeAllChildren = require('removeAllChildren');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
@@ -612,10 +613,7 @@ var ReactMount = {
       container = container.documentElement;
     }
 
-    // http://jsperf.com/emptying-a-node
-    while (container.lastChild) {
-      container.removeChild(container.lastChild);
-    }
+    removeAllChildren(container);
   },
 
   /**
