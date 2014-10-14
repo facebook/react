@@ -35,7 +35,9 @@ function deprecated(namespace, oldName, newName, ctx, fn) {
       return fn.apply(ctx, arguments);
     };
     newFn.displayName = `${namespace}_${oldName}`;
-    return newFn;
+    // We need to make sure all properties of the original fn are copied over.
+    // In particular, this is needed to support PropTypes
+    return Object.assign(newFn, fn);
   }
 
   return fn;

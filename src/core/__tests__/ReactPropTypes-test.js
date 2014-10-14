@@ -224,7 +224,7 @@ describe('ReactPropTypes', function() {
     beforeEach(function() {
       Component = React.createClass({
         propTypes: {
-          label: PropTypes.component.isRequired
+          label: PropTypes.element.isRequired
         },
 
         render: function() {
@@ -235,16 +235,16 @@ describe('ReactPropTypes', function() {
     });
 
     it('should support components', () => {
-      typeCheckPass(PropTypes.component, <div />);
+      typeCheckPass(PropTypes.element, <div />);
     });
 
     it('should not support multiple components or scalar values', () => {
       var message = 'Invalid prop `testProp` supplied to `testComponent`, ' +
-        'expected a React component.';
-      typeCheckFail(PropTypes.component, [<div />, <div />], message);
-      typeCheckFail(PropTypes.component, 123, message);
-      typeCheckFail(PropTypes.component, 'foo', message);
-      typeCheckFail(PropTypes.component, false, message);
+        'expected a ReactElement.';
+      typeCheckFail(PropTypes.element, [<div />, <div />], message);
+      typeCheckFail(PropTypes.element, 123, message);
+      typeCheckFail(PropTypes.element, 'foo', message);
+      typeCheckFail(PropTypes.element, false, message);
     });
 
     it('should be able to define a single child as label', () => {
@@ -262,13 +262,13 @@ describe('ReactPropTypes', function() {
     });
 
     it("should be implicitly optional and not warn without values", function() {
-      typeCheckPass(PropTypes.component, null);
-      typeCheckPass(PropTypes.component, undefined);
+      typeCheckPass(PropTypes.element, null);
+      typeCheckPass(PropTypes.element, undefined);
     });
 
     it("should warn for missing required values", function() {
-      typeCheckFail(PropTypes.component.isRequired, null, requiredMessage);
-      typeCheckFail(PropTypes.component.isRequired, undefined, requiredMessage);
+      typeCheckFail(PropTypes.element.isRequired, null, requiredMessage);
+      typeCheckFail(PropTypes.element.isRequired, undefined, requiredMessage);
     });
   });
 
@@ -349,20 +349,21 @@ describe('ReactPropTypes', function() {
 
     it('should warn for invalid values', function() {
       var failMessage = 'Invalid prop `testProp` supplied to ' +
-        '`testComponent`, expected a renderable prop.';
-      typeCheckFail(PropTypes.renderable, true, failMessage);
-      typeCheckFail(PropTypes.renderable, function() {}, failMessage);
-      typeCheckFail(PropTypes.renderable, {key: function() {}}, failMessage);
+        '`testComponent`, expected a ReactNode.';
+      typeCheckFail(PropTypes.node, true, failMessage);
+      typeCheckFail(PropTypes.node, function() {}, failMessage);
+      typeCheckFail(PropTypes.node, {key: function() {}}, failMessage);
     });
 
     it('should not warn for valid values', function() {
-      typeCheckPass(PropTypes.renderable, <div />);
-      typeCheckPass(PropTypes.renderable, false);
-      typeCheckPass(PropTypes.renderable, <MyComponent />);
-      typeCheckPass(PropTypes.renderable, 'Some string');
-      typeCheckPass(PropTypes.renderable, []);
-      typeCheckPass(PropTypes.renderable, {});
-      typeCheckPass(PropTypes.renderable, [
+      typeCheckPass(PropTypes.node, <div />);
+      typeCheckPass(PropTypes.node, false);
+      typeCheckPass(PropTypes.node, <MyComponent />);
+      typeCheckPass(PropTypes.node, 'Some string');
+      typeCheckPass(PropTypes.node, []);
+      typeCheckPass(PropTypes.node, {});
+
+      typeCheckPass(PropTypes.node, [
         123,
         'Some string',
         <div />,
@@ -371,7 +372,7 @@ describe('ReactPropTypes', function() {
       ]);
 
       // Object of rendereable things
-      typeCheckPass(PropTypes.renderable, {
+      typeCheckPass(PropTypes.node, {
         k0: 123,
         k1: 'Some string',
         k2: <div />,
@@ -384,26 +385,30 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for null/undefined if not required', function() {
-      typeCheckPass(PropTypes.renderable, null);
-      typeCheckPass(PropTypes.renderable, undefined);
+      typeCheckPass(PropTypes.node, null);
+      typeCheckPass(PropTypes.node, undefined);
     });
 
     it('should warn for missing required values', function() {
       typeCheckFail(
-        PropTypes.renderable.isRequired,
+        PropTypes.node.isRequired,
         null,
         'Required prop `testProp` was not specified in `testComponent`.'
       );
       typeCheckFail(
-        PropTypes.renderable.isRequired,
+        PropTypes.node.isRequired,
         undefined,
         'Required prop `testProp` was not specified in `testComponent`.'
       );
     });
 
-    it('should accept empty array & object for required props', function() {
+    it('should accept empty array for required props', function() {
+      typeCheckPass(PropTypes.node.isRequired, []);
+    });
+
+    it('should still work for deprecated typechecks', function() {
+      typeCheckPass(PropTypes.renderable, []);
       typeCheckPass(PropTypes.renderable.isRequired, []);
-      typeCheckPass(PropTypes.renderable.isRequired, {});
     });
   });
 
