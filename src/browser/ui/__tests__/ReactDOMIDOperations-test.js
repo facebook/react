@@ -53,7 +53,7 @@ describe('ReactDOMIDOperations', function() {
 
     var html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
 
-    ReactDOMIDOperations.updateInnerHTMLByID(
+    ReactDOMIDOperations.dangerouslyUpdateInnerHTMLByID(
       'testID',
       html
     );
