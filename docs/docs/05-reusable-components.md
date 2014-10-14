@@ -32,6 +32,9 @@ React.createClass({
     // A React component.
     optionalComponent: React.PropTypes.component,
 
+    // A React component class
+    optionalComponentClass: React.PropTypes.componentClass,
+
     // You can also declare that a prop is an instance of a class. This uses
     // JS's instanceof operator.
     optionalMessage: React.PropTypes.instanceOf(Message),

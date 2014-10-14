@@ -76,6 +76,7 @@ var ReactPropTypes = {
   any: createAnyTypeChecker(),
   arrayOf: createArrayOfTypeChecker,
   component: createComponentTypeChecker(),
+  componentClass: createComponentClassChecker(),
   instanceOf: createInstanceTypeChecker,
   objectOf: createObjectOfTypeChecker,
   oneOf: createEnumTypeChecker,
@@ -158,6 +159,19 @@ function createComponentTypeChecker() {
       return new Error(
         `Invalid ${locationName} \`${propName}\` supplied to ` +
         `\`${componentName}\`, expected a React component.`
+      );
+    }
+  }
+  return createChainableTypeChecker(validate);
+}
+
+function createComponentClassChecker() {
+  function validate(props, propName, componentName, location) {
+    if (!ReactDescriptor.isValidFactory(props[propName])) {
+      var locationName = ReactPropTypeLocationNames[location];
+      return new Error(
+        `Invalid ${locationName} \`${propName}\` supplied to ` +
+        `\`${componentName}\`, expected a React class.`
       );
     }
   }
