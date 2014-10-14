@@ -88,8 +88,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   },
 
   componentWillUnmount: function() {
-    var rootNode = this.getDOMNode();
-    var id = ReactMount.getID(rootNode);
+    var id = this._rootNodeID;
     delete instancesByReactID[id];
   },
 
@@ -147,6 +146,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
           continue;
         }
         var otherID = ReactMount.getID(otherNode);
+        
         invariant(
           otherID,
           'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
