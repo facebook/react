@@ -7,6 +7,159 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Introducing React Elements</title>
+				<description>&lt;p&gt;The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the &lt;code&gt;ReactElement&lt;/code&gt; type really FAST, &lt;a href=&quot;http://facebook.github.io/jest/&quot;&gt;jest unit testing&lt;/a&gt; easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!&lt;/p&gt;
+
+&lt;p&gt;If you currently use JSX everywhere, you don&amp;#39;t really have to do anything to get these benefits! The updated transformer will do it for you.&lt;/p&gt;
+
+&lt;p&gt;If you can&amp;#39;t or don&amp;#39;t want to use JSX, then please insert some hints for us. Add a &lt;code&gt;React.createFactory&lt;/code&gt; call around your imported class when you require it:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Everything is backwards compatible for now, and as always React will provide you with descriptive console messaging to help you upgrade.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;ReactElement&lt;/code&gt; is the primary API of React. Making it faster has shown to give us several times faster renders on common benchmarks. The API tweaks in this release helps us get there.&lt;/p&gt;
+
+&lt;p&gt;Continue reading if you want all the nitty gritty details...&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-terminology&quot;&gt;&lt;/a&gt;New Terminology &lt;a class=&quot;hash-link&quot; href=&quot;#new-terminology&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We wanted to make it easier for new users to see the parallell with the DOM (and why React is different). To align our terminology we now use the term &lt;code&gt;ReactElement&lt;/code&gt; instead of &lt;em&gt;descriptor&lt;/em&gt;. Likewise, we use the term &lt;code&gt;ReactNode&lt;/code&gt; instead of &lt;em&gt;renderable&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589&quot;&gt;See the full React terminology guide.&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;creating-a-reactelement&quot;&gt;&lt;/a&gt;Creating a ReactElement &lt;a class=&quot;hash-link&quot; href=&quot;#creating-a-reactelement&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We now expose an external API for programmatically creating a &lt;code&gt;ReactElement&lt;/code&gt; object.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;type&lt;/code&gt; argument is either a string (HTML tag) or a class. It&amp;#39;s a description of what tag/class is going to be rendered and what props it will contain. You can also create factory functions for specific types. This basically just provides the type argument for you:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;div&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactDivElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-auto-generated-factories&quot;&gt;&lt;/a&gt;Deprecated: Auto-generated Factories &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-auto-generated-factories&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Imagine if &lt;code&gt;React.createClass&lt;/code&gt; was just a plain JavaScript class. If you call a class as a plain function you would call the component&amp;#39;s constructor to create an Component instance, not a &lt;code&gt;ReactElement&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Component, not ReactElement&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 0.11 gave you a factory function for free when you called &lt;code&gt;React.createClass&lt;/code&gt;. This wrapped your internal class and then returned a &lt;code&gt;ReactElement&lt;/code&gt; factory function for you.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+  &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In future versions of React, we want to be able to support pure classes without any special React dependencies. To prepare for that we&amp;#39;re &lt;a href=&quot;https://gist.github.com/sebmarkbage/d7bce729f38730399d28&quot;&gt;deprecating the auto-generated factory&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;This is the biggest change to 0.12. Don&amp;#39;t worry though. This functionality continues to work the same for this release, it just warns you if you&amp;#39;re using a deprecated API. That way you can upgrade piece-by-piece instead of everything at once.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrading-to-0.12&quot;&gt;&lt;/a&gt;Upgrading to 0.12 &lt;a class=&quot;hash-link&quot; href=&quot;#upgrading-to-0.12&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-jsx&quot;&gt;&lt;/a&gt;React With JSX &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;If you use the React specific &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;JSX&lt;/a&gt; transform, the upgrade path is simple. Just make sure you have React in scope.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// If you use node/browserify modules make sure&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// that you require React into scope.&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React&amp;#39;s JSX will create the &lt;code&gt;ReactElement&lt;/code&gt; for you. You can continue to use JSX with regular classes:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;value&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;NOTE: React&amp;#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&amp;#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;the JSX spec&lt;/a&gt; with a different transpiler for custom purposes.&lt;/em&gt;&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-without-jsx&quot;&gt;&lt;/a&gt;React Without JSX &lt;a class=&quot;hash-link&quot; href=&quot;#react-without-jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;If you don&amp;#39;t use JSX and just call components as functions, you will need to explicitly create a factory before calling it:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponentClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponentClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// New step&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;If you&amp;#39;re using a module system, the recommended solution is to export the class and create the factory on the requiring side.&lt;/p&gt;
+
+&lt;p&gt;Your class creation is done just like before:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyComponent.js&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The other side uses &lt;code&gt;React.createFactory&lt;/code&gt; after &lt;code&gt;require&lt;/code&gt;ing the component class:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyOtherComponent.js&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// All you have to do to upgrade is wrap your requires like this:&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You ONLY have to do this for custom classes. React still has built-in factories for common HTML elements.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyDOMComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// still ok&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;We realize that this is noisy. At least it&amp;#39;s on the top of the file (out of sight, out of mind). This a tradeoff we had to make to get &lt;a href=&quot;https://gist.github.com/sebmarkbage/d7bce729f38730399d28&quot;&gt;the other benefits&lt;/a&gt; that this model unlocks.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;anti-pattern-exporting-factories&quot;&gt;&lt;/a&gt;Anti-Pattern: Exporting Factories &lt;a class=&quot;hash-link&quot; href=&quot;#anti-pattern-exporting-factories&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;If you have an isolated project that only you use, then you could create a helper that creates both the class and the factory at once:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Anti-pattern - Please, don&amp;#39;t use&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This makes your components incompatible with jest testing, consumers using JSX, third-party languages that implement their own optimized &lt;code&gt;ReactElement&lt;/code&gt; creation, etc.&lt;/p&gt;
+
+&lt;p&gt;It also encourages you to put more logic into these helper functions. Something that another language, a compiler or a reader of your code couldn&amp;#39;t reason about.&lt;/p&gt;
+
+&lt;p&gt;To fit into the React ecosystem we recommend that you always export pure classes from your shared modules and let the consumer decide the best strategy for generating &lt;code&gt;ReactElement&lt;/code&gt;s.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;third-party-languages&quot;&gt;&lt;/a&gt;Third-party Languages &lt;a class=&quot;hash-link&quot; href=&quot;#third-party-languages&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The signature of a &lt;code&gt;ReactElement&lt;/code&gt; is something like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;etc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Languages with static typing that don&amp;#39;t need validation (e.g. &lt;a href=&quot;https://github.com/swannodette/om&quot;&gt;Om in ClojureScript&lt;/a&gt;), and production level compilers will be able to generate these objects inline instead of going through the validation step. This optimization will allow significant performance improvements in React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;your-thoughts-and-ideas&quot;&gt;&lt;/a&gt;Your Thoughts and Ideas &lt;a class=&quot;hash-link&quot; href=&quot;#your-thoughts-and-ideas&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We&amp;#39;d love to hear your feedback on this API and your preferred style. A plausible alternative could be to directly inline objects instead of creating factory functions:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyOtherComponent.js&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This moves the noise down into the render method though. It also doesn&amp;#39;t provide a hook for dynamic validation/type checking so you&amp;#39;ll need some other way to verify that it&amp;#39;s safe.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;NOTE: This won&amp;#39;t work in this version of React because it&amp;#39;s conflicting with other legacy APIs that we&amp;#39;re deprecating. (We temporarily add a &lt;code&gt;element._isReactElement = true&lt;/code&gt; marker on the object.)&lt;/em&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-next-step-es6-classes&quot;&gt;&lt;/a&gt;The Next Step: ES6 Classes &lt;a class=&quot;hash-link&quot; href=&quot;#the-next-step-es6-classes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;After 0.12 we&amp;#39;ll begin work on moving to ES6 classes. We will still support &lt;code&gt;React.createClass&lt;/code&gt; as a backwards compatible API. If you use an ES6 transpiler you will be able to declare your components like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kr&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This upcoming release is a stepping stone to make it as easy as this. Thanks for your support.&lt;/p&gt;
+</description>
+				<pubDate>2014-10-14T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/10/14/introducting-react-elements.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/14/introducting-react-elements.html</guid>
+			</item>
+		
+			<item>
 				<title>Testing Flux Applications</title>
 				<description>&lt;p&gt;&lt;a href=&quot;http://facebook.github.io/flux/&quot;&gt;Flux&lt;/a&gt; is the application architecture that Facebook uses to build web applications with &lt;a href=&quot;http://facebook.github.io/react/&quot;&gt;React&lt;/a&gt;. It&amp;#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&amp;#39;ve shown the &lt;a href=&quot;http://facebook.github.io/flux/docs/overview.html&quot;&gt;basic structure and data flow&lt;/a&gt;, more closely examined the &lt;a href=&quot;http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html&quot;&gt;dispatcher and action creators&lt;/a&gt;, and shown how to put it all together with a &lt;a href=&quot;http://facebook.github.io/flux/docs/todo-list.html&quot;&gt;tutorial&lt;/a&gt;. Now let&amp;#39;s look at how to do formal unit testing of Flux applications with &lt;a href=&quot;http://facebook.github.io/jest/&quot;&gt;Jest&lt;/a&gt;, Facebook&amp;#39;s auto-mocking testing framework.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;testing-with-jest&quot;&gt;&lt;/a&gt;Testing with Jest &lt;a class=&quot;hash-link&quot; href=&quot;#testing-with-jest&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -834,140 +987,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-07-17T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.11 RC</title>
-				<description>&lt;p&gt;It&amp;#39;s that time again… we&amp;#39;re just about ready to ship a new React release! v0.11 includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.&lt;/p&gt;
-
-&lt;p&gt;The release candidate is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.0-rc1.js&quot;&gt;http://fb.me/react-0.11.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.0-rc1.min.js&quot;&gt;http://fb.me/react-0.11.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.11.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.11.0-rc1.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getdefaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;getDefaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#getdefaultprops&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Starting in React 0.11, &lt;code&gt;getDefaultProps()&lt;/code&gt; is called only once when &lt;code&gt;React.createClass()&lt;/code&gt; is called, instead of each time a component is rendered. This means that &lt;code&gt;getDefaultProps()&lt;/code&gt; can no longer vary its return value based on &lt;code&gt;this.props&lt;/code&gt; and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-to-null&quot;&gt;&lt;/a&gt;Rendering to &lt;code&gt;null&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-to-null&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Since React&amp;#39;s release, people have been using work arounds to &amp;quot;render nothing&amp;quot;. Usually this means returning an empty &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;span/&amp;gt;&lt;/code&gt;. Some people even got clever and started returning &lt;code&gt;&amp;lt;noscript/&amp;gt;&lt;/code&gt; to avoid extraneous DOM nodes. We finally provided a &amp;quot;blessed&amp;quot; solution that allows developers to write meaningful code. Returning &lt;code&gt;null&lt;/code&gt; is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; element, though in the future we hope to not put anything in the document. In the mean time, &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements do not affect layout in any way, so you can feel safe using &lt;code&gt;null&lt;/code&gt; today!&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-namespacing&quot;&gt;&lt;/a&gt;JSX Namespacing &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-namespacing&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Another feature request we&amp;#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&amp;#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as &lt;code&gt;&amp;lt;Namespace.Component/&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UILabel&amp;gt;&amp;lt;/UILayout&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UI.Label&amp;gt;&amp;lt;/UI.Layout&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-keyboard-event-normalization&quot;&gt;&lt;/a&gt;Improved keyboard event normalization &lt;a class=&quot;hash-link&quot; href=&quot;#improved-keyboard-event-normalization&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Keyboard events now contain a normalized &lt;code&gt;e.key&lt;/code&gt; value according to the &lt;a href=&quot;http://www.w3.org/TR/DOM-Level-3-Events/#keys-special&quot;&gt;DOM Level 3 Events spec&lt;/a&gt;, allowing you to write simpler key handling code that works in all browsers, such as:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;handleKeyDown&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Enter&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle enter key&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle spacebar&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ArrowLeft&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle left arrow&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Keyboard and mouse events also now include a normalized &lt;code&gt;e.getModifierState()&lt;/code&gt; that works consistently across browsers.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;getDefaultProps()&lt;/code&gt; is now called once per class and shared across all instances&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Rendering to &lt;code&gt;null&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Keyboard events include normalized &lt;code&gt;e.key&lt;/code&gt; and &lt;code&gt;e.getModifierState()&lt;/code&gt; properties&lt;/li&gt;
-&lt;li&gt;New normalized &lt;code&gt;onBeforeInput&lt;/code&gt; event&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.Children.count&lt;/code&gt; has been added as a helper for counting the number of children&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Re-renders are batched in more cases&lt;/li&gt;
-&lt;li&gt;Events: &lt;code&gt;e.view&lt;/code&gt; properly normalized&lt;/li&gt;
-&lt;li&gt;Added Support for more HTML attributes (&lt;code&gt;coords&lt;/code&gt;, &lt;code&gt;crossOrigin&lt;/code&gt;, &lt;code&gt;download&lt;/code&gt;, &lt;code&gt;hrefLang&lt;/code&gt;, &lt;code&gt;mediaGroup&lt;/code&gt;, &lt;code&gt;muted&lt;/code&gt;, &lt;code&gt;scrolling&lt;/code&gt;, &lt;code&gt;shape&lt;/code&gt;, &lt;code&gt;srcSet&lt;/code&gt;, &lt;code&gt;start&lt;/code&gt;, &lt;code&gt;useMap&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;Improved SVG support
-
-&lt;ul&gt;
-&lt;li&gt;Changing &lt;code&gt;className&lt;/code&gt; on a mounted SVG component now works correctly&lt;/li&gt;
-&lt;li&gt;Added support for elements &lt;code&gt;mask&lt;/code&gt; and &lt;code&gt;tspan&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added support for attributes &lt;code&gt;dx&lt;/code&gt;, &lt;code&gt;dy&lt;/code&gt;, &lt;code&gt;fillOpacity&lt;/code&gt;, &lt;code&gt;fontFamily&lt;/code&gt;, &lt;code&gt;fontSize&lt;/code&gt;, &lt;code&gt;markerEnd&lt;/code&gt;, &lt;code&gt;markerMid&lt;/code&gt;, &lt;code&gt;markerStart&lt;/code&gt;, &lt;code&gt;opacity&lt;/code&gt;, &lt;code&gt;patternContentUnits&lt;/code&gt;, &lt;code&gt;patternUnits&lt;/code&gt;, &lt;code&gt;preserveAspectRatio&lt;/code&gt;, &lt;code&gt;strokeDasharray&lt;/code&gt;, &lt;code&gt;strokeOpacity&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;CSS property names with vendor prefixes (&lt;code&gt;Webkit&lt;/code&gt;, &lt;code&gt;ms&lt;/code&gt;, &lt;code&gt;Moz&lt;/code&gt;, &lt;code&gt;O&lt;/code&gt;) are now handled properly&lt;/li&gt;
-&lt;li&gt;Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;img&lt;/code&gt; event listeners are now unbound properly, preventing the error &amp;quot;Two valid but unequal nodes with the same &lt;code&gt;data-reactid&lt;/code&gt;&amp;quot;&lt;/li&gt;
-&lt;li&gt;Added explicit warning when missing polyfills&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React With Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;PureRenderMixin&lt;/li&gt;
-&lt;li&gt;Perf: a new set of tools to help with performance analysis&lt;/li&gt;
-&lt;li&gt;Update: New &lt;code&gt;$apply&lt;/code&gt; command to transform values&lt;/li&gt;
-&lt;li&gt;TransitionGroup bug fixes with null elements, Android&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-npm-module&quot;&gt;&lt;/a&gt;React NPM Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-npm-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Now includes the pre-built packages under &lt;code&gt;dist/&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;envify&lt;/code&gt; is properly listed as a dependency instead of a peer dependency&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for namespaces, eg &lt;code&gt;&amp;lt;Components.Checkbox /&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;JSXTransformer
-
-&lt;ul&gt;
-&lt;li&gt;Enable the same &lt;code&gt;harmony&lt;/code&gt; features available in the command line with &lt;code&gt;&amp;lt;script type=&amp;quot;text/jsx;harmony=true&amp;quot;&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)&lt;/li&gt;
-&lt;li&gt;Fixed a bug preventing sourcemaps from working in Firefox&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools-module&quot;&gt;&lt;/a&gt;React Tools Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Improved readme with usage and API information&lt;/li&gt;
-&lt;li&gt;Improved ES6 transforms available with &lt;code&gt;--harmony&lt;/code&gt; option&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;--source-map-inline&lt;/code&gt; option to the &lt;code&gt;jsx&lt;/code&gt; executable&lt;/li&gt;
-&lt;li&gt;New &lt;code&gt;transformWithDetails&lt;/code&gt; API which gives access to the raw sourcemap data&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-07-13T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/07/13/react-v0.11-rc1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/13/react-v0.11-rc1.html</guid>
 			</item>
 		
 	</channel>
