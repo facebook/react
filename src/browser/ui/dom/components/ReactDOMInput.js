@@ -83,7 +83,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
   },
 
   componentDidMount: function() {
-    var id = ReactMount.getID(this.getDOMNode());
+    var id = this._rootNodeID;
     instancesByReactID[id] = this;
   },
 
