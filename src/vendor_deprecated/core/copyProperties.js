@@ -45,3 +45,10 @@ function copyProperties(obj, a, b, c, d, e, f) {
 }
 
 module.exports = copyProperties;
+
+// deprecation notice
+console.warn(
+  'react/lib/copyProperties has been deprecated and will be removed in the ' +
+  'next version of React. All uses can be replaced with ' +
+  'Object.assign(obj, a, b, ...) or _.extend(obj, a, b, ...).'
+);

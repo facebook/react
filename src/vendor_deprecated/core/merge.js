@@ -23,3 +23,10 @@ var merge = function(one, two) {
 };
 
 module.exports = merge;
+
+// deprecation notice
+console.warn(
+  'react/lib/merge has been deprecated and will be removed in the ' +
+  'next version of React. All uses can be replaced with ' +
+  'Object.assign({}, a, b) or _.extend({}, a, b).'
+);
