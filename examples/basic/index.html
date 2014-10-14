@@ -41,7 +41,10 @@
       var start = new Date().getTime();
       setInterval(function() {
         React.renderComponent(
-          ExampleApplication({elapsed: new Date().getTime() - start}),
+          /* Call React.createElement instead of 
+           * ExampleApplication({...}) which is depecrated
+           */
+          React.createElement(ExampleApplication, {elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );
       }, 50);
