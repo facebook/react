@@ -38,13 +38,14 @@
           return React.DOM.p(null, message);
         }
       });
+
+      // Call React.createFactory instead of directly call ExampleApplication({...}) in React.renderComponent
+      var ExampleApplicationFactory = React.createFactory(ExampleApplication);
+
       var start = new Date().getTime();
       setInterval(function() {
         React.renderComponent(
-          /* Call React.createElement instead of 
-           * ExampleApplication({...}) which is depecrated
-           */
-          React.createElement(ExampleApplication, {elapsed: new Date().getTime() - start}),
+          ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );
       }, 50);
