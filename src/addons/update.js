@@ -30,6 +30,7 @@ var COMMAND_SPLICE = keyOf({$splice: null});
 var COMMAND_SET = keyOf({$set: null});
 var COMMAND_MERGE = keyOf({$merge: null});
 var COMMAND_APPLY = keyOf({$apply: null});
+var COMMAND_INC = keyOf({$inc: null});
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,
@@ -37,7 +38,8 @@ var ALL_COMMANDS_LIST = [
   COMMAND_SPLICE,
   COMMAND_SET,
   COMMAND_MERGE,
-  COMMAND_APPLY
+  COMMAND_APPLY,
+  COMMAND_INC
 ];
 
 var ALL_COMMANDS_SET = {};
@@ -149,6 +151,25 @@ function update(value, spec) {
       spec[COMMAND_APPLY]
     );
     nextValue = spec[COMMAND_APPLY](nextValue);
+  }
+
+  if (spec.hasOwnProperty(COMMAND_INC)) {
+
+    invariant(
+      typeof value === "number",
+      'update(): Expected %s target to be a number; got a %s. ',
+      COMMAND_INC,
+      typeof value
+    );
+
+    invariant(
+      typeof spec[COMMAND_INC] === "number",
+      'update(): Expected spec of %s to be a number; got a %s. ',
+      COMMAND_INC,
+      typeof spec[COMMAND_INC]
+    );
+
+    nextValue += spec[COMMAND_INC];
   }
 
   for (var k in spec) {
