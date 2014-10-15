@@ -8,7 +8,7 @@ var es3ify = require('es3ify');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
-var _ = require('lodash');
+var derequire = require('derequire');
 
 var SIMPLE_TEMPLATE =
 '/**\n\
@@ -58,15 +58,19 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
-  after: [es3ify.transform, simpleBannerify]
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
-var min = _.merge({}, basic, {
+var min = {
+  entries: [
+    './build/modules/React.js'
+  ],
   outfile: './build/react.min.js',
   debug: false,
+  standalone: 'React',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
-  after: [minify, bannerify]
-});
+  after: [es3ify.transform, derequire, minify, bannerify]
+};
 
 var transformer = {
   entries:[
@@ -75,7 +79,8 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [es3ify.transform, simpleBannerify]
+  transforms: [],
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
 var addons = {
@@ -85,17 +90,22 @@ var addons = {
   outfile: './build/react-with-addons.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [es3ify.transform, simpleBannerify]
+  transforms: [envify({NODE_ENV: 'development'})],
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
-var addonsMin = _.merge({}, addons, {
+var addonsMin = {
+  entries: [
+    './build/modules/ReactWithAddons.js'
+  ],
   outfile: './build/react-with-addons.min.js',
   debug: false,
+  standalone: 'React',
+  packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
-  after: [minify, bannerify]
-});
+  after: [es3ify.transform, derequire, minify, bannerify]
+};
 
 var withCodeCoverageLogging = {
   entries: [

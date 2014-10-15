@@ -28,35 +28,34 @@
   "dependencies": {
     "commoner": "^0.10.0",
     "esprima-fb": "^6001.1.0-dev-harmony-fb",
-    "jstransform": "^6.2.0"
+    "jstransform": "^6.3.2"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
-    "browserify": "^4.1.10",
+    "browserify": "^6.1.0",
     "coverify": "~1.0.4",
-    "envify": "^2.0.0",
+    "derequire": "^1.2.0",
+    "envify": "^3.0.0",
     "es3ify": "~0.1.2",
     "es5-shim": "^4.0.0",
     "grunt": "~0.4.2",
     "grunt-cli": "~0.1.9",
     "grunt-compare-size": "~0.4.0",
-    "grunt-contrib-clean": "~0.5.0",
-    "grunt-contrib-compress": "^0.9.1",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-compress": "^0.12.0",
     "grunt-contrib-connect": "~0.6.0",
-    "grunt-contrib-copy": "~0.5.0",
+    "grunt-contrib-copy": "^0.6.0",
     "grunt-contrib-jshint": "^0.10.0",
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
     "jest-cli": "~0.1.5",
     "lodash": "~2.4.1",
-    "microtime": "^0.6.0",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
     "populist": "~0.1.6",
-    "recast": "^0.6.10",
+    "recast": "^0.7.2",
     "sauce-tunnel": "~1.1.0",
-    "semver": "^2.3.0",
     "tmp": "~0.0.18",
     "uglify-js": "~2.4.0",
     "uglifyify": "^2.4.0",
@@ -77,8 +76,17 @@
     "rootDir": "",
     "scriptPreprocessor": "jest/preprocessor.js",
     "setupEnvScriptFile": "jest/environment.js",
-    "modulePathIgnorePatterns": ["/build/", "/node_modules/", "/.module-cache/"],
-    "testPathIgnorePatterns": ["/build/", "/node_modules/"],
-    "unmockedModulePathPatterns": [""]
+    "modulePathIgnorePatterns": [
+      "/build/",
+      "/node_modules/",
+      "/.module-cache/"
+    ],
+    "testPathIgnorePatterns": [
+      "/build/",
+      "/node_modules/"
+    ],
+    "unmockedModulePathPatterns": [
+      ""
+    ]
   }
 }
