@@ -44,7 +44,7 @@ var reactDivElement = div(props, children);
 
 ## Deprecated: Auto-generated Factories
 
-Imagine if `React.createClass` was just a plain JavaScript class. If you call a class as a plain function you would call the component's constructor to create an Component instance, not a `ReactElement`:
+Imagine if `React.createClass` was just a plain JavaScript class. If you call a class as a plain function you would call the component's constructor to create a Component instance, not a `ReactElement`:
 
 ```javascript
 new MyComponent(); // Component, not ReactElement
