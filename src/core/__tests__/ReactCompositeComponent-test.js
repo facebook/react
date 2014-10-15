@@ -1465,4 +1465,54 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should deregister null components on unmount', function() {
+    var ComponentThatRendersToNull = React.createClass({
+      render: function() {
+        return null;
+      }
+    });
+
+    var MainView = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <h1>MainView</h1>
+            <ComponentThatRendersToNull />
+          </div>
+        );
+      }
+    });
+
+    var ref = "SET ME";
+
+    var OtherView = React.createClass({
+      componentDidMount: function() {
+        ref = this.refs["c"].getDOMNode();
+      },
+
+      render: function() {
+        return (
+          <div>
+            <h1>OtherView</h1>
+            <div ref="c">Component</div>
+          </div>
+        );
+      }
+    });
+
+    var Container = React.createClass({
+      render: function() {
+        if (this.props.view == "MainView") {
+          return <MainView />;
+        } else {
+          return <OtherView />;
+        }
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Container view="MainView" />);
+    instance.replaceProps({view: "OtherView"});
+    expect(ref.nodeName).toBe("DIV");
+  });
+
 });
