@@ -1,6 +1,7 @@
 ---
 title: "Introducing React Elements"
 author: Sebastian Markbåge
+redirect_from: "blog/2014/10/14/introducting-react-elements.html"
 ---
 
 The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the `ReactElement` type really FAST, [jest unit testing](http://facebook.github.io/jest/) easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!
@@ -22,7 +23,7 @@ Continue reading if you want all the nitty gritty details...
 
 ## New Terminology
 
-We wanted to make it easier for new users to see the parallell with the DOM (and why React is different). To align our terminology we now use the term `ReactElement` instead of _descriptor_. Likewise, we use the term `ReactNode` instead of _renderable_.
+We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term `ReactElement` instead of _descriptor_. Likewise, we use the term `ReactNode` instead of _renderable_.
 
 [See the full React terminology guide.](https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589)
 
