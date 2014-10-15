@@ -22,7 +22,7 @@ Continue reading if you want all the nitty gritty details...
 
 ## New Terminology
 
-We wanted to make it easier for new users to see the parallell with the DOM (and why React is different). To align our terminology we now use the term `ReactElement` instead of _descriptor_. Likewise, we use the term `ReactNode` instead of _renderable_.
+We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term `ReactElement` instead of _descriptor_. Likewise, we use the term `ReactNode` instead of _renderable_.
 
 [See the full React terminology guide.](https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589)
 
