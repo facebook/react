@@ -79,6 +79,15 @@ describe('update', function() {
     );
   });
 
+  it('should support delete', function() {
+    expect(update({a:1,b:2}, {$delete:'b'})).toEqual({a:1});
+    expect(update({a:1,b:2,c:3}, {$delete:['a','c']})).toEqual({b:2});
+    expect(update.bind(null, 2, {$delete: 'foo'})).toThrow(
+      'Invariant Violation: update(): expected target of $delete to be an ' +
+      'object; got 2.'
+    );
+  });
+
   it('should support deep updates', function() {
     expect(update({a: 'b', c: {d: 'e'}}, {c: {d: {$set: 'f'}}})).toEqual({
       a: 'b',
@@ -90,7 +99,7 @@ describe('update', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
       'that did not contain one of $push, $unshift, $splice, $set, $merge, ' +
-      '$apply. Did you forget to include {$set: ...}?'
+      '$apply, $delete. Did you forget to include {$set: ...}?'
     );
   });
 });

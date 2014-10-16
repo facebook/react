@@ -30,6 +30,7 @@ var COMMAND_SPLICE = keyOf({$splice: null});
 var COMMAND_SET = keyOf({$set: null});
 var COMMAND_MERGE = keyOf({$merge: null});
 var COMMAND_APPLY = keyOf({$apply: null});
+var COMMAND_DELETE = keyOf({$delete: null});
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,
@@ -37,7 +38,8 @@ var ALL_COMMANDS_LIST = [
   COMMAND_SPLICE,
   COMMAND_SET,
   COMMAND_MERGE,
-  COMMAND_APPLY
+  COMMAND_APPLY,
+  COMMAND_DELETE
 ];
 
 var ALL_COMMANDS_SET = {};
@@ -149,6 +151,18 @@ function update(value, spec) {
       spec[COMMAND_APPLY]
     );
     nextValue = spec[COMMAND_APPLY](nextValue);
+  }
+
+  if (spec.hasOwnProperty(COMMAND_DELETE)) {
+    invariant(
+      nextValue && typeof nextValue === 'object',
+      'update(): expected target of %s to be an object; got %s.',
+      COMMAND_DELETE,
+      nextValue
+    );
+    [].concat(spec[COMMAND_DELETE]).forEach(function(delKey){
+      delete nextValue[delKey];
+    });
   }
 
   for (var k in spec) {
