@@ -7,6 +7,110 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.12 RC</title>
+				<description>&lt;p&gt;We are finally ready to share the work we&amp;#39;ve been doing over the past couple months. A lot has gone into this and we want to make sure we iron out any potential issues before we make this final. So, we&amp;#39;re shipping a Release Candidate for React v0.12 today. If you get a chance, please give it a try and report any issues you find! A full changelog will accompany the final release but we&amp;#39;ve highlighted the interesting and breaking changes below.&lt;/p&gt;
+
+&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.0-rc1.js&quot;&gt;http://fb.me/react-0.12.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.0-rc1.min.js&quot;&gt;http://fb.me/react-0.12.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.12.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.12.0-rc1.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-elements&quot;&gt;&lt;/a&gt;React Elements &lt;a class=&quot;hash-link&quot; href=&quot;#react-elements&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The biggest conceptual change we made in v0.12 is the move to React Elements. &lt;a href=&quot;/react/blog/2014/10/14/introducting-react-elements.html&quot;&gt;We talked about this topic in depth earlier this week&lt;/a&gt;. If you haven&amp;#39;t already, you should read up on the exciting changes in there!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-changes&quot;&gt;&lt;/a&gt;JSX Changes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Earlier this year we decided to write &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;a specification for JSX&lt;/a&gt;. This has allowed us to make some changes focused on the React specific JSX and still allow others to innovate in the same space.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-jsx-pragma-is-gone&quot;&gt;&lt;/a&gt;The &lt;code&gt;@jsx&lt;/code&gt; Pragma is Gone! &lt;a class=&quot;hash-link&quot; href=&quot;#the-jsx-pragma-is-gone&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;We have wanted to do this since before we even open sourced React. No more &lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;!. The React specific JSX transform assumes you have &lt;code&gt;React&lt;/code&gt; in scope (which had to be true before anyway).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; have both been updated to account for this.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-for-function-calls-is-no-longer-supported&quot;&gt;&lt;/a&gt;JSX for Function Calls is No Longer Supported &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-for-function-calls-is-no-longer-supported&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The React specific JSX transform no longer transforms to function calls. Instead we use &lt;code&gt;React.createElement&lt;/code&gt; and pass it arguments. This allows us to make optimizations and better support React as a compile target for things like Om. Read more in the &lt;a href=&quot;/react/blog/2014/10/14/introducting-react-elements.html&quot;&gt;React Elements introduction&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The result of this change is that we will no longer support arbitrary function calls. We understand that the ability to do was was a convenient shortcut for many people but we believe the gains will be worth it.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-lower-case-convention&quot;&gt;&lt;/a&gt;JSX Lower-case Convention &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-lower-case-convention&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;We used to have a whitelist of HTML tags that got special treatment in JSX. However as new HTML tags got added to the spec, or we added support for more SVG tags, we had to go update our whitelist. Additionally, there was ambiguity about the behavior. There was always the chance that something new added to the tag list would result in breaking your code. For example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;component&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Is &lt;code&gt;component&lt;/code&gt; an existing HTML tag? What if it becomes one?&lt;/p&gt;
+
+&lt;p&gt;To address this, we decided on a convention: &lt;strong&gt;All JSX tags that start with a lower-case letter or contain a dash are treated as HTML.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;This means that you no longer have to wait for us to upgrade JSX to use new tags. This also introduces the possibility to consume custom elements (Web Components) - although custom attributes are not yet fully supported.&lt;/p&gt;
+
+&lt;p&gt;Currently we still use the whitelist as a sanity check. The transform will fail when it encounters an unknown tag. This allows you to update your code without hitting errors in production.&lt;/p&gt;
+
+&lt;p&gt;In addition, the HTML tags are converted to strings instead of using &lt;code&gt;React.DOM&lt;/code&gt; directly. &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; becomes &lt;code&gt;React.createElement(&amp;#39;div&amp;#39;)&lt;/code&gt; instead of &lt;code&gt;React.DOM.div()&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-spread-attributes&quot;&gt;&lt;/a&gt;JSX Spread Attributes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-spread-attributes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Previously there wasn&amp;#39;t a way to for you to pass a dynamic or unknown set of properties through JSX. This is now possible using the spread &lt;code&gt;...&lt;/code&gt; operator.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This merges the properties of the object onto the props of &lt;code&gt;MyComponent&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://gist.github.com/sebmarkbage/07bbe37bc42b6d4aef81&quot;&gt;Read More About Spread Attributes&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;If you used to use plain function calls to pass arbitrary props objects...&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You can now switch to using Spread Attributes instead:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-change-key-and-ref-removed-from-this.props&quot;&gt;&lt;/a&gt;Breaking Change: &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; Removed From &lt;code&gt;this.props&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-change-key-and-ref-removed-from-this.props&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The props &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; were already reserved property names. This turned out to be difficult to explicitly statically type since any object can accept these extra props. It also screws up JIT optimizations of React internals in modern VMs.&lt;/p&gt;
+
+&lt;p&gt;These are concepts that React manages from outside the Component before it even gets created so it shouldn&amp;#39;t be part of the props.&lt;/p&gt;
+
+&lt;p&gt;We made this distinction clearer by moving them off the props object and onto the &lt;code&gt;ReactElement&lt;/code&gt; itself. This means that you need to rename:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;someElement.props.key&lt;/code&gt; -&amp;gt; &lt;code&gt;someElement.key&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;You can no longer access &lt;code&gt;this.props.ref&lt;/code&gt; and &lt;code&gt;this.props.key&lt;/code&gt; from inside the Component instance itself. So you need to use a different name for those props.&lt;/p&gt;
+
+&lt;p&gt;You do NOT need to change the way to define &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt;, only if you need to read it. E.g. &lt;code&gt;&amp;lt;div key=&amp;quot;my-key&amp;quot; /&amp;gt;&lt;/code&gt; and &lt;code&gt;div({ key: &amp;#39;my-key&amp;#39; })&lt;/code&gt; still works.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-change-default-props-resolution&quot;&gt;&lt;/a&gt;Breaking Change: Default Props Resolution &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-change-default-props-resolution&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;This is a subtle difference but &lt;code&gt;defaultProps&lt;/code&gt; are now resolved at &lt;code&gt;ReactElement&lt;/code&gt; creation time instead of when it&amp;#39;s mounted. This is means that we can avoid allocating an extra object for the resolve props.&lt;/p&gt;
+
+&lt;p&gt;You will primarily see this breaking if you&amp;#39;re also using &lt;code&gt;transferPropsTo&lt;/code&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-transferpropsto&quot;&gt;&lt;/a&gt;Deprecated: transferPropsTo &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-transferpropsto&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;transferPropsTo&lt;/code&gt; is deprecated in v0.12 and will be removed in v0.13. This helper function was a bit magical. It auto-merged a certain whitelist of properties and excluded others. It was also transferring too many properties. This meant that we have to keep a whitelist of valid HTML attributes in the React runtime. It also means that we can&amp;#39;t catch typos on props.&lt;/p&gt;
+
+&lt;p&gt;Our suggested solution is to use the Spread Attributes.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Or, just if you&amp;#39;re not using JSX:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Although to avoid passing too many props down, you&amp;#39;ll probably want to use something like ES7 rest properties. &lt;a href=&quot;https://gist.github.com/sebmarkbage/a6e220b7097eb3c79ab7&quot;&gt;Read more about upgrading from transferPropsTo&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-returning-false-in-event-handlers&quot;&gt;&lt;/a&gt;Deprecated: Returning &lt;code&gt;false&lt;/code&gt; in Event Handlers &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-returning-false-in-event-handlers&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;It used to be possible to return &lt;code&gt;false&lt;/code&gt; from event handlers to preventDefault. We did this because this works in most browsers. This is a confusing API and we might want to use the return value for something else. Therefore, this is deprecated. Use &lt;code&gt;event.preventDefault()&lt;/code&gt; instead.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;renamed-apis&quot;&gt;&lt;/a&gt;Renamed APIs &lt;a class=&quot;hash-link&quot; href=&quot;#renamed-apis&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;As part of the &lt;a href=&quot;https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589&quot;&gt;new React terminology&lt;/a&gt; we aliased some existing APIs to use the new naming convention:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponent&lt;/code&gt; -&amp;gt; &lt;code&gt;React.render&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; -&amp;gt; &lt;code&gt;React.renderToString&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponentToStaticMarkup&lt;/code&gt; -&amp;gt; &lt;code&gt;React.renderToStaticMarkup&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; -&amp;gt; &lt;code&gt;React.isValidElement&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.PropTypes.component&lt;/code&gt; -&amp;gt; &lt;code&gt;React.PropTypes.element&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.PropTypes.renderable&lt;/code&gt; -&amp;gt; &lt;code&gt;React.PropTypes.node&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The older APIs will log a warning but work the same. They will be removed in v0.13.&lt;/p&gt;
+</description>
+				<pubDate>2014-10-16T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</guid>
+			</item>
+		
+			<item>
 				<title>Introducing React Elements</title>
 				<description>&lt;p&gt;The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the &lt;code&gt;ReactElement&lt;/code&gt; type really FAST, &lt;a href=&quot;http://facebook.github.io/jest/&quot;&gt;jest unit testing&lt;/a&gt; easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!&lt;/p&gt;
 
@@ -21,7 +125,7 @@
 
 &lt;p&gt;Continue reading if you want all the nitty gritty details...&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-terminology&quot;&gt;&lt;/a&gt;New Terminology &lt;a class=&quot;hash-link&quot; href=&quot;#new-terminology&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We wanted to make it easier for new users to see the parallell with the DOM (and why React is different). To align our terminology we now use the term &lt;code&gt;ReactElement&lt;/code&gt; instead of &lt;em&gt;descriptor&lt;/em&gt;. Likewise, we use the term &lt;code&gt;ReactNode&lt;/code&gt; instead of &lt;em&gt;renderable&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term &lt;code&gt;ReactElement&lt;/code&gt; instead of &lt;em&gt;descriptor&lt;/em&gt;. Likewise, we use the term &lt;code&gt;ReactNode&lt;/code&gt; instead of &lt;em&gt;renderable&lt;/em&gt;.&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589&quot;&gt;See the full React terminology guide.&lt;/a&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;creating-a-reactelement&quot;&gt;&lt;/a&gt;Creating a ReactElement &lt;a class=&quot;hash-link&quot; href=&quot;#creating-a-reactelement&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -32,7 +136,7 @@
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;div&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactDivElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-auto-generated-factories&quot;&gt;&lt;/a&gt;Deprecated: Auto-generated Factories &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-auto-generated-factories&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Imagine if &lt;code&gt;React.createClass&lt;/code&gt; was just a plain JavaScript class. If you call a class as a plain function you would call the component&amp;#39;s constructor to create an Component instance, not a &lt;code&gt;ReactElement&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;Imagine if &lt;code&gt;React.createClass&lt;/code&gt; was just a plain JavaScript class. If you call a class as a plain function you would call the component&amp;#39;s constructor to create a Component instance, not a &lt;code&gt;ReactElement&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Component, not ReactElement&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;React 0.11 gave you a factory function for free when you called &lt;code&gt;React.createClass&lt;/code&gt;. This wrapped your internal class and then returned a &lt;code&gt;ReactElement&lt;/code&gt; factory function for you.&lt;/p&gt;
@@ -155,8 +259,8 @@
 &lt;p&gt;This upcoming release is a stepping stone to make it as easy as this. Thanks for your support.&lt;/p&gt;
 </description>
 				<pubDate>2014-10-14T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/14/introducting-react-elements.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/14/introducting-react-elements.html</guid>
+				<link>http://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html</guid>
 			</item>
 		
 			<item>
@@ -838,155 +942,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-07-25T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/07/25/react-v0.11.1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/25/react-v0.11.1.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.11</title>
-				<description>&lt;p&gt;&lt;strong&gt;Update:&lt;/strong&gt; We missed a few important changes in our initial post and changelog. We&amp;#39;ve updated this post with details about &lt;a href=&quot;#descriptors&quot;&gt;Descriptors&lt;/a&gt; and &lt;a href=&quot;#prop-type-validation&quot;&gt;Prop Type Validation&lt;/a&gt;.&lt;/p&gt;
-
-&lt;hr&gt;
-
-&lt;p&gt;We&amp;#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using &lt;code&gt;jsx --harmony&lt;/code&gt;, fixed a small regression with &lt;code&gt;statics&lt;/code&gt;, and made sure we actually exposed the new API we said we were shipping: &lt;code&gt;React.Children.count&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.&lt;/p&gt;
-
-&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.0.js&quot;&gt;http://fb.me/react-0.11.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.0.min.js&quot;&gt;http://fb.me/react-0.11.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0.js&quot;&gt;http://fb.me/react-with-addons-0.11.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.0.js&quot;&gt;http://fb.me/JSXTransformer-0.11.0.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;getdefaultprops&quot;&gt;&lt;/a&gt;&lt;code&gt;getDefaultProps&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#getdefaultprops&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Starting in React 0.11, &lt;code&gt;getDefaultProps()&lt;/code&gt; is called only once when &lt;code&gt;React.createClass()&lt;/code&gt; is called, instead of each time a component is rendered. This means that &lt;code&gt;getDefaultProps()&lt;/code&gt; can no longer vary its return value based on &lt;code&gt;this.props&lt;/code&gt; and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rendering-to-null&quot;&gt;&lt;/a&gt;Rendering to &lt;code&gt;null&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#rendering-to-null&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Since React&amp;#39;s release, people have been using work arounds to &amp;quot;render nothing&amp;quot;. Usually this means returning an empty &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; or &lt;code&gt;&amp;lt;span/&amp;gt;&lt;/code&gt;. Some people even got clever and started returning &lt;code&gt;&amp;lt;noscript/&amp;gt;&lt;/code&gt; to avoid extraneous DOM nodes. We finally provided a &amp;quot;blessed&amp;quot; solution that allows developers to write meaningful code. Returning &lt;code&gt;null&lt;/code&gt; is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; element, though in the future we hope to not put anything in the document. In the mean time, &lt;code&gt;&amp;lt;noscript&amp;gt;&lt;/code&gt; elements do not affect layout in any way, so you can feel safe using &lt;code&gt;null&lt;/code&gt; today!&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;visible&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-namespacing&quot;&gt;&lt;/a&gt;JSX Namespacing &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-namespacing&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Another feature request we&amp;#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&amp;#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as &lt;code&gt;&amp;lt;Namespace.Component/&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Before&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILayout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UIButton&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UILabel&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UILabel&amp;gt;&amp;lt;/UILayout&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// After&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;UI&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Layout&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;UI&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/UI.Label&amp;gt;&amp;lt;/UI.Layout&amp;gt;;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;improved-keyboard-event-normalization&quot;&gt;&lt;/a&gt;Improved keyboard event normalization &lt;a class=&quot;hash-link&quot; href=&quot;#improved-keyboard-event-normalization&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Keyboard events now contain a normalized &lt;code&gt;e.key&lt;/code&gt; value according to the &lt;a href=&quot;http://www.w3.org/TR/DOM-Level-3-Events/#keys-special&quot;&gt;DOM Level 3 Events spec&lt;/a&gt;, allowing you to write simpler key handling code that works in all browsers, such as:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;handleKeyDown&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;Enter&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle enter key&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39; &amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle spacebar&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;===&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;ArrowLeft&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// Handle left arrow&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Keyboard and mouse events also now include a normalized &lt;code&gt;e.getModifierState()&lt;/code&gt; that works consistently across browsers.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;descriptors&quot;&gt;&lt;/a&gt;Descriptors &lt;a class=&quot;hash-link&quot; href=&quot;#descriptors&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;In our &lt;a href=&quot;http://facebook.github.io/react/blog/2014/03/21/react-v0.10.html#clone-on-mount&quot;&gt;v0.10 release notes&lt;/a&gt;, we called out that we were deprecating the existing behavior of the component function call (eg &lt;code&gt;component = MyComponent(props, ...children)&lt;/code&gt; or &lt;code&gt;component = &amp;lt;MyComponent prop={...}/&amp;gt;&lt;/code&gt;). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg &lt;code&gt;component.setProps(...)&lt;/code&gt;). This no longer works. &lt;code&gt;component&lt;/code&gt; in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.&lt;/p&gt;
-
-&lt;p&gt;Along with this change to descriptors, &lt;code&gt;React.isValidComponent&lt;/code&gt; and &lt;code&gt;React.PropTypes.component&lt;/code&gt; now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of &lt;code&gt;MyComponent()&lt;/code&gt;, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&amp;#39;re working to make sure we are consistent with our terminology.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;prop-type-validation&quot;&gt;&lt;/a&gt;Prop Type Validation &lt;a class=&quot;hash-link&quot; href=&quot;#prop-type-validation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Previously &lt;code&gt;React.PropTypes&lt;/code&gt; validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply &lt;code&gt;console.log&lt;/code&gt; your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (&lt;em&gt;not throw&lt;/em&gt;) an &lt;code&gt;Error&lt;/code&gt; object. We then log the &lt;code&gt;error.message&lt;/code&gt; property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an &lt;code&gt;Error&lt;/code&gt; with your message instead.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;getDefaultProps()&lt;/code&gt; is now called once per class and shared across all instances&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;MyComponent()&lt;/code&gt; now returns a descriptor, not an instance&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; and &lt;code&gt;React.PropTypes.component&lt;/code&gt; validate &lt;em&gt;descriptors&lt;/em&gt;, not component instances.&lt;/li&gt;
-&lt;li&gt;Custom &lt;code&gt;propType&lt;/code&gt; validators should return an &lt;code&gt;Error&lt;/code&gt; instead of logging directly&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Rendering to &lt;code&gt;null&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Keyboard events include normalized &lt;code&gt;e.key&lt;/code&gt; and &lt;code&gt;e.getModifierState()&lt;/code&gt; properties&lt;/li&gt;
-&lt;li&gt;New normalized &lt;code&gt;onBeforeInput&lt;/code&gt; event&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.Children.count&lt;/code&gt; has been added as a helper for counting the number of children&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Re-renders are batched in more cases&lt;/li&gt;
-&lt;li&gt;Events: &lt;code&gt;e.view&lt;/code&gt; properly normalized&lt;/li&gt;
-&lt;li&gt;Added Support for more HTML attributes (&lt;code&gt;coords&lt;/code&gt;, &lt;code&gt;crossOrigin&lt;/code&gt;, &lt;code&gt;download&lt;/code&gt;, &lt;code&gt;hrefLang&lt;/code&gt;, &lt;code&gt;mediaGroup&lt;/code&gt;, &lt;code&gt;muted&lt;/code&gt;, &lt;code&gt;scrolling&lt;/code&gt;, &lt;code&gt;shape&lt;/code&gt;, &lt;code&gt;srcSet&lt;/code&gt;, &lt;code&gt;start&lt;/code&gt;, &lt;code&gt;useMap&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;Improved SVG support
-
-&lt;ul&gt;
-&lt;li&gt;Changing &lt;code&gt;className&lt;/code&gt; on a mounted SVG component now works correctly&lt;/li&gt;
-&lt;li&gt;Added support for elements &lt;code&gt;mask&lt;/code&gt; and &lt;code&gt;tspan&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added support for attributes &lt;code&gt;dx&lt;/code&gt;, &lt;code&gt;dy&lt;/code&gt;, &lt;code&gt;fillOpacity&lt;/code&gt;, &lt;code&gt;fontFamily&lt;/code&gt;, &lt;code&gt;fontSize&lt;/code&gt;, &lt;code&gt;markerEnd&lt;/code&gt;, &lt;code&gt;markerMid&lt;/code&gt;, &lt;code&gt;markerStart&lt;/code&gt;, &lt;code&gt;opacity&lt;/code&gt;, &lt;code&gt;patternContentUnits&lt;/code&gt;, &lt;code&gt;patternUnits&lt;/code&gt;, &lt;code&gt;preserveAspectRatio&lt;/code&gt;, &lt;code&gt;strokeDasharray&lt;/code&gt;, &lt;code&gt;strokeOpacity&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;CSS property names with vendor prefixes (&lt;code&gt;Webkit&lt;/code&gt;, &lt;code&gt;ms&lt;/code&gt;, &lt;code&gt;Moz&lt;/code&gt;, &lt;code&gt;O&lt;/code&gt;) are now handled properly&lt;/li&gt;
-&lt;li&gt;Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;img&lt;/code&gt; event listeners are now unbound properly, preventing the error &amp;quot;Two valid but unequal nodes with the same &lt;code&gt;data-reactid&lt;/code&gt;&amp;quot;&lt;/li&gt;
-&lt;li&gt;Added explicit warning when missing polyfills&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React With Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;PureRenderMixin: a mixin which helps optimize &amp;quot;pure&amp;quot; components&lt;/li&gt;
-&lt;li&gt;Perf: a new set of tools to help with performance analysis&lt;/li&gt;
-&lt;li&gt;Update: New &lt;code&gt;$apply&lt;/code&gt; command to transform values&lt;/li&gt;
-&lt;li&gt;TransitionGroup bug fixes with null elements, Android&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-npm-module&quot;&gt;&lt;/a&gt;React NPM Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-npm-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Now includes the pre-built packages under &lt;code&gt;dist/&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;envify&lt;/code&gt; is properly listed as a dependency instead of a peer dependency&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for namespaces, eg &lt;code&gt;&amp;lt;Components.Checkbox /&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;JSXTransformer
-
-&lt;ul&gt;
-&lt;li&gt;Enable the same &lt;code&gt;harmony&lt;/code&gt; features available in the command line with &lt;code&gt;&amp;lt;script type=&amp;quot;text/jsx;harmony=true&amp;quot;&amp;gt;&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)&lt;/li&gt;
-&lt;li&gt;Fixed a bug preventing sourcemaps from working in Firefox&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools-module&quot;&gt;&lt;/a&gt;React Tools Module &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools-module&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Improved readme with usage and API information&lt;/li&gt;
-&lt;li&gt;Improved ES6 transforms available with &lt;code&gt;--harmony&lt;/code&gt; option&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;--source-map-inline&lt;/code&gt; option to the &lt;code&gt;jsx&lt;/code&gt; executable&lt;/li&gt;
-&lt;li&gt;New &lt;code&gt;transformWithDetails&lt;/code&gt; API which gives access to the raw sourcemap data&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-07-17T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html</guid>
 			</item>
 		
 	</channel>
