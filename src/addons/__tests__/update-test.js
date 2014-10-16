@@ -81,7 +81,7 @@ describe('update', function() {
 
   it('should support delete', function() {
     expect(update({a:1,b:2}, {$delete:'b'})).toEqual({a:1});
-    expect(update({a:1,b:2,c:3}, {$delete:['a','c']})).toEqual({b:2});
+    expect(update({a:1,b:2,c:3}, {$delete:['a','c','d']})).toEqual({b:2});
     expect(update.bind(null, 2, {$delete: 'foo'})).toThrow(
       'Invariant Violation: update(): expected target of $delete to be an ' +
       'object; got 2.'
