@@ -11,6 +11,7 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 
 var genericComponentClass = null;
@@ -26,7 +27,7 @@ var ReactNativeComponentInjection = {
   // This accepts a keyed object with classes as values. Each key represents a
   // tag. That particular tag will use this class instead of the generic one.
   injectComponentClasses: function(componentClasses) {
-    Object.assign(tagToComponentClass, componentClasses);
+    assign(tagToComponentClass, componentClasses);
   }
 };
 

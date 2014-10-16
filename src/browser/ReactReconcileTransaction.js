@@ -19,6 +19,8 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
+var assign = require('Object.assign');
+
 /**
  * Ensures that, when possible, the selection range (currently selected text
  * input) is not disturbed by performing the transaction.
@@ -165,7 +167,7 @@ var Mixin = {
 };
 
 
-Object.assign(ReactReconcileTransaction.prototype, Transaction.Mixin, Mixin);
+assign(ReactReconcileTransaction.prototype, Transaction.Mixin, Mixin);
 
 PooledClass.addPoolingTo(ReactReconcileTransaction);
 

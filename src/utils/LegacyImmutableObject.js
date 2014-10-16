@@ -12,6 +12,7 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var isNode = require('isNode');
 var mergeHelpers = require('mergeHelpers');
@@ -42,7 +43,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    Object.assign(this, initialProperties);
+    assign(this, initialProperties);
     deepFreeze(this);
   };
 
@@ -91,7 +92,7 @@ if (__DEV__) {
    */
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
-    var totalNewFields = Object.assign({}, immutableObject, put);
+    var totalNewFields = assign({}, immutableObject, put);
     return new LegacyImmutableObject(totalNewFields);
   };
 
@@ -103,7 +104,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    Object.assign(this, initialProperties);
+    assign(this, initialProperties);
   };
 
   /**
@@ -117,7 +118,7 @@ if (__DEV__) {
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
     var newMap = new LegacyImmutableObject(immutableObject);
-    Object.assign(newMap, put);
+    assign(newMap, put);
     return newMap;
   };
 }

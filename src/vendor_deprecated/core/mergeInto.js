@@ -12,7 +12,9 @@
 
 "use strict";
 
-module.exports = Object.assign;
+var assign = require('Object.assign');
+
+module.exports = assign;
 
 // deprecation notice
 console.warn(

@@ -11,6 +11,8 @@
 
 "use strict";
 
+var assign = require('Object.assign');
+
 /**
  * Keeps track of the current context.
  *
@@ -44,7 +46,7 @@ var ReactContext = {
   withContext: function(newContext, scopedCallback) {
     var result;
     var previousContext = ReactContext.current;
-    ReactContext.current = Object.assign({}, previousContext, newContext);
+    ReactContext.current = assign({}, previousContext, newContext);
     try {
       result = scopedCallback();
     } finally {

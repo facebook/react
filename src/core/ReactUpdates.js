@@ -17,6 +17,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactPerf = require('ReactPerf');
 var Transaction = require('Transaction');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -72,7 +73,7 @@ function ReactUpdatesFlushTransaction() {
     ReactUpdates.ReactReconcileTransaction.getPooled();
 }
 
-Object.assign(
+assign(
   ReactUpdatesFlushTransaction.prototype,
   Transaction.Mixin, {
   getTransactionWrappers: function() {

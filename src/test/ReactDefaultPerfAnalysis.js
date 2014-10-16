@@ -9,6 +9,8 @@
  * @providesModule ReactDefaultPerfAnalysis
  */
 
+var assign = require('Object.assign');
+
 // Don't try to save users less than 1.2ms (a number I made up)
 var DONT_CARE_THRESHOLD = 1.2;
 var DOM_OPERATION_TYPES = {
@@ -62,7 +64,7 @@ function getExclusiveSummary(measurements) {
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
-    var allIDs = Object.assign(
+    var allIDs = assign(
       {},
       measurement.exclusive,
       measurement.inclusive
@@ -114,7 +116,7 @@ function getInclusiveSummary(measurements, onlyClean) {
 
   for (var i = 0; i < measurements.length; i++) {
     var measurement = measurements[i];
-    var allIDs = Object.assign(
+    var allIDs = assign(
       {},
       measurement.exclusive,
       measurement.inclusive
@@ -173,7 +175,7 @@ function getUnchangedComponents(measurement) {
   // the amount of time it took to render the entire subtree.
   var cleanComponents = {};
   var dirtyLeafIDs = Object.keys(measurement.writes);
-  var allIDs = Object.assign({}, measurement.exclusive, measurement.inclusive);
+  var allIDs = assign({}, measurement.exclusive, measurement.inclusive);
 
   for (var id in allIDs) {
     var isDirty = false;

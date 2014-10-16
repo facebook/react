@@ -42,7 +42,7 @@ describe('react jsx', function() {
     var Component = jest.genMockFunction();
     var Child = jest.genMockFunction();
     var objectAssignMock = jest.genMockFunction();
-    Object.assign = objectAssignMock;
+    React.__spread = objectAssignMock;
     eval(transform(code).code);
     return expect(objectAssignMock);
   }
@@ -309,12 +309,12 @@ describe('react jsx', function() {
     expect(() => transform(code)).toThrow();
   });
 
-  it('wraps props in Object.assign for spread attributes', function() {
+  it('wraps props in React.__spread for spread attributes', function() {
     var code =
       '<Component { ... x } y\n' +
       '={2 } z />';
     var result =
-      'React.createElement(Component, Object.assign({},    x , {y: \n' +
+      'React.createElement(Component, React.__spread({},    x , {y: \n' +
       '2, z: true}))';
 
     expect(transform(code).code).toBe(result);
@@ -326,7 +326,7 @@ describe('react jsx', function() {
       '  {...this.props}\n' +
       '  sound="moo" />';
     var result =
-      'React.createElement(Component, Object.assign({}, \n' +
+      'React.createElement(Component, React.__spread({}, \n' +
       '  this.props, \n' +
       '  {sound: "moo"}))';
 
@@ -340,7 +340,7 @@ describe('react jsx', function() {
     expect(transform(code).code).toBe(result);
   });
 
-  it('does not call Object.assign when there are no spreads', function() {
+  it('does not call React.__spread when there are no spreads', function() {
     expectObjectAssign(
       '<Component x={y} />'
     ).not.toBeCalled();
@@ -376,13 +376,13 @@ describe('react jsx', function() {
     ).toBeCalledWith({x: 1}, y);
   });
 
-  it('passes the same value multiple times to Object.assign', function() {
+  it('passes the same value multiple times to React.__spread', function() {
     expectObjectAssign(
       '<Component x={1} y="2" {...z} {...z}><Child /></Component>'
     ).toBeCalledWith({x: 1, y: "2"}, z, z);
   });
 
-  it('evaluates sequences before passing them to Object.assign', function() {
+  it('evaluates sequences before passing them to React.__spread', function() {
     expectObjectAssign(
       '<Component x="1" {...(z = { y: 2 }, z)} z={3}>Text</Component>'
     ).toBeCalledWith({x: "1"}, { y: 2 }, {z: 3});

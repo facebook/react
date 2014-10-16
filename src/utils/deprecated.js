@@ -9,6 +9,7 @@
  * @providesModule deprecated
  */
 
+var assign = require('Object.assign');
 var warning = require('warning');
 
 /**
@@ -37,7 +38,7 @@ function deprecated(namespace, oldName, newName, ctx, fn) {
     newFn.displayName = `${namespace}_${oldName}`;
     // We need to make sure all properties of the original fn are copied over.
     // In particular, this is needed to support PropTypes
-    return Object.assign(newFn, fn);
+    return assign(newFn, fn);
   }
 
   return fn;

@@ -19,6 +19,8 @@ var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
+
 // Store a reference to the <select> `ReactDOMComponent`. TODO: use string
 var select = ReactElement.createFactory(ReactDOM.select.type);
 
@@ -129,7 +131,7 @@ var ReactDOMSelect = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = Object.assign({}, this.props);
+    var props = assign({}, this.props);
 
     props.onChange = this._handleChange;
     props.value = null;

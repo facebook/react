@@ -21,6 +21,7 @@ var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 
 // Store a reference to the <input> `ReactDOMComponent`. TODO: use string
@@ -66,7 +67,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = Object.assign({}, this.props);
+    var props = assign({}, this.props);
 
     props.defaultChecked = null;
     props.defaultValue = null;

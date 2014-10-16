@@ -15,6 +15,7 @@ var ReactElement = require('ReactElement');
 var ReactOwner = require('ReactOwner');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 
@@ -143,7 +144,7 @@ var ReactComponent = {
       // element props.
       var element = this._pendingElement || this._currentElement;
       this.replaceProps(
-        Object.assign({}, element.props, partialProps),
+        assign({}, element.props, partialProps),
         callback
       );
     },
@@ -192,7 +193,7 @@ var ReactComponent = {
       var element = this._pendingElement || this._currentElement;
       this._pendingElement = ReactElement.cloneAndReplaceProps(
         element,
-        Object.assign({}, element.props, partialProps)
+        assign({}, element.props, partialProps)
       );
       ReactUpdates.enqueueUpdate(this, callback);
     },

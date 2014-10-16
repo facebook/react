@@ -17,6 +17,7 @@ var CallbackQueue = require('CallbackQueue');
 var ReactPutListenerQueue = require('ReactPutListenerQueue');
 var Transaction = require('Transaction');
 
+var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
 
 /**
@@ -99,7 +100,7 @@ var Mixin = {
 };
 
 
-Object.assign(
+assign(
   ReactServerRenderingTransaction.prototype,
   Transaction.Mixin,
   Mixin
