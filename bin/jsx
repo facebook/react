@@ -5,12 +5,12 @@ var chokidar = require('chokidar');
 var fs = require('fs');
 var glob = require('glob');
 var mkdirp = require('mkdirp').sync;
-var optimist = require('optimist');
 var path = require('path');
 var transform = require('../main').transform;
+var yargs = require('yargs');
 var VERSION = require('../package.json').version;
 
-function handleChange(exitOnError, args, changedPath) {
+function handleChange(options, exitOnError, args, changedPath) {
   var startTime = Date.now();
   var src = path.resolve(args.argv._[0]);
   var dest = path.resolve(args.argv._[1]);
@@ -31,7 +31,7 @@ function handleChange(exitOnError, args, changedPath) {
     }
 
     try {
-      var transformedSrc = transform(changedSrc);
+      var transformedSrc = transform(changedSrc, options);
     } catch (e) {
       console.error('[' + new Date() + '] *** ERROR TRANSFORMING ' + JSON.stringify(absoluteChangedPath) + ':');
       console.error('  ' + e.toString());
@@ -63,7 +63,7 @@ function handleChange(exitOnError, args, changedPath) {
 }
 
 function main() {
-  var args = optimist
+  var args = yargs
     .usage(
       'jsxc ' + VERSION + ': Convert files containing JSX syntax to regular JavaScript.\n' +
       'Usage:\n' +
@@ -90,6 +90,10 @@ function main() {
     .alias('a', 'harmony')
     .describe('a', 'Enable ES6 features')
     .alias('h', 'help')
+    .describe('t', 'Strip type annotations')
+    .alias('t', 'strip-types')
+    .describe('i', 'Add inline source maps')
+    .alias('i', 'source-map-inline')
     .boolean('h')
     .describe('h', 'Show this help message');
 
@@ -97,6 +101,12 @@ function main() {
     console.error(args.help());
     process.exit(1);
   }
+
+  var options = {
+    harmony: args.argv.a,
+    sourceMap: args.argv.i,
+    stripTypes: args.argv.t
+  };
 
   if (args.argv._.length === 1) {
     if (args.argv._[0] === '-') {
@@ -108,14 +118,14 @@ function main() {
         buf += chunk;
       });
       process.stdin.on('end', function() {
-        process.stdout.write(transform(buf, {harmony: args.argv.a}));
+        process.stdout.write(transform(buf, options));
         process.exit(0);
       });
     } else {
       process.stdout.write(
         transform(
           fs.readFileSync(args.argv._[0], {encoding: 'utf8'}),
-          {harmony: args.argv.a}
+          options
         )
       );
       process.exit(0);
@@ -145,8 +155,8 @@ function main() {
       persistent: args.argv.w
     });
 
-    watcher.on('add', handleChange.bind(null, false, args));
-    watcher.on('change', handleChange.bind(null, false, args));
+    watcher.on('add', handleChange.bind(null, options, false, args));
+    watcher.on('change', handleChange.bind(null, options, false, args));
     watcher.on('error', function(err) {
       console.error(err);
     });
@@ -185,7 +195,7 @@ function main() {
           console.error(err);
           process.exit(1);
         }
-        files.forEach(handleChange.bind(null, 2, args));
+        files.forEach(handleChange.bind(null, options, 2, args));
       });
     }
   }
