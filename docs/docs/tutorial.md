@@ -415,7 +415,7 @@ var CommentBox = React.createClass({
 
 Here, `componentDidMount` is a method called automatically by React when a component is rendered. The key to dynamic updates is the call to `this.setState()`. We replace the old array of comments with the new one from the server and the UI automatically updates itself. Because of this reactivity, it is only a minor change to add live updates. We will use simple polling here but you could easily use WebSockets or other technologies.
 
-```javascript{3,19-20,34}
+```javascript{3,14,19-20,34}
 // tutorial14.js
 var CommentBox = React.createClass({
   loadCommentsFromServer: function() {
@@ -478,7 +478,7 @@ var CommentForm = React.createClass({
 
 Let's make the form interactive. When the user submits the form, we should clear it, submit a request to the server, and refresh the list of comments. To start, let's listen for the form's submit event and clear it.
 
-```javascript{3-14,17-19}
+```javascript{3-14,18-20}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
