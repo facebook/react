@@ -57,6 +57,14 @@ var unmountIDFromEnvironment = null;
 var mountImageIntoNode = null;
 
 /**
+ * An incrementing ID assigned to each component when it is mounted. This is
+ * used to enforce the order in which `ReactUpdates` updates dirty components.
+ *
+ * @private
+ */
+var nextMountID = 1;
+
+/**
  * Components are the basic units of composition in React.
  *
  * Every component accepts a set of keyed input parameters known as "props" that
@@ -260,6 +268,7 @@ var ReactComponent = {
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
       this._mountDepth = mountDepth;
+      this._mountOrder = nextMountID++;
       // Effectively: return '';
     },
 
