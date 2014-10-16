@@ -13,6 +13,7 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var mocks = require('mocks');
 
 describe('ReactDOMComponent', function() {
@@ -223,7 +224,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -273,7 +274,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      Object.assign(NodeStub.prototype, ReactDOMComponent.Mixin);
+      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -310,9 +311,9 @@ describe('ReactDOMComponent', function() {
       var StubNativeComponent = function(element) {
         ReactComponent.Mixin.construct.call(this, element);
       };
-      Object.assign(StubNativeComponent.prototype, ReactComponent.Mixin);
-      Object.assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
-      Object.assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
+      assign(StubNativeComponent.prototype, ReactComponent.Mixin);
+      assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
+      assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();

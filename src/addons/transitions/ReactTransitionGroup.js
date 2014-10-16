@@ -14,6 +14,7 @@
 var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');
 
+var assign = require('Object.assign');
 var cloneWithProps = require('cloneWithProps');
 var emptyFunction = require('emptyFunction');
 
@@ -151,7 +152,7 @@ var ReactTransitionGroup = React.createClass({
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      var newChildren = Object.assign({}, this.state.children);
+      var newChildren = assign({}, this.state.children);
       delete newChildren[key];
       this.setState({children: newChildren});
     }

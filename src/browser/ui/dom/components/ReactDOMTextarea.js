@@ -20,6 +20,7 @@ var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 
 var warning = require('warning');
@@ -95,7 +96,7 @@ var ReactDOMTextarea = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = Object.assign({}, this.props);
+    var props = assign({}, this.props);
 
     invariant(
       props.dangerouslySetInnerHTML == null,

@@ -18,6 +18,7 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
 var ViewportMetrics = require('ViewportMetrics');
 
+var assign = require('Object.assign');
 var isEventSupported = require('isEventSupported');
 
 /**
@@ -147,7 +148,7 @@ function getListeningForDocument(mountAt) {
  *
  * @internal
  */
-var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
+var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
 
   /**
    * Injectable event backend

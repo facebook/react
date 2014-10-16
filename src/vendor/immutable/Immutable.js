@@ -9,6 +9,7 @@
  * @providesModule Immutable
  */
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var isNode = require('isNode');
 var keyOf = require('keyOf');
@@ -59,7 +60,7 @@ class Immutable {
   static mergeAllPropertiesInto(destination, propertyObjects) {
     var argLength = propertyObjects.length;
     for (var i = 0; i < argLength; i++) {
-      Object.assign(destination, propertyObjects[i]);
+      assign(destination, propertyObjects[i]);
     }
   }
 

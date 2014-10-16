@@ -16,6 +16,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
 
+var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
 
 /**
@@ -37,7 +38,7 @@ var ReactTextComponent = function(props) {
   // This constructor and it's argument is currently used by mocks.
 };
 
-Object.assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
+assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
 
   /**
    * Creates the markup for this text node. This node is not intended to have

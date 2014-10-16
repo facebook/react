@@ -11,6 +11,8 @@
 
 "use strict";
 
+var assign = require('Object.assign');
+
 /**
  * Shallow merges two structures into a return value, without mutating either.
  *
@@ -19,7 +21,7 @@
  * @return {object} The shallow extension of one by two.
  */
 var merge = function(one, two) {
-  return Object.assign({}, one, two);
+  return assign({}, one, two);
 };
 
 module.exports = merge;

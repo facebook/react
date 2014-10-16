@@ -14,6 +14,8 @@
 
 var ReactTestUtils = require('ReactTestUtils');
 
+var assign = require('Object.assign');
+
 function reactComponentExpect(instance) {
   if (instance instanceof reactComponentExpect) {
     return instance;
@@ -29,7 +31,7 @@ function reactComponentExpect(instance) {
   expect(ReactTestUtils.isElement(instance)).toBe(false);
 }
 
-Object.assign(reactComponentExpect.prototype, {
+assign(reactComponentExpect.prototype, {
   // Getters -------------------------------------------------------------------
 
   /**

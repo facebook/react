@@ -11,10 +11,6 @@
 
 "use strict";
 
-// TODO: Move this elsewhere - it only exists in open source until a better
-// solution is found.
-require('Object.es6');
-
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
@@ -36,6 +32,7 @@ var ReactPropTypes = require('ReactPropTypes');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
 
+var assign = require('Object.assign');
 var deprecated = require('deprecated');
 var onlyChild = require('onlyChild');
 
@@ -83,6 +80,9 @@ var React = {
   isValidClass: ReactLegacyElement.isValidFactory,
   isValidElement: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
+
+  // Hook for JSX spread, don't use this for anything else.
+  __spread: assign,
 
   // Deprecations (remove for 0.13)
   renderComponent: deprecated(

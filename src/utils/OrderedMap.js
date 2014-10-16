@@ -11,6 +11,7 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 
 var PREFIX = 'key:';
@@ -475,7 +476,7 @@ var OrderedMapMethods = {
   }
 };
 
-Object.assign(OrderedMapImpl.prototype, OrderedMapMethods);
+assign(OrderedMapImpl.prototype, OrderedMapMethods);
 
 var OrderedMap = {
   from: function(orderedMap) {

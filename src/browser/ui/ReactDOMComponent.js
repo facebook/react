@@ -22,6 +22,7 @@ var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
+var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
@@ -213,7 +214,7 @@ ReactDOMComponent.Mixin = {
       } else {
         if (propKey === STYLE) {
           if (propValue) {
-            propValue = props.style = Object.assign({}, props.style);
+            propValue = props.style = assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
@@ -362,7 +363,7 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
-          nextProp = nextProps.style = Object.assign({}, nextProp);
+          nextProp = nextProps.style = assign({}, nextProp);
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
@@ -471,7 +472,7 @@ ReactDOMComponent.Mixin = {
 
 };
 
-Object.assign(
+assign(
   ReactDOMComponent.prototype,
   ReactComponent.Mixin,
   ReactDOMComponent.Mixin,

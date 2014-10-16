@@ -14,11 +14,13 @@
 var PooledClass = require('PooledClass');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 
+var assign = require('Object.assign');
+
 function ReactPutListenerQueue() {
   this.listenersToPut = [];
 }
 
-Object.assign(ReactPutListenerQueue.prototype, {
+assign(ReactPutListenerQueue.prototype, {
   enqueuePutListener: function(rootNodeID, propKey, propValue) {
     this.listenersToPut.push({
       rootNodeID: rootNodeID,

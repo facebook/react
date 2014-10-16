@@ -26,6 +26,7 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
@@ -340,7 +341,7 @@ var RESERVED_SPEC_KEYS = {
       childContextTypes,
       ReactPropTypeLocations.childContext
     );
-    Constructor.childContextTypes = Object.assign(
+    Constructor.childContextTypes = assign(
       {},
       Constructor.childContextTypes,
       childContextTypes
@@ -352,7 +353,7 @@ var RESERVED_SPEC_KEYS = {
       contextTypes,
       ReactPropTypeLocations.context
     );
-    Constructor.contextTypes = Object.assign(
+    Constructor.contextTypes = assign(
       {},
       Constructor.contextTypes,
       contextTypes
@@ -378,7 +379,7 @@ var RESERVED_SPEC_KEYS = {
       propTypes,
       ReactPropTypeLocations.prop
     );
-    Constructor.propTypes = Object.assign(
+    Constructor.propTypes = assign(
       {},
       Constructor.propTypes,
       propTypes
@@ -866,7 +867,7 @@ var ReactCompositeComponentMixin = {
     }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
-      Object.assign({}, this._pendingState || this.state, partialState),
+      assign({}, this._pendingState || this.state, partialState),
       callback
     );
   },
@@ -954,7 +955,7 @@ var ReactCompositeComponentMixin = {
           name
         );
       }
-      return Object.assign({}, currentContext, childContext);
+      return assign({}, currentContext, childContext);
     }
     return currentContext;
   },
@@ -1332,7 +1333,7 @@ var ReactCompositeComponentMixin = {
 };
 
 var ReactCompositeComponentBase = function() {};
-Object.assign(
+assign(
   ReactCompositeComponentBase.prototype,
   ReactComponent.Mixin,
   ReactOwner.Mixin,
