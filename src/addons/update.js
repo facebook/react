@@ -170,7 +170,7 @@ function update(value, spec) {
     );
     if (Array.isArray(nextValue)){
       delKeys.forEach(function(i){
-        if (delKeys.propertyIsEnumerable(i)) {
+        if (nextValue.propertyIsEnumerable(i)) {
           nextValue[i] = null;
         }
       });
