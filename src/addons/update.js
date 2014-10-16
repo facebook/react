@@ -30,7 +30,7 @@ var COMMAND_SPLICE = keyOf({$splice: null});
 var COMMAND_SET = keyOf({$set: null});
 var COMMAND_MERGE = keyOf({$merge: null});
 var COMMAND_APPLY = keyOf({$apply: null});
-var COMMAND_DELETE = keyOf({$delete: null});
+var COMMAND_DELETE = keyOf({$unset: null});
 
 var ALL_COMMANDS_LIST = [
   COMMAND_PUSH,

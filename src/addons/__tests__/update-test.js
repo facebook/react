@@ -79,13 +79,13 @@ describe('update', function() {
     );
   });
 
-  it('should support delete', function() {
-    expect(update({a:1,b:2}, {$delete:'b'})).toEqual({a:1});
-    expect(update({a:1,b:2,c:3}, {$delete:['a','c','d']})).toEqual({b:2});
-    expect(update({a:1,b:2,c:3}, {$delete:{'a':'','b':''}})).toEqual({c:3});
-    expect(update(['a','b','c'], {$delete:[1,'foo',5]})).toEqual(['a',null,'c']);
-    expect(update.bind(null, 2, {$delete: 'foo'})).toThrow(
-      'Invariant Violation: update(): expected target of $delete to be an ' +
+  it('should support unset', function() {
+    expect(update({a:1,b:2}, {$unset:'b'})).toEqual({a:1});
+    expect(update({a:1,b:2,c:3}, {$unset:['a','c','d']})).toEqual({b:2});
+    expect(update({a:1,b:2,c:3}, {$unset:{'a':'','b':''}})).toEqual({c:3});
+    expect(update(['a','b','c'], {$unset:[1,'foo',5]})).toEqual(['a',null,'c']);
+    expect(update.bind(null, 2, {$unset: 'foo'})).toThrow(
+      'Invariant Violation: update(): expected target of $unset to be an ' +
       'object or array; got 2.'
     );
   });
@@ -101,7 +101,7 @@ describe('update', function() {
     expect(update.bind(null, {a: 'b'}, {a: 'c'})).toThrow(
       'Invariant Violation: update(): You provided a key path to update() ' +
       'that did not contain one of $push, $unshift, $splice, $set, $merge, ' +
-      '$apply, $delete. Did you forget to include {$set: ...}?'
+      '$apply, $unset. Did you forget to include {$set: ...}?'
     );
   });
 });
