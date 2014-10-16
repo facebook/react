@@ -154,15 +154,31 @@ function update(value, spec) {
   }
 
   if (spec.hasOwnProperty(COMMAND_DELETE)) {
+    var arg = spec[COMMAND_DELETE], delKeys;
+    if (Array.isArray(arg)){
+      delKeys = arg;
+    } else if (typeof arg === 'object') {
+      delKeys = Object.keys(arg);
+    } else {
+      delKeys = [arg];
+    }
     invariant(
-      nextValue && typeof nextValue === 'object',
-      'update(): expected target of %s to be an object; got %s.',
+      nextValue && (Array.isArray(nextValue) || typeof nextValue === 'object'),
+      'update(): expected target of %s to be an object or array; got %s.',
       COMMAND_DELETE,
       nextValue
     );
-    [].concat(spec[COMMAND_DELETE]).forEach(function(delKey){
-      delete nextValue[delKey];
-    });
+    if (Array.isArray(nextValue)){
+      delKeys.forEach(function(i){
+        if (delKeys.propertyIsEnumerable(i)) {
+          nextValue[i] = null;
+        }
+      });
+    } else {
+      delKeys.forEach(function(delKey){
+        delete nextValue[delKey];
+      });
+    }
   }
 
   for (var k in spec) {
