@@ -7,6 +7,7 @@ var TODO_COMPONENT = "\
 var TodoList = React.createClass({\n\
   render: function() {\n\
     var createItem = function(itemText) {\n\
+      if(!itemText) { return false } \n\
       return <li>{itemText}</li>;\n\
     };\n\
     return <ul>{this.props.items.map(createItem)}</ul>;\n\
@@ -32,7 +33,7 @@ var TodoApp = React.createClass({\n\
         <TodoList items={this.state.items} />\n\
         <form onSubmit={this.handleSubmit}>\n\
           <input onChange={this.onChange} value={this.state.text} />\n\
-          <button>{'Add #' + (this.state.items.length + 1)}</button>\n\
+          <button>{'Add'}</button>\n\
         </form>\n\
       </div>\n\
     );\n\
