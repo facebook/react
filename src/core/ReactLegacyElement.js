@@ -74,7 +74,7 @@ function warnForNonLegacyFactory(type) {
   warning(
     false,
     'Do not pass React.DOM.' + type.type + ' to JSX or createFactory. ' +
-    'Use the string "' + type + '" instead.'
+    'Use the string "' + type.type + '" instead.'
   );
 }
 
