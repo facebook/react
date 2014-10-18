@@ -7,7 +7,7 @@ prev: expose-component-functions.html
 next: children-undefined.html
 ---
 
-If you're using React components in a larger non-React application or transitioning your code to React, you may need to keep references to components. `React.renderComponent` returns a reference to the mounted component:
+If you're using React components in a larger non-React application, transitioning your code to React, or writing a test suite for your React application, you may need to keep references to components. `React.renderComponent` returns a reference to the mounted component:
 
 ```js
 /** @jsx React.DOM */
@@ -15,16 +15,17 @@ If you're using React components in a larger non-React application or transition
 var myComponent = React.renderComponent(<MyComponent />, myContainer);
 ```
 
-Keep in mind, however, that the "constructor" of a component doesn't return a component instance! It's just a **descriptor**: a lightweight representation that tells React what the mounted component should look like.
-
+Keep in mind that a reference to `<MyComponent />` (or the equivalent `MyComponent()`) is not a component instance! It is a **descriptor**: a lightweight representation that tells React what the mounted component should look like. Because descriptors are lightweight, they lack custom methods and other features that component instances have. 
 ```js
 /** @jsx React.DOM */
 
-var myComponent = <MyComponent />; // This is just a descriptor.
+var myDescriptor = <MyComponent />; // This is just a descriptor.
+myDescriptor.someCustomMethod();    // NOT OK - someCustomMethod is undefined
 
 // Some code here...
 
-myComponent = React.renderComponent(myComponent, myContainer);
+var myComponent = React.renderComponent(myDescriptor, myContainer);
+myComponent.someCustomMethod();     // OK
 ```
 
 > Note:
