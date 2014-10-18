@@ -674,8 +674,6 @@ var ReactMount = {
 
   getNode: getNode,
 
-  cacheNodeById: cacheNodeById,
-
   purgeID: purgeID
 };
 
