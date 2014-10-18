@@ -141,8 +141,7 @@ function getNode(id) {
 function cacheNodeById(id, node) {
   invariant(
     node instanceof HTMLElement,
-    'ReactMount: invalid component element.',
-    node
+    'ReactMount: invalid component element.'
   );
 
   if (nodeCache.hasOwnProperty(id)) {
