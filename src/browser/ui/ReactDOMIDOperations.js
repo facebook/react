@@ -156,7 +156,8 @@ var ReactDOMIDOperations = {
     'dangerouslyReplaceNodeWithMarkupByID',
     function(id, markup) {
       var node = ReactMount.getNode(id);
-      DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
+      var newNode = DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
+      ReactMount.cacheNodeById(id, newNode);
     }
   ),
 

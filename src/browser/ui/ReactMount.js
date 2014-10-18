@@ -131,6 +131,26 @@ function getNode(id) {
 }
 
 /**
+ * Allow to put a node in cache for an existing id without retraversing every sibling nodes
+ *
+ * @param {string} id A React-generated DOM ID.
+ * @param {DOMElement} node DOM node to put in cache
+ *
+ */
+
+function cacheNodeById(id, node) {
+  invariant(
+    node instanceof HTMLElement,
+    'ReactMount: invalid component element.',
+    node
+  );
+
+  if (nodeCache.hasOwnProperty(id)) {
+    nodeCache[id] = node;
+  }
+}
+
+/**
  * A node is "valid" if it is contained by a currently mounted container.
  *
  * This means that the node does not have to be contained by a document in
@@ -673,6 +693,8 @@ var ReactMount = {
   setID: setID,
 
   getNode: getNode,
+
+  cacheNodeById: cacheNodeById,
 
   purgeID: purgeID
 };

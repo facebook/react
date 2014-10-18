@@ -175,6 +175,8 @@ var Danger = {
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
+
+    return newChild;
   }
 
 };
