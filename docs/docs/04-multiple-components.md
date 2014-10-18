@@ -48,7 +48,7 @@ var ProfileLink = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <Avatar username="pwh" />,
   document.getElementById('example')
 );

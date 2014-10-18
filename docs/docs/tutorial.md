@@ -75,7 +75,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.renderComponent(
+React.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -96,7 +96,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.renderComponent(
+React.render(
   CommentBox(null),
   document.getElementById('content')
 );
@@ -112,7 +112,7 @@ The `<div>` tags are not actual DOM nodes; they are instantiations of React `div
 
 You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
 
-`React.renderComponent()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
+`React.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
 ## Composing components
 
@@ -278,7 +278,7 @@ var data = [
 ];
 ```
 
-We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `renderComponent()` call to pass this data into the `CommentList` via props:
+We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `React.render()` call to pass this data into the `CommentList` via props:
 
 ```javascript{7,15}
 // tutorial9.js
@@ -294,7 +294,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -330,7 +330,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 
 ```javascript{3}
 // tutorial11.js
-React.renderComponent(
+React.render(
   <CommentBox url="comments.json" />,
   document.getElementById('content')
 );
@@ -446,7 +446,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );

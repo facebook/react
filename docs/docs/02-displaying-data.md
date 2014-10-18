@@ -47,7 +47,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.renderComponent(
+  React.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
