@@ -62,7 +62,7 @@ var ReactDOMIDOperations = {
       );
 
       // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertantly setting to a string. This
+      // from the DOM node instead   of inadvertantly setting to a string. This
       // brings us in line with the same behavior we have on initial render.
       if (value != null) {
         DOMPropertyOperations.setValueForProperty(node, name, value);
@@ -157,7 +157,7 @@ var ReactDOMIDOperations = {
     function(id, markup) {
       var node = ReactMount.getNode(id);
       var newNode = DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-      ReactMount.cacheNodeById(id, newNode);
+      ReactMount.getID(newNode);
     }
   ),
 
