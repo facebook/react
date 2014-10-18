@@ -14,12 +14,10 @@
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 
 var warning = require('warning');
 
-// Store a reference to the <option> `ReactDOMComponent`. TODO: use string
-var option = ReactElement.createFactory(ReactDOM.option.type);
+var option = ReactElement.createFactory('option');
 
 /**
  * Implements an <option> native component that warns when `selected` is set.

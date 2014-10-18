@@ -17,15 +17,13 @@ var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
 
-// Store a reference to the <input> `ReactDOMComponent`. TODO: use string
-var input = ReactElement.createFactory(ReactDOM.input.type);
+var input = ReactElement.createFactory('input');
 
 var instancesByReactID = {};
 

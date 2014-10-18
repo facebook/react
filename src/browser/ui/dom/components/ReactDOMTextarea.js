@@ -17,7 +17,6 @@ var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -25,8 +24,7 @@ var invariant = require('invariant');
 
 var warning = require('warning');
 
-// Store a reference to the <textarea> `ReactDOMComponent`. TODO: use string
-var textarea = ReactElement.createFactory(ReactDOM.textarea.type);
+var textarea = ReactElement.createFactory('textarea');
 
 function forceUpdateIfMounted() {
   /*jshint validthis:true */

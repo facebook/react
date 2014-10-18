@@ -16,13 +16,11 @@ var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 
-// Store a reference to the <select> `ReactDOMComponent`. TODO: use string
-var select = ReactElement.createFactory(ReactDOM.select.type);
+var select = ReactElement.createFactory('select');
 
 function updateWithPendingValueIfMounted() {
   /*jshint validthis:true */

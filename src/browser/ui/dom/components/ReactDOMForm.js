@@ -16,10 +16,8 @@ var LocalEventTrapMixin = require('LocalEventTrapMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 
-// Store a reference to the <form> `ReactDOMComponent`. TODO: use string
-var form = ReactElement.createFactory(ReactDOM.form.type);
+var form = ReactElement.createFactory('form');
 
 /**
  * Since onSubmit doesn't bubble OR capture on the top level in IE8, we need
