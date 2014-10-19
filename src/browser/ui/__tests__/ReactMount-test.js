@@ -108,4 +108,27 @@ describe('ReactMount', function() {
 
     expect(instance1 === instance2).toBe(true);
   });
+
+  it('should call findComponentRoot once for each component rendered', function () {
+    spyOn(ReactMount, "findComponentRoot");
+
+    var container = document.createElement('container');
+    document.documentElement.appendChild(container);
+
+    var FindDOMNode = React.createClass({
+        componentDidMount: function() { 
+          this.getDOMNode(); 
+        }, 
+        render: function () { 
+          return <span />;
+        }
+    });
+
+    React.renderComponent(<div><FindDOMNode /></div>, container);
+    React.renderComponent(<div><div><FindDOMNode /></ div></div>, container);
+
+    expect(ReactMount.findComponentRoot.callCount).toBe(2);
+
+  });
+
 });
