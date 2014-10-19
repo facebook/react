@@ -175,7 +175,10 @@ var ReactDOMIDOperations = {
       for (var i = 0; i < updates.length; i++) {
         updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
       }
-      DOMChildrenOperations.processUpdates(updates, markup);
+      var children = DOMChildrenOperations.processUpdates(updates, markup);
+      for (var i = 0, len = children.length; i < len; i++) {
+        ReactMount.getID(children[i]);
+      }
     }
   )
 };

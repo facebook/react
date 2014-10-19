@@ -91,6 +91,7 @@ var DOMChildrenOperations = {
    *
    * @param {array<object>} updates List of update configurations.
    * @param {array<string>} markupList List of markup strings.
+   * @return {array<DOMElement>} renderedMarkup List of nodes rendered
    * @internal
    */
   processUpdates: function(updates, markupList) {
@@ -164,6 +165,8 @@ var DOMChildrenOperations = {
           break;
       }
     }
+
+    return renderedMarkup;
   }
 
 };
