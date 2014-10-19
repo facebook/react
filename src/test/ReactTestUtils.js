@@ -19,7 +19,6 @@ var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
-var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -98,10 +97,6 @@ var ReactTestUtils = {
   isCompositeComponentElementWithType: function(inst, type) {
     return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
              (inst.constructor === type));
-  },
-
-  isTextComponent: function(inst) {
-    return inst instanceof ReactTextComponent.type;
   },
 
   getInternalRepresentation: function(inst) {

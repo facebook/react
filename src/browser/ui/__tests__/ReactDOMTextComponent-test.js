@@ -13,7 +13,7 @@
 
 var React;
 
-describe('ReactTextComponent', function() {
+describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
     React = require('React');
   });

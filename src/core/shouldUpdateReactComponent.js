@@ -12,6 +12,8 @@
 
 "use strict";
 
+var ReactNativeComponent = require('ReactNativeComponent');
+
 /**
  * Given a `prevElement` and `nextElement`, determines if the existing
  * instance should be updated as opposed to being destroyed or replaced by a new
@@ -24,11 +26,19 @@
  * @protected
  */
 function shouldUpdateReactComponent(prevElement, nextElement) {
-  if (prevElement && nextElement &&
-      prevElement.type === nextElement.type &&
-      prevElement.key === nextElement.key &&
-      prevElement._owner === nextElement._owner) {
-    return true;
+  if (prevElement != null && nextElement != null) {
+    var prevType = typeof prevElement;
+    var nextType = typeof nextElement;
+    if (prevType === 'string' || prevType === 'number') {
+      return (nextType === 'string' || nextType === 'number');
+    } else {
+      return (
+        nextType === 'object' &&
+        prevElement.type === nextElement.type &&
+        prevElement.key === nextElement.key &&
+        prevElement._owner === nextElement._owner
+      );
+    }
   }
   return false;
 }

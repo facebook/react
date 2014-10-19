@@ -12,7 +12,6 @@
 
 "use strict";
 
-var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 
 var assign = require('Object.assign');
@@ -131,7 +130,8 @@ assign(reactComponentExpect.prototype, {
   },
 
   toBeTextComponent: function() {
-    expect(ReactTestUtils.isTextComponent(this.instance())).toBe(true);
+    var elementType = typeof this._instance._currentElement;
+    expect(elementType === 'string' || elementType === 'number').toBe(true);
     return this;
   },
 

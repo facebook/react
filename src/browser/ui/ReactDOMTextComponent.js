@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactTextComponent
+ * @providesModule ReactDOMTextComponent
  * @typechecks static-only
  */
 
@@ -14,7 +14,8 @@
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponent = require('ReactComponent');
-var ReactElement = require('ReactElement');
+var ReactComponentBrowserEnvironment =
+  require('ReactComponentBrowserEnvironment');
 
 var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -31,15 +32,25 @@ var invariant = require('invariant');
  *
  * TODO: Investigate representing React components in the DOM with text nodes.
  *
- * @class ReactTextComponent
+ * @class ReactDOMTextComponent
  * @extends ReactComponent
  * @internal
  */
-var ReactTextComponent = function(props) {
-  // This constructor and it's argument is currently used by mocks.
+var ReactDOMTextComponent = function(props) {
+  // This constructor and its argument is currently used by mocks.
 };
 
-assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
+assign(ReactDOMTextComponent.prototype, {
+
+  /**
+   * @param {ReactText} node
+   * @internal
+   */
+  construct: function(text) {
+    // TODO: This is really a ReactText (ReactNode), not a ReactElement
+    this._currentElement = text;
+    this._stringText = '' + text;
+  },
 
   /**
    * Creates the markup for this text node. This node is not intended to have
@@ -52,14 +63,8 @@ assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
    * @internal
    */
   mountComponent: function(rootID, transaction, mountDepth) {
-    ReactComponent.Mixin.mountComponent.call(
-      this,
-      rootID,
-      transaction,
-      mountDepth
-    );
-
-    var escapedText = escapeTextForBrowser(this.props);
+    this._rootNodeID = rootID;
+    var escapedText = escapeTextForBrowser(this._stringText);
 
     if (transaction.renderToStaticMarkup) {
       // Normally we'd wrap this in a `span` for the reasons stated above, but
@@ -78,38 +83,39 @@ assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
   /**
    * Updates this component by updating the text content.
    *
-   * @param {object} nextComponent Contains the next text content.
+   * @param {ReactText} nextText The next text content
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  receiveComponent: function(nextComponent, transaction) {
-    var nextProps = nextComponent.props;
-    if (nextProps !== this.props) {
-      // TODO: Save this as pending props and use performUpdateIfNecessary
-      // and/or updateComponent to do the actual update for consistency with
-      // other component types?
-      this.props = nextProps;
-      ReactComponent.BackendIDOperations.updateTextContentByID(
-        this._rootNodeID,
-        nextProps
-      );
+  receiveComponent: function(nextText, transaction) {
+    if (nextText !== this._currentElement) {
+      this._currentElement = nextText;
+      var nextStringText = '' + nextText;
+      if (nextStringText !== this._stringText) {
+        // TODO: Save this as pending props and use performUpdateIfNecessary
+        // and/or updateComponent to do the actual update for consistency with
+        // other component types?
+        this._stringText = nextStringText;
+        ReactComponent.BackendIDOperations.updateTextContentByID(
+          this._rootNodeID,
+          nextStringText
+        );
+      }
     }
   },
 
   updateComponent: function() {
     invariant(
       false,
-      'ReactTextComponent: updateComponent() should never be called'
+      'ReactDOMTextComponent: updateComponent() should never be called'
     );
+  },
+
+  unmountComponent: function() {
+    // TODO: Is this necessary?
+    ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
   }
 
 });
 
-var ReactTextComponentFactory = function(text) {
-  // Bypass validation and configuration
-  return new ReactElement(ReactTextComponent, null, null, null, null, text);
-};
-
-ReactTextComponentFactory.type = ReactTextComponent;
-
-module.exports = ReactTextComponentFactory;
+module.exports = ReactDOMTextComponent;

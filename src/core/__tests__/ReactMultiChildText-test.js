@@ -70,8 +70,7 @@ var expectChildren = function(d, children) {
       if (typeof child === 'string') {
         reactComponentExpect(d)
           .expectRenderedChildAt(i)
-          .toBeTextComponent()
-          .instance();
+          .toBeTextComponent();
 
         textNode = d.getDOMNode().childNodes[i].firstChild;
 

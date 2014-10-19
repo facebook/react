@@ -22,6 +22,7 @@ var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactDOM = require('ReactDOM');
 var ReactDOMComponent = require('ReactDOMComponent');
+var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
@@ -30,7 +31,6 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
 var ReactRef = require('ReactRef');
 var ReactServerRendering = require('ReactServerRendering');
-var ReactTextComponent = require('ReactTextComponent');
 
 var assign = require('Object.assign');
 var deprecated = require('deprecated');
@@ -122,7 +122,7 @@ if (
     InstanceHandles: ReactInstanceHandles,
     Mount: ReactMount,
     MultiChild: ReactMultiChild,
-    TextComponent: ReactTextComponent
+    TextComponent: ReactDOMTextComponent
   });
 }
 

@@ -32,6 +32,7 @@ var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
+var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -71,6 +72,10 @@ function inject() {
 
   ReactInjection.NativeComponent.injectGenericComponentClass(
     ReactDOMComponent
+  );
+
+  ReactInjection.NativeComponent.injectTextComponentClass(
+    ReactDOMTextComponent
   );
 
   ReactInjection.NativeComponent.injectComponentClasses({
