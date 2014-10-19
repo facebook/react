@@ -85,7 +85,7 @@ function defineMutationMembrane(prototype) {
  * @param {*} type
  * @param {string|object} ref
  * @param {*} key
- * @params {*} props
+ * @param {*} props
  * @internal
  */
 var ReactElement = function(type, key, ref, owner, context, props) {
