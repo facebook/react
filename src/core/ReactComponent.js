@@ -416,22 +416,6 @@ var ReactComponent = {
      */
     isOwnedBy: function(owner) {
       return this._owner === owner;
-    },
-
-    /**
-     * Gets another component, that shares the same owner as this one, by ref.
-     *
-     * @param {string} ref of a sibling Component.
-     * @return {?ReactComponent} the actual sibling Component.
-     * @final
-     * @internal
-     */
-    getSiblingByRef: function(ref) {
-      var owner = this._owner;
-      if (!owner || !owner.refs) {
-        return null;
-      }
-      return owner.refs[ref];
     }
   }
 };
