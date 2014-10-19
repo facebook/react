@@ -125,6 +125,9 @@ describe('ReactMount', function() {
     });
 
     React.renderComponent(<div><FindDOMNode /></div>, container);
+
+    expect(ReactMount.findComponentRoot.callCount).toBe(1);    
+
     React.renderComponent(<div><div><FindDOMNode /></ div></div>, container);
 
     expect(ReactMount.findComponentRoot.callCount).toBe(2);
