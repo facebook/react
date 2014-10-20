@@ -157,8 +157,8 @@ var ReactDOMIDOperations = {
     function(id, markup) {
       var node = ReactMount.getNode(id);
       var newNode = DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-      // As getID put the node in ReactMount cache, we use it to put newNode in the cache
-      // without recache every sibling nodes
+      // `getNode` populates ReactMount's node cache with all siblings, but the
+      // replaced node creates a hole. `getID` fills the hole with the new node.
       ReactMount.getID(newNode);
     }
   ),
