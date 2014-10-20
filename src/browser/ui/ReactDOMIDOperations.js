@@ -179,7 +179,6 @@ var ReactDOMIDOperations = {
       }
       var children = DOMChildrenOperations.processUpdates(updates, markup);
 
-      // Use of getID to put in ReactMount cache every children re-rendered
       for (var i = 0, len = children.length; i < len; i++) {
         ReactMount.getID(children[i]);
       }
