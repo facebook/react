@@ -499,6 +499,11 @@
 </code></pre></div>
 <p>Every DOM component is under <code>React.DOM</code>. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself!</p>
 
+<p>Any additional, user-defined, properties will be become properties of the rendered component. For example, here&#39;s how you would you render a <code>&lt;ul&gt;</code> with css class:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>
+</span>  <span class="p">...</span>
+<span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
+</code></pre></div>
 
     <div class="docs-prevnext">
       
