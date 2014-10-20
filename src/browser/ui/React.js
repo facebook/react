@@ -77,7 +77,7 @@ var React = {
   renderToString: ReactServerRendering.renderToString,
   renderToStaticMarkup: ReactServerRendering.renderToStaticMarkup,
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
-  isValidClass: ReactLegacyElement.isValidFactory,
+  isValidClass: ReactLegacyElement.isValidClass,
   isValidElement: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
 
