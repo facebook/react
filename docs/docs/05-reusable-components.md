@@ -103,8 +103,6 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
 
 ```javascript
-/** @jsx React.DOM */
-
 var CheckLink = React.createClass({
   render: function() {
     // transferPropsTo() will take any props passed to CheckLink
@@ -150,8 +148,6 @@ Components are the best way to reuse code in React, but sometimes very different
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
 ```javascript
-/** @jsx React.DOM */
-
 var SetIntervalMixin = {
   componentWillMount: function() {
     this.intervals = [];

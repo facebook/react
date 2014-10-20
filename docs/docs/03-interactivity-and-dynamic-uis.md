@@ -12,8 +12,6 @@ You've already [learned how to display data](/react/docs/displaying-data.html) w
 ## A Simple Example
 
 ```javascript
-/** @jsx React.DOM */
-
 var LikeButton = React.createClass({
   getInitialState: function() {
     return {liked: false};

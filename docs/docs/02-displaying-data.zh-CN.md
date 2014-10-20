@@ -35,8 +35,6 @@ next: jsx-in-depth.html
 在接下去的文档中，我们只关注 JavaScript 代码，假设我们把代码插入到上面那个模板中。用下面的代码替换掉上面用来占位的注释。
 
 ```javascript
-/** @jsx React.DOM */
-
 var HelloWorld = React.createClass({
   render: function() {
     return (

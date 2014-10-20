@@ -1,9 +1,4 @@
-/**
- * @jsx React.DOM
- */
-
 var TODO_COMPONENT = "\
-/** @jsx React.DOM */\n\
 var TodoList = React.createClass({\n\
   render: function() {\n\
     var createItem = function(itemText) {\n\

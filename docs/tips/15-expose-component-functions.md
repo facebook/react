@@ -12,8 +12,6 @@ There's another (uncommon) way of [communicating between components](/react/tips
 Say a list of todos, which upon clicking get removed. If there's only one unfinished todo left, animate it:
 
 ```js
-/** @jsx React.DOM */
-
 var Todo = React.createClass({
   render: function() {
     return <div onClick={this.props.onClick}>{this.props.title}</div>;

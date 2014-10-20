@@ -29,8 +29,6 @@ To interact with the browser, you'll need a reference to a DOM node. Every mount
 In order to get a reference to a React component, you can either use `this` to get the current React component, or you can use refs to refer to a component you own. They work like this:
 
 ```javascript
-/** @jsx React.DOM */
-
 var MyComponent = React.createClass({
   handleClick: function() {
     // Explicitly focus the text input using the raw DOM API.

@@ -10,8 +10,6 @@ next: children-props-type.html
 When specifying a pixel value for your inline `style` prop, React automatically appends the string "px" for you after your number value, so this works:
 
 ```js
-/** @jsx React.DOM */
-
 var divStyle = {height: 10}; // rendered as "height:10px"
 React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
 ```

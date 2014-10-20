@@ -12,21 +12,18 @@ Here's how `false` renders in different contexts:
 Renders as `id="false"`:
 
 ```js
-/** @jsx React.DOM */
 React.renderComponent(<div id={false} />, mountNode);
 ```
 
 String `"false"` as input value:
 
 ```js
-/** @jsx React.DOM */
 React.renderComponent(<input value={false} />, mountNode);
 ```
 
 No child:
 
 ```js
-/** @jsx React.DOM */
 React.renderComponent(<div>{false}</div>, mountNode);
 ```
 
