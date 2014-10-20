@@ -157,6 +157,8 @@ var ReactDOMIDOperations = {
     function(id, markup) {
       var node = ReactMount.getNode(id);
       var newNode = DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
+      // As getID put the node in ReactMount cache, we use it to put newNode in the cache
+      // without recache every sibling nodes
       ReactMount.getID(newNode);
     }
   ),
@@ -176,6 +178,8 @@ var ReactDOMIDOperations = {
         updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
       }
       var children = DOMChildrenOperations.processUpdates(updates, markup);
+
+      // Use of getID to put in ReactMount cache every children re-rendered
       for (var i = 0, len = children.length; i < len; i++) {
         ReactMount.getID(children[i]);
       }
