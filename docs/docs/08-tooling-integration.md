@@ -23,7 +23,7 @@ We have instructions for building from `master` [in our GitHub repository](https
 
 ### In-browser JSX Transform
 
-If you like using JSX, we provide an in-browser JSX transformer for development [on our download page](/react/downloads.html). Simply include a `<script type="text/jsx">` tag to engage the JSX transformer. Be sure to include the `/** @jsx React.DOM */` comment as well, otherwise the transformer will not run the transforms.
+If you like using JSX, we provide an in-browser JSX transformer for development [on our download page](/react/downloads.html). Simply include a `<script type="text/jsx">` tag to engage the JSX transformer.
 
 > Note:
 >

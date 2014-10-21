@@ -9,8 +9,6 @@ prev: references-to-components.html
 You can't access the children of your component through `this.props.children`. `this.props.children` designates the children being **passed onto you** by the owner:
 
 ```js
-/** @jsx React.DOM */
-
 var App = React.createClass({
   componentDidMount: function() {
     // This doesn't refer to the `span`s! It refers to the children between

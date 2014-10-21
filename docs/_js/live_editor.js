@@ -1,8 +1,3 @@
-/**
- * @jsx React.DOM
- */
-
-
 var IS_MOBILE = (
   navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)

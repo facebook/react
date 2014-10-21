@@ -35,8 +35,6 @@ Let's look at a really simple example. Create a `hello-react.html` file with the
 For the rest of the documentation, we'll just focus on the JavaScript code and assume it's inserted into a template like the one above. Replace the placeholder comment above with the following JS:
 
 ```javascript
-/** @jsx React.DOM */
-
 var HelloWorld = React.createClass({
   render: function() {
     return (

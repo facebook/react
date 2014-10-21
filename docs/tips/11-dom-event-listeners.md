@@ -14,8 +14,6 @@ next: initial-ajax.html
 Try to resize the window:
 
 ```js
-/** @jsx React.DOM */
-
 var Box = React.createClass({
   getInitialState: function() {
     return {windowWidth: window.innerWidth};

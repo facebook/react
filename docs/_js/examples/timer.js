@@ -1,9 +1,4 @@
-/**
- * @jsx React.DOM
- */
-
 var TIMER_COMPONENT = "\
-/** @jsx React.DOM */\n\
 var Timer = React.createClass({\n\
   getInitialState: function() {\n\
     return {secondsElapsed: 0};\n\

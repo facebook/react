@@ -1,10 +1,4 @@
-/**
- * @jsx React.DOM
- */
-
 var MARKDOWN_COMPONENT = "\
-/** @jsx React.DOM */\n\
-\n\
 var converter = new Showdown.converter();\n\
 \n\
 var MarkdownEditor = React.createClass({\n\

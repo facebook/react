@@ -39,8 +39,6 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
   <body>
     <div id="content"></div>
     <script type="text/jsx">
-      /** @jsx React.DOM */
-      // The above declaration must remain intact at the top of the script.
       // Your code here
     </script>
   </body>

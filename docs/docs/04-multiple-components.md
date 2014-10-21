@@ -19,8 +19,6 @@ By building modular components that reuse other components with well-defined int
 Let's create a simple Avatar component which shows a profile picture and username using the Facebook Graph API.
 
 ```javascript
-/** @jsx React.DOM */
-
 var Avatar = React.createClass({
   render: function() {
     return (
@@ -178,14 +176,14 @@ You can also key children by passing an object. The object keys will be used as 
 ```javascript
   render: function() {
     var items = {};
-    
+
     this.props.results.forEach(function(result) {
       // If result.id can look like a number (consider short hashes), then
       // object iteration order is not guaranteed. In this case, we add a prefix
       // to ensure the keys are strings.
       items['result-' + result.id] = <li>{result.text}</li>;
     });
-    
+
     return (
       <ol>
         {items}

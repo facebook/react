@@ -10,8 +10,6 @@ next: controlled-input-null-value.html
 Usually, a component's children (`this.props.children`) is an array of components:
 
 ```js
-/** @jsx React.DOM */
-
 var GenericWrapper = React.createClass({
   componentDidMount: function() {
     console.log(Array.isArray(this.props.children)); // => true
@@ -31,8 +29,6 @@ React.renderComponent(
 However, when there is only a single child, `this.props.children` will be the single child component itself _without the array wrapper_. This saves an array allocation.
 
 ```js
-/** @jsx React.DOM */
-
 var GenericWrapper = React.createClass({
   componentDidMount: function() {
     console.log(Array.isArray(this.props.children)); // => false
