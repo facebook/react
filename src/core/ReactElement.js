@@ -137,7 +137,16 @@ ReactElement.createElement = function(type, config, children) {
 
   if (config != null) {
     ref = config.ref === undefined ? null : config.ref;
-    key = config.key === undefined ? null : '' + config.key;
+    if (__DEV__) {
+      warning(
+        config.key !== null,
+        'createElement(...): Encountered component with a `key` of null. In ' +
+        'a future version, this will be treated as equivalent to the string ' +
+        '\'null\'; instead, provide an explicit key or use undefined.'
+      );
+    }
+    // TODO: Change this back to `config.key === undefined`
+    key = config.key == null ? null : '' + config.key;
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (config.hasOwnProperty(propName) &&
