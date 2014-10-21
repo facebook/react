@@ -227,6 +227,17 @@ ReactLegacyElementFactory.isValidFactory = function(factory) {
     factory.isReactLegacyFactory === LEGACY_MARKER;
 };
 
+ReactLegacyElementFactory.isValidClass = function(factory) {
+  if (__DEV__) {
+    warning(
+      false,
+      'isValidClass is deprecated and will be removed in a future release. ' +
+      'Use a more specific validator instead.'
+    );
+  }
+  return ReactLegacyElementFactory.isValidFactory(factory);
+};
+
 ReactLegacyElementFactory._isLegacyCallWarningEnabled = true;
 
 module.exports = ReactLegacyElementFactory;

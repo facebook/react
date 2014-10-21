@@ -108,10 +108,6 @@ describe('ReactDOM', function() {
     expect(dog.className).toBe('bigdog');
   });
 
-  it('should be a valid class', function() {
-    expect(React.isValidClass(ReactDOM.div)).toBe(false);
-  });
-
   it('allow React.DOM factories to be called without warnings', function() {
     spyOn(console, 'warn');
     var element = React.DOM.div();
