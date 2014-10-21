@@ -10,9 +10,9 @@ module.exports = {
     var result = output.code;
     if (options && options.sourceMap) {
       var map = inlineSourceMap(
-        output.sourceMap,
-        input,
-        options.sourceFilename
+          output.sourceMap,
+          input,
+          options.sourceFilename
       );
       result += '\n' + map;
     }
@@ -50,5 +50,5 @@ function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
   json.sourcesContent = [sourceCode];
   var base64 = Buffer(JSON.stringify(json)).toString('base64');
   return '//# sourceMappingURL=data:application/json;base64,' +
-         base64;
+      base64;
 }
