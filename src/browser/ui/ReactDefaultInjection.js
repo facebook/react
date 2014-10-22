@@ -89,7 +89,7 @@ function inject() {
 
   // This needs to happen after createFullPageComponent() otherwise the mixin
   // gets double injected.
-  ReactInjection.CompositeComponent.injectMixin(ReactBrowserComponentMixin);
+  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);

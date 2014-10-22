@@ -14,7 +14,7 @@
 var EventConstants = require('EventConstants');
 var LocalEventTrapMixin = require('LocalEventTrapMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 
@@ -27,7 +27,7 @@ var form = ReactElement.createFactory(ReactDOM.form.type);
  * do to accomplish this, but the most reliable is to make <form> a
  * composite component and use `componentDidMount` to attach the event handlers.
  */
-var ReactDOMForm = ReactCompositeComponent.createClass({
+var ReactDOMForm = ReactClass.createClass({
   displayName: 'ReactDOMForm',
 
   mixins: [ReactBrowserComponentMixin, LocalEventTrapMixin],

@@ -15,7 +15,7 @@ var AutoFocusMixin = require('AutoFocusMixin');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactMount = require('ReactMount');
@@ -52,7 +52,7 @@ function forceUpdateIfMounted() {
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
-var ReactDOMInput = ReactCompositeComponent.createClass({
+var ReactDOMInput = ReactClass.createClass({
   displayName: 'ReactDOMInput',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],

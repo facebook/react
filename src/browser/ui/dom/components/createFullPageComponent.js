@@ -13,7 +13,7 @@
 "use strict";
 
 // Defeat circular references by requiring this directly.
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 
 var invariant = require('invariant');
@@ -32,7 +32,7 @@ var invariant = require('invariant');
 function createFullPageComponent(tag) {
   var elementFactory = ReactElement.createFactory(tag);
 
-  var FullPageComponent = ReactCompositeComponent.createClass({
+  var FullPageComponent = ReactClass.createClass({
     displayName: 'ReactFullPageComponent' + tag,
 
     componentWillUnmount: function() {

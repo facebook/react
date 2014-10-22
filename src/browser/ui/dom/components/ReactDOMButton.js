@@ -13,7 +13,7 @@
 
 var AutoFocusMixin = require('AutoFocusMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 
@@ -39,7 +39,7 @@ var mouseListenerNames = keyMirror({
  * Implements a <button> native component that does not receive mouse events
  * when `disabled` is set.
  */
-var ReactDOMButton = ReactCompositeComponent.createClass({
+var ReactDOMButton = ReactClass.createClass({
   displayName: 'ReactDOMButton',
 
   mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
