@@ -825,6 +825,8 @@ var ReactCompositeComponentMixin = {
     }
     this._compositeLifeCycleState = null;
 
+    ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
+
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
 
