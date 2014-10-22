@@ -179,6 +179,6 @@ if (__DEV__) {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = '0.12.0-rc1';
+React.version = '0.13.0-alpha';
 
 module.exports = React;
