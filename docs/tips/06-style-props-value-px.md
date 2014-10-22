@@ -11,7 +11,7 @@ When specifying a pixel value for your inline `style` prop, React automatically 
 
 ```js
 var divStyle = {height: 10}; // rendered as "height:10px"
-React.renderComponent(<div style={divStyle}>Hello World!</div>, mountNode);
+React.render(<div style={divStyle}>Hello World!</div>, mountNode);
 ```
 
 See [Inline Styles](/react/tips/inline-styles.html) for more info.

@@ -21,7 +21,7 @@ var App = React.createClass({
   }
 });
 
-React.renderComponent(<App></App>, mountNode);
+React.render(<App></App>, mountNode);
 ```
 
 To access your own subcomponents (the `span`s), place [refs](http://facebook.github.io/react/docs/more-about-refs.html) on them.

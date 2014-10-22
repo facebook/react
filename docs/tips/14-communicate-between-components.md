@@ -31,7 +31,7 @@ var GroceryList = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <GroceryList items={['Apple', 'Banana', 'Cranberry']} />, mountNode
 );
 ```

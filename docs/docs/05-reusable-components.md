@@ -100,19 +100,18 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
+A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
 var CheckLink = React.createClass({
   render: function() {
-    // transferPropsTo() will take any props passed to CheckLink
-    // and copy them to <a>
-    return this.transferPropsTo(<a>{'√ '}{this.props.children}</a>);
+    // This takes any props passed to CheckLink and copies them to <a>
+    return <a {...this.props}>{'√ '}{this.props.children}</a>;
   }
 });
 
-React.renderComponent(
-  <CheckLink href="javascript:alert('Hello, world!');">
+React.render(
+  <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
   document.getElementById('example')
@@ -180,7 +179,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <TickTock />,
   document.getElementById('example')
 );
