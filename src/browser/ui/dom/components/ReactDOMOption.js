@@ -12,7 +12,7 @@
 "use strict";
 
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 
@@ -24,7 +24,7 @@ var option = ReactElement.createFactory(ReactDOM.option.type);
 /**
  * Implements an <option> native component that warns when `selected` is set.
  */
-var ReactDOMOption = ReactCompositeComponent.createClass({
+var ReactDOMOption = ReactClass.createClass({
   displayName: 'ReactDOMOption',
 
   mixins: [ReactBrowserComponentMixin],

@@ -15,7 +15,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
@@ -68,7 +68,7 @@ var React = {
   initializeTouchEvents: function(shouldUseTouch) {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
-  createClass: ReactCompositeComponent.createClass,
+  createClass: ReactClass.createClass,
   createElement: createElement,
   createFactory: createFactory,
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,

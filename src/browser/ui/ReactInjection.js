@@ -14,7 +14,7 @@
 var DOMProperty = require('DOMProperty');
 var EventPluginHub = require('EventPluginHub');
 var ReactComponent = require('ReactComponent');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactNativeComponent = require('ReactNativeComponent');
@@ -24,7 +24,7 @@ var ReactUpdates = require('ReactUpdates');
 
 var ReactInjection = {
   Component: ReactComponent.injection,
-  CompositeComponent: ReactCompositeComponent.injection,
+  Class: ReactClass.injection,
   DOMProperty: DOMProperty.injection,
   EmptyComponent: ReactEmptyComponent.injection,
   EventPluginHub: EventPluginHub.injection,

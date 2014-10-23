@@ -14,7 +14,7 @@
 var AutoFocusMixin = require('AutoFocusMixin');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactDOM = require('ReactDOM');
 var ReactUpdates = require('ReactUpdates');
@@ -103,7 +103,7 @@ function updateOptions(component, propValue) {
  * If `defaultValue` is provided, any options with the supplied values will be
  * selected.
  */
-var ReactDOMSelect = ReactCompositeComponent.createClass({
+var ReactDOMSelect = ReactClass.createClass({
   displayName: 'ReactDOMSelect',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
