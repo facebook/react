@@ -13,7 +13,7 @@ exports.setup = function(){
 };
 
 exports.fn = function(deferred){
-  React.renderComponent(todolist.App({ fakeDataCount: 333 }), _rootNode, function(){ deferred.resolve(); });
+  React.render(todolist.App({ fakeDataCount: 333 }), _rootNode, function(){ deferred.resolve(); });
 };
 
 exports.teardown = function(){

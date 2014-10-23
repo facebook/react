@@ -42,7 +42,7 @@ var reactVersions = [
 window.onload = function(){
   window.isDone = false;
 
-  React.renderComponent(
+  React.render(
     BrowserPerfRunnerApp({
       headless: perfRunner.getQueryParamArrayOrDefault('headless', [false])[0],
       react: perfRunner.getQueryParamArrayOrDefault('react', reactVersions),

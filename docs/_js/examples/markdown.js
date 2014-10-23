@@ -28,10 +28,10 @@ var MarkdownEditor = React.createClass({\n\
   }\n\
 });\n\
 \n\
-React.renderComponent(<MarkdownEditor />, mountNode);\
+React.render(<MarkdownEditor />, mountNode);\
 ";
 
-React.renderComponent(
+React.render(
   <ReactPlayground codeText={MARKDOWN_COMPONENT} />,
   document.getElementById('markdownExample')
 );

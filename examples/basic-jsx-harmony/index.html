@@ -41,7 +41,7 @@
       });
       var start = new Date().getTime();
       setInterval(() => {
-        React.renderComponent(
+        React.render(
           <ExampleApplication elapsed={new Date().getTime() - start} />,
           document.getElementById('container')
         );

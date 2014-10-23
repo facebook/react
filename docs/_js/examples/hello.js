@@ -5,10 +5,10 @@ var HelloMessage = React.createClass({\n\
   }\n\
 });\n\
 \n\
-React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
+React.render(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
-React.renderComponent(
+React.render(
   <ReactPlayground codeText={HELLO_COMPONENT} />,
   document.getElementById('helloExample')
 );

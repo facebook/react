@@ -125,4 +125,4 @@ var Example = React.createClass({
   }
 });
 
-React.renderComponent(<Example />, document.getElementById('jqueryexample'));
+React.render(<Example />, document.getElementById('jqueryexample'));

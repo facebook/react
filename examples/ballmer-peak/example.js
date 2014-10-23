@@ -38,7 +38,7 @@ var BallmerPeakCalculator = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <BallmerPeakCalculator />,
   document.getElementById('container')
 );
