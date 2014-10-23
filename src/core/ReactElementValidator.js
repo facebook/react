@@ -22,6 +22,7 @@ var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var getIteratorFn = require('getIteratorFn');
 var monitorCodeUse = require('monitorCodeUse');
 
 /**
@@ -68,7 +69,7 @@ function validateExplicitKey(component, parentType) {
 
   warnAndMonitorForKeyUse(
     'react_key_warning',
-    'Each child in an array should have a unique "key" prop.',
+    'Each child in an array or iterator should have a unique "key" prop.',
     component,
     parentType
   );
@@ -123,7 +124,9 @@ function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwnerName = null;
-  if (component._owner && component._owner !== ReactCurrentOwner.current) {
+  if (component &&
+      component._owner &&
+      component._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
     childOwnerName = component._owner.constructor.displayName;
 
@@ -161,7 +164,6 @@ function monitorUseOfObjectMap() {
  * @internal
  * @param {*} component Statically passed child of any type.
  * @param {*} parentType component's parent's type.
- * @return {boolean}
  */
 function validateChildKeys(component, parentType) {
   if (Array.isArray(component)) {
@@ -174,10 +176,24 @@ function validateChildKeys(component, parentType) {
   } else if (ReactElement.isValidElement(component)) {
     // This component was passed in a valid location.
     component._store.validated = true;
-  } else if (component && typeof component === 'object') {
-    monitorUseOfObjectMap();
-    for (var name in component) {
-      validatePropertyKey(name, component[name], parentType);
+  } else if (component) {
+    var iteratorFn = getIteratorFn(component);
+    // Entry iterators provide implicit keys.
+    if (iteratorFn && iteratorFn !== component.entries) {
+      var iterator = iteratorFn.call(component);
+      var step;
+      while (!(step = iterator.next()).done) {
+        if (ReactElement.isValidElement(step.value)) {
+          validateExplicitKey(step.value, parentType);
+        }
+      }
+    } else if (typeof component === 'object') {
+      monitorUseOfObjectMap();
+      for (var key in component) {
+        if (component.hasOwnProperty(key)) {
+          validatePropertyKey(key, component[key], parentType);
+        }
+      }
     }
   }
 }

@@ -185,8 +185,99 @@ describe('ReactElement', function() {
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
-      'Each child in an array should have a unique "key" prop'
+      'Each child in an array or iterator should have a unique "key" prop.'
     );
+  });
+
+  it('warns for keys for iterables of elements in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentFactory);
+
+    var iterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            var done = ++i > 2;
+            return { value: done ? undefined : Component(), done: done };
+          }
+        };
+      }
+    };
+
+    Component(null, iterable);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Each child in an array or iterator should have a unique "key" prop.'
+    );
+  });
+
+  it('does not warns for arrays of elements with keys', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentFactory);
+
+    Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
+
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('does not warns for iterable elements with keys', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentFactory);
+
+    var iterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            var done = ++i > 2;
+            return {
+              value: done ? undefined : Component({key: '#' + i}),
+              done: done
+            };
+          }
+        };
+      }
+    };
+
+    Component(null, iterable);
+
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
+  it('warns for numeric keys on objects in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentFactory);
+
+    Component(null, { 1: Component(), 2: Component() });
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Child objects should have non-numeric keys so ordering is preserved.'
+    );
+  });
+
+  it('does not warn for numeric keys in entry iterables in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentFactory);
+
+    var iterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            var done = ++i > 2;
+            return { value: done ? undefined : [i, Component()], done: done };
+          }
+        };
+      }
+    };
+    iterable.entries = iterable['@@iterator'];
+
+    Component(null, iterable);
+
+    expect(console.warn.argsForCall.length).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', function() {
