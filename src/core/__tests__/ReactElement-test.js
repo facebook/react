@@ -311,4 +311,10 @@ describe('ReactElement', function() {
     expect(instance.getDOMNode().tagName).toBe('DIV');
   });
 
+  it('is indistinguishable from a plain object', function() {
+    var element = React.createElement('div', { className: 'foo' });
+    var object = {};
+    expect(element.constructor).toBe(object.constructor);
+  });
+
 });
