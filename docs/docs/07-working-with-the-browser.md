@@ -50,7 +50,7 @@ var MyComponent = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <MyComponent />,
   document.getElementById('example')
 );

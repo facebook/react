@@ -125,7 +125,64 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  // Todo: test that nums/strings are converted to ReactComponents.
+  it('should traverse children of different kinds', function() {
+    var div = <div key="divNode" />;
+    var span = <span key="spanNode" />;
+    var a = <a key="aNode" />;
+
+    var traverseContext = [];
+    var traverseFn =
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+        context.push(true);
+      });
+
+    var instance = (
+      <div>
+        {div}
+        {[{span}]}
+        {{a: a}}
+        {'string'}
+        {1234}
+        {true}
+        {false}
+        {null}
+        {undefined}
+      </div>
+    );
+
+    traverseAllChildren(instance.props.children, traverseFn, traverseContext);
+
+    expect(traverseFn.calls.length).toBe(9);
+    expect(traverseContext.length).toEqual(9);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, div, '.$divNode', 0
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, span, '.1:0:$span:$spanNode', 1
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, a, '.2:$a:$aNode', 2
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, 'string', '.3', 3
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, 1234, '.4', 4
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, null, '.5', 5
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, null, '.6', 6
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, null, '.7', 7
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext, null, '.8', 8
+    );
+  });
 
   it('should be called for each child in nested structure', function() {
     var zero = <div key="keyZero" />;
@@ -228,6 +285,109 @@ describe('traverseAllChildren', function() {
       oneForceKey,
       '.$keyOne',
       1
+    );
+  });
+
+  it('should be called for each child in an iterable', function() {
+    var threeDivIterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            if (i++ < 3) {
+              return { value: <div key={'#'+i} />, done: false };
+            } else {
+              return { value: undefined, done: true };
+            }
+          }
+        };
+      }
+    };
+
+    var traverseContext = [];
+    var traverseFn =
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+        context.push(kid);
+      });
+
+    var instance = (
+      <div>
+        {threeDivIterable}
+      </div>
+    );
+
+    traverseAllChildren(instance.props.children, traverseFn, traverseContext);
+    expect(traverseFn.calls.length).toBe(3);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[0],
+      '.$#1',
+      0
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[1],
+      '.$#2',
+      1
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[2],
+      '.$#3',
+      2
+    );
+  });
+
+  it('should use keys from entry iterables', function() {
+    var threeDivEntryIterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            if (i++ < 3) {
+              return { value: ['#'+i, <div />], done: false };
+            } else {
+              return { value: undefined, done: true };
+            }
+          }
+        };
+      }
+    };
+    threeDivEntryIterable.entries = threeDivEntryIterable['@@iterator'];
+
+    var traverseContext = [];
+    var traverseFn =
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+        context.push(kid);
+      });
+
+    var instance = (
+      <div>
+        {threeDivEntryIterable}
+      </div>
+    );
+
+    traverseAllChildren(instance.props.children, traverseFn, traverseContext);
+    expect(traverseFn.calls.length).toBe(3);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[0],
+      '.$#1:0',
+      0
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[1],
+      '.$#2:0',
+      1
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[2],
+      '.$#3:0',
+      2
     );
   });
 

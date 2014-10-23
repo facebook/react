@@ -7,8 +7,6 @@
     "build": "browserify -t reactify -r react -r ./src/App > ../webapp/static/bundle.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Pete Hunt",
-  "license": "Apache 2",
   "dependencies": {
     "envify": "^1.2.1",
     "react": "^0.10.0",

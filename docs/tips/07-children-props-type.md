@@ -20,7 +20,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <GenericWrapper><span/><span/><span/></GenericWrapper>,
   mountNode
 );
@@ -43,7 +43,7 @@ var GenericWrapper = React.createClass({
   }
 });
 
-React.renderComponent(<GenericWrapper>hello</GenericWrapper>, mountNode);
+React.render(<GenericWrapper>hello</GenericWrapper>, mountNode);
 ```
 
 To make `this.props.children` easy to deal with, we've provided the [React.Children utilities](/react/docs/top-level-api.html#react.children).
