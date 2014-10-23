@@ -459,6 +459,14 @@ var ReactMount = {
       'componentDidUpdate.'
     );
 
+    invariant(
+      container && (
+        container.nodeType === ELEMENT_NODE_TYPE ||
+        container.nodeType === DOC_NODE_TYPE
+      ),
+      'unmountComponentAtNode(...): Target container is not a DOM element.'
+    );
+
     var reactRootID = getReactRootID(container);
     var component = instancesByReactRootID[reactRootID];
     if (!component) {
