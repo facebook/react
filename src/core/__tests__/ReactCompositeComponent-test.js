@@ -1302,7 +1302,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
       'the "statics" key. Define it as an instance property instead; it ' +
       'will still be accessible on the constructor.'
@@ -1353,7 +1353,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define `abc` on your component more than once. This conflict may be ' +
       'due to a mixin.'
     );
@@ -1378,7 +1378,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define `abc` on your component more than once. This conflict may be ' +
       'due to a mixin.'
     );
@@ -1394,7 +1394,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'Invariant Violation: ReactClass: You\'re attempting to ' +
       'use a component as a mixin. Instead, just use a regular object.'
     );
   });
@@ -1415,7 +1415,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'Invariant Violation: ReactClass: You\'re attempting to ' +
       'use a component class as a mixin. Instead, just use a regular object.'
     );
   });
