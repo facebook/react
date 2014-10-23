@@ -79,7 +79,7 @@ var visitors = {
     }
     this.traverse(nodePath);
   }
-}
+};
 
 function transform(ast, constants) {
   // TODO constants

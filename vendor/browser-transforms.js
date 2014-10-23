@@ -238,7 +238,7 @@ function loadScripts(scripts) {
       sourceMap: true
     };
     if (/;harmony=true(;|$)/.test(script.type)) {
-      options.harmony = true
+      options.harmony = true;
     }
 
     // script.async is always true for non-javascript script tags

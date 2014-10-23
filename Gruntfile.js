@@ -99,7 +99,7 @@ module.exports = function(grunt) {
     'populist:test'
   ]);
   grunt.registerTask('build:npm-react', ['version-check', 'jsx:normal', 'npm-react:release']);
-  grunt.registerTask('build:gem-react-source', ['build', 'gem-react-source:release'])
+  grunt.registerTask('build:gem-react-source', ['build', 'gem-react-source:release']);
 
   grunt.registerTask('webdriver-phantomjs', webdriverPhantomJSTask);
 
