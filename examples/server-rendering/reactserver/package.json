@@ -8,9 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "envify": "^1.2.1",
-    "react": "^0.10.0",
+    "envify": "^3.0.0",
+    "react": "^0.12.0",
     "express": "^3.5.1",
-    "node-jsx": "^0.10.0"
+    "node-jsx": "^0.12.0"
   }
 }
