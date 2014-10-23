@@ -1,7 +1,3 @@
-/**
- * @jsx React.DOM
- */
-
 function computeBallmerPeak(x) {
   // see: http://ask.metafilter.com/76859/Make-a-function-of-this-graph-Thats-like-an-antigraph
   x = x * 100;

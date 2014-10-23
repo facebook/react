@@ -1,6 +1,3 @@
-/**
- * @jsx React.DOM
- */
 var ExampleApplication = React.createClass({
   render: function() {
     var elapsed = Math.round(this.props.elapsed  / 100);
