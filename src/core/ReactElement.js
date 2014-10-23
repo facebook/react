@@ -120,11 +120,15 @@ var ReactElement = function(type, key, ref, owner, context, props) {
   this.props = props;
 };
 
+// We intentionally don't expose the function on the constructor property.
+// ReactElement should be indistinguishable from a plain object.
+ReactElement.prototype = {
+  _isReactElement: true
+};
+
 if (__DEV__) {
   defineMutationMembrane(ReactElement.prototype);
 }
-
-ReactElement.prototype._isReactElement = true;
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
