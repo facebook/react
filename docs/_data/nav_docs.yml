@@ -77,6 +77,8 @@
     title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
+  - id: glossary
+    title: React (Virtual) DOM Terminology
 - title: Flux
   items:
   - id: flux-overview

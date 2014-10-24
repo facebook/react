@@ -3,6 +3,7 @@ id: reconciliation
 title: Reconciliation
 permalink: reconciliation.html
 prev: special-non-dom-attributes.html
+next: glossary.html
 ---
 
 React's key design decision is to make the API seem like it re-renders the whole app on every update. This makes writing applications a lot easier but is also an incredible challenge to make it tractable. This article explains how with powerful heuristics we managed to turn a O(n<sup>3</sup>) problem into a O(n) one.
