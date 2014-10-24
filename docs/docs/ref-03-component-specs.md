@@ -96,6 +96,16 @@ string displayName
 ```
 
 The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html#react-composite-components).
+For reading it can be accessed with `constructor.displayName`. For example:
+
+```javascript
+var MyComponent = React.createClass({
+  displayName: 'MyDisplayName',
+  render: function() {
+    return <div>{this.constructor.displayName}</div>;
+  }
+});
+```
 
 
 ## Lifecycle Methods
