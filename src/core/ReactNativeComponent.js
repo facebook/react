@@ -58,7 +58,7 @@ function createInstanceForTag(tag, props, parentType) {
     return new genericComponentClass(tag, props);
   }
   // Unwrap legacy factories
-  return new componentClass.type(props);
+  return new componentClass(props);
 }
 
 var ReactNativeComponent = {

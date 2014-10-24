@@ -1237,8 +1237,8 @@ describe('ReactCompositeComponent', function() {
     expect(Component.ghi).toBe(null);
     expect(instance.constructor.jkl).toBe('mno');
     expect(Component.jkl).toBe('mno');
-    expect(instance.constructor.pqr()).toBe(Component.type);
-    expect(Component.pqr()).toBe(Component.type);
+    expect(instance.constructor.pqr()).toBe(Component);
+    expect(Component.pqr()).toBe(Component);
   });
 
   it('should throw if a reserved property is in statics', function() {

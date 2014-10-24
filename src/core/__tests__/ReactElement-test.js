@@ -26,7 +26,7 @@ describe('ReactElement', function() {
     ComponentFactory = React.createClass({
       render: function() { return <div />; }
     });
-    ComponentClass = ComponentFactory.type;
+    ComponentClass = ComponentFactory;
   });
 
   it('returns a complete element according to spec', function() {
@@ -336,13 +336,6 @@ describe('ReactElement', function() {
     expect(ReactElement.isValidElement("string")).toEqual(false);
     expect(ReactElement.isValidElement(React.DOM.div)).toEqual(false);
     expect(ReactElement.isValidElement(Component)).toEqual(false);
-  });
-
-  it('should expose the underlying class from a legacy factory', function() {
-    var Legacy = React.createClass({ render: function() { } });
-    var factory = React.createFactory(Legacy);
-    expect(factory.type).toBe(Legacy.type);
-    expect(factory().type).toBe(Legacy.type);
   });
 
   it('allows the use of PropTypes validators in statics', function() {
