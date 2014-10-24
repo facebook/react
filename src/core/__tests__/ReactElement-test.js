@@ -338,45 +338,6 @@ describe('ReactElement', function() {
     expect(ReactElement.isValidElement(Component)).toEqual(false);
   });
 
-  it('warns but allow a plain function in a factory to be invoked', function() {
-    spyOn(console, 'warn');
-    // This is a temporary helper to allow JSX with plain functions.
-    // This allow you to track down these callers and replace them with regular
-    // function calls.
-    var factory = React.createFactory(function (x) {
-      return 21 + x;
-    });
-    expect(factory(21)).toBe(42);
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'This JSX uses a plain function.'
-    );
-  });
-
-  it('warns but allow a plain function to be immediately invoked', function() {
-    spyOn(console, 'warn');
-    var result = React.createElement(function (x, y) {
-      return 21 + x + y;
-    }, 11, 10);
-    expect(result).toBe(42);
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'This JSX uses a plain function.'
-    );
-  });
-
-  it('warns but does not fail on undefined results', function() {
-    spyOn(console, 'warn');
-    var fn = function () { };
-    var result = React.createElement(fn, 1, 2, null);
-    expect(result).toBe(undefined);
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'This JSX uses a plain function.'
-    );
-  });
-
-
   it('should expose the underlying class from a legacy factory', function() {
     var Legacy = React.createClass({ render: function() { } });
     var factory = React.createFactory(Legacy);
