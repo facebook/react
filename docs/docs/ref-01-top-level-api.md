@@ -93,7 +93,7 @@ Verifies the object is a React component descriptor.
 
 ### React.DOM
 
-`React.DOM` provides all of the standard HTML tags needed to build a React app. You generally don't use it directly; instead, just include it as part of the `/** @jsx React.DOM */` docblock.
+`React.DOM` provides convenience wrappers around `React.createElement` for DOM components. These should only be used when not using JSX. For example, `React.DOM.div(null, 'Hello World!')`
 
 
 ### React.PropTypes
