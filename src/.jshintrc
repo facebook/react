@@ -15,10 +15,7 @@
   "noempty": true,
   "nonstandard": true,
   "maxlen": 80,
-  "onecase": true,
-  "regexdash": true,
   "sub": false,
-  "trailing": true,
   "undef": true,
   "unused": "vars",
 
