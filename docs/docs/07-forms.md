@@ -2,7 +2,7 @@
 id: forms
 title: Forms
 permalink: forms.html
-prev: reusable-components.html
+prev: transferring-props.html
 next: working-with-the-browser.html
 ---
 

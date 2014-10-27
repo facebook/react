@@ -70,33 +70,6 @@ bool isMounted()
 `isMounted()` returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
 
 
-### transferPropsTo
-
-```javascript
-ReactComponent transferPropsTo(ReactComponent targetComponent)
-```
-
-Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, `targetComponent` is returned as a convenience. This function is useful when creating simple HTML-like components:
-
-```javascript
-var Avatar = React.createClass({
-  render: function() {
-    return this.transferPropsTo(
-      <img src={"/avatars/" + this.props.userId + ".png"} userId={null} />
-    );
-  }
-});
-
-// <Avatar userId={17} width={200} height={200} />
-```
-
-Properties that are specified directly on the target component instance (such as `src` and `userId` in the above example) will not be overwritten by `transferPropsTo`.
-
-> Note:
->
-> Use `transferPropsTo` with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it's safer to explicitly copy the properties that you need onto the child component.
-
-
 ### setProps
 
 ```javascript
