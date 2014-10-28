@@ -23,6 +23,8 @@
     subitems:
     - id: jsx-in-depth
       title: JSX in Depth
+    - id: jsx-spread
+      title: JSX Spread Attributes
     - id: jsx-gotchas
       title: JSX Gotchas
   - id: interactivity-and-dynamic-uis
@@ -31,6 +33,8 @@
     title: Multiple Components
   - id: reusable-components
     title: Reusable Components
+  - id: transferring-props
+    title: Transferring Props
   - id: forms
     title: Forms
   - id: working-with-the-browser
