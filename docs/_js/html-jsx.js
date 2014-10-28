@@ -78,5 +78,5 @@ var HELLO_COMPONENT = "\
     }
   });
 
-  React.renderComponent(<HTMLtoJSXComponent />, document.getElementById('jsxCompiler'));
+  React.render(<HTMLtoJSXComponent />, document.getElementById('jsxCompiler'));
 }());

@@ -15,7 +15,7 @@ app.get('/', function(req, res){
   var component = require(path.resolve(req.query['module']));
   var props = JSON.parse(req.query['props'] || '{}');
 
-  res.send(React.renderComponentToString(component(props)));
+  res.send(React.renderToString(component(props)));
 });
 
 app.listen(3000);

@@ -26,9 +26,6 @@
     <script src="../../build/react.js"></script>
     <script src="../../build/JSXTransformer.js"></script>
     <script type="text/jsx;harmony=true">
-      /**
-       * @jsx React.DOM
-       */
       var ExampleApplication = React.createClass({
         render() {
           var elapsed = Math.round(this.props.elapsed  / 100);
@@ -41,7 +38,7 @@
       });
       var start = new Date().getTime();
       setInterval(() => {
-        React.renderComponent(
+        React.render(
           <ExampleApplication elapsed={new Date().getTime() - start} />,
           document.getElementById('container')
         );

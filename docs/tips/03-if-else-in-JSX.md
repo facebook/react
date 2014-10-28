@@ -14,7 +14,7 @@ next: self-closing-tag.html
 React.render(<div id="msg">Hello World!</div>, mountNode);
 
 // Is transformed to this JS:
-React.render(React.DOM.div({id:"msg"}, "Hello World!"), mountNode);
+React.render(React.createElement("div", {id:"msg"}, "Hello World!"), mountNode);
 ```
 
 This means that `if` statements don't fit in. Take this example:
@@ -24,7 +24,7 @@ This means that `if` statements don't fit in. Take this example:
 <div id={if (condition) { 'msg' }}>Hello World!</div>
 
 // Is transformed to this JS:
-React.DOM.div({id: if (condition) { 'msg' }}, "Hello World!");
+React.createElement("dov", {id: if (condition) { 'msg' }}, "Hello World!");
 ```
 
 That's not valid JS. You probably want to make use of a ternary expression:

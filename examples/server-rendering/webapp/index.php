@@ -27,9 +27,9 @@ function react_component($module, $props) {
   // multiple large pages very well. For that you'd be better off using
   // webpack.
   $startup_code =
-    '<script>require(\'react\').renderComponent(require(' . 
+    '<script>require(\'react\').render(require(' .
     json_encode($module) .
-    ')(' . $props_json . '), ' . 
+    ')(' . $props_json . '), ' .
     'document.getElementById(' . json_encode($container_id) . '))' .
     '</script>';
 

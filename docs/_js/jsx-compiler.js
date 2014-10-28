@@ -5,7 +5,7 @@ var HelloMessage = React.createClass({\n\
   }\n\
 });\n\
 \n\
-React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
+React.render(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
 function transformer(harmony, code) {
@@ -39,7 +39,7 @@ var CompilerPlayground = React.createClass({
     );
   },
 });
-React.renderComponent(
+React.render(
   <CompilerPlayground />,
   document.getElementById('jsxCompiler')
 );
