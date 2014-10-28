@@ -80,7 +80,7 @@ jsx --watch src/ build/
 
 ```javascript{2}
 React.render(
-  React.DOM.h1(null, 'Hello, world!'),
+  React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );
 ```

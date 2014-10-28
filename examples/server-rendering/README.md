@@ -7,7 +7,7 @@ This example demonstrates how React's server rendering works. Rather than demons
 You generally start a React app by doing something like this:
 
 ```javascript
-React.renderComponent(MyComponent({someData: ...}), document.getElementById('someContainer'));
+React.render(<MyComponent someData={...} />, document.getElementById('someContainer'));
 ```
 
 The problem is that `someContainer` will be an empty HTML element until the JavaScript downloads and executes. This is bad for page load performance (since the user can't see anything until the JS downloads and executes) and is bad for SEO (since the Googlebot can't see any content). React's server rendering solves this problem -- it lets you fill `someContainer` with *static HTML* on the server and "bring it to life" on the client *without* throwing out and re-creating the HTML.

@@ -39,12 +39,12 @@
         }
       });
 
-      // Call React.createFactory instead of directly call ExampleApplication({...}) in React.renderComponent
+      // Call React.createFactory instead of directly call ExampleApplication({...}) in React.render
       var ExampleApplicationFactory = React.createFactory(ExampleApplication);
 
       var start = new Date().getTime();
       setInterval(function() {
-        React.renderComponent(
+        React.render(
           ExampleApplicationFactory({elapsed: new Date().getTime() - start}),
           document.getElementById('container')
         );

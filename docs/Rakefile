@@ -4,12 +4,12 @@ require('yaml')
 
 desc "generate js from jsx"
 task :js do
-  system "../bin/jsx _js js"
+  system "../bin/jsx --harmony _js js"
 end
 
 desc "watch js"
 task :watch do
-  Process.spawn "../bin/jsx --watch _js js"
+  Process.spawn "../bin/jsx --watch --harmony _js js"
   Process.waitall
 end
 

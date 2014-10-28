@@ -18,7 +18,7 @@ exports.setup = function(){
   document.body.appendChild(_rootNode);
 };
 exports.fn = function(){
-  React.renderComponent(AwesomeComponent(null), _rootNode);
+  React.render(AwesomeComponent(null), _rootNode);
 };
 exports.teardown = function(){
   React.unmountComponentAtNode(_rootNode);

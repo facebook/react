@@ -77,12 +77,50 @@ React components are very simple. You can think of them as simple function that 
 
 We strongly believe that components are the right way to separate concerns rather than "templates" and "display logic." We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.
 
-We've found that the best solution for this problem is to generate markup directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs. In order to make this easier, we've added a very simple, **optional** HTML-like syntax for the function calls that generate markup called JSX.
+We've found that the best solution for this problem is to generate HTML and component trees directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs.
 
-**JSX lets you write JavaScript function calls with HTML syntax.** To generate a link in React using pure JavaScript you'd write: `React.DOM.a({href: 'http://facebook.github.io/react/'}, 'Hello React!')`. With JSX this becomes `<a href="http://facebook.github.io/react/">Hello React!</a>`. We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
+In order to make this easier, we've added a very simple, **optional** HTML-like syntax to create these React tree nodes.
 
-JSX is very small; the "hello, world" example above uses every feature of JSX. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
+**JSX lets you create JavaScript objects using HTML syntax.** To generate a link in React using pure JavaScript you'd write:
+
+`React.createElement('a', {href: 'http://facebook.github.io/react/'}, 'Hello!')`
+
+With JSX this becomes:
+
+`<a href="http://facebook.github.io/react/">Hello!</a>`
+
+We've found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so **JSX is not required to use React.**
+
+JSX is very small. To learn more about it, see [JSX in depth](/react/docs/jsx-in-depth.html). Or see the transform in action in [our live JSX compiler](/react/jsx-compiler.html).
 
 JSX is similar to HTML, but not exactly the same. See [JSX gotchas](/react/docs/jsx-gotchas.html) for some key differences.
 
 The easiest way to get started with JSX is to use the in-browser `JSXTransformer`. We strongly recommend that you don't use this in production. You can precompile your code using our command-line [react-tools](http://npmjs.org/package/react-tools) package.
+
+
+## React without JSX
+
+JSX is completely optional. You don't have to use JSX with React. You can create these trees through `React.createElement`. The first argument is the tag, pass a properties object as the second argument and children to the third argument.
+
+```javascript
+var child = React.createElement('li', null, 'Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child);
+React.render(root, document.body);
+```
+
+As a convenience you can create short-hand factory function to create elements from custom components.
+
+```javascript
+var Factory = React.createFactory(ComponentClass);
+...
+var root = Factory({ custom: 'prop' });
+React.render(root, document.body);
+```
+
+React already have built-in factories for common HTML tags:
+
+```javascript
+var root = React.DOM.ul({ className: 'my-list' },
+             React.DOM.li(null, 'Text Content')
+           );
+```

@@ -190,7 +190,7 @@ var ReactPlayground = React.createClass({
     try {
       var compiledCode = this.compileCode();
       if (this.props.renderCode) {
-        React.renderComponent(
+        React.render(
           <CodeMirrorEditor codeText={compiledCode} readOnly={true} />,
           mountNode
         );
@@ -199,7 +199,7 @@ var ReactPlayground = React.createClass({
       }
     } catch (err) {
       this.setTimeout(function() {
-        React.renderComponent(
+        React.render(
           <div className="playgroundError">{err.toString()}</div>,
           mountNode
         );

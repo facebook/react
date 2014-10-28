@@ -8,9 +8,9 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "envify": "^1.2.1",
-    "react": "^0.10.0",
+    "envify": "^3.0.0",
+    "react": "^0.12.0",
     "browserify": "^3.38.0",
-    "reactify": "^0.10.0"
+    "reactify": "^0.15.0"
   }
 }

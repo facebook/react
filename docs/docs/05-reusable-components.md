@@ -3,7 +3,7 @@ id: reusable-components
 title: Reusable Components
 permalink: reusable-components.html
 prev: multiple-components.html
-next: forms.html
+next: transferring-props.html
 ---
 
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, fewer bugs, and fewer bytes down the wire.

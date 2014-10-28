@@ -7,38 +7,38 @@ var BenchmarkQueue = React.createClass({
     onCompleteEach: React.PropTypes.func,
     onError: React.PropTypes.func
   },
-  
+
   getDefaultProps: function(){
     return {
       maxTime: 5
     };
   },
-  
+
   getInitialState: function(){
     return {
       queue: this.props.initialQueue.slice()
     };
   },
-  
+
   setItemState: function(state){
     state.test = this.state.queue[0].test;
     state.react = this.state.queue[0].react;
     this.props.onChange(state);
   },
-  
+
   handleContextReady: function(window){
     var benchmark = window.Benchmark(window.exports);
     benchmark.options.maxTime = this.props.maxTime; //DEBUG
 
     var itemState = {
       testRunnerURL: window.location.href,
-      
+
       name: window.exports.name,
       platform: window.Benchmark.platform.description,
       reactVersion: window.React.version,
-      
+
       isMinified: (function(){
-        var code = window.React.renderComponent.toString();
+        var code = window.React.render.toString();
         return code.indexOf(',') - code.indexOf('(') <= 2;
       }())
     };
@@ -66,11 +66,11 @@ var BenchmarkQueue = React.createClass({
     });
     benchmark.run({async:true});
   },
-  
+
   shouldComponentUpdate: function(nextProps, nextState){
     return nextState.queue.length < this.state.queue.length;
   },
-  
+
   render: function(){
     if (!(this.state.queue && this.state.queue.length > 0)){
       return React.DOM.div({style:{display:'none'}});
@@ -110,11 +110,11 @@ var BrowserPerfRunnerContext = React.createClass({
   // _handleFrameError: function(error){
   //   console.error('BrowserPerfRunnerContext', error);
   // },
-  // 
+  //
   // _handleFrameLoad: function(event){
   //   console.log('BrowserPerfRunnerContext', event);
   // },
-  // 
+  //
   _handleMessage: function(event){
     if (location.href.indexOf(event.origin) !== 0)
       return console.debug('BrowserPerfRunnerContext#_handleMessage ignored message from ' + event.origin);
@@ -191,5 +191,5 @@ var BrowserPerfRunnerContext = React.createClass({
     right: '100%',
     bottom: '100%'
   }
-  
+
 });
