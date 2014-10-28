@@ -26,15 +26,15 @@ For more information about the specification object, see [Component Specs and Li
 
 ```javascript
 ReactComponent render(
-  ReactComponent component,
+  ReactElement element,
   DOMElement container,
   [function callback]
 )
 ```
 
-Render a React component into the DOM in the supplied `container` and return a reference to the component.
+Render a ReactElement into the DOM in the supplied `container` and return a reference to the component.
 
-If the React component was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
+If the ReactElement was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React component.
 
 If the optional callback is provided, it will be executed after the component is rendered or updated.
 
@@ -73,22 +73,14 @@ string renderToStaticMarkup(ReactComponent component)
 
 Similar to `renderToString`, except this doesn't create extra DOM attributes such as `data-react-id`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
 
-### React.isValidClass
+
+### React.isValidElement
 
 ```javascript
-boolean isValidClass(* factory)
+boolean isValidElement(* object)
 ```
 
-Verifies the factory is a React class descriptor. See `React.createClass`.
-
-
-### React.isValidComponent
-
-```javascript
-boolean isValidComponent(* object)
-```
-
-Verifies the object is a React component descriptor.
+Verifies the object is a ReactElement.
 
 
 ### React.DOM

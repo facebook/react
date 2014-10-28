@@ -13,14 +13,14 @@ If you're using React components in a larger non-React application or transition
 var myComponent = React.render(<MyComponent />, myContainer);
 ```
 
-Keep in mind, however, that the "constructor" of a component doesn't return a component instance! It's just a **descriptor**: a lightweight representation that tells React what the mounted component should look like.
+Keep in mind, however, that the JSX doesn't return a component instance! It's just a **ReactElement**: a lightweight representation that tells React what the mounted component should look like.
 
 ```js
-var myComponent = <MyComponent />; // This is just a descriptor.
+var myComponentElement = <MyComponent />; // This is just a ReactElement.
 
 // Some code here...
 
-myComponent = React.render(myComponent, myContainer);
+var myComponentInstance = React.render(myComponentElement, myContainer);
 ```
 
 > Note:
