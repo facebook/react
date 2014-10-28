@@ -407,8 +407,32 @@ describe('ReactPropTypes', function() {
     });
 
     it('should still work for deprecated typechecks', function() {
-      typeCheckPass(PropTypes.renderable, []);
-      typeCheckPass(PropTypes.renderable.isRequired, []);
+      // We can't use typeCheckPass here because the warning module may do
+      // something different in some environments. Luckily they should be fine
+      // if they detect that console.warn is spied upon.
+      spyOn(console, 'warn');
+
+      // typeCheckPass(PropTypes.renderable, []);
+      var error = PropTypes.renderable(
+        {testProp: []},
+        'testProp',
+        'testComponent',
+        ReactPropTypeLocations.prop
+      );
+
+      expect(error).toBe(undefined);
+      expect(console.warn.calls.length).toBe(1);
+
+      // typeCheckPass(PropTypes.renderable.isRequired, []);
+      error = PropTypes.renderable.isRequired(
+        {testProp: []},
+        'testProp',
+        'testComponent',
+        ReactPropTypeLocations.prop
+      );
+
+      expect(error).toBe(undefined);
+      expect(console.warn.calls.length).toBe(1);
     });
   });
 
