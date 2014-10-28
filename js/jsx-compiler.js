@@ -1,16 +1,11 @@
-/**
- * @jsx React.DOM
- */
-
 var HELLO_COMPONENT = "\
-/** @jsx React.DOM */\n\
 var HelloMessage = React.createClass({\n\
   render: function() {\n\
     return <div>Hello {this.props.name}</div>;\n\
   }\n\
 });\n\
 \n\
-React.renderComponent(<HelloMessage name=\"John\" />, mountNode);\
+React.render(<HelloMessage name=\"John\" />, mountNode);\
 ";
 
 function transformer(harmony, code) {
@@ -26,25 +21,25 @@ var CompilerPlayground = React.createClass({displayName: 'CompilerPlayground',
   },
   render: function() {
     return (
-      React.DOM.div(null, 
-        ReactPlayground({
+      React.createElement("div", null, 
+        React.createElement(ReactPlayground, {
           codeText: HELLO_COMPONENT, 
           renderCode: true, 
           transformer: transformer.bind(null, this.state.harmony), 
           showCompiledJSTab: false}
         ), 
-        React.DOM.label({className: "compiler-option"}, 
-          React.DOM.input({
+        React.createElement("label", {className: "compiler-option"}, 
+          React.createElement("input", {
             type: "checkbox", 
             onChange: this.handleHarmonyChange, 
             checked: this.state.harmony}), ' ', 
-          "Enable ES6 transforms (", React.DOM.code(null, "--harmony"), ")"
+          "Enable ES6 transforms (", React.createElement("code", null, "--harmony"), ")"
         )
       )
     );
   },
 });
-React.renderComponent(
-  CompilerPlayground(null),
+React.render(
+  React.createElement(CompilerPlayground, null),
   document.getElementById('jsxCompiler')
 );

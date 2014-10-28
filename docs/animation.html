@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -361,7 +375,7 @@
   <div class="inner-content">
     <h1>
       Animation
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.1-animation.md" target="_blank">Edit on GitHub</a>
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.1-animation.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
@@ -370,9 +384,7 @@
 <p><code>ReactCSSTransitionGroup</code> is based on <code>ReactTransitionGroup</code> and is an easy way to perform CSS transitions and animations when a React component enters or leaves the DOM. It&#39;s inspired by the excellent <a href="http://www.nganimate.org/">ng-animate</a> library.</p>
 <h3><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h3>
 <p><code>ReactCSSTransitionGroup</code> is the interface to <code>ReactTransitions</code>. This is a simple element that wraps all of the components you are interested in animating. Here&#39;s an example where we fade list items in and out.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">TodoList</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -407,6 +419,12 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>You must provide <a href="/react/docs/multiple-components.html#dynamic-children">the <code>key</code> attribute</a> for all children of <code>ReactCSSTransitionGroup</code>, even if rendering a single item. This is how React will determine which children have entered, left, or stayed.</p>
+</blockquote>
+
 <p>In this component, when a new item is added to <code>ReactCSSTransitionGroup</code> it will get the <code>example-enter</code> CSS class and the <code>example-enter-active</code> CSS class added in the next tick. This is a convention based on the <code>transitionName</code> prop.</p>
 
 <p>You can use these classes to trigger a CSS animation or transition. For example, try adding this CSS and adding a new list item:</p>
@@ -444,14 +462,12 @@
 <span class="hll">      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleAdd</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Add</span> <span class="nx">Item</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
 </span><span class="hll">        <span class="p">{</span><span class="nx">items</span><span class="p">}</span>
-</span>      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
+</span><span class="hll">      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+</span>    <span class="p">);</span>
   <span class="p">}</span>
 </code></pre></div><h3><a class="anchor" name="animating-one-or-zero-items"></a>Animating One or Zero Items <a class="hash-link" href="#animating-one-or-zero-items">#</a></h3>
 <p>Although in the example above we rendered a list of items into <code>ReactCSSTransitionGroup</code>, the children of <code>ReactCSSTransitionGroup</code> can be one or zero items. This makes it possible to animate a single element entering or leaving. Similarly, you can animate a new element replacing the current element, with the new element animating in while the current animates out. For example, we can implement a simple image carousel like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">ReactCSSTransitionGroup</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">CSSTransitionGroup</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">ImageCarousel</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
@@ -467,13 +483,7 @@
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>You must provide <a href="/react/docs/multiple-components.html#dynamic-children">the <code>key</code> attribute</a> for all children of <code>ReactCSSTransitionGroup</code>, even if rendering a single item. This is how React will determine which children have entered, left, or stayed.</p>
-</blockquote>
-<h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
+</code></pre></div><h3><a class="anchor" name="disabling-animations"></a>Disabling Animations <a class="hash-link" href="#disabling-animations">#</a></h3>
 <p>You can disable animating <code>enter</code> or <code>leave</code> animations if you want. For example, sometimes you may want an <code>enter</code> animation and no <code>leave</code> animation, but <code>ReactCSSTransitionGroup</code> waits for an animation to complete before removing your DOM node. You can add <code>transitionEnter={false}</code> or <code>transitionLeave={false}</code> props to <code>ReactCSSTransitionGroup</code> to disable these animations.</p>
 
 <blockquote>
@@ -493,14 +503,20 @@
 <p>This is called when the <code>willLeave</code> <code>callback</code> is called (at the same time as <code>componentWillUnmount</code>).</p>
 <h3><a class="anchor" name="rendering-a-different-component"></a>Rendering a Different Component <a class="hash-link" href="#rendering-a-different-component">#</a></h3>
 <p>By default <code>ReactTransitionGroup</code> renders as a <code>span</code>. You can change this behavior by providing a <code>component</code> prop. For example, here&#39;s how you would render a <code>&lt;ul&gt;</code>:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span><span class="o">&gt;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span><span class="o">&gt;</span>
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
-<p>Every DOM component is under <code>React.DOM</code>. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself!</p>
+<p>Every DOM component that React can render is available for use. However, <code>component</code> does not need to be a DOM component. It can be any React component you want; even ones you&#39;ve written yourself!</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Prior to v0.12, when using DOM components, the <code>component</code> prop needed to be a reference to <code>React.DOM.*</code>. Since the component is simply passed to <code>React.createElement</code>, it must now be a string. Composite components must pass the factory.</p>
+</blockquote>
 
 <p>Any additional, user-defined, properties will be become properties of the rendered component. For example, here&#39;s how you would you render a <code>&lt;ul&gt;</code> with css class:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">}</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="hll"><span class="o">&lt;</span><span class="nx">ReactTransitionGroup</span> <span class="nx">component</span><span class="o">=</span><span class="s2">&quot;ul&quot;</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;animated-list&quot;</span><span class="o">&gt;</span>
 </span>  <span class="p">...</span>
 <span class="o">&lt;</span><span class="err">/ReactTransitionGroup&gt;</span>
 </code></pre></div>
@@ -522,7 +538,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

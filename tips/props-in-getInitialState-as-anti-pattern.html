@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -254,6 +263,11 @@
         
           <li>
             <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
             
           </li>
         
@@ -370,9 +384,7 @@
 <p>Using props, passed down from parent, to generate state in <code>getInitialState</code> often leads to duplication of &quot;source of truth&quot;, i.e. where the real data is. Whenever possible, compute values on-the-fly to ensure that they don&#39;t get out of sync later on and cause maintenance trouble.</p>
 
 <p><strong>Bad example:</strong></p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">MessageBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">MessageBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">nameWithQualifier</span><span class="o">:</span> <span class="s1">&#39;Mr. &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">};</span>
   <span class="p">},</span>
@@ -382,25 +394,21 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MessageBox</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Rogers&quot;</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MessageBox</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Rogers&quot;</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>Better:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">MessageBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">MessageBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;Mr. &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MessageBox</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Rogers&quot;</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MessageBox</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Rogers&quot;</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>(For more complex logic, simply isolate the computation in a method.)</p>
 
 <p>However, it&#39;s <strong>not</strong> an anti-pattern if you make it clear that synchronization&#39;s not the goal here:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">Counter</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Counter</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// naming it initialX clearly indicates that the only purpose</span>
     <span class="c1">// of the passed down prop is to initialize something internally</span>
@@ -416,7 +424,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Counter</span> <span class="nx">initialCount</span><span class="o">=</span><span class="p">{</span><span class="mi">7</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Counter</span> <span class="nx">initialCount</span><span class="o">=</span><span class="p">{</span><span class="mi">7</span><span class="p">}</span><span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 
     <div class="docs-prevnext">
@@ -436,7 +444,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

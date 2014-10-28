@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -254,6 +263,11 @@
         
           <li>
             <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
             
           </li>
         
@@ -429,7 +443,7 @@
 
 <p>You can build top-down or bottom-up. That is, you can either start with building the components higher up in the hierarchy (i.e. starting with <code>FilterableProductTable</code>) or with the ones lower in it (<code>ProductRow</code>). In simpler examples it&#39;s usually easier to go top-down and on larger projects it&#39;s easier to go bottom-up and write tests as you build.</p>
 
-<p>At the end of this step you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>renderComponent()</code> again the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on since React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular, easy to reason about, and fast.</p>
+<p>At the end of this step you&#39;ll have a library of reusable components that render your data model. The components will only have <code>render()</code> methods since this is a static version of your app. The component at the top of the hierarchy (<code>FilterableProductTable</code>) will take your data model as a prop. If you make a change to your underlying data model and call <code>React.render()</code> again the UI will be updated. It&#39;s easy to see how your UI is updated and where to make changes since there&#39;s nothing complicated going on since React&#39;s <strong>one-way data flow</strong> (also called <em>one-way binding</em>) keeps everything modular, easy to reason about, and fast.</p>
 
 <p>Simply refer to the <a href="http://facebook.github.io/react/docs/">React docs</a> if you need help executing this step.</p>
 <h3><a class="anchor" name="a-brief-interlude-props-vs-state"></a>A brief interlude: props vs state <a class="hash-link" href="#a-brief-interlude-props-vs-state">#</a></h3>
@@ -524,7 +538,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

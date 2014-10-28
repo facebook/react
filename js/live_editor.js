@@ -1,8 +1,3 @@
-/**
- * @jsx React.DOM
- */
-
-
 var IS_MOBILE = (
   navigator.userAgent.match(/Android/i)
     || navigator.userAgent.match(/webOS/i)
@@ -46,13 +41,13 @@ var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
     var editor;
 
     if (IS_MOBILE) {
-      editor = React.DOM.pre({style: {overflow: 'scroll'}}, this.props.codeText);
+      editor = React.createElement("pre", {style: {overflow: 'scroll'}}, this.props.codeText);
     } else {
-      editor = React.DOM.textarea({ref: "editor", defaultValue: this.props.codeText});
+      editor = React.createElement("textarea", {ref: "editor", defaultValue: this.props.codeText});
     }
 
     return (
-      React.DOM.div({style: this.props.style, className: this.props.className}, 
+      React.createElement("div", {style: this.props.style, className: this.props.className}, 
         editor
       )
     );
@@ -121,7 +116,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     } catch (err) {}
 
     var JSContent =
-      CodeMirrorEditor({
+      React.createElement(CodeMirrorEditor, {
         key: "js", 
         className: "playgroundStage CodeMirror-readonly", 
         onChange: this.handleCodeChange, 
@@ -130,7 +125,7 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       );
 
     var JSXContent =
-      CodeMirrorEditor({
+      React.createElement(CodeMirrorEditor, {
         key: "jsx", 
         onChange: this.handleCodeChange, 
         className: "playgroundStage", 
@@ -143,30 +138,30 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       'playground-tab' + (isJS ? ' playground-tab-active' : '');
 
     var JSTab =
-      React.DOM.div({
+      React.createElement("div", {
         className: JSTabClassName, 
         onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JS)}, 
           "Compiled JS"
       );
 
     var JSXTab =
-      React.DOM.div({
+      React.createElement("div", {
         className: JSXTabClassName, 
         onClick: this.handleCodeModeSwitch.bind(this, this.MODES.JSX)}, 
           this.props.editorTabTitle
       )
 
     return (
-      React.DOM.div({className: "playground"}, 
-        React.DOM.div(null, 
+      React.createElement("div", {className: "playground"}, 
+        React.createElement("div", null, 
           JSXTab, 
           this.props.showCompiledJSTab && JSTab
         ), 
-        React.DOM.div({className: "playgroundCode"}, 
+        React.createElement("div", {className: "playgroundCode"}, 
           isJS ? JSContent : JSXContent
         ), 
-        React.DOM.div({className: "playgroundPreview"}, 
-          React.DOM.div({ref: "mount"})
+        React.createElement("div", {className: "playgroundPreview"}, 
+          React.createElement("div", {ref: "mount"})
         )
       )
     );
@@ -195,8 +190,8 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
     try {
       var compiledCode = this.compileCode();
       if (this.props.renderCode) {
-        React.renderComponent(
-          CodeMirrorEditor({codeText: compiledCode, readOnly: true}),
+        React.render(
+          React.createElement(CodeMirrorEditor, {codeText: compiledCode, readOnly: true}),
           mountNode
         );
       } else {
@@ -204,8 +199,8 @@ var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
       }
     } catch (err) {
       this.setTimeout(function() {
-        React.renderComponent(
-          React.DOM.div({className: "playgroundError"}, err.toString()),
+        React.render(
+          React.createElement("div", {className: "playgroundError"}, err.toString()),
           mountNode
         );
       }, 500);

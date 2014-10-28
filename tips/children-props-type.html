@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -362,9 +376,7 @@
     <h1>Type of the Children props</h1>
     <div class="subHeader"></div>
     <p>Usually, a component&#39;s children (<code>this.props.children</code>) is an array of components:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; true</span>
   <span class="p">},</span>
@@ -374,15 +386,13 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
   <span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="nx">span</span><span class="o">/&gt;&lt;</span><span class="err">/GenericWrapper&gt;,</span>
   <span class="nx">mountNode</span>
 <span class="p">);</span>
 </code></pre></div>
 <p>However, when there is only a single child, <code>this.props.children</code> will be the single child component itself <em>without the array wrapper</em>. This saves an array allocation.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">GenericWrapper</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">));</span> <span class="c1">// =&gt; false</span>
 
@@ -396,7 +406,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;</span><span class="nx">hello</span><span class="o">&lt;</span><span class="err">/GenericWrapper&gt;, mountNode);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">GenericWrapper</span><span class="o">&gt;</span><span class="nx">hello</span><span class="o">&lt;</span><span class="err">/GenericWrapper&gt;, mountNode);</span>
 </code></pre></div>
 <p>To make <code>this.props.children</code> easy to deal with, we&#39;ve provided the <a href="/react/docs/top-level-api.html#react.children">React.Children utilities</a>.</p>
 
@@ -418,7 +428,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

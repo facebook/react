@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -364,9 +378,7 @@
     <p>There&#39;s another (uncommon) way of <a href="/react/tips/communicate-between-components.html">communicating between components</a>: simply expose a method on the child component for the parent to call.</p>
 
 <p>Say a list of todos, which upon clicking get removed. If there&#39;s only one unfinished todo left, animate it:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Todo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">title</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
   <span class="p">},</span>
@@ -407,7 +419,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Todos</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Todos</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
 <p>Alternatively, you could have achieved this by passing the <code>todo</code> an <code>isLastUnfinishedItem</code> prop, let it check this prop in <code>componentDidUpdate</code>, then animate itself; however, this quickly gets messy if you pass around different props to control animations.</p>
 
@@ -429,7 +441,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

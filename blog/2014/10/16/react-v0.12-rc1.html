@@ -63,6 +63,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2014/10/28/react-v0.12.html">React v0.12</a></li>
+      
         <li><a href="/react/blog/2014/10/27/react-js-conf.html">React.js Conf</a></li>
       
         <li><a href="/react/blog/2014/10/17/community-roundup-23.html">Community Round-up #23</a></li>
@@ -80,8 +82,6 @@
         <li><a href="/react/blog/2014/09/03/introducing-the-jsx-specification.html">Introducing the JSX Specification</a></li>
       
         <li><a href="/react/blog/2014/08/03/community-roundup-21.html">Community Round-up #21</a></li>
-      
-        <li><a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">Flux: Actions and the Dispatcher</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -163,7 +163,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.12.0-rc
 
 <p>You do NOT need to change the way to define <code>key</code> and <code>ref</code>, only if you need to read it. E.g. <code>&lt;div key=&quot;my-key&quot; /&gt;</code> and <code>div({ key: &#39;my-key&#39; })</code> still works.</p>
 <h2><a class="anchor" name="breaking-change-default-props-resolution"></a>Breaking Change: Default Props Resolution <a class="hash-link" href="#breaking-change-default-props-resolution">#</a></h2>
-<p>This is a subtle difference but <code>defaultProps</code> are now resolved at <code>ReactElement</code> creation time instead of when it&#39;s mounted. This is means that we can avoid allocating an extra object for the resolve props.</p>
+<p>This is a subtle difference but <code>defaultProps</code> are now resolved at <code>ReactElement</code> creation time instead of when it&#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.</p>
 
 <p>You will primarily see this breaking if you&#39;re also using <code>transferPropsTo</code>.</p>
 <h2><a class="anchor" name="deprecated-transferpropsto"></a>Deprecated: transferPropsTo <a class="hash-link" href="#deprecated-transferpropsto">#</a></h2>
@@ -204,7 +204,10 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.12.0-rc
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

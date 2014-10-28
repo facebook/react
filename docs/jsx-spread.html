@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Cloning Components | React</title>
+  <title>JSX Spread Attributes | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Cloning Components | React">
+  <meta property="og:title" content="JSX Spread Attributes | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/clone-with-props.html">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-spread.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -124,7 +124,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                    <a href="/react/docs/jsx-spread.html" class="active">JSX Spread Attributes</a>
                   </li>
                 
                   <li>
@@ -200,7 +200,7 @@
                   </li>
                 
                   <li>
-                    <a href="/react/docs/clone-with-props.html" class="active">Cloning Components</a>
+                    <a href="/react/docs/clone-with-props.html">Cloning Components</a>
                   </li>
                 
                   <li>
@@ -374,32 +374,60 @@
 
   <div class="inner-content">
     <h1>
-      Cloning Components
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.5-clone-with-props.md" target="_blank">Edit on GitHub</a>
+      JSX Spread Attributes
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02.2-jsx-spread.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>In rare situations a component may want to change the props of a component that it doesn&#39;t own (like changing the <code>className</code> of a component passed as <code>this.props.children</code>). Other times it may want to make multiple copies of a component passed to it. <code>cloneWithProps()</code> makes this possible.</p>
-<h4><a class="anchor" name="reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops"></a><code>ReactComponent React.addons.cloneWithProps(ReactComponent component, object? extraProps)</code> <a class="hash-link" href="#reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops">#</a></h4>
-<p>Do a shallow copy of <code>component</code> and merge any props provided by <code>extraProps</code>. The <code>className</code> and <code>style</code> props will be merged intelligently.</p>
+    <p>If you know all the properties that you want to place on a component a head of time, it is easy to use JSX:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="nx">x</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="nx">y</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div><h2><a class="anchor" name="mutating-props-is-bad-mkay"></a>Mutating Props is Bad, mkay <a class="hash-link" href="#mutating-props-is-bad-mkay">#</a></h2>
+<p>If you don&#39;t know which properties you want to set, you might be tempted to add them onto the object later:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span> <span class="c1">// bad</span>
+  <span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">bar</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span> <span class="c1">// also bad</span>
+</code></pre></div>
+<p>This is an anti-pattern because it means that we can&#39;t help you check the right propTypes until way later. This means that your propTypes errors end up with a cryptic stack trace.</p>
 
+<p>The props should be considered immutable at this point. Mutating the props object somewhere else could cause unexpected consequences so ideally it would be a frozen object at this point.</p>
+<h2><a class="anchor" name="spread-attributes"></a>Spread Attributes <a class="hash-link" href="#spread-attributes">#</a></h2>
+<p>Now you can use a new feature of JSX called spread attributes:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
+  <span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
+  <span class="nx">props</span><span class="p">.</span><span class="nx">bar</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>The properties of the object that you pass in are copied onto the component&#39;s props.</p>
+
+<p>You can use this multiple times or combine it with other attributes. The specification order is important. Later attributes override previous ones.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;default&#39;</span> <span class="p">};</span>
+  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;override&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;override&#39;</span>
+</code></pre></div><h2><a class="anchor" name="whats-with-the-weird-...-notation"></a>What&#39;s with the weird <code>...</code> notation? <a class="hash-link" href="#whats-with-the-weird-...-notation">#</a></h2>
+<p>The <code>...</code> operator (or spread operator) is already supported for <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">arrays in ES6</a>. There is also an ES7 proposal for <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">Object Rest and Spread Properties</a>.</p>
+
+<p>In fact, you can already use this in our code base as an experimental syntax:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">oldObj</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="nx">bar</span><span class="o">:</span> <span class="s1">&#39;world&#39;</span> <span class="p">};</span>
+  <span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="p">{</span> <span class="p">...</span><span class="nx">oldObj</span><span class="p">,</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;hi&#39;</span> <span class="p">};</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newObj</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;hi&#39;;</span>
+  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newObj</span><span class="p">.</span><span class="nx">bar</span><span class="p">);</span> <span class="c1">// &#39;world&#39;;</span>
+</code></pre></div>
+<p>Merging two objects can be expressed as:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">ab</span> <span class="o">=</span> <span class="p">{</span> <span class="p">...</span><span class="nx">a</span><span class="p">,</span> <span class="p">...</span><span class="nx">b</span> <span class="p">};</span>
+</code></pre></div>
 <blockquote>
 <p>Note:</p>
 
-<p><code>cloneWithProps</code> does not transfer <code>key</code> to the cloned component. If you wish to preserve the key, add it to the <code>extraProps</code> object:
-<code>js
-var clonedComponent = cloneWithProps(originalComponent, { key : originalComponent.key });
-</code>
-<code>ref</code> is similarly not preserved.</p>
+<p>Use the <a href="http://npmjs.org/package/react-tools">JSX command-line tool</a> with the <code>--harmony</code> flag to activate the experimental ES7 syntax.</p>
 </blockquote>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/test-utils.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/jsx-in-depth.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/update.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/jsx-gotchas.html">Next &rarr;</a>
       
     </div>
   </div>

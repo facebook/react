@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>React v0.12 | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="React v0.12 | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site">
+          <li><a href="/react/docs/getting-started.html">docs</a></li>
+          <li><a href="/react/support.html">support</a></li>
+          <li><a href="/react/downloads.html">download</a></li>
+          <li><a href="/react/blog/" class="active">blog</a></li>
+          <li><a href="http://github.com/facebook/react">github</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap blogContent">
+  <div class="nav-docs nav-blog">
+  <div class="nav-docs-section">
+    <h3>Recent posts</h3>
+    <ul>
+      
+        <li><a href="/react/blog/2014/10/28/react-v0.12.html" class="active">React v0.12</a></li>
+      
+        <li><a href="/react/blog/2014/10/27/react-js-conf.html">React.js Conf</a></li>
+      
+        <li><a href="/react/blog/2014/10/17/community-roundup-23.html">Community Round-up #23</a></li>
+      
+        <li><a href="/react/blog/2014/10/16/react-v0.12-rc1.html">React v0.12 RC</a></li>
+      
+        <li><a href="/react/blog/2014/10/14/introducing-react-elements.html">Introducing React Elements</a></li>
+      
+        <li><a href="/react/blog/2014/09/24/testing-flux-applications.html">Testing Flux Applications</a></li>
+      
+        <li><a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a></li>
+      
+        <li><a href="/react/blog/2014/09/12/community-round-up-22.html">Community Round-up #22</a></li>
+      
+        <li><a href="/react/blog/2014/09/03/introducing-the-jsx-specification.html">Introducing the JSX Specification</a></li>
+      
+        <li><a href="/react/blog/2014/08/03/community-roundup-21.html">Community Round-up #21</a></li>
+      
+      <li><a href="/react/blog/all.html">All posts ...</a></li>
+    </ul>
+  </div>
+</div>
+
+  <div class="inner-content">
+    <h1>React v0.12</h1>
+    <p class="meta">October 28, 2014 by Paul O’Shannessy</p>
+
+    <hr>
+
+    <div class="post">
+      <p>We&#39;re happy to announce the availability of React v0.12! After over a week of baking as the release candidate, we uncovered and fixed a few small issues. Thanks to all of you who upgraded and gave us feedback!</p>
+
+<p>We have talked a lot about some of the bigger changes in this release. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced new terminology</a> and changed APIs to clean up and simplify some of the concepts of React. <a href="/react/blog/2014/10/16/react-v0.12-rc1.html">We also made several changes to JSX</a> and deprecated a few functions. We won&#39;t go into depth about these changes again but we encourage you to read up on these changes in the linked posts. We&#39;ll summarize these changes and discuss some of the other changes and how they may impact you below. As always, a full changelog is also included below.</p>
+
+<p>The release is available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-0.12.0.js">http://fb.me/react-0.12.0.js</a><br>
+Minified build for production: <a href="http://fb.me/react-0.12.0.min.js">http://fb.me/react-0.12.0.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.12.0.js">http://fb.me/react-with-addons-0.12.0.js</a><br>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.12.0.min.js">http://fb.me/react-with-addons-0.12.0.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="http://fb.me/JSXTransformer-0.12.0.js">http://fb.me/JSXTransformer-0.12.0.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.12.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+<h2><a class="anchor" name="new-terminology-amp-updated-apis"></a>New Terminology &amp; Updated APIs <a class="hash-link" href="#new-terminology-amp-updated-apis">#</a></h2>
+<p>v0.12 is bringing about some new terminology. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced</a> this 2 weeks ago and we&#39;ve also documented it in <a href="/react/docs/glossary.html">a new section of the documentation</a>. As a part of this, we also corrected many of our top-level APIs to align with the terminology. <code>Component</code> has been removed from all of our <code>React.render*</code> methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with <code>render</code> methods in your component classes, we decided to keep the top-level functions short and sweet. <code>React.renderComponent</code> is now <code>React.render</code>.</p>
+
+<p>We also corrected some other misnomers. <code>React.isValidComponent</code> actually determines if the argument is a ReactElement, so it has been renamed to <code>React.isValidElement</code>. In the same vein, <code>React.PropTypes.component</code> is now <code>React.PropTypes.element</code> and <code>React.PropTypes.renderable</code> is now <code>React.PropTypes.node</code>.</p>
+
+<p>The old methods will still work but will warn upon first use. They will be removed in v0.13.</p>
+<h2><a class="anchor" name="jsx-changes"></a>JSX Changes <a class="hash-link" href="#jsx-changes">#</a></h2>
+<p><a href="/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes">We talked more in depth about these before</a>, so here are the highlights.</p>
+
+<ul>
+<li>No more <code>/** @jsx React.DOM */</code>!</li>
+<li>We no longer transform to a straight function call. <code>&lt;Component/&gt;</code> now becomes <code>React.createElement(Component)</code></li>
+<li>DOM components don&#39;t make use of <code>React.DOM</code>, instead we pass the tag name directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code></li>
+<li>We introduced spread attributes as a quick way to transfer props.</li>
+</ul>
+<h2><a class="anchor" name="devtools-improvements-no-more-__internals"></a>DevTools Improvements, No More <code>__internals</code> <a class="hash-link" href="#devtools-improvements-no-more-__internals">#</a></h2>
+<p>For months we&#39;ve gotten complaints about the React DevTools message. It shouldn&#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!</p>
+
+<p>As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. <code>React.__internals</code> is no more.</p>
+<h2><a class="anchor" name="license-change---bsd"></a>License Change - BSD <a class="hash-link" href="#license-change---bsd">#</a></h2>
+<p>We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.</p>
+
+<p>You can read the full text of the <a href="https://github.com/facebook/react/blob/master/LICENSE">LICENSE</a> and <a href="https://github.com/facebook/react/blob/master/PATENTS"><code>PATENTS</code></a> files on GitHub.</p>
+
+<hr>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+<ul>
+<li><code>key</code> and <code>ref</code> moved off props object, now accessible on the element directly</li>
+<li>React is now BSD licensed with accompanying Patents grant</li>
+<li>Default prop resolution has moved to Element creation time instead of mount time, making them effectively static</li>
+<li><code>React.__internals</code> is removed - it was exposed for DevTools which no longer needs access</li>
+<li>Composite Component functions can no longer be called directly - they must be wrapped with <code>React.createFactory</code> first. This is handled for you when using JSX.</li>
+</ul>
+<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+<ul>
+<li>Spread operator (<code>{...}</code>) introduced to deprecate <code>this.transferPropsTo</code></li>
+<li>Added support for more HTML attributes: <code>acceptCharset</code>, <code>classID</code>, <code>manifest</code></li>
+</ul>
+<h4><a class="anchor" name="deprecations"></a>Deprecations <a class="hash-link" href="#deprecations">#</a></h4>
+<ul>
+<li><code>React.renderComponent</code> --&gt; <code>React.render</code></li>
+<li><code>React.renderComponentToString</code> --&gt; <code>React.renderToString</code></li>
+<li><code>React.renderComponentToStaticMarkup</code> --&gt; <code>React.renderToStaticMarkup</code></li>
+<li><code>React.isValidComponent</code> --&gt; <code>React.isValidElement</code></li>
+<li><code>React.PropTypes.component</code> --&gt; <code>React.PropTypes.element</code></li>
+<li><code>React.PropTypes.renderable</code> --&gt; <code>React.PropTypes.node</code></li>
+<li><strong>DEPRECATED</strong> <code>React.isValidClass</code></li>
+<li><strong>DEPRECATED</strong> <code>instance.transferPropsTo</code></li>
+<li><strong>DEPRECATED</strong> Returning <code>false</code> from event handlers to preventDefault</li>
+<li><strong>DEPRECATED</strong> Convenience Constructor usage as function, instead wrap with <code>React.createFactory</code></li>
+<li><strong>DEPRECATED</strong> use of <code>key={null}</code> to assign implicit keys</li>
+</ul>
+<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li>Better handling of events and updates in nested results, fixing value restoration in &quot;layered&quot; controlled components</li>
+<li>Correctly treat <code>event.getModifierState</code> as case sensitive</li>
+<li>Improved normalization of <code>event.charCode</code></li>
+<li>Better error stacks when involving autobound methods</li>
+<li>Removed DevTools message when the DevTools are installed</li>
+<li>Correctly detect required language features across browsers</li>
+<li>Fixed support for some HTML attributes:
+
+<ul>
+<li><code>list</code> updates correctly now</li>
+<li><code>scrollLeft</code>, <code>scrollTop</code> removed, these should not be specified as props</li>
+</ul></li>
+<li>Improved error messages</li>
+</ul>
+<h3><a class="anchor" name="react-with-addons"></a>React With Addons <a class="hash-link" href="#react-with-addons">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+<ul>
+<li><code>React.addons.batchedUpdates</code> added to API for hooking into update cycle</li>
+</ul>
+<h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+<ul>
+<li><code>React.addons.update</code> uses <code>assign</code> instead of <code>copyProperties</code> which does <code>hasOwnProperty</code> checks. Properties on prototypes will no longer be updated correctly.</li>
+</ul>
+<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li>Fixed some issues with CSS Transitions</li>
+</ul>
+<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3><h4><a class="anchor" name="breaking-changes"></a>Breaking Changes <a class="hash-link" href="#breaking-changes">#</a></h4>
+<ul>
+<li>Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components</li>
+<li>JSX no longer transforms to simple function calls</li>
+</ul>
+<h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+<ul>
+<li><code>@jsx React.DOM</code> no longer required</li>
+<li>spread (<code>{...}</code>) operator introduced to allow easier use of props</li>
+</ul>
+<h4><a class="anchor" name="bug-fixes"></a>Bug Fixes <a class="hash-link" href="#bug-fixes">#</a></h4>
+<ul>
+<li>JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)</li>
+</ul>
+
+    </div>
+
+    <div class="fb-like" data-send="true" data-width="650" data-show-faces="false"></div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

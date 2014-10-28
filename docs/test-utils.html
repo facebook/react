@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -361,7 +375,7 @@
   <div class="inner-content">
     <h1>
       Test Utilities
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/09.4-test-utils.md" target="_blank">Edit on GitHub</a>
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.4-test-utils.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
@@ -383,9 +397,9 @@
 <h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span><span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span> <span class="nx">string</span><span class="o">?</span> <span class="nx">mockTagName</span><span class="p">)</span>
 </code></pre></div>
 <p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
-<h3><a class="anchor" name="isdescriptoroftype"></a>isDescriptorOfType <a class="hash-link" href="#isdescriptoroftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDescriptorOfType</span><span class="p">(</span><span class="nx">ReactDescriptor</span> <span class="nx">descriptor</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
+<h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
 </code></pre></div>
-<p>Returns true if <code>descriptor</code> is an instance of a React <code>componentClass</code>.</p>
+<p>Returns true if <code>element</code> is a ReactElement whose type is of a React <code>componentClass</code>.</p>
 <h3><a class="anchor" name="isdomcomponent"></a>isDOMComponent <a class="hash-link" href="#isdomcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isDOMComponent</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">instance</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns true if <code>instance</code> is a DOM component (such as a <code>&lt;div&gt;</code> or <code>&lt;span&gt;</code>).</p>
@@ -438,7 +452,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

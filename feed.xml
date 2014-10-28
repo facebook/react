@@ -7,6 +7,126 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.12</title>
+				<description>&lt;p&gt;We&amp;#39;re happy to announce the availability of React v0.12! After over a week of baking as the release candidate, we uncovered and fixed a few small issues. Thanks to all of you who upgraded and gave us feedback!&lt;/p&gt;
+
+&lt;p&gt;We have talked a lot about some of the bigger changes in this release. &lt;a href=&quot;/react/blog/2014/10/14/introducing-react-elements.html&quot;&gt;We introduced new terminology&lt;/a&gt; and changed APIs to clean up and simplify some of the concepts of React. &lt;a href=&quot;/react/blog/2014/10/16/react-v0.12-rc1.html&quot;&gt;We also made several changes to JSX&lt;/a&gt; and deprecated a few functions. We won&amp;#39;t go into depth about these changes again but we encourage you to read up on these changes in the linked posts. We&amp;#39;ll summarize these changes and discuss some of the other changes and how they may impact you below. As always, a full changelog is also included below.&lt;/p&gt;
+
+&lt;p&gt;The release is available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.0.js&quot;&gt;http://fb.me/react-0.12.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.0.min.js&quot;&gt;http://fb.me/react-0.12.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0.js&quot;&gt;http://fb.me/react-with-addons-0.12.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.0.js&quot;&gt;http://fb.me/JSXTransformer-0.12.0.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-terminology-amp-updated-apis&quot;&gt;&lt;/a&gt;New Terminology &amp;amp; Updated APIs &lt;a class=&quot;hash-link&quot; href=&quot;#new-terminology-amp-updated-apis&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;v0.12 is bringing about some new terminology. &lt;a href=&quot;/react/blog/2014/10/14/introducing-react-elements.html&quot;&gt;We introduced&lt;/a&gt; this 2 weeks ago and we&amp;#39;ve also documented it in &lt;a href=&quot;/react/docs/glossary.html&quot;&gt;a new section of the documentation&lt;/a&gt;. As a part of this, we also corrected many of our top-level APIs to align with the terminology. &lt;code&gt;Component&lt;/code&gt; has been removed from all of our &lt;code&gt;React.render*&lt;/code&gt; methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with &lt;code&gt;render&lt;/code&gt; methods in your component classes, we decided to keep the top-level functions short and sweet. &lt;code&gt;React.renderComponent&lt;/code&gt; is now &lt;code&gt;React.render&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;We also corrected some other misnomers. &lt;code&gt;React.isValidComponent&lt;/code&gt; actually determines if the argument is a ReactElement, so it has been renamed to &lt;code&gt;React.isValidElement&lt;/code&gt;. In the same vein, &lt;code&gt;React.PropTypes.component&lt;/code&gt; is now &lt;code&gt;React.PropTypes.element&lt;/code&gt; and &lt;code&gt;React.PropTypes.renderable&lt;/code&gt; is now &lt;code&gt;React.PropTypes.node&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The old methods will still work but will warn upon first use. They will be removed in v0.13.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-changes&quot;&gt;&lt;/a&gt;JSX Changes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&quot;/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes&quot;&gt;We talked more in depth about these before&lt;/a&gt;, so here are the highlights.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;No more &lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;!&lt;/li&gt;
+&lt;li&gt;We no longer transform to a straight function call. &lt;code&gt;&amp;lt;Component/&amp;gt;&lt;/code&gt; now becomes &lt;code&gt;React.createElement(Component)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;DOM components don&amp;#39;t make use of &lt;code&gt;React.DOM&lt;/code&gt;, instead we pass the tag name directly. &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; becomes &lt;code&gt;React.createElement(&amp;#39;div&amp;#39;)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;We introduced spread attributes as a quick way to transfer props.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;devtools-improvements-no-more-__internals&quot;&gt;&lt;/a&gt;DevTools Improvements, No More &lt;code&gt;__internals&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#devtools-improvements-no-more-__internals&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;For months we&amp;#39;ve gotten complaints about the React DevTools message. It shouldn&amp;#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!&lt;/p&gt;
+
+&lt;p&gt;As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. &lt;code&gt;React.__internals&lt;/code&gt; is no more.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;license-change---bsd&quot;&gt;&lt;/a&gt;License Change - BSD &lt;a class=&quot;hash-link&quot; href=&quot;#license-change---bsd&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.&lt;/p&gt;
+
+&lt;p&gt;You can read the full text of the &lt;a href=&quot;https://github.com/facebook/react/blob/master/LICENSE&quot;&gt;LICENSE&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/blob/master/PATENTS&quot;&gt;&lt;code&gt;PATENTS&lt;/code&gt;&lt;/a&gt; files on GitHub.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; moved off props object, now accessible on the element directly&lt;/li&gt;
+&lt;li&gt;React is now BSD licensed with accompanying Patents grant&lt;/li&gt;
+&lt;li&gt;Default prop resolution has moved to Element creation time instead of mount time, making them effectively static&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.__internals&lt;/code&gt; is removed - it was exposed for DevTools which no longer needs access&lt;/li&gt;
+&lt;li&gt;Composite Component functions can no longer be called directly - they must be wrapped with &lt;code&gt;React.createFactory&lt;/code&gt; first. This is handled for you when using JSX.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Spread operator (&lt;code&gt;{...}&lt;/code&gt;) introduced to deprecate &lt;code&gt;this.transferPropsTo&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Added support for more HTML attributes: &lt;code&gt;acceptCharset&lt;/code&gt;, &lt;code&gt;classID&lt;/code&gt;, &lt;code&gt;manifest&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponent&lt;/code&gt; --&amp;gt; &lt;code&gt;React.render&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; --&amp;gt; &lt;code&gt;React.renderToString&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.renderComponentToStaticMarkup&lt;/code&gt; --&amp;gt; &lt;code&gt;React.renderToStaticMarkup&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; --&amp;gt; &lt;code&gt;React.isValidElement&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.PropTypes.component&lt;/code&gt; --&amp;gt; &lt;code&gt;React.PropTypes.element&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;React.PropTypes.renderable&lt;/code&gt; --&amp;gt; &lt;code&gt;React.PropTypes.node&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; &lt;code&gt;React.isValidClass&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; &lt;code&gt;instance.transferPropsTo&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; Returning &lt;code&gt;false&lt;/code&gt; from event handlers to preventDefault&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; Convenience Constructor usage as function, instead wrap with &lt;code&gt;React.createFactory&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; use of &lt;code&gt;key={null}&lt;/code&gt; to assign implicit keys&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Better handling of events and updates in nested results, fixing value restoration in &amp;quot;layered&amp;quot; controlled components&lt;/li&gt;
+&lt;li&gt;Correctly treat &lt;code&gt;event.getModifierState&lt;/code&gt; as case sensitive&lt;/li&gt;
+&lt;li&gt;Improved normalization of &lt;code&gt;event.charCode&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Better error stacks when involving autobound methods&lt;/li&gt;
+&lt;li&gt;Removed DevTools message when the DevTools are installed&lt;/li&gt;
+&lt;li&gt;Correctly detect required language features across browsers&lt;/li&gt;
+&lt;li&gt;Fixed support for some HTML attributes:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;list&lt;/code&gt; updates correctly now&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;scrollLeft&lt;/code&gt;, &lt;code&gt;scrollTop&lt;/code&gt; removed, these should not be specified as props&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;Improved error messages&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React With Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.addons.batchedUpdates&lt;/code&gt; added to API for hooking into update cycle&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.addons.update&lt;/code&gt; uses &lt;code&gt;assign&lt;/code&gt; instead of &lt;code&gt;copyProperties&lt;/code&gt; which does &lt;code&gt;hasOwnProperty&lt;/code&gt; checks. Properties on prototypes will no longer be updated correctly.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Fixed some issues with CSS Transitions&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components&lt;/li&gt;
+&lt;li&gt;JSX no longer transforms to simple function calls&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;@jsx React.DOM&lt;/code&gt; no longer required&lt;/li&gt;
+&lt;li&gt;spread (&lt;code&gt;{...}&lt;/code&gt;) operator introduced to allow easier use of props&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-10-28T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</guid>
+			</item>
+		
+			<item>
 				<title>React.js Conf</title>
 				<description>&lt;p&gt;Every few weeks someone asks us when we are going to organize a conference for React. Our answer has always been &amp;quot;some day&amp;quot;. In the mean time, people have been talking about React at other JavaScript conferences around the world. But now the time has finally come for us to have a conference of our own.&lt;/p&gt;
 
@@ -216,7 +336,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;p&gt;You do NOT need to change the way to define &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt;, only if you need to read it. E.g. &lt;code&gt;&amp;lt;div key=&amp;quot;my-key&amp;quot; /&amp;gt;&lt;/code&gt; and &lt;code&gt;div({ key: &amp;#39;my-key&amp;#39; })&lt;/code&gt; still works.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-change-default-props-resolution&quot;&gt;&lt;/a&gt;Breaking Change: Default Props Resolution &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-change-default-props-resolution&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;This is a subtle difference but &lt;code&gt;defaultProps&lt;/code&gt; are now resolved at &lt;code&gt;ReactElement&lt;/code&gt; creation time instead of when it&amp;#39;s mounted. This is means that we can avoid allocating an extra object for the resolve props.&lt;/p&gt;
+&lt;p&gt;This is a subtle difference but &lt;code&gt;defaultProps&lt;/code&gt; are now resolved at &lt;code&gt;ReactElement&lt;/code&gt; creation time instead of when it&amp;#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.&lt;/p&gt;
 
 &lt;p&gt;You will primarily see this breaking if you&amp;#39;re also using &lt;code&gt;transferPropsTo&lt;/code&gt;.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-transferpropsto&quot;&gt;&lt;/a&gt;Deprecated: transferPropsTo &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-transferpropsto&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -917,39 +1037,6 @@ This is not the intended way to use React but can be useful as last resort if yo
 				<pubDate>2014-08-03T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/08/03/community-roundup-21.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/08/03/community-roundup-21.html</guid>
-			</item>
-		
-			<item>
-				<title>Flux: Actions and the Dispatcher</title>
-				<description>&lt;p&gt;Flux is the application architecture Facebook uses to build JavaScript applications. It&amp;#39;s based on a unidirectional data flow.  We&amp;#39;ve built everything from small widgets to huge applications with Flux, and it&amp;#39;s handled everything we&amp;#39;ve thrown at it. Because we&amp;#39;ve found it to be a great way to structure our code, we&amp;#39;re excited to share it with the open source community. &lt;a href=&quot;http://youtu.be/nYkdrAPrdcw?t=10m20s&quot;&gt;Jing Chen presented Flux&lt;/a&gt; at the F8 conference, and since that time we&amp;#39;ve seen a lot of interest in it. We&amp;#39;ve also published an &lt;a href=&quot;http://facebook.github.io/flux/docs/overview.html&quot;&gt;overview of Flux&lt;/a&gt; and a &lt;a href=&quot;https://github.com/facebook/flux/tree/master/examples/flux-todomvc/&quot;&gt;TodoMVC example&lt;/a&gt;, with an accompanying &lt;a href=&quot;http://facebook.github.io/flux/docs/todo-list.html&quot;&gt;tutorial&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Flux is more of a pattern than a full-blown framework, and you can start using it without a lot of new code beyond React. Up until recently, however, we haven&amp;#39;t released one crucial piece of our Flux software: the dispatcher. But along with the creation of the new &lt;a href=&quot;https://github.com/facebook/flux&quot;&gt;Flux code repository&lt;/a&gt; and &lt;a href=&quot;http://facebook.github.io/flux/&quot;&gt;Flux website&lt;/a&gt;, we&amp;#39;ve now open sourced the same &lt;a href=&quot;http://facebook.github.io/flux/docs/dispatcher.html&quot;&gt;dispatcher&lt;/a&gt; we use in our production applications.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;where-the-dispatcher-fits-in-the-flux-data-flow&quot;&gt;&lt;/a&gt;Where the Dispatcher Fits in the Flux Data Flow &lt;a class=&quot;hash-link&quot; href=&quot;#where-the-dispatcher-fits-in-the-flux-data-flow&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The dispatcher is a singleton, and operates as the central hub of data flow in a Flux application. It is essentially a registry of callbacks, and can invoke these callbacks in order. Each &lt;em&gt;store&lt;/em&gt; registers a callback with the dispatcher. When new data comes into the dispatcher, it then uses these callbacks to propagate that data to all of the stores. The process of invoking the callbacks is initiated through the dispatch() method, which takes a data payload object as its sole argument.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;actions-and-actioncreators&quot;&gt;&lt;/a&gt;Actions and ActionCreators &lt;a class=&quot;hash-link&quot; href=&quot;#actions-and-actioncreators&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;When new data enters the system, whether through a person interacting with the application or through a web api call, that data is packaged into an &lt;em&gt;action&lt;/em&gt; — an object literal containing the new fields of data and a specific action type. We often create a library of helper methods called ActionCreators that not only create the action object, but also pass the action to the dispatcher.&lt;/p&gt;
-
-&lt;p&gt;Different actions are identified by a type attribute. When all of the stores receive the action, they typically use this attribute to determine if and how they should respond to it. In a Flux application, both stores and views control themselves; they are not acted upon by external objects. Actions flow into the stores through the callbacks they define and register, not through setter methods.&lt;/p&gt;
-
-&lt;p&gt;Letting the stores update themselves eliminates many entanglements typically found in MVC applications, where cascading updates between models can lead to unstable state and make accurate testing very difficult. The objects within a Flux application are highly decoupled, and adhere very strongly to the &lt;a href=&quot;http://en.wikipedia.org/wiki/Law_of_Demeter&quot;&gt;Law of Demeter&lt;/a&gt;, the principle that each object within a system should know as little as possible about the other objects in the system. This results in software that is more maintainable, adaptable, testable, and easier for new engineering team members to understand.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/react/img/blog/flux-diagram.png&quot; style=&quot;width: 100%;&quot; /&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;why-we-need-a-dispatcher&quot;&gt;&lt;/a&gt;Why We Need a Dispatcher &lt;a class=&quot;hash-link&quot; href=&quot;#why-we-need-a-dispatcher&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;As an application grows, dependencies across different stores are a near certainty. Store A will inevitably need Store B to update itself first, so that Store A can know how to update itself. We need the dispatcher to be able to invoke the callback for Store B, and finish that callback, before moving forward with Store A. To declaratively assert this dependency, a store needs to be able to say to the dispatcher, &amp;quot;I need to wait for Store B to finish processing this action.&amp;quot; The dispatcher provides this functionality through its waitFor() method.&lt;/p&gt;
-
-&lt;p&gt;The dispatch() method provides a simple, synchronous iteration through the callbacks, invoking each in turn. When waitFor() is encountered within one of the callbacks, execution of that callback stops and waitFor() provides us with a new iteration cycle over the dependencies. After the entire set of dependencies have been fulfilled, the original callback then continues to execute.&lt;/p&gt;
-
-&lt;p&gt;Further, the waitFor() method may be used in different ways for different actions, within the same store&amp;#39;s callback.  In one case, Store A might need to wait for Store B.  But in another case, it might need to wait for Store C.  Using waitFor() within the code block that is specific to an action allows us to have fine-grained control of these dependencies.&lt;/p&gt;
-
-&lt;p&gt;Problems arise, however, if we have circular dependencies. That is, if Store A needs to wait for Store B, and Store B needs to wait for Store A, we could wind up in an endless loop. The dispatcher now available in the Flux repo protects against this by throwing an informative error to alert the developer that this problem has occurred. The developer can then create a third store and resolve the circular dependency.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;example-chat-app&quot;&gt;&lt;/a&gt;Example Chat App &lt;a class=&quot;hash-link&quot; href=&quot;#example-chat-app&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Along with the same dispatcher that Facebook uses in its production applications, we&amp;#39;ve also published a new example &lt;a href=&quot;https://github.com/facebook/flux/tree/master/examples/flux-chat&quot;&gt;chat app&lt;/a&gt;, slightly more complicated than the simplistic TodoMVC, so that engineers can better understand how Flux solves problems like dependencies between stores and calls to a web API.&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;re hopeful that the new Flux repository will grow with time to include additional tools, boilerplate code and further examples. And we hope that Flux will prove as useful to you as it has to us. Enjoy!&lt;/p&gt;
-</description>
-				<pubDate>2014-07-30T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html</guid>
 			</item>
 		
 	</channel>

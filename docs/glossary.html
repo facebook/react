@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Displaying Data | React</title>
+  <title>React (Virtual) DOM Terminology | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Displaying Data | React">
+  <meta property="og:title" content="React (Virtual) DOM Terminology | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/displaying-data.html">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/glossary.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -115,7 +115,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html" class="active">Displaying Data</a>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
             
               <ul>
                 
@@ -267,7 +267,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            <a href="/react/docs/glossary.html" class="active">React (Virtual) DOM Terminology</a>
             
           </li>
         
@@ -374,95 +374,48 @@
 
   <div class="inner-content">
     <h1>
-      Displaying Data
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.md" target="_blank">Edit on GitHub</a>
+      React (Virtual) DOM Terminology
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-09-glossary.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
-<p>Let&#39;s look at a really simple example. Create a <code>hello-react.html</code> file with the following code:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.12.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.12.0.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+    <p>In React&#39;s terminology, there are five core types that are important to distinguish:</p>
 
-      <span class="c1">// ** Your code goes here! **</span>
+<ul>
+<li><a href="#react-elements">ReactElement / ReactElement Factory</a></li>
+<li><a href="#react-nodes">ReactNode</a></li>
+<li><a href="#react-components">ReactComponent / ReactComponent Class</a></li>
+</ul>
+<h2><a class="anchor" name="react-elements"></a>React Elements <a class="hash-link" href="#react-elements">#</a></h2>
+<p>The primary type in React is the <code>ReactElement</code>. It has four properties: <code>type</code>, <code>props</code>, <code>key</code> and <code>ref</code>. It has no methods and nothing on the prototype.</p>
 
-    <span class="nt">&lt;/script&gt;</span>
-  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
+<p>You can create one of these object through <code>React.createElement</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
 </code></pre></div>
-<p>For the rest of the documentation, we&#39;ll just focus on the JavaScript code and assume it&#39;s inserted into a template like the one above. Replace the placeholder comment above with the following JS:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
-        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
-      <span class="o">&lt;</span><span class="err">/p&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-  <span class="p">);</span>
-<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="reactive-updates"></a>Reactive Updates <a class="hash-link" href="#reactive-updates">#</a></h2>
-<p>Open <code>hello-react.html</code> in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI — any input you put in the text field remains, even though you haven&#39;t written any code to manage this behavior. React figures it out for you and does the right thing.</p>
-
-<p>The way we are able to figure this out is that React does not manipulate the DOM unless it needs to. <strong>It uses a fast, internal mock DOM to perform diffs and computes the most efficient DOM mutation for you.</strong></p>
-
-<p>The inputs to this component are called <code>props</code> — short for &quot;properties&quot;. They&#39;re passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, <strong>never write to <code>this.props</code></strong>.</p>
-<h2><a class="anchor" name="components-are-just-like-functions"></a>Components are Just Like Functions <a class="hash-link" href="#components-are-just-like-functions">#</a></h2>
-<p>React components are very simple. You can think of them as simple function that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. Because they&#39;re so simple, it makes them very easy to reason about.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p><strong>One limitation</strong>: React components can only render a single root node. If you want to return multiple nodes they <em>must</em> be wrapped in a single root.</p>
-</blockquote>
-<h2><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h2>
-<p>We strongly believe that components are the right way to separate concerns rather than &quot;templates&quot; and &quot;display logic.&quot; We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.</p>
-
-<p>We&#39;ve found that the best solution for this problem is to generate HTML and component trees directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs.</p>
-
-<p>In order to make this easier, we&#39;ve added a very simple, <strong>optional</strong> HTML-like syntax to create these React tree nodes.</p>
-
-<p><strong>JSX lets you create JavaScript objects using HTML syntax.</strong> To generate a link in React using pure JavaScript you&#39;d write:</p>
-
-<p><code>React.createElement(&#39;a&#39;, {href: &#39;http://facebook.github.io/react/&#39;}, &#39;Hello!&#39;)</code></p>
-
-<p>With JSX this becomes:</p>
-
-<p><code>&lt;a href=&quot;http://facebook.github.io/react/&quot;&gt;Hello!&lt;/a&gt;</code></p>
-
-<p>We&#39;ve found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so <strong>JSX is not required to use React.</strong></p>
-
-<p>JSX is very small. To learn more about it, see <a href="/react/docs/jsx-in-depth.html">JSX in depth</a>. Or see the transform in action in <a href="/react/jsx-compiler.html">our live JSX compiler</a>.</p>
-
-<p>JSX is similar to HTML, but not exactly the same. See <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> for some key differences.</p>
-
-<p>The easiest way to get started with JSX is to use the in-browser <code>JSXTransformer</code>. We strongly recommend that you don&#39;t use this in production. You can precompile your code using our command-line <a href="http://npmjs.org/package/react-tools">react-tools</a> package.</p>
-<h2><a class="anchor" name="react-without-jsx"></a>React without JSX <a class="hash-link" href="#react-without-jsx">#</a></h2>
-<p>JSX is completely optional. You don&#39;t have to use JSX with React. You can create these trees through <code>React.createElement</code>. The first argument is the tag, pass a properties object as the second argument and children to the third argument.</p>
+<p>To render a new tree into the DOM, you create <code>ReactElement</code>s and pass them to <code>React.render</code> a long with a regular DOM <code>Element</code> (<code>HTMLElement</code> or <code>SVGElement</code>). <code>ReactElement</code>s are not to be confused with DOM <code>Element</code>s. A <code>ReactElement</code> is a light, stateless, immutable, virtual representation of a DOM <code>Element</code>. It is a virtual DOM.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<p>To add properties to a DOM element, pass a properties object as the second argument and children to the third argument.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">);</span>
 <span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child</span><span class="p">);</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 </code></pre></div>
-<p>As a convenience you can create short-hand factory function to create elements from custom components.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
-<span class="p">...</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
+<p>If you use React JSX, then these <code>ReactElement</code>s are created for you. So this is equivalent:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">ul</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;my-list&quot;</span><span class="o">&gt;</span>
+             <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="nx">Text</span> <span class="nx">Content</span><span class="o">&lt;</span><span class="err">/li&gt;</span>
+           <span class="o">&lt;</span><span class="err">/ul&gt;;</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<p><strong>Factories</strong></p>
+
+<p>A <code>ReactElement</code>-factory is simply a function that generates a <code>ReactElement</code> with a particular <code>type</code> property. React has a built-in helper for you to create factories. It&#39;s effectively just:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createFactory</span><span class="p">(</span><span class="nx">type</span><span class="p">){</span>
+  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">type</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>It allows you to create a convenient short-hand instead of typing out <code>React.createElement(&#39;div&#39;)</code> all the time.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">div</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="s1">&#39;div&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">div</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-div&#39;</span> <span class="p">});</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 </code></pre></div>
 <p>React already have built-in factories for common HTML tags:</p>
@@ -470,13 +423,95 @@
              <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">li</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">)</span>
            <span class="p">);</span>
 </code></pre></div>
+<p>If you are using JSX you have no need for factories. JSX already provides a convenient short-hand for creating <code>ReactElement</code>s.</p>
+<h2><a class="anchor" name="react-nodes"></a>React Nodes <a class="hash-link" href="#react-nodes">#</a></h2>
+<p>A <code>ReactNode</code> can be either:
+- <code>ReactElement</code>
+- <code>string</code> (aka <code>ReactText</code>)
+- <code>number</code> (aka <code>ReactText</code>)
+- Array of <code>ReactNode</code>s (aka <code>ReactFragment</code>)</p>
+
+<p>These are used as properties of other <code>ReactElement</code>s to represent children. Effectively they create a tree of <code>ReactElement</code>s.</p>
+<h2><a class="anchor" name="react-components"></a>React Components <a class="hash-link" href="#react-components">#</a></h2>
+<p>You can use React using only <code>ReactElement</code>s but to really take advantage of React, you&#39;ll want to use <code>ReactComponent</code>s to create encapsulations with embedded state.</p>
+
+<p>A <code>ReactComponent</code> Class is simply just a JavaScript class (or &quot;constructor function&quot;).</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="p">...</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>When this constructor is invoked it is expected to return an object with at least a <code>render</code> method on it. This object is referred to as a <code>ReactComponent</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span> <span class="c1">// never do this</span>
+</code></pre></div>
+<p>Other than for testing, you would normally <strong>never</strong> call this constructor yourself. React calls it for you.</p>
+
+<p>Instead, you pass the <code>ReactComponent</code> Class to <code>createElement</code> you get a <code>ReactElement</code>.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">MyComponent</span><span class="p">);</span>
+</code></pre></div>
+<p>OR using JSX:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>When this is passed to <code>React.render</code>, React will call the constructor for you and create a <code>ReactComponent</code>, which returned.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<p>If you keep calling <code>React.render</code> with the same type of <code>ReactElement</code> and the same container DOM <code>Element</code> it always returns the same instance. This instance is stateful.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">componentA</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">componentB</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+<span class="nx">componentA</span> <span class="o">===</span> <span class="nx">componentB</span><span class="p">;</span> <span class="c1">// true</span>
+</code></pre></div>
+<p>This is why you shouldn&#39;t construct your own instance. Instead, <code>ReactElement</code> is a virtual <code>ReactComponent</code> before it gets constructed. An old and new <code>ReactElement</code> can be compared to see if a new <code>ReactComponent</code> instance is created or if the existing one is reused.</p>
+
+<p>The <code>render</code> method of a <code>ReactComponent</code> is expected to return another <code>ReactElement</code>. This allows these components to be composed. Ultimately the render resolves into <code>ReactElement</code> with a <code>string</code> tag which instantiates a DOM <code>Element</code> instance and inserts it into the document.</p>
+<h2><a class="anchor" name="formal-type-definitions"></a>Formal Type Definitions <a class="hash-link" href="#formal-type-definitions">#</a></h2>
+<p><strong>Entry Point</strong></p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">React.render = (ReactElement, HTMLElement | SVGElement) =&gt; ReactComponent;
+</code></pre></div>
+<p><strong>Nodes and Elements</strong></p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactNode = ReactElement | ReactFragment | ReactText;
+
+type ReactElement = ReactComponentElement | ReactDOMElement;
+
+type ReactDOMElement = {
+  type : string,
+  props : {
+    children : ReactNodeList,
+    className : string,
+    etc.
+  },
+  key : string | boolean | number | null,
+  ref : string | null
+};
+
+type ReactComponentElement&lt;TProps&gt; = {
+  type : ReactClass&lt;TProps&gt;,
+  props : TProps,
+  key : string | boolean | number | null,
+  ref : string | null
+};
+
+type ReactFragment = Array&lt;ReactNode | ReactEmpty&gt;;
+
+type ReactNodeList = ReactNode | ReactEmpty;
+
+type ReactText = string | number;
+
+type ReactEmpty = null | undefined | boolean;
+</code></pre></div>
+<p><strong>Classes and Components</strong></p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">type ReactClass&lt;TProps&gt; = (TProps) =&gt; ReactComponent&lt;TProps&gt;;
+
+type ReactComponent&lt;TProps&gt; = {
+  props : TProps,
+  render : () =&gt; ReactElement
+};
+</code></pre></div>
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/why-react.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/reconciliation.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/docs/jsx-in-depth.html">Next &rarr;</a>
       
     </div>
   </div>

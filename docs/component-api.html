@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -366,7 +380,7 @@
     <div class="subHeader"></div>
 
     <h2><a class="anchor" name="reactcomponent"></a>ReactComponent <a class="hash-link" href="#reactcomponent">#</a></h2>
-<p>Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as <code>this</code>. The only way to get a handle to a React Component instance outside of React is by storing the return value of <code>React.renderComponent</code>. Inside other Components, you may use <a href="/react/docs/more-about-refs.html">refs</a> to achieve the same result.</p>
+<p>Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as <code>this</code>. The only way to get a handle to a React Component instance outside of React is by storing the return value of <code>React.render</code>. Inside other Components, you may use <a href="/react/docs/more-about-refs.html">refs</a> to achieve the same result.</p>
 <h3><a class="anchor" name="setstate"></a>setState <a class="hash-link" href="#setstate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once <code>setState</code> is completed and the component is re-rendered.</p>
@@ -398,38 +412,18 @@
 <h3><a class="anchor" name="ismounted"></a>isMounted() <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code> returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>
-<h3><a class="anchor" name="transferpropsto"></a>transferPropsTo <a class="hash-link" href="#transferpropsto">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">transferPropsTo</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">targetComponent</span><span class="p">)</span>
-</code></pre></div>
-<p>Transfer properties from this component to a target component that have not already been set on the target component. After the props are updated, <code>targetComponent</code> is returned as a convenience. This function is useful when creating simple HTML-like components:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Avatar</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">transferPropsTo</span><span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">img</span> <span class="nx">src</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;/avatars/&quot;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">userId</span> <span class="o">+</span> <span class="s2">&quot;.png&quot;</span><span class="p">}</span> <span class="nx">userId</span><span class="o">=</span><span class="p">{</span><span class="kc">null</span><span class="p">}</span> <span class="o">/&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="c1">// &lt;Avatar userId={17} width={200} height={200} /&gt;</span>
-</code></pre></div>
-<p>Properties that are specified directly on the target component instance (such as <code>src</code> and <code>userId</code> in the above example) will not be overwritten by <code>transferPropsTo</code>.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>Use <code>transferPropsTo</code> with caution; it encourages tight coupling and makes it easy to accidentally introduce implicit dependencies between components. When in doubt, it&#39;s safer to explicitly copy the properties that you need onto the child component.</p>
-</blockquote>
 <h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
-<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.renderComponent()</code>.</p>
+<p>When you&#39;re integrating with an external JavaScript application you may want to signal a change to a React component rendered with <code>React.render()</code>.</p>
 
-<p>Though calling <code>React.renderComponent()</code> again on the same node is the preferred way to update a root-level component, you can also call <code>setProps()</code> to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
+<p>Though calling <code>React.render()</code> again on the same node is the preferred way to update a root-level component, you can also call <code>setProps()</code> to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once <code>setProps</code> is completed and the component is re-rendered.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p>When possible, the declarative approach of calling <code>React.renderComponent()</code> again is preferred; it tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
+<p>When possible, the declarative approach of calling <code>React.render()</code> again is preferred; it tends to make updates easier to reason about. (There&#39;s no significant performance difference between the two approaches.)</p>
 
-<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.renderComponent()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
+<p>This method can only be called on a root-level component. That is, it&#39;s only available on the component passed directly to <code>React.render()</code> and none of its children. If you&#39;re inclined to use <code>setProps()</code> on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it&#39;s created in <code>render()</code>.</p>
 </blockquote>
 <h3><a class="anchor" name="replaceprops"></a>replaceProps <a class="hash-link" href="#replaceprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
@@ -453,7 +447,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>

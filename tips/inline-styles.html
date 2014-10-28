@@ -124,6 +124,10 @@
                   </li>
                 
                   <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
                     <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
                   </li>
                 
@@ -143,6 +147,11 @@
         
           <li>
             <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
             
           </li>
         
@@ -257,6 +266,11 @@
             
           </li>
         
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
       </ul>
     </div>
   
@@ -362,17 +376,16 @@
     <h1>Inline Styles</h1>
     <div class="subHeader"></div>
     <p>In React, inline styles are not specified as a string. Instead they are specified with an object whose key is the camelCased version of the style name, and whose value is the style&#39;s value, usually a string (<a href="/react/tips/style-props-value-px.html">more on that later</a>):</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="cm">/** @jsx React.DOM */</span>
-
-<span class="kd">var</span> <span class="nx">divStyle</span> <span class="o">=</span> <span class="p">{</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">divStyle</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;white&#39;</span><span class="p">,</span>
   <span class="nx">backgroundImage</span><span class="o">:</span> <span class="s1">&#39;url(&#39;</span> <span class="o">+</span> <span class="nx">imgUrl</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span><span class="p">,</span>
-  <span class="nx">WebkitTransition</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span> <span class="c1">// note the capital &#39;W&#39; here</span>
+  <span class="nx">WebkitTransition</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="c1">// note the capital &#39;W&#39; here</span>
+  <span class="nx">msTransition</span><span class="o">:</span> <span class="s1">&#39;all&#39;</span> <span class="c1">// &#39;ms&#39; is the only lowercase vendor prefix</span>
 <span class="p">};</span>
 
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">divStyle</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">divStyle</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/div&gt;, mountNode);</span>
 </code></pre></div>
-<p>Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. <code>node.style.backgroundImage</code>). Vendor prefixes should begin with a capital letter. This is why <code>WebkitTransition</code> has an uppercase &quot;W&quot;.</p>
+<p>Style keys are camelCased in order to be consistent with accessing the properties on DOM nodes from JS (e.g. <code>node.style.backgroundImage</code>). Vendor prefixes <a href="http://www.andismith.com/blog/2012/02/modernizr-prefixed/">other than <code>ms</code></a> should begin with a capital letter. This is why <code>WebkitTransition</code> has an uppercase &quot;W&quot;.</p>
 
 
     <div class="docs-prevnext">
@@ -392,7 +405,10 @@
         A Facebook &amp; Instagram collaboration.<br>
         <a href="/react/acknowledgements.html">Acknowledgements</a>
       </div>
-      <div class="right">&copy; 2014 Facebook Inc.</div>
+      <div class="right">
+        &copy; 2013&ndash;2014 Facebook Inc.<br>
+        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
     </footer>
   </div>
   <div id="fb-root"></div>
