@@ -910,6 +910,23 @@ describe('ReactCompositeComponent', function() {
     }
   });
 
+  it('should warn if mixin is supplied instead of mixins', function () {
+    var warn = spyOn(console, 'warn');
+    console.warn = mocks.getMockFunction();
+
+    var mixinTypoClass = React.createClass({
+      mixin: [],
+
+      render: function() {
+        return <div />;
+      }
+    });
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'mixinTypoClass is trying to use `mixin`. Did you mean to use `mixins`?'
+    );
+  });
+
   it('should warn when mispelling shouldComponentUpdate', function() {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();

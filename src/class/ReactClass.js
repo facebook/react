@@ -656,6 +656,12 @@ var ReactClass = {
     );
 
     if (__DEV__) {
+      if (spec.hasOwnProperty('mixin') && Array.isArray(spec.mixin) && !spec.hasOwnProperty('mixins')) {
+        console.warn(
+          (spec.displayName || 'A component') + ' is trying to use `mixin`. ' +
+          'Did you mean to use `mixins`?'
+        );
+      }
       if (Constructor.prototype.componentShouldUpdate) {
         monitorCodeUse(
           'react_component_should_update_warning',
