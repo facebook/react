@@ -221,6 +221,73 @@ var ReactCompositeComponentMixin = {
   ),
 
   /**
+   * Renders the component shallowly, returning a ReactElement.
+   *
+   * @param {string} rootID DOM ID of the root node.
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {number} mountDepth number of components in the owner hierarchy
+   * @return {ReactElement} Shallow rendering of the component.
+   * @final
+   * @internal
+   */
+  _shallowMountComponent: function(rootID, transaction, mountDepth) {
+    ReactComponent.Mixin.mountComponent.call(
+      this,
+      rootID,
+      transaction,
+      mountDepth
+    );
+    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+
+    if (this.__reactAutoBindMap) {
+      this._bindAutoBindMethods();
+    }
+
+    this.context = this._processContext(this._currentElement._context);
+    this.props = this._processProps(this.props);
+
+    this.state = this.getInitialState ? this.getInitialState() : null;
+
+    if (__DEV__) {
+      // We allow auto-mocks to proceed as if they're returning null.
+      if (typeof this.state === 'undefined' &&
+          this.getInitialState && this.getInitialState._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        this.state = null;
+      }
+    }
+
+    invariant(
+      typeof this.state === 'object' && !Array.isArray(this.state),
+      '%s.getInitialState(): must return an object or null',
+      this.constructor.displayName || 'ReactCompositeComponent'
+    );
+
+    this._pendingState = null;
+    this._pendingForceUpdate = false;
+
+    if (this.componentWillMount) {
+      this.componentWillMount();
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingState` without triggering a re-render.
+      if (this._pendingState) {
+        this.state = this._pendingState;
+        this._pendingState = null;
+      }
+    }
+
+    var renderedElement = this._renderValidatedComponent();
+    // In a regular mount, we would then call instantiateReactComponent() on
+    // the above. For a shallow mount though, we want to stop here.
+
+    // Done with mounting, `setState` will now trigger UI changes.
+    this._compositeLifeCycleState = null;
+
+    return renderedElement;
+  },
+
+  /**
    * Releases any resources allocated by `mountComponent`.
    *
    * @final
