@@ -85,7 +85,7 @@ var eventTypes = {
 
 var usedTouch = false;
 var usedTouchTime = 0;
-var TOUCH_DELAY = 500;
+var TOUCH_DELAY = 1000;
 
 var TapEventPlugin = {
 
