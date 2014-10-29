@@ -15,7 +15,6 @@ var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactLegacyElement = require('ReactLegacyElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactPerf = require('ReactPerf');
 
@@ -26,10 +25,6 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
-
-var createElement = ReactLegacyElement.wrapCreateElement(
-  ReactElement.createElement
-);
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
 
@@ -342,7 +337,7 @@ var ReactMount = {
         typeof nextElement === 'string' ?
           ' Instead of passing an element string, make sure to instantiate ' +
           'it by passing it to React.createElement.' :
-        ReactLegacyElement.isValidFactory(nextElement) ?
+        typeof nextElement === 'function' ?
           ' Instead of passing a component class, make sure to instantiate ' +
           'it by passing it to React.createElement.' :
         // Check if it quacks like a element
@@ -394,7 +389,7 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   constructAndRenderComponent: function(constructor, props, container) {
-    var element = createElement(constructor, props);
+    var element = ReactElement.createElement(constructor, props);
     return ReactMount.render(element, container);
   },
 

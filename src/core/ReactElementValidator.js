@@ -273,6 +273,7 @@ var ReactElementValidator = {
       null,
       type
     );
+    // Legacy hook TODO: Warn if this is accessed
     validatedFactory.type = type;
     return validatedFactory;
   }

@@ -13,8 +13,6 @@
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactElement = require('ReactElement');
-var ReactElementValidator = require('ReactElementValidator');
-var ReactLegacyElement = require('ReactLegacyElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
@@ -679,14 +677,10 @@ var ReactClass = {
       }
     }
 
-    if (__DEV__) {
-      return ReactLegacyElement.wrapFactory(
-        ReactElementValidator.createFactory(Constructor)
-      );
-    }
-    return ReactLegacyElement.wrapFactory(
-      ReactElement.createFactory(Constructor)
-    );
+    // Legacy hook TODO: Warn if this is accessed
+    Constructor.type = Constructor;
+
+    return Constructor;
   },
 
   injection: {

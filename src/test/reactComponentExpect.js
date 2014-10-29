@@ -97,12 +97,9 @@ assign(reactComponentExpect.prototype, {
 
   // Matchers ------------------------------------------------------------------
 
-  toBeComponentOfType: function(convenienceConstructor) {
-    var type = typeof convenienceConstructor === 'string' ?
-               convenienceConstructor :
-               convenienceConstructor.type;
+  toBeComponentOfType: function(constructor) {
     expect(
-      this.instance()._currentElement.type === type
+      this.instance()._currentElement.type === constructor
     ).toBe(true);
     return this;
   },
@@ -119,10 +116,10 @@ assign(reactComponentExpect.prototype, {
     return this;
   },
 
-  toBeCompositeComponentWithType: function(convenienceConstructor) {
+  toBeCompositeComponentWithType: function(constructor) {
     this.toBeCompositeComponent();
     expect(
-      this.instance()._currentElement.type === convenienceConstructor.type
+      this.instance()._currentElement.type === constructor
     ).toBe(true);
     return this;
   },

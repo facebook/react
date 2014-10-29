@@ -15,9 +15,29 @@
 var warning = require('warning');
 
 var ReactElement = require('ReactElement');
-var ReactLegacyElement = require('ReactLegacyElement');
 var ReactNativeComponent = require('ReactNativeComponent');
-var ReactEmptyComponent = require('ReactEmptyComponent');
+
+// This is temporary until we've hidden all the implementation details
+// TODO: Delete this hack once implementation details are hidden
+var publicAPIs = {
+  forceUpdate: true,
+  replaceState: true,
+  setProps: true,
+  setState: true,
+  getDOMNode: true
+  // Public APIs used internally:
+  // isMounted: true,
+  // replaceProps: true,
+};
+
+function unmockImplementationDetails(mockInstance) {
+  var ReactCompositeComponentBase = instantiateReactComponent._compositeBase;
+  for (var key in ReactCompositeComponentBase.prototype) {
+    if (!publicAPIs.hasOwnProperty(key)) {
+      mockInstance[key] = ReactCompositeComponentBase.prototype[key];
+    }
+  }
+}
 
 /**
  * Given an `element` create an instance that will actually be mounted.
@@ -36,47 +56,6 @@ function instantiateReactComponent(element, parentCompositeType) {
                      typeof element.type === 'string'),
       'Only functions or strings can be mounted as React components.'
     );
-
-    // Resolve mock instances
-    if (element.type._mockedReactClassConstructor) {
-      // If this is a mocked class, we treat the legacy factory as if it was the
-      // class constructor for future proofing unit tests. Because this might
-      // be mocked as a legacy factory, we ignore any warnings triggerd by
-      // this temporary hack.
-      ReactLegacyElement._isLegacyCallWarningEnabled = false;
-      try {
-        instance = new element.type._mockedReactClassConstructor(
-          element.props
-        );
-      } finally {
-        ReactLegacyElement._isLegacyCallWarningEnabled = true;
-      }
-
-      // If the mock implementation was a legacy factory, then it returns a
-      // element. We need to turn this into a real component instance.
-      if (ReactElement.isValidElement(instance)) {
-        instance = new instance.type(instance.props);
-      }
-
-      var render = instance.render;
-      if (!render) {
-        // For auto-mocked factories, the prototype isn't shimmed and therefore
-        // there is no render function on the instance. We replace the whole
-        // component with an empty component instance instead.
-        element = ReactEmptyComponent.getEmptyComponent();
-      } else {
-        if (render._isMockFunction && !render._getMockImplementation()) {
-          // Auto-mocked components may have a prototype with a mocked render
-          // function. For those, we'll need to mock the result of the render
-          // since we consider undefined to be invalid results from render.
-          render.mockImplementation(
-            ReactEmptyComponent.getEmptyComponent
-          );
-        }
-        instance.construct(element);
-        return instance;
-      }
-    }
   }
 
   // Special case string values
@@ -92,6 +71,11 @@ function instantiateReactComponent(element, parentCompositeType) {
   }
 
   if (__DEV__) {
+    if (element.type._isMockFunction) {
+      // TODO: Remove this special case
+      unmockImplementationDetails(instance);
+    }
+
     warning(
       typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&

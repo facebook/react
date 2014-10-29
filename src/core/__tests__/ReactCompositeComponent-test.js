@@ -878,51 +878,6 @@ describe('ReactCompositeComponent', function() {
     expect(ReactMount.purgeID.callCount).toBe(4);
   });
 
-  it('should warn but detect valid CompositeComponent classes', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
-
-    var Component = React.createClass({
-      render: function() {
-        return <div/>;
-      }
-    });
-
-    expect(React.isValidClass(Component)).toBe(true);
-
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toContain(
-      'isValidClass is deprecated and will be removed in a future release'
-    );
-  });
-
-  it('should warn but detect invalid CompositeComponent classes', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
-
-    var FnComponent = function() {
-      return false;
-    };
-
-    var NullComponent = null;
-
-    var TrickFnComponent = function() {
-      return true;
-    };
-    TrickFnComponent.componentConstructor = true;
-
-    expect(React.isValidClass(FnComponent)).toBe(false);
-    expect(React.isValidClass(NullComponent)).toBe(false);
-    expect(React.isValidClass(TrickFnComponent)).toBe(false);
-
-    expect(console.warn.mock.calls.length).toBe(3);
-    console.warn.mock.calls.forEach(function(call) {
-      expect(call[0]).toContain(
-        'isValidClass is deprecated and will be removed in a future release'
-      );
-    });
-  });
-
   it('should warn when shouldComponentUpdate() returns undefined', function() {
     var warn = console.warn;
     console.warn = mocks.getMockFunction();
@@ -1282,8 +1237,8 @@ describe('ReactCompositeComponent', function() {
     expect(Component.ghi).toBe(null);
     expect(instance.constructor.jkl).toBe('mno');
     expect(Component.jkl).toBe('mno');
-    expect(instance.constructor.pqr()).toBe(Component.type);
-    expect(Component.pqr()).toBe(Component.type);
+    expect(instance.constructor.pqr()).toBe(Component);
+    expect(Component.pqr()).toBe(Component);
   });
 
   it('should throw if a reserved property is in statics', function() {

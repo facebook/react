@@ -114,24 +114,4 @@ describe('ReactDOM', function() {
     expect(element.type).toBe('div');
     expect(console.warn.argsForCall.length).toBe(0);
   });
-
-  it('warns but allow dom factories to be used in createFactory', function() {
-    spyOn(console, 'warn');
-    var factory = React.createFactory(React.DOM.div);
-    expect(factory().type).toBe('div');
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Do not pass React.DOM.div'
-    );
-  });
-
-  it('warns but allow dom factories to be used in createElement', function() {
-    spyOn(console, 'warn');
-    var element = React.createElement(React.DOM.div);
-    expect(element.type).toBe('div');
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Do not pass React.DOM.div'
-    );
-  });
 });

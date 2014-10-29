@@ -171,6 +171,17 @@ var ReactCompositeComponentMixin = {
       this.props = this._processProps(this.props);
 
       this.state = this.getInitialState ? this.getInitialState() : null;
+
+      if (__DEV__) {
+        // We allow auto-mocks to proceed as if they're returning null.
+        if (typeof this.state === 'undefined' &&
+            this.getInitialState && this.getInitialState._isMockFunction) {
+          // This is probably bad practice. Consider warning here and
+          // deprecating this convenience.
+          this.state = null;
+        }
+      }
+
       invariant(
         typeof this.state === 'object' && !Array.isArray(this.state),
         '%s.getInitialState(): must return an object or null',
@@ -675,6 +686,15 @@ var ReactCompositeComponentMixin = {
       ReactCurrentOwner.current = this;
       try {
         renderedComponent = this.render();
+        if (__DEV__) {
+          // We allow auto-mocks to proceed as if they're returning null.
+          if (typeof renderedComponent === 'undefined' &&
+              this.render._isMockFunction) {
+            // This is probably bad practice. Consider warning here and
+            // deprecating this convenience.
+            renderedComponent = null;
+          }
+        }
         if (renderedComponent === null || renderedComponent === false) {
           renderedComponent = ReactEmptyComponent.getEmptyComponent();
           ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
@@ -780,5 +800,9 @@ var ReactCompositeComponent = {
   Base: ReactCompositeComponentBase
 
 };
+
+// Temporary injection.
+// TODO: Delete this hack once implementation details are hidden.
+instantiateReactComponent._compositeBase = ReactCompositeComponentBase;
 
 module.exports = ReactCompositeComponent;

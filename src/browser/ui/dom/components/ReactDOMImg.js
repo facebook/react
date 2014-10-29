@@ -16,10 +16,8 @@ var LocalEventTrapMixin = require('LocalEventTrapMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
-var ReactDOM = require('ReactDOM');
 
-// Store a reference to the <img> `ReactDOMComponent`. TODO: use string
-var img = ReactElement.createFactory(ReactDOM.img.type);
+var img = ReactElement.createFactory('img');
 
 /**
  * Since onLoad doesn't bubble OR capture on the top level in IE8, we need to
