@@ -95,7 +95,7 @@ describe('ReactLink', function() {
       {value: 42, requestChange: emptyFunction}
     );
     typeCheckPass(
-      LinkPropTypes.link(React.PropTypes.renderable),
+      LinkPropTypes.link(React.PropTypes.node),
       {value: 42, requestChange: emptyFunction}
     );
   });
