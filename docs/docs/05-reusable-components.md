@@ -25,12 +25,12 @@ React.createClass({
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
 
-    // Anything that can be rendered: numbers, strings, components or an array
+    // Anything that can be rendered: numbers, strings, elements or an array
     // containing these types.
-    optionalRenderable: React.PropTypes.renderable,
+    optionalNode: React.PropTypes.node,
 
-    // A React component.
-    optionalComponent: React.PropTypes.component,
+    // A React element.
+    optionalElement: React.PropTypes.element,
 
     // You can also declare that a prop is an instance of a class. This uses
     // JS's instanceof operator.
@@ -120,13 +120,13 @@ React.render(
 
 ## Single Child
 
-With `React.PropTypes.component` you can specify that only a single child can be passed to
+With `React.PropTypes.element` you can specify that only a single child can be passed to
 a component as children.
 
 ```javascript
 var MyComponent = React.createClass({
   propTypes: {
-    children: React.PropTypes.component.isRequired
+    children: React.PropTypes.element.isRequired
   },
 
   render: function() {
