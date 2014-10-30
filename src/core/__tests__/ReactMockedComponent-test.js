@@ -15,7 +15,6 @@ var React;
 var ReactComponent;
 var ReactTestUtils;
 
-var reactComponentExpect;
 var mocks;
 
 var OriginalComponent;
