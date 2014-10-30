@@ -14,7 +14,6 @@
 
 var warning = require('warning');
 
-var ReactElement = require('ReactElement');
 var ReactNativeComponent = require('ReactNativeComponent');
 
 // This is temporary until we've hidden all the implementation details
