@@ -16,21 +16,21 @@ var ReactElement;
 var ReactTestUtils;
 
 describe('ReactElement', function() {
-  var ComponentFactory;
   var ComponentClass;
 
   beforeEach(function() {
+    require('mock-modules').dumpCache();
+
     React = require('React');
     ReactElement = require('ReactElement');
     ReactTestUtils = require('ReactTestUtils');
-    ComponentFactory = React.createClass({
+    ComponentClass = React.createClass({
       render: function() { return <div />; }
     });
-    ComponentClass = ComponentFactory;
   });
 
   it('returns a complete element according to spec', function() {
-    var element = React.createFactory(ComponentFactory)();
+    var element = React.createFactory(ComponentClass)();
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
@@ -46,20 +46,20 @@ describe('ReactElement', function() {
   });
 
   it('returns an immutable element', function() {
-    var element = React.createFactory(ComponentFactory)();
+    var element = React.createFactory(ComponentClass)();
     expect(() => element.type = 'div').toThrow();
   });
 
   it('does not reuse the original config object', function() {
     var config = { foo: 1 };
-    var element = React.createFactory(ComponentFactory)(config);
+    var element = React.createFactory(ComponentClass)(config);
     expect(element.props.foo).toBe(1);
     config.foo = 2;
     expect(element.props.foo).toBe(1);
   });
 
   it('extracts key and ref from the config', function() {
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       key: '12',
       ref: '34',
       foo: '56'
@@ -71,7 +71,7 @@ describe('ReactElement', function() {
   });
 
   it('coerces the key to a string', function() {
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       key: 12,
       foo: '56'
     });
@@ -83,7 +83,7 @@ describe('ReactElement', function() {
 
   it('treats a null key as omitted but warns', function() {
     spyOn(console, 'warn');
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       key: null,
       foo: '56'
     });
@@ -98,7 +98,7 @@ describe('ReactElement', function() {
   });
 
   it('preserves the context on the element', function() {
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
     var element;
 
     var Wrapper = React.createClass({
@@ -120,7 +120,7 @@ describe('ReactElement', function() {
   });
 
   it('preserves the owner on the element', function() {
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
     var element;
 
     var Wrapper = React.createClass({
@@ -144,7 +144,7 @@ describe('ReactElement', function() {
   it('merges an additional argument onto the children prop', function() {
     spyOn(console, 'warn');
     var a = 1;
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       children: 'text'
     }, a);
     expect(element.props.children).toBe(a);
@@ -153,7 +153,7 @@ describe('ReactElement', function() {
 
   it('does not override children if no rest args are provided', function() {
     spyOn(console, 'warn');
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       children: 'text'
     });
     expect(element.props.children).toBe('text');
@@ -162,7 +162,7 @@ describe('ReactElement', function() {
 
   it('overrides children if null is provided as an argument', function() {
     spyOn(console, 'warn');
-    var element = React.createFactory(ComponentFactory)({
+    var element = React.createFactory(ComponentClass)({
       children: 'text'
     }, null);
     expect(element.props.children).toBe(null);
@@ -172,14 +172,14 @@ describe('ReactElement', function() {
   it('merges rest arguments onto the children prop in an array', function() {
     spyOn(console, 'warn');
     var a = 1, b = 2, c = 3;
-    var element = React.createFactory(ComponentFactory)(null, a, b, c);
+    var element = React.createFactory(ComponentClass)(null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
     expect(console.warn.argsForCall.length).toBe(0);
   });
 
   it('warns for keys for arrays of elements in rest args', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     Component(null, [ Component(), Component() ]);
 
@@ -191,7 +191,7 @@ describe('ReactElement', function() {
 
   it('warns for keys for iterables of elements in rest args', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     var iterable = {
       '@@iterator': function() {
@@ -215,7 +215,7 @@ describe('ReactElement', function() {
 
   it('does not warns for arrays of elements with keys', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
 
@@ -224,7 +224,7 @@ describe('ReactElement', function() {
 
   it('does not warns for iterable elements with keys', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     var iterable = {
       '@@iterator': function() {
@@ -248,7 +248,7 @@ describe('ReactElement', function() {
 
   it('warns for numeric keys on objects in rest args', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     Component(null, { 1: Component(), 2: Component() });
 
@@ -260,7 +260,7 @@ describe('ReactElement', function() {
 
   it('does not warn for numeric keys in entry iterables in rest args', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     var iterable = {
       '@@iterator': function() {
@@ -282,7 +282,7 @@ describe('ReactElement', function() {
 
   it('does not warn when the element is directly in rest args', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     Component(null, Component(), Component());
 
@@ -291,7 +291,7 @@ describe('ReactElement', function() {
 
   it('does not warn when the array contains a non-element', function() {
     spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentFactory);
+    var Component = React.createFactory(ComponentClass);
 
     Component(null, [ {}, {} ]);
 
