@@ -24,7 +24,7 @@ This means that `if` statements don't fit in. Take this example:
 <div id={if (condition) { 'msg' }}>Hello World!</div>
 
 // Is transformed to this JS:
-React.createElement("dov", {id: if (condition) { 'msg' }}, "Hello World!");
+React.createElement("div", {id: if (condition) { 'msg' }}, "Hello World!");
 ```
 
 That's not valid JS. You probably want to make use of a ternary expression:
