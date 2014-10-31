@@ -57,7 +57,6 @@ function createInstanceForTag(tag, props, parentType) {
     );
     return new genericComponentClass(tag, props);
   }
-  // Unwrap legacy factories
   return new componentClass(props);
 }
 
