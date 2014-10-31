@@ -54,6 +54,7 @@ var SVGDOMPropertyConfig = {
     strokeWidth: MUST_USE_ATTRIBUTE,
     textAnchor: MUST_USE_ATTRIBUTE,
     transform: MUST_USE_ATTRIBUTE,
+    vectorEffect: MUST_USE_ATTRIBUTE,
     version: MUST_USE_ATTRIBUTE,
     viewBox: MUST_USE_ATTRIBUTE,
     x1: MUST_USE_ATTRIBUTE,
@@ -83,6 +84,7 @@ var SVGDOMPropertyConfig = {
     strokeOpacity: 'stroke-opacity',
     strokeWidth: 'stroke-width',
     textAnchor: 'text-anchor',
+    vectorEffect: 'vector-effect',
     viewBox: 'viewBox'
   }
 };
