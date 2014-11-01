@@ -145,7 +145,9 @@ var ReactDOMSelect = ReactClass.createClass({
     var value = LinkedValueUtils.getValue(this);
     var prevMultiple = !!prevProps.multiple;
     var multiple = !!this.props.multiple;
-    if (value != null || prevMultiple !== multiple) {
+    var children = this.props.children;
+    var prevChildren = prevProps.children;
+    if (value != null || prevMultiple !== multiple || prevChildren !== children) {
       updateOptions(this, value);
     }
   },
