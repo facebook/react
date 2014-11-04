@@ -340,6 +340,8 @@ describe('traverseAllChildren', function() {
   });
 
   it('should be called for each child in an iterable with keys', function() {
+    spyOn(console, 'warn');
+
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -388,6 +390,9 @@ describe('traverseAllChildren', function() {
       '.$#3',
       2
     );
+
+    // Tested in more detail in ReactElement-test
+    expect(console.warn).toHaveBeenCalled();
   });
 
   it('should use keys from entry iterables', function() {
