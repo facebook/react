@@ -110,14 +110,14 @@ function batchedUpdates(callback, a, b) {
 }
 
 /**
- * Array comparator for ReactComponents by owner depth
+ * Array comparator for ReactComponents by mount ordering.
  *
  * @param {ReactComponent} c1 first component you're comparing
  * @param {ReactComponent} c2 second component you're comparing
  * @return {number} Return value usable by Array.prototype.sort().
  */
-function mountDepthComparator(c1, c2) {
-  return c1._mountDepth - c2._mountDepth;
+function mountOrderComparator(c1, c2) {
+  return c1._mountOrder - c2._mountOrder;
 }
 
 function runBatchedUpdates(transaction) {
@@ -133,7 +133,7 @@ function runBatchedUpdates(transaction) {
   // Since reconciling a component higher in the owner hierarchy usually (not
   // always -- see shouldComponentUpdate()) will reconcile children, reconcile
   // them before their children by sorting the array.
-  dirtyComponents.sort(mountDepthComparator);
+  dirtyComponents.sort(mountOrderComparator);
 
   for (var i = 0; i < len; i++) {
     // If a component is unmounted before pending changes apply, it will still

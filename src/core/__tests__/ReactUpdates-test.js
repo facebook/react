@@ -629,6 +629,43 @@ describe('ReactUpdates', function() {
     ]);
   });
 
+  it('should flush updates in the correct order across roots', function() {
+    var instances = [];
+    var updates = [];
+
+    var MockComponent = React.createClass({
+      render: function() {
+        updates.push(this.props.depth);
+        return <div />;
+      },
+      componentDidMount: function() {
+        instances.push(this);
+        if (this.props.depth < this.props.count) {
+          React.renderComponent(
+            <MockComponent
+              depth={this.props.depth + 1}
+              count={this.props.count}
+            />,
+            this.getDOMNode()
+          );
+        }
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<MockComponent depth={0} count={2} />);
+
+    expect(updates).toEqual([0, 1, 2]);
+
+    ReactUpdates.batchedUpdates(function() {
+      // Simulate update on each component from top to bottom.
+      instances.forEach(function(instance) {
+        instance.forceUpdate();
+      });
+    });
+
+    expect(updates).toEqual([0, 1, 2, 0, 1, 2]);
+  });
+
   it('should queue nested updates', function() {
     // See https://github.com/facebook/react/issues/1147
 
