@@ -288,7 +288,58 @@ describe('traverseAllChildren', function() {
     );
   });
 
-  it('should be called for each child in an iterable', function() {
+  it('should be called for each child in an iterable without keys', function() {
+    var threeDivIterable = {
+      '@@iterator': function() {
+        var i = 0;
+        return {
+          next: function() {
+            if (i++ < 3) {
+              return { value: <div />, done: false };
+            } else {
+              return { value: undefined, done: true };
+            }
+          }
+        };
+      }
+    };
+
+    var traverseContext = [];
+    var traverseFn =
+      jasmine.createSpy().andCallFake(function(context, kid, key, index) {
+        context.push(kid);
+      });
+
+    var instance = (
+      <div>
+        {threeDivIterable}
+      </div>
+    );
+
+    traverseAllChildren(instance.props.children, traverseFn, traverseContext);
+    expect(traverseFn.calls.length).toBe(3);
+
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[0],
+      '.0',
+      0
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[1],
+      '.1',
+      1
+    );
+    expect(traverseFn).toHaveBeenCalledWith(
+      traverseContext,
+      traverseContext[2],
+      '.2',
+      2
+    );
+  });
+
+  it('should be called for each child in an iterable with keys', function() {
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
