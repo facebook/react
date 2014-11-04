@@ -171,28 +171,24 @@ ReactDOMComponent.Mixin = {
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} The computed markup.
    */
-  mountComponent: ReactPerf.measure(
-    'ReactDOMComponent',
-    'mountComponent',
-    function(rootID, transaction, mountDepth, context) {
-      invariant(context !== undefined, "Context is required parameter");
-      ReactComponent.Mixin.mountComponent.call(
-        this,
-        rootID,
-        transaction,
-        mountDepth,
-        context
-      );
-      this._rootNodeID = rootID;
-      assertValidProps(this._currentElement.props);
-      var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
-      return (
-        this._createOpenTagMarkupAndPutListeners(transaction) +
-        this._createContentMarkup(transaction, context) +
-        closeTag
-      );
-    }
-  ),
+  mountComponent: function(rootID, transaction, mountDepth, context) {
+    invariant(context !== undefined, "Context is required parameter");
+    ReactComponent.Mixin.mountComponent.call(
+      this,
+      rootID,
+      transaction,
+      mountDepth,
+      context
+    );
+    this._rootNodeID = rootID;
+    assertValidProps(this._currentElement.props);
+    var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
+    return (
+      this._createOpenTagMarkupAndPutListeners(transaction) +
+      this._createContentMarkup(transaction, context) +
+      closeTag
+    );
+  },
 
   /**
    * Creates markup for the open tag and all attributes.
@@ -319,24 +315,20 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @overridable
    */
-  updateComponent: ReactPerf.measure(
-    'ReactDOMComponent',
-    'updateComponent',
-    function(transaction, prevElement, nextElement, context) {
-      if(context === undefined) throw new Error("Context required for mounting");
-      if(context === null) throw new Error("Assert: context is not null");
-      assertValidProps(this._currentElement.props);
-      ReactComponent.Mixin.updateComponent.call(
-        this,
-        transaction,
-        prevElement,
-        nextElement,
-        context
-      );
-      this._updateDOMProperties(prevElement.props, transaction);
-      this._updateDOMChildren(prevElement.props, transaction, context);
-    }
-  ),
+  updateComponent: function(transaction, prevElement, nextElement, context) {
+    if(context === undefined) throw new Error("Context required for mounting");
+    if(context === null) throw new Error("Assert: context is not null");
+    assertValidProps(this._currentElement.props);
+    ReactComponent.Mixin.updateComponent.call(
+      this,
+      transaction,
+      prevElement,
+      nextElement,
+      context
+    );
+    this._updateDOMProperties(prevElement.props, transaction);
+    this._updateDOMChildren(prevElement.props, transaction, context);
+  },
 
   /**
    * Reconciles the properties by detecting differences in property values and
@@ -503,6 +495,11 @@ ReactDOMComponent.Mixin = {
   }
 
 };
+
+ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
+  mountComponent: 'mountComponent',
+  updateComponent: 'updateComponent'
+});
 
 assign(
   ReactDOMComponent.prototype,

@@ -50,27 +50,23 @@ var ReactDOMIDOperations = {
    * @param {*} value New value of the property.
    * @internal
    */
-  updatePropertyByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updatePropertyByID',
-    function(id, name, value) {
-      var node = ReactMount.getNode(id);
-      invariant(
-        !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-        'updatePropertyByID(...): %s',
-        INVALID_PROPERTY_ERRORS[name]
-      );
+  updatePropertyByID: function(id, name, value) {
+    var node = ReactMount.getNode(id);
+    invariant(
+      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+      'updatePropertyByID(...): %s',
+      INVALID_PROPERTY_ERRORS[name]
+    );
 
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertantly setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      if (value != null) {
-        DOMPropertyOperations.setValueForProperty(node, name, value);
-      } else {
-        DOMPropertyOperations.deleteValueForProperty(node, name);
-      }
+    // If we're updating to null or undefined, we should remove the property
+    // from the DOM node instead of inadvertantly setting to a string. This
+    // brings us in line with the same behavior we have on initial render.
+    if (value != null) {
+      DOMPropertyOperations.setValueForProperty(node, name, value);
+    } else {
+      DOMPropertyOperations.deleteValueForProperty(node, name);
     }
-  ),
+  },
 
   /**
    * Updates a DOM node to remove a property. This should only be used to remove
@@ -80,19 +76,15 @@ var ReactDOMIDOperations = {
    * @param {string} name A property name to remove, see `DOMProperty`.
    * @internal
    */
-  deletePropertyByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'deletePropertyByID',
-    function(id, name, value) {
-      var node = ReactMount.getNode(id);
-      invariant(
-        !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-        'updatePropertyByID(...): %s',
-        INVALID_PROPERTY_ERRORS[name]
-      );
-      DOMPropertyOperations.deleteValueForProperty(node, name, value);
-    }
-  ),
+  deletePropertyByID: function(id, name, value) {
+    var node = ReactMount.getNode(id);
+    invariant(
+      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+      'updatePropertyByID(...): %s',
+      INVALID_PROPERTY_ERRORS[name]
+    );
+    DOMPropertyOperations.deleteValueForProperty(node, name, value);
+  },
 
   /**
    * Updates a DOM node with new style values. If a value is specified as '',
@@ -102,14 +94,10 @@ var ReactDOMIDOperations = {
    * @param {object} styles Mapping from styles to values.
    * @internal
    */
-  updateStylesByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateStylesByID',
-    function(id, styles) {
-      var node = ReactMount.getNode(id);
-      CSSPropertyOperations.setValueForStyles(node, styles);
-    }
-  ),
+  updateStylesByID: function(id, styles) {
+    var node = ReactMount.getNode(id);
+    CSSPropertyOperations.setValueForStyles(node, styles);
+  },
 
   /**
    * Updates a DOM node's innerHTML.
@@ -118,14 +106,10 @@ var ReactDOMIDOperations = {
    * @param {string} html An HTML string.
    * @internal
    */
-  updateInnerHTMLByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateInnerHTMLByID',
-    function(id, html) {
-      var node = ReactMount.getNode(id);
-      setInnerHTML(node, html);
-    }
-  ),
+  updateInnerHTMLByID: function(id, html) {
+    var node = ReactMount.getNode(id);
+    setInnerHTML(node, html);
+  },
 
   /**
    * Updates a DOM node's text content set by `props.content`.
@@ -134,14 +118,10 @@ var ReactDOMIDOperations = {
    * @param {string} content Text content.
    * @internal
    */
-  updateTextContentByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'updateTextContentByID',
-    function(id, content) {
-      var node = ReactMount.getNode(id);
-      DOMChildrenOperations.updateTextContent(node, content);
-    }
-  ),
+  updateTextContentByID: function(id, content) {
+    var node = ReactMount.getNode(id);
+    DOMChildrenOperations.updateTextContent(node, content);
+  },
 
   /**
    * Replaces a DOM node that exists in the document with markup.
@@ -151,14 +131,10 @@ var ReactDOMIDOperations = {
    * @internal
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
-  dangerouslyReplaceNodeWithMarkupByID: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'dangerouslyReplaceNodeWithMarkupByID',
-    function(id, markup) {
+  dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
       var node = ReactMount.getNode(id);
       DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
-    }
-  ),
+  },
 
   /**
    * Updates a component's children by processing a series of updates.
@@ -167,16 +143,22 @@ var ReactDOMIDOperations = {
    * @param {array<string>} markup List of markup strings.
    * @internal
    */
-  dangerouslyProcessChildrenUpdates: ReactPerf.measure(
-    'ReactDOMIDOperations',
-    'dangerouslyProcessChildrenUpdates',
-    function(updates, markup) {
-      for (var i = 0; i < updates.length; i++) {
-        updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
-      }
-      DOMChildrenOperations.processUpdates(updates, markup);
+  dangerouslyProcessChildrenUpdates: function(updates, markup) {
+    for (var i = 0; i < updates.length; i++) {
+      updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
     }
-  )
+    DOMChildrenOperations.processUpdates(updates, markup);
+  }
 };
+
+ReactPerf.measureMethods(ReactDOMIDOperations, 'ReactDOMIDOperations', {
+  updatePropertyByID: 'updatePropertyByID',
+  deletePropertyByID: 'deletePropertyByID',
+  updateStylesByID: 'updateStylesByID',
+  updateInnerHTMLByID: 'updateInnerHTMLByID',
+  updateTextContentByID: 'updateTextContentByID',
+  dangerouslyReplaceNodeWithMarkupByID: 'dangerouslyReplaceNodeWithMarkupByID',
+  dangerouslyProcessChildrenUpdates: 'dangerouslyProcessChildrenUpdates'
+});
 
 module.exports = ReactDOMIDOperations;

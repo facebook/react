@@ -159,30 +159,31 @@ function runBatchedUpdates(transaction) {
   }
 }
 
-var flushBatchedUpdates = ReactPerf.measure(
-  'ReactUpdates',
-  'flushBatchedUpdates',
-  function() {
-    // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
-    // array and perform any updates enqueued by mount-ready handlers (i.e.,
-    // componentDidUpdate) but we need to check here too in order to catch
-    // updates enqueued by setState callbacks and asap calls.
-    while (dirtyComponents.length || asapEnqueued) {
-      if (dirtyComponents.length) {
-        var transaction = ReactUpdatesFlushTransaction.getPooled();
-        transaction.perform(runBatchedUpdates, null, transaction);
-        ReactUpdatesFlushTransaction.release(transaction);
-      }
+var flushBatchedUpdates = function() {
+  // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
+  // array and perform any updates enqueued by mount-ready handlers (i.e.,
+  // componentDidUpdate) but we need to check here too in order to catch
+  // updates enqueued by setState callbacks and asap calls.
+  while (dirtyComponents.length || asapEnqueued) {
+    if (dirtyComponents.length) {
+      var transaction = ReactUpdatesFlushTransaction.getPooled();
+      transaction.perform(runBatchedUpdates, null, transaction);
+      ReactUpdatesFlushTransaction.release(transaction);
+    }
 
-      if (asapEnqueued) {
-        asapEnqueued = false;
-        var queue = asapCallbackQueue;
-        asapCallbackQueue = CallbackQueue.getPooled();
-        queue.notifyAll();
-        CallbackQueue.release(queue);
-      }
+    if (asapEnqueued) {
+      asapEnqueued = false;
+      var queue = asapCallbackQueue;
+      asapCallbackQueue = CallbackQueue.getPooled();
+      queue.notifyAll();
+      CallbackQueue.release(queue);
     }
   }
+};
+flushBatchedUpdates = ReactPerf.measure(
+  'ReactUpdates',
+  'flushBatchedUpdates',
+  flushBatchedUpdates
 );
 
 /**
