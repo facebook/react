@@ -125,8 +125,7 @@ function traverseAllChildrenImpl(
     for (var i = 0; i < children.length; i++) {
       child = children[i];
       nextName = (
-        nameSoFar +
-        (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+        (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
         getComponentKey(child, i)
       );
       nextIndex = indexSoFar + subtreeCount;
@@ -144,12 +143,12 @@ function traverseAllChildrenImpl(
       var iterator = iteratorFn.call(children);
       var step;
       if (iteratorFn !== children.entries) {
+        var ii = 0;
         while (!(step = iterator.next()).done) {
           child = step.value;
           nextName = (
-            nameSoFar +
-            (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
-            getComponentKey(child, i)
+            (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
+            getComponentKey(child, ii++)
           );
           nextIndex = indexSoFar + subtreeCount;
           subtreeCount += traverseAllChildrenImpl(
@@ -167,7 +166,7 @@ function traverseAllChildrenImpl(
           if (entry) {
             child = entry[1];
             nextName = (
-              nameSoFar + (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+              (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
               wrapUserProvidedKey(entry[0]) + SUBSEPARATOR +
               getComponentKey(child, 0)
             );
@@ -192,7 +191,7 @@ function traverseAllChildrenImpl(
         if (children.hasOwnProperty(key)) {
           child = children[key];
           nextName = (
-            nameSoFar + (nameSoFar ? SUBSEPARATOR : SEPARATOR) +
+            (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
             wrapUserProvidedKey(key) + SUBSEPARATOR +
             getComponentKey(child, 0)
           );
