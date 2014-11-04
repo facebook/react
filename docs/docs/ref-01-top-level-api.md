@@ -57,10 +57,10 @@ Remove a mounted React component from the DOM and clean up its event handlers an
 ### React.renderToString
 
 ```javascript
-string renderToString(ReactComponent component)
+string renderToString(ReactElement element)
 ```
 
-Render a component to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
+Render a ReactElement to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
 
 If you call `React.render()` on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.
 
@@ -68,7 +68,7 @@ If you call `React.render()` on a node that already has this server-rendered mar
 ### React.renderToStaticMarkup
 
 ```javascript
-string renderToStaticMarkup(ReactComponent component)
+string renderToStaticMarkup(ReactElement element)
 ```
 
 Similar to `renderToString`, except this doesn't create extra DOM attributes such as `data-react-id`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
