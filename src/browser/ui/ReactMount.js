@@ -225,7 +225,8 @@ function mountComponentIntoNode(
     container,
     transaction,
     shouldReuseMarkup) {
-  var markup = this.mountComponent(rootID, transaction, 0, emptyObject);
+  var markup = this.mountComponent(rootID, transaction, emptyObject);
+  this._isTopLevel = true;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
 

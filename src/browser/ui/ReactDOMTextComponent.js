@@ -62,11 +62,10 @@ assign(ReactDOMTextComponent.prototype, {
    *
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth, context) {
+  mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     var escapedText = escapeTextForBrowser(this._stringText);
 

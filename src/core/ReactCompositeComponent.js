@@ -141,6 +141,7 @@ var ReactCompositeComponentMixin = assign({},
 
     this._context = null;
     this._mountOrder = 0;
+    this._isTopLevel = false;
 
     // See ReactUpdates.
     this._pendingCallbacks = null;
@@ -161,17 +162,15 @@ var ReactCompositeComponentMixin = assign({},
    *
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {number} mountDepth number of components in the owner hierarchy
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth, context) {
+  mountComponent: function(rootID, transaction, context) {
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
       transaction,
-      mountDepth,
       context
     );
 
@@ -233,7 +232,6 @@ var ReactCompositeComponentMixin = assign({},
     var markup = this._renderedComponent.mountComponent(
       rootID,
       transaction,
-      mountDepth + 1,
       this._processChildContext(context)
     );
     if (inst.componentDidMount) {
@@ -313,7 +311,7 @@ var ReactCompositeComponentMixin = assign({},
    */
   replaceProps: function(props, callback) {
     invariant(
-      this._mountDepth === 0,
+      this._isTopLevel,
       'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
       'component with a parent. This is an anti-pattern since props will ' +
       'get reactively updated when rendered. Instead, change the owner\'s ' +
@@ -781,7 +779,6 @@ var ReactCompositeComponentMixin = assign({},
       var nextMarkup = this._renderedComponent.mountComponent(
         thisID,
         transaction,
-        this._mountDepth + 1,
         context
       );
       ReactComponentEnvironment.replaceNodeWithMarkupByID(
@@ -890,17 +887,15 @@ var ShallowMixin = assign({},
    *
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {number} mountDepth number of components in the owner hierarchy
    * @return {ReactElement} Shallow rendering of the component.
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth, context) {
+  mountComponent: function(rootID, transaction, context) {
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
       transaction,
-      mountDepth,
       context
     );
 

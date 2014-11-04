@@ -529,6 +529,34 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should only allow `setProps` on top-level components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var innerInstance;
+
+    var Component = React.createClass({
+      render: function() {
+        return <div><div ref="inner" /></div>;
+      },
+      componentDidMount: function() {
+        innerInstance = this.refs.inner;
+      }
+    });
+    React.render(<Component />, container);
+
+    expect(innerInstance).not.toBe(undefined);
+    expect(function() {
+      innerInstance.setProps({value: 1});
+    }).toThrow(
+      'Invariant Violation: replaceProps(...): You called `setProps` or ' +
+      '`replaceProps` on a component with a parent. This is an anti-pattern ' +
+      'since props will get reactively updated when rendered. Instead, ' +
+      'change the owner\'s `render` method to pass the correct value as ' +
+      'props to the component where it is created.'
+    );
+  });
+
   it('should cleanup even if render() fatals', function() {
     var BadComponent = React.createClass({
       render: function() {

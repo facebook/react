@@ -16,7 +16,6 @@ var ReactInstanceMap;
 var ReactTestUtils;
 
 var reactComponentExpect;
-var getMountDepth;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
@@ -24,10 +23,6 @@ describe('ReactComponent', function() {
     ReactInstanceMap = require('ReactInstanceMap');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
-
-    getMountDepth = function(instance) {
-      return ReactInstanceMap.get(instance)._mountDepth;
-    };
   });
 
   it('should throw on invalid render targets', function() {
@@ -230,81 +225,5 @@ describe('ReactComponent', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
-  });
-
-  it('should know its simple mount depth', function() {
-    var Owner = React.createClass({
-      render: function() {
-        return <Child ref="child" />;
-      }
-    });
-
-    var Child = React.createClass({
-      render: function() {
-        return <div />;
-      }
-    });
-
-    var instance = <Owner />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(getMountDepth(instance)).toBe(0);
-    expect(getMountDepth(instance.refs.child)).toBe(1);
-  });
-
-  it('should know its (complicated) mount depth', function() {
-    var Box = React.createClass({
-      render: function() {
-        return <div ref="boxDiv">{this.props.children}</div>;
-      }
-    });
-
-    var Child = React.createClass({
-      render: function() {
-        return <span ref="span">child</span>;
-      }
-    });
-
-    var Switcher = React.createClass({
-      getInitialState: function() {
-        return {tabKey: 'hello'};
-      },
-
-      render: function() {
-        var child = this.props.children;
-
-        return (
-          <Box ref="box">
-            <div
-              ref="switcherDiv"
-              style={{
-                display: this.state.tabKey === child.key ? '' : 'none'
-              }}>
-              {child}
-            </div>
-          </Box>
-        );
-      }
-    });
-
-    var App = React.createClass({
-      render: function() {
-        return (
-          <Switcher ref="switcher">
-            <Child key="hello" ref="child" />
-          </Switcher>
-        );
-      }
-    });
-
-    var root = <App />;
-    root = ReactTestUtils.renderIntoDocument(root);
-
-    expect(getMountDepth(root)).toBe(0);
-    expect(getMountDepth(root.refs.switcher)).toBe(1);
-    expect(getMountDepth(root.refs.switcher.refs.box)).toBe(2);
-    expect(getMountDepth(root.refs.switcher.refs.switcherDiv)).toBe(5);
-    expect(getMountDepth(root.refs.child)).toBe(7);
-    expect(getMountDepth(root.refs.switcher.refs.box.refs.boxDiv)).toBe(3);
-    expect(getMountDepth(root.refs.child.refs.span)).toBe(8);
   });
 });
