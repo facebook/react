@@ -1,17 +1,10 @@
 /**
- * Copyright 2013 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ResponderEventPlugin
  */
@@ -23,7 +16,7 @@ var EventPluginUtils = require('react/lib/EventPluginUtils');
 var EventPropagators = require('react/lib/EventPropagators');
 var SyntheticEvent = require('react/lib/SyntheticEvent');
 
-var accumulate = require('react/lib/accumulate');
+var accumulateInto = require('react/lib/accumulateInto');
 var keyOf = require('react/lib/keyOf');
 
 var isStartish = EventPluginUtils.isStartish;
@@ -212,7 +205,7 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(terminateEvent);
-      extracted = accumulate(extracted, [grantEvent, terminateEvent]);
+      extracted = accumulateInto(extracted, [grantEvent, terminateEvent]);
       responderID = wantsResponderID;
     } else {
       var rejectEvent = SyntheticEvent.getPooled(
@@ -221,10 +214,10 @@ function setResponderAndExtractTransfer(
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(rejectEvent);
-      extracted = accumulate(extracted, rejectEvent);
+      extracted = accumulateInto(extracted, rejectEvent);
     }
   } else {
-    extracted = accumulate(extracted, grantEvent);
+    extracted = accumulateInto(extracted, grantEvent);
     responderID = wantsResponderID;
   }
   return extracted;
@@ -288,7 +281,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       if (transfer) {
-        extracted = accumulate(extracted, transfer);
+        extracted = accumulateInto(extracted, transfer);
       }
     }
     // Now that we know the responder is set correctly, we can dispatch
@@ -303,7 +296,7 @@ var ResponderEventPlugin = {
         nativeEvent
       );
       EventPropagators.accumulateDirectDispatches(gesture);
-      extracted = accumulate(extracted, gesture);
+      extracted = accumulateInto(extracted, gesture);
     }
     if (type === eventTypes.responderRelease) {
       responderID = null;
