@@ -71,7 +71,7 @@ If you're using an npm-compatible packaging system like browserify or webpack, y
 
 ```js
 var React = require('react');
-React.renderComponent(...);
+React.render(...);
 ```
 
 If you'd like to use any [add-ons](/react/docs/addons.html), use `var React = require('react/addons');` instead.

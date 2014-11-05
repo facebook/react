@@ -1,34 +1,28 @@
 /**
- * Copyright 2014 Facebook, Inc.
+ * Copyright 2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @providesModule ReactDescriptorValidator
+ * @providesModule ReactElementValidator
  */
 
 /**
- * ReactDescriptorValidator provides a wrapper around a descriptor factory
- * which validates the props passed to the descriptor. This is intended to be
+ * ReactElementValidator provides a wrapper around a element factory
+ * which validates the props passed to the element. This is intended to be
  * used only in DEV and could be replaced by a static type checker for languages
  * that support it.
  */
 
 "use strict";
 
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var getIteratorFn = require('getIteratorFn');
 var monitorCodeUse = require('monitorCodeUse');
 
 /**
@@ -75,7 +69,7 @@ function validateExplicitKey(component, parentType) {
 
   warnAndMonitorForKeyUse(
     'react_key_warning',
-    'Each child in an array should have a unique "key" prop.',
+    'Each child in an array or iterator should have a unique "key" prop.',
     component,
     parentType
   );
@@ -130,7 +124,9 @@ function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwnerName = null;
-  if (component._owner && component._owner !== ReactCurrentOwner.current) {
+  if (component &&
+      component._owner &&
+      component._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
     childOwnerName = component._owner.constructor.displayName;
 
@@ -168,23 +164,36 @@ function monitorUseOfObjectMap() {
  * @internal
  * @param {*} component Statically passed child of any type.
  * @param {*} parentType component's parent's type.
- * @return {boolean}
  */
 function validateChildKeys(component, parentType) {
   if (Array.isArray(component)) {
     for (var i = 0; i < component.length; i++) {
       var child = component[i];
-      if (ReactDescriptor.isValidDescriptor(child)) {
+      if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
     }
-  } else if (ReactDescriptor.isValidDescriptor(component)) {
+  } else if (ReactElement.isValidElement(component)) {
     // This component was passed in a valid location.
     component._store.validated = true;
-  } else if (component && typeof component === 'object') {
-    monitorUseOfObjectMap();
-    for (var name in component) {
-      validatePropertyKey(name, component[name], parentType);
+  } else if (component) {
+    var iteratorFn = getIteratorFn(component);
+    // Entry iterators provide implicit keys.
+    if (iteratorFn && iteratorFn !== component.entries) {
+      var iterator = iteratorFn.call(component);
+      var step;
+      while (!(step = iterator.next()).done) {
+        if (ReactElement.isValidElement(step.value)) {
+          validateExplicitKey(step.value, parentType);
+        }
+      }
+    } else if (typeof component === 'object') {
+      monitorUseOfObjectMap();
+      for (var key in component) {
+        if (component.hasOwnProperty(key)) {
+          validatePropertyKey(key, component[key], parentType);
+        }
+      }
     }
   }
 }
@@ -224,15 +233,15 @@ function checkPropTypes(componentName, propTypes, props, location) {
   }
 }
 
-var ReactDescriptorValidator = {
+var ReactElementValidator = {
 
-  createDescriptor: function(type, props, children) {
-    var descriptor = ReactDescriptor.createDescriptor.apply(this, arguments);
+  createElement: function(type, props, children) {
+    var element = ReactElement.createElement.apply(this, arguments);
 
     // The result can be nullish if a mock or a custom function is used.
     // TODO: Drop this when these are no longer allowed as the type argument.
-    if (descriptor == null) {
-      return descriptor;
+    if (element == null) {
+      return element;
     }
 
     for (var i = 2; i < arguments.length; i++) {
@@ -244,7 +253,7 @@ var ReactDescriptorValidator = {
       checkPropTypes(
         name,
         type.propTypes,
-        descriptor.props,
+        element.props,
         ReactPropTypeLocations.prop
       );
     }
@@ -252,22 +261,23 @@ var ReactDescriptorValidator = {
       checkPropTypes(
         name,
         type.contextTypes,
-        descriptor._context,
+        element._context,
         ReactPropTypeLocations.context
       );
     }
-    return descriptor;
+    return element;
   },
 
   createFactory: function(type) {
-    var validatedFactory = ReactDescriptorValidator.createDescriptor.bind(
+    var validatedFactory = ReactElementValidator.createElement.bind(
       null,
       type
     );
+    // Legacy hook TODO: Warn if this is accessed
     validatedFactory.type = type;
     return validatedFactory;
   }
 
 };
 
-module.exports = ReactDescriptorValidator;
+module.exports = ReactElementValidator;

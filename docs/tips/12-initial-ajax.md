@@ -14,8 +14,6 @@ When processing the response of an asynchronous request, be sure to check that t
 This example fetches the desired Github user's latest gist:
 
 ```js
-/** @jsx React.DOM */
-
 var UserGist = React.createClass({
   getInitialState: function() {
     return {
@@ -46,7 +44,7 @@ var UserGist = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <UserGist source="https://api.github.com/users/octocat/gists" />,
   mountNode
 );

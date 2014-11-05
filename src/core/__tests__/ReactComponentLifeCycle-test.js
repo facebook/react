@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -103,10 +95,10 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    var descriptor = <StatefulComponent />;
-    var firstInstance = React.renderComponent(descriptor, container);
+    var element = <StatefulComponent />;
+    var firstInstance = React.render(element, container);
     React.unmountComponentAtNode(container);
-    var secondInstance = React.renderComponent(descriptor, container);
+    var secondInstance = React.render(element, container);
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -399,7 +391,7 @@ describe('ReactComponentLifeCycle', function() {
       updateTooltip: function() {
         // Even though this.props.tooltip has an owner, updating it shouldn't
         // throw here because it's mounted as a root component
-        React.renderComponent(this.props.tooltip, this.container);
+        React.render(this.props.tooltip, this.container);
       }
     });
     var Component = React.createClass({
@@ -415,7 +407,7 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.renderComponent(
+    var instance = React.render(
       <Component text="uno" tooltipText="one" />,
       container
     );
@@ -425,7 +417,7 @@ describe('ReactComponentLifeCycle', function() {
     instance.setProps({text: "dos", tooltipText: "two"});
   });
 
-  it('should not allow setProps() called on an unmounted descriptor',
+  it('should not allow setProps() called on an unmounted element',
      function() {
     var PropsToUpdate = React.createClass({
       render: function() {

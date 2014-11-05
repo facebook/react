@@ -1,18 +1,13 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
-  "version": "0.12.0-alpha",
+  "version": "0.13.0-alpha",
   "keywords": [
     "react"
   ],
   "homepage": "https://github.com/facebook/react/tree/master/npm-react",
   "bugs": "https://github.com/facebook/react/issues?labels=react-core",
-  "licenses": [
-    {
-      "type": "Apache-2.0",
-      "url": "http://www.apache.org/licenses/LICENSE-2.0"
-    }
-  ],
+  "license": "BSD-3-Clause",
   "files": [
     "README.md",
     "addons.js",
@@ -29,7 +24,7 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "envify": "^2.0.0"
+    "envify": "^3.0.0"
   },
   "browserify": {
     "transform": ["envify"]

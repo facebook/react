@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -207,7 +199,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    instance = React.renderComponent(instance, container);
+    instance = React.render(instance, container);
 
     expect(instance.getDOMNode().value).toBe('yolo');
     expect(link.value).toBe('yolo');
@@ -227,25 +219,25 @@ describe('ReactDOMInput', function() {
 
       var node = document.createElement('div');
       var link = new ReactLink('yolo', mocks.getMockFunction());
-      React.renderComponent(<input type="text" valueLink={link} />, node);
+      React.render(<input type="text" valueLink={link} />, node);
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(
+      React.render(
         <input type="text" value="zoink" onChange={mocks.getMockFunction()} />,
         node
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(
+      React.render(
         <input type="text" value="zoink" readOnly={true} />,
         node
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(<input type="text" value="zoink" />, node);
+      React.render(<input type="text" value="zoink" />, node);
       expect(console.warn.mock.calls.length).toBe(1);
 
-      React.renderComponent(
+      React.render(
         <input type="text" value="zoink" readOnly={false} />,
         node
       );
@@ -265,7 +257,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+    expect(React.render.bind(React, instance, node)).not.toThrow();
 
     instance =
       <input
@@ -274,10 +266,10 @@ describe('ReactDOMInput', function() {
         value="test"
         onChange={emptyFunction}
       />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.render.bind(React, instance, node)).toThrow();
 
     instance = <input type="text" valueLink={link} onChange={emptyFunction} />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.render.bind(React, instance, node)).toThrow();
 
   });
 
@@ -286,7 +278,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    instance = React.renderComponent(instance, container);
+    instance = React.render(instance, container);
 
     expect(instance.getDOMNode().checked).toBe(true);
     expect(link.value).toBe(true);
@@ -306,10 +298,10 @@ describe('ReactDOMInput', function() {
 
       var node = document.createElement('div');
       var link = new ReactLink(true, mocks.getMockFunction());
-      React.renderComponent(<input type="checkbox" checkedLink={link} />, node);
+      React.render(<input type="checkbox" checkedLink={link} />, node);
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(
+      React.render(
         <input
           type="checkbox"
           checked="false"
@@ -319,16 +311,16 @@ describe('ReactDOMInput', function() {
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(
+      React.render(
         <input type="checkbox" checked="false" readOnly={true} />,
         node
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.renderComponent(<input type="checkbox" checked="false" />, node);
+      React.render(<input type="checkbox" checked="false" />, node);
       expect(console.warn.mock.calls.length).toBe(1);
 
-      React.renderComponent(
+      React.render(
         <input type="checkbox" checked="false" readOnly={false} />,
         node
       );
@@ -348,7 +340,7 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+    expect(React.render.bind(React, instance, node)).not.toThrow();
 
     instance =
       <input
@@ -357,11 +349,11 @@ describe('ReactDOMInput', function() {
         checked="false"
         onChange={emptyFunction}
       />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.render.bind(React, instance, node)).toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} onChange={emptyFunction} />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.render.bind(React, instance, node)).toThrow();
 
   });
 
@@ -375,13 +367,13 @@ describe('ReactDOMInput', function() {
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+    expect(React.render.bind(React, instance, node)).not.toThrow();
 
     instance = <input type="checkbox" valueLink={link} />;
-    expect(React.renderComponent.bind(React, instance, node)).not.toThrow();
+    expect(React.render.bind(React, instance, node)).not.toThrow();
 
     instance =
       <input type="checkbox" checkedLink={link} valueLink={emptyFunction} />;
-    expect(React.renderComponent.bind(React, instance, node)).toThrow();
+    expect(React.render.bind(React, instance, node)).toThrow();
   });
 });

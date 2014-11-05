@@ -12,8 +12,6 @@ There's another (uncommon) way of [communicating between components](/react/tips
 Say a list of todos, which upon clicking get removed. If there's only one unfinished todo left, animate it:
 
 ```js
-/** @jsx React.DOM */
-
 var Todo = React.createClass({
   render: function() {
     return <div onClick={this.props.onClick}>{this.props.title}</div>;
@@ -55,7 +53,7 @@ var Todos = React.createClass({
   }
 });
 
-React.renderComponent(<Todos />, mountNode);
+React.render(<Todos />, mountNode);
 ```
 
 Alternatively, you could have achieved this by passing the `todo` an `isLastUnfinishedItem` prop, let it check this prop in `componentDidUpdate`, then animate itself; however, this quickly gets messy if you pass around different props to control animations.

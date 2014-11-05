@@ -14,11 +14,9 @@ You might have run into a problem where `value` is specified, but the input can 
 The snippet below shows this phenomenon; after a second, the text becomes editable.
 
 ```js
-/** @jsx React.DOM */
-
-React.renderComponent(<input value="hi" />, mountNode);
+React.render(<input value="hi" />, mountNode);
 
 setTimeout(function() {
-  React.renderComponent(<input value={null} />, mountNode);
+  React.render(<input value={null} />, mountNode);
 }, 1000);
 ```

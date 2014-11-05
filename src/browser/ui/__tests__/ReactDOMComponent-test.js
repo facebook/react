@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -21,6 +13,7 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var mocks = require('mocks');
 
 describe('ReactDOMComponent', function() {
@@ -224,7 +217,6 @@ describe('ReactDOMComponent', function() {
       var ReactDefaultInjection = require('ReactDefaultInjection');
       ReactDefaultInjection.inject();
 
-      var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -232,7 +224,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactDOMComponent.Mixin);
+      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -275,7 +267,6 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var mixInto = require('mixInto');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
@@ -283,7 +274,7 @@ describe('ReactDOMComponent', function() {
         this.props = initialProps || {};
         this._rootNodeID = 'test';
       };
-      mixInto(NodeStub, ReactDOMComponent.Mixin);
+      assign(NodeStub.prototype, ReactDOMComponent.Mixin);
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -312,18 +303,17 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var mixInto = require('mixInto');
       var ReactComponent = require('ReactComponent');
       var ReactMultiChild = require('ReactMultiChild');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
-      var StubNativeComponent = function(descriptor) {
-        ReactComponent.Mixin.construct.call(this, descriptor);
+      var StubNativeComponent = function(element) {
+        ReactComponent.Mixin.construct.call(this, element);
       };
-      mixInto(StubNativeComponent, ReactComponent.Mixin);
-      mixInto(StubNativeComponent, ReactDOMComponent.Mixin);
-      mixInto(StubNativeComponent, ReactMultiChild.Mixin);
+      assign(StubNativeComponent.prototype, ReactComponent.Mixin);
+      assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
+      assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
 
       mountComponent = function(props) {
         var transaction = new ReactReconcileTransaction();
@@ -373,10 +363,10 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should validate against multiple children props", function() {
-      React.renderComponent(<div></div>, container);
+      React.render(<div></div>, container);
 
       expect(function() {
-        React.renderComponent(
+        React.render(
           <div children="" dangerouslySetInnerHTML={{__html: ''}}></div>,
           container
         );
@@ -388,7 +378,7 @@ describe('ReactDOMComponent', function() {
 
     it("should warn about contentEditable and children", function() {
       spyOn(console, 'warn');
-      React.renderComponent(
+      React.render(
         <div contentEditable><div /></div>,
         container
       );
@@ -397,10 +387,10 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should validate against invalid styles", function() {
-      React.renderComponent(<div></div>, container);
+      React.render(<div></div>, container);
 
       expect(function() {
-        React.renderComponent(<div style={1}></div>, container);
+        React.render(<div style={1}></div>, container);
       }).toThrow(
         'Invariant Violation: The `style` prop expects a mapping from style ' +
         'properties to values, not a string.'
@@ -419,7 +409,7 @@ describe('ReactDOMComponent', function() {
 
       var callback = function() {};
       var instance = <div onClick={callback} />;
-      instance = React.renderComponent(instance, container);
+      instance = React.render(instance, container);
 
       var rootNode = instance.getDOMNode();
       var rootNodeID = ReactMount.getID(rootNode);
@@ -457,4 +447,28 @@ describe('ReactDOMComponent', function() {
     });
   });
 
+  describe('tag sanitization', function() {
+    it('should throw when an invalid tag name is used', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+      var hackzor = React.createElement('script tag');
+      expect(
+        () => ReactTestUtils.renderIntoDocument(hackzor)
+      ).toThrow(
+        'Invariant Violation: Invalid tag: script tag'
+      );
+    });
+
+    it('should throw when an attack vector is used', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+      var hackzor = React.createElement('div><img /><div');
+      expect(
+        () => ReactTestUtils.renderIntoDocument(hackzor)
+      ).toThrow(
+        'Invariant Violation: Invalid tag: div><img /><div'
+      );
+    });
+
+  });
 });

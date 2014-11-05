@@ -21,7 +21,7 @@ exports.setup = function(){
     }
   });
 
-  React.renderComponent(AwesomeComponent(null), _rootNode);
+  React.render(AwesomeComponent(null), _rootNode);
 };
 exports.fn = function(deferred){
   setState({random: Date.now() + Math.random()}, function(){

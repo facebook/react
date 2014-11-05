@@ -12,10 +12,7 @@
   "newcap": false,
   "noempty": true,
   "nonstandard": true,
-  "onecase": true,
   "sub": true,
-  "regexdash": true,
-  "trailing": true,
   "undef": true,
   "unused": "vars"
 }

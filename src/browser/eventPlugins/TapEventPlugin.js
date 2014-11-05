@@ -1,17 +1,10 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule TapEventPlugin
  * @typechecks static-only
@@ -69,13 +62,15 @@ var dependencies = [
   topLevelTypes.topMouseUp
 ];
 
+var touchDependencies = [
+  topLevelTypes.topTouchStart,
+  topLevelTypes.topTouchCancel,
+  topLevelTypes.topTouchEnd,
+  topLevelTypes.topTouchMove
+];
+
 if (EventPluginUtils.useTouchEvents) {
-  dependencies.push(
-    topLevelTypes.topTouchCancel,
-    topLevelTypes.topTouchEnd,
-    topLevelTypes.topTouchStart,
-    topLevelTypes.topTouchMove
-  );
+  dependencies = dependencies.concat(touchDependencies);
 }
 
 var eventTypes = {
@@ -87,6 +82,10 @@ var eventTypes = {
     dependencies: dependencies
   }
 };
+
+var usedTouch = false;
+var usedTouchTime = 0;
+var TOUCH_DELAY = 1000;
 
 var TapEventPlugin = {
 
@@ -109,6 +108,17 @@ var TapEventPlugin = {
       nativeEvent) {
     if (!isStartish(topLevelType) && !isEndish(topLevelType)) {
       return null;
+    }
+    // on ios, there is a delay after touch event and synthetic
+    // mouse events, so that user can perform double tap
+    // solution: ignore mouse events following touchevent within small timeframe
+    if (touchDependencies.indexOf(topLevelType) !== -1) {
+      usedTouch = true;
+      usedTouchTime = Date.now();
+    } else {
+      if (usedTouch && (Date.now() - usedTouchTime < TOUCH_DELAY)) {
+        return;
+      }
     }
     var event = null;
     var distance = getDistance(startCoords, nativeEvent);

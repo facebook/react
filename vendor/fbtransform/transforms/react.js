@@ -1,22 +1,15 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  */
 /*global exports:true*/
 "use strict";
 
-var Syntax = require('esprima-fb').Syntax;
+var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
 var FALLBACK_TAGS = require('./xjs').knownTags;
@@ -28,26 +21,15 @@ var quoteAttrName = require('./xjs').quoteAttrName;
 var trimLeft = require('./xjs').trimLeft;
 
 /**
- * Customized desugar processor.
+ * Customized desugar processor for React JSX. Currently:
  *
- * Currently: (Somewhat tailored to React)
- * <X> </X> => X(null, null)
- * <X prop="1" /> => X({prop: '1'}, null)
- * <X prop="2"><Y /></X> => X({prop:'2'}, Y(null, null))
- * <X prop="2"><Y /><Z /></X> => X({prop:'2'}, [Y(null, null), Z(null, null)])
- *
- * Exceptions to the simple rules above:
- * if a property is named "class" it will be changed to "className" in the
- * javascript since "class" is not a valid object key in javascript.
+ * <X> </X> => React.createElement(X, null)
+ * <X prop="1" /> => React.createElement(X, {prop: '1'}, null)
+ * <X prop="2"><Y /></X> => React.createElement(X, {prop:'2'},
+ *   React.createElement(Y, null)
+ * )
+ * <div /> => React.createElement("div", null)
  */
-
-var JSX_ATTRIBUTE_TRANSFORMS = {
-  cxName: function(attr) {
-    throw new Error(
-      "cxName is no longer supported, use className={cx(...)} instead"
-    );
-  }
-};
 
 /**
  * Removes all non-whitespace/parenthesis characters
@@ -57,8 +39,12 @@ function stripNonWhiteParen(value) {
   return value.replace(reNonWhiteParen, '');
 }
 
+var tagConvention = /^[a-z]|\-/;
+function isTagName(name) {
+  return tagConvention.test(name);
+}
+
 function visitReactTag(traverse, object, path, state) {
-  var jsxObjIdent = utils.getDocblock(state).jsx;
   var openingElement = object.openingElement;
   var nameObject = openingElement.name;
   var attributesObject = openingElement.attributes;
@@ -69,55 +55,31 @@ function visitReactTag(traverse, object, path, state) {
     throw new Error('Namespace tags are not supported. ReactJSX is not XML.');
   }
 
-  var isReact = jsxObjIdent !== 'JSXDOM';
-
   // We assume that the React runtime is already in scope
-  if (isReact) {
-    utils.append('React.createElement(', state);
-  }
+  utils.append('React.createElement(', state);
 
-  // Only identifiers can be fallback tags or need quoting. We don't need to
-  // handle quoting for other types.
-  var didAddTag = false;
-
-  // Only identifiers can be fallback tags. XJSMemberExpressions are not.
-  if (nameObject.type === Syntax.XJSIdentifier) {
-    var tagName = nameObject.name;
-    var quotedTagName = quoteAttrName(tagName);
-
-    if (FALLBACK_TAGS.hasOwnProperty(tagName)) {
-      // "Properly" handle invalid identifiers, like <font-face>, which needs to
-      // be enclosed in quotes.
-      var predicate =
-        tagName === quotedTagName ?
-          ('.' + tagName) :
-          ('[' + quotedTagName + ']');
-      utils.append(jsxObjIdent + predicate, state);
-      utils.move(nameObject.range[1], state);
-      didAddTag = true;
-    } else if (tagName !== quotedTagName) {
-      // If we're in the case where we need to quote and but don't recognize the
-      // tag, throw.
+  // Identifiers with lower case or hypthens are fallback tags (strings).
+  // XJSMemberExpressions are not.
+  if (nameObject.type === Syntax.XJSIdentifier && isTagName(nameObject.name)) {
+    // This is a temporary error message to assist upgrades
+    if (!FALLBACK_TAGS.hasOwnProperty(nameObject.name)) {
       throw new Error(
-        'Tags must be valid JS identifiers or a recognized special case. `<' +
-        tagName + '>` is not one of them.'
+        'Lower case component names (' + nameObject.name + ') are no longer ' +
+        'supported in JSX: See http://fb.me/react-jsx-lower-case'
       );
     }
-  }
 
-  // Use utils.catchup in this case so we can easily handle XJSMemberExpressions
-  // which look like Foo.Bar.Baz. This also handles unhyphenated XJSIdentifiers
-  // that aren't fallback tags.
-  if (!didAddTag) {
+    utils.append('"' + nameObject.name + '"', state);
+    utils.move(nameObject.range[1], state);
+  } else {
+    // Use utils.catchup in this case so we can easily handle
+    // XJSMemberExpressions which look like Foo.Bar.Baz. This also handles
+    // XJSIdentifiers that aren't fallback tags.
     utils.move(nameObject.range[0], state);
     utils.catchup(nameObject.range[1], state);
   }
 
-  if (isReact) {
-    utils.append(', ', state);
-  } else {
-    utils.append('(', state);
-  }
+  utils.append(', ', state);
 
   var hasAttributes = attributesObject.length;
 
@@ -127,7 +89,7 @@ function visitReactTag(traverse, object, path, state) {
 
   // if we don't have any attributes, pass in null
   if (hasAtLeastOneSpreadProperty) {
-    utils.append('Object.assign({', state);
+    utils.append('React.__spread({', state);
   } else if (hasAttributes) {
     utils.append('{', state);
   } else {
@@ -146,7 +108,6 @@ function visitReactTag(traverse, object, path, state) {
       if (!previousWasSpread) {
         utils.append('}, ', state);
       }
-
 
       // Move to the expression start, ignoring everything except parenthesis
       // and whitespace.
@@ -203,13 +164,7 @@ function visitReactTag(traverse, object, path, state) {
       utils.move(attr.name.range[1], state);
       // Use catchupNewlines to skip over the '=' in the attribute
       utils.catchupNewlines(attr.value.range[0], state);
-      if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
-        utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
-        utils.move(attr.value.range[1], state);
-        if (!isLast) {
-          utils.append(', ', state);
-        }
-      } else if (attr.value.type === Syntax.Literal) {
+      if (attr.value.type === Syntax.Literal) {
         renderXJSLiteral(attr.value, isLast, state);
       } else {
         renderXJSExpressionContainer(traverse, attr.value, isLast, path, state);

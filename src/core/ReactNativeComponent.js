@@ -1,25 +1,18 @@
 /**
- * Copyright 2014 Facebook, Inc.
+ * Copyright 2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactNativeComponent
  */
 
 "use strict";
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
-var mergeInto = require('mergeInto');
 
 var genericComponentClass = null;
 // This registry keeps track of wrapper classes around native tags
@@ -34,7 +27,7 @@ var ReactNativeComponentInjection = {
   // This accepts a keyed object with classes as values. Each key represents a
   // tag. That particular tag will use this class instead of the generic one.
   injectComponentClasses: function(componentClasses) {
-    mergeInto(tagToComponentClass, componentClasses);
+    assign(tagToComponentClass, componentClasses);
   }
 };
 
@@ -64,8 +57,7 @@ function createInstanceForTag(tag, props, parentType) {
     );
     return new genericComponentClass(tag, props);
   }
-  // Unwrap legacy factories
-  return new componentClass.type(props);
+  return new componentClass(props);
 }
 
 var ReactNativeComponent = {

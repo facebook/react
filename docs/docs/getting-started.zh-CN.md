@@ -33,8 +33,7 @@ next: tutorial.html
   <body>
     <div id="example"></div>
     <script type="text/jsx">
-      /** @jsx React.DOM */
-      React.renderComponent(
+      React.render(
         <h1>Hello, world!</h1>,
         document.getElementById('example')
       );
@@ -50,15 +49,14 @@ next: tutorial.html
 你的 React JSX 代码文件可以写在另外的文件里。新建下面的 `src/helloworld.js`。
 
 ```javascript
-/** @jsx React.DOM */
-React.renderComponent(
+React.render(
   <h1>Hello, world!</h1>,
   document.getElementById('example')
 );
 ```
 
 然后在 `helloworld.html` 引用该文件：
- 
+
 ```html{10}
 <script type="text/jsx" src="src/helloworld.js"></script>
 ```
@@ -80,17 +78,12 @@ jsx --watch src/ build/
 
 只要你修改了， `build/helloworld.js` 文件会自动生成。
 
-```javascript{3}
-/** @jsx React.DOM */
-React.renderComponent(
-  React.DOM.h1(null, 'Hello, world!'),
+```javascript{2}
+React.render(
+  React.createElement('h1', null, 'Hello, world!'),
   document.getElementById('example')
 );
 ```
-
-> 注意:
->
-> 目前注释解析器还是非常严格；为了让它能够找出 `@jsx` 修饰符，有两个限制是必须的。`@jsx` 注释块必须是代码文件第一个注释。注释必须以 `/**` (`/*` 和 `//` 不起作用) 开头。如果解析器找不到 `@jsx` 注释，它就不会转换代码，直接原样输出到文件。
 
 对照下面更新你的 HTML 代码
 

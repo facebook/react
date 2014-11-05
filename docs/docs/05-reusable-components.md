@@ -3,7 +3,7 @@ id: reusable-components
 title: Reusable Components
 permalink: reusable-components.html
 prev: multiple-components.html
-next: forms.html
+next: transferring-props.html
 ---
 
 When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, fewer bugs, and fewer bytes down the wire.
@@ -25,12 +25,12 @@ React.createClass({
     optionalObject: React.PropTypes.object,
     optionalString: React.PropTypes.string,
 
-    // Anything that can be rendered: numbers, strings, components or an array
+    // Anything that can be rendered: numbers, strings, elements or an array
     // containing these types.
-    optionalRenderable: React.PropTypes.renderable,
+    optionalNode: React.PropTypes.node,
 
-    // A React component.
-    optionalComponent: React.PropTypes.component,
+    // A React element.
+    optionalElement: React.PropTypes.element,
 
     // You can also declare that a prop is an instance of a class. This uses
     // JS's instanceof operator.
@@ -100,21 +100,18 @@ The result of `getDefaultProps()` will be cached and used to ensure that `this.p
 
 ## Transferring Props: A Shortcut
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. React provides `transferPropsTo()` to do just this.
+A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
 
 ```javascript
-/** @jsx React.DOM */
-
 var CheckLink = React.createClass({
   render: function() {
-    // transferPropsTo() will take any props passed to CheckLink
-    // and copy them to <a>
-    return this.transferPropsTo(<a>{'√ '}{this.props.children}</a>);
+    // This takes any props passed to CheckLink and copies them to <a>
+    return <a {...this.props}>{'√ '}{this.props.children}</a>;
   }
 });
 
-React.renderComponent(
-  <CheckLink href="javascript:alert('Hello, world!');">
+React.render(
+  <CheckLink href="/checked.html">
     Click here!
   </CheckLink>,
   document.getElementById('example')
@@ -123,13 +120,13 @@ React.renderComponent(
 
 ## Single Child
 
-With `React.PropTypes.component` you can specify that only a single child can be passed to
+With `React.PropTypes.element` you can specify that only a single child can be passed to
 a component as children.
 
 ```javascript
 var MyComponent = React.createClass({
   propTypes: {
-    children: React.PropTypes.component.isRequired
+    children: React.PropTypes.element.isRequired
   },
 
   render: function() {
@@ -150,8 +147,6 @@ Components are the best way to reuse code in React, but sometimes very different
 One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
 ```javascript
-/** @jsx React.DOM */
-
 var SetIntervalMixin = {
   componentWillMount: function() {
     this.intervals = [];
@@ -184,7 +179,7 @@ var TickTock = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <TickTock />,
   document.getElementById('example')
 );

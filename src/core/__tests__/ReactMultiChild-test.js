@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -50,13 +42,13 @@ describe('ReactMultiChild', function() {
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><MockComponent /></div>, container);
+      React.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><MockComponent /></div>, container);
+      React.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(1);
@@ -80,12 +72,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><MockComponent /></div>, container);
+      React.render(<div><MockComponent /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><span /></div>, container);
+      React.render(<div><span /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -114,12 +106,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<WrapperComponent />, container);
+      React.render(<WrapperComponent />, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(
+      React.render(
         <WrapperComponent><MockComponent /></WrapperComponent>,
         container
       );
@@ -145,12 +137,12 @@ describe('ReactMultiChild', function() {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><MockComponent key="A" /></div>, container);
+      React.render(<div><MockComponent key="A" /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      React.renderComponent(<div><MockComponent key="B" /></div>, container);
+      React.render(<div><MockComponent key="B" /></div>, container);
 
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -180,7 +172,7 @@ describe('ReactMultiChild', function() {
     it('should only set `innerHTML` once on update', function() {
       var container = document.createElement('div');
 
-      React.renderComponent(
+      React.render(
         <div>
           <p><span /></p>
           <p><span /></p>
@@ -189,7 +181,7 @@ describe('ReactMultiChild', function() {
         container
       );
       // Warm the cache used by `getMarkupWrap`.
-      React.renderComponent(
+      React.render(
         <div>
           <p><span /><span /></p>
           <p><span /><span /></p>
@@ -200,7 +192,7 @@ describe('ReactMultiChild', function() {
       expect(setInnerHTML).toHaveBeenCalled();
       var callCountOnMount = setInnerHTML.callCount;
 
-      React.renderComponent(
+      React.render(
         <div>
           <p><span /><span /><span /></p>
           <p><span /><span /><span /></p>

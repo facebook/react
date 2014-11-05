@@ -175,4 +175,4 @@ var PagePopUpContent = React.createClass({
 });
 
 // Render application.
-React.renderComponent(App(null), document.getElementById('content'));
+React.render(App(null), document.getElementById('content'));

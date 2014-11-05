@@ -18,7 +18,7 @@ exports.setup = function(){
       number: React.PropTypes.number,
       string: React.PropTypes.string.isRequired,
       func: React.PropTypes.func.isRequired,
-      renderable: React.PropTypes.renderable.isRequired,
+      node: React.PropTypes.node.isRequired,
       instanceOf: React.PropTypes.instanceOf(Thing).isRequired
     },
     render: function() {
@@ -33,14 +33,14 @@ exports.setup = function(){
       number: React.PropTypes.number,
       string: React.PropTypes.string.isRequired,
       func: React.PropTypes.func.isRequired,
-      renderable: React.PropTypes.renderable.isRequired,
-      renderable2: React.PropTypes.renderable.isRequired,
+      node: React.PropTypes.node.isRequired,
+      node2: React.PropTypes.node.isRequired,
       instanceOf: React.PropTypes.instanceOf(Thing).isRequired,
-      component: React.PropTypes.component.isRequired
+      element: React.PropTypes.element.isRequired
     },
     render: function(){
       return React.DOM.li(null,
-        this.props.number + this.props.string + this.props.renderable
+        this.props.number + this.props.string + this.props.node
       );
     }
   });
@@ -63,14 +63,14 @@ exports.fn = function(){
       number: Math.random(),
       string: 'banana banana banana',
       func: function() { return 'this is a function'; },
-      renderable: 'renderable string',
-      renderable2: [MyReactComponent(), 'a string'],
+      node: 'renderable string',
+      node2: [MyReactComponent(), 'a string'],
       instanceOf: new Thing,
-      component: MyReactComponent()
+      element: MyReactComponent()
     }));
   };
 
-  React.renderComponent(List({
+  React.render(List({
     array: [11, 12, 13, 14, 15, 16, 17, 18, 19, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     bool: false,
     number: Math.random(),

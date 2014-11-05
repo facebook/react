@@ -1,0 +1,1 @@
+The files in this directory are not related to React's core functionality. They are shared utility modules that are also used in other parts of Facebook's front-end. Changes to these files need more consideration than changes to React itself.

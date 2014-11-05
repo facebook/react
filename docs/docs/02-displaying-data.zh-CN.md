@@ -35,8 +35,6 @@ next: jsx-in-depth.html
 在接下去的文档中，我们只关注 JavaScript 代码，假设我们把代码插入到上面那个模板中。用下面的代码替换掉上面用来占位的注释。
 
 ```javascript
-/** @jsx React.DOM */
-
 var HelloWorld = React.createClass({
   render: function() {
     return (
@@ -49,7 +47,7 @@ var HelloWorld = React.createClass({
 });
 
 setInterval(function() {
-  React.renderComponent(
+  React.render(
     <HelloWorld date={new Date()} />,
     document.getElementById('example')
   );
@@ -78,7 +76,7 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 
 我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。为了使这变得更简单，我们做了一个非常简单、**可选**类似 HTML 语法 ，通过函数调用即可生成模板的编译器，称为 JSX。
 
-**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： `React.DOM.a({href: 'http://facebook.github.io/react/'}, 'Hello React!')`。通过 JSX 这就变成了 `<a href="http://facebook.github.io/react/">Hello React!</a>`。我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以**JSX 不是必须用的。**
+**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： `React.createElement('a', {href: 'http://facebook.github.io/react/'}, 'Hello React!')`。通过 JSX 这就变成了 `<a href="http://facebook.github.io/react/">Hello React!</a>`。我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以**JSX 不是必须用的。**
 
 JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 [深入理解 JSX](/react/docs/jsx-in-depth.html)。或者直接使用[在线 JSX 编译器](/react/jsx-compiler.html)观察变化过程。
 

@@ -1,17 +1,10 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactUpdates
  */
@@ -24,13 +17,13 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactPerf = require('ReactPerf');
 var Transaction = require('Transaction');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
-var mixInto = require('mixInto');
 var warning = require('warning');
 
 var dirtyComponents = [];
-var setImmediateCallbackQueue = CallbackQueue.getPooled();
-var setImmediateEnqueued = false;
+var asapCallbackQueue = CallbackQueue.getPooled();
+var asapEnqueued = false;
 
 var batchingStrategy = null;
 
@@ -80,8 +73,9 @@ function ReactUpdatesFlushTransaction() {
     ReactUpdates.ReactReconcileTransaction.getPooled();
 }
 
-mixInto(ReactUpdatesFlushTransaction, Transaction.Mixin);
-mixInto(ReactUpdatesFlushTransaction, {
+assign(
+  ReactUpdatesFlushTransaction.prototype,
+  Transaction.Mixin, {
   getTransactionWrappers: function() {
     return TRANSACTION_WRAPPERS;
   },
@@ -172,18 +166,18 @@ var flushBatchedUpdates = ReactPerf.measure(
     // ReactUpdatesFlushTransaction's wrappers will clear the dirtyComponents
     // array and perform any updates enqueued by mount-ready handlers (i.e.,
     // componentDidUpdate) but we need to check here too in order to catch
-    // updates enqueued by setState callbacks and setImmediate calls.
-    while (dirtyComponents.length || setImmediateEnqueued) {
+    // updates enqueued by setState callbacks and asap calls.
+    while (dirtyComponents.length || asapEnqueued) {
       if (dirtyComponents.length) {
         var transaction = ReactUpdatesFlushTransaction.getPooled();
         transaction.perform(runBatchedUpdates, null, transaction);
         ReactUpdatesFlushTransaction.release(transaction);
       }
 
-      if (setImmediateEnqueued) {
-        setImmediateEnqueued = false;
-        var queue = setImmediateCallbackQueue;
-        setImmediateCallbackQueue = CallbackQueue.getPooled();
+      if (asapEnqueued) {
+        asapEnqueued = false;
+        var queue = asapCallbackQueue;
+        asapCallbackQueue = CallbackQueue.getPooled();
         queue.notifyAll();
         CallbackQueue.release(queue);
       }
@@ -237,14 +231,14 @@ function enqueueUpdate(component, callback) {
  * Enqueue a callback to be run at the end of the current batching cycle. Throws
  * if no updates are currently being performed.
  */
-function setImmediate(callback, context) {
+function asap(callback, context) {
   invariant(
     batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.setImmediate: Can\'t enqueue an immediate callback in a ' +
-    'context where updates are not being batched.'
+    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
+    'updates are not being batched.'
   );
-  setImmediateCallbackQueue.enqueue(callback, context);
-  setImmediateEnqueued = true;
+  asapCallbackQueue.enqueue(callback, context);
+  asapEnqueued = true;
 }
 
 var ReactUpdatesInjection = {
@@ -286,7 +280,7 @@ var ReactUpdates = {
   enqueueUpdate: enqueueUpdate,
   flushBatchedUpdates: flushBatchedUpdates,
   injection: ReactUpdatesInjection,
-  setImmediate: setImmediate
+  asap: asap
 };
 
 module.exports = ReactUpdates;

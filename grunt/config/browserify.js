@@ -8,7 +8,7 @@ var es3ify = require('es3ify');
 var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
-var _ = require('lodash');
+var derequire = require('derequire');
 
 var SIMPLE_TEMPLATE =
 '/**\n\
@@ -19,19 +19,13 @@ var LICENSE_TEMPLATE =
 '/**\n\
  * @PACKAGE@ v@VERSION@\n\
  *\n\
- * Copyright 2013-2014 Facebook, Inc.\n\
+ * Copyright 2013-2014, Facebook, Inc.\n\
+ * All rights reserved.\n\
  *\n\
- * Licensed under the Apache License, Version 2.0 (the "License");\n\
- * you may not use this file except in compliance with the License.\n\
- * You may obtain a copy of the License at\n\
+ * This source code is licensed under the BSD-style license found in the\n\
+ * LICENSE file in the root directory of this source tree. An additional grant\n\
+ * of patent rights can be found in the PATENTS file in the same directory.\n\
  *\n\
- * http://www.apache.org/licenses/LICENSE-2.0\n\
- *\n\
- * Unless required by applicable law or agreed to in writing, software\n\
- * distributed under the License is distributed on an "AS IS" BASIS,\n\
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n\
- * See the License for the specific language governing permissions and\n\
- * limitations under the License.\n\
  */';
 
 function minify(src) {
@@ -64,15 +58,19 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
-  after: [es3ify.transform, simpleBannerify]
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
-var min = _.merge({}, basic, {
+var min = {
+  entries: [
+    './build/modules/React.js'
+  ],
   outfile: './build/react.min.js',
   debug: false,
+  standalone: 'React',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
-  after: [minify, bannerify]
-});
+  after: [es3ify.transform, derequire, minify, bannerify]
+};
 
 var transformer = {
   entries:[
@@ -81,7 +79,8 @@ var transformer = {
   outfile: './build/JSXTransformer.js',
   debug: false,
   standalone: 'JSXTransformer',
-  after: [es3ify.transform, simpleBannerify]
+  transforms: [],
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
 var addons = {
@@ -91,17 +90,22 @@ var addons = {
   outfile: './build/react-with-addons.js',
   debug: false,
   standalone: 'React',
-  transforms: [envify({NODE_ENV: 'development'})],
   packageName: 'React (with addons)',
-  after: [es3ify.transform, simpleBannerify]
+  transforms: [envify({NODE_ENV: 'development'})],
+  after: [es3ify.transform, derequire, simpleBannerify]
 };
 
-var addonsMin = _.merge({}, addons, {
+var addonsMin = {
+  entries: [
+    './build/modules/ReactWithAddons.js'
+  ],
   outfile: './build/react-with-addons.min.js',
   debug: false,
+  standalone: 'React',
+  packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
-  after: [minify, bannerify]
-});
+  after: [es3ify.transform, derequire, minify, bannerify]
+};
 
 var withCodeCoverageLogging = {
   entries: [

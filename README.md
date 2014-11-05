@@ -13,14 +13,13 @@ React is a JavaScript library for building user interfaces.
 We have several examples [on the website](http://facebook.github.io/react/). Here is the first one to get you started:
 
 ```js
-/** @jsx React.DOM */
 var HelloMessage = React.createClass({
   render: function() {
     return <div>Hello {this.props.name}</div>;
   }
 });
 
-React.renderComponent(
+React.render(
   <HelloMessage name="John" />,
   document.getElementById('container')
 );
@@ -32,16 +31,16 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](http://facebook
 
 ## Installation
 
-The fastest way to get started is to serve JavaScript from the CDN (also available on [CDNJS](http://cdnjs.com/#react)):
+The fastest way to get started is to serve JavaScript from the CDN (also available on [cdnjs](https://cdnjs.com/libraries/react) and [jsdelivr](http://www.jsdelivr.com/#!react)):
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.11.1.js"></script>
+<script src="http://fb.me/react-0.12.0.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.11.1.js"></script>
+<script src="http://fb.me/JSXTransformer-0.12.0.js"></script>
 ```
 
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.11.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.12.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -92,6 +91,14 @@ grunt lint
 # Wipe out build directory
 grunt clean
 ```
+
+### License
+
+React is [BSD licensed](./LICENSE). We also provide an additional [patent grant](./PATENTS).
+
+React documentation is [Creative Commons licensed](./LICENSE-docs).
+
+Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
 
 ### More…
 

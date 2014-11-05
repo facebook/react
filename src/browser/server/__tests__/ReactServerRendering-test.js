@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -60,7 +52,7 @@ describe('ReactServerRendering', function() {
 
   describe('renderComponentToString', function() {
     it('should generate simple markup', function() {
-      var response = ReactServerRendering.renderComponentToString(
+      var response = ReactServerRendering.renderToString(
         <span>hello world</span>
       );
       expect(response).toMatch(
@@ -73,7 +65,7 @@ describe('ReactServerRendering', function() {
       var EventPluginHub = require('EventPluginHub');
       var cb = mocks.getMockFunction();
 
-      ReactServerRendering.renderComponentToString(
+      ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
       );
       expect(EventPluginHub.__getListenerBank()).toEqual({});
@@ -90,7 +82,7 @@ describe('ReactServerRendering', function() {
           return <span>My name is {this.props.name}</span>;
         }
       });
-      var response = ReactServerRendering.renderComponentToString(
+      var response = ReactServerRendering.renderToString(
         <Parent />
       );
       expect(response).toMatch(
@@ -139,7 +131,7 @@ describe('ReactServerRendering', function() {
           }
         });
 
-        var response = ReactServerRendering.renderComponentToString(
+        var response = ReactServerRendering.renderToString(
           <TestComponent />
         );
 
@@ -184,20 +176,20 @@ describe('ReactServerRendering', function() {
       });
 
       var element = document.createElement('div');
-      React.renderComponent(<TestComponent />, element);
+      React.render(<TestComponent />, element);
 
       var lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
-      React.renderComponent(<TestComponent name="x" />, element);
+      React.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(1);
 
       // Unmount and remount. We should get another mount event and
       // we should get different markup, as the IDs are unique each time.
       React.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
-      React.renderComponent(<TestComponent name="x" />, element);
+      React.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(2);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -209,13 +201,13 @@ describe('ReactServerRendering', function() {
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
-      lastMarkup = ReactServerRendering.renderComponentToString(
+      lastMarkup = ReactServerRendering.renderToString(
         <TestComponent name="x" />
       );
       ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup + ' __sentinel__';
 
-      React.renderComponent(<TestComponent name="x" />, element);
+      React.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       expect(element.innerHTML.indexOf('__sentinel__') > -1).toBe(true);
       React.unmountComponentAtNode(element);
@@ -226,7 +218,7 @@ describe('ReactServerRendering', function() {
       var _warn = console.warn;
       console.warn = mocks.getMockFunction();
       element.innerHTML = lastMarkup;
-      var instance = React.renderComponent(<TestComponent name="y" />, element);
+      var instance = React.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expect(console.warn.mock.calls.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -241,27 +233,13 @@ describe('ReactServerRendering', function() {
 
     it('should throw with silly args', function() {
       expect(
-        ReactServerRendering.renderComponentToString.bind(
+        ReactServerRendering.renderToString.bind(
           ReactServerRendering,
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderComponentToString(): You must pass ' +
-        'a valid ReactComponent.'
-      );
-    });
-
-    it('should provide guidance for breaking API changes', function() {
-      expect(
-        ReactServerRendering.renderComponentToString.bind(
-          ReactServerRendering,
-          <div />,
-          function(){}
-        )
-      ).toThrow(
-        'Invariant Violation: renderComponentToString(): This function ' +
-        'became synchronous and now returns the generated markup. Please ' +
-        'remove the second parameter.'
+        'Invariant Violation: renderToString(): You must pass ' +
+        'a valid ReactElement.'
       );
     });
   });
@@ -282,7 +260,7 @@ describe('ReactServerRendering', function() {
         }
       });
 
-      var response = ReactServerRendering.renderComponentToStaticMarkup(
+      var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -296,7 +274,7 @@ describe('ReactServerRendering', function() {
         }
       });
 
-      var response = ReactServerRendering.renderComponentToStaticMarkup(
+      var response = ReactServerRendering.renderToStaticMarkup(
         <TestComponent />
       );
 
@@ -307,7 +285,7 @@ describe('ReactServerRendering', function() {
       var EventPluginHub = require('EventPluginHub');
       var cb = mocks.getMockFunction();
 
-      ReactServerRendering.renderComponentToString(
+      ReactServerRendering.renderToString(
         <span onClick={cb}>hello world</span>
       );
       expect(EventPluginHub.__getListenerBank()).toEqual({});
@@ -348,7 +326,7 @@ describe('ReactServerRendering', function() {
           }
         });
 
-        var response = ReactServerRendering.renderComponentToStaticMarkup(
+        var response = ReactServerRendering.renderToStaticMarkup(
           <TestComponent />
         );
 
@@ -367,13 +345,13 @@ describe('ReactServerRendering', function() {
 
     it('should throw with silly args', function() {
       expect(
-        ReactServerRendering.renderComponentToStaticMarkup.bind(
+        ReactServerRendering.renderToStaticMarkup.bind(
           ReactServerRendering,
           'not a component'
         )
       ).toThrow(
-        'Invariant Violation: renderComponentToStaticMarkup(): You must pass ' +
-        'a valid ReactComponent.'
+        'Invariant Violation: renderToStaticMarkup(): You must pass ' +
+        'a valid ReactElement.'
       );
     });
 
@@ -391,7 +369,7 @@ describe('ReactServerRendering', function() {
         // We shouldn't ever be calling this on the server
         throw new Error('Browser reconcile transaction should not be used');
       };
-      var markup = ReactServerRendering.renderComponentToString(
+      var markup = ReactServerRendering.renderToString(
         <Component />
       );
       expect(markup.indexOf('hello, world') >= 0).toBe(true);

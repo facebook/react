@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -160,8 +152,8 @@ describe('ReactCompositeComponent-mixin', function() {
   });
 
   it('should validate prop types via mixins', function() {
-    expect(TestComponent.type.propTypes).toBeDefined();
-    expect(TestComponent.type.propTypes.value)
+    expect(TestComponent.propTypes).toBeDefined();
+    expect(TestComponent.propTypes.value)
       .toBe(mixinPropValidator);
   });
 
@@ -169,11 +161,11 @@ describe('ReactCompositeComponent-mixin', function() {
     // Sanity check...
     expect(componentPropValidator).toNotBe(mixinPropValidator);
     // Actually check...
-    expect(TestComponentWithPropTypes.type.propTypes)
+    expect(TestComponentWithPropTypes.propTypes)
       .toBeDefined();
-    expect(TestComponentWithPropTypes.type.propTypes.value)
+    expect(TestComponentWithPropTypes.propTypes.value)
       .toNotBe(mixinPropValidator);
-    expect(TestComponentWithPropTypes.type.propTypes.value)
+    expect(TestComponentWithPropTypes.propTypes.value)
       .toBe(componentPropValidator);
   });
 });

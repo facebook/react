@@ -1,22 +1,30 @@
 ---
 - - Adam Krebs
+  - Adam Mark
   - Adam Solove
   - Alan deLevie
   - Alex Zelenskiy
   - Alexander Solovyov
+  - Alexey Raspopov
+  - Andre Z Sanchez
   - Andreas Svensson
+  - Andres Suarez
   - Andrew Davey
+  - Andrew Rasmussen
   - Andrew Zich
   - Andrey Popp
   - Anthony van der Hoorn
+  - Areeb Malik
   - Ayman Osman
   - Ben Alpert
+  - Ben Foxall
   - Ben Newman
   - Ben Ripkens
   - Bill Fisher
   - Bob Eagan
   - Bojan Mihelac
   - Brandon Bloom
+  - Brandon Tilley
   - Brian Cooke
   - Brian Kim
   - Brian Reavis
@@ -24,12 +32,17 @@
   - Cam Spiers
   - Cassus Adam Banko
   - Cat Chen
+  - Charles Marsh
   - Cheng Lou
+  - Chris Sciolla
+  - Christian Alfoni
   - Christian Roman
   - Christoph Pojer
   - Christopher Monsanto
   - Clay Allsopp
   - Connor McSheffrey
+  - Cotton Hou
+  - Dan Abramov
   - Dan Schafer
   - Daniel Gasienica
   - Daniel Lo Nigro
@@ -40,6 +53,7 @@
   - David Hellsing
   - David Hu
   - Devon Blandin
+  - Dmitrii Abramov
   - Dmitry Mazuro
   - Dustin Getz
   - Enguerran
@@ -49,21 +63,24 @@
   - Evan Coonrod
   - Fabio M. Costa
   - Felipe Oliveira Carvalho
+  - Felix Gnass
   - Felix Kling
   - Fernando Correia
   - François-Xavier Bois
   - Fred Zhao
   - G Scott Olson
+  - Garren Smith
   - Geert Pasteels
   - Geert-Jan Brits
   - George A Sisco III
   - Gilbert
+  - Glen Mailer
   - Greg Hurrell
-- - Greg Roodt
+  - Greg Roodt
   - Guangqiang Dong
   - Guido Bouman
   - Harry Hull
-  - Harshad Sabne
+- - Harshad Sabne
   - Hendrik Swanepoel
   - Hugo Jobling
   - Ian Obermiller
@@ -71,25 +88,36 @@
   - Irae Carvalho
   - Isaac Salier-Hellendag
   - Ivan Kozik
+  - Ivan Vergiliev
+  - Jacob Gable
+  - Jacob Greenleaf
   - Jaime Mingo
   - Jakub Malinowski
   - James Brantly
   - James Ide
+  - James Seppi
   - Jamie Wong
   - Jamison Dance
+  - Jan Hancic
   - Jan Kassens
   - Jared Forsyth
   - Jason Bonta
   - Jason Trill
   - Jean Lauliac
+  - Jed Watson
   - Jeff Barczewski
   - Jeff Carpenter
+  - Jeff Chan
   - Jeff Morrison
   - Jeff Welch
   - Jeffrey Lin
+  - Jesse Skinner
   - Jignesh Kakadiya
+  - Jim OBrien
+  - Jimmy Jea
   - Jing Chen
   - Johannes Baiter
+  - Johannes Emerich
   - John Watson
   - Jon Beebe
   - Jonas Enlund
@@ -101,15 +129,18 @@
   - Josh Yudaken
   - Joshua Ma
   - Julen Ruiz Aizpuru
+  - Julien Bordellier
   - Jun Wu
   - Juraj Dudak
   - Justin Jaffray
   - Karl Mikkelsen
+  - Karpich Dmitry
   - Keito Uchiyama
   - Kit Randel
   - Kunal Mehta
   - Kyle Mathews
   - Laurence Rowe
+  - Lee Byron
   - Levi McCallum
   - Lily
   - Logan Allen
@@ -117,23 +148,40 @@
   - Marcin Kwiatkowski
   - Marcin Szczepanski
   - Mariano Desanze
+  - Mark Anderson
+  - Mark Hintz
+  - Mark IJbema
   - Mark Richardson
   - Marshall Roch
-- - Martin Andert
+  - Martin Andert
   - Martin Konicek
   - Mathieu M-Gosselin
   - Matt Harrison
   - Matthew Dapena-Tretter
   - Matti Nelimarkka
+  - Max F. Albrecht
+  - Michael Chan
+- - Michael Randers-Pehrson
   - Michal Srb
+  - Mike D Pilsbury
+  - Miorel Palii
   - Mouad Debbar
   - Nadeesha Cabral
+  - Naman Goel
   - Nate Hunzaker
+  - Nathan White
   - Nicholas Bergson-Shilcock
+  - Nick Fitzgerald
   - Nick Gavalas
+  - Nick Merwin
   - Nick Thompson
+  - Nick Williams
   - Niklas Boström
+  - Oleg
+  - Oleksii Markhovskyi
+  - Oliver Zeigermann
   - Owen Coutts
+  - Pablo Lacerda de Miranda
   - Pascal Hartig
   - Paul O’Shannessy
   - Paul Seiffert
@@ -148,32 +196,49 @@
   - Richard D. Worth
   - Richard Feldman
   - Richard Livesey
+  - Rick Beerendonk
+  - Rob Arnold
   - Ryan Seddon
   - Sahat Yalkabov
+  - Sam Selikoff
   - Sander Spies
   - Sean Kinsey
   - Sebastian Markbåge
+  - Sergey Generalov
+  - Shane O'Sullivan
   - Shaun Trennery
+  - Sheraz
+  - Shripad K
   - Simon Højberg
+  - Simon Welsh
   - Stefan Dombrowski
   - Stephen Murphy
   - Stoyan Stefanov
   - Sundeep Malladi
+  - Sunny Juneja
   - Sven Helmberger
+  - Sébastien Lorber
   - Thomas Aylott
   - Thomas Boyt
   - Thomas Shaddox
   - Thomas Shafer
+  - ThomasCrvsr
   - Timothy Yung
   - Tom Haggie
+  - Tom Hauburger
+  - Tom MacWright
   - Tom Occhino
   - Ville Immonen
   - Vjeux
   - Volkan Unsal
   - Wayne Larsen
+  - WickyNilliams
   - Wincent Colaiuta
+  - XuefengWu
   - Yuriy Dybskiy
   - Yuval Dekel
   - Zach Bruggeman
+  - cutbko
   - davidxi
   - imagentleman
+  - jon madison

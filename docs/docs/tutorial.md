@@ -25,7 +25,7 @@ It'll also have a few neat features:
 
 ### Getting started
 
-For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
+For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
 
 ```html
 <!-- template.html -->
@@ -39,8 +39,6 @@ For this tutorial we'll use prebuilt JavaScript files on a CDN. Open up your fav
   <body>
     <div id="content"></div>
     <script type="text/jsx">
-      /** @jsx React.DOM */
-      // The above declaration must remain intact at the top of the script.
       // Your code here
     </script>
   </body>
@@ -77,7 +75,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.renderComponent(
+React.render(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -92,14 +90,14 @@ The first thing you'll notice is the XML-ish syntax in your JavaScript. We have 
 var CommentBox = React.createClass({displayName: 'CommentBox',
   render: function() {
     return (
-      React.DOM.div({className: "commentBox"},
+      React.createElement('div', {className: "commentBox"},
         "Hello, world! I am a CommentBox."
       )
     );
   }
 });
-React.renderComponent(
-  CommentBox(null),
+React.render(
+  React.createElement(CommentBox, null),
   document.getElementById('content')
 );
 ```
@@ -114,7 +112,7 @@ The `<div>` tags are not actual DOM nodes; they are instantiations of React `div
 
 You do not have to return basic HTML. You can return a tree of components that you (or someone else) built. This is what makes React **composable**: a key tenet of maintainable frontends.
 
-`React.renderComponent()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
+`React.render()` instantiates the root component, starts the framework, and injects the markup into a raw DOM element, provided as the second argument.
 
 ## Composing components
 
@@ -160,7 +158,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to "React.DOM.tagName" expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
+Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to `React.createElement(tagName)` expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
 
 ### Component Properties
 
@@ -280,7 +278,7 @@ var data = [
 ];
 ```
 
-We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `renderComponent()` call to pass this data into the `CommentList` via props:
+We need to get this data into `CommentList` in a modular way. Modify `CommentBox` and the `React.render()` call to pass this data into the `CommentList` via props:
 
 ```javascript{7,15}
 // tutorial9.js
@@ -296,7 +294,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -332,7 +330,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 
 ```javascript{3}
 // tutorial11.js
-React.renderComponent(
+React.render(
   <CommentBox url="comments.json" />,
   document.getElementById('content')
 );
@@ -448,7 +446,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );

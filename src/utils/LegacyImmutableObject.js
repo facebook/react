@@ -1,17 +1,10 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule LegacyImmutableObject
  * @typechecks
@@ -19,10 +12,9 @@
 
 "use strict";
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
 var isNode = require('isNode');
-var merge = require('merge');
-var mergeInto = require('mergeInto');
 var mergeHelpers = require('mergeHelpers');
 
 var checkMergeObjectArgs = mergeHelpers.checkMergeObjectArgs;
@@ -51,7 +43,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
+    assign(this, initialProperties);
     deepFreeze(this);
   };
 
@@ -100,7 +92,7 @@ if (__DEV__) {
    */
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
-    var totalNewFields = merge(immutableObject, put);
+    var totalNewFields = assign({}, immutableObject, put);
     return new LegacyImmutableObject(totalNewFields);
   };
 
@@ -112,7 +104,7 @@ if (__DEV__) {
    * @constructor
    */
   LegacyImmutableObject = function LegacyImmutableObject(initialProperties) {
-    mergeInto(this, initialProperties);
+    assign(this, initialProperties);
   };
 
   /**
@@ -126,7 +118,7 @@ if (__DEV__) {
   LegacyImmutableObject.set = function(immutableObject, put) {
     assertLegacyImmutableObject(immutableObject);
     var newMap = new LegacyImmutableObject(immutableObject);
-    mergeInto(newMap, put);
+    assign(newMap, put);
     return newMap;
   };
 }

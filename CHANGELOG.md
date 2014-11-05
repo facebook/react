@@ -1,3 +1,99 @@
+## 0.12.0 (October 28, 2014)
+
+### React Core
+
+#### Breaking Changes
+
+* `key` and `ref` moved off props object, now accessible on the element directly
+* React is now BSD licensed with accompanying Patents grant
+* Default prop resolution has moved to Element creation time instead of mount time, making them effectively static
+* `React.__internals` is removed - it was exposed for DevTools which no longer needs access
+* Composite Component functions can no longer be called directly - they must be wrapped with `React.createFactory` first. This is handled for you when using JSX.
+
+#### New Features
+
+* Spread operator (`{...}`) introduced to deprecate `this.transferPropsTo`
+* Added support for more HTML attributes: `acceptCharset`, `classID`, `manifest`
+
+#### Deprecations
+
+* `React.renderComponent` --> `React.render`
+* `React.renderComponentToString` --> `React.renderToString`
+* `React.renderComponentToStaticMarkup` --> `React.renderToStaticMarkup`
+* `React.isValidComponent` --> `React.isValidElement`
+* `React.PropTypes.component` --> `React.PropTypes.element`
+* `React.PropTypes.renderable` --> `React.PropTypes.node`
+* **DEPRECATED** `React.isValidClass`
+* **DEPRECATED** `instance.transferPropsTo`
+* **DEPRECATED** Returning `false` from event handlers to preventDefault
+* **DEPRECATED** Convenience Constructor usage as function, instead wrap with `React.createFactory`
+* **DEPRECATED** use of `key={null}` to assign implicit keys
+
+#### Bug Fixes
+
+* Better handling of events and updates in nested results, fixing value restoration in "layered" controlled components
+* Correctly treat `event.getModifierState` as case sensitive
+* Improved normalization of `event.charCode`
+* Better error stacks when involving autobound methods
+* Removed DevTools message when the DevTools are installed
+* Correctly detect required language features across browsers
+* Fixed support for some HTML attributes:
+  * `list` updates correctly now
+  * `scrollLeft`, `scrollTop` removed, these should not be specified as props
+* Improved error messages
+
+### React With Addons
+
+#### New Features
+
+* `React.addons.batchedUpdates` added to API for hooking into update cycle
+
+#### Breaking Changes
+
+* `React.addons.update` uses `assign` instead of `copyProperties` which does `hasOwnProperty` checks. Properties on prototypes will no longer be updated correctly.
+
+#### Bug Fixes
+
+* Fixed some issues with CSS Transitions
+
+### JSX
+
+#### Breaking Changes
+
+* Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components
+* JSX no longer transforms to simple function calls
+
+#### New Features
+
+* `@jsx React.DOM` no longer required
+* spread (`{...}`) operator introduced to allow easier use of props
+
+#### Bug Fixes
+
+* JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)
+
+
+## 0.11.2 (September 16, 2014)
+
+### React Core
+
+#### New Features
+
+* Added support for `<dialog>` element and associated `open` attribute
+* Added support for `<picture>` element and associated `media` and `sizes` attributes
+* Added `React.createElement` API in preparation for React v0.12
+  * `React.createDescriptor` has been deprecated as a result
+
+### JSX
+
+* `<picture>` is now parsed into `React.DOM.picture`
+
+### React Tools
+
+* Update `esprima` and `jstransform` for correctness fixes
+* The `jsx` executable now exposes a `--strip-types` flag which can be used to remove TypeScript-like type annotations
+  * This option is also exposed to `require('react-tools').transform` as `stripTypes`
+
 ## 0.11.1 (July 24, 2014)
 
 ### React Core

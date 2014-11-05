@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -98,8 +90,8 @@ describe('ReactCompositeComponent', function() {
         console.log(this.getDOMNode());
       },
       render: function() {
-        var component = this.state.component;
-        return component ? <component /> : null;
+        var Component = this.state.component;
+        return Component ? <Component /> : null;
       }
     });
 
@@ -114,7 +106,7 @@ describe('ReactCompositeComponent', function() {
   it('should give context for PropType errors in nested components.', () => {
     // In this test, we're making sure that if a proptype error is found in a
     // component, we give a small hint as to which parent instantiated that
-    // component as per warnings about key usage in ReactDescriptorValidator.
+    // component as per warnings about key usage in ReactElementValidator.
     spyOn(console, 'warn');
     var MyComp = React.createClass({
       propTypes: {
@@ -196,11 +188,11 @@ describe('ReactCompositeComponent', function() {
     var instance1 =
       <TogglingComponent
         firstComponent={null}
-        secondComponent={React.DOM.div}
+        secondComponent={'div'}
       />;
     var instance2 =
       <TogglingComponent
-        firstComponent={React.DOM.div}
+        firstComponent={'div'}
         secondComponent={null}
       />;
 
@@ -223,11 +215,11 @@ describe('ReactCompositeComponent', function() {
       var instance1 =
         <TogglingComponent
           firstComponent={null}
-          secondComponent={React.DOM.script}
+          secondComponent={'script'}
         />;
       var instance2 =
         <TogglingComponent
-          firstComponent={React.DOM.script}
+          firstComponent={'script'}
           secondComponent={null}
         />;
 
@@ -264,13 +256,13 @@ describe('ReactCompositeComponent', function() {
 
       var instance1 =
         <TogglingComponent
-          firstComponent={React.DOM.div}
+          firstComponent={'div'}
           secondComponent={Child}
         />;
       var instance2 =
         <TogglingComponent
           firstComponent={Child}
-          secondComponent={React.DOM.div}
+          secondComponent={'div'}
         />;
 
       expect(function() {
@@ -300,12 +292,12 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var markup = ReactServerRendering.renderComponentToString(<Parent />);
+    var markup = ReactServerRendering.renderToString(<Parent />);
     var container = document.createElement('div');
     container.innerHTML = markup;
 
     spyOn(console, 'warn');
-    React.renderComponent(<Parent />, container);
+    React.render(<Parent />, container);
     expect(console.warn).not.toHaveBeenCalled();
   });
 
@@ -469,13 +461,13 @@ describe('ReactCompositeComponent', function() {
     });
 
     var container = document.createElement('div');
-    var instance = React.renderComponent(
+    var instance = React.render(
       <Component fruit="mango" />,
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.renderComponent(<Component />, container);
+    React.render(<Component />, container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
@@ -617,7 +609,7 @@ describe('ReactCompositeComponent', function() {
     var instance = <Component />;
     expect(instance.forceUpdate).not.toBeDefined();
 
-    instance = React.renderComponent(instance, container);
+    instance = React.render(instance, container);
     expect(function() {
       instance.forceUpdate();
     }).not.toThrow();
@@ -877,40 +869,13 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    React.renderComponent(<Component />, container);
+    React.render(<Component />, container);
     React.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
 
     // <Component />, <Inner />, and both <div /> elements each call
     // unmountIDFromEnvironment which calls purgeID, for a total of 4.
     expect(ReactMount.purgeID.callCount).toBe(4);
-  });
-
-  it('should detect valid CompositeComponent classes', function() {
-    var Component = React.createClass({
-      render: function() {
-        return <div/>;
-      }
-    });
-
-    expect(React.isValidClass(Component)).toBe(true);
-  });
-
-  it('should detect invalid CompositeComponent classes', function() {
-    var FnComponent = function() {
-      return false;
-    };
-
-    var NullComponent = null;
-
-    var TrickFnComponent = function() {
-      return true;
-    };
-    TrickFnComponent.componentConstructor = true;
-
-    expect(React.isValidClass(FnComponent)).toBe(false);
-    expect(React.isValidClass(NullComponent)).toBe(false);
-    expect(React.isValidClass(TrickFnComponent)).toBe(false);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
@@ -1272,8 +1237,8 @@ describe('ReactCompositeComponent', function() {
     expect(Component.ghi).toBe(null);
     expect(instance.constructor.jkl).toBe('mno');
     expect(Component.jkl).toBe('mno');
-    expect(instance.constructor.pqr()).toBe(Component.type);
-    expect(Component.pqr()).toBe(Component.type);
+    expect(instance.constructor.pqr()).toBe(Component);
+    expect(Component.pqr()).toBe(Component);
   });
 
   it('should throw if a reserved property is in statics', function() {
@@ -1292,7 +1257,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define a reserved property, `getDefaultProps`, that shouldn\'t be on ' +
       'the "statics" key. Define it as an instance property instead; it ' +
       'will still be accessible on the constructor.'
@@ -1343,7 +1308,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define `abc` on your component more than once. This conflict may be ' +
       'due to a mixin.'
     );
@@ -1368,7 +1333,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You are attempting to ' +
+      'Invariant Violation: ReactClass: You are attempting to ' +
       'define `abc` on your component more than once. This conflict may be ' +
       'due to a mixin.'
     );
@@ -1384,7 +1349,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'Invariant Violation: ReactClass: You\'re attempting to ' +
       'use a component as a mixin. Instead, just use a regular object.'
     );
   });
@@ -1405,7 +1370,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
     }).toThrow(
-      'Invariant Violation: ReactCompositeComponent: You\'re attempting to ' +
+      'Invariant Violation: ReactClass: You\'re attempting to ' +
       'use a component class as a mixin. Instead, just use a regular object.'
     );
   });
@@ -1471,6 +1436,42 @@ describe('ReactCompositeComponent', function() {
       'updates from render is not allowed. If necessary, trigger nested ' +
       'updates in componentDidUpdate.'
     );
+  });
+
+  it('should update refs if shouldComponentUpdate gives false', function() {
+    var Static = React.createClass({
+      shouldComponentUpdate: function() {
+        return false;
+      },
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+    var Component = React.createClass({
+      render: function() {
+        if (this.props.flipped) {
+          return <div>
+            <Static ref="static0" key="B">B (ignored)</Static>
+            <Static ref="static1" key="A">A (ignored)</Static>
+          </div>;
+        } else {
+          return <div>
+            <Static ref="static0" key="A">A</Static>
+            <Static ref="static1" key="B">B</Static>
+          </div>;
+        }
+      }
+    });
+
+    var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
+    expect(comp.refs.static0.getDOMNode().textContent).toBe('A');
+    expect(comp.refs.static1.getDOMNode().textContent).toBe('B');
+
+    // When flipping the order, the refs should update even though the actual
+    // contents do not
+    comp.setProps({flipped: true});
+    expect(comp.refs.static0.getDOMNode().textContent).toBe('B');
+    expect(comp.refs.static1.getDOMNode().textContent).toBe('A');
   });
 
 });

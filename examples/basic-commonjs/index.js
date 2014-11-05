@@ -1,7 +1,3 @@
-/**
-  * @jsx React.DOM
-  */
-
 var React = require('react');
 
 var ExampleApplication = React.createClass({
@@ -18,7 +14,7 @@ var ExampleApplication = React.createClass({
 var start = new Date().getTime();
 
 setInterval(function() {
-  React.renderComponent(
+  React.render(
     <ExampleApplication elapsed={new Date().getTime() - start} />,
     document.getElementById('container')
   );

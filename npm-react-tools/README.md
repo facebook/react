@@ -37,7 +37,7 @@ option | values | default
 -------|--------|---------
 `sourceMap` | `true`: append inline source map at the end of the transformed source | `false`
 `harmony` | `true`: enable ES6 features | `false`
-`filename` | the output filename for the source map | `"source.js"`
+`sourceFilename` | the output filename for the source map | `"source.js"`
 `stripTypes` | `true`: strips out type annotations | `false`
 
 ```js

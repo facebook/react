@@ -1,17 +1,10 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactDOMInput
  */
@@ -22,17 +15,15 @@ var AutoFocusMixin = require('AutoFocusMixin');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var LinkedValueUtils = require('LinkedValueUtils');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
-var ReactCompositeComponent = require('ReactCompositeComponent');
-var ReactDescriptor = require('ReactDescriptor');
-var ReactDOM = require('ReactDOM');
+var ReactClass = require('ReactClass');
+var ReactElement = require('ReactElement');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
+var assign = require('Object.assign');
 var invariant = require('invariant');
-var merge = require('merge');
 
-// Store a reference to the <input> `ReactDOMComponent`. TODO: use string
-var input = ReactDescriptor.createFactory(ReactDOM.input.type);
+var input = ReactElement.createFactory('input');
 
 var instancesByReactID = {};
 
@@ -59,7 +50,7 @@ function forceUpdateIfMounted() {
  *
  * @see http://www.w3.org/TR/2012/WD-html5-20121025/the-input-element.html
  */
-var ReactDOMInput = ReactCompositeComponent.createClass({
+var ReactDOMInput = ReactClass.createClass({
   displayName: 'ReactDOMInput',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
@@ -74,7 +65,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
 
   render: function() {
     // Clone `this.props` so we don't mutate the input.
-    var props = merge(this.props);
+    var props = assign({}, this.props);
 
     props.defaultChecked = null;
     props.defaultValue = null;
@@ -125,10 +116,10 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
-    // Here we use setImmediate to wait until all updates have propagated, which
+    // Here we use asap to wait until all updates have propagated, which
     // is important when using controlled components within layers:
     // https://github.com/facebook/react/issues/1698
-    ReactUpdates.setImmediate(forceUpdateIfMounted, this);
+    ReactUpdates.asap(forceUpdateIfMounted, this);
 
     var name = this.props.name;
     if (this.props.type === 'radio' && name != null) {
@@ -169,7 +160,7 @@ var ReactDOMInput = ReactCompositeComponent.createClass({
         // If this is a controlled radio button group, forcing the input that
         // was previously checked to update will cause it to be come re-checked
         // as appropriate.
-        ReactUpdates.setImmediate(forceUpdateIfMounted, otherInstance);
+        ReactUpdates.asap(forceUpdateIfMounted, otherInstance);
       }
     }
 

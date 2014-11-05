@@ -1,19 +1,11 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * @jsx React.DOM
  * @emails react-core
  */
 
@@ -509,16 +501,16 @@ describe('ReactUpdates', function() {
 
     // Initial renders aren't batched together yet...
     ReactUpdates.batchedUpdates(function() {
-      React.renderComponent(<Component text="A1" />, containerA);
-      React.renderComponent(<Component text="B1" />, containerB);
+      React.render(<Component text="A1" />, containerA);
+      React.render(<Component text="B1" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(2);
 
     // ...but updates are! Here only one more transaction is used, which means
     // we only have to initialize and close the wrappers once.
     ReactUpdates.batchedUpdates(function() {
-      React.renderComponent(<Component text="A2" />, containerA);
-      React.renderComponent(<Component text="B2" />, containerB);
+      React.render(<Component text="A2" />, containerA);
+      React.render(<Component text="B2" />, containerB);
     });
     expect(ReconcileTransaction.getPooled.calls.length).toBe(3);
   });
@@ -744,12 +736,12 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    React.renderComponent(<A x={1} />, container);
-    React.renderComponent(<A x={2} />, container);
+    React.render(<A x={1} />, container);
+    React.render(<A x={2} />, container);
     expect(callbackCount).toBe(1);
   });
 
-  it('calls setImmediate callbacks properly', function() {
+  it('calls asap callbacks properly', function() {
     var callbackCount = 0;
     var A = React.createClass({
       render: function() {
@@ -757,10 +749,10 @@ describe('ReactUpdates', function() {
       },
       componentDidUpdate: function() {
         var component = this;
-        ReactUpdates.setImmediate(function() {
+        ReactUpdates.asap(function() {
           expect(this).toBe(component);
           callbackCount++;
-          ReactUpdates.setImmediate(function() {
+          ReactUpdates.asap(function() {
             callbackCount++;
           });
           expect(callbackCount).toBe(1);
@@ -770,12 +762,12 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    var component = React.renderComponent(<A />, container);
+    var component = React.render(<A />, container);
     component.forceUpdate();
     expect(callbackCount).toBe(2);
   });
 
-  it('calls setImmediate callbacks with queued updates', function() {
+  it('calls asap callbacks with queued updates', function() {
     var log = [];
     var A = React.createClass({
       getInitialState: () => ({updates: 0}),
@@ -785,18 +777,18 @@ describe('ReactUpdates', function() {
       },
       componentDidUpdate: function() {
         if (this.state.updates === 1) {
-          ReactUpdates.setImmediate(function() {
+          ReactUpdates.asap(function() {
             this.setState({updates: 2}, function() {
-              ReactUpdates.setImmediate(function() {
-                log.push('setImmediate-1.2');
+              ReactUpdates.asap(function() {
+                log.push('asap-1.2');
               });
               log.push('setState-cb');
             });
-            log.push('setImmediate-1.1');
+            log.push('asap-1.1');
           }, this);
         } else if (this.state.updates === 2) {
-          ReactUpdates.setImmediate(function() {
-            log.push('setImmediate-2');
+          ReactUpdates.asap(function() {
+            log.push('asap-2');
           });
         }
         log.push('didUpdate-' + this.state.updates);
@@ -804,23 +796,23 @@ describe('ReactUpdates', function() {
     });
 
     var container = document.createElement('div');
-    var component = React.renderComponent(<A />, container);
+    var component = React.render(<A />, container);
     component.setState({updates: 1});
     expect(log).toEqual([
       'render-0',
       // We do the first update...
       'render-1',
       'didUpdate-1',
-      // ...which calls a setImmediate and enqueues a second update...
-      'setImmediate-1.1',
-      // ...which runs and enqueues the setImmediate-2 log in its didUpdate...
+      // ...which calls asap and enqueues a second update...
+      'asap-1.1',
+      // ...which runs and enqueues the asap-2 log in its didUpdate...
       'render-2',
       'didUpdate-2',
       // ...and runs the setState callback, which enqueues the log for
-      // setImmediate-1.2.
+      // asap-1.2.
       'setState-cb',
-      'setImmediate-2',
-      'setImmediate-1.2'
+      'asap-2',
+      'asap-1.2'
     ]);
   });
 });

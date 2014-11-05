@@ -1,32 +1,25 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
  */
 
 "use strict";
 
+var assign = require('Object.assign');
+
 var Transaction;
-var mixInto;
 
 var INIT_ERRORED = 'initErrored';     // Just a dummy value to check for.
 describe('Transaction', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     Transaction = require('Transaction');
-    mixInto = require('mixInto');
   });
 
   /**
@@ -53,7 +46,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -102,7 +95,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -163,7 +156,7 @@ describe('Transaction', function() {
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
       this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    assign(TestTransaction.prototype, Transaction.Mixin);
     // Now, none of the close/inits throw, but the operation we wrap will throw.
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -227,7 +220,7 @@ describe('Transaction', function() {
     var TestTransaction = function() {
       this.reinitializeTransaction();
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    assign(TestTransaction.prototype, Transaction.Mixin);
     var exceptionMsg = 'This exception should throw.';
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
@@ -256,7 +249,7 @@ describe('Transaction', function() {
       this.reinitializeTransaction();
       this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
     };
-    mixInto(TestTransaction, Transaction.Mixin);
+    assign(TestTransaction.prototype, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
       return [
         {
@@ -284,7 +277,7 @@ describe('Transaction', function() {
     var NestedTransaction = function() {
       this.reinitializeTransaction();
     };
-    mixInto(NestedTransaction, Transaction.Mixin);
+    assign(NestedTransaction.prototype, Transaction.Mixin);
     NestedTransaction.prototype.getTransactionWrappers = function() {
       return [{
         initialize: function() {

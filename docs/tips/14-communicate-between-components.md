@@ -13,8 +13,6 @@ For child-parent communication:
 Say your `GroceryList` component has a list of items generated through an array. When a list item is clicked, you want to display its name:
 
 ```js
-/** @jsx React.DOM */
-
 var GroceryList = React.createClass({
   handleClick: function(i) {
     console.log('You clicked: ' + this.props.items[i]);
@@ -33,7 +31,7 @@ var GroceryList = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <GroceryList items={['Apple', 'Banana', 'Cranberry']} />, mountNode
 );
 ```

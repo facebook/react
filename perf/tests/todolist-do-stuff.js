@@ -12,7 +12,7 @@ exports.setup = function(){
   /*global*/_rootNode = document.createElement('div');
   document.body.appendChild(_rootNode);
   var appDescriptor = todolist.App({ fakeDataCount: 333 });
-  /*global*/_app = React.renderComponent(appDescriptor, _rootNode);
+  /*global*/_app = React.render(appDescriptor, _rootNode);
 };
 
 exports.fn = function(deferred){

@@ -1,20 +1,12 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
- * @jsx React.DOM
  */
 
 'use strict';
@@ -48,9 +40,9 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      childControl = ReactMount.renderComponent(childControl, childContainer);
+      childControl = ReactMount.render(childControl, childContainer);
       parentControl =
-        ReactMount.renderComponent(parentControl, parentContainer);
+        ReactMount.render(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
@@ -71,11 +63,11 @@ describe('ReactEventListener', function() {
       var parentControl = <div>Parent</div>;
       var grandParentContainer = document.createElement('div');
       var grandParentControl = <div>Parent</div>;
-      childControl = ReactMount.renderComponent(childControl, childContainer);
+      childControl = ReactMount.render(childControl, childContainer);
       parentControl =
-        ReactMount.renderComponent(parentControl, parentContainer);
+        ReactMount.render(parentControl, parentContainer);
       grandParentControl =
-        ReactMount.renderComponent(grandParentControl, grandParentContainer);
+        ReactMount.render(grandParentControl, grandParentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
       grandParentControl.getDOMNode().appendChild(parentContainer);
 
@@ -97,9 +89,9 @@ describe('ReactEventListener', function() {
       var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
       var parentControl = <div>Parent</div>;
-      childControl = ReactMount.renderComponent(childControl, childContainer);
+      childControl = ReactMount.render(childControl, childContainer);
       parentControl =
-        ReactMount.renderComponent(parentControl, parentContainer);
+        ReactMount.render(parentControl, parentContainer);
       parentControl.getDOMNode().appendChild(childContainer);
 
       // ReactBrowserEventEmitter.handleTopLevel might remove the
@@ -129,11 +121,11 @@ describe('ReactEventListener', function() {
     it('should batch between handlers from different roots', function() {
       var childContainer = document.createElement('div');
       var parentContainer = document.createElement('div');
-      var childControl = ReactMount.renderComponent(
+      var childControl = ReactMount.render(
         <div>Child</div>,
         childContainer
       );
-      var parentControl = ReactMount.renderComponent(
+      var parentControl = ReactMount.render(
         <div>Parent</div>,
         parentContainer
       );
@@ -144,7 +136,7 @@ describe('ReactEventListener', function() {
       var childNode = childControl.getDOMNode();
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
-          ReactMount.renderComponent(
+          ReactMount.render(
             <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
             childContainer
           );
@@ -180,7 +172,7 @@ describe('ReactEventListener', function() {
 
     });
 
-    var instance = ReactMount.renderComponent(<Wrapper />, container);
+    var instance = ReactMount.render(<Wrapper />, container);
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({

@@ -1,17 +1,10 @@
 /**
- * Copyright 2013-2014 Facebook, Inc.
+ * Copyright 2013-2014, Facebook, Inc.
+ * All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule ReactTextComponent
  * @typechecks static-only
@@ -20,12 +13,12 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
-var ReactDescriptor = require('ReactDescriptor');
+var ReactElement = require('ReactElement');
 
+var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
-var mixInto = require('mixInto');
+var invariant = require('invariant');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -46,8 +39,7 @@ var ReactTextComponent = function(props) {
   // This constructor and it's argument is currently used by mocks.
 };
 
-mixInto(ReactTextComponent, ReactComponent.Mixin);
-mixInto(ReactTextComponent, {
+assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
 
   /**
    * Creates the markup for this text node. This node is not intended to have
@@ -93,19 +85,29 @@ mixInto(ReactTextComponent, {
   receiveComponent: function(nextComponent, transaction) {
     var nextProps = nextComponent.props;
     if (nextProps !== this.props) {
+      // TODO: Save this as pending props and use performUpdateIfNecessary
+      // and/or updateComponent to do the actual update for consistency with
+      // other component types?
       this.props = nextProps;
       ReactComponent.BackendIDOperations.updateTextContentByID(
         this._rootNodeID,
         nextProps
       );
     }
+  },
+
+  updateComponent: function() {
+    invariant(
+      false,
+      'ReactTextComponent: updateComponent() should never be called'
+    );
   }
 
 });
 
 var ReactTextComponentFactory = function(text) {
   // Bypass validation and configuration
-  return new ReactDescriptor(ReactTextComponent, null, null, null, null, text);
+  return new ReactElement(ReactTextComponent, null, null, null, null, text);
 };
 
 ReactTextComponentFactory.type = ReactTextComponent;

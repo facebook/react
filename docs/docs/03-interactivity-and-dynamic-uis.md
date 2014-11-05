@@ -12,8 +12,6 @@ You've already [learned how to display data](/react/docs/displaying-data.html) w
 ## A Simple Example
 
 ```javascript
-/** @jsx React.DOM */
-
 var LikeButton = React.createClass({
   getInitialState: function() {
     return {liked: false};
@@ -31,7 +29,7 @@ var LikeButton = React.createClass({
   }
 });
 
-React.renderComponent(
+React.render(
   <LikeButton />,
   document.getElementById('example')
 );
@@ -47,9 +45,9 @@ If you'd like to use React on a touch device such as a phone or tablet, simply c
 
 ## Under the Hood: Autobinding and Event Delegation
 
-Under the hood React does a few things to keep your code performant and easy to understand.
+Under the hood, React does a few things to keep your code performant and easy to understand.
 
-**Autobinding:** When creating callbacks in JavaScript you usually need to explicitly bind a method to its instance such that the value of `this` is correct. With React, every method is automatically bound to its component instance. React caches the bound method such that it's extremely CPU and memory efficient. It's also less typing!
+**Autobinding:** When creating callbacks in JavaScript, you usually need to explicitly bind a method to its instance such that the value of `this` is correct. With React, every method is automatically bound to its component instance. React caches the bound method such that it's extremely CPU and memory efficient. It's also less typing!
 
 **Event delegation:** React doesn't actually attach event handlers to the nodes themselves. When React starts up, it starts listening for all events at the top level using a single event listener. When a component is mounted or unmounted, the event handlers are simply added or removed from an internal mapping. When an event occurs, React knows how to dispatch it using this mapping. When there are no event handlers left in the mapping, React's event handlers are simple no-ops. To learn more about why this is fast, see [David Walsh's excellent blog post](http://davidwalsh.name/event-delegate).
 
