@@ -37,7 +37,7 @@ var CompilerPlayground = React.createClass({
         </label>
       </div>
     );
-  },
+  }
 });
 React.render(
   <CompilerPlayground />,
