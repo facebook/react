@@ -9,6 +9,8 @@
  * @providesModule copyProperties
  */
 
+"use strict";
+
 /**
  * Copy properties from one or more objects (up to 5) into the first object.
  * This is a shallow copy. It mutates the first object and also returns it.

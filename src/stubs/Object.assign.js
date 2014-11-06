@@ -11,6 +11,8 @@
 
 // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
 
+"use strict";
+
 function assign(target, sources) {
   if (target == null) {
     throw new TypeError('Object.assign target cannot be null or undefined');
@@ -40,6 +42,6 @@ function assign(target, sources) {
   }
 
   return to;
-};
+}
 
 module.exports = assign;
