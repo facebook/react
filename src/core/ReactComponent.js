@@ -13,6 +13,7 @@
 
 var ReactElement = require('ReactElement');
 var ReactOwner = require('ReactOwner');
+var ReactRef = require('ReactRef');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -55,6 +56,22 @@ var unmountIDFromEnvironment = null;
  * @private
  */
 var mountImageIntoNode = null;
+
+function attachRef(ref, component, owner) {
+  if (ref instanceof ReactRef) {
+    ReactRef.attachRef(ref, component);
+  } else {
+    ReactOwner.addComponentAsRefTo(component, ref, owner);
+  }
+}
+
+function detachRef(ref, component, owner) {
+  if (ref instanceof ReactRef) {
+    ReactRef.detachRef(ref, component);
+  } else {
+    ReactOwner.removeComponentAsRefFrom(component, ref, owner);
+  }
+}
 
 /**
  * Components are the basic units of composition in React.
@@ -255,7 +272,7 @@ var ReactComponent = {
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
-        ReactOwner.addComponentAsRefTo(this, ref, owner);
+        attachRef(ref, this, owner);
       }
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
@@ -280,7 +297,7 @@ var ReactComponent = {
       );
       var ref = this._currentElement.ref;
       if (ref != null) {
-        ReactOwner.removeComponentAsRefFrom(this, ref, this._owner);
+        detachRef(ref, this, this._owner);
       }
       unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
@@ -350,17 +367,11 @@ var ReactComponent = {
       if (nextElement._owner !== prevElement._owner ||
           nextElement.ref !== prevElement.ref) {
         if (prevElement.ref != null) {
-          ReactOwner.removeComponentAsRefFrom(
-            this, prevElement.ref, prevElement._owner
-          );
+          detachRef(prevElement.ref, this, prevElement._owner);
         }
         // Correct, even if the owner is the same, and only the ref has changed.
         if (nextElement.ref != null) {
-          ReactOwner.addComponentAsRefTo(
-            this,
-            nextElement.ref,
-            nextElement._owner
-          );
+          attachRef(nextElement.ref, this, nextElement._owner);
         }
       }
     },

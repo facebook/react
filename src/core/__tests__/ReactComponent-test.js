@@ -118,6 +118,114 @@ describe('ReactComponent', function() {
     instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
+  it('should support new-style refs', function() {
+    var innerObj = {}, outerObj = {};
+
+    var Wrapper = React.createClass({
+      getObject: function() {
+        return this.props.object;
+      },
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var refsResolved = 0;
+    var refsErrored = 0;
+    var Component = React.createClass({
+      componentWillMount: function() {
+        this.innerRef = React.createRef();
+        this.outerRef = React.createRef();
+        this.unusedRef = React.createRef();
+      },
+      render: function() {
+        var inner = <Wrapper object={innerObj} ref={this.innerRef} />;
+        var outer = (
+          <Wrapper object={outerObj} ref={this.outerRef}>
+            {inner}
+          </Wrapper>
+        );
+        return outer;
+      },
+      componentDidMount: function() {
+        // TODO: Currently new refs aren't available on initial render
+      },
+      componentDidUpdate: function() {
+        this.innerRef.then(function(inner) {
+          expect(inner.getObject()).toEqual(innerObj);
+          refsResolved++;
+        });
+        this.outerRef.then(function(outer) {
+          expect(outer.getObject()).toEqual(outerObj);
+          refsResolved++;
+        });
+        this.unusedRef.then(function() {
+          throw new Error("Unused ref should not be resolved");
+        }, function() {
+          refsErrored++;
+        });
+        expect(refsResolved).toBe(0);
+        expect(refsErrored).toBe(0);
+      }
+    });
+
+    var instance = <Component />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance.forceUpdate();
+    expect(refsResolved).toBe(2);
+    expect(refsErrored).toBe(1);
+  });
+
+  it('should support new-style refs with mixed-up owners', function() {
+    var Wrapper = React.createClass({
+      render: function() {
+        return this.props.getContent();
+      }
+    });
+
+    var refsResolved = 0;
+    var Component = React.createClass({
+      componentWillMount: function() {
+        this.wrapperRef = React.createRef();
+        this.innerRef = React.createRef();
+      },
+      getInner: function() {
+        // (With old-style refs, it's impossible to get a ref to this div
+        // because Wrapper is the current owner when this function is called.)
+        return <div title="inner" ref={this.innerRef} />;
+      },
+      render: function() {
+        return (
+          <Wrapper
+            title="wrapper"
+            ref={this.wrapperRef}
+            getContent={this.getInner}
+            />
+        );
+      },
+      componentDidMount: function() {
+        // TODO: Currently new refs aren't available on initial render
+      },
+      componentDidUpdate: function() {
+        // Check .props.title to make sure we got the right elements back
+        this.wrapperRef.then(function(wrapper) {
+          expect(wrapper.props.title).toBe("wrapper");
+          refsResolved++;
+        });
+        this.innerRef.then(function(inner) {
+          expect(inner.props.title).toEqual("inner");
+          refsResolved++;
+        });
+        expect(refsResolved).toBe(0);
+      }
+    });
+
+    var instance = <Component />;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance.forceUpdate();
+    expect(refsResolved).toBe(2);
+  });
+
   it('should correctly determine if a component is mounted', function() {
     var Component = React.createClass({
       componentWillMount: function() {

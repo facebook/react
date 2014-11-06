@@ -28,6 +28,7 @@ var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
+var ReactRef = require('ReactRef');
 var ReactServerRendering = require('ReactServerRendering');
 var ReactTextComponent = require('ReactTextComponent');
 
@@ -62,6 +63,9 @@ var React = {
   createClass: ReactClass.createClass,
   createElement: createElement,
   createFactory: createFactory,
+  createRef: function() {
+    return new ReactRef();
+  },
   constructAndRenderComponent: ReactMount.constructAndRenderComponent,
   constructAndRenderComponentByID: ReactMount.constructAndRenderComponentByID,
   render: render,
