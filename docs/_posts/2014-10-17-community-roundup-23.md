@@ -61,7 +61,7 @@ Yahoo is converting Yahoo Mail to React and Flux and in the process, they open s
 >
 > - There should be only one channel for all state changes: The Dispatcher. This makes debugging easy because it just requires a single console.log in the dispatcher to observe every single state change trigger.
 >
-> - Asynchronously executed callbacks should not leak into Stores. The consequences of it are just to hard to fully foresee. This leads to elusive bugs. Stores should only execute synchronous code. Otherwise they are too hard to understand.
+> - Asynchronously executed callbacks should not leak into Stores. The consequences of it are just too hard to fully foresee. This leads to elusive bugs. Stores should only execute synchronous code. Otherwise they are too hard to understand.
 >
 > - Avoiding actions firing other actions makes your app simple. We use the newest Dispatcher implementation from Facebook that does not allow a new dispatch while dispatching. It forces you to do things right.
 >
