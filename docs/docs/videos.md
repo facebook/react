@@ -127,3 +127,11 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 <iframe width="650" height="315" src="//www.youtube.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 Facebook engineers [Bill Fisher](http://twitter.com/fisherwebdev) and [Jing Chen](http://twitter.com/jingc) talk about Flux and React, and how using an application architecture with a unidirectional data flow cleans up a lot of their code.
+
+### Server-Side Rendering of Isomorphic Apps at SoundCloud
+
+<iframe src="//player.vimeo.com/video/108488724" width="500" height="281" frameborder="0" allowfullscreen></iframe>
+
+Walk-through by [Andres Suarez](https://github.com/zertosh) on how [SoundCloud](https://developers.soundcloud.com/blog/) is using React and Flux for server-side rendering.
+
+[Slides and sample code](https://github.com/zertosh/ssr-demo-kit)
