@@ -17,12 +17,14 @@ var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
 var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
+var instantiateReactComponent = require('instantiateReactComponent');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -275,6 +277,46 @@ var ReactTestUtils = {
     );
   },
 
+  areElementsEquivalent: function(re1, re2) {
+    return (
+      re1.type === re2.type &&
+      re1.key === re2.key &&
+      re1.ref === re2.ref &&
+      ReactTestUtils._arePropsEquivalent(re1._store.props, re2._store.props)
+    );
+  },
+
+  _arePropsEquivalent: function(props1, props2) {
+    // Is every key in props1 (except children) also in props2 and equal?
+    Object.keys(props1).forEach(function(key) {
+      if (key !== 'children' && props1[key] !== props2[key]) {
+        return false;
+      }
+    });
+
+    // Are there no keys unique to props2?
+    if (Object.keys(props1).length !== Object.keys(props2).length) {
+      return false;
+    }
+
+    // If neither element's props has children, we're good.
+    if (props1.children == null && props2.children == null) {
+      return true;
+    }
+
+    // Lastly, if they do have children, compare each.
+    if (props1.children.length !== props2.children.length) {
+      return false;
+    }
+    for (var i = 0; i < props1.children.length; i++) {
+      if (!ReactTestUtils.areElementsEquivalent(props1.children[i],
+                                                props2.children[i])) {
+        return false;
+      }
+    }
+    return true;
+  },
+
   nativeTouchData: function(x, y) {
     return {
       touches: [
@@ -283,8 +325,46 @@ var ReactTestUtils = {
     };
   },
 
+  createRenderer: function() {
+    return new ReactShallowRenderer();
+  },
+
   Simulate: null,
   SimulateNative: {}
+};
+
+/**
+ * @class ReactShallowRenderer
+ */
+var ReactShallowRenderer = function() {};
+
+ReactShallowRenderer.prototype.getRenderOutput = function() {
+  return this._renderOutput;
+};
+
+ReactShallowRenderer.prototype.render = function(element) {
+  var instance = instantiateReactComponent(element, null);
+  var rootID = ReactInstanceHandles.createReactRootID();
+
+  // transaction stuff copied from ReactComponent, mountComponentIntoNode
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  transaction.perform(
+    this._render,
+    this,
+    element,
+    instance,
+    rootID,
+    transaction
+  );
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
+};
+
+ReactShallowRenderer.prototype._render = function(
+    element,
+    instance,
+    rootID,
+    transaction) {
+  this._renderOutput = instance._shallowMountComponent(rootID, transaction, 0);
 };
 
 /**
