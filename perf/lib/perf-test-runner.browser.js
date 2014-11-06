@@ -195,10 +195,14 @@ perfRunner.ViewObject = function(props){
   
   if (typeof value != 'object') return React.DOM.span(props, [JSON.stringify(value), " ", typeof value]);
   
-  return React.DOM.table(props, Object.keys(value).map(function(key){
-    return React.DOM.tr(null,
-      React.DOM.th(null, key),
-      React.DOM.td(null, perfRunner.ViewObject({key:key, value:value[key]}))
-    );
-  }));
+  return React.DOM.table(props,
+    React.DOM.tbody(null,
+      Object.keys(value).map(function(key){
+        return React.DOM.tr(null,
+          React.DOM.th(null, key),
+          React.DOM.td(null, perfRunner.ViewObject({key:key, value:value[key]}))
+        );
+      })
+    )
+  );
 }
