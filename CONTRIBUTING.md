@@ -41,7 +41,7 @@ The best way to get your bug fixed is to provide a reduced test case. jsFiddle, 
 
 ### Security Bugs
 
-Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe disclosure of security bugs. With that in mind, please do not file public issues and go through the process outlined on that page.
+Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe disclosure of security bugs. With that in mind, please do not file public issues; go through the process outlined on that page.
 
 ## How to Get in Touch
 
