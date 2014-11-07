@@ -14,6 +14,7 @@
 "use strict";
 
 var React;
+var ReactInstanceMap;
 var ReactMount;
 
 var getTestDocument;
@@ -32,6 +33,7 @@ describe('rendering React components at document', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactInstanceMap = require('ReactInstanceMap');
     ReactMount = require('ReactMount');
     getTestDocument = require('getTestDocument');
 
@@ -61,8 +63,10 @@ describe('rendering React components at document', function() {
     var component = React.render(<Root />, testDocument);
     expect(testDocument.body.innerHTML).toBe('Hello world');
 
+    // TODO: This is a bad test. I have no idea what this is testing.
+    // Node IDs is an implementation detail and not part of the public API.
     var componentID = ReactMount.getReactRootID(testDocument);
-    expect(componentID).toBe(component._rootNodeID);
+    expect(componentID).toBe(ReactInstanceMap.get(component)._rootNodeID);
   });
 
   it('should not be able to unmount component from document node', function() {

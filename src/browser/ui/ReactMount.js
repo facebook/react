@@ -15,7 +15,9 @@ var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPerf = require('ReactPerf');
 
 var containsNode = require('containsNode');
@@ -119,6 +121,30 @@ function setID(node, id) {
  * @internal
  */
 function getNode(id) {
+  if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
+    nodeCache[id] = ReactMount.findReactNodeByID(id);
+  }
+  return nodeCache[id];
+}
+
+/**
+ * Finds the node with the supplied public React instance.
+ *
+ * @param {*} instance A public React instance.
+ * @return {?DOMElement} DOM node with the suppled `id`.
+ * @internal
+ */
+function getNodeFromInstance(instance) {
+  // This instance can currently be either a public or private instance since
+  // native nodes are still public.
+  var id = instance._rootNodeID;
+  // TODO: Once these are only public instances, remove this conditional.
+  if (id == null) {
+    id = ReactInstanceMap.get(instance)._rootNodeID;
+  }
+  if (ReactEmptyComponent.isNullComponentID(id)) {
+    return null;
+  }
   if (!nodeCache.hasOwnProperty(id) || !isValid(nodeCache[id], id)) {
     nodeCache[id] = ReactMount.findReactNodeByID(id);
   }
@@ -358,7 +384,7 @@ var ReactMount = {
           nextElement,
           container,
           callback
-        );
+        ).getPublicInstance();
       } else {
         ReactMount.unmountComponentAtNode(container);
       }
@@ -374,7 +400,7 @@ var ReactMount = {
       nextElement,
       container,
       shouldReuseMarkup
-    );
+    ).getPublicInstance();
     callback && callback.call(component);
     return component;
   },
@@ -676,6 +702,8 @@ var ReactMount = {
   setID: setID,
 
   getNode: getNode,
+
+  getNodeFromInstance: getNodeFromInstance,
 
   purgeID: purgeID
 };

@@ -100,7 +100,7 @@ var ReactOwner = {
     );
     // Check that `component` is still the current ref because we do not want to
     // detach the ref if another component stole it.
-    if (owner.refs[ref] === component) {
+    if (owner.getPublicInstance().refs[ref] === component.getPublicInstance()) {
       owner.detachRef(ref);
     }
   },
@@ -113,7 +113,8 @@ var ReactOwner = {
   Mixin: {
 
     construct: function() {
-      this.refs = emptyObject;
+      var inst = this.getPublicInstance();
+      inst.refs = emptyObject;
     },
 
     /**
@@ -125,13 +126,16 @@ var ReactOwner = {
      * @private
      */
     attachRef: function(ref, component) {
+      // TODO: Remove this invariant. This is never exposed and cannot be called
+      // by user code. The unit test is already removed.
       invariant(
         component.isOwnedBy(this),
         'attachRef(%s, ...): Only a component\'s owner can store a ref to it.',
         ref
       );
-      var refs = this.refs === emptyObject ? (this.refs = {}) : this.refs;
-      refs[ref] = component;
+      var inst = this.getPublicInstance();
+      var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+      refs[ref] = component.getPublicInstance();
     },
 
     /**
@@ -142,7 +146,8 @@ var ReactOwner = {
      * @private
      */
     detachRef: function(ref) {
-      delete this.refs[ref];
+      var refs = this.getPublicInstance().refs;
+      delete refs[ref];
     }
 
   }

@@ -89,7 +89,7 @@ assign(ReactRef.prototype, {
 });
 
 ReactRef.attachRef = function(ref, value) {
-  ref._value = value;
+  ref._value = value.getPublicInstance();
 };
 
 ReactRef.detachRef = function(ref, value) {

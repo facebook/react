@@ -138,7 +138,7 @@ describe('ReactElement', function() {
 
     var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
-    expect(element._owner).toBe(instance);
+    expect(element._owner.getPublicInstance()).toBe(instance);
   });
 
   it('merges an additional argument onto the children prop', function() {

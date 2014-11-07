@@ -623,6 +623,63 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should not allow `setState` on unmounted components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return { value: 0 };
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Component />;
+    expect(instance.setState).not.toBeDefined();
+
+    instance = React.render(instance, container);
+    expect(function() {
+      instance.setState({ value: 1 });
+    }).not.toThrow();
+
+    React.unmountComponentAtNode(container);
+    expect(function() {
+      instance.setState({ value: 2 });
+    }).toThrow(
+      'Invariant Violation: setState(...): Can only update a mounted or ' +
+      'mounting component.'
+    );
+  });
+
+  it('should not allow `setProps` on unmounted components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = <Component />;
+    expect(instance.setProps).not.toBeDefined();
+
+    instance = React.render(instance, container);
+    expect(function() {
+      instance.setProps({ value: 1 });
+    }).not.toThrow();
+
+    React.unmountComponentAtNode(container);
+    expect(function() {
+      instance.setProps({ value: 2 });
+    }).toThrow(
+      'Invariant Violation: setProps(...): Can only update a mounted ' +
+      'component.'
+    );
+  });
+
   it('should cleanup even if render() fatals', function() {
     var BadComponent = React.createClass({
       render: function() {

@@ -11,7 +11,6 @@
 
 "use strict";
 
-var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactMount = require('ReactMount');
 
 var invariant = require('invariant');
@@ -29,10 +28,7 @@ var ReactBrowserComponentMixin = {
       this.isMounted(),
       'getDOMNode(): A component must be mounted to have a DOM node.'
     );
-    if (ReactEmptyComponent.isNullComponentID(this._rootNodeID)) {
-      return null;
-    }
-    return ReactMount.getNode(this._rootNodeID);
+    return ReactMount.getNodeFromInstance(this);
   }
 };
 

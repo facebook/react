@@ -442,6 +442,18 @@ var ReactComponent = {
         return null;
       }
       return owner.refs[ref];
+    },
+
+    /**
+     * Get the publicly accessible representation of this component - i.e. what
+     * is exposed by refs and renderComponent. Can be null for stateless
+     * components.
+     *
+     * @return {?ReactComponent} the actual sibling Component.
+     * @internal
+     */
+    getPublicInstance: function() {
+      return this;
     }
   }
 };

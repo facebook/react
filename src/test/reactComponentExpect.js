@@ -12,6 +12,7 @@
 
 "use strict";
 
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 
 var assign = require('Object.assign');
@@ -25,7 +26,10 @@ function reactComponentExpect(instance) {
     return new reactComponentExpect(instance);
   }
 
-  this._instance = instance;
+  expect(instance).not.toBeNull();
+
+  this._instance = ReactTestUtils.getInternalRepresentation(instance);
+
   expect(typeof instance).toBe('object');
   expect(typeof instance.constructor).toBe('function');
   expect(ReactTestUtils.isElement(instance)).toBe(false);
@@ -38,7 +42,7 @@ assign(reactComponentExpect.prototype, {
    * @instance: Retrieves the backing instance.
    */
   instance: function() {
-    return this._instance;
+    return this._instance.getPublicInstance();
   },
 
   /**
@@ -57,7 +61,8 @@ assign(reactComponentExpect.prototype, {
    */
   expectRenderedChild: function() {
     this.toBeCompositeComponent();
-    return new reactComponentExpect(this.instance()._renderedComponent);
+    var child = this._instance._renderedComponent;
+    return new reactComponentExpect(child);
   },
 
   /**
@@ -67,7 +72,7 @@ assign(reactComponentExpect.prototype, {
     // Currently only dom components have arrays of children, but that will
     // change soon.
     this.toBeDOMComponent();
-    var renderedChildren = this.instance()._renderedChildren || {};
+    var renderedChildren = this._instance._renderedChildren || {};
     for (var name in renderedChildren) {
       if (!renderedChildren.hasOwnProperty(name)) {
         continue;
@@ -83,15 +88,15 @@ assign(reactComponentExpect.prototype, {
 
   toBeDOMComponentWithChildCount: function(n) {
     this.toBeDOMComponent();
-    expect(this.instance()._renderedChildren).toBeTruthy();
-    var len = Object.keys(this.instance()._renderedChildren).length;
+    expect(this._instance._renderedChildren).toBeTruthy();
+    var len = Object.keys(this._instance._renderedChildren).length;
     expect(len).toBe(n);
     return this;
   },
 
   toBeDOMComponentWithNoChildren: function() {
     this.toBeDOMComponent();
-    expect(this.instance()._renderedChildren).toBeFalsy();
+    expect(this._instance._renderedChildren).toBeFalsy();
     return this;
   },
 
@@ -99,7 +104,7 @@ assign(reactComponentExpect.prototype, {
 
   toBeComponentOfType: function(constructor) {
     expect(
-      this.instance()._currentElement.type === constructor
+      this._instance._currentElement.type === constructor
     ).toBe(true);
     return this;
   },
@@ -110,6 +115,7 @@ assign(reactComponentExpect.prototype, {
    */
   toBeCompositeComponent: function() {
     expect(
+      typeof this.instance() === 'object' &&
       typeof this.instance().render === 'function' &&
       typeof this.instance().setState === 'function'
     ).toBe(true);
@@ -119,7 +125,7 @@ assign(reactComponentExpect.prototype, {
   toBeCompositeComponentWithType: function(constructor) {
     this.toBeCompositeComponent();
     expect(
-      this.instance()._currentElement.type === constructor
+      this._instance._currentElement.type === constructor
     ).toBe(true);
     return this;
   },

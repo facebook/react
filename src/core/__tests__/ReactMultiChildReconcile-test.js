@@ -14,6 +14,7 @@
 require('mock-modules');
 
 var React = require('React');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
@@ -83,7 +84,10 @@ var FriendsStatusDisplay = React.createClass({
   getStatusDisplays: function() {
     var name;
     var orderOfUsernames = [];
-    var statusDisplays = this._renderedComponent._renderedChildren;
+    // TODO: Update this to a better test that doesn't rely so much on internal
+    // implementation details.
+    var statusDisplays =
+      ReactInstanceMap.get(this)._renderedComponent._renderedChildren;
     for (name in statusDisplays) {
       var child = statusDisplays[name];
       var isPresent = !!child;
@@ -195,7 +199,7 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
       continue;
     }
     var statusDisplay = statusDisplays[username];
-    orderedLogicalIds.push(statusDisplay._rootNodeID);
+    orderedLogicalIds.push(ReactInstanceMap.get(statusDisplay)._rootNodeID);
   }
   expect(orderedDomIds).toEqual(orderedLogicalIds);
 }
