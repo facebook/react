@@ -49,9 +49,7 @@ var ReactContext = {
    */
   withContext: function(newContext, scopedCallback) {
 
-    monitorCodeUse('react_with_context',
-      {newContext: newContext, scopedCallback: scopedCallback}
-    );
+    monitorCodeUse('react_with_context', {newContext: newContext});
 
     var result;
     var previousContext = ReactContext.current;
