@@ -17,6 +17,7 @@ var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 var ReactTextComponent = require('ReactTextComponent');
 var ReactUpdates = require('ReactUpdates');
@@ -60,7 +61,9 @@ var ReactTestUtils = {
   },
 
   isDOMComponent: function(inst) {
-    return !!(inst && inst.mountComponent && inst.tagName);
+    // TODO: Fix this heuristic. It's just here because composites can currently
+    // pretend to be DOM components.
+    return !!(inst && inst.getDOMNode && inst.tagName);
   },
 
   isDOMComponentElement: function(inst) {
@@ -101,6 +104,22 @@ var ReactTestUtils = {
     return inst instanceof ReactTextComponent.type;
   },
 
+  getInternalRepresentation: function(inst) {
+    // TODO: Remove this duck check once we have a separate DOM/Native instance
+    if (typeof inst.mountComponent === 'function') {
+      return inst;
+    }
+    return ReactInstanceMap.get(inst);
+  },
+
+  getRenderedChildOfCompositeComponent: function(inst) {
+    if (!ReactTestUtils.isCompositeComponent(inst)) {
+      return null;
+    }
+    var internalInstance = ReactInstanceMap.get(inst);
+    return internalInstance._renderedComponent.getPublicInstance();
+  },
+
   findAllInRenderedTree: function(inst, test) {
     if (!inst) {
       return [];
@@ -114,12 +133,18 @@ var ReactTestUtils = {
           continue;
         }
         ret = ret.concat(
-          ReactTestUtils.findAllInRenderedTree(renderedChildren[key], test)
+          ReactTestUtils.findAllInRenderedTree(
+            renderedChildren[key].getPublicInstance(),
+            test
+          )
         );
       }
     } else if (ReactTestUtils.isCompositeComponent(inst)) {
       ret = ret.concat(
-        ReactTestUtils.findAllInRenderedTree(inst._renderedComponent, test)
+        ReactTestUtils.findAllInRenderedTree(
+          ReactTestUtils.getRenderedChildOfCompositeComponent(inst),
+          test
+        )
       );
     }
     return ret;

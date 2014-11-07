@@ -11,8 +11,10 @@
 
 "use strict";
 
-var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactElement = require('ReactElement');
+var ReactErrorUtils = require('ReactErrorUtils');
+var ReactInstanceMap = require('ReactInstanceMap');
+var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
@@ -22,6 +24,7 @@ var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
 var monitorCodeUse = require('monitorCodeUse');
 var mapObject = require('mapObject');
+var warning = require('warning');
 
 var MIXINS_KEY = keyOf({mixins: null});
 
@@ -398,7 +401,7 @@ function validateMethodOverride(proto, name) {
     null;
 
   // Disallow overriding of base class methods unless explicitly allowed.
-  if (ReactCompositeComponent.Base.prototype.hasOwnProperty(name)) {
+  if (ReactClassMixin.hasOwnProperty(name)) {
     invariant(
       specPolicy === SpecPolicy.OVERRIDE_BASE,
       'ReactClassInterface: You are attempting to override ' +
@@ -621,6 +624,218 @@ function createChainedFunction(one, two) {
   };
 }
 
+/**
+ * Binds a method to the component.
+ *
+ * @param {object} component Component whose method is going to be bound.
+ * @param {function} method Method to be bound.
+ * @return {function} The bound method.
+ */
+function bindAutoBindMethod(component, method) {
+  var boundMethod = method.bind(component);
+  if (__DEV__) {
+    boundMethod.__reactBoundContext = component;
+    boundMethod.__reactBoundMethod = method;
+    boundMethod.__reactBoundArguments = null;
+    var componentName = component.constructor.displayName;
+    var _bind = boundMethod.bind;
+    boundMethod.bind = function(newThis, ...args) {
+      // User is trying to bind() an autobound method; we effectively will
+      // ignore the value of "this" that the user is trying to use, so
+      // let's warn.
+      if (newThis !== component && newThis !== null) {
+        monitorCodeUse('react_bind_warning', { component: componentName });
+        console.warn(
+          'bind(): React component methods may only be bound to the ' +
+          'component instance. See ' + componentName
+        );
+      } else if (!args.length) {
+        monitorCodeUse('react_bind_warning', { component: componentName });
+        console.warn(
+          'bind(): You are binding a component method to the component. ' +
+          'React does this for you automatically in a high-performance ' +
+          'way, so you can safely remove this call. See ' + componentName
+        );
+        return boundMethod;
+      }
+      var reboundMethod = _bind.apply(boundMethod, arguments);
+      reboundMethod.__reactBoundContext = component;
+      reboundMethod.__reactBoundMethod = method;
+      reboundMethod.__reactBoundArguments = args;
+      return reboundMethod;
+    };
+  }
+  return boundMethod;
+}
+
+/**
+ * Binds all auto-bound methods in a component.
+ *
+ * @param {object} component Component whose method is going to be bound.
+ */
+function bindAutoBindMethods(component) {
+  for (var autoBindKey in component.__reactAutoBindMap) {
+    if (component.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
+      var method = component.__reactAutoBindMap[autoBindKey];
+      component[autoBindKey] = bindAutoBindMethod(
+        component,
+        ReactErrorUtils.guard(
+          method,
+          component.constructor.displayName + '.' + autoBindKey
+        )
+      );
+    }
+  }
+}
+
+/**
+ * @lends {ReactClass.prototype}
+ */
+var ReactClassMixin = {
+
+  /**
+   * Sets a subset of the state. Always use this or `replaceState` to mutate
+   * state. You should treat `this.state` as immutable.
+   *
+   * There is no guarantee that `this.state` will be immediately updated, so
+   * accessing `this.state` after calling this method may return the old value.
+   *
+   * There is no guarantee that calls to `setState` will run synchronously,
+   * as they may eventually be batched together.  You can provide an optional
+   * callback that will be executed when the call to setState is actually
+   * completed.
+   *
+   * @param {object} partialState Next partial state to be merged with state.
+   * @param {?function} callback Called after state is updated.
+   * @final
+   * @protected
+   */
+  setState: function(partialState, callback) {
+    invariant(
+      typeof partialState === 'object' || partialState == null,
+      'setState(...): takes an object of state variables to update.'
+    );
+    if (__DEV__) {
+      warning(
+        partialState != null,
+        'setState(...): You passed an undefined or null state object; ' +
+        'instead, use forceUpdate().'
+      );
+    }
+    var internalInstance = ReactInstanceMap.get(this);
+    invariant(
+      internalInstance,
+      'setState(...): Can only update a mounted or mounting component.'
+    );
+    internalInstance.setState(
+      partialState, callback && callback.bind(this)
+    );
+  },
+
+  /**
+   * TODO: This will be deprecated because state should always keep a consistent
+   * type signature and the only use case for this, is to avoid that.
+   */
+  replaceState: function(newState, callback) {
+    var internalInstance = ReactInstanceMap.get(this);
+    invariant(
+      internalInstance,
+      'replaceState(...): Can only update a mounted or mounting component.'
+    );
+    internalInstance.replaceState(
+      newState,
+      callback && callback.bind(this)
+    );
+  },
+
+  /**
+   * Forces an update. This should only be invoked when it is known with
+   * certainty that we are **not** in a DOM transaction.
+   *
+   * You may want to call this when you know that some deeper aspect of the
+   * component's state has changed but `setState` was not called.
+   *
+   * This will not invoke `shouldUpdateComponent`, but it will invoke
+   * `componentWillUpdate` and `componentDidUpdate`.
+   *
+   * @param {?function} callback Called after update is complete.
+   * @final
+   * @protected
+   */
+  forceUpdate: function(callback) {
+    var internalInstance = ReactInstanceMap.get(this);
+    invariant(
+      internalInstance,
+      'forceUpdate(...): Can only force an update on mounted or mounting ' +
+        'components.'
+    );
+    internalInstance.forceUpdate(callback && callback.bind(this));
+  },
+
+  /**
+   * Checks whether or not this composite component is mounted.
+   * @return {boolean} True if mounted, false otherwise.
+   * @protected
+   * @final
+   */
+  isMounted: function() {
+    var internalInstance = ReactInstanceMap.get(this);
+    // In theory, isMounted is always true if it exists in the map.
+    // TODO: Remove the internal isMounted method.
+    return internalInstance && internalInstance.isMounted();
+  },
+
+  /**
+   * Sets a subset of the props.
+   *
+   * @param {object} partialProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   * @deprecated
+   */
+  setProps: function(partialProps, callback) {
+    var internalInstance = ReactInstanceMap.get(this);
+    invariant(
+      internalInstance,
+      'setProps(...): Can only update a mounted component.'
+    );
+    internalInstance.setProps(
+      partialProps,
+      callback && callback.bind(this)
+    );
+  },
+
+  /**
+   * Replace all the props.
+   *
+   * @param {object} newProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   * @deprecated
+   */
+  replaceProps: function(newProps, callback) {
+    ReactInstanceMap.get(this).replaceProps(
+      newProps,
+      callback && callback.bind(this)
+    );
+  }
+};
+
+var ReactClassBase = function() {};
+assign(
+  ReactClassBase.prototype,
+  ReactPropTransferer.Mixin,
+  ReactClassMixin
+);
+
+/**
+ * Module for creating composite components.
+ *
+ * @class ReactClass
+ * @extends ReactPropTransferer
+ */
 var ReactClass = {
 
   /**
@@ -633,10 +848,14 @@ var ReactClass = {
   createClass: function(spec) {
     var Constructor = function(props) {
       // This constructor is overridden by mocks. The argument is used
-      // by mocks to assert on what gets mounted. This will later be used
-      // by the stand-alone class implementation.
+      // by mocks to assert on what gets mounted.
+
+      // Wire up auto-binding
+      if (this.__reactAutoBindMap) {
+        bindAutoBindMethods(this);
+      }
     };
-    Constructor.prototype = new ReactCompositeComponent.Base();
+    Constructor.prototype = new ReactClassBase();
     Constructor.prototype.constructor = Constructor;
 
     injectedMixins.forEach(

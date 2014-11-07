@@ -12,30 +12,37 @@
 
 "use strict";
 
-var warning = require('warning');
-
+var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 
-// This is temporary until we've hidden all the implementation details
-// TODO: Delete this hack once implementation details are hidden
-var publicAPIs = {
-  forceUpdate: true,
-  replaceState: true,
-  setProps: true,
-  setState: true,
-  getDOMNode: true
-  // Public APIs used internally:
-  // isMounted: true,
-  // replaceProps: true,
-};
+var assign = require('Object.assign');
+var warning = require('warning');
 
-function unmockImplementationDetails(mockInstance) {
-  var ReactCompositeComponentBase = instantiateReactComponent._compositeBase;
-  for (var key in ReactCompositeComponentBase.prototype) {
-    if (!publicAPIs.hasOwnProperty(key)) {
-      mockInstance[key] = ReactCompositeComponentBase.prototype[key];
-    }
+// To avoid a cyclic dependency, we create the final class in this module
+var ReactCompositeComponentWrapper = function(inst) {
+  this._instance = inst;
+};
+assign(
+  ReactCompositeComponentWrapper.prototype,
+  ReactCompositeComponent.Mixin,
+  {
+    _instantiateReactComponent: instantiateReactComponent
   }
+);
+
+/**
+ * Check if the type reference is a known internal type. I.e. not a user
+ * provided composite type.
+ *
+ * @param {function} type
+ * @return {boolean} Returns true if this is a valid internal type.
+ */
+function isInternalComponentType(type) {
+  return (
+    typeof type === 'function' &&
+    typeof type.prototype.mountComponent === 'function' &&
+    typeof type.prototype.receiveComponent === 'function'
+  );
 }
 
 /**
@@ -52,7 +59,7 @@ function instantiateReactComponent(element, parentCompositeType) {
   if (__DEV__) {
     warning(
       element && (typeof element.type === 'function' ||
-                     typeof element.type === 'string'),
+                  typeof element.type === 'string'),
       'Only functions or strings can be mounted as React components.'
     );
   }
@@ -64,17 +71,25 @@ function instantiateReactComponent(element, parentCompositeType) {
       element.props,
       parentCompositeType
     );
+    // If the injected special class is not an internal class, but another
+    // composite, then we must wrap it.
+    // TODO: Move this resolution around to something cleaner.
+    if (typeof instance.mountComponent !== 'function') {
+      instance = new ReactCompositeComponentWrapper(instance);
+    }
+  } else if (isInternalComponentType(element.type)) {
+    // This is temporarily available for custom components that are not string
+    // represenations. I.e. ART. Once those are updated to use the string
+    // representation, we can drop this code path.
+    instance = new element.type(element);
   } else {
-    // Normal case for non-mocks and non-strings
-    instance = new element.type(element.props);
+    // TODO: Update to follow new ES6 initialization. Ideally, we can use props
+    // in property initializers.
+    var inst = new element.type(element.props);
+    instance = new ReactCompositeComponentWrapper(inst);
   }
 
   if (__DEV__) {
-    if (element.type._isMockFunction) {
-      // TODO: Remove this special case
-      unmockImplementationDetails(instance);
-    }
-
     warning(
       typeof instance.construct === 'function' &&
       typeof instance.mountComponent === 'function' &&
@@ -83,8 +98,7 @@ function instantiateReactComponent(element, parentCompositeType) {
     );
   }
 
-  // This actually sets up the internal instance. This will become decoupled
-  // from the public instance in a future diff.
+  // Sets up the instance. This can probably just move into the constructor now.
   instance.construct(element);
 
   return instance;

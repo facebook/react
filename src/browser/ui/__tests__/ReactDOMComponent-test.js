@@ -21,41 +21,39 @@ describe('ReactDOMComponent', function() {
   describe('updateDOM', function() {
     var React;
     var ReactTestUtils;
-    var transaction;
 
     beforeEach(function() {
       React = require('React');
       ReactTestUtils = require('ReactTestUtils');
-
-      var ReactReconcileTransaction = require('ReactReconcileTransaction');
-      transaction = new ReactReconcileTransaction();
     });
 
     it("should handle className", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
+      var container = document.createElement('div');
+      React.render(<div style={{}} />, container);
 
-      stub.receiveComponent({props: { className: 'foo' }}, transaction);
-      expect(stub.getDOMNode().className).toEqual('foo');
-      stub.receiveComponent({props: { className: 'bar' }}, transaction);
-      expect(stub.getDOMNode().className).toEqual('bar');
-      stub.receiveComponent({props: { className: null }}, transaction);
-      expect(stub.getDOMNode().className).toEqual('');
+      React.render(<div className={'foo'} />, container);
+      expect(container.firstChild.className).toEqual('foo');
+      React.render(<div className={'bar'} />, container);
+      expect(container.firstChild.className).toEqual('bar');
+      React.render(<div className={null} />, container);
+      expect(container.firstChild.className).toEqual('');
     });
 
     it("should gracefully handle various style value types", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div style={{}} />);
-      var stubStyle = stub.getDOMNode().style;
+      var container = document.createElement('div');
+      React.render(<div style={{}} />, container);
+      var stubStyle = container.firstChild.style;
 
       // set initial style
       var setup = { display: 'block', left: '1', top: 2, fontFamily: 'Arial' };
-      stub.receiveComponent({props: { style: setup }}, transaction);
+      React.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
       var reset = { display: '', left: null, top: false, fontFamily: true };
-      stub.receiveComponent({props: { style: reset }}, transaction);
+      React.render(<div style={reset} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
       expect(stubStyle.top).toEqual('');
@@ -64,34 +62,35 @@ describe('ReactDOMComponent', function() {
 
     it("should update styles when mutating style object", function() {
       var styles = { display: 'none', fontFamily: 'Arial', lineHeight: 1.2 };
-      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+      var container = document.createElement('div');
+      React.render(<div style={styles} />, container);
 
-      var stubStyle = stub.getDOMNode().style;
+      var stubStyle = container.firstChild.style;
       stubStyle.display = styles.display;
       stubStyle.fontFamily = styles.fontFamily;
 
       styles.display = 'block';
 
-      stub.receiveComponent({props: { style: styles }}, transaction);
+      React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.fontFamily = 'Helvetica';
 
-      stub.receiveComponent({props: { style: styles }}, transaction);
+      React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.lineHeight = 0.5;
 
-      stub.receiveComponent({props: { style: styles }}, transaction);
+      React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.fontFamily).toEqual('Helvetica');
       expect(stubStyle.lineHeight).toEqual('0.5');
 
-      stub.receiveComponent({props: { style: undefined }}, transaction);
+      React.render(<div style={undefined} />, container);
       expect(stubStyle.display).toBe('');
       expect(stubStyle.fontFamily).toBe('');
       expect(stubStyle.lineHeight).toBe('');
@@ -99,92 +98,96 @@ describe('ReactDOMComponent', function() {
 
     it("should update styles if initially null", function() {
       var styles = null;
-      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+      var container = document.createElement('div');
+      React.render(<div style={styles} />, container);
 
-      var stubStyle = stub.getDOMNode().style;
+      var stubStyle = container.firstChild.style;
 
       styles = {display: 'block'};
 
-      stub.receiveComponent({props: { style: styles }}, transaction);
+      React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('block');
     });
 
     it("should remove attributes", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<img height='17' />);
+      var container = document.createElement('div');
+      React.render(<img height='17' />, container);
 
-      expect(stub.getDOMNode().hasAttribute('height')).toBe(true);
-      stub.receiveComponent({props: {}}, transaction);
-      expect(stub.getDOMNode().hasAttribute('height')).toBe(false);
+      expect(container.firstChild.hasAttribute('height')).toBe(true);
+      React.render(<img />, container);
+      expect(container.firstChild.hasAttribute('height')).toBe(false);
     });
 
     it("should remove properties", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div className='monkey' />);
+      var container = document.createElement('div');
+      React.render(<div className='monkey' />, container);
 
-      expect(stub.getDOMNode().className).toEqual('monkey');
-      stub.receiveComponent({props: {}}, transaction);
-      expect(stub.getDOMNode().className).toEqual('');
+      expect(container.firstChild.className).toEqual('monkey');
+      React.render(<div />, container);
+      expect(container.firstChild.className).toEqual('');
     });
 
     it("should clear a single style prop when changing 'style'", function() {
       var styles = {display: 'none', color: 'red'};
-      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+      var container = document.createElement('div');
+      React.render(<div style={styles} />, container);
 
-      var stubStyle = stub.getDOMNode().style;
+      var stubStyle = container.firstChild.style;
 
       styles = {color: 'green'};
-      stub.receiveComponent({props: { style: styles }}, transaction);
+      React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('green');
     });
 
     it("should clear all the styles when removing 'style'", function() {
       var styles = {display: 'none', color: 'red'};
-      var stub = ReactTestUtils.renderIntoDocument(<div style={styles} />);
+      var container = document.createElement('div');
+      React.render(<div style={styles} />, container);
 
-      var stubStyle = stub.getDOMNode().style;
+      var stubStyle = container.firstChild.style;
 
-      stub.receiveComponent({props: {}}, transaction);
+      React.render(<div />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('');
     });
 
     it("should empty element when removing innerHTML", function() {
-      var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: ':)'}} />
-      );
+      var container = document.createElement('div');
+      React.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
 
-      expect(stub.getDOMNode().innerHTML).toEqual(':)');
-      stub.receiveComponent({props: {}}, transaction);
-      expect(stub.getDOMNode().innerHTML).toEqual('');
+      expect(container.firstChild.innerHTML).toEqual(':)');
+      React.render(<div />, container);
+      expect(container.firstChild.innerHTML).toEqual('');
     });
 
     it("should transition from string content to innerHTML", function() {
-      var stub = ReactTestUtils.renderIntoDocument(
-        <div>hello</div>
-      );
+      var container = document.createElement('div');
+      React.render(<div>hello</div>, container);
 
-      expect(stub.getDOMNode().innerHTML).toEqual('hello');
-      stub.receiveComponent(
-        {props: {dangerouslySetInnerHTML: {__html: 'goodbye'}}},
-        transaction
+      expect(container.firstChild.innerHTML).toEqual('hello');
+      React.render(
+        <div dangerouslySetInnerHTML={{__html: 'goodbye'}} />,
+        container
       );
-      expect(stub.getDOMNode().innerHTML).toEqual('goodbye');
+      expect(container.firstChild.innerHTML).toEqual('goodbye');
     });
 
     it("should transition from innerHTML to string content", function() {
-      var stub = ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
-      );
+      var container = document.createElement('div');
+      React.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+      , container);
 
-      expect(stub.getDOMNode().innerHTML).toEqual('bonjour');
-      stub.receiveComponent({props: {children: 'adieu'}}, transaction);
-      expect(stub.getDOMNode().innerHTML).toEqual('adieu');
+      expect(container.firstChild.innerHTML).toEqual('bonjour');
+      React.render(<div>adieu</div>, container);
+      expect(container.firstChild.innerHTML).toEqual('adieu');
     });
 
     it("should not incur unnecessary DOM mutations", function() {
-      var stub = ReactTestUtils.renderIntoDocument(<div value="" />);
+      var container = document.createElement('div');
+      React.render(<div value="" />, container);
 
-      var node = stub.getDOMNode();
+      var node = container.firstChild;
       var nodeValue = ''; // node.value always returns undefined
       var nodeValueSetter = mocks.getMockFunction();
       Object.defineProperty(node, 'value', {
@@ -196,10 +199,10 @@ describe('ReactDOMComponent', function() {
         })
       });
 
-      stub.receiveComponent({props: {value: ''}}, transaction);
+      React.render(<div value="" />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(0);
 
-      stub.receiveComponent({props: {}}, transaction);
+      React.render(<div />, container);
       expect(nodeValueSetter.mock.calls.length).toBe(1);
     });
   });

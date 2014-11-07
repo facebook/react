@@ -15,8 +15,12 @@ var React;
 var ReactTestUtils;
 var ReactComponent;
 var ReactCompositeComponent;
+var ReactInstanceMap;
 var ComponentLifeCycle;
 var CompositeComponentLifeCycle;
+
+var getCompositeLifeCycle;
+var getLifeCycleState;
 
 var clone = function(o) {
   return JSON.parse(JSON.stringify(o));
@@ -81,6 +85,23 @@ describe('ReactComponentLifeCycle', function() {
     ReactCompositeComponent = require('ReactCompositeComponent');
     ComponentLifeCycle = ReactComponent.LifeCycle;
     CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
+
+    ReactInstanceMap = require('ReactInstanceMap');
+
+    getCompositeLifeCycle = function(instance) {
+      return ReactInstanceMap.get(instance)._compositeLifeCycleState;
+    };
+
+    getLifeCycleState = function(instance) {
+      var internalInstance = ReactInstanceMap.get(instance);
+      if (!internalInstance) {
+        // Once a component is fully unmounted, we cannot actually get to the
+        // internal instance. It's already dereferenced and possibly GC:ed.
+        // So the unmounted life cycle hook doesn't exist anymore.
+        return ComponentLifeCycle.UNMOUNTED;
+      }
+      return internalInstance._lifeCycleState;
+    };
   });
 
   it('should not reuse an instance when it has been unmounted', function() {
@@ -222,25 +243,25 @@ describe('ReactComponentLifeCycle', function() {
         };
         this._testJournal.returnedFromGetInitialState = clone(initState);
         this._testJournal.lifeCycleAtStartOfGetInitialState =
-          this._lifeCycleState;
+          getLifeCycleState(this);
         this._testJournal.compositeLifeCycleAtStartOfGetInitialState =
-          this._compositeLifeCycleState;
+          getCompositeLifeCycle(this);
         return initState;
       },
 
       componentWillMount: function() {
         this._testJournal.stateAtStartOfWillMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillMount =
-          this._lifeCycleState;
+          getLifeCycleState(this);
         this._testJournal.compositeLifeCycleAtStartOfWillMount =
-          this._compositeLifeCycleState;
+          getCompositeLifeCycle(this);
         this.state.hasWillMountCompleted = true;
       },
 
       componentDidMount: function() {
         this._testJournal.stateAtStartOfDidMount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfDidMount =
-          this._lifeCycleState;
+          getLifeCycleState(this);
         this.setState({hasDidMountCompleted: true});
       },
 
@@ -248,12 +269,12 @@ describe('ReactComponentLifeCycle', function() {
         var isInitialRender = !this.state.hasRenderCompleted;
         if (isInitialRender) {
           this._testJournal.stateInInitialRender = clone(this.state);
-          this._testJournal.lifeCycleInInitialRender = this._lifeCycleState;
+          this._testJournal.lifeCycleInInitialRender = getLifeCycleState(this);
           this._testJournal.compositeLifeCycleInInitialRender =
-            this._compositeLifeCycleState;
+            getCompositeLifeCycle(this);
         } else {
           this._testJournal.stateInLaterRender = clone(this.state);
-          this._testJournal.lifeCycleInLaterRender = this._lifeCycleState;
+          this._testJournal.lifeCycleInLaterRender = getLifeCycleState(this);
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
@@ -267,7 +288,7 @@ describe('ReactComponentLifeCycle', function() {
       componentWillUnmount: function() {
         this._testJournal.stateAtStartOfWillUnmount = clone(this.state);
         this._testJournal.lifeCycleAtStartOfWillUnmount =
-          this._lifeCycleState;
+          getLifeCycleState(this);
         this.state.hasWillUnmountCompleted = true;
       }
     });
@@ -275,7 +296,8 @@ describe('ReactComponentLifeCycle', function() {
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
     //
-    var instance = ReactTestUtils.renderIntoDocument(<LifeCycleComponent />);
+    var container = document.createElement('div');
+    var instance = React.render(<LifeCycleComponent />, container);
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
@@ -312,7 +334,7 @@ describe('ReactComponentLifeCycle', function() {
       CompositeComponentLifeCycle.MOUNTING
     );
 
-    expect(instance._lifeCycleState).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
 
     // Now *update the component*
     instance.forceUpdate();
@@ -324,10 +346,9 @@ describe('ReactComponentLifeCycle', function() {
       ComponentLifeCycle.MOUNTED
     );
 
-    expect(instance._lifeCycleState).toBe(ComponentLifeCycle.MOUNTED);
+    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
 
-    // Now *unmountComponent*
-    instance.unmountComponent();
+    React.unmountComponentAtNode(container);
 
     expect(instance._testJournal.stateAtStartOfWillUnmount)
       .toEqual(WILL_UNMOUNT_STATE);
@@ -337,7 +358,7 @@ describe('ReactComponentLifeCycle', function() {
     );
 
     // But the current lifecycle of the component is unmounted.
-    expect(instance._lifeCycleState).toBe(ComponentLifeCycle.UNMOUNTED);
+    expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.UNMOUNTED);
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
@@ -487,10 +508,11 @@ describe('ReactComponentLifeCycle', function() {
       componentDidUpdate: logger('inner componentDidUpdate'),
       componentWillUnmount: logger('inner componentWillUnmount')
     });
-    var instance;
 
+
+    var container = document.createElement('div');
     log = [];
-    instance = ReactTestUtils.renderIntoDocument(<Outer x={17} />);
+    var instance = React.render(<Outer x={17} />, container);
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -512,7 +534,7 @@ describe('ReactComponentLifeCycle', function() {
     ]);
 
     log = [];
-    instance.unmountComponent();
+    React.unmountComponentAtNode(container);
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount'

@@ -62,6 +62,14 @@ describe('ReactInstanceHandles', function() {
     });
   }
 
+  function getNodeID(instance) {
+    if (instance === null) {
+      return '';
+    }
+    var internal = ReactTestUtils.getInternalRepresentation(instance);
+    return internal._rootNodeID;
+  }
+
   beforeEach(function() {
     ReactInstanceHandles = require('ReactInstanceHandles');
     aggregatedArgs = [];
@@ -178,17 +186,17 @@ describe('ReactInstanceHandles', function() {
 
     it("should traverse two phase across component boundary", function() {
       var parent = renderParentIntoDocument();
-      var targetID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
+      var targetID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [
-        {id: parent.refs.P._rootNodeID, isUp: false, arg: ARG},
-        {id: parent.refs.P_P1._rootNodeID, isUp: false, arg: ARG},
-        {id: parent.refs.P_P1_C1.refs.DIV._rootNodeID, isUp: false, arg: ARG},
-        {id: parent.refs.P_P1_C1.refs.DIV_1._rootNodeID, isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: false, arg: ARG},
 
-        {id: parent.refs.P_P1_C1.refs.DIV_1._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P_P1_C1.refs.DIV._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P_P1._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P._rootNodeID, isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
       ];
       ReactInstanceHandles.traverseTwoPhase(targetID, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -196,10 +204,10 @@ describe('ReactInstanceHandles', function() {
 
     it("should traverse two phase at shallowest node", function() {
       var parent = renderParentIntoDocument();
-      var targetID = parent.refs.P._rootNodeID;
+      var targetID = getNodeID(parent.refs.P);
       var expectedAggregation = [
-        {id: parent.refs.P._rootNodeID, isUp: false, arg: ARG},
-        {id: parent.refs.P._rootNodeID, isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
       ];
       ReactInstanceHandles.traverseTwoPhase(targetID, argAggregator, ARG);
       expect(aggregatedArgs).toEqual(expectedAggregation);
@@ -218,8 +226,8 @@ describe('ReactInstanceHandles', function() {
 
     it("should not traverse if enter/leave the same node", function() {
       var parent = renderParentIntoDocument();
-      var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
-      var enterID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
+      var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
+      var enterID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
       var expectedAggregation = [];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -229,12 +237,12 @@ describe('ReactInstanceHandles', function() {
 
     it("should traverse enter/leave to sibling - avoids parent", function() {
       var parent = renderParentIntoDocument();
-      var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
-      var enterID = parent.refs.P_P1_C1.refs.DIV_2._rootNodeID;
+      var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
+      var enterID = getNodeID(parent.refs.P_P1_C1.refs.DIV_2);
       var expectedAggregation = [
-        {id: parent.refs.P_P1_C1.refs.DIV_1._rootNodeID, isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG},
         // enter/leave shouldn't fire antyhing on the parent
-        {id: parent.refs.P_P1_C1.refs.DIV_2._rootNodeID, isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_2), isUp: false, arg: ARG2}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -244,10 +252,10 @@ describe('ReactInstanceHandles', function() {
 
     it("should traverse enter/leave to parent - avoids parent", function() {
       var parent = renderParentIntoDocument();
-      var leaveID = parent.refs.P_P1_C1.refs.DIV_1._rootNodeID;
-      var enterID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
+      var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV_1);
+      var enterID = getNodeID(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {id: parent.refs.P_P1_C1.refs.DIV_1._rootNodeID, isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV_1), isUp: true, arg: ARG}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -258,11 +266,11 @@ describe('ReactInstanceHandles', function() {
     it("should enter from the window", function() {
       var parent = renderParentIntoDocument();
       var leaveID = ''; // From the window or outside of the React sandbox.
-      var enterID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
+      var enterID = getNodeID(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {id: parent.refs.P._rootNodeID, isUp: false, arg: ARG2},
-        {id: parent.refs.P_P1._rootNodeID, isUp: false, arg: ARG2},
-        {id: parent.refs.P_P1_C1.refs.DIV._rootNodeID, isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG2},
+        {id: getNodeID(parent.refs.P_P1), isUp: false, arg: ARG2},
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: false, arg: ARG2}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -273,9 +281,9 @@ describe('ReactInstanceHandles', function() {
     it("should enter from the window to the shallowest", function() {
       var parent = renderParentIntoDocument();
       var leaveID = ''; // From the window or outside of the React sandbox.
-      var enterID = parent.refs.P._rootNodeID;
+      var enterID = getNodeID(parent.refs.P);
       var expectedAggregation = [
-        {id: parent.refs.P._rootNodeID, isUp: false, arg: ARG2}
+        {id: getNodeID(parent.refs.P), isUp: false, arg: ARG2}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -286,11 +294,11 @@ describe('ReactInstanceHandles', function() {
     it("should leave to the window", function() {
       var parent = renderParentIntoDocument();
       var enterID = ''; // From the window or outside of the React sandbox.
-      var leaveID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
+      var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {id: parent.refs.P_P1_C1.refs.DIV._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P_P1._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P._rootNodeID, isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -301,11 +309,11 @@ describe('ReactInstanceHandles', function() {
     it("should leave to the window from the shallowest", function() {
       var parent = renderParentIntoDocument();
       var enterID = ''; // From the window or outside of the React sandbox.
-      var leaveID = parent.refs.P_P1_C1.refs.DIV._rootNodeID;
+      var leaveID = getNodeID(parent.refs.P_P1_C1.refs.DIV);
       var expectedAggregation = [
-        {id: parent.refs.P_P1_C1.refs.DIV._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P_P1._rootNodeID, isUp: true, arg: ARG},
-        {id: parent.refs.P._rootNodeID, isUp: true, arg: ARG}
+        {id: getNodeID(parent.refs.P_P1_C1.refs.DIV), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P_P1), isUp: true, arg: ARG},
+        {id: getNodeID(parent.refs.P), isUp: true, arg: ARG}
       ];
       ReactInstanceHandles.traverseEnterLeave(
         leaveID, enterID, argAggregator, ARG, ARG2
@@ -320,9 +328,9 @@ describe('ReactInstanceHandles', function() {
       expect(
         ReactInstanceHandles._getNextDescendantID(
           '',
-          parent.refs.P_P1._rootNodeID
+          getNodeID(parent.refs.P_P1)
         )
-      ).toBe(parent.refs.P._rootNodeID);
+      ).toBe(getNodeID(parent.refs.P));
     });
 
     it("should return window for next descendent towards window", function() {
@@ -333,10 +341,10 @@ describe('ReactInstanceHandles', function() {
       var parent = renderParentIntoDocument();
       expect(
         ReactInstanceHandles._getNextDescendantID(
-          parent.refs.P_P1._rootNodeID,
-          parent.refs.P_P1._rootNodeID
+          getNodeID(parent.refs.P_P1),
+          getNodeID(parent.refs.P_P1)
         )
-      ).toBe(parent.refs.P_P1._rootNodeID);
+      ).toBe(getNodeID(parent.refs.P_P1));
     });
   });
 
@@ -345,19 +353,19 @@ describe('ReactInstanceHandles', function() {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor from window to deep element is ''.
-        { one: {_rootNodeID: ''},
+        { one: null,
           two: parent.refs.P_P1_C1.refs.DIV_1,
-          com: {_rootNodeID: ''}
+          com: null
         },
         // Same as previous - reversed direction.
         { one: parent.refs.P_P1_C1.refs.DIV_1,
-          two: {_rootNodeID: ''},
-          com: {_rootNodeID: ''}
+          two: null,
+          com: null
         },
         // Common ancestor from window to shallow id is ''.
         { one: parent.refs.P,
-          two: {_rootNodeID: ''},
-          com: {_rootNodeID: ''}
+          two: null,
+          com: null
         },
         // Common ancestor with self is self.
         { one: parent.refs.P_P1_C1.refs.DIV_1,
@@ -401,10 +409,10 @@ describe('ReactInstanceHandles', function() {
       for (i = 0; i < ancestors.length; i++) {
         var plan = ancestors[i];
         var firstCommon = ReactInstanceHandles._getFirstCommonAncestorID(
-          plan.one._rootNodeID,
-          plan.two._rootNodeID
+          getNodeID(plan.one),
+          getNodeID(plan.two)
         );
-        expect(firstCommon).toBe(plan.com._rootNodeID);
+        expect(firstCommon).toBe(getNodeID(plan.com));
       }
     });
   });

@@ -12,15 +12,26 @@
 "use strict";
 
 var React;
+var ReactInstanceMap;
 var ReactTestUtils;
 
 var reactComponentExpect;
+var getMountDepth;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
     React = require('React');
+    ReactInstanceMap = require('ReactInstanceMap');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
+
+    getMountDepth = function(instance) {
+      if (instance.mountComponent) {
+        // Native instance
+        return instance._mountDepth;
+      }
+      return ReactInstanceMap.get(instance)._mountDepth;
+    };
   });
 
   it('should throw on invalid render targets', function() {
@@ -46,26 +57,6 @@ describe('ReactComponent', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
-  });
-
-  it('should throw when attempting to hijack a ref', function() {
-    var Component = React.createClass({
-      render: function() {
-        var child = this.props.child;
-        this.attachRef('test', child);
-        return child;
-      }
-    });
-
-    var childInstance = ReactTestUtils.renderIntoDocument(<span />);
-    var instance = <Component child={childInstance} />;
-
-    expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).toThrow(
-      'Invariant Violation: attachRef(test, ...): Only a component\'s owner ' +
-      'can store a ref to it.'
-    );
   });
 
   it('should support refs on owned components', function() {
@@ -260,8 +251,8 @@ describe('ReactComponent', function() {
 
     var instance = <Owner />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(instance._mountDepth).toBe(0);
-    expect(instance.refs.child._mountDepth).toBe(1);
+    expect(getMountDepth(instance)).toBe(0);
+    expect(getMountDepth(instance.refs.child)).toBe(1);
   });
 
   it('should know its (complicated) mount depth', function() {
@@ -291,7 +282,7 @@ describe('ReactComponent', function() {
               ref="switcherDiv"
               style={{
                 display: this.state.tabKey === child.key ? '' : 'none'
-            }}>
+              }}>
               {child}
             </div>
           </Box>
@@ -312,12 +303,12 @@ describe('ReactComponent', function() {
     var root = <App />;
     root = ReactTestUtils.renderIntoDocument(root);
 
-    expect(root._mountDepth).toBe(0);
-    expect(root.refs.switcher._mountDepth).toBe(1);
-    expect(root.refs.switcher.refs.box._mountDepth).toBe(2);
-    expect(root.refs.switcher.refs.switcherDiv._mountDepth).toBe(4);
-    expect(root.refs.child._mountDepth).toBe(5);
-    expect(root.refs.switcher.refs.box.refs.boxDiv._mountDepth).toBe(3);
-    expect(root.refs.child.refs.span._mountDepth).toBe(6);
+    expect(getMountDepth(root)).toBe(0);
+    expect(getMountDepth(root.refs.switcher)).toBe(1);
+    expect(getMountDepth(root.refs.switcher.refs.box)).toBe(2);
+    expect(getMountDepth(root.refs.switcher.refs.switcherDiv)).toBe(4);
+    expect(getMountDepth(root.refs.child)).toBe(5);
+    expect(getMountDepth(root.refs.switcher.refs.box.refs.boxDiv)).toBe(3);
+    expect(getMountDepth(root.refs.child.refs.span)).toBe(6);
   });
 });

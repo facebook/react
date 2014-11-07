@@ -48,7 +48,9 @@ var NUMERIC_PROPERTY_REGEX = /^\d+$/;
  */
 function getCurrentOwnerDisplayName() {
   var current = ReactCurrentOwner.current;
-  return current && current.constructor.displayName || undefined;
+  return (
+    current && current.getPublicInstance().constructor.displayName || undefined
+  );
 }
 
 /**
@@ -128,7 +130,8 @@ function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
       component._owner &&
       component._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
-    childOwnerName = component._owner.constructor.displayName;
+    childOwnerName =
+      component._owner.getPublicInstance().constructor.displayName;
 
     message += ` It was passed a child from ${childOwnerName}.`;
   }

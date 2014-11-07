@@ -129,7 +129,7 @@ var ReactPropTransferer = {
      */
     transferPropsTo: function(element) {
       invariant(
-        element._owner === this,
+        element._owner && element._owner.getPublicInstance() === this,
         '%s: You can\'t call transferPropsTo() on a component that you ' +
         'don\'t own, %s. This usually means you are calling ' +
         'transferPropsTo() on a component passed in as props or children.',

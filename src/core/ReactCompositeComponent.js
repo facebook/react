@@ -16,37 +16,31 @@ var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
-var ReactErrorUtils = require('ReactErrorUtils');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
-var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
-var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
-var monitorCodeUse = require('monitorCodeUse');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum(component) {
   var owner = component._owner || null;
-  if (owner && owner.constructor && owner.constructor.displayName) {
-    return ' Check the render method of `' + owner.constructor.displayName +
-      '`.';
+  if (owner) {
+    var constructor = owner._instance.constructor;
+    if (constructor && constructor.displayName) {
+      return ' Check the render method of `' + constructor.displayName + '`.';
+    }
   }
   return '';
 }
 
 function validateLifeCycleOnReplaceState(instance) {
   var compositeLifeCycleState = instance._compositeLifeCycleState;
-  invariant(
-    instance.isMounted() ||
-      compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
-    'replaceState(...): Can only update a mounted or mounting component.'
-  );
   invariant(
     ReactCurrentOwner.current == null,
     'replaceState(...): Cannot update during an existing state transition ' +
@@ -106,7 +100,9 @@ var CompositeLifeCycle = keyMirror({
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = {
+var ReactCompositeComponentMixin = assign({},
+  ReactComponent.Mixin,
+  ReactOwner.Mixin, {
 
   /**
    * Base constructor for all composite component.
@@ -116,18 +112,16 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   construct: function(element) {
+    this._instance.props = element.props;
+    this._instance.state = null;
+    this._instance.context = null;
+
+    this._pendingState = null;
+    this._compositeLifeCycleState = null;
+
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
     ReactOwner.Mixin.construct.apply(this, arguments);
-
-    this.state = null;
-    this._pendingState = null;
-
-    // This is the public post-processed context. The real context and pending
-    // context lives on the element.
-    this.context = null;
-
-    this._compositeLifeCycleState = null;
   },
 
   /**
@@ -161,47 +155,48 @@ var ReactCompositeComponentMixin = {
         transaction,
         mountDepth
       );
+
+      var inst = this._instance;
+
+      // Store a reference from the instance back to the internal representation
+      ReactInstanceMap.set(inst, this);
+
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
-      if (this.__reactAutoBindMap) {
-        this._bindAutoBindMethods();
-      }
+      inst.context = this._processContext(this._currentElement._context);
+      inst.props = this._processProps(this._currentElement.props);
 
-      this.context = this._processContext(this._currentElement._context);
-      this.props = this._processProps(this.props);
-
-      this.state = this.getInitialState ? this.getInitialState() : null;
-
+      var initialState = inst.getInitialState ? inst.getInitialState() : null;
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
-        if (typeof this.state === 'undefined' &&
-            this.getInitialState && this.getInitialState._isMockFunction) {
+        if (typeof initialState === 'undefined' &&
+            inst.getInitialState._isMockFunction) {
           // This is probably bad practice. Consider warning here and
           // deprecating this convenience.
-          this.state = null;
+          initialState = null;
         }
       }
-
       invariant(
-        typeof this.state === 'object' && !Array.isArray(this.state),
+        typeof initialState === 'object' && !Array.isArray(initialState),
         '%s.getInitialState(): must return an object or null',
-        this.constructor.displayName || 'ReactCompositeComponent'
+        inst.constructor.displayName || 'ReactCompositeComponent'
       );
+      inst.state = initialState;
 
       this._pendingState = null;
       this._pendingForceUpdate = false;
 
-      if (this.componentWillMount) {
-        this.componentWillMount();
+      if (inst.componentWillMount) {
+        inst.componentWillMount();
         // When mounting, calls to `setState` by `componentWillMount` will set
         // `this._pendingState` without triggering a re-render.
         if (this._pendingState) {
-          this.state = this._pendingState;
+          inst.state = this._pendingState;
           this._pendingState = null;
         }
       }
 
-      this._renderedComponent = instantiateReactComponent(
+      this._renderedComponent = this._instantiateReactComponent(
         this._renderValidatedComponent(),
         this._currentElement.type // The wrapping type
       );
@@ -213,8 +208,8 @@ var ReactCompositeComponentMixin = {
         transaction,
         mountDepth + 1
       );
-      if (this.componentDidMount) {
-        transaction.getReactMountReady().enqueue(this.componentDidMount, this);
+      if (inst.componentDidMount) {
+        transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
       }
       return markup;
     }
@@ -227,9 +222,11 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   unmountComponent: function() {
+    var inst = this._instance;
+
     this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
-    if (this.componentWillUnmount) {
-      this.componentWillUnmount();
+    if (inst.componentWillUnmount) {
+      inst.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
 
@@ -238,23 +235,23 @@ var ReactCompositeComponentMixin = {
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
-    // Some existing components rely on this.props even after they've been
+    // Delete the reference from the instance to this internal representation
+    // which allow the internals to be properly cleaned up even if the user
+    // leaks a reference to the public instance.
+    ReactInstanceMap.remove(inst);
+
+    // Some existing components rely on inst.props even after they've been
     // destroyed (in event handlers).
-    // TODO: this.props = null;
-    // TODO: this.state = null;
+    // TODO: inst.props = null;
+    // TODO: inst.state = null;
+    // TODO: inst.context = null;
   },
 
   /**
-   * Sets a subset of the state. Always use this or `replaceState` to mutate
-   * state. You should treat `this.state` as immutable.
-   *
-   * There is no guarantee that `this.state` will be immediately updated, so
-   * accessing `this.state` after calling this method may return the old value.
-   *
-   * There is no guarantee that calls to `setState` will run synchronously,
-   * as they may eventually be batched together.  You can provide an optional
-   * callback that will be executed when the call to setState is actually
-   * completed.
+   * Sets a subset of the state. This only exists because _pendingState is
+   * internal. This provides a merging strategy that is not available to deep
+   * properties which is confusing. TODO: Expose pendingState or don't use it
+   * during the merge.
    *
    * @param {object} partialState Next partial state to be merged with state.
    * @param {?function} callback Called after state is updated.
@@ -262,20 +259,9 @@ var ReactCompositeComponentMixin = {
    * @protected
    */
   setState: function(partialState, callback) {
-    invariant(
-      typeof partialState === 'object' || partialState == null,
-      'setState(...): takes an object of state variables to update.'
-    );
-    if (__DEV__){
-      warning(
-        partialState != null,
-        'setState(...): You passed an undefined or null state object; ' +
-        'instead, use forceUpdate().'
-      );
-    }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
-      assign({}, this._pendingState || this.state, partialState),
+      assign({}, this._pendingState || this._instance.state, partialState),
       callback
     );
   },
@@ -307,6 +293,32 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
+   * Forces an update. This should only be invoked when it is known with
+   * certainty that we are **not** in a DOM transaction.
+   *
+   * You may want to call this when you know that some deeper aspect of the
+   * component's state has changed but `setState` was not called.
+   *
+   * This will not invoke `shouldUpdateComponent`, but it will invoke
+   * `componentWillUpdate` and `componentDidUpdate`.
+   *
+   * @param {?function} callback Called after update is complete.isM
+   * @final
+   * @protected
+   */
+  forceUpdate: function(callback) {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'forceUpdate(...): Cannot force an update while unmounting component ' +
+      'or during an existing state transition (such as within `render`).'
+    );
+    this._pendingForceUpdate = true;
+    ReactUpdates.enqueueUpdate(this, callback);
+  },
+
+  /**
    * Filters the context object to only contain keys specified in
    * `contextTypes`, and asserts that they are valid.
    *
@@ -316,7 +328,7 @@ var ReactCompositeComponentMixin = {
    */
   _processContext: function(context) {
     var maskedContext = null;
-    var contextTypes = this.constructor.contextTypes;
+    var contextTypes = this._instance.constructor.contextTypes;
     if (contextTypes) {
       maskedContext = {};
       for (var contextName in contextTypes) {
@@ -339,25 +351,26 @@ var ReactCompositeComponentMixin = {
    * @private
    */
   _processChildContext: function(currentContext) {
-    var childContext = this.getChildContext && this.getChildContext();
-    var displayName = this.constructor.displayName || 'ReactCompositeComponent';
+    var inst = this._instance;
+    var childContext = inst.getChildContext && inst.getChildContext();
+    var displayName = inst.constructor.displayName || 'ReactCompositeComponent';
     if (childContext) {
       invariant(
-        typeof this.constructor.childContextTypes === 'object',
+        typeof inst.constructor.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
         'use getChildContext().',
         displayName
       );
       if (__DEV__) {
         this._checkPropTypes(
-          this.constructor.childContextTypes,
+          inst.constructor.childContextTypes,
           childContext,
           ReactPropTypeLocations.childContext
         );
       }
       for (var name in childContext) {
         invariant(
-          name in this.constructor.childContextTypes,
+          name in inst.constructor.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
           displayName,
           name
@@ -379,7 +392,8 @@ var ReactCompositeComponentMixin = {
    */
   _processProps: function(newProps) {
     if (__DEV__) {
-      var propTypes = this.constructor.propTypes;
+      var inst = this._instance;
+      var propTypes = inst.constructor.propTypes;
       if (propTypes) {
         this._checkPropTypes(propTypes, newProps, ReactPropTypeLocations.prop);
       }
@@ -398,7 +412,7 @@ var ReactCompositeComponentMixin = {
   _checkPropTypes: function(propTypes, props, location) {
     // TODO: Stop validating prop types here and only use the element
     // validation.
-    var componentName = this.constructor.displayName;
+    var componentName = this._instance.constructor.displayName;
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error =
@@ -497,8 +511,10 @@ var ReactCompositeComponentMixin = {
         nextParentElement
       );
 
-      var prevContext = this.context;
-      var prevProps = this.props;
+      var inst = this._instance;
+
+      var prevContext = inst.context;
+      var prevProps = inst.props;
       var nextContext = prevContext;
       var nextProps = prevProps;
       // Distinguish between a props update versus a simple state update
@@ -507,25 +523,25 @@ var ReactCompositeComponentMixin = {
         nextProps = this._processProps(nextParentElement.props);
 
         this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
-        if (this.componentWillReceiveProps) {
-          this.componentWillReceiveProps(nextProps, nextContext);
+        if (inst.componentWillReceiveProps) {
+          inst.componentWillReceiveProps(nextProps, nextContext);
         }
       }
 
       this._compositeLifeCycleState = null;
 
-      var nextState = this._pendingState || this.state;
+      var nextState = this._pendingState || inst.state;
       this._pendingState = null;
 
       var shouldUpdate =
         this._pendingForceUpdate ||
-        !this.shouldComponentUpdate ||
-        this.shouldComponentUpdate(nextProps, nextState, nextContext);
+        !inst.shouldComponentUpdate ||
+        inst.shouldComponentUpdate(nextProps, nextState, nextContext);
 
       if (__DEV__) {
         if (typeof shouldUpdate === "undefined") {
           console.warn(
-            (this.constructor.displayName || 'ReactCompositeComponent') +
+            (inst.constructor.displayName || 'ReactCompositeComponent') +
             '.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.'
           );
@@ -536,9 +552,9 @@ var ReactCompositeComponentMixin = {
         // If it's determined that a component should not update, we still want
         // to set props and state but we shortcut the rest of the update.
         this._currentElement = nextParentElement;
-        this.props = nextProps;
-        this.state = nextState;
-        this.context = nextContext;
+        inst.props = nextProps;
+        inst.state = nextState;
+        inst.context = nextContext;
 
         // Owner cannot change because shouldUpdateReactComponent doesn't allow
         // it. TODO: Remove this._owner completely.
@@ -576,18 +592,20 @@ var ReactCompositeComponentMixin = {
     nextContext,
     transaction
   ) {
-    var prevProps = this.props;
-    var prevState = this.state;
-    var prevContext = this.context;
+    var inst = this._instance;
 
-    if (this.componentWillUpdate) {
-      this.componentWillUpdate(nextProps, nextState, nextContext);
+    var prevProps = inst.props;
+    var prevState = inst.state;
+    var prevContext = inst.context;
+
+    if (inst.componentWillUpdate) {
+      inst.componentWillUpdate(nextProps, nextState, nextContext);
     }
 
     this._currentElement = nextElement;
-    this.props = nextProps;
-    this.state = nextState;
-    this.context = nextContext;
+    inst.props = nextProps;
+    inst.state = nextState;
+    inst.context = nextContext;
 
     // Owner cannot change because shouldUpdateReactComponent doesn't allow
     // it. TODO: Remove this._owner completely.
@@ -595,10 +613,10 @@ var ReactCompositeComponentMixin = {
 
     this._updateRenderedComponent(transaction);
 
-    if (this.componentDidUpdate) {
+    if (inst.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
-        this.componentDidUpdate.bind(this, prevProps, prevState, prevContext),
-        this
+        inst.componentDidUpdate.bind(inst, prevProps, prevState, prevContext),
+        inst
       );
     }
   },
@@ -623,7 +641,7 @@ var ReactCompositeComponentMixin = {
       var thisID = this._rootNodeID;
       var prevComponentID = prevComponentInstance._rootNodeID;
       prevComponentInstance.unmountComponent();
-      this._renderedComponent = instantiateReactComponent(
+      this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement,
         this._currentElement.type
       );
@@ -640,38 +658,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Forces an update. This should only be invoked when it is known with
-   * certainty that we are **not** in a DOM transaction.
-   *
-   * You may want to call this when you know that some deeper aspect of the
-   * component's state has changed but `setState` was not called.
-   *
-   * This will not invoke `shouldUpdateComponent`, but it will invoke
-   * `componentWillUpdate` and `componentDidUpdate`.
-   *
-   * @param {?function} callback Called after update is complete.
-   * @final
-   * @protected
-   */
-  forceUpdate: function(callback) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      this.isMounted() ||
-        compositeLifeCycleState === CompositeLifeCycle.MOUNTING,
-      'forceUpdate(...): Can only force an update on mounted or mounting ' +
-        'components.'
-    );
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING &&
-      ReactCurrentOwner.current == null,
-      'forceUpdate(...): Cannot force an update while unmounting component ' +
-      'or within a `render` function.'
-    );
-    this._pendingForceUpdate = true;
-    ReactUpdates.enqueueUpdate(this, callback);
-  },
-
-  /**
    * @private
    */
   _renderValidatedComponent: ReactPerf.measure(
@@ -684,12 +670,13 @@ var ReactCompositeComponentMixin = {
         this._currentElement._context
       );
       ReactCurrentOwner.current = this;
+      var inst = this._instance;
       try {
-        renderedComponent = this.render();
+        renderedComponent = inst.render();
         if (__DEV__) {
           // We allow auto-mocks to proceed as if they're returning null.
           if (typeof renderedComponent === 'undefined' &&
-              this.render._isMockFunction) {
+              inst.render._isMockFunction) {
             // This is probably bad practice. Consider warning here and
             // deprecating this convenience.
             renderedComponent = null;
@@ -709,100 +696,35 @@ var ReactCompositeComponentMixin = {
         ReactElement.isValidElement(renderedComponent),
         '%s.render(): A valid ReactComponent must be returned. You may have ' +
           'returned undefined, an array or some other invalid object.',
-        this.constructor.displayName || 'ReactCompositeComponent'
+        inst.constructor.displayName || 'ReactCompositeComponent'
       );
       return renderedComponent;
     }
   ),
 
   /**
-   * @private
+   * Get the publicly accessible representation of this component - i.e. what
+   * is exposed by refs and renderComponent. Can be null for stateless
+   * components.
+   *
+   * @return {ReactComponent} the public component instance.
+   * @internal
    */
-  _bindAutoBindMethods: function() {
-    for (var autoBindKey in this.__reactAutoBindMap) {
-      if (!this.__reactAutoBindMap.hasOwnProperty(autoBindKey)) {
-        continue;
-      }
-      var method = this.__reactAutoBindMap[autoBindKey];
-      this[autoBindKey] = this._bindAutoBindMethod(ReactErrorUtils.guard(
-        method,
-        this.constructor.displayName + '.' + autoBindKey
-      ));
-    }
+  getPublicInstance: function() {
+    return this._instance;
   },
 
-  /**
-   * Binds a method to the component.
-   *
-   * @param {function} method Method to be bound.
-   * @private
-   */
-  _bindAutoBindMethod: function(method) {
-    var component = this;
-    var boundMethod = method.bind(component);
-    if (__DEV__) {
-      boundMethod.__reactBoundContext = component;
-      boundMethod.__reactBoundMethod = method;
-      boundMethod.__reactBoundArguments = null;
-      var componentName = component.constructor.displayName;
-      var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis, ...args) {
-        // User is trying to bind() an autobound method; we effectively will
-        // ignore the value of "this" that the user is trying to use, so
-        // let's warn.
-        if (newThis !== component && newThis !== null) {
-          monitorCodeUse('react_bind_warning', { component: componentName });
-          console.warn(
-            'bind(): React component methods may only be bound to the ' +
-            'component instance. See ' + componentName
-          );
-        } else if (!args.length) {
-          monitorCodeUse('react_bind_warning', { component: componentName });
-          console.warn(
-            'bind(): You are binding a component method to the component. ' +
-            'React does this for you automatically in a high-performance ' +
-            'way, so you can safely remove this call. See ' + componentName
-          );
-          return boundMethod;
-        }
-        var reboundMethod = _bind.apply(boundMethod, arguments);
-        reboundMethod.__reactBoundContext = component;
-        reboundMethod.__reactBoundMethod = method;
-        reboundMethod.__reactBoundArguments = args;
-        return reboundMethod;
-      };
-    }
-    return boundMethod;
-  }
-};
+  // Stub
+  _instantiateReactComponent: null
 
-var ReactCompositeComponentBase = function() {};
-assign(
-  ReactCompositeComponentBase.prototype,
-  ReactComponent.Mixin,
-  ReactOwner.Mixin,
-  ReactPropTransferer.Mixin,
-  ReactCompositeComponentMixin
-);
+});
 
-/**
- * Module for creating composite components.
- *
- * @class ReactCompositeComponent
- * @extends ReactComponent
- * @extends ReactOwner
- * @extends ReactPropTransferer
- */
 var ReactCompositeComponent = {
 
   LifeCycle: CompositeLifeCycle,
 
-  Base: ReactCompositeComponentBase
+  Mixin: ReactCompositeComponentMixin
 
 };
-
-// Temporary injection.
-// TODO: Delete this hack once implementation details are hidden.
-instantiateReactComponent._compositeBase = ReactCompositeComponentBase;
 
 module.exports = ReactCompositeComponent;
