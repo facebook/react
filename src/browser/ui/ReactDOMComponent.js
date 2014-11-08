@@ -285,7 +285,7 @@ ReactDOMComponent.Mixin = {
       // superfluous reconcile. It's possible for state to be mutable but such
       // change should trigger an update of the owner which would recreate
       // the element. We explicitly check for the existence of an owner since
-      // it's possible for a element created outside a composite to be
+      // it's possible for an element created outside a composite to be
       // deeply mutated and reused.
       return;
     }
