@@ -175,8 +175,10 @@ describe('ReactDOMComponent', function() {
 
     it("should transition from innerHTML to string content", function() {
       var container = document.createElement('div');
-      React.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
-      , container);
+      React.render(
+        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
+        container
+      );
 
       expect(container.firstChild.innerHTML).toEqual('bonjour');
       React.render(<div>adieu</div>, container);
