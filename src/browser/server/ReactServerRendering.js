@@ -17,14 +17,17 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactServerRenderingTransaction =
   require('ReactServerRenderingTransaction');
 
+var emptyObject = require('emptyObject');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 
 /**
  * @param {ReactElement} element
+ * @param {?object} context
  * @return {string} the HTML markup
  */
-function renderToString(element) {
+function renderToString(element, context) {
+  if(context === undefined) context = emptyObject;
   invariant(
     ReactElement.isValidElement(element),
     'renderToString(): You must pass a valid ReactElement.'
@@ -37,7 +40,7 @@ function renderToString(element) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
-      var markup = componentInstance.mountComponent(id, transaction, 0);
+      var markup = componentInstance.mountComponent(id, transaction, 0, context);
       return ReactMarkupChecksum.addChecksumToMarkup(markup);
     }, null);
   } finally {
@@ -47,10 +50,12 @@ function renderToString(element) {
 
 /**
  * @param {ReactElement} element
+ * @param {?object} context
  * @return {string} the HTML markup, without the extra React ID and checksum
  * (for generating static pages)
  */
-function renderToStaticMarkup(element) {
+function renderToStaticMarkup(element, context) {
+  if(context === undefined) context = emptyObject;
   invariant(
     ReactElement.isValidElement(element),
     'renderToStaticMarkup(): You must pass a valid ReactElement.'
@@ -63,7 +68,7 @@ function renderToStaticMarkup(element) {
 
     return transaction.perform(function() {
       var componentInstance = instantiateReactComponent(element, null);
-      return componentInstance.mountComponent(id, transaction, 0);
+      return componentInstance.mountComponent(id, transaction, 0, context);
     }, null);
   } finally {
     ReactServerRenderingTransaction.release(transaction);

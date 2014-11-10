@@ -12,6 +12,7 @@
 "use strict";
 
 var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
 var monitorCodeUse = require('monitorCodeUse');
 
 /**
@@ -26,7 +27,7 @@ var ReactContext = {
    * @internal
    * @type {object}
    */
-  current: {},
+  current: emptyObject,
 
   /**
    * Temporarily extends the current context while executing scopedCallback.

@@ -97,7 +97,7 @@ describe('ReactElement', function() {
     );
   });
 
-  it('preserves the context on the element', function() {
+  it('preserves the legacy context on the element', function() {
     var Component = React.createFactory(ComponentClass);
     var element;
 
@@ -124,12 +124,6 @@ describe('ReactElement', function() {
     var element;
 
     var Wrapper = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string
-      },
-      getChildContext: function() {
-        return { foo: 'bar' };
-      },
       render: function() {
         element = Component();
         return element;

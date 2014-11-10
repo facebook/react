@@ -20,6 +20,7 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPerf = require('ReactPerf');
 
+var emptyObject = require('emptyObject');
 var containsNode = require('containsNode');
 var deprecated = require('deprecated');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
@@ -327,10 +328,12 @@ var ReactMount = {
         componentInstance,
         container
       );
+
       componentInstance.mountComponentIntoNode(
         reactRootID,
         container,
-        shouldReuseMarkup
+        shouldReuseMarkup,
+        emptyObject
       );
 
       if (__DEV__) {
