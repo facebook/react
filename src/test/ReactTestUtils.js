@@ -17,12 +17,15 @@ var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactElement = require('ReactElement');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
+var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
+var instantiateReactComponent = require('instantiateReactComponent');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -298,8 +301,51 @@ var ReactTestUtils = {
     };
   },
 
+  createRenderer: function() {
+    return new ReactShallowRenderer();
+  },
+
   Simulate: null,
   SimulateNative: {}
+};
+
+/**
+ * @class ReactShallowRenderer
+ */
+var ReactShallowRenderer = function() {
+  this._instance = null;
+};
+
+ReactShallowRenderer.prototype.getRenderOutput = function() {
+  return (this._instance && this._instance._renderedComponent) || null;
+};
+
+var ShallowComponentWrapper = function(inst) {
+  this._instance = inst;
+}
+assign(
+  ShallowComponentWrapper.prototype,
+  ReactCompositeComponent.ShallowMixin
+);
+
+ReactShallowRenderer.prototype.render = function(element) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  this._render(element, transaction);
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
+};
+
+ReactShallowRenderer.prototype._render = function(element, transaction) {
+  if (!this._instance) {
+    var rootID = ReactInstanceHandles.createReactRootID();
+    var instance = new ShallowComponentWrapper(new element.type(element.props));
+    instance.construct(element);
+
+    instance.mountComponent(rootID, transaction, 0);
+
+    this._instance = instance;
+  } else {
+    this._instance.receiveComponent(element, transaction);
+  }
 };
 
 /**
