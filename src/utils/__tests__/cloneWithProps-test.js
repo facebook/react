@@ -110,6 +110,36 @@ describe('cloneWithProps', function() {
     }
   });
 
+  it('should not warn cloning with refs when refs are copied', function() {
+    var Grandparent = React.createClass({
+      render: function() {
+        return <Parent><div ref="yolo" /></Parent>;
+      }
+    });
+    var Parent = React.createClass({
+      render: function() {
+        var child = onlyChild(this.props.children);
+        return (
+          <div>
+            {cloneWithProps(child, {className: 'xyz', ref: child.ref})}
+          </div>
+        );
+      }
+    });
+
+    var _warn = console.warn;
+
+    try {
+      console.warn = mocks.getMockFunction();
+
+      var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+      expect(component.refs).toBe(emptyObject);
+      expect(console.warn.mock.calls.length).toBe(0);
+    } finally {
+      console.warn = _warn;
+    }
+  });
+
   it('should transfer the key property', function() {
     var Component = React.createClass({
       render: function() {

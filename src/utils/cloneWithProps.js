@@ -32,7 +32,7 @@ var CHILDREN_PROP = keyOf({children: null});
 function cloneWithProps(child, props) {
   if (__DEV__) {
     warning(
-      !child.ref,
+      !child.ref || (child.ref === props.ref),
       'You are calling cloneWithProps() on a child with a ref. This is ' +
       'dangerous because you\'re creating a new child which will not be ' +
       'added as a ref to its parent.'
