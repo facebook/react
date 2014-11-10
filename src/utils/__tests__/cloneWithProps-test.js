@@ -113,15 +113,19 @@ describe('cloneWithProps', function() {
   it('should not warn cloning with refs when refs are copied', function() {
     var Grandparent = React.createClass({
       render: function() {
-        return <Parent><div ref="yolo" /></Parent>;
+        var child = onlyChild(this.props.children);
+        return (
+          <div ref='grandpa'>
+            {cloneWithProps(child, {className: 'xyz', ref: child.ref})}
+          </div>
+        );
       }
     });
     var Parent = React.createClass({
       render: function() {
-        var child = onlyChild(this.props.children);
         return (
-          <div>
-            {cloneWithProps(child, {className: 'xyz', ref: child.ref})}
+          <div className={this.props.className}>
+            {this.props.children}
           </div>
         );
       }
@@ -132,8 +136,12 @@ describe('cloneWithProps', function() {
     try {
       console.warn = mocks.getMockFunction();
 
-      var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-      expect(component.refs).toBe(emptyObject);
+      var component = ReactTestUtils.renderIntoDocument(
+        <Grandparent>
+          <Parent ref='yolo'>XYZ</Parent>
+        </Grandparent>
+      );
+      expect(component.refs.yolo.getDOMNode().className).toBe("xyz");
       expect(console.warn.mock.calls.length).toBe(0);
     } finally {
       console.warn = _warn;
