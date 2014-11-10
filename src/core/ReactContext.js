@@ -29,9 +29,6 @@ var ReactContext = {
   current: {},
 
   /**
-   *
-   * @deprecated
-   *
    * Temporarily extends the current context while executing scopedCallback.
    *
    * A typical use case might look like
@@ -48,7 +45,6 @@ var ReactContext = {
    * @return {ReactComponent|array<ReactComponent>}
    */
   withContext: function(newContext, scopedCallback) {
-
     monitorCodeUse('react_with_context', {newContext: newContext});
 
     var result;
