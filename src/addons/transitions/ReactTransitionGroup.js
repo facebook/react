@@ -23,7 +23,8 @@ var ReactTransitionGroup = React.createClass({
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func
+    childFactory: React.PropTypes.func,
+    startOnMount: React.PropTypes.bool
   },
 
   getDefaultProps: function() {
@@ -37,6 +38,13 @@ var ReactTransitionGroup = React.createClass({
     return {
       children: ReactTransitionChildMapping.getChildMapping(this.props.children)
     };
+  },
+
+  componentDidMount: function() {
+    if (this.props.startOnMount) {
+      this.keysToEnter = Object.keys(this.state.children);
+      this.keysToEnter.forEach(this.performEnter);
+    }
   },
 
   componentWillReceiveProps: function(nextProps) {
