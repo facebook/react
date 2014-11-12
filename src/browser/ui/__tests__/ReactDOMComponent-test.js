@@ -283,7 +283,7 @@ describe('ReactDOMComponent', function() {
 
       genMarkup = function(props) {
         var transaction = new ReactReconcileTransaction();
-        return (new NodeStub(props))._createContentMarkup(transaction);
+        return (new NodeStub(props))._createContentMarkup(transaction, {});
       };
 
       this.addMatchers({
@@ -328,7 +328,7 @@ describe('ReactDOMComponent', function() {
           _owner: null,
           _context: null
         });
-        return stubComponent.mountComponent('test', transaction, 0);
+        return stubComponent.mountComponent('test', transaction, 0, {});
       };
     });
 

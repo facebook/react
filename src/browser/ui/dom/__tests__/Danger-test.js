@@ -32,7 +32,7 @@ describe('Danger', function() {
     it('should render markup', function() {
       var markup = instantiateReactComponent(
         <div />
-      ).mountComponent('.rX', transaction, 0);
+      ).mountComponent('.rX', transaction, 0, {});
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('DIV');
@@ -44,7 +44,7 @@ describe('Danger', function() {
       ).mountComponent(
         '.rX',
         transaction,
-        0
+        0, {}
       );
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
@@ -55,7 +55,7 @@ describe('Danger', function() {
     it('should render wrapped markup', function() {
       var markup = instantiateReactComponent(
         <th />
-      ).mountComponent('.rX', transaction, 0);
+      ).mountComponent('.rX', transaction, 0, {});
       var output = Danger.dangerouslyRenderMarkup([markup])[0];
 
       expect(output.nodeName).toBe('TH');

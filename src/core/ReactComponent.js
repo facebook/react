@@ -238,6 +238,10 @@ var ReactComponent = {
       // All components start unmounted.
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
 
+      // Object/map containing variables defined in the mount context.
+      // Value is null iff ComponentLifeCycle.UNMOUNTED
+      this._context = null;
+
       // See ReactUpdates.
       this._pendingCallbacks = null;
 
@@ -245,6 +249,7 @@ var ReactComponent = {
       // to track updates.
       this._currentElement = element;
       this._pendingElement = null;
+      this._pendingContext = null;
     },
 
     /**
@@ -261,7 +266,8 @@ var ReactComponent = {
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
      */
-    mountComponent: function(rootID, transaction, mountDepth) {
+    mountComponent: function(rootID, transaction, mountDepth, context) {
+      invariant(context !== undefined, "Context is required parameter");
       invariant(
         !this.isMounted(),
         'mountComponent(%s, ...): Can only mount an unmounted component. ' +
@@ -276,6 +282,7 @@ var ReactComponent = {
       }
       this._rootNodeID = rootID;
       this._lifeCycleState = ComponentLifeCycle.MOUNTED;
+      this._context = context;
       this._mountDepth = mountDepth;
       // Effectively: return '';
     },
@@ -302,6 +309,7 @@ var ReactComponent = {
       unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
+      this._context = null;
     },
 
     /**
@@ -315,13 +323,15 @@ var ReactComponent = {
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    receiveComponent: function(nextElement, transaction) {
+    receiveComponent: function(nextElement, transaction, context) {
+      invariant(context !== undefined, "Context is required parameter");
       invariant(
         this.isMounted(),
         'receiveComponent(...): Can only update a mounted component.'
       );
       this._pendingElement = nextElement;
-      this.performUpdateIfNecessary(transaction);
+      this._context = context;
+      this.performUpdateIfNecessary(transaction, context);
     },
 
     /**
@@ -336,11 +346,12 @@ var ReactComponent = {
       }
       var prevElement = this._currentElement;
       var nextElement = this._pendingElement;
+      var nextContext = this._pendingContext;
       this._currentElement = nextElement;
       this.props = nextElement.props;
       this._owner = nextElement._owner;
       this._pendingElement = null;
-      this.updateComponent(transaction, prevElement, nextElement);
+      this.updateComponent(transaction, prevElement, nextElement, nextContext);
     },
 
     /**
@@ -351,7 +362,8 @@ var ReactComponent = {
      * @param {object} nextElement
      * @internal
      */
-    updateComponent: function(transaction, prevElement, nextElement) {
+    updateComponent: function(transaction, prevElement, nextElement, context) {
+      invariant(context !== undefined, "Context is required parameter");
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`. We use the element instead
@@ -386,7 +398,12 @@ var ReactComponent = {
      * @internal
      * @see {ReactMount.render}
      */
-    mountComponentIntoNode: function(rootID, container, shouldReuseMarkup) {
+    mountComponentIntoNode: function(
+      rootID,
+      container,
+      shouldReuseMarkup,
+      context) {
+      invariant(context !== undefined, "Context is required parameter");
       var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
       transaction.perform(
         this._mountComponentIntoNode,
@@ -394,7 +411,8 @@ var ReactComponent = {
         rootID,
         container,
         transaction,
-        shouldReuseMarkup
+        shouldReuseMarkup,
+        context
       );
       ReactUpdates.ReactReconcileTransaction.release(transaction);
     },
@@ -411,8 +429,10 @@ var ReactComponent = {
         rootID,
         container,
         transaction,
-        shouldReuseMarkup) {
-      var markup = this.mountComponent(rootID, transaction, 0);
+        shouldReuseMarkup,
+        context) {
+      invariant(context !== undefined, "Context is required parameter");
+      var markup = this.mountComponent(rootID, transaction, 0, context);
       mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 

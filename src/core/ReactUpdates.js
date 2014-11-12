@@ -144,8 +144,10 @@ function runBatchedUpdates(transaction) {
       // shouldn't execute the callbacks until the next render happens, so
       // stash the callbacks first
       var callbacks = component._pendingCallbacks;
+      var context = component._pendingContext;
       component._pendingCallbacks = null;
-      component.performUpdateIfNecessary(transaction.reconcileTransaction);
+      component._pendingContext = null;
+      component.performUpdateIfNecessary(transaction.reconcileTransaction, context);
 
       if (callbacks) {
         for (var j = 0; j < callbacks.length; j++) {

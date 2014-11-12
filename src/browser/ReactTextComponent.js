@@ -51,12 +51,13 @@ assign(ReactTextComponent.prototype, ReactComponent.Mixin, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth) {
+  mountComponent: function(rootID, transaction, mountDepth, context) {
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
       transaction,
-      mountDepth
+      mountDepth,
+      context
     );
 
     var escapedText = escapeTextForBrowser(this.props);
