@@ -26,17 +26,17 @@ var ReactEmptyComponentInjection = {
   }
 };
 
-/**
- * @return {ReactComponent} component The injected empty component.
- */
-function getEmptyComponent() {
+var ReactEmptyComponentType = function() {};
+ReactEmptyComponentType.prototype.render = function() {
   invariant(
     component,
     'Trying to return null from a render, but no null placeholder component ' +
     'was injected.'
   );
   return component();
-}
+};
+
+var emptyElement = ReactElement.createElement(ReactEmptyComponentType);
 
 /**
  * Mark the component as having rendered to null.
@@ -63,9 +63,10 @@ function isNullComponentID(id) {
 }
 
 var ReactEmptyComponent = {
-  deregisterNullComponentID: deregisterNullComponentID,
-  getEmptyComponent: getEmptyComponent,
+  emptyElement: emptyElement,
   injection: ReactEmptyComponentInjection,
+
+  deregisterNullComponentID: deregisterNullComponentID,
   isNullComponentID: isNullComponentID,
   registerNullComponentID: registerNullComponentID
 };

@@ -21,7 +21,6 @@ var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
-var TogglingComponent;
 
 var cx;
 var reactComponentExpect;
@@ -78,23 +77,6 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    TogglingComponent = React.createClass({
-      getInitialState: function() {
-        return {component: this.props.firstComponent};
-      },
-      componentDidMount: function() {
-        console.log(this.getDOMNode());
-        this.setState({component: this.props.secondComponent});
-      },
-      componentDidUpdate: function() {
-        console.log(this.getDOMNode());
-      },
-      render: function() {
-        var Component = this.state.component;
-        return Component ? <Component /> : null;
-      }
-    });
-
     warn = console.warn;
     console.warn = mocks.getMockFunction();
   });
@@ -146,139 +128,6 @@ describe('ReactCompositeComponent', function() {
       .expectRenderedChild()
       .toBeDOMComponentWithTag('a');
   });
-
-  it('should render null and false as a noscript tag under the hood', () => {
-    var Component1 = React.createClass({
-      render: function() {
-        return null;
-      }
-    });
-    var Component2 = React.createClass({
-      render: function() {
-        return false;
-      }
-    });
-
-    var instance1 = ReactTestUtils.renderIntoDocument(<Component1 />);
-    var instance2 = ReactTestUtils.renderIntoDocument(<Component2 />);
-    reactComponentExpect(instance1)
-      .expectRenderedChild()
-      .toBeDOMComponentWithTag('noscript');
-    reactComponentExpect(instance2)
-      .expectRenderedChild()
-      .toBeDOMComponentWithTag('noscript');
-  });
-
-  it('should still throw when rendering to undefined', () => {
-    var Component = React.createClass({
-      render: function() {}
-    });
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
-    }).toThrow(
-      'Invariant Violation: Component.render(): A valid ReactComponent must ' +
-      'be returned. You may have returned undefined, an array or some other ' +
-      'invalid object.'
-    );
-  });
-
-  it('should be able to switch between rendering null and a normal tag', () => {
-    spyOn(console, 'log');
-
-    var instance1 =
-      <TogglingComponent
-        firstComponent={null}
-        secondComponent={'div'}
-      />;
-    var instance2 =
-      <TogglingComponent
-        firstComponent={'div'}
-        secondComponent={null}
-      />;
-
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(instance1);
-      ReactTestUtils.renderIntoDocument(instance2);
-    }).not.toThrow();
-
-    expect(console.log.argsForCall.length).toBe(4);
-    expect(console.log.argsForCall[0][0]).toBe(null);
-    expect(console.log.argsForCall[1][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[2][0].tagName).toBe('DIV');
-    expect(console.log.argsForCall[3][0]).toBe(null);
-  });
-
-  it('should distinguish between a script placeholder and an actual script tag',
-    () => {
-      spyOn(console, 'log');
-
-      var instance1 =
-        <TogglingComponent
-          firstComponent={null}
-          secondComponent={'script'}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={'script'}
-          secondComponent={null}
-        />;
-
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance1);
-      }).not.toThrow();
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance2);
-      }).not.toThrow();
-
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0]).toBe(null);
-      expect(console.log.argsForCall[1][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[2][0].tagName).toBe('SCRIPT');
-      expect(console.log.argsForCall[3][0]).toBe(null);
-    }
-  );
-
-  it('should have getDOMNode return null when multiple layers of composite ' +
-    'components render to the same null placeholder', () => {
-      spyOn(console, 'log');
-
-      var GrandChild = React.createClass({
-        render: function() {
-          return null;
-        }
-      });
-
-      var Child = React.createClass({
-        render: function() {
-          return <GrandChild />;
-        }
-      });
-
-      var instance1 =
-        <TogglingComponent
-          firstComponent={'div'}
-          secondComponent={Child}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={Child}
-          secondComponent={'div'}
-        />;
-
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance1);
-      }).not.toThrow();
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance2);
-      }).not.toThrow();
-
-      expect(console.log.argsForCall.length).toBe(4);
-      expect(console.log.argsForCall[0][0].tagName).toBe('DIV');
-      expect(console.log.argsForCall[1][0]).toBe(null);
-      expect(console.log.argsForCall[2][0]).toBe(null);
-      expect(console.log.argsForCall[3][0].tagName).toBe('DIV');
-    }
-  );
 
   it('should not thrash a server rendered layout with client side one', () => {
     var Child = React.createClass({

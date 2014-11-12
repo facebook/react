@@ -196,8 +196,13 @@ var ReactCompositeComponentMixin = assign({},
         }
       }
 
+      var renderedElement = this._renderValidatedComponent();
+      if (renderedElement === ReactEmptyComponent.emptyElement) {
+        ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
+      }
+
       this._renderedComponent = this._instantiateReactComponent(
-        this._renderValidatedComponent(),
+        renderedElement,
         this._currentElement.type // The wrapping type
       );
 
@@ -229,6 +234,11 @@ var ReactCompositeComponentMixin = assign({},
       inst.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
+
+    if (this._renderedComponent._currentElement ===
+        ReactEmptyComponent.emptyElement) {
+      ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
+    }
 
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
@@ -641,6 +651,13 @@ var ReactCompositeComponentMixin = assign({},
       var thisID = this._rootNodeID;
       var prevComponentID = prevComponentInstance._rootNodeID;
       prevComponentInstance.unmountComponent();
+
+      if (nextRenderedElement === ReactEmptyComponent.emptyElement) {
+        ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
+      } else if (prevRenderedElement === ReactEmptyComponent.emptyElement) {
+        ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
+      }
+
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement,
         this._currentElement.type
@@ -683,10 +700,7 @@ var ReactCompositeComponentMixin = assign({},
           }
         }
         if (renderedComponent === null || renderedComponent === false) {
-          renderedComponent = ReactEmptyComponent.getEmptyComponent();
-          ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
-        } else {
-          ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
+          renderedComponent = ReactEmptyComponent.emptyElement;
         }
       } finally {
         ReactContext.current = previousContext;

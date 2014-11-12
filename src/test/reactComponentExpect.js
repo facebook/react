@@ -61,6 +61,7 @@ assign(reactComponentExpect.prototype, {
   expectRenderedChild: function() {
     this.toBeCompositeComponent();
     var child = this._instance._renderedComponent;
+    // TODO: Hide ReactEmptyComponent instances here?
     return new reactComponentExpect(child);
   },
 
