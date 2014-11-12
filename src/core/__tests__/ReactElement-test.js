@@ -81,22 +81,6 @@ describe('ReactElement', function() {
     expect(element.props).toEqual({foo:'56'});
   });
 
-  it('treats a null key as omitted but warns', function() {
-    spyOn(console, 'warn');
-    var element = React.createFactory(ComponentClass)({
-      key: null,
-      foo: '56'
-    });
-    expect(element.type).toBe(ComponentClass);
-    expect(element.key).toBe(null);  // as opposed to string 'null'
-    expect(element.ref).toBe(null);
-    expect(element.props).toEqual({foo:'56'});
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'will be treated as equivalent to the string \'null\''
-    );
-  });
-
   it('preserves the context on the element', function() {
     var Component = React.createFactory(ComponentClass);
     var element;
