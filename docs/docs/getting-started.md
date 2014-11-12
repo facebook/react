@@ -106,7 +106,11 @@ Update your HTML file as below:
 
 ## Want CommonJS?
 
-If you want to use React with [browserify](http://browserify.org/), [webpack](http://webpack.github.io/), or another CommonJS-compatible module system, just use the [`react` npm package](https://www.npmjs.org/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS) quite easily.
+The community is contributing with boilerplates that will help you get going with your React development workflow. Here are some examples:
+
+- [react-app-boilerplate](https://github.com/christianalfoni/react-app-boilerplate) @ christianalfoni. Browserify workflow with automatic JSX transformation, dependency handling for fast builds and jasmine test environment.
+
+In general you can use React with [browserify](http://browserify.org/), [webpack](http://webpack.github.io/), or another CommonJS-compatible module system. Use the [`react` npm package](https://www.npmjs.org/package/react). In addition, the `jsx` build tool can be integrated into most packaging systems (not just CommonJS).
 
 ## Next Steps
 
