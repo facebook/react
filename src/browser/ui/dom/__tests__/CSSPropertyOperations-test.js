@@ -136,4 +136,21 @@ describe('CSSPropertyOperations', function() {
     expect(console.warn.argsForCall[1][0]).toContain('WebkitTransform');
   });
 
+  it('warns when miscapitalizing vendored style names', function() {
+    spyOn(console, 'warn');
+
+    CSSPropertyOperations.createMarkupForStyles({
+      msTransform: 'translate3d(0, 0, 0)',
+      oTransform: 'translate3d(0, 0, 0)',
+      webkitTransform: 'translate3d(0, 0, 0)'
+    });
+
+    // msTransform is correct already and shouldn't warn
+    expect(console.warn.argsForCall.length).toBe(2);
+    expect(console.warn.argsForCall[0][0]).toContain('oTransform');
+    expect(console.warn.argsForCall[0][0]).toContain('OTransform');
+    expect(console.warn.argsForCall[1][0]).toContain('webkitTransform');
+    expect(console.warn.argsForCall[1][0]).toContain('WebkitTransform');
+  });
+
 });
