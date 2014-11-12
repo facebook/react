@@ -187,7 +187,7 @@ var ReactComponent = {
         '`render` method to pass the correct value as props to the component ' +
         'where it is created.'
       );
-      // This is a deoptimized path. We optimize for always having a element.
+      // This is a deoptimized path. We optimize for always having an element.
       // This creates an extra internal element.
       this._pendingElement = ReactElement.cloneAndReplaceProps(
         this._pendingElement || this._currentElement,
@@ -205,7 +205,7 @@ var ReactComponent = {
      * @internal
      */
     _setPropsInternal: function(partialProps, callback) {
-      // This is a deoptimized path. We optimize for always having a element.
+      // This is a deoptimized path. We optimize for always having an element.
       // This creates an extra internal element.
       var element = this._pendingElement || this._currentElement;
       this._pendingElement = ReactElement.cloneAndReplaceProps(
