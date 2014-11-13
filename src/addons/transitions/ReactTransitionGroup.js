@@ -39,6 +39,12 @@ var ReactTransitionGroup = React.createClass({
     };
   },
 
+  componentDidMount: function() {
+    for (var key in this.state.children) {
+      this.performMount(key);
+    }
+  },
+
   componentWillReceiveProps: function(nextProps) {
     var nextChildMapping = ReactTransitionChildMapping.getChildMapping(
       nextProps.children
@@ -87,6 +93,39 @@ var ReactTransitionGroup = React.createClass({
     var keysToLeave = this.keysToLeave;
     this.keysToLeave = [];
     keysToLeave.forEach(this.performLeave);
+  },
+
+  performMount: function(key) {
+    this.currentlyTransitioningKeys[key] = true;
+
+    var component = this.refs[key];
+
+    // can't use componentWillMount because that name is already taken
+    if (component.componentWillEnterOnMount) {
+      component.componentWillEnterOnMount(
+        this._handleDoneMounting.bind(this, key)
+      );
+    } else {
+      this._handleDoneMounting(key);
+    }
+  },
+
+  _handleDoneMounting: function(key) {
+    var component = this.refs[key];
+    if (component.componentDidEnterOnMount) {
+      component.componentDidEnterOnMount();
+    }
+
+    delete this.currentlyTransitioningKeys[key];
+
+    var currentChildMapping = ReactTransitionChildMapping.getChildMapping(
+      this.props.children
+    );
+
+    if (!currentChildMapping || !currentChildMapping.hasOwnProperty(key)) {
+      // This was removed before it had fully entered. Remove it.
+      this.performLeave(key);
+    }
   },
 
   performEnter: function(key) {
