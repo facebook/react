@@ -36,6 +36,13 @@ describe('ReactTransitionGroup', function() {
       componentDidMount: function() {
         log.push('didMount');
       },
+      componentWillAppear: function(cb) {
+        log.push('willAppear');
+        cb();
+      },
+      componentDidAppear: function() {
+        log.push('didAppear');
+      },
       componentWillEnter: function(cb) {
         log.push('willEnter');
         cb();
@@ -72,15 +79,15 @@ describe('ReactTransitionGroup', function() {
     });
 
     var instance = React.render(<Component />, container);
-    expect(log).toEqual(['didMount']);
+    expect(log).toEqual(['didMount', 'willAppear', 'didAppear']);
 
+    log = [];
     instance.setState({count: 2}, function() {
-      expect(log).toEqual(['didMount', 'didMount', 'willEnter', 'didEnter']);
+      expect(log).toEqual(['didMount', 'willEnter', 'didEnter']);
+
+      log = [];
       instance.setState({count: 1}, function() {
-        expect(log).toEqual([
-          "didMount", "didMount", "willEnter", "didEnter",
-          "willLeave", "didLeave", "willUnmount"
-        ]);
+        expect(log).toEqual(['willLeave', 'didLeave', 'willUnmount']);
       });
     });
   });
