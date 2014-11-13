@@ -21,7 +21,7 @@ You can create one of these object through `React.createElement`.
 var root = React.createElement('div');
 ```
 
-To render a new tree into the DOM, you create `ReactElement`s and pass them to `React.render` a long with a regular DOM `Element` (`HTMLElement` or `SVGElement`). `ReactElement`s are not to be confused with DOM `Element`s. A `ReactElement` is a light, stateless, immutable, virtual representation of a DOM `Element`. It is a virtual DOM.
+To render a new tree into the DOM, you create `ReactElement`s and pass them to `React.render` along with a regular DOM `Element` (`HTMLElement` or `SVGElement`). `ReactElement`s are not to be confused with DOM `Element`s. A `ReactElement` is a light, stateless, immutable, virtual representation of a DOM `Element`. It is a virtual DOM.
 
 ```javascript
 React.render(root, document.body);
