@@ -107,6 +107,14 @@ var ReactCSSTransitionGroupChild = React.createClass({
     }
   },
 
+  componentWillAppear: function(done) {
+    if (this.props.appear) {
+      this.transition('appear', done);
+    } else {
+      done();
+    }
+  },
+
   componentWillEnter: function(done) {
     if (this.props.enter) {
       this.transition('enter', done);
