@@ -61,10 +61,10 @@ if (ExecutionEnvironment.canUseDOM) {
         // deleteData leaves an empty `TextNode` which offsets the index of all
         // children. Definitely want to avoid this.
         var textNode = node.firstChild;
-        if (textNode.data.length === 1) {
+        if (textNode.data && textNode.data.length === 1) {
           node.removeChild(textNode);
         } else {
-          textNode.deleteData(0, 1);
+          textNode.deleteData && textNode.deleteData(0, 1);
         }
       } else {
         node.innerHTML = html;
