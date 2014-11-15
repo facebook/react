@@ -174,6 +174,7 @@ ReactDOMComponent.Mixin = {
         mountDepth
       );
       assertValidProps(this.props);
+      this._previousStyleCopy = null;
       var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
@@ -212,7 +213,7 @@ ReactDOMComponent.Mixin = {
       } else {
         if (propKey === STYLE) {
           if (propValue) {
-            propValue = props.style = assign({}, props.style);
+            propValue = this._previousStyleCopy = assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
@@ -347,7 +348,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (propKey === STYLE) {
-        var lastStyle = lastProps[propKey];
+        var lastStyle = this._previousStyleCopy;
         for (styleName in lastStyle) {
           if (lastStyle.hasOwnProperty(styleName)) {
             styleUpdates = styleUpdates || {};
@@ -367,13 +368,15 @@ ReactDOMComponent.Mixin = {
     }
     for (propKey in nextProps) {
       var nextProp = nextProps[propKey];
-      var lastProp = lastProps[propKey];
+      var lastProp = propKey === STYLE ?
+        this._previousStyleCopy :
+        lastProps[propKey];
       if (!nextProps.hasOwnProperty(propKey) || nextProp === lastProp) {
         continue;
       }
       if (propKey === STYLE) {
         if (nextProp) {
-          nextProp = nextProps.style = assign({}, nextProp);
+          nextProp = this._previousStyleCopy = assign({}, nextProp);
         }
         if (lastProp) {
           // Unset styles on `lastProp` but not on `nextProp`.
