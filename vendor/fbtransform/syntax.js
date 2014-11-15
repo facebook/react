@@ -4,6 +4,7 @@
 "use strict";
 
 var transform = require('jstransform').transform;
+var typesSyntax = require('jstransform/visitors/type-syntax');
 var visitors = require('./visitors');
 
 /**
@@ -15,6 +16,12 @@ var visitors = require('./visitors');
  */
 function transformAll(source, options, excludes) {
   excludes = excludes || [];
+
+  // Stripping types needs to happen before the other transforms
+  // unfortunately, due to bad interactions. For example,
+  // es6-rest-param-visitors conflict with stripping rest param type
+  // annotation
+  source = transform(typesSyntax.visitorList, source, options).code;
 
   // The typechecker transform must run in a second pass in order to operate on
   // the entire source code -- so exclude it from the first pass

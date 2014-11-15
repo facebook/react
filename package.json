@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "commoner": "^0.10.0",
-    "jstransform": "^7.0.0"
+    "jstransform": "^8.0.0"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
