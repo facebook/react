@@ -13,6 +13,7 @@
 "use strict";
 
 var ReactCompositeComponent = require('ReactCompositeComponent');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactNativeComponent = require('ReactNativeComponent');
 
 var assign = require('Object.assign');
@@ -56,6 +57,10 @@ function isInternalComponentType(type) {
  */
 function instantiateReactComponent(node, parentCompositeType) {
   var instance;
+
+  if (node === null || node === false) {
+    node = ReactEmptyComponent.emptyElement;
+  }
 
   if (typeof node === 'object') {
     var element = node;

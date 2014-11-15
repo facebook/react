@@ -12,6 +12,7 @@
 "use strict";
 
 var ReactElement = require('ReactElement');
+var ReactInstanceMap = require('ReactInstanceMap');
 
 var invariant = require('invariant');
 
@@ -27,6 +28,14 @@ var ReactEmptyComponentInjection = {
 };
 
 var ReactEmptyComponentType = function() {};
+ReactEmptyComponentType.prototype.componentDidMount = function() {
+  var internalInstance = ReactInstanceMap.get(this);
+  registerNullComponentID(internalInstance._rootNodeID);
+};
+ReactEmptyComponentType.prototype.componentWillUnmount = function() {
+  var internalInstance = ReactInstanceMap.get(this);
+  deregisterNullComponentID(internalInstance._rootNodeID);
+};
 ReactEmptyComponentType.prototype.render = function() {
   invariant(
     component,
@@ -65,10 +74,7 @@ function isNullComponentID(id) {
 var ReactEmptyComponent = {
   emptyElement: emptyElement,
   injection: ReactEmptyComponentInjection,
-
-  deregisterNullComponentID: deregisterNullComponentID,
-  isNullComponentID: isNullComponentID,
-  registerNullComponentID: registerNullComponentID
+  isNullComponentID: isNullComponentID
 };
 
 module.exports = ReactEmptyComponent;

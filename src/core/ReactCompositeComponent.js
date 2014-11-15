@@ -15,7 +15,6 @@ var ReactComponent = require('ReactComponent');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
-var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
@@ -197,10 +196,6 @@ var ReactCompositeComponentMixin = assign({},
       }
 
       var renderedElement = this._renderValidatedComponent();
-      if (renderedElement === ReactEmptyComponent.emptyElement) {
-        ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
-      }
-
       this._renderedComponent = this._instantiateReactComponent(
         renderedElement,
         this._currentElement.type // The wrapping type
@@ -234,11 +229,6 @@ var ReactCompositeComponentMixin = assign({},
       inst.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
-
-    if (this._renderedComponent._currentElement ===
-        ReactEmptyComponent.emptyElement) {
-      ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
-    }
 
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
@@ -652,12 +642,6 @@ var ReactCompositeComponentMixin = assign({},
       var prevComponentID = prevComponentInstance._rootNodeID;
       prevComponentInstance.unmountComponent();
 
-      if (nextRenderedElement === ReactEmptyComponent.emptyElement) {
-        ReactEmptyComponent.registerNullComponentID(this._rootNodeID);
-      } else if (prevRenderedElement === ReactEmptyComponent.emptyElement) {
-        ReactEmptyComponent.deregisterNullComponentID(this._rootNodeID);
-      }
-
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement,
         this._currentElement.type
@@ -699,14 +683,13 @@ var ReactCompositeComponentMixin = assign({},
             renderedComponent = null;
           }
         }
-        if (renderedComponent === null || renderedComponent === false) {
-          renderedComponent = ReactEmptyComponent.emptyElement;
-        }
       } finally {
         ReactContext.current = previousContext;
         ReactCurrentOwner.current = null;
       }
       invariant(
+        // TODO: An `isValidNode` function would probably be more appropriate
+        renderedComponent === null || renderedComponent === false ||
         ReactElement.isValidElement(renderedComponent),
         '%s.render(): A valid ReactComponent must be returned. You may have ' +
           'returned undefined, an array or some other invalid object.',

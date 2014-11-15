@@ -221,5 +221,15 @@ describe('ReactEmptyComponent', function() {
 
     expect(assertions).toBe(3);
   });
+
+  it('throws when rendering null at the top level', function() {
+    // TODO: This should actually work since `null` is a valid ReactNode
+    var div = document.createElement('div');
+    expect(function() {
+      React.render(null, div);
+    }).toThrow(
+      'Invariant Violation: renderComponent(): Invalid component element.'
+    );
+  });
 });
 

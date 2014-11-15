@@ -361,7 +361,7 @@ var ReactMount = {
           ' Instead of passing a component class, make sure to instantiate ' +
           'it by passing it to React.createElement.' :
         // Check if it quacks like an element
-        typeof nextElement.props !== "undefined" ?
+        nextElement != null && nextElement.props !== undefined ?
           ' This may be caused by unintentionally loading two independent ' +
           'copies of React.' :
           ''
