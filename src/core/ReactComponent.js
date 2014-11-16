@@ -225,10 +225,6 @@ var ReactComponent = {
      * @internal
      */
     construct: function(element) {
-      // This is the public exposed props object after it has been processed
-      // with default props. The element's props represents the true internal
-      // state of the props.
-      this.props = element.props;
       // Record the component responsible for creating this component.
       // This is accessible through the element but we maintain an extra
       // field for compatibility with devtools and as a way to make an
@@ -337,7 +333,6 @@ var ReactComponent = {
       var prevElement = this._currentElement;
       var nextElement = this._pendingElement;
       this._currentElement = nextElement;
-      this.props = nextElement.props;
       this._owner = nextElement._owner;
       this._pendingElement = null;
       this.updateComponent(transaction, prevElement, nextElement);
