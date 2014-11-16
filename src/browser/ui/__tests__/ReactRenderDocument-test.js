@@ -244,4 +244,21 @@ describe('rendering React components at document', function() {
     );
   });
 
+  it('supports getDOMNode on full-page components', function() {
+    var tree =
+      <html>
+        <head>
+          <title>Hello World</title>
+        </head>
+        <body>
+          Hello world
+        </body>
+      </html>;
+
+    var markup = React.renderToString(tree);
+    testDocument = getTestDocument(markup);
+    var component = React.render(tree, testDocument);
+    expect(testDocument.body.innerHTML).toBe('Hello world');
+    expect(component.getDOMNode().tagName).toBe('HTML');
+  });
 });

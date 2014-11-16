@@ -78,6 +78,10 @@ function inject() {
     ReactDOMTextComponent
   );
 
+  // This needs to happen before createFullPageComponent() otherwise the mixin
+  // won't be included.
+  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
+
   ReactInjection.NativeComponent.injectComponentClasses({
     'button': ReactDOMButton,
     'form': ReactDOMForm,
@@ -91,10 +95,6 @@ function inject() {
     'head': createFullPageComponent('head'),
     'body': createFullPageComponent('body')
   });
-
-  // This needs to happen after createFullPageComponent() otherwise the mixin
-  // gets double injected.
-  ReactInjection.Class.injectMixin(ReactBrowserComponentMixin);
 
   ReactInjection.DOMProperty.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
   ReactInjection.DOMProperty.injectDOMPropertyConfig(SVGDOMPropertyConfig);
