@@ -154,6 +154,7 @@ var Danger = {
    *
    * @param {DOMElement} oldChild Child node to replace.
    * @param {string} markup Markup to render in place of the child node.
+   * @return {DOMElement} New rendered node
    * @internal
    */
   dangerouslyReplaceNodeWithMarkup: function(oldChild, markup) {
@@ -175,6 +176,8 @@ var Danger = {
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);
+
+    return newChild;
   }
 
 };
