@@ -2,6 +2,7 @@
 
 var visitors = require('./vendor/fbtransform/visitors');
 var transform = require('jstransform').transform;
+var typesSyntax = require('jstransform/visitors/type-syntax');
 var Buffer = require('buffer').Buffer;
 
 module.exports = {
@@ -37,7 +38,11 @@ function innerTransform(input, options) {
     visitorSets.push('harmony');
   }
   if (options.stripTypes) {
-    visitorSets.push('type-annotations');
+    // Stripping types needs to happen before the other transforms
+    // unfortunately, due to bad interactions. For example,
+    // es6-rest-param-visitors conflict with stripping rest param type
+    // annotation
+    input = transform(typesSyntax.visitorList, input, options).code;
   }
 
   var visitorList = visitors.getVisitorsBySet(visitorSets);

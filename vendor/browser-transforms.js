@@ -13,6 +13,7 @@
 
 var buffer = require('buffer');
 var transform = require('jstransform').transform;
+var typesSyntax = require('jstransform/visitors/type-syntax');
 var visitors = require('./fbtransform/visitors');
 
 var headEl;
@@ -40,6 +41,14 @@ function transformReact(source, options) {
     visitorList = visitors.getAllVisitors();
   } else {
     visitorList = visitors.transformVisitors.react;
+  }
+
+  if (options.stripTypes) {
+    // Stripping types needs to happen before the other transforms
+    // unfortunately, due to bad interactions. For example,
+    // es6-rest-param-visitors conflict with stripping rest param type
+    // annotation
+    source = transform(typesSyntax.visitorList, source, options).code;
   }
 
   return transform(visitorList, source, {
@@ -239,6 +248,9 @@ function loadScripts(scripts) {
     };
     if (/;harmony=true(;|$)/.test(script.type)) {
       options.harmony = true;
+    }
+    if (/;stripTypes=true(;|$)/.test(script.type)) {
+      options.stripTypes = true;
     }
 
     // script.async is always true for non-javascript script tags
