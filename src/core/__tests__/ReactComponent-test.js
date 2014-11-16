@@ -26,10 +26,6 @@ describe('ReactComponent', function() {
     reactComponentExpect = require('reactComponentExpect');
 
     getMountDepth = function(instance) {
-      if (instance.mountComponent) {
-        // Native instance
-        return instance._mountDepth;
-      }
       return ReactInstanceMap.get(instance)._mountDepth;
     };
   });
@@ -306,9 +302,9 @@ describe('ReactComponent', function() {
     expect(getMountDepth(root)).toBe(0);
     expect(getMountDepth(root.refs.switcher)).toBe(1);
     expect(getMountDepth(root.refs.switcher.refs.box)).toBe(2);
-    expect(getMountDepth(root.refs.switcher.refs.switcherDiv)).toBe(4);
-    expect(getMountDepth(root.refs.child)).toBe(5);
+    expect(getMountDepth(root.refs.switcher.refs.switcherDiv)).toBe(5);
+    expect(getMountDepth(root.refs.child)).toBe(7);
     expect(getMountDepth(root.refs.switcher.refs.box.refs.boxDiv)).toBe(3);
-    expect(getMountDepth(root.refs.child.refs.span)).toBe(6);
+    expect(getMountDepth(root.refs.child.refs.span)).toBe(8);
   });
 });

@@ -27,6 +27,7 @@ var form = ReactElement.createFactory('form');
  */
 var ReactDOMForm = ReactClass.createClass({
   displayName: 'ReactDOMForm',
+  tagName: 'FORM',
 
   mixins: [ReactBrowserComponentMixin, LocalEventTrapMixin],
 

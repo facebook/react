@@ -39,6 +39,7 @@ var mouseListenerNames = keyMirror({
  */
 var ReactDOMButton = ReactClass.createClass({
   displayName: 'ReactDOMButton',
+  tagName: 'BUTTON',
 
   mixins: [AutoFocusMixin, ReactBrowserComponentMixin],
 

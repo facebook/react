@@ -453,7 +453,11 @@ var ReactComponent = {
      * @internal
      */
     getPublicInstance: function() {
-      return this;
+      invariant(
+        false,
+        'getPublicInstance should never be called on the base class. It must ' +
+        'be overriden.'
+      );
     }
   }
 };

@@ -135,13 +135,7 @@ function getNode(id) {
  * @internal
  */
 function getNodeFromInstance(instance) {
-  // This instance can currently be either a public or private instance since
-  // native nodes are still public.
-  var id = instance._rootNodeID;
-  // TODO: Once these are only public instances, remove this conditional.
-  if (id == null) {
-    id = ReactInstanceMap.get(instance)._rootNodeID;
-  }
+  var id = ReactInstanceMap.get(instance)._rootNodeID;
   if (ReactEmptyComponent.isNullComponentID(id)) {
     return null;
   }

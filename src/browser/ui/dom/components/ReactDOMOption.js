@@ -24,6 +24,7 @@ var option = ReactElement.createFactory('option');
  */
 var ReactDOMOption = ReactClass.createClass({
   displayName: 'ReactDOMOption',
+  tagName: 'OPTION',
 
   mixins: [ReactBrowserComponentMixin],
 

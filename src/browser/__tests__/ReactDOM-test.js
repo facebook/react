@@ -15,7 +15,6 @@
 
 var React = require('React');
 var ReactDOM = require('ReactDOM');
-var ReactMount = require('ReactMount');
 var ReactTestUtils = require('ReactTestUtils');
 var div = React.createFactory('div');
 
@@ -53,7 +52,7 @@ describe('ReactDOM', function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       div(null, 'child')
     );
-    var argNode = ReactMount.getNode(argDiv._rootNodeID);
+    var argNode = argDiv.getDOMNode();
     expect(argNode.innerHTML).toBe('child');
   });
 
@@ -61,7 +60,7 @@ describe('ReactDOM', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = ReactMount.getNode(conflictDiv._rootNodeID);
+    var conflictNode = conflictDiv.getDOMNode();
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -103,7 +102,7 @@ describe('ReactDOM', function() {
         theBird: <div className="bird" />
       }
     });
-    var root = ReactMount.getNode(myDiv._rootNodeID);
+    var root = myDiv.getDOMNode();
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

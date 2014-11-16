@@ -87,7 +87,10 @@ var FriendsStatusDisplay = React.createClass({
     // TODO: Update this to a better test that doesn't rely so much on internal
     // implementation details.
     var statusDisplays =
-      ReactInstanceMap.get(this)._renderedComponent._renderedChildren;
+      ReactInstanceMap.get(this)
+      ._renderedComponent
+      ._renderedComponent
+      ._renderedChildren;
     for (name in statusDisplays) {
       var child = statusDisplays[name];
       var isPresent = !!child;
