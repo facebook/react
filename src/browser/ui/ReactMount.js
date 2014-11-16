@@ -15,6 +15,7 @@ var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactElementValidator = require('ReactElementValidator');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -291,6 +292,10 @@ var ReactMount = {
       nextElement,
       container,
       callback) {
+    if (__DEV__) {
+      ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
+    }
+
     var nextProps = nextElement.props;
     ReactMount.scrollMonitor(container, function() {
       prevComponent.replaceProps(nextProps, callback);

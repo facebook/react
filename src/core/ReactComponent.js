@@ -11,6 +11,7 @@
 
 "use strict";
 
+var ReactElementValidator = require('ReactElementValidator');
 var ReactOwner = require('ReactOwner');
 var ReactRef = require('ReactRef');
 
@@ -110,6 +111,10 @@ var ReactComponent = {
      * @internal
      */
     mountComponent: function(rootID, transaction, context) {
+      if (__DEV__) {
+        ReactElementValidator.checkAndWarnForMutatedProps(this._currentElement);
+      }
+
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
@@ -144,6 +149,10 @@ var ReactComponent = {
      * @internal
      */
     updateComponent: function(transaction, prevElement, nextElement, context) {
+      if (__DEV__) {
+        ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
+      }
+
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`. We use the element instead
