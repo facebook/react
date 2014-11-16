@@ -126,13 +126,6 @@ var ReactOwner = {
      * @private
      */
     attachRef: function(ref, component) {
-      // TODO: Remove this invariant. This is never exposed and cannot be called
-      // by user code. The unit test is already removed.
-      invariant(
-        component.isOwnedBy(this),
-        'attachRef(%s, ...): Only a component\'s owner can store a ref to it.',
-        ref
-      );
       var inst = this.getPublicInstance();
       var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
       refs[ref] = component.getPublicInstance();
