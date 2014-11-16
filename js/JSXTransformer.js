@@ -17,6 +17,7 @@
 
 var buffer = _dereq_('buffer');
 var transform = _dereq_('jstransform').transform;
+var typesSyntax = _dereq_('jstransform/visitors/type-syntax');
 var visitors = _dereq_('./fbtransform/visitors');
 
 var headEl;
@@ -44,6 +45,14 @@ function transformReact(source, options) {
     visitorList = visitors.getAllVisitors();
   } else {
     visitorList = visitors.transformVisitors.react;
+  }
+
+  if (options.stripTypes) {
+    // Stripping types needs to happen before the other transforms
+    // unfortunately, due to bad interactions. For example,
+    // es6-rest-param-visitors conflict with stripping rest param type
+    // annotation
+    source = transform(typesSyntax.visitorList, source, options).code;
   }
 
   return transform(visitorList, source, {
@@ -244,6 +253,9 @@ function loadScripts(scripts) {
     if (/;harmony=true(;|$)/.test(script.type)) {
       options.harmony = true
     }
+    if (/;stripTypes=true(;|$)/.test(script.type)) {
+      options.stripTypes = true;
+    }
 
     // script.async is always true for non-javascript script tags
     var async = script.hasAttribute('async');
@@ -330,7 +342,7 @@ module.exports = {
   exec: exec
 };
 
-},{"./fbtransform/visitors":37,"buffer":2,"jstransform":21}],2:[function(_dereq_,module,exports){
+},{"./fbtransform/visitors":37,"buffer":2,"jstransform":21,"jstransform/visitors/type-syntax":33}],2:[function(_dereq_,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -13752,7 +13764,6 @@ var es6Templates = _dereq_('jstransform/visitors/es6-template-visitors');
 var es7SpreadProperty = _dereq_('jstransform/visitors/es7-spread-property-visitors');
 var react = _dereq_('./transforms/react');
 var reactDisplayName = _dereq_('./transforms/reactDisplayName');
-var typesSyntax = _dereq_('jstransform/visitors/type-syntax');
 
 /**
  * Map from transformName => orderedListOfVisitors.
@@ -13766,8 +13777,7 @@ var transformVisitors = {
   'es6-rest-params': es6RestParameters.visitorList,
   'es6-templates': es6Templates.visitorList,
   'es7-spread-property': es7SpreadProperty.visitorList,
-  'react': react.visitorList.concat(reactDisplayName.visitorList),
-  'types': typesSyntax.visitorList
+  'react': react.visitorList.concat(reactDisplayName.visitorList)
 };
 
 var transformSets = {
@@ -13783,9 +13793,6 @@ var transformSets = {
   ],
   'react': [
     'react'
-  ],
-  'type-annotations': [
-    'types'
   ]
 };
 
@@ -13793,7 +13800,6 @@ var transformSets = {
  * Specifies the order in which each transform should run.
  */
 var transformRunOrder = [
-  'types',
   'es6-arrow-functions',
   'es6-object-concise-method',
   'es6-object-short-notation',
@@ -13854,5 +13860,5 @@ exports.getVisitorsBySet = getVisitorsBySet;
 exports.getAllVisitors = getAllVisitors;
 exports.transformVisitors = transformVisitors;
 
-},{"./transforms/react":34,"./transforms/reactDisplayName":35,"jstransform/visitors/es6-arrow-function-visitors":23,"jstransform/visitors/es6-class-visitors":24,"jstransform/visitors/es6-destructuring-visitors":25,"jstransform/visitors/es6-object-concise-method-visitors":26,"jstransform/visitors/es6-object-short-notation-visitors":27,"jstransform/visitors/es6-rest-param-visitors":28,"jstransform/visitors/es6-template-visitors":29,"jstransform/visitors/es7-spread-property-visitors":31,"jstransform/visitors/type-syntax":33}]},{},[1])(1)
+},{"./transforms/react":34,"./transforms/reactDisplayName":35,"jstransform/visitors/es6-arrow-function-visitors":23,"jstransform/visitors/es6-class-visitors":24,"jstransform/visitors/es6-destructuring-visitors":25,"jstransform/visitors/es6-object-concise-method-visitors":26,"jstransform/visitors/es6-object-short-notation-visitors":27,"jstransform/visitors/es6-rest-param-visitors":28,"jstransform/visitors/es6-template-visitors":29,"jstransform/visitors/es7-spread-property-visitors":31}]},{},[1])(1)
 });
