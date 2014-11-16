@@ -11,6 +11,9 @@
 
 "use strict";
 
+var ReactClass = require('ReactClass');
+var ReactElement = require('ReactElement');
+
 var assign = require('Object.assign');
 var invariant = require('invariant');
 
@@ -37,6 +40,22 @@ var ReactNativeComponentInjection = {
   }
 };
 
+function autoGenerateWrapperClass(type) {
+  return ReactClass.createClass({
+    tagName: type.toUpperCase(),
+    render: function() {
+      return new ReactElement(
+        type,
+        null,
+        null,
+        null,
+        null,
+        this.props
+      );
+    }
+  });
+}
+
 /**
  * Create an internal class for a specific tag.
  *
@@ -47,12 +66,7 @@ var ReactNativeComponentInjection = {
 function createInstanceForTag(tag, props, parentType) {
   var componentClass = tagToComponentClass[tag];
   if (componentClass == null) {
-    invariant(
-      genericComponentClass,
-      'There is no registered component for the tag %s',
-      tag
-    );
-    return new genericComponentClass(tag, props);
+    tagToComponentClass[tag] = componentClass = autoGenerateWrapperClass(tag);
   }
   if (parentType === tag) {
     // Avoid recursion

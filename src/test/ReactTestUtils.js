@@ -99,14 +99,6 @@ var ReactTestUtils = {
              (inst.constructor === type));
   },
 
-  getInternalRepresentation: function(inst) {
-    // TODO: Remove this duck check once we have a separate DOM/Native instance
-    if (typeof inst.mountComponent === 'function') {
-      return inst;
-    }
-    return ReactInstanceMap.get(inst);
-  },
-
   getRenderedChildOfCompositeComponent: function(inst) {
     if (!ReactTestUtils.isCompositeComponent(inst)) {
       return null;
@@ -121,7 +113,10 @@ var ReactTestUtils = {
     }
     var ret = test(inst) ? [inst] : [];
     if (ReactTestUtils.isDOMComponent(inst)) {
-      var renderedChildren = inst._renderedChildren;
+      var internalInstance = ReactInstanceMap.get(inst);
+      var renderedChildren = internalInstance
+        ._renderedComponent
+        ._renderedChildren;
       var key;
       for (key in renderedChildren) {
         if (!renderedChildren.hasOwnProperty(key)) {

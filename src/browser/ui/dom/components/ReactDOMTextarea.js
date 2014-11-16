@@ -50,6 +50,7 @@ function forceUpdateIfMounted() {
  */
 var ReactDOMTextarea = ReactClass.createClass({
   displayName: 'ReactDOMTextarea',
+  tagName: 'TEXTAREA',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 

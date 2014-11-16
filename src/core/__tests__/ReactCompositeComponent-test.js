@@ -66,8 +66,8 @@ describe('ReactCompositeComponent', function() {
      * reallocated again.
      */
     ChildUpdates = React.createClass({
-      getAnchorID: function() {
-        return this.refs.anch._rootNodeID;
+      getAnchor: function() {
+        return this.refs.anch;
       },
       render: function() {
         var className = cx({'anchorClass': this.props.anchorClassOn});
@@ -182,8 +182,8 @@ describe('ReactCompositeComponent', function() {
     instance.setProps({renderAnchor: false});  // Clear out the anchor
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
-    var anchorID = instance.getAnchorID();
-    var actualDOMAnchorNode = ReactMount.getNode(anchorID);
+    var anchor = instance.getAnchor();
+    var actualDOMAnchorNode = anchor.getDOMNode();
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
@@ -779,9 +779,11 @@ describe('ReactCompositeComponent', function() {
     React.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
 
-    // <Component />, <Inner />, and both <div /> elements each call
-    // unmountIDFromEnvironment which calls purgeID, for a total of 4.
-    expect(ReactMount.purgeID.callCount).toBe(4);
+    // <Component />, <Inner />, and both <div /> elements and their wrappers
+    // each call unmountIDFromEnvironment which calls purgeID, for a total of 6.
+    // TODO: Test the effect of this. E.g. does the node cache get repopulated
+    // after a getDOMNode call?
+    expect(ReactMount.purgeID.callCount).toBe(6);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {

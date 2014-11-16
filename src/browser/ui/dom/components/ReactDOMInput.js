@@ -52,6 +52,7 @@ function forceUpdateIfMounted() {
  */
 var ReactDOMInput = ReactClass.createClass({
   displayName: 'ReactDOMInput',
+  tagName: 'INPUT',
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 

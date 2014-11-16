@@ -12,6 +12,7 @@
 "use strict";
 
 var React = require('React');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');
 var ReactMount = require('ReactMount');
 
@@ -66,8 +67,7 @@ describe('ReactInstanceHandles', function() {
     if (instance === null) {
       return '';
     }
-    var internal = ReactTestUtils.getInternalRepresentation(instance);
-    return internal._rootNodeID;
+    return ReactInstanceMap.get(instance)._rootNodeID;
   }
 
   beforeEach(function() {

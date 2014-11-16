@@ -15,7 +15,6 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
@@ -148,7 +147,6 @@ function validateDangerousTag(tag) {
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag;
-  this.tagName = tag.toUpperCase();
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -488,8 +486,7 @@ assign(
   ReactDOMComponent.prototype,
   ReactComponent.Mixin,
   ReactDOMComponent.Mixin,
-  ReactMultiChild.Mixin,
-  ReactBrowserComponentMixin
+  ReactMultiChild.Mixin
 );
 
 module.exports = ReactDOMComponent;
