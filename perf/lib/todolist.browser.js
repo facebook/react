@@ -110,8 +110,14 @@ todolist.NewItemForm = React.createClass({
     return false;
   },
   render: function(){
-    return this.transferPropsTo(
-      React.DOM.input({ref:"text", onKeyDown:this.props.onEnter && this._handleNewItemKeyDown})
-    );
+    var props = {};
+    for (var key in this.props) {
+      if (key !== "onEnter") {
+        props[key] = this.props[key];
+      }
+    }
+    props.ref = "text";
+    props.onKeyDown = this.props.onEnter && this._handleNewItemKeyDown;
+    return React.DOM.input(props);
   }
 });

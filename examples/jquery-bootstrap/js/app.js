@@ -2,12 +2,11 @@
 // Bootstrap's classes
 var BootstrapButton = React.createClass({
   render: function() {
-    // transferPropsTo() is smart enough to merge classes provided
-    // to this component.
-    return this.transferPropsTo(
-      <a href="javascript:;" role="button" className="btn">
-        {this.props.children}
-      </a>
+    return (
+      <a {...this.props}
+        href="javascript:;"
+        role="button"
+        className={(this.props.className || '') + ' btn'} />
     );
   }
 });

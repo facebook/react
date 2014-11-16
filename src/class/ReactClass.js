@@ -14,7 +14,6 @@
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPropTransferer = require('ReactPropTransferer');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 
@@ -826,7 +825,6 @@ var ReactClassMixin = {
 var ReactClassBase = function() {};
 assign(
   ReactClassBase.prototype,
-  ReactPropTransferer.Mixin,
   ReactClassMixin
 );
 
@@ -834,7 +832,6 @@ assign(
  * Module for creating composite components.
  *
  * @class ReactClass
- * @extends ReactPropTransferer
  */
 var ReactClass = {
 

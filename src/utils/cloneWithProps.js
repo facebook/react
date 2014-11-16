@@ -25,8 +25,8 @@ var CHILDREN_PROP = keyOf({children: null});
  * this is to add a CSS class.
  *
  * @param {object} child child component you'd like to clone
- * @param {object} props props you'd like to modify. They will be merged
- * as if you used `transferPropsTo()`.
+ * @param {object} props props you'd like to modify. className and style will be
+ * merged automatically.
  * @return {object} a clone of child with props merged in.
  */
 function cloneWithProps(child, props) {
