@@ -16,12 +16,12 @@ var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactOwner = require('ReactOwner');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
+var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -100,8 +100,7 @@ var CompositeLifeCycle = keyMirror({
  * @lends {ReactCompositeComponent.prototype}
  */
 var ReactCompositeComponentMixin = assign({},
-  ReactComponent.Mixin,
-  ReactOwner.Mixin, {
+  ReactComponent.Mixin, {
 
   /**
    * Base constructor for all composite component.
@@ -114,13 +113,13 @@ var ReactCompositeComponentMixin = assign({},
     this._instance.props = element.props;
     this._instance.state = null;
     this._instance.context = null;
+    this._instance.refs = emptyObject;
 
     this._pendingState = null;
     this._compositeLifeCycleState = null;
 
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
-    ReactOwner.Mixin.construct.apply(this, arguments);
   },
 
   /**
@@ -698,6 +697,32 @@ var ReactCompositeComponentMixin = assign({},
       return renderedComponent;
     }
   ),
+
+  /**
+   * Lazily allocates the refs object and stores `component` as `ref`.
+   *
+   * @param {string} ref Reference name.
+   * @param {component} component Component to store as `ref`.
+   * @final
+   * @private
+   */
+  attachRef: function(ref, component) {
+    var inst = this.getPublicInstance();
+    var refs = inst.refs === emptyObject ? (inst.refs = {}) : inst.refs;
+    refs[ref] = component.getPublicInstance();
+  },
+
+  /**
+   * Detaches a reference name.
+   *
+   * @param {string} ref Name to dereference.
+   * @final
+   * @private
+   */
+  detachRef: function(ref) {
+    var refs = this.getPublicInstance().refs;
+    delete refs[ref];
+  },
 
   /**
    * Get the publicly accessible representation of this component - i.e. what
