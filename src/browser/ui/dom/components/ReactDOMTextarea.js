@@ -97,8 +97,10 @@ var ReactDOMTextarea = ReactClass.createClass({
     var props = assign({}, this.props);
 
     invariant(
-      props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      props.dangerouslySetInnerHTML == null &&
+      props.dangerouslySetDefaultInnerHTML == null,
+      '`dangerouslySetInnerHTML` and `dangerouslySetDefaultInnerHTML` does ' +
+      'not make sense on <textarea>.'
     );
 
     props.defaultValue = null;
