@@ -54,25 +54,25 @@ function getCurrentOwnerDisplayName() {
 }
 
 /**
- * Warn if the component doesn't have an explicit key assigned to it.
- * This component is in an array. The array could grow and shrink or be
+ * Warn if the element doesn't have an explicit key assigned to it.
+ * This element is in an array. The array could grow and shrink or be
  * reordered. All children that haven't already been validated are required to
  * have a "key" property assigned to it.
  *
  * @internal
- * @param {ReactComponent} component Component that requires a key.
- * @param {*} parentType component's parent's type.
+ * @param {ReactElement} element Element that requires a key.
+ * @param {*} parentType element's parent's type.
  */
-function validateExplicitKey(component, parentType) {
-  if (component._store.validated || component.key != null) {
+function validateExplicitKey(element, parentType) {
+  if (element._store.validated || element.key != null) {
     return;
   }
-  component._store.validated = true;
+  element._store.validated = true;
 
   warnAndMonitorForKeyUse(
     'react_key_warning',
     'Each child in an array or iterator should have a unique "key" prop.',
-    component,
+    element,
     parentType
   );
 }
@@ -83,17 +83,17 @@ function validateExplicitKey(component, parentType) {
  *
  * @internal
  * @param {string} name Property name of the key.
- * @param {ReactComponent} component Component that requires a key.
- * @param {*} parentType component's parent's type.
+ * @param {ReactElement} element Component that requires a key.
+ * @param {*} parentType element's parent's type.
  */
-function validatePropertyKey(name, component, parentType) {
+function validatePropertyKey(name, element, parentType) {
   if (!NUMERIC_PROPERTY_REGEX.test(name)) {
     return;
   }
   warnAndMonitorForKeyUse(
     'react_numeric_key_warning',
     'Child objects should have non-numeric keys so ordering is preserved.',
-    component,
+    element,
     parentType
   );
 }
@@ -104,10 +104,10 @@ function validatePropertyKey(name, component, parentType) {
  * @internal
  * @param {string} warningID The id used when logging.
  * @param {string} message The base warning that gets output.
- * @param {ReactComponent} component Component that requires a key.
- * @param {*} parentType component's parent's type.
+ * @param {ReactElement} element Component that requires a key.
+ * @param {*} parentType element's parent's type.
  */
-function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
+function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
   var ownerName = getCurrentOwnerDisplayName();
   var parentName = parentType.displayName;
 
@@ -126,12 +126,12 @@ function warnAndMonitorForKeyUse(warningID, message, component, parentType) {
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwnerName = null;
-  if (component &&
-      component._owner &&
-      component._owner !== ReactCurrentOwner.current) {
+  if (element &&
+      element._owner &&
+      element._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
     childOwnerName =
-      component._owner.getPublicInstance().constructor.displayName;
+      element._owner.getPublicInstance().constructor.displayName;
 
     message += ` It was passed a child from ${childOwnerName}.`;
   }
@@ -165,36 +165,36 @@ function monitorUseOfObjectMap() {
  * with valid key property.
  *
  * @internal
- * @param {*} component Statically passed child of any type.
- * @param {*} parentType component's parent's type.
+ * @param {ReactNode} node Statically passed child of any type.
+ * @param {*} parentType node's parent's type.
  */
-function validateChildKeys(component, parentType) {
-  if (Array.isArray(component)) {
-    for (var i = 0; i < component.length; i++) {
-      var child = component[i];
+function validateChildKeys(node, parentType) {
+  if (Array.isArray(node)) {
+    for (var i = 0; i < node.length; i++) {
+      var child = node[i];
       if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
     }
-  } else if (ReactElement.isValidElement(component)) {
-    // This component was passed in a valid location.
-    component._store.validated = true;
-  } else if (component) {
-    var iteratorFn = getIteratorFn(component);
+  } else if (ReactElement.isValidElement(node)) {
+    // This element was passed in a valid location.
+    node._store.validated = true;
+  } else if (node) {
+    var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
-    if (iteratorFn && iteratorFn !== component.entries) {
-      var iterator = iteratorFn.call(component);
+    if (iteratorFn && iteratorFn !== node.entries) {
+      var iterator = iteratorFn.call(node);
       var step;
       while (!(step = iterator.next()).done) {
         if (ReactElement.isValidElement(step.value)) {
           validateExplicitKey(step.value, parentType);
         }
       }
-    } else if (typeof component === 'object') {
+    } else if (typeof node === 'object') {
       monitorUseOfObjectMap();
-      for (var key in component) {
-        if (component.hasOwnProperty(key)) {
-          validatePropertyKey(key, component[key], parentType);
+      for (var key in node) {
+        if (node.hasOwnProperty(key)) {
+          validatePropertyKey(key, node[key], parentType);
         }
       }
     }
