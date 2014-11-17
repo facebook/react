@@ -89,6 +89,8 @@ var ReactTransitionGroup = React.createClass({
   },
 
   componentDidUpdate: function() {
+    this.updatedChildren = null;
+
     var keysToEnter = this.keysToEnter;
     this.keysToEnter = [];
     keysToEnter.forEach(this.performEnter);
@@ -193,9 +195,13 @@ var ReactTransitionGroup = React.createClass({
       // This entered again before it fully left. Add it again.
       this.performEnter(key);
     } else {
-      var newChildren = assign({}, this.state.children);
-      delete newChildren[key];
-      this.setState({children: newChildren});
+      // As this.state.children will not be updated until next render, we keep 
+      // this.updatedChildren state to avoid losing all but the last removal. 
+      // It's cleaned after this.state is updated, in componentDidUpdate.
+      if (!this.updatedChildren)
+        this.updatedChildren = assign({}, this.state.children);
+      delete this.updatedChildren[key];
+      this.setState({children: this.updatedChildren});
     }
   },
 
