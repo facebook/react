@@ -291,11 +291,9 @@ ReactDOMComponent.Mixin = {
       return;
     }
 
-    ReactComponent.Mixin.receiveComponent.call(
-      this,
-      nextElement,
-      transaction
-    );
+    var prevElement = this._currentElement;
+    this._currentElement = nextElement;
+    this.updateComponent(transaction, prevElement, nextElement);
   },
 
   /**

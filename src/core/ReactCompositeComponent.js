@@ -115,11 +115,15 @@ var ReactCompositeComponentMixin = assign({},
     this._instance.context = null;
     this._instance.refs = emptyObject;
 
+    this._pendingElement = null;
     this._pendingState = null;
     this._compositeLifeCycleState = null;
 
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+
+    // See ReactUpdates.
+    this._pendingCallbacks = null;
   },
 
   /**
@@ -234,6 +238,9 @@ var ReactCompositeComponentMixin = assign({},
     // Reset pending fields
     this._pendingState = null;
     this._pendingForceUpdate = false;
+    this._pendingCallbacks = null;
+    this._pendingElement = null;
+
     ReactComponent.Mixin.unmountComponent.call(this);
 
     // Delete the reference from the instance to this internal representation
@@ -505,11 +512,8 @@ var ReactCompositeComponentMixin = assign({},
       return;
     }
 
-    ReactComponent.Mixin.receiveComponent.call(
-      this,
-      nextElement,
-      transaction
-    );
+    this._pendingElement = nextElement;
+    this.performUpdateIfNecessary(transaction);
   },
 
   /**

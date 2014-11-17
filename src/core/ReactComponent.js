@@ -115,13 +115,9 @@ var ReactComponent = {
      * @internal
      */
     construct: function(element) {
-      // See ReactUpdates.
-      this._pendingCallbacks = null;
-
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
-      this._pendingElement = null;
     },
 
     /**
@@ -167,41 +163,6 @@ var ReactComponent = {
       unmountIDFromEnvironment(this._rootNodeID);
       // Reset all fields
       this._rootNodeID = null;
-      this._pendingCallbacks = null;
-      this._pendingElement = null;
-    },
-
-    /**
-     * Given a new instance of this component, updates the rendered DOM nodes
-     * as if that instance was rendered instead.
-     *
-     * Subclasses that override this method should make sure to invoke
-     * `ReactComponent.Mixin.receiveComponent.call(this, ...)`.
-     *
-     * @param {object} nextComponent Next set of properties.
-     * @param {ReactReconcileTransaction} transaction
-     * @internal
-     */
-    receiveComponent: function(nextElement, transaction) {
-      this._pendingElement = nextElement;
-      this.performUpdateIfNecessary(transaction);
-    },
-
-    /**
-     * If `_pendingElement` is set, update the component.
-     *
-     * @param {ReactReconcileTransaction} transaction
-     * @internal
-     */
-    performUpdateIfNecessary: function(transaction) {
-      if (this._pendingElement == null) {
-        return;
-      }
-      var prevElement = this._currentElement;
-      var nextElement = this._pendingElement;
-      this._currentElement = nextElement;
-      this._pendingElement = null;
-      this.updateComponent(transaction, prevElement, nextElement);
     },
 
     /**
