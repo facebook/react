@@ -463,7 +463,7 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
+        ReactComponent.BackendIDOperations.dangerouslyUpdateInnerHTMLByID(
           this._rootNodeID,
           nextHtml
         );

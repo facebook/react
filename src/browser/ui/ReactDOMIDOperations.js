@@ -31,7 +31,8 @@ var setInnerHTML = require('setInnerHTML');
  */
 var INVALID_PROPERTY_ERRORS = {
   dangerouslySetInnerHTML:
-    '`dangerouslySetInnerHTML` must be set using `updateInnerHTMLByID()`.',
+    '`dangerouslySetInnerHTML` must be set using ' +
+    '`dangerouslyUpdateInnerHTMLByID()`.',
   style: '`style` must be set using `updateStylesByID()`.'
 };
 
@@ -118,9 +119,9 @@ var ReactDOMIDOperations = {
    * @param {string} html An HTML string.
    * @internal
    */
-  updateInnerHTMLByID: ReactPerf.measure(
+  dangerouslyUpdateInnerHTMLByID: ReactPerf.measure(
     'ReactDOMIDOperations',
-    'updateInnerHTMLByID',
+    'dangerouslyUpdateInnerHTMLByID',
     function(id, html) {
       var node = ReactMount.getNode(id);
       setInnerHTML(node, html);
