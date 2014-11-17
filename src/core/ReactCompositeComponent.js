@@ -653,6 +653,25 @@ var ReactCompositeComponentMixin = assign({},
   /**
    * @private
    */
+  _renderValidatedComponentWithoutOwnerOrContext: function() {
+    var inst = this._instance;
+    var renderedComponent = inst.render();
+    if (__DEV__) {
+      // We allow auto-mocks to proceed as if they're returning null.
+      if (typeof renderedComponent === 'undefined' &&
+          inst.render._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        renderedComponent = null;
+      }
+    }
+
+    return renderedComponent;
+  },
+
+  /**
+   * @private
+   */
   _renderValidatedComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     '_renderValidatedComponent',
@@ -665,16 +684,8 @@ var ReactCompositeComponentMixin = assign({},
       ReactCurrentOwner.current = this;
       var inst = this._instance;
       try {
-        renderedComponent = inst.render();
-        if (__DEV__) {
-          // We allow auto-mocks to proceed as if they're returning null.
-          if (typeof renderedComponent === 'undefined' &&
-              inst.render._isMockFunction) {
-            // This is probably bad practice. Consider warning here and
-            // deprecating this convenience.
-            renderedComponent = null;
-          }
-        }
+        renderedComponent =
+          this._renderValidatedComponentWithoutOwnerOrContext();
       } finally {
         ReactContext.current = previousContext;
         ReactCurrentOwner.current = null;
@@ -734,11 +745,124 @@ var ReactCompositeComponentMixin = assign({},
 
 });
 
+var ShallowMixin = assign({},
+  ReactCompositeComponentMixin, {
+
+  /**
+   * Initializes the component, renders markup, and registers event listeners.
+   *
+   * @param {string} rootID DOM ID of the root node.
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {number} mountDepth number of components in the owner hierarchy
+   * @return {ReactElement} Shallow rendering of the component.
+   * @final
+   * @internal
+   */
+  mountComponent: function(rootID, transaction, mountDepth) {
+    ReactComponent.Mixin.mountComponent.call(
+      this,
+      rootID,
+      transaction,
+      mountDepth
+    );
+
+    var inst = this._instance;
+
+    // Store a reference from the instance back to the internal representation
+    ReactInstanceMap.set(inst, this);
+
+    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+
+    // No context for shallow-mounted components.
+    inst.props = this._processProps(this._currentElement.props);
+
+    var initialState = inst.getInitialState ? inst.getInitialState() : null;
+    if (__DEV__) {
+      // We allow auto-mocks to proceed as if they're returning null.
+      if (typeof initialState === 'undefined' &&
+          inst.getInitialState._isMockFunction) {
+        // This is probably bad practice. Consider warning here and
+        // deprecating this convenience.
+        initialState = null;
+      }
+    }
+    invariant(
+      typeof initialState === 'object' && !Array.isArray(initialState),
+      '%s.getInitialState(): must return an object or null',
+      inst.constructor.displayName || 'ReactCompositeComponent'
+    );
+    inst.state = initialState;
+
+    this._pendingState = null;
+    this._pendingForceUpdate = false;
+
+    if (inst.componentWillMount) {
+      inst.componentWillMount();
+      // When mounting, calls to `setState` by `componentWillMount` will set
+      // `this._pendingState` without triggering a re-render.
+      if (this._pendingState) {
+        inst.state = this._pendingState;
+        this._pendingState = null;
+      }
+    }
+
+    // No recursive call to instantiateReactComponent for shallow rendering.
+    this._renderedComponent =
+      this._renderValidatedComponentWithoutOwnerOrContext();
+
+    // Done with mounting, `setState` will now trigger UI changes.
+    this._compositeLifeCycleState = null;
+
+    // No call to this._renderedComponent.mountComponent for shallow
+    // rendering.
+
+    if (inst.componentDidMount) {
+      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
+    }
+
+    return this._renderedComponent;
+  },
+
+  /**
+   * Call the component's `render` method and update the DOM accordingly.
+   *
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
+  _updateRenderedComponent: function(transaction) {
+    var prevComponentInstance = this._renderedComponent;
+    var prevRenderedElement = prevComponentInstance._currentElement;
+    // Use the without-owner-or-context variant of _rVC below:
+    var nextRenderedElement = this._renderValidatedComponentWithoutOwnerOrContext();
+    if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
+      prevComponentInstance.receiveComponent(
+        nextRenderedElement,
+        transaction
+      );
+    } else {
+      // These two IDs are actually the same! But nothing should rely on that.
+      var thisID = this._rootNodeID;
+      var prevComponentID = prevComponentInstance._rootNodeID;
+      // Don't unmount previous instance since it was never mounted, due to
+      // shallow render.
+      //prevComponentInstance.unmountComponent();
+      this._renderedComponent = nextRenderedElement;
+      // ^ no instantiateReactComponent
+      //
+      // no recursive mountComponent
+      return nextRenderedElement;
+    }
+  }
+
+});
+
 var ReactCompositeComponent = {
 
   LifeCycle: CompositeLifeCycle,
 
-  Mixin: ReactCompositeComponentMixin
+  Mixin: ReactCompositeComponentMixin,
+
+  ShallowMixin: ShallowMixin
 
 };
 
