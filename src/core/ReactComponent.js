@@ -11,14 +11,10 @@
 
 "use strict";
 
-var ReactElement = require('ReactElement');
 var ReactOwner = require('ReactOwner');
 var ReactRef = require('ReactRef');
-var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
-var keyMirror = require('keyMirror');
 
 var injected = false;
 
