@@ -13,9 +13,9 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactComponent = require('ReactComponent');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
+var ReactDOMComponent = require('ReactDOMComponent');
 
 var assign = require('Object.assign');
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -100,7 +100,7 @@ assign(ReactDOMTextComponent.prototype, {
         // and/or updateComponent to do the actual update for consistency with
         // other component types?
         this._stringText = nextStringText;
-        ReactComponent.BackendIDOperations.updateTextContentByID(
+        ReactDOMComponent.BackendIDOperations.updateTextContentByID(
           this._rootNodeID,
           nextStringText
         );

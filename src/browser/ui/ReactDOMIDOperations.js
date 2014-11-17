@@ -37,7 +37,7 @@ var INVALID_PROPERTY_ERRORS = {
 
 /**
  * Operations used to process updates to DOM nodes. This is made injectable via
- * `ReactComponent.BackendIDOperations`.
+ * `ReactDOMComponent.BackendIDOperations`.
  */
 var ReactDOMIDOperations = {
 

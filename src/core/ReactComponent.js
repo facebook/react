@@ -16,17 +16,6 @@ var ReactRef = require('ReactRef');
 
 var invariant = require('invariant');
 
-var injected = false;
-
-/**
- * Optionally injectable environment dependent cleanup hook. (server vs.
- * browser etc). Example: A browser system caches DOM nodes based on component
- * ID and must remove that cache entry when this instance is unmounted.
- *
- * @private
- */
-var unmountIDFromEnvironment = null;
-
 function attachRef(ref, component, owner) {
   if (ref instanceof ReactRef) {
     ReactRef.attachRef(ref, component);
@@ -70,20 +59,6 @@ function detachRef(ref, component, owner) {
  */
 var ReactComponent = {
 
-  injection: {
-    injectEnvironment: function(ReactComponentEnvironment) {
-      invariant(
-        !injected,
-        'ReactComponent: injectEnvironment() can only be called once.'
-      );
-      unmountIDFromEnvironment =
-        ReactComponentEnvironment.unmountIDFromEnvironment;
-      ReactComponent.BackendIDOperations =
-        ReactComponentEnvironment.BackendIDOperations;
-      injected = true;
-    }
-  },
-
   /**
    * Injected module that provides ability to mutate individual properties.
    * Injected into the base class because many different subclasses need access
@@ -114,7 +89,6 @@ var ReactComponent = {
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
-      this._rootNodeID = null;
       this._mountIndex = 0;
       this._mountDepth = 0;
     },
@@ -140,7 +114,6 @@ var ReactComponent = {
         var owner = this._currentElement._owner;
         attachRef(ref, this, owner);
       }
-      this._rootNodeID = rootID;
       this._mountDepth = mountDepth;
       // Effectively: return '';
     },
@@ -160,9 +133,6 @@ var ReactComponent = {
       if (ref != null) {
         detachRef(ref, this, this._currentElement._owner);
       }
-      unmountIDFromEnvironment(this._rootNodeID);
-      // Reset all fields
-      this._rootNodeID = null;
     },
 
     /**

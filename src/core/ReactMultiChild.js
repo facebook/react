@@ -12,7 +12,7 @@
 
 "use strict";
 
-var ReactComponent = require('ReactComponent');
+var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var flattenChildren = require('flattenChildren');
@@ -136,7 +136,7 @@ function enqueueTextContent(parentID, textContent) {
  */
 function processQueue() {
   if (updateQueue.length) {
-    ReactComponent.BackendIDOperations.dangerouslyProcessChildrenUpdates(
+    ReactComponentEnvironment.processChildrenUpdates(
       updateQueue,
       markupQueue
     );

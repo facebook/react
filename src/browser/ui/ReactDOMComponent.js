@@ -40,6 +40,11 @@ var STYLE = keyOf({style: null});
 var ELEMENT_NODE_TYPE = 1;
 
 /**
+ * Optionally injectable operations for mutating the DOM
+ */
+var BackendIDOperations = null;
+
+/**
  * @param {?object} props
  */
 function assertValidProps(props) {
@@ -149,6 +154,7 @@ function ReactDOMComponent(tag) {
   this._tag = tag;
   this._renderedChildren = null;
   this._previousStyleCopy = null;
+  this._rootNodeID = null;
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -177,7 +183,7 @@ ReactDOMComponent.Mixin = {
         mountDepth,
         context
       );
-      this._previousStyleCopy = null;
+      this._rootNodeID = rootID;
       assertValidProps(this._currentElement.props);
       var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
       return (
@@ -370,7 +376,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.deletePropertyByID(
+        BackendIDOperations.deletePropertyByID(
           this._rootNodeID,
           propKey
         );
@@ -414,7 +420,7 @@ ReactDOMComponent.Mixin = {
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
-        ReactComponent.BackendIDOperations.updatePropertyByID(
+        BackendIDOperations.updatePropertyByID(
           this._rootNodeID,
           propKey,
           nextProp
@@ -422,7 +428,7 @@ ReactDOMComponent.Mixin = {
       }
     }
     if (styleUpdates) {
-      ReactComponent.BackendIDOperations.updateStylesByID(
+      BackendIDOperations.updateStylesByID(
         this._rootNodeID,
         styleUpdates
       );
@@ -472,7 +478,7 @@ ReactDOMComponent.Mixin = {
       }
     } else if (nextHtml != null) {
       if (lastHtml !== nextHtml) {
-        ReactComponent.BackendIDOperations.updateInnerHTMLByID(
+        BackendIDOperations.updateInnerHTMLByID(
           this._rootNodeID,
           nextHtml
         );
@@ -492,6 +498,8 @@ ReactDOMComponent.Mixin = {
     this.unmountChildren();
     ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
     ReactComponent.Mixin.unmountComponent.call(this);
+    ReactMount.purgeID(this._rootNodeID);
+    this._rootNodeID = null;
   }
 
 };
@@ -502,5 +510,11 @@ assign(
   ReactDOMComponent.Mixin,
   ReactMultiChild.Mixin
 );
+
+ReactDOMComponent.injection = {
+  injectIDOperations: function(IDOperations) {
+    ReactDOMComponent.BackendIDOperations = BackendIDOperations = IDOperations;
+  }
+};
 
 module.exports = ReactDOMComponent;

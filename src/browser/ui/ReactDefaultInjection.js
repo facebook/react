@@ -28,6 +28,7 @@ var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMButton = require('ReactDOMButton');
 var ReactDOMForm = require('ReactDOMForm');
 var ReactDOMImg = require('ReactDOMImg');
+var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
@@ -37,6 +38,7 @@ var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
+var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SelectEventPlugin = require('SelectEventPlugin');
 var ServerReactRootIndex = require('ServerReactRootIndex');
 var SimpleEventPlugin = require('SimpleEventPlugin');
@@ -102,7 +104,7 @@ function inject() {
   ReactInjection.EmptyComponent.injectEmptyComponent('noscript');
 
   ReactInjection.Updates.injectReconcileTransaction(
-    ReactComponentBrowserEnvironment.ReactReconcileTransaction
+    ReactReconcileTransaction
   );
   ReactInjection.Updates.injectBatchingStrategy(
     ReactDefaultBatchingStrategy
@@ -115,6 +117,7 @@ function inject() {
   );
 
   ReactInjection.Component.injectEnvironment(ReactComponentBrowserEnvironment);
+  ReactInjection.DOMComponent.injectIDOperations(ReactDOMIDOperations);
 
   if (__DEV__) {
     var url = (ExecutionEnvironment.canUseDOM && window.location.href) || '';

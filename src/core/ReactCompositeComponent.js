@@ -12,6 +12,7 @@
 "use strict";
 
 var ReactComponent = require('ReactComponent');
+var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
@@ -112,6 +113,8 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   construct: function(element) {
+    this._rootNodeID = null;
+
     this._instance.props = element.props;
     this._instance.state = null;
     this._instance.context = null;
@@ -168,6 +171,7 @@ var ReactCompositeComponentMixin = assign({},
       );
 
       this._context = context;
+      this._rootNodeID = rootID;
 
       var inst = this._instance;
 
@@ -259,7 +263,10 @@ var ReactCompositeComponentMixin = assign({},
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
+    ReactComponentEnvironment.unmountIDFromEnvironment(this._rootNodeID);
+
     this._context = null;
+    this._rootNodeID = null;
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
@@ -780,7 +787,7 @@ var ReactCompositeComponentMixin = assign({},
         this._mountDepth + 1,
         context
       );
-      ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
+      ReactComponentEnvironment.replaceNodeWithMarkupByID(
         prevComponentID,
         nextMarkup
       );
