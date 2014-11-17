@@ -117,7 +117,10 @@ var ReactCompositeComponentMixin = assign({},
 
     this._pendingElement = null;
     this._pendingState = null;
+    this._pendingForceUpdate = false;
     this._compositeLifeCycleState = null;
+
+    this._renderedComponent = null;
 
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);

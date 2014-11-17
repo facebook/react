@@ -147,6 +147,8 @@ function validateDangerousTag(tag) {
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag;
+  this._renderedChildren = null;
+  this._previousStyleCopy = null;
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';

@@ -118,6 +118,10 @@ var ReactComponent = {
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
+
+      this._rootNodeID = null;
+      this._mountIndex = 0;
+      this._mountDepth = 0;
     },
 
     /**
