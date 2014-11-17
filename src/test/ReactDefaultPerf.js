@@ -244,7 +244,8 @@ var ReactDefaultPerf = {
 
         entry.displayNames[rootNodeID] = {
           current: this.constructor.displayName,
-          owner: this._owner ? this._owner.constructor.displayName : '<root>'
+          owner: this._currentElement._owner ?
+                 this._currentElement._owner.constructor.displayName : '<root>'
         };
 
         return rv;

@@ -11,12 +11,13 @@
 
 "use strict";
 
+var keyMirror = require('keyMirror');
+
 var React;
 var ReactTestUtils;
 var ReactComponent;
 var ReactCompositeComponent;
 var ReactInstanceMap;
-var ComponentLifeCycle;
 var CompositeComponentLifeCycle;
 
 var getCompositeLifeCycle;
@@ -70,6 +71,21 @@ var POST_WILL_UNMOUNT_STATE = {
 };
 
 /**
+ * Every React component is in one of these life cycles.
+ */
+var ComponentLifeCycle = keyMirror({
+  /**
+   * Mounted components have a DOM node representation and are capable of
+   * receiving new props.
+   */
+  MOUNTED: null,
+  /**
+   * Unmounted components are inactive and cannot receive new props.
+   */
+  UNMOUNTED: null
+});
+
+/**
  * TODO: We should make any setState calls fail in
  * `getInitialState` and `componentWillMount`. They will usually fail
  * anyways because `this._renderedComponent` is empty, however, if a component
@@ -83,7 +99,6 @@ describe('ReactComponentLifeCycle', function() {
     ReactTestUtils = require('ReactTestUtils');
     ReactComponent = require('ReactComponent');
     ReactCompositeComponent = require('ReactCompositeComponent');
-    ComponentLifeCycle = ReactComponent.LifeCycle;
     CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
 
     ReactInstanceMap = require('ReactInstanceMap');
@@ -94,13 +109,11 @@ describe('ReactComponentLifeCycle', function() {
 
     getLifeCycleState = function(instance) {
       var internalInstance = ReactInstanceMap.get(instance);
-      if (!internalInstance) {
-        // Once a component is fully unmounted, we cannot actually get to the
-        // internal instance. It's already dereferenced and possibly GC:ed.
-        // So the unmounted life cycle hook doesn't exist anymore.
-        return ComponentLifeCycle.UNMOUNTED;
-      }
-      return internalInstance._lifeCycleState;
+      // Once a component gets mounted, it has an internal instance, once it
+      // gets unmounted, it loses that internal instance.
+      return internalInstance ?
+             ComponentLifeCycle.MOUNTED :
+             ComponentLifeCycle.UNMOUNTED;
     };
   });
 

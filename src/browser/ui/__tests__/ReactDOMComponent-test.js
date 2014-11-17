@@ -226,7 +226,7 @@ describe('ReactDOMComponent', function() {
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
-        this.props = initialProps || {};
+        this._currentElement = { props: initialProps };
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
@@ -276,7 +276,7 @@ describe('ReactDOMComponent', function() {
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
-        this.props = initialProps || {};
+        this._currentElement = { props: initialProps };
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
