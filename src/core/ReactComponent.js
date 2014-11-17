@@ -20,21 +20,6 @@ var assign = require('Object.assign');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 
-/**
- * Every React component is in one of these life cycles.
- */
-var ComponentLifeCycle = keyMirror({
-  /**
-   * Mounted components have a DOM node representation and are capable of
-   * receiving new props.
-   */
-  MOUNTED: null,
-  /**
-   * Unmounted components are inactive and cannot receive new props.
-   */
-  UNMOUNTED: null
-});
-
 var injected = false;
 
 /**
@@ -116,11 +101,6 @@ var ReactComponent = {
   },
 
   /**
-   * @internal
-   */
-  LifeCycle: ComponentLifeCycle,
-
-  /**
    * Injected module that provides ability to mutate individual properties.
    * Injected into the base class because many different subclasses need access
    * to this.
@@ -136,17 +116,6 @@ var ReactComponent = {
    * @lends {ReactComponent.prototype}
    */
   Mixin: {
-
-    /**
-     * Checks whether or not this component is mounted.
-     *
-     * @return {boolean} True if mounted, false otherwise.
-     * @final
-     * @protected
-     */
-    isMounted: function() {
-      return this._lifeCycleState === ComponentLifeCycle.MOUNTED;
-    },
 
     /**
      * Sets a subset of the props.
@@ -175,10 +144,6 @@ var ReactComponent = {
      * @public
      */
     replaceProps: function(props, callback) {
-      invariant(
-        this.isMounted(),
-        'replaceProps(...): Can only update a mounted component.'
-      );
       invariant(
         this._mountDepth === 0,
         'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
@@ -225,15 +190,6 @@ var ReactComponent = {
      * @internal
      */
     construct: function(element) {
-      // Record the component responsible for creating this component.
-      // This is accessible through the element but we maintain an extra
-      // field for compatibility with devtools and as a way to make an
-      // incremental update. TODO: Consider deprecating this field.
-      this._owner = element._owner;
-
-      // All components start unmounted.
-      this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
-
       // See ReactUpdates.
       this._pendingCallbacks = null;
 
@@ -258,20 +214,12 @@ var ReactComponent = {
      * @internal
      */
     mountComponent: function(rootID, transaction, mountDepth) {
-      invariant(
-        !this.isMounted(),
-        'mountComponent(%s, ...): Can only mount an unmounted component. ' +
-        'Make sure to avoid storing components between renders or reusing a ' +
-        'single component instance in multiple places.',
-        rootID
-      );
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
         attachRef(ref, this, owner);
       }
       this._rootNodeID = rootID;
-      this._lifeCycleState = ComponentLifeCycle.MOUNTED;
       this._mountDepth = mountDepth;
       // Effectively: return '';
     },
@@ -287,17 +235,15 @@ var ReactComponent = {
      * @internal
      */
     unmountComponent: function() {
-      invariant(
-        this.isMounted(),
-        'unmountComponent(): Can only unmount a mounted component.'
-      );
       var ref = this._currentElement.ref;
       if (ref != null) {
-        detachRef(ref, this, this._owner);
+        detachRef(ref, this, this._currentElement._owner);
       }
       unmountIDFromEnvironment(this._rootNodeID);
+      // Reset all fields
       this._rootNodeID = null;
-      this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
+      this._pendingCallbacks = null;
+      this._pendingElement = null;
     },
 
     /**
@@ -312,10 +258,6 @@ var ReactComponent = {
      * @internal
      */
     receiveComponent: function(nextElement, transaction) {
-      invariant(
-        this.isMounted(),
-        'receiveComponent(...): Can only update a mounted component.'
-      );
       this._pendingElement = nextElement;
       this.performUpdateIfNecessary(transaction);
     },
@@ -333,7 +275,6 @@ var ReactComponent = {
       var prevElement = this._currentElement;
       var nextElement = this._pendingElement;
       this._currentElement = nextElement;
-      this._owner = nextElement._owner;
       this._pendingElement = null;
       this.updateComponent(transaction, prevElement, nextElement);
     },

@@ -28,7 +28,7 @@ var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
 function getDeclarationErrorAddendum(component) {
-  var owner = component._owner || null;
+  var owner = component._currentElement._owner || null;
   if (owner) {
     var constructor = owner._instance.constructor;
     if (constructor && constructor.displayName) {
@@ -56,8 +56,8 @@ function validateLifeCycleOnReplaceState(instance) {
  * `ReactCompositeComponent` maintains an auxiliary life cycle state in
  * `this._compositeLifeCycleState` (which can be null).
  *
- * This is different from the life cycle state maintained by `ReactComponent` in
- * `this._lifeCycleState`. The following diagram shows how the states overlap in
+ * This is different from the life cycle state maintained by `ReactComponent`.
+ * The following diagram shows how the states overlap in
  * time. There are times when the CompositeLifeCycle is null - at those times it
  * is only meaningful to look at ComponentLifeCycle alone.
  *
@@ -129,8 +129,7 @@ var ReactCompositeComponentMixin = assign({},
    * @final
    */
   isMounted: function() {
-    return ReactComponent.Mixin.isMounted.call(this) &&
-      this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING;
+    return this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING;
   },
 
   /**
@@ -232,6 +231,9 @@ var ReactCompositeComponentMixin = assign({},
     this._renderedComponent.unmountComponent();
     this._renderedComponent = null;
 
+    // Reset pending fields
+    this._pendingState = null;
+    this._pendingForceUpdate = false;
     ReactComponent.Mixin.unmountComponent.call(this);
 
     // Delete the reference from the instance to this internal representation
@@ -554,11 +556,6 @@ var ReactCompositeComponentMixin = assign({},
         inst.props = nextProps;
         inst.state = nextState;
         inst.context = nextContext;
-
-        // Owner cannot change because shouldUpdateReactComponent doesn't allow
-        // it. TODO: Remove this._owner completely.
-        this._owner = nextParentElement._owner;
-
         return;
       }
 
@@ -605,10 +602,6 @@ var ReactCompositeComponentMixin = assign({},
     inst.props = nextProps;
     inst.state = nextState;
     inst.context = nextContext;
-
-    // Owner cannot change because shouldUpdateReactComponent doesn't allow
-    // it. TODO: Remove this._owner completely.
-    this._owner = nextElement._owner;
 
     this._updateRenderedComponent(transaction);
 

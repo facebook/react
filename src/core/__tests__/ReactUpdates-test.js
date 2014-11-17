@@ -815,4 +815,46 @@ describe('ReactUpdates', function() {
       'asap-1.2'
     ]);
   });
+
+  it('does not call render after a component as been deleted', function() {
+
+    var renderCount = 0;
+    var componentB = null;
+
+    var B = React.createClass({
+      getInitialState: function() {
+        return { updates: 0 };
+      },
+      componentDidMount: function() {
+        componentB = this;
+      },
+      render: function() {
+        renderCount++;
+        return <div />;
+      }
+    });
+
+    var A = React.createClass({
+      getInitialState: function() {
+        return { showB: true };
+      },
+      render: function() {
+        return this.state.showB ? <B /> : <div />;
+      }
+    });
+
+    var container = document.createElement('div');
+
+    var component = React.render(<A />, container);
+
+    ReactUpdates.batchedUpdates(function() {
+      // B will have scheduled an update but the batching should ensure that its
+      // update never fires.
+      componentB.setState({ updates: 1 });
+      component.setState({ showB: false });
+    });
+
+    expect(renderCount).toBe(1);
+  });
+
 });
