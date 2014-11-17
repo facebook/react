@@ -147,6 +147,8 @@ function validateDangerousTag(tag) {
 function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag;
+  this._renderedChildren = null;
+  this._previousStyleCopy = null;
 }
 
 ReactDOMComponent.displayName = 'ReactDOMComponent';
@@ -291,11 +293,9 @@ ReactDOMComponent.Mixin = {
       return;
     }
 
-    ReactComponent.Mixin.receiveComponent.call(
-      this,
-      nextElement,
-      transaction
-    );
+    var prevElement = this._currentElement;
+    this._currentElement = nextElement;
+    this.updateComponent(transaction, prevElement, nextElement);
   },
 
   /**

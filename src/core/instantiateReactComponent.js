@@ -118,6 +118,14 @@ function instantiateReactComponent(node, parentCompositeType) {
   // Sets up the instance. This can probably just move into the constructor now.
   instance.construct(node);
 
+  // Internal instances should fully constructed at this point, so they should
+  // not get any new fields added to them at this point.
+  if (__DEV__) {
+    if (Object.preventExtensions) {
+      Object.preventExtensions(instance);
+    }
+  }
+
   return instance;
 }
 

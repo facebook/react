@@ -50,6 +50,10 @@ assign(ReactDOMTextComponent.prototype, {
     // TODO: This is really a ReactText (ReactNode), not a ReactElement
     this._currentElement = text;
     this._stringText = '' + text;
+
+    // Properties
+    this._rootNodeID = null;
+    this._mountIndex = 0;
   },
 
   /**

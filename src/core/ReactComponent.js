@@ -11,14 +11,10 @@
 
 "use strict";
 
-var ReactElement = require('ReactElement');
 var ReactOwner = require('ReactOwner');
 var ReactRef = require('ReactRef');
-var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
-var keyMirror = require('keyMirror');
 
 var injected = false;
 
@@ -30,17 +26,6 @@ var injected = false;
  * @private
  */
 var unmountIDFromEnvironment = null;
-
-/**
- * The "image" of a component tree, is the platform specific (typically
- * serialized) data that represents a tree of lower level UI building blocks.
- * On the web, this "image" is HTML markup which describes a construction of
- * low level `div` and `span` nodes. Other platforms may have different
- * encoding of this "image". This must be injected.
- *
- * @private
- */
-var mountImageIntoNode = null;
 
 function attachRef(ref, component, owner) {
   if (ref instanceof ReactRef) {
@@ -91,7 +76,6 @@ var ReactComponent = {
         !injected,
         'ReactComponent: injectEnvironment() can only be called once.'
       );
-      mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
       unmountIDFromEnvironment =
         ReactComponentEnvironment.unmountIDFromEnvironment;
       ReactComponent.BackendIDOperations =
@@ -118,69 +102,6 @@ var ReactComponent = {
   Mixin: {
 
     /**
-     * Sets a subset of the props.
-     *
-     * @param {object} partialProps Subset of the next props.
-     * @param {?function} callback Called after props are updated.
-     * @final
-     * @public
-     */
-    setProps: function(partialProps, callback) {
-      // Merge with the pending element if it exists, otherwise with existing
-      // element props.
-      var element = this._pendingElement || this._currentElement;
-      this.replaceProps(
-        assign({}, element.props, partialProps),
-        callback
-      );
-    },
-
-    /**
-     * Replaces all of the props.
-     *
-     * @param {object} props New props.
-     * @param {?function} callback Called after props are updated.
-     * @final
-     * @public
-     */
-    replaceProps: function(props, callback) {
-      invariant(
-        this._mountDepth === 0,
-        'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
-        'component with a parent. This is an anti-pattern since props will ' +
-        'get reactively updated when rendered. Instead, change the owner\'s ' +
-        '`render` method to pass the correct value as props to the component ' +
-        'where it is created.'
-      );
-      // This is a deoptimized path. We optimize for always having an element.
-      // This creates an extra internal element.
-      this._pendingElement = ReactElement.cloneAndReplaceProps(
-        this._pendingElement || this._currentElement,
-        props
-      );
-      ReactUpdates.enqueueUpdate(this, callback);
-    },
-
-    /**
-     * Schedule a partial update to the props. Only used for internal testing.
-     *
-     * @param {object} partialProps Subset of the next props.
-     * @param {?function} callback Called after props are updated.
-     * @final
-     * @internal
-     */
-    _setPropsInternal: function(partialProps, callback) {
-      // This is a deoptimized path. We optimize for always having an element.
-      // This creates an extra internal element.
-      var element = this._pendingElement || this._currentElement;
-      this._pendingElement = ReactElement.cloneAndReplaceProps(
-        element,
-        assign({}, element.props, partialProps)
-      );
-      ReactUpdates.enqueueUpdate(this, callback);
-    },
-
-    /**
      * Base constructor for all React components.
      *
      * Subclasses that override this method should make sure to invoke
@@ -190,13 +111,13 @@ var ReactComponent = {
      * @internal
      */
     construct: function(element) {
-      // See ReactUpdates.
-      this._pendingCallbacks = null;
-
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
-      this._pendingElement = null;
+
+      this._rootNodeID = null;
+      this._mountIndex = 0;
+      this._mountDepth = 0;
     },
 
     /**
@@ -242,41 +163,6 @@ var ReactComponent = {
       unmountIDFromEnvironment(this._rootNodeID);
       // Reset all fields
       this._rootNodeID = null;
-      this._pendingCallbacks = null;
-      this._pendingElement = null;
-    },
-
-    /**
-     * Given a new instance of this component, updates the rendered DOM nodes
-     * as if that instance was rendered instead.
-     *
-     * Subclasses that override this method should make sure to invoke
-     * `ReactComponent.Mixin.receiveComponent.call(this, ...)`.
-     *
-     * @param {object} nextComponent Next set of properties.
-     * @param {ReactReconcileTransaction} transaction
-     * @internal
-     */
-    receiveComponent: function(nextElement, transaction) {
-      this._pendingElement = nextElement;
-      this.performUpdateIfNecessary(transaction);
-    },
-
-    /**
-     * If `_pendingElement` is set, update the component.
-     *
-     * @param {ReactReconcileTransaction} transaction
-     * @internal
-     */
-    performUpdateIfNecessary: function(transaction) {
-      if (this._pendingElement == null) {
-        return;
-      }
-      var prevElement = this._currentElement;
-      var nextElement = this._pendingElement;
-      this._currentElement = nextElement;
-      this._pendingElement = null;
-      this.updateComponent(transaction, prevElement, nextElement);
     },
 
     /**
@@ -310,46 +196,6 @@ var ReactComponent = {
           attachRef(nextElement.ref, this, nextElement._owner);
         }
       }
-    },
-
-    /**
-     * Mounts this component and inserts it into the DOM.
-     *
-     * @param {string} rootID DOM ID of the root node.
-     * @param {DOMElement} container DOM element to mount into.
-     * @param {boolean} shouldReuseMarkup If true, do not insert markup
-     * @final
-     * @internal
-     * @see {ReactMount.render}
-     */
-    mountComponentIntoNode: function(rootID, container, shouldReuseMarkup) {
-      var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-      transaction.perform(
-        this._mountComponentIntoNode,
-        this,
-        rootID,
-        container,
-        transaction,
-        shouldReuseMarkup
-      );
-      ReactUpdates.ReactReconcileTransaction.release(transaction);
-    },
-
-    /**
-     * @param {string} rootID DOM ID of the root node.
-     * @param {DOMElement} container DOM element to mount into.
-     * @param {ReactReconcileTransaction} transaction
-     * @param {boolean} shouldReuseMarkup If true, do not insert markup
-     * @final
-     * @private
-     */
-    _mountComponentIntoNode: function(
-        rootID,
-        container,
-        transaction,
-        shouldReuseMarkup) {
-      var markup = this.mountComponent(rootID, transaction, 0);
-      mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 
     /**

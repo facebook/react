@@ -115,11 +115,18 @@ var ReactCompositeComponentMixin = assign({},
     this._instance.context = null;
     this._instance.refs = emptyObject;
 
+    this._pendingElement = null;
     this._pendingState = null;
+    this._pendingForceUpdate = false;
     this._compositeLifeCycleState = null;
+
+    this._renderedComponent = null;
 
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+
+    // See ReactUpdates.
+    this._pendingCallbacks = null;
   },
 
   /**
@@ -234,6 +241,9 @@ var ReactCompositeComponentMixin = assign({},
     // Reset pending fields
     this._pendingState = null;
     this._pendingForceUpdate = false;
+    this._pendingCallbacks = null;
+    this._pendingElement = null;
+
     ReactComponent.Mixin.unmountComponent.call(this);
 
     // Delete the reference from the instance to this internal representation
@@ -246,6 +256,69 @@ var ReactCompositeComponentMixin = assign({},
     // TODO: inst.props = null;
     // TODO: inst.state = null;
     // TODO: inst.context = null;
+  },
+
+  /**
+   * Sets a subset of the props.
+   *
+   * @param {object} partialProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   */
+  setProps: function(partialProps, callback) {
+    // Merge with the pending element if it exists, otherwise with existing
+    // element props.
+    var element = this._pendingElement || this._currentElement;
+    this.replaceProps(
+      assign({}, element.props, partialProps),
+      callback
+    );
+  },
+
+  /**
+   * Replaces all of the props.
+   *
+   * @param {object} props New props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   */
+  replaceProps: function(props, callback) {
+    invariant(
+      this._mountDepth === 0,
+      'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will ' +
+      'get reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
+    // This is a deoptimized path. We optimize for always having an element.
+    // This creates an extra internal element.
+    this._pendingElement = ReactElement.cloneAndReplaceProps(
+      this._pendingElement || this._currentElement,
+      props
+    );
+    ReactUpdates.enqueueUpdate(this, callback);
+  },
+
+  /**
+   * Schedule a partial update to the props. Only used for internal testing.
+   *
+   * @param {object} partialProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @internal
+   */
+  _setPropsInternal: function(partialProps, callback) {
+    // This is a deoptimized path. We optimize for always having an element.
+    // This creates an extra internal element.
+    var element = this._pendingElement || this._currentElement;
+    this._pendingElement = ReactElement.cloneAndReplaceProps(
+      element,
+      assign({}, element.props, partialProps)
+    );
+    ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
@@ -442,11 +515,8 @@ var ReactCompositeComponentMixin = assign({},
       return;
     }
 
-    ReactComponent.Mixin.receiveComponent.call(
-      this,
-      nextElement,
-      transaction
-    );
+    this._pendingElement = nextElement;
+    this.performUpdateIfNecessary(transaction);
   },
 
   /**
