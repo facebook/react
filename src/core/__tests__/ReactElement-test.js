@@ -173,6 +173,36 @@ describe('ReactElement', function() {
     );
   });
 
+  it('warns for keys for arrays of elements in rest args', function() {
+    spyOn(console, 'warn');
+    var Component = React.createFactory(ComponentClass);
+
+    var InnerClass = React.createClass({
+      displayName: 'InnerClass',
+      render: function() {
+        return Component(null, this.props.childSet);
+      }
+    });
+
+    var InnerComponent = React.createFactory(InnerClass);
+
+    var ComponentWrapper = React.createClass({
+      displayName: 'ComponentWrapper',
+      render: function() {
+        return InnerComponent({ childSet: [ Component(), Component() ] });
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<ComponentWrapper />);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Each child in an array or iterator should have a unique "key" prop. ' +
+      'Check the render method of InnerClass. ' +
+      'It was passed a child from ComponentWrapper. '
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);

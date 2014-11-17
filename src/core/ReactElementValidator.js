@@ -160,7 +160,7 @@ function monitorUseOfObjectMap() {
 }
 
 /**
- * Ensure that every component either is passed in a static location, in an
+ * Ensure that every element either is passed in a static location, in an
  * array with an explicit keys property defined, or in an object literal
  * with valid key property.
  *
