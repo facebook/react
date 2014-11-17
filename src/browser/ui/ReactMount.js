@@ -18,13 +18,16 @@ var ReactElement = require('ReactElement');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
+var ReactUpdates = require('ReactUpdates');
 
 var containsNode = require('containsNode');
 var deprecated = require('deprecated');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
+var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -209,6 +212,23 @@ function findDeepestCachedAncestor(targetID) {
 }
 
 /**
+ * Mounts this component and inserts it into the DOM.
+ *
+ * @param {string} rootID DOM ID of the root node.
+ * @param {DOMElement} container DOM element to mount into.
+ * @param {ReactReconcileTransaction} transaction
+ * @param {boolean} shouldReuseMarkup If true, do not insert markup
+ */
+function mountComponentIntoNode(
+    rootID,
+    container,
+    transaction,
+    shouldReuseMarkup) {
+  var markup = this.mountComponent(rootID, transaction, 0);
+  ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
+}
+
+/**
  * Mounting is the process of initializing a React component by creatings its
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
@@ -321,11 +341,17 @@ var ReactMount = {
         componentInstance,
         container
       );
-      componentInstance.mountComponentIntoNode(
+
+      var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+      transaction.perform(
+        mountComponentIntoNode,
+        componentInstance,
         reactRootID,
         container,
+        transaction,
         shouldReuseMarkup
       );
+      ReactUpdates.ReactReconcileTransaction.release(transaction);
 
       if (__DEV__) {
         // Record the root element in case it later gets transplanted.
@@ -684,6 +710,62 @@ var ReactMount = {
     );
   },
 
+  _mountImageIntoNode: ReactPerf.measure(
+    'ReactMount',
+    '_mountImageIntoNode',
+    function(markup, container, shouldReuseMarkup) {
+      invariant(
+        container && (
+          container.nodeType === ELEMENT_NODE_TYPE ||
+            container.nodeType === DOC_NODE_TYPE
+        ),
+        'mountComponentIntoNode(...): Target container is not valid.'
+      );
+
+      if (shouldReuseMarkup) {
+        if (ReactMarkupChecksum.canReuseMarkup(
+          markup,
+          getReactRootElementInContainer(container))) {
+          return;
+        } else {
+          invariant(
+            container.nodeType !== DOC_NODE_TYPE,
+            'You\'re trying to render a component to the document using ' +
+            'server rendering but the checksum was invalid. This usually ' +
+            'means you rendered a different component type or props on ' +
+            'the client from the one on the server, or your render() ' +
+            'methods are impure. React cannot handle this case due to ' +
+            'cross-browser quirks by rendering at the document root. You ' +
+            'should look for environment dependent code in your components ' +
+            'and ensure the props are the same client and server side.'
+          );
+
+          if (__DEV__) {
+            console.warn(
+              'React attempted to use reuse markup in a container but the ' +
+              'checksum was invalid. This generally means that you are ' +
+              'using server rendering and the markup generated on the ' +
+              'server was not what the client was expecting. React injected ' +
+              'new markup to compensate which works but you have lost many ' +
+              'of the benefits of server rendering. Instead, figure out ' +
+              'why the markup being generated is different on the client ' +
+              'or server.'
+            );
+          }
+        }
+      }
+
+      invariant(
+        container.nodeType !== DOC_NODE_TYPE,
+        'You\'re trying to render a component to the document but ' +
+          'you didn\'t use server rendering. We can\'t do this ' +
+          'without using server rendering due to cross-browser quirks. ' +
+          'See renderComponentToString() for server rendering.'
+      );
+
+      setInnerHTML(container, markup);
+    }
+  ),
 
   /**
    * React ID utilities.

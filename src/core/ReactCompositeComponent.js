@@ -249,6 +249,69 @@ var ReactCompositeComponentMixin = assign({},
   },
 
   /**
+   * Sets a subset of the props.
+   *
+   * @param {object} partialProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   */
+  setProps: function(partialProps, callback) {
+    // Merge with the pending element if it exists, otherwise with existing
+    // element props.
+    var element = this._pendingElement || this._currentElement;
+    this.replaceProps(
+      assign({}, element.props, partialProps),
+      callback
+    );
+  },
+
+  /**
+   * Replaces all of the props.
+   *
+   * @param {object} props New props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @public
+   */
+  replaceProps: function(props, callback) {
+    invariant(
+      this._mountDepth === 0,
+      'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will ' +
+      'get reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
+    );
+    // This is a deoptimized path. We optimize for always having an element.
+    // This creates an extra internal element.
+    this._pendingElement = ReactElement.cloneAndReplaceProps(
+      this._pendingElement || this._currentElement,
+      props
+    );
+    ReactUpdates.enqueueUpdate(this, callback);
+  },
+
+  /**
+   * Schedule a partial update to the props. Only used for internal testing.
+   *
+   * @param {object} partialProps Subset of the next props.
+   * @param {?function} callback Called after props are updated.
+   * @final
+   * @internal
+   */
+  _setPropsInternal: function(partialProps, callback) {
+    // This is a deoptimized path. We optimize for always having an element.
+    // This creates an extra internal element.
+    var element = this._pendingElement || this._currentElement;
+    this._pendingElement = ReactElement.cloneAndReplaceProps(
+      element,
+      assign({}, element.props, partialProps)
+    );
+    ReactUpdates.enqueueUpdate(this, callback);
+  },
+
+  /**
    * Sets a subset of the state. This only exists because _pendingState is
    * internal. This provides a merging strategy that is not available to deep
    * properties which is confusing. TODO: Expose pendingState or don't use it
