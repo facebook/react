@@ -30,6 +30,26 @@ var ReactPerf = {
   storedMeasure: _noMeasure,
 
   /**
+   * @param {object} object
+   * @param {string} objectName
+   * @param {object<string>} methodNames
+   */
+  measureMethods: function(object, objectName, methodNames) {
+    if (__DEV__) {
+      for (var key in methodNames) {
+        if (!methodNames.hasOwnProperty(key)) {
+          continue;
+        }
+        object[key] = ReactPerf.measure(
+          objectName,
+          methodNames[key],
+          object[key]
+        );
+      }
+    }
+  },
+
+  /**
    * Use this to wrap methods you want to measure. Zero overhead in production.
    *
    * @param {string} objName
