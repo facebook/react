@@ -323,8 +323,6 @@ ReactDOMComponent.Mixin = {
     'ReactDOMComponent',
     'updateComponent',
     function(transaction, prevElement, nextElement, context) {
-      if(context === undefined) throw new Error("Context required for mounting");
-      if(context === null) throw new Error("Assert: context is not null");
       assertValidProps(this._currentElement.props);
       ReactComponent.Mixin.updateComponent.call(
         this,
