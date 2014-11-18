@@ -15,16 +15,19 @@
 
 var ReactDOMIDOperations = require('ReactDOMIDOperations');
 var ReactMount = require('ReactMount');
-var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
 /**
- * Abstracts away all functionality of `ReactComponent` requires knowledge of
- * the browser context.
+ * Abstracts away all functionality of the reconciler that requires knowledge of
+ * the browser context. TODO: These callers should be refactored to avoid the
+ * need for this injection.
  */
 var ReactComponentBrowserEnvironment = {
-  ReactReconcileTransaction: ReactReconcileTransaction,
 
-  BackendIDOperations: ReactDOMIDOperations,
+  processChildrenUpdates:
+    ReactDOMIDOperations.dangerouslyProcessChildrenUpdates,
+
+  replaceNodeWithMarkupByID:
+    ReactDOMIDOperations.dangerouslyReplaceNodeWithMarkupByID,
 
   /**
    * If a particular environment requires that some resources be cleaned up,
