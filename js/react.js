@@ -1,5 +1,5 @@
 /**
- * React v0.12.0
+ * React v0.12.1
  */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.React=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 /**
@@ -183,7 +183,7 @@ if ("production" !== "development") {
 
 // Version exists only in the open-source version of React, not in Facebook's
 // internal version.
-React.version = '0.12.0';
+React.version = '0.12.1';
 
 module.exports = React;
 
@@ -6618,7 +6618,7 @@ var ReactCompositeComponentMixin = {
       boundMethod.__reactBoundArguments = null;
       var componentName = component.constructor.displayName;
       var _bind = boundMethod.bind;
-      boundMethod.bind = function(newThis ) {var args=Array.prototype.slice.call(arguments,1);
+      boundMethod.bind = function(newThis ) {for (var args=[],$__0=1,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
         // User is trying to bind() an autobound method; we effectively will
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
@@ -8952,7 +8952,7 @@ var ReactDefaultPerf = {
   },
 
   measure: function(moduleName, fnName, func) {
-    return function() {var args=Array.prototype.slice.call(arguments,0);
+    return function() {for (var args=[],$__0=0,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
       var totalTime;
       var rv;
       var start;
@@ -18074,7 +18074,7 @@ var emptyFunction = _dereq_("./emptyFunction");
 var warning = emptyFunction;
 
 if ("production" !== "development") {
-  warning = function(condition, format ) {var args=Array.prototype.slice.call(arguments,2);
+  warning = function(condition, format ) {for (var args=[],$__0=2,$__1=arguments.length;$__0<$__1;$__0++) args.push(arguments[$__0]);
     if (format === undefined) {
       throw new Error(
         '`warning(condition, format, ...args)` requires a warning ' +
