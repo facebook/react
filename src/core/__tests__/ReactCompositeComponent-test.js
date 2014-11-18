@@ -586,12 +586,32 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
-      'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
+      'Invariant Violation: mergeIntoWithNoDuplicateKeys(): ' +
       'Tried to merge two objects with the same key: `x`. This conflict ' +
       'may be due to a mixin; in particular, this may be caused by two ' +
       'getInitialState() or getDefaultProps() methods returning objects ' +
       'with clashing keys.'
     );
+  });
+
+  it('should not mutate objects returned by getInitialState()', function() {
+    var Mixin = {
+      getInitialState: function() {
+        return Object.freeze({mixin: true});
+      }
+    };
+    var Component = React.createClass({
+      mixins: [Mixin],
+      getInitialState: function() {
+        return Object.freeze({component: true});
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).not.toThrow();
   });
 
   it('should work with object getInitialState() return values', function() {
