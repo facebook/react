@@ -1,3 +1,12 @@
+## 0.12.1 (November 18, 2014)
+
+### React Tools
+
+* Types transform updated with latest support
+* jstransform version updated with improved ES6 transforms
+* Explicit Esprima dependency removed in favor of using Esprima information exported by jstransform
+
+
 ## 0.12.0 (October 28, 2014)
 
 ### React Core
