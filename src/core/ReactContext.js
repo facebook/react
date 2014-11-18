@@ -13,6 +13,7 @@
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
+var monitorCodeUse = require('monitorCodeUse');
 
 /**
  * Keeps track of the current context.
@@ -45,6 +46,8 @@ var ReactContext = {
    * @return {ReactComponent|array<ReactComponent>}
    */
   withContext: function(newContext, scopedCallback) {
+    monitorCodeUse('react_with_context', {newContext: newContext});
+
     var result;
     var previousContext = ReactContext.current;
     ReactContext.current = assign({}, previousContext, newContext);
