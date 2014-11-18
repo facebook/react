@@ -20,10 +20,12 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactUpdates = require('ReactUpdates');
 
+var emptyObject = require('emptyObject');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
+var monitorCodeUse = require('monitorCodeUse');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -116,6 +118,7 @@ var ReactCompositeComponentMixin = assign({},
     this._instance.refs = emptyObject;
 
     this._pendingElement = null;
+    this._pendingContext = null;
     this._pendingState = null;
     this._pendingForceUpdate = false;
     this._compositeLifeCycleState = null;
@@ -124,6 +127,8 @@ var ReactCompositeComponentMixin = assign({},
 
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+
+    this._context = null;
 
     // See ReactUpdates.
     this._pendingCallbacks = null;
@@ -152,13 +157,17 @@ var ReactCompositeComponentMixin = assign({},
   mountComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(rootID, transaction, mountDepth, context) {
+      invariant(context !== undefined, "Context is required parameter");
       ReactComponent.Mixin.mountComponent.call(
         this,
         rootID,
         transaction,
-        mountDepth
+        mountDepth,
+        context
       );
+
+      this._context = context;
 
       var inst = this._instance;
 
@@ -168,6 +177,9 @@ var ReactCompositeComponentMixin = assign({},
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
       inst.context = this._processContext(this._currentElement._context);
+      if (__DEV__) {
+        this._warnIfContextsDiffer(this._currentElement._context, context);
+      }
       inst.props = this._processProps(this._currentElement.props);
 
       var initialState = inst.getInitialState ? inst.getInitialState() : null;
@@ -211,7 +223,8 @@ var ReactCompositeComponentMixin = assign({},
       var markup = this._renderedComponent.mountComponent(
         rootID,
         transaction,
-        mountDepth + 1
+        mountDepth + 1,
+        this._processChildContext(context)
       );
       if (inst.componentDidMount) {
         transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
@@ -245,6 +258,8 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingElement = null;
 
     ReactComponent.Mixin.unmountComponent.call(this);
+
+    this._context = null;
 
     // Delete the reference from the instance to this internal representation
     // which allow the internals to be properly cleaned up even if the user
@@ -403,18 +418,17 @@ var ReactCompositeComponentMixin = assign({},
   _processContext: function(context) {
     var maskedContext = null;
     var contextTypes = this._instance.constructor.contextTypes;
-    if (contextTypes) {
-      maskedContext = {};
-      for (var contextName in contextTypes) {
-        maskedContext[contextName] = context[contextName];
-      }
-      if (__DEV__) {
-        this._checkPropTypes(
-          contextTypes,
-          maskedContext,
-          ReactPropTypeLocations.context
-        );
-      }
+    if (!contextTypes) return emptyObject;
+    maskedContext = {};
+    for (var contextName in contextTypes) {
+      maskedContext[contextName] = context[contextName];
+    }
+    if (__DEV__) {
+      this._checkPropTypes(
+        contextTypes,
+        maskedContext,
+        ReactPropTypeLocations.context
+      );
     }
     return maskedContext;
   },
@@ -502,7 +516,8 @@ var ReactCompositeComponentMixin = assign({},
     }
   },
 
-  receiveComponent: function(nextElement, transaction) {
+  receiveComponent: function(nextElement, transaction, context) {
+    invariant(context !== undefined, "Context is required parameter");
     if (nextElement === this._currentElement &&
         nextElement._owner != null) {
       // Since elements are immutable after the owner is rendered,
@@ -516,6 +531,7 @@ var ReactCompositeComponentMixin = assign({},
     }
 
     this._pendingElement = nextElement;
+    this._pendingContext = context;
     this.performUpdateIfNecessary(transaction);
   },
 
@@ -537,6 +553,7 @@ var ReactCompositeComponentMixin = assign({},
 
     if (this._pendingElement == null &&
         this._pendingState == null &&
+        this._pendingContext == null &&
         !this._pendingForceUpdate) {
       return;
     }
@@ -548,11 +565,44 @@ var ReactCompositeComponentMixin = assign({},
       this._pendingElement = null;
     }
 
+    var prevContext = this._context;
+    var nextContext = prevContext;
+    if (this._pendingContext != null) {
+      nextContext = this._pendingContext;
+      this._pendingContext = null;
+    }
+
     this.updateComponent(
       transaction,
       prevElement,
-      nextElement
+      nextElement,
+      prevContext,
+      nextContext
     );
+  },
+
+  /**
+   * Compare two contexts, warning if they are different
+   * TODO: Remove this check when owner-context is removed
+   */
+   _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
+    invariant(ownerBasedContext !== undefined, "Owner based context is required parameter");
+    invariant(parentBasedContext !== undefined, "Parent based ontext is required parameter");
+    var ownerKeys = Object.keys(ownerBasedContext).sort();
+    var parentKeys = Object.keys(parentBasedContext).sort();
+    if (ownerKeys.length != parentKeys.length || ownerKeys.toString() != parentKeys.toString()) {
+      var message = ("owner based context (keys: " +
+        Object.keys(ownerBasedContext) + ") does not equal parent based" +
+        " context (keys: "+Object.keys(parentBasedContext)+")" +
+        " while mounting " +
+        (this._instance.constructor.displayName || 'ReactCompositeComponent'));
+      console.warn(message);
+      monitorCodeUse('contexts_differ', {
+        ownerBasedKeys: Object.keys(ownerBasedContext),
+        parentBasedKeys: Object.keys(parentBasedContext),
+        mounting: (this._instance.constructor.displayName || 'ReactCompositeComponent')
+      });
+    }
   },
 
   /**
@@ -573,13 +623,20 @@ var ReactCompositeComponentMixin = assign({},
   updateComponent: ReactPerf.measure(
     'ReactCompositeComponent',
     'updateComponent',
-    function(transaction, prevParentElement, nextParentElement) {
+    function(
+        transaction,
+        prevParentElement,
+        nextParentElement,
+        prevUnmaskedContext,
+        nextUnmaskedContext) {
       // Update refs regardless of what shouldComponentUpdate returns
       ReactComponent.Mixin.updateComponent.call(
         this,
         transaction,
         prevParentElement,
-        nextParentElement
+        nextParentElement,
+        prevUnmaskedContext,
+        nextUnmaskedContext
       );
 
       var inst = this._instance;
@@ -623,6 +680,7 @@ var ReactCompositeComponentMixin = assign({},
         // If it's determined that a component should not update, we still want
         // to set props and state but we shortcut the rest of the update.
         this._currentElement = nextParentElement;
+        this._context = nextUnmaskedContext;
         inst.props = nextProps;
         inst.state = nextState;
         inst.context = nextContext;
@@ -636,7 +694,8 @@ var ReactCompositeComponentMixin = assign({},
         nextProps,
         nextState,
         nextContext,
-        transaction
+        transaction,
+        nextUnmaskedContext
       );
     }),
 
@@ -649,6 +708,7 @@ var ReactCompositeComponentMixin = assign({},
    * @param {?object} nextState Next object to set as state.
    * @param {?object} nextContext Next public object to set as context.
    * @param {ReactReconcileTransaction} transaction
+   * @param {?object} unmaskedContext
    * @private
    */
   _performComponentUpdate: function(
@@ -656,8 +716,11 @@ var ReactCompositeComponentMixin = assign({},
     nextProps,
     nextState,
     nextContext,
-    transaction
+    transaction,
+    unmaskedContext
   ) {
+    invariant(unmaskedContext !== undefined, "Context required for mounting");
+    invariant(unmaskedContext !== null, "Context must be non-null");
     var inst = this._instance;
 
     var prevProps = inst.props;
@@ -669,11 +732,12 @@ var ReactCompositeComponentMixin = assign({},
     }
 
     this._currentElement = nextElement;
+    this._context = unmaskedContext;
     inst.props = nextProps;
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction);
+    this._updateRenderedComponent(transaction, nextContext);
 
     if (inst.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
@@ -689,14 +753,16 @@ var ReactCompositeComponentMixin = assign({},
    * @param {ReactReconcileTransaction} transaction
    * @internal
    */
-  _updateRenderedComponent: function(transaction) {
+  _updateRenderedComponent: function(transaction, context) {
+    invariant(context !== undefined, "Context is required parameter");
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
       prevComponentInstance.receiveComponent(
         nextRenderedElement,
-        transaction
+        transaction,
+        this._processChildContext(context)
       );
     } else {
       // These two IDs are actually the same! But nothing should rely on that.
@@ -711,7 +777,8 @@ var ReactCompositeComponentMixin = assign({},
       var nextMarkup = this._renderedComponent.mountComponent(
         thisID,
         transaction,
-        this._mountDepth + 1
+        this._mountDepth + 1,
+        context
       );
       ReactComponent.BackendIDOperations.dangerouslyReplaceNodeWithMarkupByID(
         prevComponentID,
@@ -828,12 +895,13 @@ var ShallowMixin = assign({},
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth) {
+  mountComponent: function(rootID, transaction, mountDepth, context) {
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
       transaction,
-      mountDepth
+      mountDepth,
+      context
     );
 
     var inst = this._instance;

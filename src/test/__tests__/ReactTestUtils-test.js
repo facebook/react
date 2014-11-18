@@ -46,7 +46,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.render(<SomeComponent />, {});
 
     var result = shallowRenderer.getRenderOutput();
 
@@ -91,7 +91,7 @@ describe('ReactTestUtils', function() {
     });
 
     var shallowRenderer = ReactTestUtils.createRenderer();
-    shallowRenderer.render(<SomeComponent />);
+    shallowRenderer.render(<SomeComponent />, {});
     var result = shallowRenderer.getRenderOutput();
     expect(result.type).toBe('div');
     expect(result.props.children).toEqual([
@@ -99,7 +99,7 @@ describe('ReactTestUtils', function() {
       <span className="child2" />
     ]);
 
-    shallowRenderer.render(<SomeComponent aNew="prop" />);
+    shallowRenderer.render(<SomeComponent aNew="prop" />, {});
     var updatedResult = shallowRenderer.getRenderOutput();
     expect(updatedResult.type).toBe('a');
 

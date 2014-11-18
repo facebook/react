@@ -140,6 +140,7 @@ function runBatchedUpdates(transaction) {
     // be here, but we assume that it has cleared its _pendingCallbacks and
     // that performUpdateIfNecessary is a noop.
     var component = dirtyComponents[i];
+
     // If performUpdateIfNecessary happens to enqueue any new updates, we
     // shouldn't execute the callbacks until the next render happens, so
     // stash the callbacks first

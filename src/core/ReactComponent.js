@@ -114,7 +114,6 @@ var ReactComponent = {
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
-
       this._rootNodeID = null;
       this._mountIndex = 0;
       this._mountDepth = 0;
@@ -134,7 +133,8 @@ var ReactComponent = {
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
      */
-    mountComponent: function(rootID, transaction, mountDepth) {
+    mountComponent: function(rootID, transaction, mountDepth, context) {
+      invariant(context !== undefined, "Context is required parameter");
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
@@ -173,7 +173,8 @@ var ReactComponent = {
      * @param {object} nextElement
      * @internal
      */
-    updateComponent: function(transaction, prevElement, nextElement) {
+    updateComponent: function(transaction, prevElement, nextElement, context) {
+      invariant(context !== undefined, "Context is required parameter");
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`. We use the element instead

@@ -961,6 +961,29 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
 
+  it('warn if contexts differ', function() {
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    React.withContext({foo: 'bar'}, function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    });
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'owner based context (keys: foo) does not equal parent based ' +
+      'context (keys: ) while mounting ReactCompositeComponent'
+    );
+
+  });
+
   it('should check context types', function() {
     var Component = React.createClass({
       contextTypes: {
@@ -979,21 +1002,50 @@ describe('ReactCompositeComponent', function() {
       'Warning: Required context `foo` was not specified in `Component`.'
     );
 
-    React.withContext({foo: 'bar'}, function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
+    var ComponentInFooStringContext = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.fooValue
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      }
     });
+
+    ReactTestUtils.renderIntoDocument(<ComponentInFooStringContext fooValue={'bar'} />);
 
     // Previous call should not error
     expect(console.warn.mock.calls.length).toBe(1);
 
-    React.withContext({foo: 123}, function() {
-      ReactTestUtils.renderIntoDocument(<Component />);
+    var ComponentInFooNumberContext = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.fooValue
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      }
     });
+
+    ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
 
     expect(console.warn.mock.calls.length).toBe(2);
     expect(console.warn.mock.calls[1][0]).toBe(
       'Warning: Invalid context `foo` of type `number` supplied ' +
-      'to `Component`, expected `string`.'
+      'to `Component`, expected `string`.' +
+      ' Check the render method of `ComponentInFooNumberContext`.'
     );
   });
 
@@ -1014,16 +1066,18 @@ describe('ReactCompositeComponent', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-
-    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls.length).toBe(2);
     expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required child context `foo` was not specified in `Component`.'
+    );
+    expect(console.warn.mock.calls[1][0]).toBe(
       'Warning: Required child context `foo` was not specified in `Component`.'
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expect(console.warn.mock.calls.length).toBe(2);
-    expect(console.warn.mock.calls[1][0]).toBe(
+    expect(console.warn.mock.calls.length).toBe(4);
+    expect(console.warn.mock.calls[3][0]).toBe(
       'Warning: Invalid child context `foo` of type `number` ' +
       'supplied to `Component`, expected `string`.'
     );
@@ -1037,7 +1091,7 @@ describe('ReactCompositeComponent', function() {
     );
 
     // Previous calls should not log errors
-    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls.length).toBe(4);
   });
 
   it('should filter out context not in contextTypes', function() {
@@ -1051,11 +1105,26 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var instance = React.withContext({foo: 'abc', bar: 123}, function() {
-      return <Component />;
+    var ComponentInFooBarContext = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        bar: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'abc',
+          bar: 123
+        };
+      },
+
+      render: function() {
+        return <Component />;
+      }
     });
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    reactComponentExpect(instance).scalarContextEqual({foo: 'abc'});
+
+    var instance = ReactTestUtils.renderIntoDocument(<ComponentInFooBarContext />);
+    reactComponentExpect(instance).expectRenderedChild().scalarContextEqual({foo: 'abc'});
   });
 
   it('should filter context properly in callbacks', function() {
