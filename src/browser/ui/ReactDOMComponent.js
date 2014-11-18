@@ -168,19 +168,21 @@ ReactDOMComponent.Mixin = {
   mountComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'mountComponent',
-    function(rootID, transaction, mountDepth) {
+    function(rootID, transaction, mountDepth, context) {
+      invariant(context !== undefined, "Context is required parameter");
       ReactComponent.Mixin.mountComponent.call(
         this,
         rootID,
         transaction,
-        mountDepth
+        mountDepth,
+        context
       );
       this._previousStyleCopy = null;
       assertValidProps(this._currentElement.props);
       var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
       return (
         this._createOpenTagMarkupAndPutListeners(transaction) +
-        this._createContentMarkup(transaction) +
+        this._createContentMarkup(transaction, context) +
         closeTag
       );
     }
@@ -242,9 +244,10 @@ ReactDOMComponent.Mixin = {
    *
    * @private
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {object} context
    * @return {string} Content markup.
    */
-  _createContentMarkup: function(transaction) {
+  _createContentMarkup: function(transaction, context) {
     var prefix = '';
     if (this._tag === 'listing' ||
         this._tag === 'pre' ||
@@ -272,7 +275,8 @@ ReactDOMComponent.Mixin = {
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
-          transaction
+          transaction,
+          context
         );
         return prefix + mountImages.join('');
       }
@@ -280,7 +284,8 @@ ReactDOMComponent.Mixin = {
     return prefix;
   },
 
-  receiveComponent: function(nextElement, transaction) {
+  receiveComponent: function(nextElement, transaction, context) {
+    invariant(context !== undefined, "Context is required parameter");
     if (nextElement === this._currentElement &&
         nextElement._owner != null) {
       // Since elements are immutable after the owner is rendered,
@@ -295,7 +300,7 @@ ReactDOMComponent.Mixin = {
 
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
-    this.updateComponent(transaction, prevElement, nextElement);
+    this.updateComponent(transaction, prevElement, nextElement, context);
   },
 
   /**
@@ -311,16 +316,19 @@ ReactDOMComponent.Mixin = {
   updateComponent: ReactPerf.measure(
     'ReactDOMComponent',
     'updateComponent',
-    function(transaction, prevElement, nextElement) {
+    function(transaction, prevElement, nextElement, context) {
+      if(context === undefined) throw new Error("Context required for mounting");
+      if(context === null) throw new Error("Assert: context is not null");
       assertValidProps(this._currentElement.props);
       ReactComponent.Mixin.updateComponent.call(
         this,
         transaction,
         prevElement,
-        nextElement
+        nextElement,
+        context
       );
       this._updateDOMProperties(prevElement.props, transaction);
-      this._updateDOMChildren(prevElement.props, transaction);
+      this._updateDOMChildren(prevElement.props, transaction, context);
     }
   ),
 
@@ -428,7 +436,8 @@ ReactDOMComponent.Mixin = {
    * @param {object} lastProps
    * @param {ReactReconcileTransaction} transaction
    */
-  _updateDOMChildren: function(lastProps, transaction) {
+  _updateDOMChildren: function(lastProps, transaction, context) {
+    invariant(context !== undefined, "Context is required parameter");
     var nextProps = this._currentElement.props;
 
     var lastContent =
@@ -452,7 +461,7 @@ ReactDOMComponent.Mixin = {
     var lastHasContentOrHtml = lastContent != null || lastHtml != null;
     var nextHasContentOrHtml = nextContent != null || nextHtml != null;
     if (lastChildren != null && nextChildren == null) {
-      this.updateChildren(null, transaction);
+      this.updateChildren(null, transaction, context);
     } else if (lastHasContentOrHtml && !nextHasContentOrHtml) {
       this.updateTextContent('');
     }
@@ -469,7 +478,7 @@ ReactDOMComponent.Mixin = {
         );
       }
     } else if (nextChildren != null) {
-      this.updateChildren(nextChildren, transaction);
+      this.updateChildren(nextChildren, transaction, context);
     }
   },
 

@@ -17,6 +17,7 @@ var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
+var invariant = require('invariant');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 /**
@@ -178,7 +179,8 @@ var ReactMultiChild = {
      * @return {array} An array of mounted representations.
      * @internal
      */
-    mountChildren: function(nestedChildren, transaction) {
+    mountChildren: function(nestedChildren, transaction, context) {
+      invariant(context !== undefined, "Context is required parameter");
       var children = flattenChildren(nestedChildren);
       var mountImages = [];
       var index = 0;
@@ -195,7 +197,8 @@ var ReactMultiChild = {
           var mountImage = childInstance.mountComponent(
             rootID,
             transaction,
-            this._mountDepth + 1
+            this._mountDepth + 1,
+            context
           );
           childInstance._mountIndex = index;
           mountImages.push(mountImage);
@@ -240,11 +243,12 @@ var ReactMultiChild = {
      * @param {ReactReconcileTransaction} transaction
      * @internal
      */
-    updateChildren: function(nextNestedChildren, transaction) {
+    updateChildren: function(nextNestedChildren, transaction, context) {
+      invariant(context !== undefined, "Context is required parameter");
       updateDepth++;
       var errorThrown = true;
       try {
-        this._updateChildren(nextNestedChildren, transaction);
+        this._updateChildren(nextNestedChildren, transaction, context);
         errorThrown = false;
       } finally {
         updateDepth--;
@@ -263,7 +267,8 @@ var ReactMultiChild = {
      * @final
      * @protected
      */
-    _updateChildren: function(nextNestedChildren, transaction) {
+    _updateChildren: function(nextNestedChildren, transaction, context) {
+      invariant(context !== undefined, "Context is required parameter");
       var nextChildren = flattenChildren(nextNestedChildren);
       var prevChildren = this._renderedChildren;
       if (!nextChildren && !prevChildren) {
@@ -284,7 +289,7 @@ var ReactMultiChild = {
         if (shouldUpdateReactComponent(prevElement, nextElement)) {
           this.moveChild(prevChild, nextIndex, lastIndex);
           lastIndex = Math.max(prevChild._mountIndex, lastIndex);
-          prevChild.receiveComponent(nextElement, transaction);
+          prevChild.receiveComponent(nextElement, transaction, context);
           prevChild._mountIndex = nextIndex;
         } else {
           if (prevChild) {
@@ -298,7 +303,7 @@ var ReactMultiChild = {
             null
           );
           this._mountChildByNameAtIndex(
-            nextChildInstance, name, nextIndex, transaction
+            nextChildInstance, name, nextIndex, transaction, context
           );
         }
         nextIndex++;
@@ -389,13 +394,20 @@ var ReactMultiChild = {
      * @param {ReactReconcileTransaction} transaction
      * @private
      */
-    _mountChildByNameAtIndex: function(child, name, index, transaction) {
+    _mountChildByNameAtIndex: function(
+      child,
+      name,
+      index,
+      transaction,
+      context) {
+      invariant(context !== undefined, "Context is required parameter");
       // Inlined for performance, see `ReactInstanceHandles.createReactID`.
       var rootID = this._rootNodeID + name;
       var mountImage = child.mountComponent(
         rootID,
         transaction,
-        this._mountDepth + 1
+        this._mountDepth + 1,
+        context
       );
       child._mountIndex = index;
       this.createChild(child, mountImage);

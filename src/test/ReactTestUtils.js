@@ -328,23 +328,23 @@ assign(
   ReactCompositeComponent.ShallowMixin
 );
 
-ReactShallowRenderer.prototype.render = function(element) {
+ReactShallowRenderer.prototype.render = function(element, context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-  this._render(element, transaction);
+  this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
 };
 
-ReactShallowRenderer.prototype._render = function(element, transaction) {
+ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (!this._instance) {
     var rootID = ReactInstanceHandles.createReactRootID();
     var instance = new ShallowComponentWrapper(new element.type(element.props));
     instance.construct(element);
 
-    instance.mountComponent(rootID, transaction, 0);
+    instance.mountComponent(rootID, transaction, 0, context);
 
     this._instance = instance;
   } else {
-    this._instance.receiveComponent(element, transaction);
+    this._instance.receiveComponent(element, transaction, context);
   }
 };
 

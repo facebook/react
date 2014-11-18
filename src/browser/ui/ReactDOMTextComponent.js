@@ -66,7 +66,7 @@ assign(ReactDOMTextComponent.prototype, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, mountDepth) {
+  mountComponent: function(rootID, transaction, mountDepth, context) {
     this._rootNodeID = rootID;
     var escapedText = escapeTextForBrowser(this._stringText);
 

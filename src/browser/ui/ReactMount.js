@@ -22,6 +22,7 @@ var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactUpdates = require('ReactUpdates');
 
+var emptyObject = require('emptyObject');
 var containsNode = require('containsNode');
 var deprecated = require('deprecated');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
@@ -224,7 +225,7 @@ function mountComponentIntoNode(
     container,
     transaction,
     shouldReuseMarkup) {
-  var markup = this.mountComponent(rootID, transaction, 0);
+  var markup = this.mountComponent(rootID, transaction, 0, emptyObject);
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
 
