@@ -172,7 +172,6 @@ ReactDOMComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: function(rootID, transaction, mountDepth, context) {
-    invariant(context !== undefined, "Context is required parameter");
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
@@ -287,7 +286,6 @@ ReactDOMComponent.Mixin = {
   },
 
   receiveComponent: function(nextElement, transaction, context) {
-    invariant(context !== undefined, "Context is required parameter");
     if (nextElement === this._currentElement &&
         nextElement._owner != null) {
       // Since elements are immutable after the owner is rendered,
@@ -316,8 +314,6 @@ ReactDOMComponent.Mixin = {
    * @overridable
    */
   updateComponent: function(transaction, prevElement, nextElement, context) {
-    if(context === undefined) throw new Error("Context required for mounting");
-    if(context === null) throw new Error("Assert: context is not null");
     assertValidProps(this._currentElement.props);
     ReactComponent.Mixin.updateComponent.call(
       this,
@@ -435,7 +431,6 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction} transaction
    */
   _updateDOMChildren: function(lastProps, transaction, context) {
-    invariant(context !== undefined, "Context is required parameter");
     var nextProps = this._currentElement.props;
 
     var lastContent =
