@@ -108,7 +108,6 @@ var ReactComponent = {
      * @internal
      */
     mountComponent: function(rootID, transaction, mountDepth, context) {
-      invariant(context !== undefined, "Context is required parameter");
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
@@ -144,7 +143,6 @@ var ReactComponent = {
      * @internal
      */
     updateComponent: function(transaction, prevElement, nextElement, context) {
-      invariant(context !== undefined, "Context is required parameter");
       // If either the owner or a `ref` has changed, make sure the newest owner
       // has stored a reference to `this`, and the previous owner (if different)
       // has forgotten the reference to `this`. We use the element instead

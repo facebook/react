@@ -158,7 +158,6 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   mountComponent: function(rootID, transaction, mountDepth, context) {
-    invariant(context !== undefined, "Context is required parameter");
     ReactComponent.Mixin.mountComponent.call(
       this,
       rootID,
@@ -520,7 +519,6 @@ var ReactCompositeComponentMixin = assign({},
   },
 
   receiveComponent: function(nextElement, transaction, context) {
-    invariant(context !== undefined, "Context is required parameter");
     if (nextElement === this._currentElement &&
         nextElement._owner != null) {
       // Since elements are immutable after the owner is rendered,
@@ -589,8 +587,6 @@ var ReactCompositeComponentMixin = assign({},
    * TODO: Remove this check when owner-context is removed
    */
    _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
-    invariant(ownerBasedContext !== undefined, "Owner based context is required parameter");
-    invariant(parentBasedContext !== undefined, "Parent based ontext is required parameter");
     var ownerKeys = Object.keys(ownerBasedContext).sort();
     var parentKeys = Object.keys(parentBasedContext).sort();
     if (ownerKeys.length != parentKeys.length || ownerKeys.toString() != parentKeys.toString()) {
@@ -720,8 +716,6 @@ var ReactCompositeComponentMixin = assign({},
     transaction,
     unmaskedContext
   ) {
-    invariant(unmaskedContext !== undefined, "Context required for mounting");
-    invariant(unmaskedContext !== null, "Context must be non-null");
     var inst = this._instance;
 
     var prevProps = inst.props;
@@ -755,7 +749,6 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   _updateRenderedComponent: function(transaction, context) {
-    invariant(context !== undefined, "Context is required parameter");
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
@@ -968,25 +961,11 @@ var ShallowMixin = assign({},
     var prevComponentInstance = this._renderedComponent;
     var prevRenderedElement = prevComponentInstance._currentElement;
     // Use the without-owner-or-context variant of _rVC below:
-    var nextRenderedElement = this._renderValidatedComponentWithoutOwnerOrContext();
-    if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
-      prevComponentInstance.receiveComponent(
-        nextRenderedElement,
-        transaction
-      );
-    } else {
-      // These two IDs are actually the same! But nothing should rely on that.
-      var thisID = this._rootNodeID;
-      var prevComponentID = prevComponentInstance._rootNodeID;
-      // Don't unmount previous instance since it was never mounted, due to
-      // shallow render.
-      //prevComponentInstance.unmountComponent();
-      this._renderedComponent = nextRenderedElement;
-      // ^ no instantiateReactComponent
-      //
-      // no recursive mountComponent
-      return nextRenderedElement;
-    }
+    var nextRenderedElement =
+      this._renderValidatedComponentWithoutOwnerOrContext();
+    // This is a noop in shallow render
+    shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement);
+    this._renderedComponent = nextRenderedElement;
   }
 
 });
