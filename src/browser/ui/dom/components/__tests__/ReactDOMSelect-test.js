@@ -138,9 +138,7 @@ describe('ReactDOMSelect', function() {
   });
 
   it('should reset child options selected when they are changed and `value` is set', function() {
-    var stub =
-      <select multiple={true} value={["a", "b"]}>
-      </select>
+    var stub = <select multiple={true} value={["a", "b"]} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     stub.setProps({
@@ -149,9 +147,9 @@ describe('ReactDOMSelect', function() {
         <option value="b">b</option>,
         <option value="c">c</option>
       ]
-    })
+    });
 
-    var node = stub.getDOMNode()
+    var node = stub.getDOMNode();
 
     expect(node.options[0].selected).toBe(true);  // a
     expect(node.options[1].selected).toBe(true);  // b

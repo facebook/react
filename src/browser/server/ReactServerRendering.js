@@ -23,7 +23,6 @@ var invariant = require('invariant');
 
 /**
  * @param {ReactElement} element
- * @param {?object} context
  * @return {string} the HTML markup
  */
 function renderToString(element) {
@@ -49,7 +48,6 @@ function renderToString(element) {
 
 /**
  * @param {ReactElement} element
- * @param {?object} context
  * @return {string} the HTML markup, without the extra React ID and checksum
  * (for generating static pages)
  */

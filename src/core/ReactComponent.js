@@ -180,7 +180,7 @@ var ReactComponent = {
       invariant(
         false,
         'getPublicInstance should never be called on the base class. It must ' +
-        'be overriden.'
+        'be overridden.'
       );
     }
   }

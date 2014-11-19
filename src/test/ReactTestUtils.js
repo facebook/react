@@ -25,7 +25,6 @@ var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
-var instantiateReactComponent = require('instantiateReactComponent');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 

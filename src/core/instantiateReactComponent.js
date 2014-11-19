@@ -101,7 +101,8 @@ function instantiateReactComponent(node, parentCompositeType) {
   } else {
     invariant(
       false,
-      'Encountered invalid React node of type ' + typeof node
+      'Encountered invalid React node of type %s',
+      typeof node
     );
   }
 

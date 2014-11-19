@@ -43,7 +43,7 @@ var ReactDOMTextComponent = function(props) {
 assign(ReactDOMTextComponent.prototype, {
 
   /**
-   * @param {ReactText} node
+   * @param {ReactText} text
    * @internal
    */
   construct: function(text) {
