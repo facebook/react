@@ -90,7 +90,6 @@ var ReactComponent = {
       // to track updates.
       this._currentElement = element;
       this._mountIndex = 0;
-      this._mountDepth = 0;
     },
 
     /**
@@ -103,17 +102,15 @@ var ReactComponent = {
      *
      * @param {string} rootID DOM ID of the root node.
      * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-     * @param {number} mountDepth number of components in the owner hierarchy.
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
      */
-    mountComponent: function(rootID, transaction, mountDepth, context) {
+    mountComponent: function(rootID, transaction, context) {
       var ref = this._currentElement.ref;
       if (ref != null) {
         var owner = this._currentElement._owner;
         attachRef(ref, this, owner);
       }
-      this._mountDepth = mountDepth;
       // Effectively: return '';
     },
 
