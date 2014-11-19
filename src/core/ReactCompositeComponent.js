@@ -100,6 +100,14 @@ var CompositeLifeCycle = keyMirror({
 });
 
 /**
+ * An incrementing ID assigned to each component when it is mounted. This is
+ * used to enforce the order in which `ReactUpdates` updates dirty components.
+ *
+ * @private
+ */
+var nextMountID = 1;
+
+/**
  * @lends {ReactCompositeComponent.prototype}
  */
 var ReactCompositeComponentMixin = assign({},
@@ -132,6 +140,7 @@ var ReactCompositeComponentMixin = assign({},
     ReactComponent.Mixin.construct.apply(this, arguments);
 
     this._context = null;
+    this._mountOrder = 0;
 
     // See ReactUpdates.
     this._pendingCallbacks = null;
@@ -167,6 +176,7 @@ var ReactCompositeComponentMixin = assign({},
     );
 
     this._context = context;
+    this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
 
     var inst = this._instance;
