@@ -141,7 +141,7 @@ var CommentForm = React.createClass({
 });
 ```
 
-Next, update the `CommentBox` component to use its new friends:
+Next, update the `CommentBox` component to use these new components:
 
 ```javascript{6-8}
 // tutorial3.js
