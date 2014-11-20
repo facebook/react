@@ -24,7 +24,8 @@ var ReactStateSetters = {
    */
   createStateSetter: function(component, funcReturningState) {
     return function(a, b, c, d, e, f) {
-      var partialState = funcReturningState.call(component, a, b, c, d, e, f);
+      var partialState = funcReturningState.apply(component, arguments);
+
       if (partialState) {
         component.setState(partialState);
       }
