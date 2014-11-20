@@ -1026,8 +1026,9 @@ describe('ReactCompositeComponent', function() {
 
     expect(console.warn.mock.calls.length).toBe(2);
     expect(console.warn.mock.calls[1][0]).toBe(
-      'owner based context (keys: foo) does not equal parent based ' +
-      'context (keys: ) while mounting ReactCompositeComponent'
+      'Warning: owner based context (keys: foo) does not equal parent based ' +
+      'context (keys: ) while mounting ReactCompositeComponent ' +
+      '(see: http://fb.me/react-context-by-parent)'
     );
 
   });
