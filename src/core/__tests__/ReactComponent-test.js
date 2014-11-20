@@ -226,4 +226,22 @@ describe('ReactComponent', function() {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
   });
+
+  it('should reset textarea values on empty replaceState', function(){
+    var Component = React.createClass({
+      getInitialState: function(){
+        return { text: 'text' };
+      },
+      render: function() {
+        return <textarea ref="textarea" value={this.state.text} />;
+      }
+    });
+
+    var element = <Component />;
+
+    var instance = ReactTestUtils.renderIntoDocument(element);
+    var textarea = instance.refs.textarea.getDOMNode();
+    instance.replaceState({});
+    expect(textarea.value).toEqual('');
+  });
 });
