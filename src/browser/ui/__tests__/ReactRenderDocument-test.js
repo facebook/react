@@ -240,7 +240,7 @@ describe('rendering React components at document', function() {
       'Invariant Violation: You\'re trying to render a component to the ' +
       'document but you didn\'t use server rendering. We can\'t do this ' +
       'without using server rendering due to cross-browser quirks. See ' +
-      'renderComponentToString() for server rendering.'
+      'React.renderToString() for server rendering.'
     );
   });
 

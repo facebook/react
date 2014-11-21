@@ -228,7 +228,7 @@ describe('ReactEmptyComponent', function() {
     expect(function() {
       React.render(null, div);
     }).toThrow(
-      'Invariant Violation: renderComponent(): Invalid component element.'
+      'Invariant Violation: React.render(): Invalid component element.'
     );
   });
 });

@@ -641,7 +641,7 @@ describe('ReactUpdates', function() {
       componentDidMount: function() {
         instances.push(this);
         if (this.props.depth < this.props.count) {
-          React.renderComponent(
+          React.render(
             <MockComponent
               depth={this.props.depth + 1}
               count={this.props.count}

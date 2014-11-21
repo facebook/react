@@ -377,7 +377,7 @@ var ReactMount = {
   render: function(nextElement, container, callback) {
     invariant(
       ReactElement.isValidElement(nextElement),
-      'renderComponent(): Invalid component element.%s',
+      'React.render(): Invalid component element.%s',
       (
         typeof nextElement === 'string' ?
           ' Instead of passing an element string, make sure to instantiate ' +
@@ -756,7 +756,7 @@ var ReactMount = {
       'You\'re trying to render a component to the document but ' +
         'you didn\'t use server rendering. We can\'t do this ' +
         'without using server rendering due to cross-browser quirks. ' +
-        'See renderComponentToString() for server rendering.'
+        'See React.renderToString() for server rendering.'
     );
 
     setInnerHTML(container, markup);

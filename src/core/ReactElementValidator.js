@@ -120,7 +120,7 @@ function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
 
   message += ownerName ?
     ` Check the render method of ${ownerName}.` :
-    ` Check the renderComponent call using <${parentName}>.`;
+    ` Check the React.render call using <${parentName}>.`;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for

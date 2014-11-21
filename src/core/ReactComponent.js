@@ -166,8 +166,8 @@ var ReactComponent = {
 
     /**
      * Get the publicly accessible representation of this component - i.e. what
-     * is exposed by refs and renderComponent. Can be null for stateless
-     * components.
+     * is exposed by refs and returned by React.render. Can be null for
+     * stateless components.
      *
      * @return {?ReactComponent} the actual sibling Component.
      * @internal
