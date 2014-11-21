@@ -50,7 +50,7 @@ describe('ReactServerRendering', function() {
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
   });
 
-  describe('renderComponentToString', function() {
+  describe('renderToString', function() {
     it('should generate simple markup', function() {
       var response = ReactServerRendering.renderToString(
         <span>hello world</span>
@@ -244,7 +244,7 @@ describe('ReactServerRendering', function() {
     });
   });
 
-  describe('renderComponentToStaticMarkup', function() {
+  describe('renderToStaticMarkup', function() {
     it('should not put checksum and React ID on components', function() {
       var lifecycle = [];
       var NestedComponent = React.createClass({
