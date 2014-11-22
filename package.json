@@ -49,7 +49,6 @@
     "jasmine-tapreporter": "~0.2.2",
     "jest-cli": "~0.1.5",
     "lodash": "~2.4.1",
-    "optimist": "~0.6.0",
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
     "populist": "~0.1.6",
@@ -58,7 +57,8 @@
     "tmp": "~0.0.18",
     "uglify-js": "~2.4.0",
     "uglifyify": "^2.4.0",
-    "wd": "~0.2.6"
+    "wd": "~0.2.6",
+    "yargs": "^1.3.3"
   },
   "engines": {
     "node": ">=0.10.0"
