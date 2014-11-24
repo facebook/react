@@ -7,6 +7,50 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React.js Conf Updates</title>
+				<description>&lt;p&gt;Yesterday was the &lt;a href=&quot;http://conf.reactjs.com/index.html&quot;&gt;React.js Conf&lt;/a&gt; call for presenters submission deadline. We were
+surprised to have received a total of &lt;strong&gt;one hundred talk proposals&lt;/strong&gt; and were
+amazed that 600 people requested to be notified when ticket go on sale. This is incredible!&lt;/p&gt;
+
+&lt;p&gt;When we organized the conference, we decided to start small since this is the
+first React.js conference. Also, we weren&amp;#39;t sure what level of demand to expect,
+so we planned for a single-track, two-day conference on Facebook&amp;#39;s campus. The
+largest room available would accomodate 18 speaking slots and 200 attendees.
+The spacial configuration makes it difficult to add a second track and changing
+venues only two months in advance would be too difficult, so we are deciding to
+stick with the originally planned format and venue on Facebook&amp;#39;s campus.&lt;/p&gt;
+
+&lt;p&gt;Unfortunately, this means that we can only accept a small number of the awesome
+conference talk proposals. In order to make sure attendees get a fair shot at
+registering, we&amp;#39;re going to to sell tickets in three separate first-come,
+first-serve phases. &lt;strong&gt;Tickets will cost $200 regardless of which phase they are
+purchased from and all proceeds will go to charity&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Friday November 28th 2014 — Noon PST: First wave of tickets&lt;/li&gt;
+&lt;li&gt;Friday December 5th 2014 — Noon PST: Second wave of tickets&lt;/li&gt;
+&lt;li&gt;Friday December 12th 2014 — Noon PST: Third and last wave of tickets&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We really do wish that everyone could attend React.js Conf, but in order to
+ensure a quality experience for those who attend, we feel it will be best to
+limit the size of the conference to what was originally planned for. This means
+that not everyone who wants to attend will be able to, and many talks that
+would be excellent contributions to the conference will have to be postponed
+until the next conference.&lt;/p&gt;
+
+&lt;p&gt;We hope to see many of you at React.js Conf this January.&lt;/p&gt;
+
+&lt;p&gt;Sincerely,&lt;/p&gt;
+
+&lt;p&gt;React Core Team&lt;/p&gt;
+</description>
+				<pubDate>2014-11-24T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.12</title>
 				<description>&lt;p&gt;We&amp;#39;re happy to announce the availability of React v0.12! After over a week of baking as the release candidate, we uncovered and fixed a few small issues. Thanks to all of you who upgraded and gave us feedback!&lt;/p&gt;
 
@@ -953,90 +997,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-09-03T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/09/03/introducing-the-jsx-specification.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/03/introducing-the-jsx-specification.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #21</title>
-				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-router&quot;&gt;&lt;/a&gt;React Router &lt;a class=&quot;hash-link&quot; href=&quot;#react-router&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://ryanflorence.com/&quot;&gt;Ryan Florence&lt;/a&gt; and &lt;a href=&quot;http://twitter.com/mjackson&quot;&gt;Michael Jackson&lt;/a&gt; ported Ember&amp;#39;s router to React in a project called &lt;a href=&quot;https://github.com/rackt/react-router&quot;&gt;React Router&lt;/a&gt;. This is a very good example of both communities working together to make the web better!&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Routes&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;App&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;about&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;About&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;users&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Users&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Route&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;user&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;/user/:userId&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;handler&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;User&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Route&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Route&amp;gt;&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Routes&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;document&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;body&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;going-big-with-react&quot;&gt;&lt;/a&gt;Going Big with React &lt;a class=&quot;hash-link&quot; href=&quot;#going-big-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Areeb Malik, from Facebook, talks about his experience using React. &amp;quot;On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we&amp;#39;ll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale&amp;quot;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://skillsmatter.com/skillscasts/5429-going-big-with-react&quot;&gt;&lt;img src=&quot;/react/img/blog/skills-matter.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-
-&lt;!--
-&lt;iframe allowfullscreen=&quot;&quot; data-progress=&quot;true&quot; frameborder=&quot;0&quot; height=&quot;390&quot; id=&quot;vimeo-player&quot; mozallowfullscreen=&quot;&quot; src=&quot;//player.vimeo.com/video/100245392?api=1&amp;amp;title=0&quot; webkitallowfullscreen=&quot;&quot; width=&quot;640&quot;&gt;&lt;/iframe&gt;
---&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-react&quot;&gt;&lt;/a&gt;What is React? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.funnyant.com/author/admin/&quot;&gt;Craig McKeachie&lt;/a&gt; author of &lt;a href=&quot;http://www.funnyant.com/javascript-framework-guide/&quot;&gt;Javascript Framework Guide&lt;/a&gt; wrote an excellent news named &lt;a href=&quot;http://www.funnyant.com/reactjs-what-is-it/&quot;&gt;&amp;quot;What is React.js? Another Template Library?&lt;/a&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Is React a template library?&lt;/li&gt;
-&lt;li&gt;Is React similar to Web Components?&lt;/li&gt;
-&lt;li&gt;Are the Virtual DOM and Shadow DOM the same?&lt;/li&gt;
-&lt;li&gt;Can React be used with other JavaScript MVC frameworks?&lt;/li&gt;
-&lt;li&gt;Who uses React?&lt;/li&gt;
-&lt;li&gt;Is React a premature optimization if you aren’t Facebook or Instagram?&lt;/li&gt;
-&lt;li&gt;Can I work with designers?&lt;/li&gt;
-&lt;li&gt;Will React hurt my search engine optimizations (SEO)?&lt;/li&gt;
-&lt;li&gt;Is React a framework for building applications or a library with one feature?&lt;/li&gt;
-&lt;li&gt;Are components a better way to build an application?&lt;/li&gt;
-&lt;li&gt;Can I build something complex with React?&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;referencing-dynamic-children&quot;&gt;&lt;/a&gt;Referencing Dynamic Children &lt;a class=&quot;hash-link&quot; href=&quot;#referencing-dynamic-children&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;While Matt Zabriskie was working on &lt;a href=&quot;https://www.npmjs.org/package/react-tabs&quot;&gt;react-tabs&lt;/a&gt; he discovered how to use React.Children.map and React.addons.cloneWithProps in order to &lt;a href=&quot;http://www.mattzabriskie.com/blog/react-referencing-dynamic-children&quot;&gt;reference dynamic children&lt;/a&gt;.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;App&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneWithProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;child-&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;index&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-with-sweet.js-using-readtables&quot;&gt;&lt;/a&gt;JSX with Sweet.js using Readtables &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-with-sweet.js-using-readtables&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Have you ever wondered how JSX was implemented? James Long wrote a very instructive blog post that explains how to &lt;a href=&quot;http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables&quot;&gt;compile JSX with Sweet.js using Readtables&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables&quot;&gt;&lt;img src=&quot;/react/img/blog/sweet-jsx.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;first-look-getting-started-with-react&quot;&gt;&lt;/a&gt;First Look: Getting Started with React &lt;a class=&quot;hash-link&quot; href=&quot;#first-look-getting-started-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://modernweb.com/authors/kirill-buga/&quot;&gt;Kirill Buga&lt;/a&gt; wrote an article on Modern Web explaining how &lt;a href=&quot;http://modernweb.com/2014/07/23/getting-started-reactjs/&quot;&gt;React is different from traditional MVC&lt;/a&gt; used by most JavaScript applications&lt;/p&gt;
-
-&lt;figure&gt;&lt;a href=&quot;http://modernweb.com/2014/07/23/getting-started-reactjs&quot;&gt;&lt;img src=&quot;/react/img/blog/first-look.png&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-draggable&quot;&gt;&lt;/a&gt;React Draggable &lt;a class=&quot;hash-link&quot; href=&quot;#react-draggable&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/mzabriskie&quot;&gt;Matt Zabriskie&lt;/a&gt; released a &lt;a href=&quot;https://github.com/mzabriskie/react-draggable&quot;&gt;project&lt;/a&gt; to make your react components draggable.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://mzabriskie.github.io/react-draggable/example/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-draggable.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;html-parser2-react&quot;&gt;&lt;/a&gt;HTML Parser2 React &lt;a class=&quot;hash-link&quot; href=&quot;#html-parser2-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://browniefed.github.io/&quot;&gt;Jason Brown&lt;/a&gt; adapted htmlparser2 to React: &lt;a href=&quot;https://www.npmjs.org/package/htmlparser2-react&quot;&gt;htmlparser2-react&lt;/a&gt;. That allows you to convert raw HTML to the virtual DOM.
-This is not the intended way to use React but can be useful as last resort if you have an existing piece of HTML.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;html&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;&amp;lt;div data-id=&amp;quot;1&amp;quot; class=&amp;quot;hey this is a class&amp;quot; &amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
-  &lt;span class=&quot;s1&quot;&gt;&amp;#39;style=&amp;quot;width:100%;height: 100%;&amp;quot;&amp;gt;&amp;lt;article id=&amp;quot;this-article&amp;quot;&amp;gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
-  &lt;span class=&quot;s1&quot;&gt;&amp;#39;&amp;lt;p&amp;gt;hey this is a paragraph&amp;lt;/p&amp;gt;&amp;lt;div&amp;gt;&amp;lt;ul&amp;gt;&amp;lt;li&amp;gt;1&amp;lt;/li&amp;gt;&amp;lt;li&amp;gt;2&amp;lt;/li&amp;gt;&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt;
-  &lt;span class=&quot;s1&quot;&gt;&amp;#39;&amp;lt;li&amp;gt;3&amp;lt;/li&amp;gt;&amp;lt;/ul&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/article&amp;gt;&amp;lt;/div&amp;gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;parsedComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactParser&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;html&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;building-uis-with-react&quot;&gt;&lt;/a&gt;Building UIs with React &lt;a class=&quot;hash-link&quot; href=&quot;#building-uis-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;If you haven&amp;#39;t yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/lAn7GVoGlKU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweets&quot;&gt;&lt;/a&gt;Random Tweets &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweets&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;We shipped reddit&amp;#39;s first production &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; code last week, our checkout process.&amp;#10;&amp;#10;&lt;a href=&quot;https://t.co/KUInwsCmAF&quot;&gt;https://t.co/KUInwsCmAF&lt;/a&gt;&lt;/p&gt;&amp;mdash; Brian Holt (@holtbt) &lt;a href=&quot;https://twitter.com/holtbt/statuses/493852312604254208&quot;&gt;July 28, 2014&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;.&lt;a href=&quot;https://twitter.com/AirbnbNerds&quot;&gt;@AirbnbNerds&lt;/a&gt; just launched our first user-facing React.js feature to production! We love it so far. &lt;a href=&quot;https://t.co/KtyudemcIW&quot;&gt;https://t.co/KtyudemcIW&lt;/a&gt; /&lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;@floydophone&lt;/a&gt;&lt;/p&gt;&amp;mdash; spikebrehm (@spikebrehm) &lt;a href=&quot;https://twitter.com/spikebrehm/statuses/491645223643013121&quot;&gt;July 22, 2014&lt;/a&gt;&lt;/blockquote&gt;
-</description>
-				<pubDate>2014-08-03T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/08/03/community-roundup-21.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/08/03/community-roundup-21.html</guid>
 			</item>
 		
 	</channel>
