@@ -288,6 +288,19 @@ h1, h2, h3, h4, h5, h6 {
   width: 400px;
 }
 
+.skinny-row {
+  @include clearfix;
+}
+
+.skinny-col {
+  float: left;
+  margin-left: $columnGutter;
+  width: ($skinnyContentWidth - $columnGutter) / 2;
+  &:first-child {
+    margin-left: 0;
+  }
+}
+
 .marketing-row {
   @include clearfix;
   margin: 50px 0;
