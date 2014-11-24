@@ -3,20 +3,37 @@ title: React.js Conf Updates
 author: Vjeux
 ---
 
-Yesterday, the call for presenters closed for [React.js Conf](http://conf.reactjs.com/) and we couldn't believe it, we got a **hundred proposals** and more than 600 people left their contact information to be notified when tickets would go on sale. This is incredible!
+Yesterday was the [React.js Conf](http://conf.reactjs.com/index.html) call for presenters submission deadline. We were
+surprised to have received a total of **one hundred talk proposals** and were
+amazed that 600 people requested to be notified when ticket go on sale. This is incredible!
 
-But...
+When we organized the conference, we decided to start small since this is the
+first React.js conference. Also, we weren't sure what level of demand to expect,
+so we planned for a single-track, two-day conference on Facebook's campus. The
+largest room available would accomodate 18 speaking slots and 200 attendees.
+The spacial configuration makes it difficult to add a second track and changing
+venues only two months in advance would be too difficult, so we are deciding to
+stick with the originally planned format and venue on Facebook's campus.
 
-When we organized the conference we decided to start small since it's the first one. We went for a single track, two-days conference, on Facebook campus. This means that we've got "only" 18 speaking slots and 200 attendees.
+Unfortunately, this means that we can only accept a small number of the awesome
+conference talk proposals. In order to make sure attendees get a fair shot at
+registering, we're going to to sell tickets in three separate first-come,
+first-serve phases. **Tickets will cost $200 regardless of which phase they are
+purchased from and all proceeds will go to charity**.
 
-Unfortunately, we're using the biggest room on campus and putting more people won't make for a very good experience. The spatial configuration also makes it hard to add a second track to accomodate for more speakers. Changing the venue only two months in advance is also going to prove very challenging.
+- Friday November 28th 2014 — Noon PST: First wave of tickets
+- Friday December 5th 2014 — Noon PST: Second wave of tickets
+- Friday December 12th 2014 — Noon PST: Third and last wave of tickets
 
-So...
+We really do wish that everyone could attend React.js Conf, but in order to
+ensure a quality experience for those who attend, we feel it will be best to
+limit the size of the conference to what was originally planned for. This means
+that not everyone who wants to attend will be able to, and many talks that
+would be excellent contributions to the conference will have to be postponed
+until the next conference.
 
-We took the very hard decision of keeping the current format. This means that from the hundred talks that were submitted, we're only going to be able to accept a tiny number :( For the attendees, we want to make sure that people have a fair shot at getting their tickets, so we're going to do three waves of ticket sales. Each of them is going to be first come first serve. **The price is set to $200 per ticket**.
+We hope to see many of you at React.js Conf this January.
 
-- Friday November 28th 2014 — Noon PST, first wave
-- A week later, on Friday December 5th 2014 — Noon PST, second wave
-- A week later, on Friday December 12th 2014 — Noon PST, third and last wave
+Sincerely,
 
-This is a very unfortunate situation but I hope that we can make the best out of it!
+React Core Team
