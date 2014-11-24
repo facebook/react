@@ -30,7 +30,7 @@ ensure a quality experience for those who attend, we feel it will be best to
 limit the size of the conference to what was originally planned for. This means
 that not everyone who wants to attend will be able to, and many talks that
 would be excellent contributions to the conference will have to be postponed
-until the next conference.
+until the next conference. All the talks will be recorded and put online shortly after.
 
 We hope to see many of you at React.js Conf this January.
 
