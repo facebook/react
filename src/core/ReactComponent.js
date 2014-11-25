@@ -89,7 +89,11 @@ var ReactComponent = {
       // We keep the old element and a reference to the pending element
       // to track updates.
       this._currentElement = element;
+      // These two fields are used by the DOM and ART diffing algorithms
+      // respectively. Instead of using expandos on components, we should be
+      // storing the state needed by the diffing algorithms elsewhere.
       this._mountIndex = 0;
+      this._mountImage = null;
     },
 
     /**
