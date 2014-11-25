@@ -798,8 +798,7 @@ describe('ReactUpdates', function() {
       }
     });
 
-    var container = document.createElement('div');
-    var component = React.render(<A />, container);
+    var component = ReactTestUtils.renderIntoDocument(<A />);
     component.forceUpdate();
     expect(callbackCount).toBe(2);
   });
@@ -832,8 +831,7 @@ describe('ReactUpdates', function() {
       }
     });
 
-    var container = document.createElement('div');
-    var component = React.render(<A />, container);
+    var component = ReactTestUtils.renderIntoDocument(<A />);
     component.setState({updates: 1});
     expect(log).toEqual([
       'render-0',
@@ -880,9 +878,7 @@ describe('ReactUpdates', function() {
       }
     });
 
-    var container = document.createElement('div');
-
-    var component = React.render(<A />, container);
+    var component = ReactTestUtils.renderIntoDocument(<A />);
 
     ReactUpdates.batchedUpdates(function() {
       // B will have scheduled an update but the batching should ensure that its

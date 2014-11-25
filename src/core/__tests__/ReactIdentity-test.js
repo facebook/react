@@ -182,7 +182,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.render(<TestContainer />, document.createElement('div'));
+      ReactTestUtils.renderIntoDocument(<TestContainer />);
 
     }).not.toThrow();
   });
@@ -218,7 +218,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.render(<TestContainer />, document.createElement('div'));
+      ReactTestUtils.renderIntoDocument(<TestContainer />);
 
     }).not.toThrow();
   });
@@ -245,7 +245,7 @@ describe('ReactIdentity', function() {
 
     expect(function() {
 
-      React.render(<TestContainer />, document.createElement('div'));
+      ReactTestUtils.renderIntoDocument(<TestContainer />);
 
     }).not.toThrow();
   });
@@ -304,7 +304,7 @@ describe('ReactIdentity', function() {
       </div>;
 
     expect(function() {
-      React.render(component, document.createElement('div'));
+      ReactTestUtils.renderIntoDocument(component);
     }).not.toThrow();
   });
 

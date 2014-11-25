@@ -195,11 +195,10 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support ReactLink', function() {
-    var container = document.createElement('div');
     var link = new ReactLink('yolo', mocks.getMockFunction());
     var instance = <input type="text" valueLink={link} />;
 
-    instance = React.render(instance, container);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(instance.getDOMNode().value).toBe('yolo');
     expect(link.value).toBe('yolo');
@@ -274,11 +273,10 @@ describe('ReactDOMInput', function() {
   });
 
   it('should support checkedLink', function() {
-    var container = document.createElement('div');
     var link = new ReactLink(true, mocks.getMockFunction());
     var instance = <input type="checkbox" checkedLink={link} />;
 
-    instance = React.render(instance, container);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(instance.getDOMNode().checked).toBe(true);
     expect(link.value).toBe(true);
