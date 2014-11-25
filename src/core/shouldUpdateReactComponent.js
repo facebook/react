@@ -12,8 +12,6 @@
 
 "use strict";
 
-var ReactNativeComponent = require('ReactNativeComponent');
-
 /**
  * Given a `prevElement` and `nextElement`, determines if the existing
  * instance should be updated as opposed to being destroyed or replaced by a new

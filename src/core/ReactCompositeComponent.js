@@ -21,12 +21,10 @@ var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactUpdates = require('ReactUpdates');
 
-var emptyObject = require('emptyObject');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
-var monitorCodeUse = require('monitorCodeUse');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -428,7 +426,9 @@ var ReactCompositeComponentMixin = assign({},
   _processContext: function(context) {
     var maskedContext = null;
     var contextTypes = this._instance.constructor.contextTypes;
-    if (!contextTypes) return emptyObject;
+    if (!contextTypes) {
+      return emptyObject;
+    }
     maskedContext = {};
     for (var contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];

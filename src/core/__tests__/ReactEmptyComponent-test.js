@@ -232,4 +232,3 @@ describe('ReactEmptyComponent', function() {
     );
   });
 });
-

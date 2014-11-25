@@ -13,11 +13,7 @@
 
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
-var invariant = require('invariant');
 var joinClasses = require('joinClasses');
-var warning = require('warning');
-
-var didWarn = false;
 
 /**
  * Creates a transfer strategy that will merge prop values using the supplied
