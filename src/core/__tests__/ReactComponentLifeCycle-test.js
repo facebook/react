@@ -440,10 +440,8 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
 
-    var container = document.createElement('div');
-    var instance = React.render(
-      <Component text="uno" tooltipText="one" />,
-      container
+    var instance = ReactTestUtils.renderIntoDocument(
+      <Component text="uno" tooltipText="one" />
     );
 
     // Since `instance` is a root component, we can set its props. This also

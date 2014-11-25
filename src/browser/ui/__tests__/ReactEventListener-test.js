@@ -21,6 +21,7 @@ describe('ReactEventListener', function() {
 
   var ReactMount;
   var ReactEventListener;
+  var ReactTestUtils;
   var handleTopLevel;
 
   beforeEach(function() {
@@ -29,6 +30,7 @@ describe('ReactEventListener', function() {
 
     ReactMount = require('ReactMount');
     ReactEventListener = require('ReactEventListener');
+    ReactTestUtils = require('ReactTestUtils');
 
     handleTopLevel = mocks.getMockFunction();
     ReactEventListener._handleTopLevel = handleTopLevel;
@@ -158,7 +160,6 @@ describe('ReactEventListener', function() {
   });
 
   it('should not fire duplicate events for a React DOM tree', function() {
-    var container = document.createElement('div');
     var Wrapper = React.createClass({
 
       getInner: function() {
@@ -172,7 +173,7 @@ describe('ReactEventListener', function() {
 
     });
 
-    var instance = ReactMount.render(<Wrapper />, container);
+    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({
