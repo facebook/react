@@ -597,16 +597,34 @@ var ReactCompositeComponentMixin = assign({},
    _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
     var ownerKeys = Object.keys(ownerBasedContext).sort();
     var parentKeys = Object.keys(parentBasedContext).sort();
-    warning(
-      ownerKeys.length === parentKeys.length &&
-      ownerKeys.toString() === parentKeys.toString(),
-      'owner based context (keys: %s) does not equal parent based' +
-      ' context (keys: %s) while mounting %s' +
-      ' (see: http://fb.me/react-context-by-parent)',
-      Object.keys(ownerBasedContext),
-      Object.keys(parentBasedContext),
-      (this._instance.constructor.displayName || 'ReactCompositeComponent')
-    );
+    var displayName = this._instance.constructor.displayName || 'ReactCompositeComponent';
+    if (ownerKeys.length !== parentKeys.length ||
+        ownerKeys.toString() !== parentKeys.toString()) {
+      warning(
+        ownerKeys.length === parentKeys.length &&
+        ownerKeys.toString() === parentKeys.toString(),
+        'owner based context (keys: %s) does not equal parent based ' +
+        'context (keys: %s) while mounting %s ' +
+        '(see: http://fb.me/react-context-by-parent)',
+        Object.keys(ownerBasedContext),
+        Object.keys(parentBasedContext),
+        displayName
+      );
+    } else {
+      for (key in parentKeys) {
+        var key = parentKeys[key];
+        warning(
+          ownerBasedContext[key] === parentBasedContext[key],
+          'owner-based and parent-based contexts differ '  +
+          '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
+          '(see: http://fb.me/react-context-by-parent)',
+          ownerBasedContext[key],
+          parentBasedContext[key],
+          key,
+          displayName
+        );
+      }
+    }
   },
 
   /**

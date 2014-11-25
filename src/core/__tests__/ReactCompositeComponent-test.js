@@ -1009,7 +1009,7 @@ describe('ReactCompositeComponent', function() {
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
 
-  it('warn if contexts differ', function() {
+  it('warn if context keys differ', function() {
     var Component = React.createClass({
       contextTypes: {
         foo: ReactPropTypes.string.isRequired
@@ -1028,6 +1028,47 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.mock.calls[1][0]).toBe(
       'Warning: owner based context (keys: foo) does not equal parent based ' +
       'context (keys: ) while mounting ReactCompositeComponent ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
+
+  });
+
+  it('warn if context values differ', function() {
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: "bar"
+        };
+      },
+
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var component = React.withContext({foo: 'noise'}, function() {
+      return <Component />
+    });
+
+    ReactTestUtils.renderIntoDocument(<Parent>{component}</Parent>);
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
     );
 
