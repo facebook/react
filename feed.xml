@@ -7,6 +7,86 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Community Round-up #24</title>
+				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;keep-it-simple&quot;&gt;&lt;/a&gt;Keep it Simple &lt;a class=&quot;hash-link&quot; href=&quot;#keep-it-simple&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Pedro Nauck (&lt;a href=&quot;https://github.com/pedronauck&quot;&gt;pedronauck&lt;/a&gt;) delivered an impeccably illustrated deck at Brazil&amp;#39;s &lt;em&gt;Front in Floripa&lt;/em&gt; conference. Watch him talk about how to keep delivering value as your app scales, by keeping your development process simple.&lt;/p&gt;
+
+&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;44129b9054c901328b89221e99b278fe&quot; data-ratio=&quot;1.33333333333333&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Murilo Pereira (&lt;a href=&quot;https://github.com/mpereira&quot;&gt;mpereira&lt;/a&gt;) tussles with the topic of complexity in this blog post about &lt;a href=&quot;http://www.techsonian.net/2014/09/from-backbone-to-react-our-experience-scaling-a-web-application/&quot;&gt;coping with scaling up&lt;/a&gt;, where he describes how his team used React to make possible the “nearly impossible.”&lt;/p&gt;
+
+&lt;p&gt;I (&lt;a href=&quot;https://github.com/steveluscher&quot;&gt;steveluscher&lt;/a&gt;) spoke at Manning Publications&amp;#39; “Powered By JavaScript” Strangeloop pre-conf in St. Louis. There, I proposed a new notation to talk about development complexity – Big-Coffee Notation ☕(n) – and spoke about the features of React that help keep our Big-Coffee from going quadratic, as our user interfaces get more complex.&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/rI0GQc__0SM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;James Pearce (&lt;a href=&quot;https://github.com/jamesgpearce&quot;&gt;jamesgpearce&lt;/a&gt;) carried Big-Coffee all the way to Raleigh, NC. At the &lt;em&gt;All Things Open&lt;/em&gt; conference, he spoke about some of the design decisions that went into React, particularly those that lend themselves to simpler, more reliable code.&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/m2fuO2wl_3c&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;all-about-isomorphism&quot;&gt;&lt;/a&gt;All About Isomorphism &lt;a class=&quot;hash-link&quot; href=&quot;#all-about-isomorphism&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Michael Ridgway (&lt;a href=&quot;https://github.com/mridgway&quot;&gt;mridgway&lt;/a&gt;) shows us how Yahoo! (who recently &lt;a href=&quot;http://www.slideshare.net/rmsguhan/react-meetup-mailonreact&quot;&gt;moved Yahoo! Mail to React&lt;/a&gt;) renders their React+Flux application, server-side.&lt;/p&gt;
+
+&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;87ecaa3048750132f42542ffc18c6fcf&quot; data-ratio=&quot;1.77777777777778&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;Péter Márton (&lt;a href=&quot;https://github.com/hekike&quot;&gt;hekike&lt;/a&gt;) helps us brew a cold one (literally) using an application that&amp;#39;s server-client &lt;a href=&quot;http://blog.risingstack.com/from-angularjs-to-react-the-isomorphic-way/&quot;&gt;isomorphic and indexable&lt;/a&gt;. Demo and sample code included – cold ones sold separately.&lt;/p&gt;
+
+&lt;p&gt;And, lest you think that client-server isomorphism exists in pursuit of crawalable, indexable HTML alone, watch as Nate Hunzaker (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;nhunzaker&lt;/a&gt;) &lt;a href=&quot;http://viget.com/extend/visualization-is-for-sharing-using-react-for-portable-data-visualization&quot;&gt;server renders data visualizations as SVG&lt;/a&gt; with React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-router-mows-the-lawn&quot;&gt;&lt;/a&gt;React Router Mows the Lawn &lt;a class=&quot;hash-link&quot; href=&quot;#react-router-mows-the-lawn&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Ryan Florence (&lt;a href=&quot;https://github.com/rpflorence%5D&quot;&gt;rpflorence&lt;/a&gt;) and Michael Jackson (&lt;a href=&quot;https://github.com/mjackson&quot;&gt;mjackson&lt;/a&gt;) unveiled a new API for &lt;a href=&quot;https://github.com/rackt/react-router&quot;&gt;React Router&lt;/a&gt; that solves some of its user&amp;#39;s problems by eliminating the problems themselves. Read all about what React Router learned from its community of users, and how they&amp;#39;ve &lt;a href=&quot;https://github.com/rackt/react-router/wiki/Announcements&quot;&gt;rolled your ideas into their latest release&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-practice&quot;&gt;&lt;/a&gt;React in Practice &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-practice&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Jonathan Beebe (&lt;a href=&quot;https://github.com/somethingkindawierd&quot;&gt;somethingkindawierd&lt;/a&gt;) spoke about how he uses React to build tools that deliver hope to those trying to make the best of a bad situation. Watch his talk from this year&amp;#39;s &lt;em&gt;Nodevember&lt;/em&gt; conference in Nashville&lt;/p&gt;
+
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/uZgAq1CZ1N8&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;If you take a peek under the covers, you&amp;#39;ll find that React powers &lt;a href=&quot;https://blog.dropbox.com/2014/04/introducing-carousel/&quot;&gt;Carousel&lt;/a&gt;, Dropbox&amp;#39;s new photo and video gallery app.&lt;/p&gt;
+
+&lt;p&gt;We enjoyed a cinematic/narrative experience with this React-powered, interactive story by British author William Boyd. Dive into “&lt;a href=&quot;https://thevanishinggame.wellstoried.com&quot;&gt;The Vanishing Game&lt;/a&gt;” and see for yourself.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;be-kind-rewind&quot;&gt;&lt;/a&gt;Be Kind, Rewind &lt;a class=&quot;hash-link&quot; href=&quot;#be-kind-rewind&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Spend the next 60 seconds watching Daniel Woelfel (&lt;a href=&quot;https://github.com/dwwoelfel&quot;&gt;dwwoelfel&lt;/a&gt;) serialize a React app&amp;#39;s state as a string, then deserialize it to produce a working UI. Read about how he uses this technique to &lt;a href=&quot;http://blog.circleci.com/local-state-global-concerns/&quot;&gt;reproduce bugs&lt;/a&gt; reported to him by his users.&lt;/p&gt;
+
+&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/5yHFTN-_mOo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;community-components&quot;&gt;&lt;/a&gt;Community Components &lt;a class=&quot;hash-link&quot; href=&quot;#community-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Tom Chen (&lt;a href=&quot;https://github.com/tomchentw&quot;&gt;tomchentw&lt;/a&gt;) brings us a &lt;a href=&quot;http://tomchentw.github.io/react-google-maps/&quot;&gt;react-google-maps&lt;/a&gt; component, and a way to syntax highlight source code using Prism and the &lt;a href=&quot;http://tomchentw.github.io/react-prism/&quot;&gt;react-prisim&lt;/a&gt; component, for good measure.&lt;/p&gt;
+
+&lt;p&gt;Jed Watson (&lt;a href=&quot;https://github.com/JedWatson&quot;&gt;jedwatson&lt;/a&gt;) helps you manage touch, tap, and press events using the &lt;a href=&quot;https://github.com/JedWatson/react-tappable&quot;&gt;react-tappable&lt;/a&gt; component.&lt;/p&gt;
+
+&lt;p&gt;To find these, and more community-built components, consult the &lt;a href=&quot;http://react-components.com/&quot;&gt;React Components&lt;/a&gt; and &lt;a href=&quot;http://react.rocks&quot;&gt;React Rocks&lt;/a&gt; component directories. React Rocks recently breached one-hundred listed components, and counting. See one missing? Add the keyword &lt;code&gt;react-component&lt;/code&gt; to your &lt;code&gt;package.json&lt;/code&gt; to get listed on React Components, and &lt;a href=&quot;https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform&quot;&gt;submit a link to React Rocks&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;waiter-theres-a-css-in-my-javascript&quot;&gt;&lt;/a&gt;Waiter, There&amp;#39;s a CSS In My JavaScript &lt;a class=&quot;hash-link&quot; href=&quot;#waiter-theres-a-css-in-my-javascript&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The internet is abuzz with talk of styling React components using JavaScript instead of CSS. Christopher Chedeau (&lt;a href=&quot;https://github.com/vjeux&quot;&gt;vjeux&lt;/a&gt;) talks about some of the &lt;a href=&quot;https://speakerdeck.com/vjeux/react-css-in-js&quot;&gt;fundamental style management challenges&lt;/a&gt; we grapple with, at Facebook scale. A number of implementations of JavaScript centric style management solutions have appeared in the wild, including the React-focused &lt;a href=&quot;https://github.com/js-next/react-style&quot;&gt;react-style&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;test-isolation&quot;&gt;&lt;/a&gt;Test Isolation &lt;a class=&quot;hash-link&quot; href=&quot;#test-isolation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Yahoo! shows us how they make use of &lt;code&gt;iframe&lt;/code&gt; elements to &lt;a href=&quot;http://yahooeng.tumblr.com/post/102274727496/to-testutil-or-not-to-testutil&quot;&gt;unit test React components in isolation&lt;/a&gt;.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;youve-got-the-hang-of-flux-now-lets-flow&quot;&gt;&lt;/a&gt;You&amp;#39;ve Got The Hang of Flux, Now Let&amp;#39;s Flow &lt;a class=&quot;hash-link&quot; href=&quot;#youve-got-the-hang-of-flux-now-lets-flow&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Facebook Open Source released &lt;a href=&quot;https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/&quot;&gt;Flow&lt;/a&gt; this month – a static type checker for JavaScript. Naturally, Flow supports JSX, and you can use it to &lt;a href=&quot;https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/#compatibility&quot;&gt;type check React applications&lt;/a&gt;. There&amp;#39;s never been a better reason to start making use of &lt;code&gt;propTypes&lt;/code&gt; in your component specifications!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;countdown-to-react.js-conf-2014&quot;&gt;&lt;/a&gt;Countdown to React.js Conf 2014 &lt;a class=&quot;hash-link&quot; href=&quot;#countdown-to-react.js-conf-2014&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We&amp;#39;re counting down the days until &lt;a href=&quot;http://conf.reactjs.com&quot;&gt;React.js Conf&lt;/a&gt; at Facebook&amp;#39;s headquarters in Menlo Park, California, on January 28th &amp;amp; 29th, 2015. Thank you, to everyone who responded to the Call for Presenters. Mark the dates; tickets go on sale in three waves: at noon PST on November 28th, December 5th, and December 12th, 2014.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-meetups-around-the-world&quot;&gt;&lt;/a&gt;React Meetups Around the World &lt;a class=&quot;hash-link&quot; href=&quot;#react-meetups-around-the-world&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;React JS meetup having pretty good turn up rate today &lt;a href=&quot;https://twitter.com/hashtag/londonreact?src=hash&quot;&gt;#londonreact&lt;/a&gt; &lt;a href=&quot;http://t.co/c360dlVVAe&quot;&gt;pic.twitter.com/c360dlVVAe&lt;/a&gt;&lt;/p&gt;&amp;mdash; Alexander Savin (@karismafilms) &lt;a href=&quot;https://twitter.com/karismafilms/status/535152580377468928&quot;&gt;November 19, 2014&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;60+ attendees at the second React.js Utah meetup. &lt;a href=&quot;https://twitter.com/ryanflorence&quot;&gt;@ryanflorence&lt;/a&gt; doing a great job, even without the internet. &lt;a href=&quot;http://t.co/fV59AQTOyu&quot;&gt;pic.twitter.com/fV59AQTOyu&lt;/a&gt;&lt;/p&gt;&amp;mdash; ReactJS Utah (@reactjsutah) &lt;a href=&quot;https://twitter.com/reactjsutah/status/527259410020573184&quot;&gt;October 29, 2014&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt; meetup at &lt;a href=&quot;https://twitter.com/Yahoo&quot;&gt;@Yahoo&lt;/a&gt; ! History of &lt;a href=&quot;https://twitter.com/yahoomail&quot;&gt;@yahoomail&lt;/a&gt; and why we chose react and NodeJS &lt;a href=&quot;http://t.co/Nm4EdTv45G&quot;&gt;pic.twitter.com/Nm4EdTv45G&lt;/a&gt;&lt;/p&gt;&amp;mdash; rmsguhan (@rmsguhan) &lt;a href=&quot;https://twitter.com/rmsguhan/status/515370950427029504&quot;&gt;September 26, 2014&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; data-cards=&quot;hidden&quot; lang=&quot;en&quot;&gt;&lt;p&gt;The very first ReactJS meetup in NYC tonight, I&amp;#39;ll be speaking about the big ideas behind Om &lt;a href=&quot;http://t.co/dvPrFqE9eP&quot;&gt;http://t.co/dvPrFqE9eP&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Nolen (@swannodette) &lt;a href=&quot;https://twitter.com/swannodette/status/532190993463128064&quot;&gt;November 11, 2014&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;If anyone in Sydney is curious about &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt;, I&amp;#39;m presenting at &lt;a href=&quot;https://twitter.com/sydjs&quot;&gt;@sydjs&lt;/a&gt; tonight on how to use it and why it is the future. &lt;a href=&quot;https://twitter.com/hashtag/javascript?src=hash&quot;&gt;#javascript&lt;/a&gt;&lt;/p&gt;&amp;mdash; Jed Watson (@JedWatson) &lt;a href=&quot;https://twitter.com/JedWatson/status/534943557568565248&quot;&gt;November 19, 2014&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+</description>
+				<pubDate>2014-11-25T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</guid>
+			</item>
+		
+			<item>
 				<title>React.js Conf Updates</title>
 				<description>&lt;p&gt;Yesterday was the &lt;a href=&quot;http://conf.reactjs.com/index.html&quot;&gt;React.js Conf&lt;/a&gt; call for presenters submission deadline. We were
 surprised to have received a total of &lt;strong&gt;one hundred talk proposals&lt;/strong&gt; and were
@@ -980,23 +1060,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-09-12T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/09/12/community-round-up-22.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/12/community-round-up-22.html</guid>
-			</item>
-		
-			<item>
-				<title>Introducing the JSX Specification</title>
-				<description>&lt;p&gt;At Facebook we&amp;#39;ve been using JSX for a long time. We originally introduced it to the world last year alongside React, but we actually used it in another form before that to create native DOM nodes. We&amp;#39;ve also seen some similar efforts grow out of our work in order to be used with other libraries and in interesting ways. At this point React JSX is just one of many implementations.&lt;/p&gt;
-
-&lt;p&gt;In order to make it easier to implement new versions and to make sure that the syntax remains compatible, we&amp;#39;re now formalizing the syntax of JSX in a stand-alone spec without any semantic meaning. It&amp;#39;s completely stand-alone from React itself.&lt;/p&gt;
-
-&lt;p&gt;Read the spec now at &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;http://facebook.github.io/jsx/&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This is not a proposal to be standardized in ECMAScript. It&amp;#39;s just a reference document that transpiler writers and syntax highlighters can agree on. It&amp;#39;s currently in a draft stage and will probably continue to be a living document.&lt;/p&gt;
-
-&lt;p&gt;Feel free to &lt;a href=&quot;https://github.com/facebook/jsx/issues/new&quot;&gt;open an Issue&lt;/a&gt; or Pull Request if you find something wrong.&lt;/p&gt;
-</description>
-				<pubDate>2014-09-03T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/09/03/introducing-the-jsx-specification.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/03/introducing-the-jsx-specification.html</guid>
 			</item>
 		
 	</channel>
