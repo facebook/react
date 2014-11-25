@@ -40,7 +40,7 @@ Jonathan Beebe ([somethingkindawierd](https://github.com/somethingkindawierd)) s
 
 <iframe width="420" height="315" src="//www.youtube.com/embed/uZgAq1CZ1N8" frameborder="0" allowfullscreen></iframe>
 
-If you take a peek under the covers, you'll find that React powers [Carousel](https://blog.dropbox.com/2014/04/introducing-carousel/), Dropbox's new photo and video gallery app.
+If you take a peek under the covers, you'll find that React powers [Carousel](https://blog.carousel.com/2014/11/introducing-carousel-for-web-ipad-and-android-tablet/), Dropbox's new photo and video gallery app.
 
 We enjoyed a cinematic/narrative experience with this React-powered, interactive story by British author William Boyd. Dive into “[The Vanishing Game](https://thevanishinggame.wellstoried.com)” and see for yourself.
 
@@ -52,11 +52,11 @@ Spend the next 60 seconds watching Daniel Woelfel ([dwwoelfel](https://github.co
 
 ## Community Components
 
-Tom Chen ([tomchentw](https://github.com/tomchentw)) brings us a [react-google-maps](http://tomchentw.github.io/react-google-maps/) component, and a way to syntax highlight source code using Prism and the [react-prisim](http://tomchentw.github.io/react-prism/) component, for good measure.
+Tom Chen ([tomchentw](https://github.com/tomchentw)) brings us a [react-google-maps](http://tomchentw.github.io/react-google-maps/) component, and a way to syntax highlight source code using Prism and the [react-prism](http://tomchentw.github.io/react-prism/) component, for good measure.
 
 Jed Watson ([jedwatson](https://github.com/JedWatson)) helps you manage touch, tap, and press events using the [react-tappable](https://github.com/JedWatson/react-tappable) component.
 
-To find these, and more community-built components, consult the [React Components](http://react-components.com/) and [React Rocks](http://react.rocks) component directories. React Rocks recently breached one-hundred listed components, and counting. See one missing? Add the keyword `react-component` to your `package.json` to get listed on React Components, and [submit a link to React Rocks](https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform).
+To find these, and more community-built components, consult the [React Components](http://react-components.com/) and [React Rocks](http://react.rocks) component directories. React Rocks recently exceeded one-hundred listed components and counting. See one missing? Add the keyword `react-component` to your `package.json` to get listed on React Components, and [submit a link to React Rocks](https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform).
 
 ## Waiter, There's a CSS In My JavaScript
 
