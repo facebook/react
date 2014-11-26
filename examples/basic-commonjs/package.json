@@ -3,10 +3,10 @@
   "description": "Basic example of using React with CommonJS",
   "main": "index.js",
   "devDependencies": {
-    "envify": "~1.2.1",
-    "react": "~0.10.0",
-    "reactify": "~0.13.1",
-    "browserify": "~3.44.2"
+    "browserify": "^6.3.3",
+    "envify": "^3.2.0",
+    "react": "^0.12.0",
+    "reactify": "^0.17.1"
   },
   "scripts": {
     "build": "browserify --debug --transform reactify index.js > bundle.js"
