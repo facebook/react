@@ -90,6 +90,7 @@ var HTMLDOMPropertyConfig = {
     form: MUST_USE_ATTRIBUTE,
     formNoValidate: HAS_BOOLEAN_VALUE,
     frameBorder: MUST_USE_ATTRIBUTE,
+    headers: null,
     height: MUST_USE_ATTRIBUTE,
     hidden: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     href: null,
