@@ -18,7 +18,7 @@ var ReactTestUtils = require('ReactTestUtils');
 var assign = require('Object.assign');
 
 function reactComponentExpect(instance) {
-  if (instance instanceof reactComponentExpect) {
+  if (instance instanceof reactComponentExpectInternal) {
     return instance;
   }
 
