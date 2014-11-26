@@ -68,7 +68,7 @@
     "version": 4
   },
   "scripts": {
-    "test": "./node_modules/.bin/grunt test",
+    "test": "jest",
     "jest": "jest"
   },
   "jest": {
