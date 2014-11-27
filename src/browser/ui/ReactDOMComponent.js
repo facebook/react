@@ -15,6 +15,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
@@ -74,6 +75,25 @@ function assertValidProps(props) {
   );
 }
 
+var ShadowRoot = ExecutionEnvironment.canUseDOM ? window.ShadowRoot : false;
+
+/**
+ * @param {object}  node
+ */
+var realContainer = !!ShadowRoot ?
+  function(node) { // if browser supports shadow DOM
+    if (node instanceof ShadowRoot || !node.parentNode) {
+      return node;
+    }
+    return realContainer(node.parentNode);   // tries to go up in the shadow DOM tree to get the root
+  } :
+  function(node) {
+    if (!node.parentNode) {
+      return node;
+    }
+    return realContainer(node.parentNode);
+  };
+  
 function putListener(id, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
