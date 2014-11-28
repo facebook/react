@@ -35,7 +35,7 @@ String type
 ## Supported Events
 
 React normalizes events so that they have consistent properties across
-different browsers.
+different browsers. The event handlers below are triggered by an event in the bubbling phase; to register an event handler for the capture phase, append "Capture" to the event name (for example: onClick -> onClickCapture).
 
 
 ### Clipboard Events
