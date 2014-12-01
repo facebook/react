@@ -210,7 +210,9 @@ describe('rendering React components at document', function() {
       'are impure. React cannot handle this case due to cross-browser ' +
       'quirks by rendering at the document root. You should look for ' +
       'environment dependent code in your components and ensure ' +
-      'the props are the same client and server side.'
+      'the props are the same client and server side:\n' +
+      ' (client) data-reactid=".0.1">Hello world</body></\n' +
+      ' (server) data-reactid=".0.1">Goodbye world</body>'
     );
   });
 
