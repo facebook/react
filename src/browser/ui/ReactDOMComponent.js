@@ -82,16 +82,16 @@ var ShadowRoot = ExecutionEnvironment.canUseDOM ? window.ShadowRoot : false;
  */
 var realContainer = !!ShadowRoot ?
   function(node) { // if browser supports shadow DOM
-    if (node instanceof ShadowRoot || !node.parentNode) {
-      return node;
+    var _node = node;
+    // iterates until we find the shadow root or until the parent is reached
+    while (!(_node instanceof ShadowRoot) && _node.parentNode)
+    {
+      _node = node.parentNode;
     }
-    return realContainer(node.parentNode);   // tries to go up in the shadow DOM tree to get the root
+    return _node;
   } :
   function(node) {
-    if (!node.parentNode) {
-      return node;
-    }
-    return realContainer(node.parentNode);
+    return node.ownerDocument;
   };
   
 function putListener(id, registrationName, listener, transaction) {
