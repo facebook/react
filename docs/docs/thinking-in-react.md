@@ -60,7 +60,7 @@ Now that we've identified the components in our mock, let's arrange them into a 
 
 ## Step 2: Build a static version in React
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/n25pd/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 Now that you have your component hierarchy it's time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It's easiest to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We'll see why.
 
@@ -104,7 +104,7 @@ So finally, our state is:
 
 ## Step 4: Identify where your state should live
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/t53sx/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 OK, so we've identified what the minimal set of app state is. Next we need to identify which component mutates, or *owns*, this state.
 
@@ -129,7 +129,7 @@ You can start seeing how your application will behave: set `filterText` to `"bal
 
 ## Step 5: Add inverse data flow
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/F8H7p/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 So far we've built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it's time to support data flowing the other way: the form components deep in the hierarchy need to update the state in `FilterableProductTable`.
 
