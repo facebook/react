@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
+    <title>Example with Transitions</title>
+    <link rel="stylesheet" href="../shared/css/base.css" />
+    <link rel="stylesheet" href="transition.css" />
+    <style>
+      #container {
+        position: relative;
+        
+        margin-bottom: 10px;
+        width: 970px;
+        height: 250px;
+
+        border: 1px solid grey;
+      }
+
+      .transitionContainer {
+        position: relative;
+
+        width: 100%;
+        height: 100%;
+
+        overflow: hidden;
+      }
+
+      .btn {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+
+        z-index: 10;
+      }
+
+      .item {
+        position: absolute;
+
+        width: 100%;
+        height: 100%;
+        
+        opacity: 0;
+        background: grey;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Example with Transitions</h1>
+    <div id="container">
+      <p>
+        To install React, follow the instructions on
+        <a href="http://www.github.com/facebook/react/">GitHub</a>.
+      </p>
+      <p>
+        If you can see this, React is not working right.
+        If you checked out the source from GitHub make sure to run <code>grunt</code>.
+      </p>
+    </div>
+    <h4>Example Details</h4>
+    <p>This is written with JSX and transformed in the browser.<p>
+    <p>
+      Learn more about React at
+      <a href="http://facebook.github.io/react" target="_blank">facebook.github.io/react</a>.
+    </p>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/gsap/latest/TweenMax.min.js"></script>
+    <script src="../shared/thirdparty/es5-shim.min.js"></script>
+    <script src="../shared/thirdparty/es5-sham.min.js"></script>
+    <script src="../shared/thirdparty/console-polyfill.js"></script>
+    <script src="../../build/react-with-addons.js"></script>
+    <script src="../../build/JSXTransformer.js"></script>
+    <script type="text/jsx">
+      var ReactTransitionGroup = React.addons.TransitionGroup;
+
+      var TransitionDemoItem = React.createClass({
+        componentWillEnter: function(callback) {
+          TweenMax.fromTo(this.getDOMNode(), 0.5,
+            {alpha: 0, y: "+=100", scale: 1.25},
+            {alpha: 1, y: "0", scale: 1, ease: Back.easeOut, onComplete: callback});
+        },
+
+        componentWillLeave: function(callback) {
+          TweenMax.fromTo(this.getDOMNode(), 0.5,
+            {alpha: 1, y: "0", scale: 1},
+            {alpha: 1, y: "-=250", scale: 1.25, ease: Power4.easeOut, onComplete: callback});
+        },
+
+        componentDidEnter: function () {
+          console.log("componentDidEnter");
+        },
+
+        componentDidLeave: function () {
+          console.log("componentDidLeave");
+        },
+
+        render: function() {
+          return (
+            <div className="item">
+              <img src="http://lorempixel.com/970/250/abstract" />
+            </div>
+          )
+        }
+      });
+
+      var _transitioning = false;
+
+      var TransitionDemo = React.createClass({
+        getInitialState: function () {
+          return {transitionItem: false}
+        },
+
+        addTransitionItem: function () {
+          var randKey = "item" + (Math.random() * 10);
+
+          return (
+            <TransitionDemoItem key={randKey} />
+          )
+        },
+
+        activate: function () {
+          console.log("activate!", _transitioning);
+
+          if (!_transitioning) {
+            this.setState({transitionItem: this.addTransitionItem()});
+            _transitioning = true;
+          }
+        },
+
+        transitionsComplete: function () {
+          console.log('Complete!')
+
+          _transitioning = false;
+        },
+
+        render: function () {
+          return (
+            <div className="transitionContainer">
+              <button className="btn" onClick={this.activate}>Activate</button>
+              <ReactTransitionGroup component="div" transitionsComplete={this.transitionsComplete}>
+                {this.state.transitionItem}
+              </ReactTransitionGroup>
+            </div>
+          )
+        }
+      });
+      
+      React.render( 
+        <TransitionDemo />,
+        document.getElementById('container')
+      );
+
+      
+    </script>
+  </body>
+</html>

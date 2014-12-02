@@ -18,12 +18,16 @@ var assign = require('Object.assign');
 var cloneWithProps = require('cloneWithProps');
 var emptyFunction = require('emptyFunction');
 
+var _performLeaveLength = 0, _performEnterLength = 0;
+var _performLeaveComplete = 0, _performEnterComplete = 0;
+
 var ReactTransitionGroup = React.createClass({
   displayName: 'ReactTransitionGroup',
 
   propTypes: {
     component: React.PropTypes.any,
-    childFactory: React.PropTypes.func
+    childFactory: React.PropTypes.func,
+    transitionsComplete: React.PropTypes.func
   },
 
   getDefaultProps: function() {
@@ -84,6 +88,9 @@ var ReactTransitionGroup = React.createClass({
         this.keysToLeave.push(key);
       }
     }
+
+    _performLeaveLength = this.keysToLeave.length;
+    _performEnterLength = this.keysToEnter.length;
 
     // If we want to someday check for reordering, we could do it here.
   },
@@ -160,6 +167,10 @@ var ReactTransitionGroup = React.createClass({
       // This was removed before it had fully entered. Remove it.
       this.performLeave(key);
     }
+
+    _performEnterComplete++;
+
+    this._checkTransitionsComplete();
   },
 
   performLeave: function(key) {
@@ -196,6 +207,25 @@ var ReactTransitionGroup = React.createClass({
       var newChildren = assign({}, this.state.children);
       delete newChildren[key];
       this.setState({children: newChildren});
+    }
+
+    _performLeaveComplete++;
+
+    this._checkTransitionsComplete();
+  },
+
+  _checkTransitionsComplete: function () {
+    if ( ( _performEnterLength === _performEnterComplete ) && 
+         ( _performLeaveLength === _performLeaveComplete ) ) {
+      _performLeaveComplete = _performEnterComplete =  0;
+
+      this._handleTransitionsComplete();
+    }
+  },
+
+  _handleTransitionsComplete: function () {
+    if (this.props.transitionsComplete) {
+      this.props.transitionsComplete();
     }
   },
 
