@@ -14,7 +14,6 @@
 "use strict";
 
 var React = require('React');
-var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var div = React.createFactory('div');
 
