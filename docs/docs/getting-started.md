@@ -110,4 +110,8 @@ If you want to use React with [browserify](http://browserify.org/), [webpack](ht
 
 ## Next Steps
 
-Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more. Good luck, and welcome!
+Check out [the tutorial](/react/docs/tutorial.html) and the other examples in the starter kit's `examples` directory to learn more. 
+
+We also have a wiki where the community contributes with [workflows, UI-components, routing, data management etc.](https://github.com/facebook/react/wiki/Complementary-Tools)
+
+Good luck, and welcome!
