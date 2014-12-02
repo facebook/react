@@ -22,6 +22,21 @@ Create a component given a specification. A component implements a `render` meth
 For more information about the specification object, see [Component Specs and Lifecycle](/react/docs/component-specs.html).
 
 
+### React.createElement
+
+```javascript
+function createElement(
+  string/ReactComponent type,
+  [object props],
+  [children ...]
+)
+```
+
+Create and return a new ReactElement of the given type. The type argument can be either an
+html tag name string (eg. 'div', 'span', etc), or a `ReactComponent` class that was created
+with `React.createClass`.
+
+
 ### React.render
 
 ```javascript
