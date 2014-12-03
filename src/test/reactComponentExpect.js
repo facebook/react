@@ -139,9 +139,10 @@ assign(reactComponentExpectInternal.prototype, {
     return this;
   },
 
-  toBeTextComponent: function() {
+  toBeTextComponentWithValue: function(val) {
     var elementType = typeof this._instance._currentElement;
     expect(elementType === 'string' || elementType === 'number').toBe(true);
+    expect(this._instance._stringText).toBe(val);
     return this;
   },
 
