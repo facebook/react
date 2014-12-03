@@ -20,7 +20,7 @@ If you don't use JSX, you can use any object helper such as ES6 `Object.assign` 
 return Component(Object.assign({}, this.props, { more: 'values' }));
 ```
 
-The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.
+The rest of this tutorial explains best practices. It uses JSX and experimental ES6 syntax.
 
 ## Manual Transfer
 
