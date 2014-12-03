@@ -386,6 +386,15 @@
 <p>Create a component given a specification. A component implements a <code>render</code> method which returns <strong>one single</strong> child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don&#39;t need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.</p>
 
 <p>For more information about the specification object, see <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>.</p>
+<h3><a class="anchor" name="react.createelement"></a>React.createElement <a class="hash-link" href="#react.createelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span>
+  <span class="nx">string</span><span class="o">/</span><span class="nx">ReactComponent</span> <span class="nx">type</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">object</span> <span class="nx">props</span><span class="p">],</span>
+  <span class="p">[</span><span class="nx">children</span> <span class="p">...]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Create and return a new ReactElement of the given type. The type argument can be either an
+html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactComponent</code> class that was created
+with <code>React.createClass</code>.</p>
 <h3><a class="anchor" name="react.render"></a>React.render <a class="hash-link" href="#react.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>

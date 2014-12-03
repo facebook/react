@@ -401,7 +401,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">FancyCheckbox</span> <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">}</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">FancyCheckbox</span> <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="nx">console</span><span class="p">)}</span><span class="o">&gt;</span>
     <span class="nx">Hello</span> <span class="nx">world</span><span class="o">!</span>
   <span class="o">&lt;</span><span class="err">/FancyCheckbox&gt;,</span>
   <span class="nb">document</span><span class="p">.</span><span class="nx">body</span>

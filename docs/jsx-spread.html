@@ -404,22 +404,7 @@
   <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;override&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
   <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">component</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;override&#39;</span>
 </code></pre></div><h2><a class="anchor" name="whats-with-the-weird-...-notation"></a>What&#39;s with the weird <code>...</code> notation? <a class="hash-link" href="#whats-with-the-weird-...-notation">#</a></h2>
-<p>The <code>...</code> operator (or spread operator) is already supported for <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">arrays in ES6</a>. There is also an ES7 proposal for <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">Object Rest and Spread Properties</a>.</p>
-
-<p>In fact, you can already use this in our code base as an experimental syntax:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">oldObj</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;hello&#39;</span><span class="p">,</span> <span class="nx">bar</span><span class="o">:</span> <span class="s1">&#39;world&#39;</span> <span class="p">};</span>
-  <span class="kd">var</span> <span class="nx">newObj</span> <span class="o">=</span> <span class="p">{</span> <span class="p">...</span><span class="nx">oldObj</span><span class="p">,</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;hi&#39;</span> <span class="p">};</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newObj</span><span class="p">.</span><span class="nx">foo</span><span class="p">);</span> <span class="c1">// &#39;hi&#39;;</span>
-  <span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newObj</span><span class="p">.</span><span class="nx">bar</span><span class="p">);</span> <span class="c1">// &#39;world&#39;;</span>
-</code></pre></div>
-<p>Merging two objects can be expressed as:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">ab</span> <span class="o">=</span> <span class="p">{</span> <span class="p">...</span><span class="nx">a</span><span class="p">,</span> <span class="p">...</span><span class="nx">b</span> <span class="p">};</span>
-</code></pre></div>
-<blockquote>
-<p>Note:</p>
-
-<p>Use the <a href="http://npmjs.org/package/react-tools">JSX command-line tool</a> with the <code>--harmony</code> flag to activate the experimental ES7 syntax.</p>
-</blockquote>
+<p>The <code>...</code> operator (or spread operator) is already supported for <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_operator">arrays in ES6</a>. There is also an ES7 proposal for <a href="https://github.com/sebmarkbage/ecmascript-rest-spread">Object Rest and Spread Properties</a>. We&#39;re taking advantage of these supported and developing standards in order to provide a cleaner syntax in JSX.</p>
 
 
     <div class="docs-prevnext">
