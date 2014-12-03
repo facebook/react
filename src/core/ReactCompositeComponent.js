@@ -130,6 +130,7 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingContext = null;
     this._pendingState = null;
     this._pendingForceUpdate = false;
+    this._removeState = false;
     this._compositeLifeCycleState = null;
 
     this._renderedComponent = null;
@@ -208,6 +209,7 @@ var ReactCompositeComponentMixin = assign({},
 
     this._pendingState = null;
     this._pendingForceUpdate = false;
+    this._removeState = false;
 
     if (inst.componentWillMount) {
       inst.componentWillMount();
@@ -261,6 +263,7 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingForceUpdate = false;
     this._pendingCallbacks = null;
     this._pendingElement = null;
+    this._removeState = false;
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
@@ -378,6 +381,11 @@ var ReactCompositeComponentMixin = assign({},
   replaceState: function(completeState, callback) {
     validateLifeCycleOnReplaceState(this);
     this._pendingState = completeState;
+
+    if (completeState === null) {
+      this._removeState = true;
+    }
+
     if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
       // If we're in a componentWillMount handler, don't enqueue a rerender
       // because ReactUpdates assumes we're in a browser context (which is wrong
@@ -563,6 +571,7 @@ var ReactCompositeComponentMixin = assign({},
     if (this._pendingElement == null &&
         this._pendingState == null &&
         this._pendingContext == null &&
+        !this._removeState &&
         !this._pendingForceUpdate) {
       return;
     }
@@ -678,7 +687,13 @@ var ReactCompositeComponentMixin = assign({},
 
     this._compositeLifeCycleState = null;
 
-    var nextState = this._pendingState || inst.state;
+    var nextState;
+    if (this._removeState) {
+      nextState = null;
+      this._removeState = false;
+    } else {
+      nextState = this._pendingState || inst.state;
+    }
     this._pendingState = null;
 
     var shouldUpdate =
