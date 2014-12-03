@@ -48,10 +48,6 @@ describe('ReactCompositeComponent-state', function() {
         this.setState({color: nextColor});
       },
 
-      removeState: function() {
-        this.replaceState(null);
-      },
-
       getInitialState: function() {
         this.peekAtState('getInitialState');
         return {color: 'red'};
@@ -117,7 +113,7 @@ describe('ReactCompositeComponent-state', function() {
     instance.setProps({nextColor: 'green'});
     instance.setFavoriteColor('blue');
     instance.forceUpdate();
-    instance.removeState();
+    instance.replaceState(null);
 
     React.unmountComponentAtNode(container);
     expect(stateListener.mock.calls).toEqual([
@@ -166,7 +162,7 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'blue', null ],
       [ 'componentDidUpdate-currentState', 'blue', null ],
       [ 'componentDidUpdate-prevState', 'blue' ],
-      // removeState()
+      // replaceState(null)
       [ 'shouldComponentUpdate-currentState', 'blue', null ],
       [ 'shouldComponentUpdate-nextState', null ],
       [ 'componentWillUpdate-currentState', 'blue', null ],
