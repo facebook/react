@@ -8,8 +8,8 @@ next: tutorial.html
 
 开始 Hack React 的最简单的方法是用下面 JSFiddle 的Hello Worlds
 
- * **[React JSFiddle](http://jsfiddle.net/vjeux/kb3gN/)**
- * [React JSFiddle without JSX](http://jsfiddle.net/vjeux/VkebS/)
+ * **[React JSFiddle](http://jsfiddle.net/reactjs/69z2wepo/)**
+ * [React JSFiddle without JSX](http://jsfiddle.net/reactjs/5vjqabv3/)
 
 ## 入门教程包 (Starter Kit)
 
