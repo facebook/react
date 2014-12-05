@@ -293,7 +293,7 @@ var ReactCompositeComponentMixin = assign({},
     // Merge with the pending element if it exists, otherwise with existing
     // element props.
     var element = this._pendingElement || this._currentElement;
-    this.replaceProps(
+    return this.replaceProps(
       assign({}, element.props, partialProps),
       callback
     );
@@ -322,7 +322,7 @@ var ReactCompositeComponentMixin = assign({},
       this._pendingElement || this._currentElement,
       props
     );
-    ReactUpdates.enqueueUpdate(this, callback);
+    return ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
@@ -341,7 +341,7 @@ var ReactCompositeComponentMixin = assign({},
       element,
       assign({}, element.props, partialProps)
     );
-    ReactUpdates.enqueueUpdate(this, callback);
+    return ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**
@@ -357,7 +357,7 @@ var ReactCompositeComponentMixin = assign({},
    */
   setState: function(partialState, callback) {
     // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this.replaceState(
+    return this.replaceState(
       assign({}, this._pendingState || this._instance.state, partialState),
       callback
     );
@@ -385,7 +385,7 @@ var ReactCompositeComponentMixin = assign({},
       // TODO: The callback here is ignored when setState is called from
       // componentWillMount. Either fix it or disallow doing so completely in
       // favor of getInitialState.
-      ReactUpdates.enqueueUpdate(this, callback);
+      return ReactUpdates.enqueueUpdate(this, callback);
     }
   },
 
@@ -412,7 +412,7 @@ var ReactCompositeComponentMixin = assign({},
       'or during an existing state transition (such as within `render`).'
     );
     this._pendingForceUpdate = true;
-    ReactUpdates.enqueueUpdate(this, callback);
+    return ReactUpdates.enqueueUpdate(this, callback);
   },
 
   /**

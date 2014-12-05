@@ -244,6 +244,45 @@ describe('ReactUpdates', function() {
     expect(updateCount).toBe(2);
   });
 
+  it('should return a promise if Promises/A+ are supported', function() {
+    var updateCount = 0;
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {x: 0};
+      },
+      componentDidUpdate: function() {
+        updateCount++;
+      },
+      render: function() {
+        return <div>{this.state.x}</div>;
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(instance.state.x).toBe(0);
+
+    ReactUpdates.batchedUpdates(function() {
+      var promise = instance.setState({x: 1});
+
+      if (typeof Promise === 'function') {
+        expect(promise).toBeDefined();
+        expect(instance.state.x).toBe(0);
+        promise.then(function() {
+          instance.setState({x: 2}).then(function() {
+            expect(instance.state.x).toBe(2);
+            expect(updateCount).toBe(2);
+          });
+        }).then(function() {
+          expect(instance.state.x).toBe(1);
+          expect(updateCount).toBe(1);
+        });
+      } else {
+        // Promises are not supported
+        expect(promise).toBeUndefined();
+      }
+    });
+  });
+
   it('should batch forceUpdate together', function() {
     var shouldUpdateCount = 0;
     var updateCount = 0;
