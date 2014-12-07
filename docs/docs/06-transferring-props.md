@@ -71,7 +71,7 @@ var FancyCheckbox = React.createClass({
   }
 });
 React.render(
-  <FancyCheckbox checked={true} onClick={console.log}>
+  <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     Hello world!
   </FancyCheckbox>,
   document.body
