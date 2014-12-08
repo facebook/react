@@ -14,7 +14,7 @@ redirect_from: "/docs/reference.html"
 ### React.createClass
 
 ```javascript
-function createClass(object specification)
+ReactComponent createClass(object specification)
 ```
 
 Create a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
@@ -25,14 +25,14 @@ For more information about the specification object, see [Component Specs and Li
 ### React.createElement
 
 ```javascript
-function createElement(
+ReactElement createElement(
   string/ReactComponent type,
   [object props],
   [children ...]
 )
 ```
 
-Create and return a new ReactElement of the given type. The type argument can be either an
+Create and return a new `ReactElement` of the given type. The type argument can be either an
 html tag name string (eg. 'div', 'span', etc), or a `ReactComponent` class that was created
 with `React.createClass`.
 
