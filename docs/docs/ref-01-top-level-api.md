@@ -37,6 +37,19 @@ html tag name string (eg. 'div', 'span', etc), or a `ReactComponent` class that 
 with `React.createClass`.
 
 
+### React.createFactory
+
+```javascript
+factoryFunction createFactory(
+  string/ReactComponent type
+)
+```
+
+Return a function that produces ReactElements of a given type. Like `React.createElement`,
+the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a
+`ReactComponent` class that was created with `React.createClass`.
+
+
 ### React.render
 
 ```javascript
