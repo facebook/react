@@ -9,6 +9,8 @@
  * @providesModule React
  */
 
+/* globals __REACT_DEVTOOLS_GLOBAL_HOOK__*/
+
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');

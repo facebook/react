@@ -321,7 +321,7 @@ ReactShallowRenderer.prototype.getRenderOutput = function() {
 
 var ShallowComponentWrapper = function(inst) {
   this._instance = inst;
-}
+};
 assign(
   ShallowComponentWrapper.prototype,
   ReactCompositeComponent.ShallowMixin

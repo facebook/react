@@ -611,8 +611,8 @@ var ReactCompositeComponentMixin = assign({},
         displayName
       );
     } else {
-      for (key in parentKeys) {
-        var key = parentKeys[key];
+      for (var i = 0; i < parentKeys.length; i++) {
+        var key = parentKeys[i];
         warning(
           ownerBasedContext[key] === parentBasedContext[key],
           'owner-based and parent-based contexts differ '  +
