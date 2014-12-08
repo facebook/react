@@ -764,7 +764,7 @@ var ReactMount = {
           'methods are impure. React cannot handle this case due to ' +
           'cross-browser quirks by rendering at the document root. You ' +
           'should look for environment dependent code in your components ' +
-          'and ensure the props are the same client and server side:\n' +
+          'and ensure the props are the same client and server side:\n%s',
           difference
         );
 

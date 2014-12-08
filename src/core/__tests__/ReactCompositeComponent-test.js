@@ -1060,7 +1060,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var component = React.withContext({foo: 'noise'}, function() {
-      return <Component />
+      return <Component />;
     });
 
     ReactTestUtils.renderIntoDocument(<Parent>{component}</Parent>);
