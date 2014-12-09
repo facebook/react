@@ -105,10 +105,12 @@ var Danger = {
 
       for (i = 0; i < renderNodes.length; ++i) {
         var renderNode = renderNodes[i];
+        var indexAttr = renderNode.getAttribute(RESULT_INDEX_ATTR);
         if (renderNode.hasAttribute &&
-            renderNode.hasAttribute(RESULT_INDEX_ATTR)) {
+            renderNode.hasAttribute(RESULT_INDEX_ATTR) ||
+            indexAttr != null && indexAttr != '') {
 
-          resultIndex = +renderNode.getAttribute(RESULT_INDEX_ATTR);
+          resultIndex = +indexAttr;
           renderNode.removeAttribute(RESULT_INDEX_ATTR);
 
           invariant(
