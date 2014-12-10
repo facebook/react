@@ -34,14 +34,14 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
   documentMode = document.documentMode;
 }
 
-// Webkit and Presto offer a very useful `textInput` event that can be used to
+// Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
 var canUseTextInputEvent = (
   ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
-  !isOldPresto()
+  !isPresto()
 );
 
 // In IE9+, we have access to composition events, but the data supplied
@@ -59,7 +59,7 @@ var useFallbackCompositionData = (
  * Opera <= 12 includes TextEvent in window, but does not fire
  * text input events. Rely on keypress instead.
  */
-function isOldPresto() {
+function isPresto() {
   var opera = window.opera;
   return (
     typeof opera === 'object' &&
