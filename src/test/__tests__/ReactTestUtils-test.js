@@ -110,4 +110,14 @@ describe('ReactTestUtils', function() {
     expect(updatedResultCausedByClick.type).toBe('a');
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
   });
+
+  it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
+    var ufiComment = ReactTestUtils.renderIntoDocument(<div>Hello <span>Jim</span></div>);
+    var replyLink = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      ufiComment,
+      'UFIReplyLink'
+    );
+    expect(replyLink.length).toBe(0);
+
+  });
 });
