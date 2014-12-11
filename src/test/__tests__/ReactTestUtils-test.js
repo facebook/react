@@ -110,4 +110,14 @@ describe('ReactTestUtils', function() {
     expect(updatedResultCausedByClick.type).toBe('a');
     expect(updatedResultCausedByClick.props.className).toBe('was-clicked');
   });
+
+  it('Test scryRenderedDOMComponentsWithClass with TextComponent', function() {
+    var renderedComponent = ReactTestUtils.renderIntoDocument(<div>Hello <span>Jim</span></div>);
+    var scryResults = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+      renderedComponent,
+      'NonExistantClass'
+    );
+    expect(scryResults.length).toBe(0);
+
+  });
 });

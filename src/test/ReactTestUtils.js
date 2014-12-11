@@ -124,6 +124,9 @@ var ReactTestUtils = {
         if (!renderedChildren.hasOwnProperty(key)) {
           continue;
         }
+        if (!renderedChildren[key].getPublicInstance) {
+          continue;
+        }
         ret = ret.concat(
           ReactTestUtils.findAllInRenderedTree(
             renderedChildren[key].getPublicInstance(),
@@ -167,7 +170,9 @@ var ReactTestUtils = {
     var all =
       ReactTestUtils.scryRenderedDOMComponentsWithClass(root, className);
     if (all.length !== 1) {
-      throw new Error('Did not find exactly one match for class:' + className);
+      throw new Error('Did not find exactly one match '+
+        '(found: ' + all.length + ') for class:' + className
+      );
     }
     return all[0];
   },
