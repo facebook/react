@@ -218,14 +218,29 @@ function enqueueUpdate(component, callback) {
   }
 
   dirtyComponents.push(component);
+  var resolver, promise;
 
-  if (callback) {
+  if (typeof Promise === 'function') {
+    promise = new Promise(function(resolve, reject) {
+      resolver = function() {
+        // Always resolve, there is no reason for Promise to be rejected.
+        if (typeof callback === 'function') {
+          callback();
+        }
+        resolve();
+      };
+    });
+  }
+
+  if (resolver || callback) {
     if (component._pendingCallbacks) {
-      component._pendingCallbacks.push(callback);
+      component._pendingCallbacks.push(resolver || callback);
     } else {
-      component._pendingCallbacks = [callback];
+      component._pendingCallbacks = [resolver || callback];
     }
   }
+
+  return promise;
 }
 
 /**

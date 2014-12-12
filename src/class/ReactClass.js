@@ -730,7 +730,7 @@ var ReactClassMixin = {
       internalInstance,
       'setState(...): Can only update a mounted or mounting component.'
     );
-    internalInstance.setState(
+    return internalInstance.setState(
       partialState, callback && callback.bind(this)
     );
   },
@@ -745,7 +745,7 @@ var ReactClassMixin = {
       internalInstance,
       'replaceState(...): Can only update a mounted or mounting component.'
     );
-    internalInstance.replaceState(
+    return internalInstance.replaceState(
       newState,
       callback && callback.bind(this)
     );
@@ -772,7 +772,7 @@ var ReactClassMixin = {
       'forceUpdate(...): Can only force an update on mounted or mounting ' +
         'components.'
     );
-    internalInstance.forceUpdate(callback && callback.bind(this));
+    return internalInstance.forceUpdate(callback && callback.bind(this));
   },
 
   /**
@@ -803,7 +803,7 @@ var ReactClassMixin = {
       internalInstance,
       'setProps(...): Can only update a mounted component.'
     );
-    internalInstance.setProps(
+    return internalInstance.setProps(
       partialProps,
       callback && callback.bind(this)
     );
@@ -819,7 +819,7 @@ var ReactClassMixin = {
    * @deprecated
    */
   replaceProps: function(newProps, callback) {
-    ReactInstanceMap.get(this).replaceProps(
+    return ReactInstanceMap.get(this).replaceProps(
       newProps,
       callback && callback.bind(this)
     );
