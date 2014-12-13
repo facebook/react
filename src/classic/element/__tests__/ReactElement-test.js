@@ -11,6 +11,8 @@
 
 "use strict";
 
+var mocks;
+
 var React;
 var ReactElement;
 var ReactTestUtils;
@@ -20,6 +22,8 @@ describe('ReactElement', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
+
+    mocks = require('mocks');
 
     React = require('React');
     ReactElement = require('ReactElement');
@@ -368,6 +372,58 @@ describe('ReactElement', function() {
     var element = React.createElement('div', { className: 'foo' });
     var object = {};
     expect(element.constructor).toBe(object.constructor);
+  });
+
+  it('should use default prop value when removing a prop', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {fruit: 'persimmon'};
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.render(
+      <Component fruit="mango" />,
+      container
+    );
+    expect(instance.props.fruit).toBe('mango');
+
+    React.render(<Component />, container);
+    expect(instance.props.fruit).toBe('persimmon');
+  });
+
+  it('should normalize props with default values', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+
+    var Component = React.createClass({
+      propTypes: {prop: React.PropTypes.string.isRequired},
+      getDefaultProps: function() {
+        return {prop: 'testKey'};
+      },
+      getInitialState: function() {
+        return {prop: this.props.prop + 'State'};
+      },
+      render: function() {
+        return <span>{this.props.prop}</span>;
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(instance.props.prop).toBe('testKey');
+    expect(instance.state.prop).toBe('testKeyState');
+
+    ReactTestUtils.renderIntoDocument(<Component prop={null} />);
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Required prop `prop` was not specified in `Component`.'
+    );
+
+    console.warn = warn;
   });
 
 });
