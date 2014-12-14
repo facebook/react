@@ -66,7 +66,7 @@ The inputs to this component are called `props` — short for "properties". They
 
 ## Components are Just Like Functions
 
-React components are very simple. You can think of them as simple function that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
+React components are very simple. You can think of them as simple functions that take in `props` and `state` (discussed later) and render HTML. Because they're so simple, it makes them very easy to reason about.
 
 > Note:
 >
