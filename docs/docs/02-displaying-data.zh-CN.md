@@ -7,7 +7,8 @@ prev: why-react-zh-CN.html
 next: jsx-in-depth.html
 ---
 
-通过用户界面，最基础可以做的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。
+用户界面能做的最基础的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。
+
 
 ## 开始
 
@@ -54,6 +55,7 @@ setInterval(function() {
 }, 500);
 ```
 
+
 ## 被动更新 (Reactive Updates)
 
 在浏览器中打开 `hello-react.html` ，在输入框输入你的名字。你会发现 React 在用户界面中只改变了时间， 任何你在输入框输入的内容一直保留着，即使你没有写任何代码来完成这个功能。React 为你解决了这个问题，做了正确的事。
@@ -62,6 +64,7 @@ setInterval(function() {
 
 对这个组件的输入称为 `props` - "properties"的缩写。得益于 JSX 语法，它们通过参数传递。你必须知道在组件里，这些属性是不可改变的，也就是说 **`this.props` 是只读的**。
 
+
 ## 组件就像是函数
 
 React 组件非常简单。你可以认为它们就是简单的函数，接受 `props` 和 `state` (后面会讨论) 作为参数，然后渲染出 HTML。正是应为它们是这么的简单，这使得它们非常容易理解。
@@ -69,6 +72,7 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 > 注意:
 >
 > **只有一个限制**: React 组件只能渲染单个根节点。如果你想要返回多个节点，它们*必须*被包含在同一个节点里。
+
 
 ## JSX 语法
 
@@ -80,6 +84,34 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 
 JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 [深入理解 JSX](/react/docs/jsx-in-depth.html)。或者直接使用[在线 JSX 编译器](/react/jsx-compiler.html)观察变化过程。
 
-JSX 类似于 HTML，但不是完全一样。参考[JSX gotchas](/react/docs/jsx-gotchas.html) 学习关键区别。
+JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas.html) 学习关键区别。
 
 最简单开始学习 JSX 的方法就是使用浏览器端的 `JSXTransformer`。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 [react-tools](http://npmjs.org/package/react-tools) 包来预编译你的代码。
+
+
+## 没有 JSX 的 React
+
+你完全可以选择是否使用 JSX，并不是 React 必须的。你可以通过 `React.createElement` 来创建一个树。第一个参数是标签，第二个参数是一个属性对象，每三个是子节点。
+
+```javascript
+var child = React.createElement('li', null, 'Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child);
+React.render(root, document.body);
+```
+
+方便起见，你可以创建基于自定义组件的速记工厂方法。
+
+```javascript
+var Factory = React.createFactory(ComponentClass);
+...
+var root = Factory({ custom: 'prop' });
+React.render(root, document.body);
+```
+
+React 已经为 HTML 标签提供内置工厂方法。
+
+```javascript
+var root = React.DOM.ul({ className: 'my-list' },
+             React.DOM.li(null, 'Text Content')
+           );
+```
