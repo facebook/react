@@ -2,8 +2,7 @@
 // -*- mode: js -*-
 "use strict";
 
-var getAllVisitors = require('../vendor/fbtransform/visitors').getAllVisitors;
-var transform = require('jstransform').transform;
+var transform = require('../main').transform;
 var propagate = require("../vendor/constants").propagate;
 
 require("commoner").version(
@@ -31,7 +30,7 @@ require("commoner").version(
   var constants = context.config.constants || {};
 
   // This is where JSX, ES6, etc. desugaring happens.
-  source = transform(getAllVisitors(), source).code;
+  source = transform(source, {harmony: true, stripTypes: true});
 
   // Constant propagation means removing any obviously dead code after
   // replacing constant expressions with literal (boolean) values.
