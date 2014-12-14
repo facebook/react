@@ -405,35 +405,6 @@ describe('ReactPropTypes', function() {
     it('should accept empty array for required props', function() {
       typeCheckPass(PropTypes.node.isRequired, []);
     });
-
-    it('should still work for deprecated typechecks', function() {
-      // We can't use typeCheckPass here because the warning module may do
-      // something different in some environments. Luckily they should be fine
-      // if they detect that console.warn is spied upon.
-      spyOn(console, 'warn');
-
-      // typeCheckPass(PropTypes.renderable, []);
-      var error = PropTypes.renderable(
-        {testProp: []},
-        'testProp',
-        'testComponent',
-        ReactPropTypeLocations.prop
-      );
-
-      expect(error).toBe(undefined);
-      expect(console.warn.calls.length).toBe(1);
-
-      // typeCheckPass(PropTypes.renderable.isRequired, []);
-      error = PropTypes.renderable.isRequired(
-        {testProp: []},
-        'testProp',
-        'testComponent',
-        ReactPropTypeLocations.prop
-      );
-
-      expect(error).toBe(undefined);
-      expect(console.warn.calls.length).toBe(1);
-    });
   });
 
   describe('ObjectOf Type', function() {

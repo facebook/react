@@ -24,7 +24,6 @@ var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
 var containsNode = require('containsNode');
-var deprecated = require('deprecated');
 var getReactRootElementInContainer = require('getReactRootElementInContainer');
 var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
@@ -815,14 +814,5 @@ ReactPerf.measureMethods(ReactMount, 'ReactMount', {
   _renderNewRootComponent: '_renderNewRootComponent',
   _mountImageIntoNode: '_mountImageIntoNode'
 });
-
-// Deprecations (remove for 0.13)
-ReactMount.renderComponent = deprecated(
-  'ReactMount',
-  'renderComponent',
-  'render',
-  this,
-  ReactMount.render
-);
 
 module.exports = ReactMount;
