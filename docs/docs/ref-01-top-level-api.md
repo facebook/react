@@ -14,10 +14,10 @@ redirect_from: "/docs/reference.html"
 ### React.createClass
 
 ```javascript
-ReactComponent createClass(object specification)
+ReactClass createClass(object specification)
 ```
 
-Create a component given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
+Create a component class, given a specification. A component implements a `render` method which returns **one single** child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don't need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.
 
 For more information about the specification object, see [Component Specs and Lifecycle](/react/docs/component-specs.html).
 
@@ -26,28 +26,27 @@ For more information about the specification object, see [Component Specs and Li
 
 ```javascript
 ReactElement createElement(
-  string/ReactComponent type,
+  string/ReactClass type,
   [object props],
   [children ...]
 )
 ```
 
 Create and return a new `ReactElement` of the given type. The type argument can be either an
-html tag name string (eg. 'div', 'span', etc), or a `ReactComponent` class that was created
-with `React.createClass`.
+html tag name string (eg. 'div', 'span', etc), or a `ReactClass` (created via `React.createClass`).
 
 
 ### React.createFactory
 
 ```javascript
 factoryFunction createFactory(
-  string/ReactComponent type
+  string/ReactClass type
 )
 ```
 
 Return a function that produces ReactElements of a given type. Like `React.createElement`,
 the type argument can be either an html tag name string (eg. 'div', 'span', etc), or a
-`ReactComponent` class that was created with `React.createClass`.
+`ReactClass`.
 
 
 ### React.render
