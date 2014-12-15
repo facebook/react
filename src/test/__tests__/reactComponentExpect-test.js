@@ -15,9 +15,6 @@ var React;
 var ReactTestUtils;
 var reactComponentExpect;
 
-var mocks;
-var warn;
-
 describe('reactComponentExpect', function() {
 
   beforeEach(function() {
@@ -46,4 +43,3 @@ describe('reactComponentExpect', function() {
       .toBeTextComponentWithValue('This is text');
   });
 });
-

@@ -185,13 +185,13 @@ describe('ReactClass-spec', function() {
       React.createClass({
         mixins: [{}],
         propTypes: {
-          foo: ReactPropTypes.string
+          foo: React.PropTypes.string
         },
         contextTypes: {
-          foo: ReactPropTypes.string
+          foo: React.PropTypes.string
         },
         childContextTypes: {
-          foo: ReactPropTypes.string
+          foo: React.PropTypes.string
         },
         render: function() {
           return <div />;
