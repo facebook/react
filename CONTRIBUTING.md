@@ -67,4 +67,4 @@ Facebook has a [bounty program](https://www.facebook.com/whitehat/) for the safe
 
 ## License
 
-By contributing to React, you agree that your contributions will be licensed under its BSD license..
+By contributing to React, you agree that your contributions will be licensed under its BSD license.
