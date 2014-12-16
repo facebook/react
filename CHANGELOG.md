@@ -1,3 +1,17 @@
+## 0.12.2 (December 18, 2014)
+
+### React Core
+
+* Added support for more HTML attributes: `formAction`, `formEncType`, `formMethod`, `formTarget`, `marginHeight`, `marginWidth`
+* Added `strokeOpacity` to the list of unitless CSS properties
+* Removed trailing commas (allows npm module to be bundled and used in IE8)
+* Fixed bug resulting in error when passing `undefined` to `React.createElement` - now there is a useful warning
+
+### React Tools
+
+* JSX-related transforms now always use double quotes for props and `displayName`
+
+
 ## 0.12.1 (November 18, 2014)
 
 ### React Tools
