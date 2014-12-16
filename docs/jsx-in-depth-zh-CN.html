@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Displaying Data | React</title>
+  <title>深入 JSX | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Displaying Data | React">
+  <meta property="og:title" content="深入 JSX | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/docs/displaying-data.html">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-in-depth-zh-CN.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -115,7 +115,7 @@
           </li>
         
           <li>
-            <a href="/react/docs/displaying-data.html" class="active">Displaying Data</a>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
             
               <ul>
                 
@@ -374,109 +374,118 @@
 
   <div class="inner-content">
     <h1>
-      Displaying Data
-      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02-displaying-data.md" target="_blank">Edit on GitHub</a>
+      深入 JSX
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02.1-jsx-in-depth.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>The most basic thing you can do with a UI is display some data. React makes it easy to display data and automatically keeps the interface up-to-date when the data changes.</p>
-<h2><a class="anchor" name="getting-started"></a>Getting Started <a class="hash-link" href="#getting-started">#</a></h2>
-<p>Let&#39;s look at a really simple example. Create a <code>hello-react.html</code> file with the following code:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html&gt;</span>
-  <span class="nt">&lt;head&gt;</span>
-    <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.12.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/JSXTransformer-0.12.1.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-  <span class="nt">&lt;/head&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;example&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
-    <span class="nt">&lt;script </span><span class="na">type=</span><span class="s">&quot;text/jsx&quot;</span><span class="nt">&gt;</span>
+    <p><a href="http://facebook.github.io/jsx/">JSX</a> 是一个看起来很像 XML 的 JavaScript 语法扩展。React 可以用来做简单的 JSX 句法转换。</p>
+<h2><a class="anchor" name="-jsx"></a>为什么要用 JSX？ <a class="hash-link" href="#-jsx">#</a></h2>
+<p>你不需要为了 React 使用 JSX，可以直接使用原生 JS。但是，我们建议使用 JSX 是因为它能精确，也是常用的定义包含属性的树状结构的语法。</p>
 
-      <span class="c1">// ** Your code goes here! **</span>
+<p>它对于非专职开发者比如设计师也比较熟悉。</p>
 
-    <span class="nt">&lt;/script&gt;</span>
-  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
+<p>XML 有固定的标签开启和闭合的优点。这能让复杂的树更易于阅读，优于方法调用和对象字面量的形式。</p>
+
+<p>它没有修改 JavaScript 语义。</p>
+<h2><a class="anchor" name="html---react-"></a>HTML 标签 对比 React 模块 <a class="hash-link" href="#html---react-">#</a></h2>
+<p>React 可以渲染 HTML 标签 (strings) 或 React 模块 (classes)。</p>
+
+<p>要渲染 HTML 标签，只需在 JSX 里使用小写字母开头的标签名。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myDivElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myDivElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 </code></pre></div>
-<p>For the rest of the documentation, we&#39;ll just focus on the JavaScript code and assume it&#39;s inserted into a template like the one above. Replace the placeholder comment above with the following JS:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">HelloWorld</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>
-        <span class="nx">Hello</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name here&quot;</span> <span class="o">/&gt;!</span>
-        <span class="nx">It</span> <span class="nx">is</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">date</span><span class="p">.</span><span class="nx">toTimeString</span><span class="p">()}</span>
-      <span class="o">&lt;</span><span class="err">/p&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">setInterval</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">HelloWorld</span> <span class="nx">date</span><span class="o">=</span><span class="p">{</span><span class="k">new</span> <span class="nb">Date</span><span class="p">()}</span> <span class="o">/&gt;</span><span class="p">,</span>
-    <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-  <span class="p">);</span>
-<span class="p">},</span> <span class="mi">500</span><span class="p">);</span>
-</code></pre></div><h2><a class="anchor" name="reactive-updates"></a>Reactive Updates <a class="hash-link" href="#reactive-updates">#</a></h2>
-<p>Open <code>hello-react.html</code> in a web browser and type your name into the text field. Notice that React is only changing the time string in the UI — any input you put in the text field remains, even though you haven&#39;t written any code to manage this behavior. React figures it out for you and does the right thing.</p>
-
-<p>The way we are able to figure this out is that React does not manipulate the DOM unless it needs to. <strong>It uses a fast, internal mock DOM to perform diffs and computes the most efficient DOM mutation for you.</strong></p>
-
-<p>The inputs to this component are called <code>props</code> — short for &quot;properties&quot;. They&#39;re passed as attributes in JSX syntax. You should think of these as immutable within the component, that is, <strong>never write to <code>this.props</code></strong>.</p>
-<h2><a class="anchor" name="components-are-just-like-functions"></a>Components are Just Like Functions <a class="hash-link" href="#components-are-just-like-functions">#</a></h2>
-<p>React components are very simple. You can think of them as simple functions that take in <code>props</code> and <code>state</code> (discussed later) and render HTML. Because they&#39;re so simple, it makes them very easy to reason about.</p>
+<p>要渲染 React 模块，只需创建一个大写字母开头的本地变量。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
+<span class="kd">var</span> <span class="nx">myElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+</code></pre></div>
+<p>React 的 JSX 里约定分别使用首字母大、小写来区分本地模块的类和 HTML 标签。</p>
 
 <blockquote>
-<p>Note:</p>
+<p>提示:</p>
 
-<p><strong>One limitation</strong>: React components can only render a single root node. If you want to return multiple nodes they <em>must</em> be wrapped in a single root.</p>
+<p>由于 JSX 就是 JavaScript，一些标识符像 <code>class</code> 和 <code>for</code> 不建议作为 XML
+属性名。作为替代，React DOM 使用 <code>className</code> 和 <code>htmlFor</code> 来做对应的属性。</p>
 </blockquote>
-<h2><a class="anchor" name="jsx-syntax"></a>JSX Syntax <a class="hash-link" href="#jsx-syntax">#</a></h2>
-<p>We strongly believe that components are the right way to separate concerns rather than &quot;templates&quot; and &quot;display logic.&quot; We think that markup and the code that generates it are intimately tied together. Additionally, display logic is often very complex and using template languages to express it becomes cumbersome.</p>
-
-<p>We&#39;ve found that the best solution for this problem is to generate HTML and component trees directly from the JavaScript code such that you can use all of the expressive power of a real programming language to build UIs.</p>
-
-<p>In order to make this easier, we&#39;ve added a very simple, <strong>optional</strong> HTML-like syntax to create these React tree nodes.</p>
-
-<p><strong>JSX lets you create JavaScript objects using HTML syntax.</strong> To generate a link in React using pure JavaScript you&#39;d write:</p>
-
-<p><code>React.createElement(&#39;a&#39;, {href: &#39;http://facebook.github.io/react/&#39;}, &#39;Hello!&#39;)</code></p>
-
-<p>With JSX this becomes:</p>
-
-<p><code>&lt;a href=&quot;http://facebook.github.io/react/&quot;&gt;Hello!&lt;/a&gt;</code></p>
-
-<p>We&#39;ve found this has made building React apps easier and designers tend to prefer the syntax, but everyone has their own workflow, so <strong>JSX is not required to use React.</strong></p>
-
-<p>JSX is very small. To learn more about it, see <a href="/react/docs/jsx-in-depth.html">JSX in depth</a>. Or see the transform in action in <a href="/react/jsx-compiler.html">our live JSX compiler</a>.</p>
-
-<p>JSX is similar to HTML, but not exactly the same. See <a href="/react/docs/jsx-gotchas.html">JSX gotchas</a> for some key differences.</p>
-
-<p>The easiest way to get started with JSX is to use the in-browser <code>JSXTransformer</code>. We strongly recommend that you don&#39;t use this in production. You can precompile your code using our command-line <a href="http://npmjs.org/package/react-tools">react-tools</a> package.</p>
-<h2><a class="anchor" name="react-without-jsx"></a>React without JSX <a class="hash-link" href="#react-without-jsx">#</a></h2>
-<p>JSX is completely optional. You don&#39;t have to use JSX with React. You can create these trees through <code>React.createElement</code>. The first argument is the tag, pass a properties object as the second argument and children to the third argument.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">child</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;li&#39;</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="s1">&#39;ul&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span> <span class="nx">child</span><span class="p">);</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+<h2><a class="anchor" name="transform"></a>转换（Transform） <a class="hash-link" href="#transform">#</a></h2>
+<p>JSX 把类 XML 的语法转成原生 JavaScript，XML 元素、属性和子节点被转换成 <code>React.createElement</code> 的参数。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
+<span class="c1">// 输入 (JSX):</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="c1">// 输出 (JS):</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">,</span> <span class="p">{</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">});</span>
 </code></pre></div>
-<p>As a convenience you can create short-hand factory function to create elements from custom components.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Factory</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="nx">ComponentClass</span><span class="p">);</span>
-<span class="p">...</span>
-<span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">Factory</span><span class="p">({</span> <span class="nx">custom</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">root</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
+<p>注意，要想使用 <code>&lt;Nav /&gt;</code>，<code>Nav</code> 变量一定要在作用区间内。</p>
+
+<p>JSX 也支持使用 XML 语法定义子结点：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">,</span> <span class="nx">Profile</span><span class="p">;</span>
+<span class="c1">// 输入 (JSX):</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="o">&gt;&lt;</span><span class="nx">Profile</span><span class="o">&gt;</span><span class="nx">click</span><span class="o">&lt;</span><span class="err">/Profile&gt;&lt;/Nav&gt;;</span>
+<span class="c1">// 输出 (JS):</span>
+<span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+  <span class="nx">Nav</span><span class="p">,</span>
+  <span class="p">{</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">},</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Profile</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">)</span>
+<span class="p">);</span>
 </code></pre></div>
-<p>React already have built-in factories for common HTML tags:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">root</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">ul</span><span class="p">({</span> <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;my-list&#39;</span> <span class="p">},</span>
-             <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">li</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="s1">&#39;Text Content&#39;</span><span class="p">)</span>
-           <span class="p">);</span>
+<p>使用 <a href="/react/jsx-compiler.html">JSX 编译器</a> 来试用 JSX 并理解它是如何转换到原生 JavaScript，还有 <a href="/react/html-jsx.html">HTML 到 JSX 转换器</a> 来把现有 HTML 转成 JSX。</p>
+
+<p>如果你要使用 JSX，这篇 <a href="/react/docs/getting-started.html">新手入门</a> 教程来教你如何搭建环境。</p>
+
+<blockquote>
+<p>提示:</p>
+
+<p>JSX 表达式总是会当作 ReactElement 执行。具体的实际细节可能不同。一种优化
+的模式是把 ReactElement 当作一个行内的对象字面量形式来绕过
+<code>React.createElement</code> 里的校验代码。</p>
+</blockquote>
+<h2><a class="anchor" name="javascript-"></a>JavaScript 表达式 <a class="hash-link" href="#javascript-">#</a></h2><h3><a class="anchor" name=""></a>属性表达式 <a class="hash-link" href="#">#</a></h3>
+<p>要使用 JavaScript 表达式作为属性值，只需把这个表达式用一对大括号 (<code>{}</code>) 包起来，不要用引号 (<code>&quot;&quot;</code>)。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 输入 (JSX):</span>
+<span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Person</span> <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="c1">// 输出 (JS):</span>
+<span class="kd">var</span> <span class="nx">person</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+  <span class="nx">Person</span><span class="p">,</span>
+  <span class="p">{</span><span class="nx">name</span><span class="o">:</span> <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
+<span class="p">);</span>
+</code></pre></div><h3><a class="anchor" name=""></a>子节点表达式 <a class="hash-link" href="#">#</a></h3>
+<p>同样地，JavaScript 表达式可用于描述子结点：</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 输入 (JSX):</span>
+<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Container</span><span class="o">&gt;</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="o">&lt;</span><span class="nx">Login</span> <span class="o">/&gt;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Container&gt;;</span>
+<span class="c1">// 输出 (JS):</span>
+<span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span>
+  <span class="nx">Container</span><span class="p">,</span>
+  <span class="kc">null</span><span class="p">,</span>
+  <span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Nav</span><span class="p">)</span> <span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Login</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div><h3><a class="anchor" name=""></a>注释 <a class="hash-link" href="#">#</a></h3>
+<p>JSX 里添加注释很容易；它们只是 JS 表达式而已。你只需要在一个标签的子节点内(非最外层)小心地用 <code>{}</code> 包围要注释的部分。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">content</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Nav</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="cm">/* 一般注释, 用 {} 包围 */</span><span class="p">}</span>
+    <span class="o">&lt;</span><span class="nx">Person</span>
+      <span class="cm">/* 多</span>
+<span class="cm">         行</span>
+<span class="cm">         注释 */</span>
+      <span class="nx">name</span><span class="o">=</span><span class="p">{</span><span class="nb">window</span><span class="p">.</span><span class="nx">isLoggedIn</span> <span class="o">?</span> <span class="nb">window</span><span class="p">.</span><span class="nx">name</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span> <span class="c1">// 行尾注释</span>
+    <span class="o">/&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Nav&gt;</span>
+<span class="p">);</span>
 </code></pre></div>
+<blockquote>
+<p>提示:</p>
+
+<p>JSX 类似于 HTML，但不完全一样。参考 <a href="/react/docs/jsx-gotchas.html">JSX 陷阱</a> 了解主要不同。</p>
+</blockquote>
+
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/docs/why-react.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/displaying-data-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/jsx-in-depth.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/jsx-spread-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>
