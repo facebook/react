@@ -21,6 +21,20 @@ var MyComponent;
 var requiredMessage =
   'Required prop `testProp` was not specified in `testComponent`.';
 
+function dependencyCheckPass(declaration, value, props) {
+  if (!props) {
+    props = {};
+  }
+  props.testProp = value;
+  var error = declaration(
+    props,
+    'testProp',
+    'testComponent',
+    ReactPropTypeLocations.prop
+  );
+  expect(error).toBe(undefined);
+}
+
 function typeCheckFail(declaration, value, message) {
   var props = {testProp: value};
   var error = declaration(
@@ -269,6 +283,58 @@ describe('ReactPropTypes', function() {
     it("should warn for missing required values", function() {
       typeCheckFail(PropTypes.element.isRequired, null, requiredMessage);
       typeCheckFail(PropTypes.element.isRequired, undefined, requiredMessage);
+    });
+  });
+
+  describe('DependsOn Types', function() {
+    it("should support the dependsOn propType", () => {
+      dependencyCheckPass(
+        PropTypes.dependsOn('testProp2'),
+        'value',
+        {testProp2: 'value2'}
+      );
+    });
+
+    it("should support an array of dependencies", () => {
+      dependencyCheckPass(
+        PropTypes.dependsOn(['testProp2', 'testProp3']),
+        'value',
+        {testProp2: 'value2', testProp3: 'value3'}
+      );
+    });
+
+    it("should support an optional typeChecker", () => {
+      dependencyCheckPass(
+        PropTypes.dependsOn('testProp2', React.PropTypes.string),
+        'value',
+        {testProp2: 'value2'}
+      );
+    });
+
+    it("should warn for missing dependency", () => {
+      typeCheckFail(
+        PropTypes.dependsOn('missingProp'),
+        'testProp',
+        'Invalid prop `testProp` supplied to `testComponent` ' +
+        'without `missingProp`.'
+      );
+    });
+
+    it("should warn for missing required values", () => {
+      typeCheckFail(
+        PropTypes.dependsOn('testProp').isRequired,
+        null,
+        requiredMessage
+      );
+    });
+
+    it("should warn for invalid type", () => {
+      typeCheckFail(
+        PropTypes.dependsOn('testProp', PropTypes.string),
+        1,
+        'Invalid prop `testProp` of type `number` supplied to ' +
+        '`testComponent`, expected `string`.'
+      );
     });
   });
 
