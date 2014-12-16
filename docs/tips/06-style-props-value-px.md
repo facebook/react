@@ -29,6 +29,7 @@ Sometimes you _do_ want to keep the CSS properties unitless. Here's a list of pr
 - `opacity`
 - `order`
 - `orphans`
+- `strokeOpacity`
 - `widows`
 - `zIndex`
 - `zoom`
