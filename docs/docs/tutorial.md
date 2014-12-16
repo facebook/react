@@ -16,8 +16,8 @@ We'll provide:
 It'll also have a few neat features:
 
 * **Optimistic commenting:** comments appear in the list before they're saved on the server so it feels fast.
-* **Live updates:** as other users comment we'll pop them into the comment view in real time
-* **Markdown formatting:** users can use Markdown to format their text
+* **Live updates:** other users' comments are popped into the comment view in real time.
+* **Markdown formatting:** users can use Markdown to format their text.
 
 ### Want to skip all this and just see the source?
 
