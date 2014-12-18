@@ -13,7 +13,7 @@ var BootstrapButton = React.createClass({
 
 var BootstrapModal = React.createClass({
   // The following two methods are the only places we need to
-  // integrate with Bootstrap or jQuery!
+  // integrate Bootstrap or jQuery with the components lifecycle methods.
   componentDidMount: function() {
     // When the component is added, turn it into a modal
     $(this.getDOMNode())
