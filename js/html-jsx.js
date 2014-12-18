@@ -22,7 +22,7 @@ var HELLO_COMPONENT = "\
 <p>Enter your HTML here</p>\
 ";
 
-  var HTMLtoJSXComponent = React.createClass({displayName: 'HTMLtoJSXComponent',
+  var HTMLtoJSXComponent = React.createClass({displayName: "HTMLtoJSXComponent",
     getInitialState: function() {
       return {
         outputClassName: 'NewComponent',

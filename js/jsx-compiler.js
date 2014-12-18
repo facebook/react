@@ -12,7 +12,7 @@ function transformer(harmony, code) {
   return JSXTransformer.transform(code, {harmony: harmony}).code;
 }
 
-var CompilerPlayground = React.createClass({displayName: 'CompilerPlayground',
+var CompilerPlayground = React.createClass({displayName: "CompilerPlayground",
   getInitialState: function() {
     return {harmony: false};
   },
@@ -37,7 +37,7 @@ var CompilerPlayground = React.createClass({displayName: 'CompilerPlayground',
         )
       )
     );
-  },
+  }
 });
 React.render(
   React.createElement(CompilerPlayground, null),

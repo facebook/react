@@ -7,6 +7,45 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.12.2</title>
+				<description>&lt;p&gt;We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.&lt;/p&gt;
+
+&lt;p&gt;You may have noticed that we did not do an announcement for v0.12.1. That release was snuck out in anticipation of &lt;a href=&quot;http://flowtype.org/&quot;&gt;Flow&lt;/a&gt;, with only transform-related changes. Namely we added a flag to the &lt;code&gt;jsx&lt;/code&gt; executable which allowed you to safely transform Flow-based code to vanilla JS. If you didn&amp;#39;t update for that release, you can safely skip it and move directly to v0.12.2.&lt;/p&gt;
+
+&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.2.js&quot;&gt;http://fb.me/react-0.12.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.2.min.js&quot;&gt;http://fb.me/react-0.12.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.2.js&quot;&gt;http://fb.me/react-with-addons-0.12.2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.2.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.2.js&quot;&gt;http://fb.me/JSXTransformer-0.12.2.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower. &lt;code&gt;0.12.1&lt;/code&gt; is also available in the same locations if need those.&lt;/p&gt;
+
+&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Added support for more HTML attributes: &lt;code&gt;formAction&lt;/code&gt;, &lt;code&gt;formEncType&lt;/code&gt;, &lt;code&gt;formMethod&lt;/code&gt;, &lt;code&gt;formTarget&lt;/code&gt;, &lt;code&gt;marginHeight&lt;/code&gt;, &lt;code&gt;marginWidth&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Added &lt;code&gt;strokeOpacity&lt;/code&gt; to the list of unitless CSS properties&lt;/li&gt;
+&lt;li&gt;Removed trailing commas (allows npm module to be bundled and used in IE8)&lt;/li&gt;
+&lt;li&gt;Fixed bug resulting in error when passing &lt;code&gt;undefined&lt;/code&gt; to &lt;code&gt;React.createElement&lt;/code&gt; - now there is a useful warning&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;JSX-related transforms now always use double quotes for props and &lt;code&gt;displayName&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-12-18T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #24</title>
 				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;keep-it-simple&quot;&gt;&lt;/a&gt;Keep it Simple &lt;a class=&quot;hash-link&quot; href=&quot;#keep-it-simple&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Pedro Nauck (&lt;a href=&quot;https://github.com/pedronauck&quot;&gt;pedronauck&lt;/a&gt;) delivered an impeccably illustrated deck at Brazil&amp;#39;s &lt;em&gt;Front in Floripa&lt;/em&gt; conference. Watch him talk about how to keep delivering value as your app scales, by keeping your development process simple.&lt;/p&gt;
@@ -971,95 +1010,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-09-16T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #22</title>
-				<description>&lt;p&gt;This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!&lt;/p&gt;
-
-&lt;table&gt;&lt;tr&gt;&lt;td&gt;
-&lt;blockquote width=&quot;300&quot; class=&quot;twitter-tweet&quot; data-cards=&quot;hidden&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Our friends at &lt;a href=&quot;https://twitter.com/Yahoo&quot;&gt;@yahoo&lt;/a&gt; talk about migrating Yahoo! Mail from YUI to ReactJS at the next &lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt; meetup! &lt;a href=&quot;http://t.co/Cu2AaE0sVE&quot;&gt;http://t.co/Cu2AaE0sVE&lt;/a&gt;&lt;/p&gt;&amp;mdash; Facebook Open Source (@fbOpenSource) &lt;a href=&quot;https://twitter.com/fbOpenSource/status/510258065900572672&quot;&gt;September 12, 2014&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;td valign=&quot;top&quot;&gt;
-&lt;blockquote width=&quot;300&quot; class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;I guess &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; is getting into Firefox :-) Thanks &lt;a href=&quot;https://twitter.com/n1k0&quot;&gt;@n1k0&lt;/a&gt; ! &lt;a href=&quot;https://t.co/kipfUS0hu4&quot;&gt;https://t.co/kipfUS0hu4&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Bruant (@DavidBruant) &lt;a href=&quot;https://twitter.com/DavidBruant/status/484956929933213696&quot;&gt;July 4, 2014&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;
-&lt;blockquote width=&quot;300&quot; class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;.&lt;a href=&quot;https://twitter.com/AirbnbNerds&quot;&gt;@AirbnbNerds&lt;/a&gt; just launched our first user-facing React.js feature to production! We love it so far. &lt;a href=&quot;https://t.co/KtyudemcIW&quot;&gt;https://t.co/KtyudemcIW&lt;/a&gt; /&lt;a href=&quot;https://twitter.com/floydophone&quot;&gt;@floydophone&lt;/a&gt;&lt;/p&gt;&amp;mdash; spikebrehm (@spikebrehm) &lt;a href=&quot;https://twitter.com/spikebrehm/statuses/491645223643013121&quot;&gt;July 22, 2014&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;td&gt;
-&lt;blockquote width=&quot;300&quot; class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;We shipped reddit&amp;#39;s first production &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; code last week, our checkout process.&amp;#10;&amp;#10;&lt;a href=&quot;https://t.co/KUInwsCmAF&quot;&gt;https://t.co/KUInwsCmAF&lt;/a&gt;&lt;/p&gt;&amp;mdash; Brian Holt (@holtbt) &lt;a href=&quot;https://twitter.com/holtbt/statuses/493852312604254208&quot;&gt;July 28, 2014&lt;/a&gt;&lt;/blockquote&gt;
-&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reacts-architecture&quot;&gt;&lt;/a&gt;React&amp;#39;s Architecture &lt;a class=&quot;hash-link&quot; href=&quot;#reacts-architecture&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://blog.vjeux.com/&quot;&gt;Vjeux&lt;/a&gt;, from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the &lt;a href=&quot;https://speakerdeck.com/vjeux/oscon-react-architecture&quot;&gt;annotated slides&lt;/a&gt; or &lt;a href=&quot;http://thenewstack.io/author/chrisdawson/&quot;&gt;Chris Dawson&lt;/a&gt;&amp;#39;s notes titled &lt;a href=&quot;http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/&quot;&gt;JavaScript’s History and How it Led To React&lt;/a&gt;.&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/eCf5CquV_Bw&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;v8-optimizations&quot;&gt;&lt;/a&gt;v8 optimizations &lt;a class=&quot;hash-link&quot; href=&quot;#v8-optimizations&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Jakob Kummerow landed &lt;a href=&quot;http://www.chromium.org/developers/speed-hall-of-fame#TOC-2014-06-18&quot;&gt;two optimizations to V8&lt;/a&gt; specifically targeted at optimizing React. That&amp;#39;s really exciting to see browser vendors helping out on performance!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reusable-components-by-khan-academy&quot;&gt;&lt;/a&gt;Reusable Components by Khan Academy &lt;a class=&quot;hash-link&quot; href=&quot;#reusable-components-by-khan-academy&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://www.khanacademy.org/&quot;&gt;Khan Academy&lt;/a&gt; released &lt;a href=&quot;http://khan.github.io/react-components/&quot;&gt;many high quality standalone components&lt;/a&gt; they are using. This is a good opportunity to see what React code used in production look like.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;TeX&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react-components/js/tex.jsx&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;TeX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;nabla&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cdot&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;pi&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;\&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;rho&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/TeX&amp;gt;, domNode);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;translated&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;$_&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Motoko&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;last&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Kusanagi&amp;quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;last&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/$_&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react--browserify--gulp&quot;&gt;&lt;/a&gt;React + Browserify + Gulp &lt;a class=&quot;hash-link&quot; href=&quot;#react--browserify--gulp&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://truongtx.me/&quot;&gt;Trường&lt;/a&gt; wrote a little guide to help your &lt;a href=&quot;http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/&quot;&gt;getting started using React, Browserify and Gulp&lt;/a&gt;.&lt;/p&gt;
-
-&lt;figure&gt;&lt;a href=&quot;http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/&quot;&gt;&lt;img src=&quot;/react/img/blog/react-browserify-gulp.jpg&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-style&quot;&gt;&lt;/a&gt;React Style &lt;a class=&quot;hash-link&quot; href=&quot;#react-style&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: &lt;a href=&quot;https://github.com/SanderSpies/react-style&quot;&gt;IntegratedCSS&lt;/a&gt;. It seems weird at first but this is the direction where React is heading.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;normalStyle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ReactStyle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;backgroundColor&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;vars&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;orange&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}),&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;activeStyle&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ReactStyle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;active&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;yellow&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;padding&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;10px&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}),&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;styles&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;normalStyle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;activeStyle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()]}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-        &lt;span class=&quot;nx&quot;&gt;Hello&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;I&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&amp;#39;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;m&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;styled&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;virtual-dom-in-elm&quot;&gt;&lt;/a&gt;Virtual DOM in Elm &lt;a class=&quot;hash-link&quot; href=&quot;#virtual-dom-in-elm&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://evan.czaplicki.us&quot;&gt;Evan Czaplicki&lt;/a&gt; explains how Elm implements the idea of a Virtual DOM and a diffing algorithm. This is great to see React ideas spread to other languages.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Performance is a good hook, but the real benefit is that this approach leads to code that is easier to understand and maintain. In short, it becomes very simple to create reusable HTML widgets and abstract out common patterns. This is why people with larger code bases should be interested in virtual DOM approaches.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://elm-lang.org/blog/Blazing-Fast-Html.elm&quot;&gt;Read the full article&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;components-tutorial&quot;&gt;&lt;/a&gt;Components Tutorial &lt;a class=&quot;hash-link&quot; href=&quot;#components-tutorial&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;If you are getting started with React, &lt;a href=&quot;http://www.joemaddalone.com/&quot;&gt;Joe Maddalone&lt;/a&gt; made a good tutorial on how to build your first component.&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;200&quot; src=&quot;//www.youtube.com/embed/rFvZydtmsxM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;saving-time-amp-staying-sane&quot;&gt;&lt;/a&gt;Saving time &amp;amp; staying sane? &lt;a class=&quot;hash-link&quot; href=&quot;#saving-time-amp-staying-sane&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;When &lt;a href=&quot;http://http://kentwilliam.com/&quot;&gt;Kent William Innholt&lt;/a&gt; who works at &lt;a href=&quot;http://mpath.com/&quot;&gt;M&amp;gt;Path&lt;/a&gt; summed up his experience using React in an &lt;a href=&quot;http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js&quot;&gt;article&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;We&amp;#39;re building an ambitious new web app, where the UI complexity represents most of the app&amp;#39;s complexity overall. It includes a tremendous amount of UI widgets as well as a lot rules on what-to-show-when. This is exactly the sort of situation React.js was built to simplify.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Big win&lt;/strong&gt;: Tighter coupling of markup and behavior&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Jury&amp;#39;s still out&lt;/strong&gt;: CSS lives outside React.js&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Big win&lt;/strong&gt;: Cascading updates and functional thinking&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Jury&amp;#39;s still out&lt;/strong&gt;: Verbose propagation&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js&quot;&gt;Read the article...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;weather&quot;&gt;&lt;/a&gt;Weather &lt;a class=&quot;hash-link&quot; href=&quot;#weather&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;To finish this round-up, Andrew Gleave made a page that displays the &lt;a href=&quot;https://github.com/andrewgleave/react-weather&quot;&gt;Weather&lt;/a&gt;. It&amp;#39;s great to see that React is also used for small prototypes.&lt;/p&gt;
-
-&lt;figure&gt;&lt;a href=&quot;https://github.com/andrewgleave/react-weather&quot;&gt;&lt;img src=&quot;/react/img/blog/weather.png&quot; /&gt;&lt;/a&gt;&lt;/figure&gt;
-</description>
-				<pubDate>2014-09-12T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/09/12/community-round-up-22.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/12/community-round-up-22.html</guid>
 			</item>
 		
 	</channel>

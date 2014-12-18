@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>React v0.11.2 | React</title>
+  <title>React v0.12.2 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="React v0.11.2 | React">
+  <meta property="og:title" content="React v0.12.2 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html">
+  <meta property="og:url" content="http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -63,7 +63,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2014/12/18/react-v0.12.2.html">React v0.12.2</a></li>
+        <li><a href="/react/blog/2014/12/18/react-v0.12.2.html" class="active">React v0.12.2</a></li>
       
         <li><a href="/react/blog/2014/11/25/community-roundup-24.html">Community Round-up #24</a></li>
       
@@ -81,7 +81,7 @@
       
         <li><a href="/react/blog/2014/09/24/testing-flux-applications.html">Testing Flux Applications</a></li>
       
-        <li><a href="/react/blog/2014/09/16/react-v0.11.2.html" class="active">React v0.11.2</a></li>
+        <li><a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
@@ -89,58 +89,42 @@
 </div>
 
   <div class="inner-content">
-    <h1>React v0.11.2</h1>
-    <p class="meta">September 16, 2014 by Paul O’Shannessy</p>
+    <h1>React v0.12.2</h1>
+    <p class="meta">December 18, 2014 by Paul O’Shannessy</p>
 
     <hr>
 
     <div class="post">
-      <p>Today we&#39;re releasing React v0.11.2 to add a few small features.</p>
+      <p>We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.</p>
 
-<p>We&#39;re adding support for two more DOM elements, <code>&lt;dialog&gt;</code> and <code>&lt;picture&gt;</code>, as well as the associated attributes needed to use these elements: <code>open</code>, <code>media</code>, and <code>sizes</code>. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&#39;re making them available to everybody.</p>
-
-<p>We&#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing <code>React.createDescriptor</code> with <code>React.createElement</code>. <code>createDescriptor</code> will continue to work with a warning and will be gone in v0.12. Chances are that this won&#39;t affect anybody.</p>
-
-<p>And lastly, on the heels of announcing Flow at <a href="http://atscaleconference.com/">@Scale</a> yesterday, we&#39;re adding the ability to strip TypeScript-like type annotations as part of the <code>jsx</code> transform. To use, simply use the <code>--strip-types</code> flag on the command line, or set <code>stripTypes</code> in the <code>options</code> object when calling the API. We&#39;ll be talking about Flow more in the coming months. But for now, it&#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.</p>
+<p>You may have noticed that we did not do an announcement for v0.12.1. That release was snuck out in anticipation of <a href="http://flowtype.org/">Flow</a>, with only transform-related changes. Namely we added a flag to the <code>jsx</code> executable which allowed you to safely transform Flow-based code to vanilla JS. If you didn&#39;t update for that release, you can safely skip it and move directly to v0.12.2.</p>
 
 <p>The release is available for download from the CDN:</p>
 
 <ul>
 <li><strong>React</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-0.11.2.js">http://fb.me/react-0.11.2.js</a><br>
-Minified build for production: <a href="http://fb.me/react-0.11.2.min.js">http://fb.me/react-0.11.2.min.js</a><br></li>
+Dev build with warnings: <a href="http://fb.me/react-0.12.2.js">http://fb.me/react-0.12.2.js</a><br>
+Minified build for production: <a href="http://fb.me/react-0.12.2.min.js">http://fb.me/react-0.12.2.min.js</a><br></li>
 <li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="http://fb.me/react-with-addons-0.11.2.js">http://fb.me/react-with-addons-0.11.2.js</a><br>
-Minified build for production: <a href="http://fb.me/react-with-addons-0.11.2.min.js">http://fb.me/react-with-addons-0.11.2.min.js</a><br></li>
+Dev build with warnings: <a href="http://fb.me/react-with-addons-0.12.2.js">http://fb.me/react-with-addons-0.12.2.js</a><br>
+Minified build for production: <a href="http://fb.me/react-with-addons-0.12.2.min.js">http://fb.me/react-with-addons-0.12.2.min.js</a><br></li>
 <li><strong>In-Browser JSX transformer</strong><br>
-<a href="http://fb.me/JSXTransformer-0.11.2.js">http://fb.me/JSXTransformer-0.11.2.js</a></li>
+<a href="http://fb.me/JSXTransformer-0.12.2.js">http://fb.me/JSXTransformer-0.12.2.js</a></li>
 </ul>
 
-<p>We&#39;ve also published version <code>0.11.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+<p>We&#39;ve also published version <code>0.12.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower. <code>0.12.1</code> is also available in the same locations if need those.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-<h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3><h4><a class="anchor" name="new-features"></a>New Features <a class="hash-link" href="#new-features">#</a></h4>
+<h2><a class="anchor" name="changelog"></a>Changelog <a class="hash-link" href="#changelog">#</a></h2><h3><a class="anchor" name="react-core"></a>React Core <a class="hash-link" href="#react-core">#</a></h3>
 <ul>
-<li>Added support for <code>&lt;dialog&gt;</code> element and associated <code>open</code> attribute</li>
-<li>Added support for <code>&lt;picture&gt;</code> element and associated <code>media</code> and <code>sizes</code> attributes</li>
-<li>Added <code>React.createElement</code> API in preparation for React v0.12
-
-<ul>
-<li><code>React.createDescriptor</code> has been deprecated as a result</li>
-</ul></li>
-</ul>
-<h3><a class="anchor" name="jsx"></a>JSX <a class="hash-link" href="#jsx">#</a></h3>
-<ul>
-<li><code>&lt;picture&gt;</code> is now parsed into <code>React.DOM.picture</code></li>
+<li>Added support for more HTML attributes: <code>formAction</code>, <code>formEncType</code>, <code>formMethod</code>, <code>formTarget</code>, <code>marginHeight</code>, <code>marginWidth</code></li>
+<li>Added <code>strokeOpacity</code> to the list of unitless CSS properties</li>
+<li>Removed trailing commas (allows npm module to be bundled and used in IE8)</li>
+<li>Fixed bug resulting in error when passing <code>undefined</code> to <code>React.createElement</code> - now there is a useful warning</li>
 </ul>
 <h3><a class="anchor" name="react-tools"></a>React Tools <a class="hash-link" href="#react-tools">#</a></h3>
 <ul>
-<li>Update <code>esprima</code> and <code>jstransform</code> for correctness fixes</li>
-<li>The <code>jsx</code> executable now exposes a <code>--strip-types</code> flag which can be used to remove TypeScript-like type annotations
-
-<ul>
-<li>This option is also exposed to <code>require(&#39;react-tools&#39;).transform</code> as <code>stripTypes</code></li>
-</ul></li>
+<li>JSX-related transforms now always use double quotes for props and <code>displayName</code></li>
 </ul>
 
     </div>

@@ -8,7 +8,7 @@ var IS_MOBILE = (
     || navigator.userAgent.match(/Windows Phone/i)
 );
 
-var CodeMirrorEditor = React.createClass({displayName: 'CodeMirrorEditor',
+var CodeMirrorEditor = React.createClass({displayName: "CodeMirrorEditor",
   componentDidMount: function() {
     if (IS_MOBILE) return;
 
@@ -65,7 +65,7 @@ var selfCleaningTimeout = {
   }
 };
 
-var ReactPlayground = React.createClass({displayName: 'ReactPlayground',
+var ReactPlayground = React.createClass({displayName: "ReactPlayground",
   mixins: [selfCleaningTimeout],
 
   MODES: {JSX: 'JSX', JS: 'JS'}, //keyMirror({JSX: true, JS: true}),
