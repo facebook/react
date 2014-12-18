@@ -16,7 +16,6 @@ var ReactElement = require('ReactElement');
 var ReactPropTransferer = require('ReactPropTransferer');
 
 var keyOf = require('keyOf');
-var monitorCodeUse = require('monitorCodeUse');
 var warning = require('warning');
 
 var CHILDREN_PROP = keyOf({children: null});
@@ -31,7 +30,6 @@ var CHILDREN_PROP = keyOf({children: null});
  * @return {object} a clone of child with props merged in.
  */
 function cloneWithProps(child, props) {
-  monitorCodeUse('react_clone_with_props');
   if (__DEV__) {
     warning(
       !child.ref,
