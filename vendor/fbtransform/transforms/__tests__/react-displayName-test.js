@@ -24,7 +24,7 @@ describe('react displayName jsx', function() {
     var code = [
       '"use strict";',
       'var Whateva = React.createClass({',
-      '  displayName: \'Whateva\',',
+      '  displayName: "Whateva",',
       '  render: function() {',
       '    return null;',
       '  }',
@@ -34,7 +34,7 @@ describe('react displayName jsx', function() {
     var result = [
       '"use strict";',
       'var Whateva = React.createClass({',
-      '  displayName: \'Whateva\',',
+      '  displayName: "Whateva",',
       '  render: function() {',
       '    return null;',
       '  }',
@@ -54,7 +54,7 @@ describe('react displayName jsx', function() {
     ].join('\n');
 
     var result = [
-      'var Component = React.createClass({displayName: \'Component\',',
+      'var Component = React.createClass({displayName: "Component",',
       '  render: function() {',
       '    return null;',
       '  }',
@@ -76,7 +76,7 @@ describe('react displayName jsx', function() {
 
     var result = [
       'var Component;',
-      'Component = React.createClass({displayName: \'Component\',',
+      'Component = React.createClass({displayName: "Component",',
       '  render: function() {',
       '    return null;',
       '  }',
@@ -96,7 +96,7 @@ describe('react displayName jsx', function() {
     ].join('\n');
 
     var result = [
-      'exports.Component = React.createClass({displayName: \'Component\',',
+      'exports.Component = React.createClass({displayName: "Component",',
       '  render: function() {',
       '    return null;',
       '  }',
@@ -119,7 +119,7 @@ describe('react displayName jsx', function() {
 
     var result = [
       'exports = {',
-      '  Component: React.createClass({displayName: \'Component\',',
+      '  Component: React.createClass({displayName: "Component",',
       '    render: function() {',
       '      return null;',
       '    }',

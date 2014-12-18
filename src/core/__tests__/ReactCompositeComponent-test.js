@@ -1483,4 +1483,25 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('gives a helpful error when passing null or undefined', function() {
+    spyOn(console, 'warn');
+    React.createElement(undefined);
+    React.createElement(null);
+    expect(console.warn.calls.length).toBe(2);
+    expect(console.warn.calls[0].args[0]).toBe(
+      'Warning: React.createElement: type should not be null or undefined. ' +
+      'It should be a string (for DOM elements) or a ReactClass (for ' +
+      'composite components).'
+    );
+    expect(console.warn.calls[1].args[0]).toBe(
+      'Warning: React.createElement: type should not be null or undefined. ' +
+      'It should be a string (for DOM elements) or a ReactClass (for ' +
+      'composite components).'
+    );
+    React.createElement('div');
+    expect(console.warn.calls.length).toBe(2);
+
+    expect(() => React.createElement(undefined)).not.toThrow()
+  });
+
 });
