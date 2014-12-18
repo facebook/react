@@ -29,6 +29,10 @@ React.createClass({
     // containing these types.
     optionalNode: React.PropTypes.node,
 
+    // You can ensure that both this prop and a dependency are present.
+    // Dependencies can also be passed as an Array: ['oneProp', 'twoProp'].
+    optionalDependency: React.PropTypes.dependsOn('otherProp', optionalTypeChecker),
+
     // A React element.
     optionalElement: React.PropTypes.element,
 
