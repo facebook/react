@@ -10,6 +10,8 @@
  * @typechecks static-only
  */
 
+/* global requestAnimationFrame:true */
+
 'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');

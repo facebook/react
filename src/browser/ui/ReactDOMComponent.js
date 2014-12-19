@@ -10,6 +10,8 @@
  * @typechecks static-only
  */
 
+/* global hasOwnProperty:true */
+
 'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
@@ -73,9 +75,9 @@ function assertValidProps(props) {
     if (props.contentEditable && props.children != null) {
       console.warn(
         'A component is `contentEditable` and contains `children` managed by ' +
-        'React. It is now your responsibility to guarantee that none of those '+
-        'nodes are unexpectedly modified or duplicated. This is probably not ' +
-        'intentional.'
+        'React. It is now your responsibility to guarantee that none of ' +
+        'those nodes are unexpectedly modified or duplicated. This is ' +
+        'probably not intentional.'
       );
     }
   }

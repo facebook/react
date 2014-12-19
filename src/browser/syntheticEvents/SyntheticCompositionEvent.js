@@ -41,4 +41,3 @@ SyntheticEvent.augmentClass(
 );
 
 module.exports = SyntheticCompositionEvent;
-

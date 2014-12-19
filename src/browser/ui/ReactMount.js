@@ -435,7 +435,9 @@ var ReactMount = {
       container,
       shouldReuseMarkup
     ).getPublicInstance();
-    callback && callback.call(component);
+    if (callback) {
+      callback.call(component);
+    }
     return component;
   },
 

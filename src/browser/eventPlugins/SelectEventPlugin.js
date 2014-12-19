@@ -94,7 +94,7 @@ function constructSelectEvent(nativeEvent) {
   // won't dispatch.
   if (mouseDown ||
       activeElement == null ||
-      activeElement != getActiveElement()) {
+      activeElement !== getActiveElement()) {
     return;
   }
 

@@ -42,4 +42,3 @@ SyntheticEvent.augmentClass(
 );
 
 module.exports = SyntheticInputEvent;
-

@@ -11,8 +11,6 @@
 
 'use strict';
 
-var mocks = require('mocks');
-
 var React;
 
 describe('ReactES6Class', function() {

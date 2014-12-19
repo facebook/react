@@ -9,6 +9,8 @@
  * @providesModule setInnerHTML
  */
 
+/* globals MSApp */
+
 'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');

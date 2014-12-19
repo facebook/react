@@ -41,4 +41,3 @@ function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent) {
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);
 
 module.exports = SyntheticClipboardEvent;
-

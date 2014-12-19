@@ -50,7 +50,7 @@ var ReactComponentEnvironment = {
         environment.processChildrenUpdates;
       injected = true;
     }
-  },
+  }
 
 };
 

@@ -490,7 +490,7 @@ var BeforeInputEventPlugin = {
         topLevelTarget,
         topLevelTargetID,
         nativeEvent
-      ),
+      )
     ];
   }
 };

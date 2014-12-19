@@ -29,7 +29,7 @@ var PREFIX = 'key:';
  */
 function extractObjectFromArray(arr, keyExtractor) {
   var normalizedObj = {};
-  for (var i=0; i < arr.length; i++) {
+  for (var i = 0; i < arr.length; i++) {
     var item = arr[i];
     var key = keyExtractor(item);
     assertValidPublicKey(key);

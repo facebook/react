@@ -13,7 +13,6 @@
 
 var ReactInstanceMap = require('ReactInstanceMap');
 
-var assign = require('Object.assign');
 var invariant = require('invariant');
 var warning = require('warning');
 

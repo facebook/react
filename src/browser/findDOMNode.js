@@ -35,9 +35,9 @@ function findDOMNode(componentOrElement) {
   }
   invariant(
     componentOrElement.render == null ||
-    typeof(componentOrElement.render) !== 'function',
-    'Component (with keys: %s) contains `render` method '
-    +'but is not mounted in the DOM',
+    typeof componentOrElement.render !== 'function',
+    'Component (with keys: %s) contains `render` method ' +
+    'but is not mounted in the DOM',
     Object.keys(componentOrElement)
   );
   invariant(
