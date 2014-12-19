@@ -42,6 +42,24 @@ var loggedTypeFailures = {};
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
 
 /**
+ * Gets the instance's name for use in warnings.
+ *
+ * @internal
+ * @return {?string} Display name or undefined
+ */
+function getName(instance) {
+  var publicInstance = instance && instance.getPublicInstance();
+  if (!publicInstance) {
+    return undefined;
+  }
+  var constructor = publicInstance.constructor;
+  if (!constructor) {
+    return undefined;
+  }
+  return constructor.displayName || constructor.name || undefined;
+}
+
+/**
  * Gets the current owner's displayName for use in warnings.
  *
  * @internal
@@ -50,7 +68,7 @@ var NUMERIC_PROPERTY_REGEX = /^\d+$/;
 function getCurrentOwnerDisplayName() {
   var current = ReactCurrentOwner.current;
   return (
-    current && current.getPublicInstance().constructor.displayName || undefined
+    current && getName(current) || undefined
   );
 }
 
@@ -110,7 +128,7 @@ function validatePropertyKey(name, element, parentType) {
  */
 function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
   var ownerName = getCurrentOwnerDisplayName();
-  var parentName = parentType.displayName;
+  var parentName = parentType.displayName || parentType.name;
 
   var useName = ownerName || parentName;
   var memoizer = ownerHasKeyUseWarning[warningID];
@@ -131,8 +149,7 @@ function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
       element._owner &&
       element._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
-    childOwnerName =
-      element._owner.getPublicInstance().constructor.displayName;
+    childOwnerName = getName(element._owner);
 
     message += ` It was passed a child from ${childOwnerName}.`;
   }
@@ -262,7 +279,7 @@ var ReactElementValidator = {
     }
 
     if (type) {
-      var name = type.displayName;
+      var name = type.displayName || type.name;
       if (type.propTypes) {
         checkPropTypes(
           name,

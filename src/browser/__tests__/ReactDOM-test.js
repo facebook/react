@@ -47,6 +47,12 @@ describe('ReactDOM', function() {
   });
   */
 
+  it("allows a DOM element to be used with a string", function() {
+    var element = React.createElement('div', { className: 'foo' });
+    var instance = ReactTestUtils.renderIntoDocument(element);
+    expect(instance.getDOMNode().tagName).toBe('DIV');
+  });
+
   it("should allow children to be passed as an argument", function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       div(null, 'child')
