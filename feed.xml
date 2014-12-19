@@ -7,6 +7,46 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React.js Conf Diversity Scholarship</title>
+				<description>&lt;p&gt;Today I&amp;#39;m really happy to announce the React.js Conf Diversity Scholarship! We believe that a diverse set of viewpoints and opinions is really important to build a thriving community. In an ideal world, every part of the tech community would be made up of people from all walks of life. However the reality is that we must be proactive and make an effort to make sure everybody has a voice. As conference organizers we worked closely with the Diversity Team here at Facebook to set aside 10 tickets and provide a scholarship. 10 tickets may not be many in the grand scheme but we really believe that this will have a positive impact on the discussions we have at the conference.&lt;/p&gt;
+
+&lt;p&gt;I&amp;#39;m really excited about this and I hope you are too! The full announcement is below:&lt;/p&gt;
+
+&lt;hr&gt;
+
+&lt;p&gt;The Diversity Team at Facebook is excited to announce that we are now accepting applications for the React.js Conf scholarship!&lt;/p&gt;
+
+&lt;p&gt;Beginning today, those studying or working in computer science or a related field can apply for an all-expense paid scholarship to attend the React.js Conf at Facebook’s Headquarters in Menlo Park, CA on January 28 &amp;amp; 29, 2014. React opens a world of new possibilities such as server-side rendering, real-time updates, different rendering targets like SVG and canvas. Join us at React.js Conf to shape the future of client-side applications! For more information about the React.js conference, please see the &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;website&lt;/a&gt; and &lt;a href=&quot;http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html&quot;&gt;previous&lt;/a&gt; &lt;a href=&quot;http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html&quot;&gt;updates&lt;/a&gt; on our blog.&lt;/p&gt;
+
+&lt;p&gt;At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply.
+Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.&lt;/p&gt;
+
+&lt;p&gt;To apply for the scholarship, please visit the Application Page: &lt;a href=&quot;https://www.surveymonkey.com/s/XVJGK6R&quot;&gt;https://www.surveymonkey.com/s/XVJGK6R&lt;/a&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;award-includes&quot;&gt;&lt;/a&gt;Award Includes &lt;a class=&quot;hash-link&quot; href=&quot;#award-includes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Paid registration fee for the React.js Conf January 28 &amp;amp; 29th at Facebook’s Headquarters in Menlo Park, CA&lt;/li&gt;
+&lt;li&gt;Paid travel and lodging expenses&lt;/li&gt;
+&lt;li&gt;Additional $200 meal stipend&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;important-dates&quot;&gt;&lt;/a&gt;Important Dates &lt;a class=&quot;hash-link&quot; href=&quot;#important-dates&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Monday, January 5, 2015: Applications for the React.js Conf Scholarship must be submitted in full&lt;/li&gt;
+&lt;li&gt;Friday, January 9, 2015: Award recipients will be notified by email of their acceptance&lt;/li&gt;
+&lt;li&gt;Wednesday &amp;amp; Thursday, January 28 &amp;amp; 29, 2015: React.js Conf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;eligibility&quot;&gt;&lt;/a&gt;Eligibility &lt;a class=&quot;hash-link&quot; href=&quot;#eligibility&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Must currently be studying or working in Computer Science or a related field&lt;/li&gt;
+&lt;li&gt;International applicants are welcome, but you will be responsible for securing your own visa to attend the conference&lt;/li&gt;
+&lt;li&gt;You must be available to attend the full duration of React.js conf on January 28 and 29 at Facebook Headquarters in Menlo Park&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2014-12-19T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.12.2</title>
 				<description>&lt;p&gt;We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.&lt;/p&gt;
 
@@ -955,61 +995,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-09-24T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/09/24/testing-flux-applications.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/24/testing-flux-applications.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.11.2</title>
-				<description>&lt;p&gt;Today we&amp;#39;re releasing React v0.11.2 to add a few small features.&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;re adding support for two more DOM elements, &lt;code&gt;&amp;lt;dialog&amp;gt;&lt;/code&gt; and &lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt;, as well as the associated attributes needed to use these elements: &lt;code&gt;open&lt;/code&gt;, &lt;code&gt;media&lt;/code&gt;, and &lt;code&gt;sizes&lt;/code&gt;. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&amp;#39;re making them available to everybody.&lt;/p&gt;
-
-&lt;p&gt;We&amp;#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing &lt;code&gt;React.createDescriptor&lt;/code&gt; with &lt;code&gt;React.createElement&lt;/code&gt;. &lt;code&gt;createDescriptor&lt;/code&gt; will continue to work with a warning and will be gone in v0.12. Chances are that this won&amp;#39;t affect anybody.&lt;/p&gt;
-
-&lt;p&gt;And lastly, on the heels of announcing Flow at &lt;a href=&quot;http://atscaleconference.com/&quot;&gt;@Scale&lt;/a&gt; yesterday, we&amp;#39;re adding the ability to strip TypeScript-like type annotations as part of the &lt;code&gt;jsx&lt;/code&gt; transform. To use, simply use the &lt;code&gt;--strip-types&lt;/code&gt; flag on the command line, or set &lt;code&gt;stripTypes&lt;/code&gt; in the &lt;code&gt;options&lt;/code&gt; object when calling the API. We&amp;#39;ll be talking about Flow more in the coming months. But for now, it&amp;#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.&lt;/p&gt;
-
-&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.11.2.js&quot;&gt;http://fb.me/react-0.11.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.11.2.min.js&quot;&gt;http://fb.me/react-0.11.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.2.js&quot;&gt;http://fb.me/react-with-addons-0.11.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.11.2.min.js&quot;&gt;http://fb.me/react-with-addons-0.11.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.11.2.js&quot;&gt;http://fb.me/JSXTransformer-0.11.2.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.11.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for &lt;code&gt;&amp;lt;dialog&amp;gt;&lt;/code&gt; element and associated &lt;code&gt;open&lt;/code&gt; attribute&lt;/li&gt;
-&lt;li&gt;Added support for &lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt; element and associated &lt;code&gt;media&lt;/code&gt; and &lt;code&gt;sizes&lt;/code&gt; attributes&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;React.createElement&lt;/code&gt; API in preparation for React v0.12
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.createDescriptor&lt;/code&gt; has been deprecated as a result&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;&amp;lt;picture&amp;gt;&lt;/code&gt; is now parsed into &lt;code&gt;React.DOM.picture&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Update &lt;code&gt;esprima&lt;/code&gt; and &lt;code&gt;jstransform&lt;/code&gt; for correctness fixes&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;jsx&lt;/code&gt; executable now exposes a &lt;code&gt;--strip-types&lt;/code&gt; flag which can be used to remove TypeScript-like type annotations
-
-&lt;ul&gt;
-&lt;li&gt;This option is also exposed to &lt;code&gt;require(&amp;#39;react-tools&amp;#39;).transform&lt;/code&gt; as &lt;code&gt;stripTypes&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-09-16T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/09/16/react-v0.11.2.html</guid>
 			</item>
 		
 	</channel>
