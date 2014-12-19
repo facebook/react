@@ -32,8 +32,9 @@ function getDeclarationErrorAddendum(component) {
   var owner = component._currentElement._owner || null;
   if (owner) {
     var constructor = owner._instance.constructor;
-    if (constructor && constructor.displayName) {
-      return ' Check the render method of `' + constructor.displayName + '`.';
+    var name = constructor && (constructor.displayName || constructor.name);
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
     }
   }
   return '';
@@ -510,7 +511,8 @@ var ReactCompositeComponentMixin = assign({},
   _checkPropTypes: function(propTypes, props, location) {
     // TODO: Stop validating prop types here and only use the element
     // validation.
-    var componentName = this._instance.constructor.displayName;
+    var componentName = this._instance.constructor.displayName ||
+                        this._instance.constructor.name;
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error =

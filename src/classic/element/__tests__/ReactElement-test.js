@@ -11,10 +11,12 @@
 
 "use strict";
 
+// NOTE: We're explicitly not using JSX in this file. This is intended to test
+// classic JS without JSX.
+
 var mocks;
 
 var React;
-var ReactElement;
 var ReactTestUtils;
 
 describe('ReactElement', function() {
@@ -26,10 +28,9 @@ describe('ReactElement', function() {
     mocks = require('mocks');
 
     React = require('React');
-    ReactElement = require('ReactElement');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
-      render: function() { return <div />; }
+      render: function() { return React.createElement('div'); }
     });
   });
 
@@ -102,7 +103,9 @@ describe('ReactElement', function() {
       }
     });
 
-    ReactTestUtils.renderIntoDocument(<Wrapper />);
+    ReactTestUtils.renderIntoDocument(
+      React.createElement(Wrapper)
+    );
 
     expect(element._context).toEqual({ foo: 'bar' });
   });
@@ -118,7 +121,9 @@ describe('ReactElement', function() {
       }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(Wrapper)
+    );
 
     expect(element._owner.getPublicInstance()).toBe(instance);
   });
@@ -159,157 +164,6 @@ describe('ReactElement', function() {
     expect(console.warn.argsForCall.length).toBe(0);
   });
 
-  it('warns for keys for arrays of elements in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, [ Component(), Component() ]);
-
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.'
-    );
-  });
-
-  it('warns for keys for arrays of elements in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    var InnerClass = React.createClass({
-      displayName: 'InnerClass',
-      render: function() {
-        return Component(null, this.props.childSet);
-      }
-    });
-
-    var InnerComponent = React.createFactory(InnerClass);
-
-    var ComponentWrapper = React.createClass({
-      displayName: 'ComponentWrapper',
-      render: function() {
-        return InnerComponent({ childSet: [ Component(), Component() ] });
-      }
-    });
-
-    ReactTestUtils.renderIntoDocument(<ComponentWrapper />);
-
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop. ' +
-      'Check the render method of InnerClass. ' +
-      'It was passed a child from ComponentWrapper. '
-    );
-  });
-
-  it('warns for keys for iterables of elements in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    var iterable = {
-      '@@iterator': function() {
-        var i = 0;
-        return {
-          next: function() {
-            var done = ++i > 2;
-            return { value: done ? undefined : Component(), done: done };
-          }
-        };
-      }
-    };
-
-    Component(null, iterable);
-
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.'
-    );
-  });
-
-  it('does not warns for arrays of elements with keys', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
-
-    expect(console.warn.argsForCall.length).toBe(0);
-  });
-
-  it('does not warns for iterable elements with keys', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    var iterable = {
-      '@@iterator': function() {
-        var i = 0;
-        return {
-          next: function() {
-            var done = ++i > 2;
-            return {
-              value: done ? undefined : Component({key: '#' + i}),
-              done: done
-            };
-          }
-        };
-      }
-    };
-
-    Component(null, iterable);
-
-    expect(console.warn.argsForCall.length).toBe(0);
-  });
-
-  it('warns for numeric keys on objects in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, { 1: Component(), 2: Component() });
-
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
-      'Child objects should have non-numeric keys so ordering is preserved.'
-    );
-  });
-
-  it('does not warn for numeric keys in entry iterables in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    var iterable = {
-      '@@iterator': function() {
-        var i = 0;
-        return {
-          next: function() {
-            var done = ++i > 2;
-            return { value: done ? undefined : [i, Component()], done: done };
-          }
-        };
-      }
-    };
-    iterable.entries = iterable['@@iterator'];
-
-    Component(null, iterable);
-
-    expect(console.warn.argsForCall.length).toBe(0);
-  });
-
-  it('does not warn when the element is directly in rest args', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, Component(), Component());
-
-    expect(console.warn.argsForCall.length).toBe(0);
-  });
-
-  it('does not warn when the array contains a non-element', function() {
-    spyOn(console, 'warn');
-    var Component = React.createFactory(ComponentClass);
-
-    Component(null, [ {}, {} ]);
-
-    expect(console.warn.argsForCall.length).toBe(0);
-  });
-
   it('allows static methods to be called using the type property', function() {
     spyOn(console, 'warn');
 
@@ -323,11 +177,11 @@ describe('ReactElement', function() {
         return {valueToReturn: 'hi'};
       },
       render: function() {
-        return <div></div>;
+        return React.createElement('div');
       }
     });
 
-    var element = <ComponentClass />;
+    var element = React.createElement(ComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
     expect(console.warn.argsForCall.length).toBe(0);
   });
@@ -335,22 +189,27 @@ describe('ReactElement', function() {
   it('identifies valid elements', function() {
     var Component = React.createClass({
       render: function() {
-        return <div />;
+        return React.createElement('div');
       }
     });
 
-    expect(ReactElement.isValidElement(<div />)).toEqual(true);
-    expect(ReactElement.isValidElement(<Component />)).toEqual(true);
+    expect(React.isValidElement(React.createElement('div')))
+      .toEqual(true);
+    expect(React.isValidElement(React.createElement(Component)))
+      .toEqual(true);
 
-    expect(ReactElement.isValidElement(null)).toEqual(false);
-    expect(ReactElement.isValidElement(true)).toEqual(false);
-    expect(ReactElement.isValidElement({})).toEqual(false);
-    expect(ReactElement.isValidElement("string")).toEqual(false);
-    expect(ReactElement.isValidElement(React.DOM.div)).toEqual(false);
-    expect(ReactElement.isValidElement(Component)).toEqual(false);
+    expect(React.isValidElement(null)).toEqual(false);
+    expect(React.isValidElement(true)).toEqual(false);
+    expect(React.isValidElement({})).toEqual(false);
+    expect(React.isValidElement("string")).toEqual(false);
+    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(Component)).toEqual(false);
   });
 
   it('allows the use of PropTypes validators in statics', function() {
+    // TODO: This test was added to cover a special case where we proxied
+    // methods. However, we don't do that any more so this test can probably
+    // be removed. Leaving it in classic as a safety precausion.
     var Component = React.createClass({
       render: () => null,
       statics: {
@@ -360,12 +219,6 @@ describe('ReactElement', function() {
 
     expect(typeof Component.specialType).toBe("function");
     expect(typeof Component.specialType.isRequired).toBe("function");
-  });
-
-  it('allows a DOM element to be used with a string', function() {
-    var element = React.createElement('div', { className: 'foo' });
-    var instance = ReactTestUtils.renderIntoDocument(element);
-    expect(instance.getDOMNode().tagName).toBe('DIV');
   });
 
   it('is indistinguishable from a plain object', function() {
@@ -380,50 +233,40 @@ describe('ReactElement', function() {
         return {fruit: 'persimmon'};
       },
       render: function() {
-        return <span />;
+        return React.createElement('span');
       }
     });
 
     var container = document.createElement('div');
     var instance = React.render(
-      <Component fruit="mango" />,
+      React.createElement(Component, { fruit: 'mango' }),
       container
     );
     expect(instance.props.fruit).toBe('mango');
 
-    React.render(<Component />, container);
+    React.render(React.createElement(Component), container);
     expect(instance.props.fruit).toBe('persimmon');
   });
 
   it('should normalize props with default values', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
-
     var Component = React.createClass({
-      propTypes: {prop: React.PropTypes.string.isRequired},
       getDefaultProps: function() {
         return {prop: 'testKey'};
       },
-      getInitialState: function() {
-        return {prop: this.props.prop + 'State'};
-      },
       render: function() {
-        return <span>{this.props.prop}</span>;
+        return React.createElement('span', null, this.props.prop);
       }
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
-    expect(instance.props.prop).toBe('testKey');
-    expect(instance.state.prop).toBe('testKeyState');
-
-    ReactTestUtils.renderIntoDocument(<Component prop={null} />);
-
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
-      'Warning: Required prop `prop` was not specified in `Component`.'
+    var instance = ReactTestUtils.renderIntoDocument(
+      React.createElement(Component)
     );
+    expect(instance.props.prop).toBe('testKey');
 
-    console.warn = warn;
+    var inst2 = ReactTestUtils.renderIntoDocument(
+      React.createElement(Component, { prop: null })
+    );
+    expect(inst2.props.prop).toBe(null);
   });
 
 });
