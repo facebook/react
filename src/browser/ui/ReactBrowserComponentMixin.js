@@ -11,9 +11,7 @@
 
 "use strict";
 
-var ReactMount = require('ReactMount');
-
-var invariant = require('invariant');
+var findDOMNode = require('findDOMNode');
 
 var ReactBrowserComponentMixin = {
   /**
@@ -24,11 +22,7 @@ var ReactBrowserComponentMixin = {
    * @protected
    */
   getDOMNode: function() {
-    invariant(
-      this.isMounted(),
-      'getDOMNode(): A component must be mounted to have a DOM node.'
-    );
-    return ReactMount.getNodeFromInstance(this);
+    return findDOMNode(this);
   }
 };
 
