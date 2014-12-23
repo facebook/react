@@ -22,7 +22,7 @@ var isNode = require('isNode');
 /**
  * Returns the DOM node rendered by this element.
  *
- * @param {ReactComponent|DOMElement} element
+ * @param {ReactComponent|DOMElement} componentOrElement
  * @return {DOMElement} The root node of this element.
  */
 function findDOMNode(componentOrElement) {
