@@ -231,4 +231,38 @@ describe('ReactEmptyComponent', function() {
       'Invariant Violation: React.render(): Invalid component element.'
     );
   });
+
+  it('does not break when updating during mount', function() {
+    var Child = React.createClass({
+      componentDidMount() {
+        this.props.onMount && this.props.onMount();
+      },
+      render() {
+        if (!this.props.visible) {
+          return null;
+        }
+
+        return <div>hello world</div>;
+      }
+    });
+
+    var Parent = React.createClass({
+      update() {
+        this.forceUpdate();
+      },
+      render() {
+        return (
+          <div>
+            <Child key="1" visible={false} />
+            <Child key="0" visible={true} onMount={this.update} />
+            <Child key="2" visible={false} />
+          </div>
+        );
+      }
+    });
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Parent/>)
+    }).not.toThrow();
+  });
 });
