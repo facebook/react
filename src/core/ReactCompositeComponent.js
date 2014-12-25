@@ -935,7 +935,7 @@ var ReactCompositeComponentMixin = assign({},
     var refs = this.getPublicInstance().refs;
     delete refs[ref];
   },
- 
+
   /**
    * Get a text description of the component that can be used to identify it
    * in error messages.
