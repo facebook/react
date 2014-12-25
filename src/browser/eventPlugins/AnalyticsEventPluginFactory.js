@@ -152,7 +152,7 @@ function extractEvents(
     return null;
   }
 
-  var analyticsEventsArr = analyticsEventsStr.split(",");
+  var analyticsEventsArr = analyticsEventsStr.split(',');
   if (!analyticsData.hasOwnProperty(analyticsID)) {
     initAnalyticsDataForID(analyticsID, analyticsEventsArr);
   }

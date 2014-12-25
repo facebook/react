@@ -746,7 +746,7 @@ var ReactCompositeComponentMixin = assign({},
       inst.shouldComponentUpdate(nextProps, nextState, nextContext);
 
     if (__DEV__) {
-      if (typeof shouldUpdate === "undefined") {
+      if (typeof shouldUpdate === 'undefined') {
         console.warn(
           (this.getName() || 'ReactCompositeComponent') +
           '.shouldComponentUpdate(): Returned undefined instead of a ' +

@@ -192,7 +192,7 @@ flushBatchedUpdates = ReactPerf.measure(
  */
 function enqueueUpdate(component, callback) {
   invariant(
-    !callback || typeof callback === "function",
+    !callback || typeof callback === 'function',
     'enqueueUpdate(...): You called `setProps`, `replaceProps`, ' +
     '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
     'isn\'t callable.'

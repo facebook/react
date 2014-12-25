@@ -124,7 +124,7 @@ var Danger = {
 
         } else if (__DEV__) {
           console.error(
-            "Danger: Discarding unexpected node:",
+            'Danger: Discarding unexpected node:',
             renderNode
           );
         }
