@@ -309,6 +309,66 @@ var ReactTestUtils = {
     return new ReactShallowRenderer();
   },
 
+  jasmineMatchers: {
+    /**
+    * Expect function to perform a console.warn.
+    * If `expectation` is a number, we expect the function to make `expectation` calls to warn.
+    * If `expectation` is a string, we expect that string to appear in the warn output.
+    **/
+    toWarn: function(expectation) {
+      var mocks = require('mocks');
+      var warn = console.warn;
+      console.warn = mocks.getMockFunction();
+      try {
+        this.actual();
+        var consoleLog = console.warn.mock.calls;
+        var result = { pass: false };
+        if (typeof expectation === 'number') {
+          result.pass = consoleLog.length === expectation;
+        } else {
+          // TODO: We may want to additionally handle a javascript regex
+          for (var i = 0; i < consoleLog.length; i++) {
+            if (consoleLog[i][0].indexOf(expectation) >= 0) {
+              result.pass = true;
+            }
+          }
+        }
+
+        this.message = function() {
+          if (result.pass) {
+            if (typeof expectation === 'number') {
+              return 'Expected [' + consoleLog + '].length=' +
+                consoleLog.length + ' NOT to equal expectation (' +
+                expectation + ').';
+            }
+            if (typeof expectation === 'string') {
+              return 'Expected [' + consoleLog +
+                '] NOT to contain expectation (' +
+                expectation + ').';
+            }
+          } else {
+            if (typeof expectation === 'number') {
+              return 'Expected [' + consoleLog + '].length=' +
+                consoleLog.length + ' to equal expectation (' +
+                expectation + ').';
+            }
+            if (typeof expectation === 'string') {
+              return 'Expected [' + consoleLog +
+                '] to contain expectation (' +
+                expectation + ').';
+            }
+          }
+          throw new Error('Assert not reached, unknown expectation type: ' + (typeof expectation));
+        };
+
+        return result.pass;
+      }
+      finally {
+        console.warn = warn;
+      }
+    }
+  },
+
   Simulate: null,
   SimulateNative: {}
 };
