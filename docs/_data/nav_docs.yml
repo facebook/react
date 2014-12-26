@@ -87,6 +87,8 @@
     title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
+  - id: webcomponents
+    title: Web Components
   - id: glossary
     title: React (Virtual) DOM Terminology
 - title: Flux

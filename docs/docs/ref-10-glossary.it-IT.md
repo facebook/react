@@ -2,7 +2,7 @@
 id: glossary-it-IT
 title: Terminologia del DOM (Virtuale)
 permalink: glossary-it-IT.html
-prev: reconciliation-it-IT.html
+prev: webcomponents.html
 ---
 
 Nella terminologia di React, esistono cinque tipi base che è importante distinguere:
