@@ -1,0 +1,93 @@
+- title: 快速入门
+  items:
+  - id: getting-started
+    title: 开始学习
+  - id: tutorial
+    title: 教程
+  - id: thinking-in-react
+    title: React编程思想
+- title: 社区资源
+  items:
+  - id: videos
+    title: 视频教程
+  - id: complementary-tools
+    title: 辅助工具
+  - id: examples
+    title: 范例
+- title: 指南
+  items:
+  - id: why-react
+    title: 为什么使用 React?
+  - id: displaying-data-zh-CN
+    title: 数据显示
+    subitems:
+    - id: jsx-in-depth
+      title: 深入 JSX
+    - id: jsx-spread
+      title: JSX 扩展属性
+    - id: jsx-gotchas
+      title: JSX 陷阱（注意事项）
+  - id: interactivity-and-dynamic-uis
+    title: 交互动态UI
+  - id: multiple-components
+    title: 多组件组合
+  - id: reusable-components
+    title: 可复用的组件
+  - id: transferring-props
+    title: 传递属性
+  - id: forms
+    title: 表单
+  - id: working-with-the-browser
+    title: 在浏览器里运行
+    subitems:
+    - id: more-about-refs
+      title: 关于更多参考
+  - id: tooling-integration
+    title: 工具集成
+  - id: addons
+    title: 附件
+    subitems:
+    - id: animation
+      title: 动画
+    - id: two-way-binding-helpers
+      title: 双向绑定助手
+    - id: class-name-manipulation
+      title: 类名处理
+    - id: test-utils
+      title: 测试工具
+    - id: clone-with-props
+      title: 克隆组件
+    - id: update
+      title: 直接量助手
+    - id: pure-render-mixin
+      title: PureRenderMixin
+    - id: perf
+      title: 性能工具
+- title: 参考
+  items:
+  - id: top-level-api
+    title: 顶级 API
+  - id: component-api
+    title: 组件 API
+  - id: component-specs
+    title: 组件的规格和生命周期
+  - id: tags-and-attributes
+    title:支持的标签和属性
+  - id: events
+    title: 事件系统
+  - id: dom-differences
+    title: DOM差异
+  - id: special-non-dom-attributes
+    title: 特殊的非DOM属性
+  - id: reconciliation
+    title: 一致性
+  - id: glossary
+    title: React (虚拟) DOM术语
+- title: Flux
+  items:
+  - id: flux-overview
+    title: Flux 概览
+    href: http://facebook.github.io/flux/docs/overview.html
+  - id: flux-todo-list
+    title: Flux TodoMVC 教程
+    href: http://facebook.github.io/flux/docs/todo-list.html
