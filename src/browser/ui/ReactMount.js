@@ -769,7 +769,7 @@ var ReactMount = {
 
         if (__DEV__) {
           console.warn(
-            'React attempted to use reuse markup in a container but the ' +
+            'React attempted to reuse markup in a container but the ' +
             'checksum was invalid. This generally means that you are ' +
             'using server rendering and the markup generated on the ' +
             'server was not what the client was expecting. React injected ' +
