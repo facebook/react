@@ -290,4 +290,62 @@ describe('ReactJSXElementValidator', function() {
     expect(console.warn.calls.length).toBe(2);
   });
 
+  it('should warn on invalid prop types', function() {
+    // Since there is no prevalidation step for ES6 classes, there is no hook
+    // for us to issue a warning earlier than element creation when the error
+    // actually occurs. Since this step is skipped in production, we should just
+    // warn instead of throwing for this case.
+    spyOn(console, 'warn');
+    class Component {
+      render() {
+        return <span>{this.props.prop}</span>;
+      }
+    }
+    Component.propTypes = {
+      prop: null
+    };
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'Invariant Violation: Component: prop type `prop` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should warn on invalid context types', function() {
+    spyOn(console, 'warn');
+    class Component {
+      render() {
+        return <span>{this.props.prop}</span>;
+      }
+    }
+    Component.contextTypes = {
+      prop: null
+    };
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'Invariant Violation: Component: context type `prop` is invalid; ' +
+      'it must be a function, usually from React.PropTypes.'
+    );
+  });
+
+  it('should warn if getDefaultProps is specificed on the class', function() {
+    spyOn(console, 'warn');
+    class Component {
+      render() {
+        return <span>{this.props.prop}</span>;
+      }
+    }
+    Component.getDefaultProps = () => ({
+      prop: 'foo'
+    });
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'getDefaultProps is only used on classic React.createClass definitions.' +
+      ' Use a static property named `defaultProps` instead.'
+    );
+  });
+
 });
