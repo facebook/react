@@ -9,6 +9,7 @@ var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
 var derequire = require('derequire');
+var collapser = require('bundle-collapser/plugin');
 
 var SIMPLE_TEMPLATE =
 '/**\n\
@@ -69,6 +70,7 @@ var min = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, minify, bannerify]
 };
 
@@ -104,6 +106,7 @@ var addonsMin = {
   standalone: 'React',
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, minify, bannerify]
 };
 
