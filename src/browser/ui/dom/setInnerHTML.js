@@ -28,6 +28,15 @@ var setInnerHTML = function(node, html) {
   node.innerHTML = html;
 };
 
+// Win8 apps: Allow all html to be inserted
+if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
+    setInnerHTML = function (node, html) {
+        MSApp.execUnsafeLocalFunction(function () {
+            node.innerHTML = html;
+        });
+    };
+}
+
 if (ExecutionEnvironment.canUseDOM) {
   // IE8: When updating a just created node with innerHTML only leading
   // whitespace is removed. When updating an existing node with innerHTML
