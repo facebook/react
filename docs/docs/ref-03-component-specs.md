@@ -195,7 +195,7 @@ Use this as an opportunity to perform preparation before an update occurs.
 componentDidUpdate(object prevProps, object prevState)
 ```
 
-Invoked immediately after updating occurs. This method is not called for the initial render.
+Invoked immediately after the component's updates are flushed to the DOM. This method is not called for the initial render.
 
 Use this as an opportunity to operate on the DOM when the component has been updated.
 
