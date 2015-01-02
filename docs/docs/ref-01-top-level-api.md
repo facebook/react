@@ -110,6 +110,14 @@ boolean isValidElement(* object)
 Verifies the object is a ReactElement.
 
 
+### React.findDOMNode
+
+```javascript
+DOMElement findDOMNode(ReactComponent component)
+```
+If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
+
+
 ### React.DOM
 
 `React.DOM` provides convenience wrappers around `React.createElement` for DOM components. These should only be used when not using JSX. For example, `React.DOM.div(null, 'Hello World!')`

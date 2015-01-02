@@ -18,13 +18,13 @@ Additionally, React implements a full synthetic event system such that all event
 Most of the time you should stay within React's "faked browser" world since it's more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.
 
 
-## Refs and getDOMNode()
+## Refs and findDOMNode()
 
-To interact with the browser, you'll need a reference to a DOM node. Every mounted React component has a `getDOMNode()` function which you can call to get a reference to it.
+To interact with the browser, you'll need a reference to a DOM node. React has a `React.findDOMNode(component)` function which you can call to get a reference to the component's DOM node.
 
 > Note:
 >
-> `getDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `getDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
+> `findDOMNode()` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `findDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
 
 In order to get a reference to a React component, you can either use `this` to get the current React component, or you can use refs to refer to a component you own. They work like this:
 
@@ -32,7 +32,7 @@ In order to get a reference to a React component, you can either use `this` to g
 var MyComponent = React.createClass({
   handleClick: function() {
     // Explicitly focus the text input using the raw DOM API.
-    this.refs.myTextInput.getDOMNode().focus();
+    React.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
     // The ref attribute adds a reference to the component to
@@ -97,7 +97,7 @@ React provides lifecycle methods that you can specify to hook into this process.
 
 _Mounted_ composite components also support the following methods:
 
-* `getDOMNode(): DOMElement` can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.
+* `findDOMNode(): DOMElement` can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.
 * `forceUpdate()` can be invoked on any mounted component when you know that some deeper aspect of the component's state has changed without using `this.setState()`.
 
 
