@@ -30,11 +30,11 @@ var setInnerHTML = function(node, html) {
 
 // Win8 apps: Allow all html to be inserted
 if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
-    setInnerHTML = function (node, html) {
-        MSApp.execUnsafeLocalFunction(function () {
-            node.innerHTML = html;
-        });
-    };
+  setInnerHTML = function(node, html) {
+    MSApp.execUnsafeLocalFunction(function() {
+      node.innerHTML = html;
+    });
+  };
 }
 
 if (ExecutionEnvironment.canUseDOM) {
