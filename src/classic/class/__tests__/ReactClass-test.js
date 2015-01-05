@@ -15,14 +15,12 @@ var mocks = require('mocks');
 
 var React;
 var ReactTestUtils;
-var reactComponentExpect;
 
 describe('ReactClass-spec', function() {
 
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    reactComponentExpect = require('reactComponentExpect');
   });
 
   it('should throw when `render` is not specified', function() {
@@ -297,42 +295,6 @@ describe('ReactClass-spec', function() {
     expect(
       () => ReactTestUtils.renderIntoDocument(<Component />)
     ).not.toThrow();
-  });
-
-  it('should work with object getInitialState() return values', function() {
-    var Component = React.createClass({
-      getInitialState: function() {
-        return {
-          occupation: 'clown'
-        };
-      },
-      render: function() {
-        return <span />;
-      }
-    });
-    var instance = <Component />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    expect(instance.state.occupation).toEqual('clown');
-  });
-
-  it('should throw with non-object getInitialState() return values', function() {
-    [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = React.createClass({
-        getInitialState: function() {
-          return state;
-        },
-        render: function() {
-          return <span />;
-        }
-      });
-      var instance = <Component />;
-      expect(function() {
-        instance = ReactTestUtils.renderIntoDocument(instance);
-      }).toThrow(
-        'Invariant Violation: Component.getInitialState(): ' +
-        'must return an object or null'
-      );
-    });
   });
 
 });

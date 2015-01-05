@@ -20,10 +20,12 @@
 
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
+var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
 var getIteratorFn = require('getIteratorFn');
 var monitorCodeUse = require('monitorCodeUse');
+var invariant = require('invariant');
 var warning = require('warning');
 
 /**
@@ -236,6 +238,16 @@ function checkPropTypes(componentName, propTypes, props, location) {
       // fail the render phase where it didn't fail before. So we log it.
       // After these have been cleaned up, we'll let them throw.
       try {
+        // This is intentionally an invariant that gets caught. It's the same
+        // behavior as without this statement except with a better message.
+        invariant(
+          typeof propTypes[propName] === 'function',
+          '%s: %s type `%s` is invalid; it must be a function, usually from ' +
+          'React.PropTypes.',
+          componentName || 'React class',
+          ReactPropTypeLocationNames[location],
+          propName
+        );
         error = propTypes[propName](props, propName, componentName, location);
       } catch (ex) {
         error = ex;
@@ -296,7 +308,15 @@ var ReactElementValidator = {
           ReactPropTypeLocations.context
         );
       }
+      if (typeof type.getDefaultProps === 'function') {
+        warning(
+          type.getDefaultProps._isReactClassApproved,
+          'getDefaultProps is only used on classic React.createClass ' +
+          'definitions. Use a static property named `defaultProps` instead.'
+        );
+      }
     }
+
     return element;
   },
 

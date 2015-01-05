@@ -108,7 +108,7 @@ var root = React.createElement('ul', { className: 'my-list' }, child);
 React.render(root, document.body);
 ```
 
-As a convenience you can create short-hand factory function to create elements from custom components.
+As a convenience you can create short-hand factory functions to create elements from custom components.
 
 ```javascript
 var Factory = React.createFactory(ComponentClass);
@@ -117,7 +117,7 @@ var root = Factory({ custom: 'prop' });
 React.render(root, document.body);
 ```
 
-React already have built-in factories for common HTML tags:
+React already has built-in factories for common HTML tags:
 
 ```javascript
 var root = React.DOM.ul({ className: 'my-list' },
