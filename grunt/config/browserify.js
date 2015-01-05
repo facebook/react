@@ -59,6 +59,7 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -82,6 +83,7 @@ var transformer = {
   debug: false,
   standalone: 'JSXTransformer',
   transforms: [],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -94,6 +96,7 @@ var addons = {
   standalone: 'React',
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'development'})],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -120,7 +123,8 @@ var withCodeCoverageLogging = {
   transforms: [
     envify({NODE_ENV: 'development'}),
     require('coverify')
-  ]
+  ],
+  plugins: [collapser]
 };
 
 module.exports = {
