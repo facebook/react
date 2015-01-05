@@ -93,9 +93,9 @@ React.render(
 
 ### 子级的状态
 
-For most components, this is not a big deal. However, for stateful components that maintain data in `this.state` across render passes, this can be very problematic.
+对于大部分组件，这并不是什么大不了的事。然而在`this.state`整个渲染过程中，对于有状态的组件维持数据，这是非常有问题的。
 
-In most cases, this can be sidestepped by hiding elements instead of destroying them:
+在大多数情况下，可以通过隐藏元素来替代销毁元素：
 
 ```html
 // Render Pass 1
@@ -111,9 +111,9 @@ In most cases, this can be sidestepped by hiding elements instead of destroying 
 ```
 
 
-### Dynamic Children
+### 动态的子级
 
-The situation gets more complicated when the children are shuffled around (as in search results) or if new components are added onto the front of the list (as in streams). In these cases where the identity and state of each child must be maintained across render passes, you can uniquely identify each child by assigning it a `key`:
+像子级来回调整（就像在搜索结果中）或者一些新组件插入到列表的前面（就像在流中）这些情况就更复杂了。在这种情况下，每个子级的标示和状态，必须保持整个渲染过程中，可以给每个子级分配一个唯一的识别`key`：
 
 ```javascript
   render: function() {
@@ -128,9 +128,9 @@ The situation gets more complicated when the children are shuffled around (as in
   }
 ```
 
-When React reconciles the keyed children, it will ensure that any child with `key` will be reordered (instead of clobbered) or destroyed (instead of reused).
+当React调整这些加了键名的子级时，可以确保通过`key`进行重新排序（而不是彻底重来）或销毁（而不是重用）。
 
-The `key` should *always* be supplied directly to the components in the array, not to the container HTML child of each component in the array:
+这个`key`应该*一直*被直接赋值在数组中的组件，而不是在HTML容器中各个数组组件的子级。
 
 ```javascript
 // WRONG!
@@ -170,7 +170,7 @@ var MyComponent = React.createClass({
 });
 ```
 
-You can also key children by passing an object. The object keys will be used as `key` for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order **except** for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:
+你也可以通过子级的键名传递对象。这些键名的对象将会作为`key`被每一个值使用。然而，要记住，JavaScript不保证属性的排序将被保留，是非常重要的。在实际应用中的浏览器会保留属性顺序**除了**为可以解析为一个32位无符号整数的属性。数字属性将被按数字顺序排列并排在其它性质之前。如果发生这种情况React会使组件在顺序之外渲染。这可通过给键名添加前缀来避免：
 
 ```javascript
   render: function() {
@@ -191,17 +191,18 @@ You can also key children by passing an object. The object keys will be used as 
   }
 ```
 
-## Data Flow
+## 数据流
 
-In React, data flows from owner to owned component through `props` as discussed above. This is effectively one-way data binding: owners bind their owned component's props to some value the owner has computed based on its `props` or `state`. Since this process happens recursively, data changes are automatically reflected everywhere they are used.
+在React中，就像上面所说的数据流是通过`props`从所有者组件传递给从属组件。这是一个高效的单向绑定：所有者绑定从属组件的属性通过所有者组件基于`props`和`state`计算出的一些值。由于这是一个递归过程，数据的改变会自动反射到那些每一个被使用的地方。
 
 
-## A Note on Performance
+## 对于性能的注意事项
 
-You may be thinking that it's expensive to react to changing data if there are a large number of nodes under an owner. The good news is that JavaScript is fast and `render()` methods tend to be quite simple, so in most applications this is extremely fast. Additionally, the bottleneck is almost always the DOM mutation and not JS execution and React will optimize this for you using batching and change detection.
+你可能会认为这是性能消耗是巨大的，如果有在主组件中有大量的节点，应对不断变化的数据。好消息是，JavaScript的执行效率是快速以及`render()`方法往往也是很简单的，因此在大多数应用中，这过程非常快的。此外，性能瓶颈几乎总是DOM变动，而不是JS执行同时React通过使用批量操作和变化检测进行优化。
 
-However, sometimes you really want to have fine-grained control over your performance. In that case, simply override `shouldComponentUpdate()` to return false when you want React to skip processing of a subtree. See [the React reference docs](/react/docs/component-specs.html) for more information.
+不过，有时候你真的想在你的表现细粒度的控制。在这种情况下，简单地重写`shouldComponentUpdate（）'，当你想要React跳过子级树的处理直接返回false。查看 [React引用参考](/react/docs/component-specs.html) 获取更多信息。
 
-> Note:
+> 注意:
 >
-> If `shouldComponentUpdate()` returns false when data has actually changed, React can't keep your UI in sync. Be sure you know what you're doing while using it, and only use this function when you have a noticeable performance problem. Don't underestimate how fast JavaScript is relative to the DOM.
+> 当数据发生改变如果 `shouldComponentUpdate()` 返回false , React 将无法同步变化到界面。当你这么做要确定知道这一点，当你有一个明显的性能问题才使用这个功能。 
+> 不要小看JavaScript的速度相对于DOM有多快。
