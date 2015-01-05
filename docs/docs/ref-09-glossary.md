@@ -62,7 +62,7 @@ var root = div({ className: 'my-div' });
 React.render(root, document.body);
 ```
 
-React already have built-in factories for common HTML tags:
+React already has built-in factories for common HTML tags:
 
 ```javascript
 var root = React.DOM.ul({ className: 'my-list' },
