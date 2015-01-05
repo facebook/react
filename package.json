@@ -32,6 +32,7 @@
   "devDependencies": {
     "benchmark": "~1.0.0",
     "browserify": "^7.0.2",
+    "bundle-collapser": "^1.1.1",
     "coverify": "~1.0.4",
     "derequire": "^1.2.0",
     "envify": "^3.0.0",
