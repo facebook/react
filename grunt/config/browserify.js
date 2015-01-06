@@ -9,6 +9,7 @@ var grunt = require('grunt');
 var UglifyJS = require('uglify-js');
 var uglifyify = require('uglifyify');
 var derequire = require('derequire');
+var collapser = require('bundle-collapser/plugin');
 
 var SIMPLE_TEMPLATE =
 '/**\n\
@@ -58,6 +59,7 @@ var basic = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'development'})],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -69,6 +71,7 @@ var min = {
   debug: false,
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, minify, bannerify]
 };
 
@@ -80,6 +83,7 @@ var transformer = {
   debug: false,
   standalone: 'JSXTransformer',
   transforms: [],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -92,6 +96,7 @@ var addons = {
   standalone: 'React',
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'development'})],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
@@ -104,6 +109,7 @@ var addonsMin = {
   standalone: 'React',
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
+  plugins: [collapser],
   after: [es3ify.transform, derequire, minify, bannerify]
 };
 
@@ -117,7 +123,8 @@ var withCodeCoverageLogging = {
   transforms: [
     envify({NODE_ENV: 'development'}),
     require('coverify')
-  ]
+  ],
+  plugins: [collapser]
 };
 
 module.exports = {

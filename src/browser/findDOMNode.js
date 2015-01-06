@@ -11,8 +11,6 @@
  */
 
 "use strict";
-
-var ReactComponent = require('ReactComponent');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 
@@ -36,8 +34,10 @@ function findDOMNode(componentOrElement) {
     return ReactMount.getNodeFromInstance(componentOrElement);
   }
   invariant(
-    !(componentOrElement.render != null && typeof(componentOrElement.render) === 'function'),
-    'Component contains `render` method but is not mounted in the DOM',
+    componentOrElement.render == null ||
+    typeof(componentOrElement.render) !== 'function',
+    'Component (with keys: %s) contains `render` method '
+    +'but is not mounted in the DOM',
     Object.keys(componentOrElement)
   );
   invariant(

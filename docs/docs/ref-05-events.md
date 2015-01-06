@@ -17,14 +17,14 @@ boolean bubbles
 boolean cancelable
 DOMEventTarget currentTarget
 boolean defaultPrevented
-Number eventPhase
+number eventPhase
 boolean isTrusted
 DOMEvent nativeEvent
 void preventDefault()
 void stopPropagation()
 DOMEventTarget target
-Date timeStamp
-String type
+number timeStamp
+string type
 ```
 
 > Note:

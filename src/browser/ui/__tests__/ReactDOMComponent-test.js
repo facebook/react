@@ -341,6 +341,36 @@ describe('ReactDOMComponent', function() {
       );
     });
 
+    it('should validate against use of innerHTML', function() {
+
+      spyOn(console, 'warn');
+      mountComponent({ innerHTML: '<span>Hi Jim!</span>' });
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain(
+        'Directly setting property `innerHTML` is not permitted. '
+      );
+    });
+
+    it('should validate use of dangerouslySetInnerHTML', function() {
+      expect(function() {
+        mountComponent({ dangerouslySetInnerHTML: '<span>Hi Jim!</span>' });
+      }).toThrow(
+        'Invariant Violation: ' +
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
+      );
+    });
+
+    it('should validate use of dangerouslySetInnerHTML', function() {
+      expect(function() {
+        mountComponent({ dangerouslySetInnerHTML: {foo: 'bar'} });
+      }).toThrow(
+        'Invariant Violation: ' +
+        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
+      );
+    });
+
     it("should warn about contentEditable and children", function() {
       spyOn(console, 'warn');
       mountComponent({ contentEditable: true, children: '' });

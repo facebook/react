@@ -13,6 +13,7 @@ module.exports = function() {
   // grunt.config.requires('outfile');
   // grunt.config.requires('entries');
   config.transforms = config.transforms || [];
+  config.plugins = config.plugins || [];
   config.after = config.after || [];
 
   // create the bundle we'll work with
@@ -30,6 +31,8 @@ module.exports = function() {
   config.transforms.forEach(function(transform) {
     bundle.transform({}, transform);
   });
+
+  config.plugins.forEach(bundle.plugin, bundle);
 
   // Actually bundle it up
   var _this = this;
