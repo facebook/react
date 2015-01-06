@@ -1,6 +1,6 @@
 ---
 id: interactivity-and-dynamic-uis
-title: Interactivity and Dynamic UIs
+title: 交互动态UI
 permalink: interactivity-and-dynamic-uis.html
 prev: jsx-gotchas.html
 next: multiple-components.html

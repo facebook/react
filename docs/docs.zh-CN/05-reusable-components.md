@@ -1,18 +1,17 @@
 ---
----
 id: reusable-components
-title: Reusable Components
+title: 可复用的组件
 permalink: reusable-components.html
 prev: multiple-components.html
 next: transferring-props.html
 ---
 
-When designing interfaces, break down the common design elements (buttons, form fields, layout components, etc) into reusable components with well-defined interfaces. That way, the next time you need to build some UI you can write much less code, which means faster development time, fewer bugs, and fewer bytes down the wire.
+在设计界面时，分解出常见的设计元素（按钮，表单字段，布局组件等）成可重用定义良好接口的组件。这样一来，下一次你需要建立一些UI，你可以写更少的代码，这意味着更快的开发时间，减少bug，并下载更少的字节。
 
 
-## Prop Validation
+## 属性验证
 
-As your app grows it's helpful to ensure that your components are used correctly. We do this by allowing you to specify `propTypes`. `React.PropTypes` exports a range of validators that can be used to make sure the data you receive is valid. When an invalid value is provided for a prop, a warning will be shown in the JavaScript console. Note that for performance reasons `propTypes` is only checked in development mode. Here is an example documenting the different validators provided:
+以确保您的组件的正确使用对于你的应用程序的成长是有帮助。为此，我们允许你指定`propTypes`。 `React.PropTypes`暴露了一系列验证器，可用于确保您收到的数据是有效的。当提供了一个属性是无效值，在JavaScript控制台将显示警告。请注意，由于性能原因`propTypes`只在开发模式下进行检查。这里有一个例子记录提供了不同的验证：
 
 ```javascript
 React.createClass({
@@ -81,9 +80,9 @@ React.createClass({
 ```
 
 
-## Default Prop Values
+## 默认属性值
 
-React lets you define default values for your `props` in a very declarative way:
+React提供了十分直白的方式定义`prop`的默认值：
 
 ```javascript
 var ComponentWithDefaultProps = React.createClass({
@@ -96,12 +95,12 @@ var ComponentWithDefaultProps = React.createClass({
 });
 ```
 
-The result of `getDefaultProps()` will be cached and used to ensure that `this.props.value` will have a value if it was not specified by the parent component. This allows you to safely just use your props without having to write repetitive and fragile code to handle that yourself.
+`getDefaultProps()`的结果将会被缓存和使用以确保即使在父级组件没有设置也有值。这可以让你安全地只管你的属性，而无需重复编写脆弱的代码来处理自身问题。
 
 
-## Transferring Props: A Shortcut
+## 传递属性: 一种快捷方式
 
-A common type of React component is one that extends a basic HTML in a simple way. Often you'll want to copy any HTML attributes passed to your component to the underlying HTML element to save typing. You can use the JSX _spread_ syntax to achieve this:
+这是一个常见扩展基础HTML的React组件的简单实现方式。通常你会想复制传递HTML属性给你的组件到底层的HTML元素，又想节省打字，你可以使用JSX_spread_语法来实现这一目的：
 
 ```javascript
 var CheckLink = React.createClass({
@@ -119,10 +118,9 @@ React.render(
 );
 ```
 
-## Single Child
+## 单个子级
 
-With `React.PropTypes.element` you can specify that only a single child can be passed to
-a component as children.
+通过`React.PropTypes.element`你可以指定只有单个子级可以被传递到一个组件。
 
 ```javascript
 var MyComponent = React.createClass({
@@ -141,11 +139,11 @@ var MyComponent = React.createClass({
 });
 ```
 
-## Mixins
+## mixins
 
-Components are the best way to reuse code in React, but sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](http://en.wikipedia.org/wiki/Cross-cutting_concern). React provides `mixins` to solve this problem.
+组件在React里面是最好的代码复用方式，但是有时不同的组件或许要共享一些公共的功能。这里有时叫做[横切关注点](http://en.wikipedia.org/wiki/Cross-cutting_concern). React 提供 `mixins` 来解决这类问题.
 
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
+有一个普通的例子是一个组件想要定时更新自身状态。简单的做法是`setInterval()`，但当你不需要它时，重要的是要取消这个定时来节省内存。React提供了[生命周期方法](/react/docs/working-with-the-browser.html#component-lifecycle)，让你知道当组件将要被创建或销毁。我们来创建一个使用这些方法并提供一个简单的`setInterval()`函数，当你使用这个简单的mixins,在组件被摧毁时，将自动得到清理。
 
 ```javascript
 var SetIntervalMixin = {
@@ -186,5 +184,4 @@ React.render(
 );
 ```
 
-A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called. Methods defined on mixins run in the order mixins were listed, followed by a method call on the component.
-
+mixins的一个很好的功能是，如果一个组件使用多个mixins和一些mixins定义相同的生命周期方法（比如，当组件被销毁，即几个混入也会做一些清理），所有的生命周期方法，保证被调用。在mixins上定义的方法按照mixins的列出顺序运行，然后在组件的方法内调用。
