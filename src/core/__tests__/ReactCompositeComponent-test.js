@@ -549,7 +549,14 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     });
 
+    // Two warnings, one for the component and one for the div
+    // We may want to make this expect one warning in the future
     expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: owner based context (keys: foo) does not equal parent based ' +
+      'context (keys: ) while mounting Component ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
     expect(console.warn.mock.calls[1][0]).toBe(
       'Warning: owner based context (keys: foo) does not equal parent based ' +
       'context (keys: ) while mounting ReactCompositeComponent ' +
@@ -590,13 +597,210 @@ describe('ReactCompositeComponent', function() {
 
     ReactTestUtils.renderIntoDocument(<Parent>{component}</Parent>);
 
+    // Two warnings, one for the component and one for the div
+    // We may want to make this expect one warning in the future
     expect(console.warn.mock.calls.length).toBe(2);
     expect(console.warn.mock.calls[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
     );
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
 
+  });
+
+  it('should warn if context values differ on update using withContext', function() {
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: "bar"
+        };
+      },
+
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var div = document.createElement('div');
+
+    var componentWithSameContext = React.withContext({foo: 'bar'}, function() {
+      return <Component />;
+    });
+    React.render(<Parent>{componentWithSameContext}</Parent>, div);
+
+    expect(console.warn.mock.calls.length).toBe(0);
+
+    var componentWithDifferentContext = React.withContext({foo: 'noise'}, function() {
+      return <Component />;
+    });
+    React.render(<Parent>{componentWithDifferentContext}</Parent>, div);
+
+    // Two warnings, one for the component and one for the div
+    // We may want to make this expect one warning in the future
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
+
+  });
+
+  it('should warn if context values differ on update using wrapper', function() {
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: "bar"
+        };
+      },
+
+      render: function() {
+        return <div>{this.props.children}</div>;
+      }
+    });
+
+    var Component = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var Wrapper = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return { foo: this.props.foo };
+      },
+
+      render: function() { return <Parent><Component /></Parent>; }
+
+    });
+
+    var div = document.createElement('div');
+    React.render(<Wrapper foo='bar' />, div);
+    React.render(<Wrapper foo='noise' />, div);
+
+    // Two warnings, one for the component and one for the div
+    // We may want to make this expect one warning in the future
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
+      '(see: http://fb.me/react-context-by-parent)'
+    );
+
+  });
+
+  it('unmasked context propagates through updates', function() {
+
+    var Leaf = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string.isRequired
+      },
+
+      componentWillReceiveProps: function(nextProps, nextContext) {
+        expect('foo' in nextContext).toBe(true);
+      },
+
+      componentDidUpdate: function(prevProps, prevState, prevContext) {
+        expect('foo' in prevContext).toBe(true);
+      },
+
+      shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+        expect('foo' in nextContext).toBe(true);
+        return true;
+      },
+
+      render: function() {
+        return <span>{this.context.foo}</span>;
+      }
+    });
+
+    var Intermediary = React.createClass({
+
+      componentWillReceiveProps: function(nextProps, nextContext) {
+        expect('foo' in nextContext).toBe(false);
+      },
+
+      componentDidUpdate: function(prevProps, prevState, prevContext) {
+        expect('foo' in prevContext).toBe(false);
+      },
+
+      shouldComponentUpdate: function(nextProps, nextState, nextContext) {
+        expect('foo' in nextContext).toBe(false);
+        return true;
+      },
+
+      render: function() {
+        return <Leaf />;
+      }
+    });
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string
+      },
+
+      getChildContext: function() {
+        return {
+          foo: this.props.cntxt
+        };
+      },
+
+      render: function() {
+        return <Intermediary />;
+      }
+    });
+
+    var div = document.createElement('div');
+    React.render(<Parent cntxt="noise" />, div);
+    expect(div.children[0].innerHTML).toBe('noise');
+    div.children[0].innerHTML = 'aliens';
+    div.children[0].id = 'aliens';
+    expect(div.children[0].innerHTML).toBe('aliens');
+    expect(div.children[0].id).toBe('aliens');
+    React.render(<Parent cntxt="bar" />, div);
+    expect(div.children[0].innerHTML).toBe('bar');
+    expect(div.children[0].id).toBe('aliens');
   });
 
   it('should disallow nested render calls', function() {
