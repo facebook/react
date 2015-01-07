@@ -1,5 +1,4 @@
 ---
----
 id: reusable-components
 title: Reusable Components
 permalink: reusable-components.html
