@@ -1,6 +1,7 @@
 ---
 id: transferring-props
 title: 传递属性
+layout: docs.zh-CN
 permalink: transferring-props.html
 prev: reusable-components.html
 next: forms.html

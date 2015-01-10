@@ -1,6 +1,7 @@
 ---
 id: multiple-components
 title: 多组件组合
+layout: docs.zh-CN
 permalink: multiple-components.html
 prev: interactivity-and-dynamic-uis.html
 next: reusable-components.html

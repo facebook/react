@@ -1,5 +1,5 @@
 ---
-id: displaying-data-zh-CN
+id: displaying-data
 title: 显示数据
 layout: docs.zh-CN
 permalink: displaying-data.html

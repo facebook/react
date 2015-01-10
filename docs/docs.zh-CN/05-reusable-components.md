@@ -1,6 +1,7 @@
 ---
 id: reusable-components
 title: 可复用的组件
+layout: docs.zh-CN
 permalink: reusable-components.html
 prev: multiple-components.html
 next: transferring-props.html

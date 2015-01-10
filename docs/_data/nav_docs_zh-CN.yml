@@ -18,7 +18,7 @@
   items:
   - id: why-react
     title: 为什么使用 React?
-  - id: displaying-data-zh-CN
+  - id: displaying-data
     title: 数据显示
     subitems:
     - id: jsx-in-depth
@@ -72,7 +72,7 @@
   - id: component-specs
     title: 组件的规格和生命周期
   - id: tags-and-attributes
-    title:支持的标签和属性
+    title: 支持的标签和属性
   - id: events
     title: 事件系统
   - id: dom-differences
