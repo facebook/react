@@ -12,7 +12,6 @@
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
-var FALLBACK_TAGS = require('./xjs').knownTags;
 var renderXJSExpressionContainer =
   require('./xjs').renderXJSExpressionContainer;
 var renderXJSLiteral = require('./xjs').renderXJSLiteral;
@@ -58,17 +57,8 @@ function visitReactTag(traverse, object, path, state) {
   // We assume that the React runtime is already in scope
   utils.append('React.createElement(', state);
 
-  // Identifiers with lower case or hypthens are fallback tags (strings).
   // XJSMemberExpressions are not.
   if (nameObject.type === Syntax.XJSIdentifier && isTagName(nameObject.name)) {
-    // This is a temporary error message to assist upgrades
-    if (!FALLBACK_TAGS.hasOwnProperty(nameObject.name)) {
-      throw new Error(
-        'Lower case component names (' + nameObject.name + ') are no longer ' +
-        'supported in JSX: See http://fb.me/react-jsx-lower-case'
-      );
-    }
-
     utils.append('"' + nameObject.name + '"', state);
     utils.move(nameObject.range[1], state);
   } else {

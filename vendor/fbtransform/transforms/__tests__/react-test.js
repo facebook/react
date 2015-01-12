@@ -19,11 +19,6 @@ describe('react jsx', function() {
   var transformAll = require('../../syntax.js').transformAll;
   var xjs = require('../xjs.js');
 
-  // Add <font-face> to list of known tags to ensure that when we test support
-  // for hyphentated known tags, it's there.
-  // TODO: remove this when/if <font-face> is supported out of the box.
-  xjs.knownTags['font-face'] = true;
-
   var transform = function(code, options, excludes) {
     return transformAll(
       code,
@@ -272,13 +267,8 @@ describe('react jsx', function() {
 
   it('should handle hasOwnProperty correctly', function() {
     var code = '<hasOwnProperty>testing</hasOwnProperty>;';
-    // var result = 'React.createElement("hasOwnProperty", null, "testing");';
-
-    // expect(transform(code).code).toBe(result);
-
-    // This is currently not supported, and will generate a string tag in
-    // a follow up.
-    expect(() => transform(code)).toThrow();
+    var result = 'React.createElement("hasOwnProperty", null, "testing");';
+    expect(transform(code).code).toBe(result);
   });
 
   it('should allow constructor as prop', function() {
@@ -346,10 +336,9 @@ describe('react jsx', function() {
     ).not.toBeCalled();
   });
 
-  it('should throw for unknown hyphenated tags', function() {
+  it('should not throw for unknown hyphenated tags', function() {
     var code = '<x-component />;';
-
-    expect(() => transform(code)).toThrow();
+    transform(code); // Asserting it doesn't throw
   });
 
   it('calls assign with a new target object for spreads', function() {
