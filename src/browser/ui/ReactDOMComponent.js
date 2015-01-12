@@ -208,12 +208,12 @@ ReactDOMComponent.Mixin = {
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     assertValidProps(this, this._currentElement.props);
-    var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
-    return (
-      this._createOpenTagMarkupAndPutListeners(transaction) +
-      this._createContentMarkup(transaction, context) +
-      closeTag
-    );
+    var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction);
+    var tagContent = this._createContentMarkup(transaction, context);
+    if(!tagContent && omittedCloseTags[this._tag]){
+      return tagOpen + '/>';
+    }
+    return tagOpen + '>' + tagContent + '</' + this._tag + '>';
   },
 
   /**
@@ -260,11 +260,11 @@ ReactDOMComponent.Mixin = {
     // For static pages, no need to put React ID and checksum. Saves lots of
     // bytes.
     if (transaction.renderToStaticMarkup) {
-      return ret + '>';
+      return ret;
     }
 
     var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    return ret + ' ' + markupForID;
   },
 
   /**
