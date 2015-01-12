@@ -12,6 +12,13 @@ require('commoner').version(
   '--harmony',
   'Turns on JS transformations such as ES6 Classes etc.'
 ).option(
+  '--target [version]',
+  'Specify your target version of ECMAScript. Valid values are "es3" and ' +
+  '"es5". The default is "es5". "es3" will avoid uses of defineProperty and ' +
+  'will quote reserved words. WARNING: "es5" is not properly supported, even ' +
+  'with the use of es5shim, es5sham. If you need to support IE8, use "es3".',
+  'es5'
+).option(
   '--strip-types',
   'Strips out type annotations.'
 ).option(
@@ -37,7 +44,8 @@ require('commoner').version(
     sourceMap: this.options.sourceMapInline,
     stripTypes: this.options.stripTypes,
     es6module: this.options.es6module,
-    nonStrictEs6Module: this.options.nonStrictEs6Module
+    nonStrictEs6Module: this.options.nonStrictEs6Module,
+    target: this.options.target
   };
   return transform(source, options);
 });
