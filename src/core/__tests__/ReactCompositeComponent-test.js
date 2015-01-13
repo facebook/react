@@ -581,16 +581,11 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls.length).toBe(1);
     expect(console.warn.mock.calls[0][0]).toBe(
-      'Warning: owner based context (keys: foo) does not equal parent based ' +
-      'context (keys: ) while mounting Component ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-    expect(console.warn.mock.calls[1][0]).toBe(
-      'Warning: owner based context (keys: foo) does not equal parent based ' +
-      'context (keys: ) while mounting ReactCompositeComponent ' +
-      '(see: http://fb.me/react-context-by-parent)'
+      'Warning: owner-based and parent-based contexts differ '+
+      '(values: `bar` vs `undefined`) for key (foo) '+
+      'while mounting Component (see: http://fb.me/react-context-by-parent)'
     );
 
   });
@@ -629,15 +624,10 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls.length).toBe(1);
     expect(console.warn.mock.calls[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-    expect(console.warn.mock.calls[1][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
       '(see: http://fb.me/react-context-by-parent)'
     );
 
@@ -686,18 +676,12 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls.length).toBe(1);
     expect(console.warn.mock.calls[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
     );
-    expect(console.warn.mock.calls[1][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-
   });
 
   it('should warn if context values differ on update using wrapper', function() {
@@ -746,18 +730,12 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls.length).toBe(1);
     expect(console.warn.mock.calls[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
     );
-    expect(console.warn.mock.calls[1][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ ' +
-      '(values: `noise` vs `bar`) for key (foo) while mounting ReactCompositeComponent ' +
-      '(see: http://fb.me/react-context-by-parent)'
-    );
-
   });
 
   it('unmasked context propagates through updates', function() {
