@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
-    "browserify": "^7.0.2",
+    "browserify": "^8.1.0",
     "bundle-collapser": "^1.1.1",
     "coverify": "~1.0.4",
     "derequire": "^1.2.0",
@@ -43,7 +43,7 @@
     "grunt-cli": "~0.1.9",
     "grunt-compare-size": "~0.4.0",
     "grunt-contrib-clean": "^0.6.0",
-    "grunt-contrib-compress": "^0.12.0",
+    "grunt-contrib-compress": "^0.13.0",
     "grunt-contrib-connect": "~0.6.0",
     "grunt-contrib-copy": "^0.7.0",
     "grunt-contrib-jshint": "^0.10.0",
