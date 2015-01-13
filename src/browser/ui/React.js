@@ -146,6 +146,6 @@ if (__DEV__) {
   }
 }
 
-React.version = '0.13.0-alpha.1';
+React.version = '0.13.0-alpha.2';
 
 module.exports = React;
