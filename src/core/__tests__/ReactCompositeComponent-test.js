@@ -297,7 +297,8 @@ describe('ReactCompositeComponent', function() {
       instance.forceUpdate();
     }).toThrow(
       'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted or mounting components.'
+      'mounted or mounting components. This usually means you called ' +
+      'forceUpdate() on an unmounted component.'
     );
   });
 
@@ -327,8 +328,37 @@ describe('ReactCompositeComponent', function() {
       instance.setState({ value: 2 });
     }).toThrow(
       'Invariant Violation: setState(...): Can only update a mounted or ' +
-      'mounting component.'
+      'mounting component. This usually means you called setState() on an ' +
+      'unmounted component.'
     );
+  });
+
+  it('should not allow `setState` on unmounting components', function() {
+    var container = document.createElement('div');
+    document.documentElement.appendChild(container);
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return { value: 0 };
+      },
+      componentWillUnmount: function() {
+        expect(() => this.setState({ value: 2 })).toThrow(
+          'Invariant Violation: replaceState(...): Cannot update while ' +
+          'unmounting component. This usually means you called setState() ' +
+          'on an unmounted component.'
+        );
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = React.render(<Component />, container);
+    expect(function() {
+      instance.setState({ value: 1 });
+    }).not.toThrow();
+
+    React.unmountComponentAtNode(container);
   });
 
   it('should not allow `setProps` on unmounted components', function() {
@@ -623,6 +653,31 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('only renders once if updated in componentWillReceiveProps', function() {
+    var renders = 0;
+    var Component = React.createClass({
+      getInitialState: function() {
+        return { updated: false };
+      },
+      componentWillReceiveProps: function(props) {
+        expect(props.update).toBe(1);
+        this.setState({ updated: true });
+      },
+      render: function() {
+        renders++;
+        return <div />;
+      }
+    });
+
+    var container = document.createElement('div');
+    var instance = React.render(<Component update={0} />, container);
+    expect(renders).toBe(1);
+    expect(instance.state.updated).toBe(false);
+    React.render(<Component update={1} />, container);
+    expect(renders).toBe(2);
+    expect(instance.state.updated).toBe(true);
+  });
+
   it('should update refs if shouldComponentUpdate gives false', function() {
     var Static = React.createClass({
       shouldComponentUpdate: function() {
@@ -657,6 +712,27 @@ describe('ReactCompositeComponent', function() {
     comp.setProps({flipped: true});
     expect(comp.refs.static0.getDOMNode().textContent).toBe('B');
     expect(comp.refs.static1.getDOMNode().textContent).toBe('A');
+  });
+
+  it('should allow access to getDOMNode in componentWillUnmount', function() {
+    var a = null;
+    var b = null;
+    var Component = React.createClass({
+      componentDidMount: function() {
+        a = this.getDOMNode();
+      },
+      componentWillUnmount: function() {
+        b = this.getDOMNode();
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+    var container = document.createElement('div');
+    expect(a).toBe(container.firstChild);
+    React.render(<Component />, container);
+    React.unmountComponentAtNode(container);
+    expect(a).toBe(b);
   });
 
 });

@@ -17,6 +17,7 @@ var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
+var ReactComponentBase = require('ReactComponentBase');
 var ReactClass = require('ReactClass');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -57,6 +58,7 @@ var React = {
     count: ReactChildren.count,
     only: onlyChild
   },
+  Component: ReactComponentBase,
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
   initializeTouchEvents: function(shouldUseTouch) {
