@@ -9,7 +9,7 @@
  * @providesModule ReactTestUtils
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');

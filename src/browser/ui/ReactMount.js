@@ -9,7 +9,7 @@
  * @providesModule ReactMount
  */
 
-"use strict";
+'use strict';
 
 var DOMProperty = require('DOMProperty');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -435,7 +435,9 @@ var ReactMount = {
       container,
       shouldReuseMarkup
     ).getPublicInstance();
-    callback && callback.call(component);
+    if (callback) {
+      callback.call(component);
+    }
     return component;
   },
 

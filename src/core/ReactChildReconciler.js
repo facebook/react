@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -67,7 +67,7 @@ var ReactChildReconciler = {
     // can quickly bailout if nothing has changed.
     var nextChildren = flattenChildren(nextNestedChildNodes);
     if (!nextChildren && !prevChildren) {
-      return;
+      return null;
     }
     var name;
     for (name in nextChildren) {

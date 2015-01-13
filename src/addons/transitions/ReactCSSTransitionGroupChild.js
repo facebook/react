@@ -10,7 +10,7 @@
  * @providesModule ReactCSSTransitionGroupChild
  */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 
@@ -64,7 +64,9 @@ var ReactCSSTransitionGroupChild = React.createClass({
 
       // Usually this optional callback is used for informing an owner of
       // a leave animation and telling it to remove the child.
-      finishCallback && finishCallback();
+      if (finishCallback) {
+        finishCallback();
+      }
     };
 
     ReactTransitionEvents.addEndEventListener(node, endListener);

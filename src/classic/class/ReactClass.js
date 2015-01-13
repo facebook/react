@@ -9,7 +9,7 @@
  * @providesModule ReactClass
  */
 
-"use strict";
+'use strict';
 
 var ReactComponentBase = require('ReactComponentBase');
 var ReactElement = require('ReactElement');
@@ -382,7 +382,7 @@ function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       invariant(
-        typeof typeDef[propName] == 'function',
+        typeof typeDef[propName] === 'function',
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
         'React.PropTypes.',
         Constructor.displayName || 'ReactClass',
@@ -642,6 +642,7 @@ function bindAutoBindMethod(component, method) {
     boundMethod.__reactBoundArguments = null;
     var componentName = component.constructor.displayName;
     var _bind = boundMethod.bind;
+    /* eslint-disable block-scoped-var, no-undef */
     boundMethod.bind = function(newThis, ...args) {
       // User is trying to bind() an autobound method; we effectively will
       // ignore the value of "this" that the user is trying to use, so
@@ -666,6 +667,7 @@ function bindAutoBindMethod(component, method) {
       reboundMethod.__reactBoundMethod = method;
       reboundMethod.__reactBoundArguments = args;
       return reboundMethod;
+      /* eslint-enable */
     };
   }
   return boundMethod;

@@ -9,7 +9,7 @@
  * @providesModule getTestDocument
  */
 
-"use strict";
+'use strict';
 
 function getTestDocument(markup) {
   var iframe = document.createElement('iframe');

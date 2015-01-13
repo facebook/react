@@ -10,7 +10,7 @@
  */
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 var instantiateReactComponent = require('instantiateReactComponent');

@@ -9,7 +9,7 @@
  * @providesModule ReactElement
  */
 
-"use strict";
+'use strict';
 
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');

@@ -9,7 +9,7 @@
  * @providesModule flattenChildren
  */
 
-"use strict";
+'use strict';
 
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');

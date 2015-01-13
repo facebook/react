@@ -9,7 +9,7 @@
  * @providesModule ReactComponent
  */
 
-"use strict";
+'use strict';
 
 var ReactOwner = require('ReactOwner');
 var ReactRef = require('ReactRef');

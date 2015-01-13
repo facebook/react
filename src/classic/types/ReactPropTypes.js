@@ -9,7 +9,7 @@
  * @providesModule ReactPropTypes
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
@@ -98,6 +98,7 @@ function createChainableTypeChecker(validate) {
           `\`${componentName}\`.`
         );
       }
+      return null;
     } else {
       return validate(props, propName, componentName, location);
     }
@@ -125,12 +126,13 @@ function createPrimitiveTypeChecker(expectedType) {
         `supplied to \`${componentName}\`, expected \`${expectedType}\`.`
       );
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
 
 function createAnyTypeChecker() {
-  return createChainableTypeChecker(emptyFunction.thatReturns());
+  return createChainableTypeChecker(emptyFunction.thatReturns(null));
 }
 
 function createArrayOfTypeChecker(typeChecker) {
@@ -150,6 +152,7 @@ function createArrayOfTypeChecker(typeChecker) {
         return error;
       }
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
@@ -163,6 +166,7 @@ function createElementTypeChecker() {
         `\`${componentName}\`, expected a ReactElement.`
       );
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
@@ -177,6 +181,7 @@ function createInstanceTypeChecker(expectedClass) {
         `\`${componentName}\`, expected instance of \`${expectedClassName}\`.`
       );
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
@@ -186,7 +191,7 @@ function createEnumTypeChecker(expectedValues) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
       if (propValue === expectedValues[i]) {
-        return;
+        return null;
       }
     }
 
@@ -219,6 +224,7 @@ function createObjectOfTypeChecker(typeChecker) {
         }
       }
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
@@ -228,7 +234,7 @@ function createUnionTypeChecker(arrayOfTypeCheckers) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
       if (checker(props, propName, componentName, location) == null) {
-        return;
+        return null;
       }
     }
 
@@ -250,6 +256,7 @@ function createNodeChecker() {
         `\`${componentName}\`, expected a ReactNode.`
       );
     }
+    return null;
   }
   return createChainableTypeChecker(validate);
 }
@@ -275,12 +282,13 @@ function createShapeTypeChecker(shapeTypes) {
         return error;
       }
     }
+    return null;
   }
   return createChainableTypeChecker(validate, 'expected `object`');
 }
 
 function isNode(propValue) {
-  switch(typeof propValue) {
+  switch (typeof propValue) {
     case 'number':
     case 'string':
       return true;

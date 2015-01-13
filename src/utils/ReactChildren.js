@@ -9,7 +9,7 @@
  * @providesModule ReactChildren
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 

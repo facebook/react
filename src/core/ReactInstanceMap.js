@@ -9,7 +9,7 @@
  * @providesModule ReactInstanceMap
  */
 
-"use strict";
+'use strict';
 
 /**
  * `ReactInstanceMap` maintains a mapping from a public facing stateful

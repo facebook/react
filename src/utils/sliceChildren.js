@@ -9,7 +9,7 @@
  * @providesModule sliceChildren
  */
 
-"use strict";
+'use strict';
 
 var flattenChildren = require('flattenChildren');
 

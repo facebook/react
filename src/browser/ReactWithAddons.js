@@ -16,7 +16,7 @@
  * place to live inside React core.
  */
 
-"use strict";
+'use strict';
 
 var LinkedStateMixin = require('LinkedStateMixin');
 var React = require('React');

@@ -9,7 +9,7 @@
  * @providesModule ReactOwner
  */
 
-"use strict";
+'use strict';
 
 var invariant = require('invariant');
 

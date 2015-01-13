@@ -9,9 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
-
-var mocks = require('mocks');
+'use strict';
 
 var React;
 

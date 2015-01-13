@@ -9,7 +9,7 @@
  * @providesModule ReactCompositeComponent
  */
 
-"use strict";
+'use strict';
 
 var ReactComponent = require('ReactComponent');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
@@ -746,7 +746,7 @@ var ReactCompositeComponentMixin = assign({},
       inst.shouldComponentUpdate(nextProps, nextState, nextContext);
 
     if (__DEV__) {
-      if (typeof shouldUpdate === "undefined") {
+      if (typeof shouldUpdate === 'undefined') {
         console.warn(
           (this.getName() || 'ReactCompositeComponent') +
           '.shouldComponentUpdate(): Returned undefined instead of a ' +
@@ -935,7 +935,7 @@ var ReactCompositeComponentMixin = assign({},
     var refs = this.getPublicInstance().refs;
     delete refs[ref];
   },
- 
+
   /**
    * Get a text description of the component that can be used to identify it
    * in error messages.

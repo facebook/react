@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var monitorCodeUse = require('monitorCodeUse');
 
@@ -39,19 +39,22 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
         var prevName = null;
         var nextName = null;
         var nextDisplayName = null;
-        if(__DEV__) {
+        if (__DEV__) {
           if (!ownersMatch) {
             if (prevElement._owner != null &&
                 prevElement._owner.getPublicInstance() != null &&
                 prevElement._owner.getPublicInstance().constructor != null) {
-              prevName = prevElement._owner.getPublicInstance().constructor.displayName;
+              prevName =
+                prevElement._owner.getPublicInstance().constructor.displayName;
             }
             if (nextElement._owner != null &&
                 nextElement._owner.getPublicInstance() != null &&
                 nextElement._owner.getPublicInstance().constructor != null) {
-              nextName = nextElement._owner.getPublicInstance().constructor.displayName;
+              nextName =
+                nextElement._owner.getPublicInstance().constructor.displayName;
             }
-            if(nextElement.type != null && nextElement.type.displayName != null) {
+            if (nextElement.type != null &&
+                nextElement.type.displayName != null) {
               nextDisplayName = nextElement.type.displayName;
             }
             monitorCodeUse(

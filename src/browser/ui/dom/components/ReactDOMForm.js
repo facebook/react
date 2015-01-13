@@ -9,7 +9,7 @@
  * @providesModule ReactDOMForm
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var LocalEventTrapMixin = require('LocalEventTrapMixin');

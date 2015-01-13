@@ -9,7 +9,7 @@
  * @providesModule ReactStateSetters
  */
 
-"use strict";
+'use strict';
 
 var ReactStateSetters = {
   /**

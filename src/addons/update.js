@@ -9,7 +9,7 @@
  * @providesModule update
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var keyOf = require('keyOf');

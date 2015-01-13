@@ -9,7 +9,7 @@
  * @providesModule ReactDOMInput
  */
 
-"use strict";
+'use strict';
 
 var AutoFocusMixin = require('AutoFocusMixin');
 var DOMPropertyOperations = require('DOMPropertyOperations');

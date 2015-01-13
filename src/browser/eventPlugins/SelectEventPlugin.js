@@ -9,7 +9,7 @@
  * @providesModule SelectEventPlugin
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
@@ -94,8 +94,8 @@ function constructSelectEvent(nativeEvent) {
   // won't dispatch.
   if (mouseDown ||
       activeElement == null ||
-      activeElement != getActiveElement()) {
-    return;
+      activeElement !== getActiveElement()) {
+    return null;
   }
 
   // Only fire when selection has actually changed.

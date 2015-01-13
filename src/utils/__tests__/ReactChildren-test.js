@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 describe('ReactChildren', function() {
   var ReactChildren;

@@ -9,7 +9,7 @@
  * @providesModule ReactEventEmitterMixin
  */
 
-"use strict";
+'use strict';
 
 var EventPluginHub = require('EventPluginHub');
 
