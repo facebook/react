@@ -90,6 +90,67 @@ describe('ReactES6Class', function() {
     expect(renderedName).toBe('bar');
   });
 
+  it('warns when classic properties are defined on the instance, ' +
+     'but does not invoke them.', function() {
+    spyOn(console, 'warn');
+    var getInitialStateWasCalled = false;
+    var componentWillMountWasCalled = false;
+    class Foo extends React.Component {
+      constructor() {
+        this.contextTypes = {};
+        this.propTypes = {};
+      }
+      getInitialState() {
+        getInitialStateWasCalled = true;
+        return {};
+      }
+      componentWillMount() {
+        componentWillMountWasCalled = true;
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<Foo />, 'SPAN', 'foo');
+    // TODO: expect(getInitialStateWasCalled).toBe(false);
+    // TODO: expect(componentWillMountWasCalled).toBe(false);
+    expect(console.warn.calls.length).toBe(4);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'getInitialState was defined on Foo, a plain JavaScript class.'
+    );
+    expect(console.warn.calls[1].args[0]).toContain(
+      'componentWillMount was defined on Foo, a plain JavaScript class.'
+    );
+    expect(console.warn.calls[2].args[0]).toContain(
+      'propTypes was defined as an instance property on Foo.'
+    );
+    expect(console.warn.calls[3].args[0]).toContain(
+      'contextTypes was defined as an instance property on Foo.'
+    );
+  });
+
+  it('should warn when mispelling shouldComponentUpdate', function() {
+    spyOn(console, 'warn');
+
+    class NamedComponent {
+      componentShouldUpdate() {
+        return false;
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<NamedComponent />, 'SPAN', 'foo');
+
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toBe(
+      'Warning: ' +
+      'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+      'mean shouldComponentUpdate()? The name is phrased as a question ' +
+      'because the function is expected to return a value.'
+    );
+  });
+
   it('should throw AND warn when trying to access classic APIs', function() {
     spyOn(console, 'warn');
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
