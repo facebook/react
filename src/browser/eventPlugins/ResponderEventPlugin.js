@@ -9,7 +9,7 @@
  * @providesModule ResponderEventPlugin
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');

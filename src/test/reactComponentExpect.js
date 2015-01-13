@@ -10,7 +10,7 @@
  * @nolint
  */
 
-"use strict";
+'use strict';
 
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactTestUtils = require('ReactTestUtils');

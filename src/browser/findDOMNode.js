@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 

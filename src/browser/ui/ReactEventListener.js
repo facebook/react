@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var EventListener = require('EventListener');
 var ExecutionEnvironment = require('ExecutionEnvironment');

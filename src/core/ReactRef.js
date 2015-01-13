@@ -9,7 +9,7 @@
  * @providesModule ReactRef
  */
 
-"use strict";
+'use strict';
 
 var ReactUpdates = require('ReactUpdates');
 

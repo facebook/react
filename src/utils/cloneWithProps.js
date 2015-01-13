@@ -10,7 +10,7 @@
  * @providesModule cloneWithProps
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactPropTransferer = require('ReactPropTransferer');

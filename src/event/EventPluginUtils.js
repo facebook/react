@@ -9,7 +9,7 @@
  * @providesModule EventPluginUtils
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 

@@ -11,7 +11,7 @@
 
 /* globals __REACT_DEVTOOLS_GLOBAL_HOOK__*/
 
-"use strict";
+'use strict';
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');

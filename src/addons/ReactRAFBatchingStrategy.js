@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactUpdates = require('ReactUpdates');

@@ -9,7 +9,7 @@
  * @providesModule CallbackQueue
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 

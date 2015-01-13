@@ -9,7 +9,7 @@
  * @providesModule ReactPropTransferer
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');

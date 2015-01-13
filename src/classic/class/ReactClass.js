@@ -9,7 +9,7 @@
  * @providesModule ReactClass
  */
 
-"use strict";
+'use strict';
 
 var ReactComponentBase = require('ReactComponentBase');
 var ReactElement = require('ReactElement');

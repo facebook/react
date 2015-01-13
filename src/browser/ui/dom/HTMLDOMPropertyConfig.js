@@ -11,7 +11,7 @@
 
 /*jslint bitwise: true*/
 
-"use strict";
+'use strict';
 
 var DOMProperty = require('DOMProperty');
 var ExecutionEnvironment = require('ExecutionEnvironment');

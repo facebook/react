@@ -9,7 +9,7 @@
  * @providesModule ReactComponentBase
  */
 
-"use strict";
+'use strict';
 
 var ReactInstanceMap = require('ReactInstanceMap');
 
@@ -57,7 +57,7 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
   var internalInstance = ReactInstanceMap.get(this);
   invariant(
     internalInstance,
-    'setState(...): Can only update a mounted or mounting component. ' + 
+    'setState(...): Can only update a mounted or mounting component. ' +
     'This usually means you called setState() on an unmounted ' +
     'component.'
   );

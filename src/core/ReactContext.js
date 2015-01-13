@@ -9,7 +9,7 @@
  * @providesModule ReactContext
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');

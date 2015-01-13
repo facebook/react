@@ -9,7 +9,7 @@
  * @providesModule setInnerHTML
  */
 
-"use strict";
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 

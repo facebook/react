@@ -9,7 +9,7 @@
  * @providesModule SelectEventPlugin
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');

@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 /* global Symbol */
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

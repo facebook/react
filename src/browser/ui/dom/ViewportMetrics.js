@@ -9,7 +9,7 @@
  * @providesModule ViewportMetrics
  */
 
-"use strict";
+'use strict';
 
 var ViewportMetrics = {
 

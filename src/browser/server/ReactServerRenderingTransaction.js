@@ -10,7 +10,7 @@
  * @typechecks
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 var CallbackQueue = require('CallbackQueue');

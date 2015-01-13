@@ -9,7 +9,7 @@
  * @providesModule deprecated
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var warning = require('warning');

@@ -12,7 +12,7 @@
 
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMChildrenOperations = require('DOMChildrenOperations');

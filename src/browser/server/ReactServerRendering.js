@@ -9,7 +9,7 @@
  * @typechecks static-only
  * @providesModule ReactServerRendering
  */
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');

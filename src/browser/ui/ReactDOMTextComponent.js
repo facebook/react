@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var ReactComponentBrowserEnvironment =

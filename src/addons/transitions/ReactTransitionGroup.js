@@ -9,7 +9,7 @@
  * @providesModule ReactTransitionGroup
  */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 var ReactTransitionChildMapping = require('ReactTransitionChildMapping');

@@ -74,7 +74,7 @@
  * usage.
  */
 
-"use strict";
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 

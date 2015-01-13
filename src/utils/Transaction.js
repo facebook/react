@@ -9,7 +9,7 @@
  * @providesModule Transaction
  */
 
-"use strict";
+'use strict';
 
 var invariant = require('invariant');
 

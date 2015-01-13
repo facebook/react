@@ -9,7 +9,7 @@
  * @providesModule OrderedMap
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var invariant = require('invariant');

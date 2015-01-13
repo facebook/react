@@ -16,7 +16,7 @@
  * that support it.
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');

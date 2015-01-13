@@ -9,7 +9,7 @@
  * @providesModule ReactCompositeComponent
  */
 
-"use strict";
+'use strict';
 
 var ReactComponent = require('ReactComponent');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
