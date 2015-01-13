@@ -276,40 +276,47 @@ ReactDOMComponent.Mixin = {
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction, context) {
-    var prefix = '';
-    if (this._tag === 'listing' ||
-        this._tag === 'pre' ||
-        this._tag === 'textarea') {
-      // Add an initial newline because browsers ignore the first newline in
-      // a <listing>, <pre>, or <textarea> as an "authoring convenience" -- see
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody.
-      prefix = '\n';
-    }
-
+    var ret = '';
     var props = this._currentElement.props;
 
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return prefix + innerHTML.__html;
+        ret = innerHTML.__html;
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
-        return prefix + escapeTextContentForBrowser(contentToUse);
+        ret = escapeTextContentForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
           context
         );
-        return prefix + mountImages.join('');
+        ret = mountImages.join('');
       }
     }
-    return prefix;
+    if (
+      (this._tag === 'listing'
+       || this._tag === 'pre'
+       || this._tag === 'textarea')
+      && ret.charAt(0) === '\n'
+    ) {
+      // Add an invisible node that's not a newline, because the HTML syntax
+      // ignores the first character in these tags if it's a newline
+      // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+      // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+      // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+      // See: Parsing of "textarea" "listing" and "pre" elements
+      //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+      return '<!---->' + ret;
+    } else {
+      return ret;
+    }
   },
 
   receiveComponent: function(nextElement, transaction, context) {
