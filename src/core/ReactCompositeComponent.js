@@ -723,6 +723,12 @@ var ReactCompositeComponentMixin = assign({},
       nextContext = this._processContext(nextParentElement._context);
       nextProps = this._processProps(nextParentElement.props);
 
+      if (__DEV__) {
+        if (nextUnmaskedContext != null) {
+          this._warnIfContextsDiffer(nextParentElement._context, nextUnmaskedContext);
+        }
+      }
+
       this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
       if (inst.componentWillReceiveProps) {
         inst.componentWillReceiveProps(nextProps, nextContext);
@@ -808,7 +814,7 @@ var ReactCompositeComponentMixin = assign({},
     inst.state = nextState;
     inst.context = nextContext;
 
-    this._updateRenderedComponent(transaction, nextContext);
+    this._updateRenderedComponent(transaction, unmaskedContext);
 
     if (inst.componentDidUpdate) {
       transaction.getReactMountReady().enqueue(
