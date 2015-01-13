@@ -80,7 +80,12 @@ function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent) {
   } else {
     this.isDefaultPrevented = emptyFunction.thatReturnsFalse;
   }
-  this.isPropagationStopped = emptyFunction.thatReturnsFalse;
+  var propagationStopped = nativeEvent.cancelBubble;
+  if (propagationStopped) {
+    this.isPropagationStopped = emptyFunction.thatReturnsTrue;
+  } else {
+    this.isPropagationStopped = emptyFunction.thatReturnsFalse;
+  }
 }
 
 assign(SyntheticEvent.prototype, {
@@ -94,7 +99,11 @@ assign(SyntheticEvent.prototype, {
 
   stopPropagation: function() {
     var event = this.nativeEvent;
-    event.stopPropagation ? event.stopPropagation() : event.cancelBubble = true;
+    if (event.stopPropagation) {
+      event.stopPropagation();
+    }
+    // PhantomJS doesn't automatically update cancelBubble on stopPropagation.
+    event.cancelBubble = true;
     this.isPropagationStopped = emptyFunction.thatReturnsTrue;
   },
 
