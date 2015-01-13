@@ -95,7 +95,7 @@ function constructSelectEvent(nativeEvent) {
   if (mouseDown ||
       activeElement == null ||
       activeElement !== getActiveElement()) {
-    return;
+    return null;
   }
 
   // Only fire when selection has actually changed.

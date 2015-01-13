@@ -67,7 +67,7 @@ var ReactChildReconciler = {
     // can quickly bailout if nothing has changed.
     var nextChildren = flattenChildren(nextNestedChildNodes);
     if (!nextChildren && !prevChildren) {
-      return;
+      return null;
     }
     var name;
     for (name in nextChildren) {

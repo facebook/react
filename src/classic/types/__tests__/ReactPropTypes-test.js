@@ -41,7 +41,7 @@ function typeCheckPass(declaration, value) {
     'testComponent',
     ReactPropTypeLocations.prop
   );
-  expect(error).toBe(undefined);
+  expect(error).toBe(null);
 }
 
 describe('ReactPropTypes', function() {
