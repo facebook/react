@@ -808,11 +808,21 @@ var ReactClass = {
     // Initialize the defaultProps property after all mixins have been merged
     if (Constructor.getDefaultProps) {
       Constructor.defaultProps = Constructor.getDefaultProps();
-      if (__DEV__) {
-        // This is a tag to indicate that this use of getDefaultProps is ok,
-        // since it's used with createClass. If it's not, then it's likely a
-        // mistake so we'll warn you to use the static property instead.
+    }
+
+    if (__DEV__) {
+      // This is a tag to indicate that the use of these method names is ok,
+      // since it's used with createClass. If it's not, then it's likely a
+      // mistake so we'll warn you to use the static property, property
+      // initializer or constructor respectively.
+      if (Constructor.getDefaultProps) {
         Constructor.getDefaultProps._isReactClassApproved = true;
+      }
+      if (Constructor.prototype.getInitialState) {
+        Constructor.prototype.getInitialState._isReactClassApproved = true;
+      }
+      if (Constructor.prototype.componentWillMount) {
+        Constructor.prototype.componentWillMount._isReactClassApproved = true;
       }
     }
 

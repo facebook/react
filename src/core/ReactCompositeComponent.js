@@ -32,8 +32,7 @@ var warning = require('warning');
 function getDeclarationErrorAddendum(component) {
   var owner = component._currentElement._owner || null;
   if (owner) {
-    var constructor = owner._instance.constructor;
-    var name = constructor && (constructor.displayName || constructor.name);
+    var name = owner.getName();
     if (name) {
       return ' Check the render method of `' + name + '`.';
     }
@@ -200,11 +199,50 @@ var ReactCompositeComponentMixin = assign({},
         // deprecating this convenience.
         initialState = null;
       }
+      // Since plain JS classes are defined without any special initialization
+      // logic, we can not catch common errors early. Therefore, we have to
+      // catch them here, at initialization time, instead.
+      warning(
+        !inst.getInitialState ||
+        inst.getInitialState._isReactClassApproved,
+        'getInitialState was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Did you mean to define a state property instead?',
+        this.getName() || 'a component'
+      );
+      warning(
+        !inst.componentWillMount ||
+        inst.componentWillMount._isReactClassApproved,
+        'componentWillMount was defined on %s, a plain JavaScript class. ' +
+        'This is only supported for classes created using React.createClass. ' +
+        'Did you mean to define a constructor instead?',
+        this.getName() || 'a component'
+      );
+      warning(
+        !inst.propTypes,
+        'propTypes was defined as an instance property on %s. Use a static ' +
+        'property to define propTypes instead.',
+        this.getName() || 'a component'
+      );
+      warning(
+        !inst.contextTypes,
+        'contextTypes was defined as an instance property on %s. Use a ' +
+        'static property to define contextTypes instead.',
+        this.getName() || 'a component'
+      );
+      warning(
+        typeof inst.componentShouldUpdate !== 'function',
+        '%s has a method called ' +
+        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+        'The name is phrased as a question because the function is ' +
+        'expected to return a value.',
+        (this.getName() || 'A component')
+      );
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
       '%s.getInitialState(): must return an object or null',
-      inst.constructor.displayName || 'ReactCompositeComponent'
+      this.getName() || 'ReactCompositeComponent'
     );
     inst.state = initialState;
 
@@ -453,13 +491,12 @@ var ReactCompositeComponentMixin = assign({},
   _processChildContext: function(currentContext) {
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
-    var displayName = inst.constructor.displayName || 'ReactCompositeComponent';
     if (childContext) {
       invariant(
         typeof inst.constructor.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
         'use getChildContext().',
-        displayName
+        this.getName() || 'ReactCompositeComponent'
       );
       if (__DEV__) {
         this._checkPropTypes(
@@ -472,7 +509,7 @@ var ReactCompositeComponentMixin = assign({},
         invariant(
           name in inst.constructor.childContextTypes,
           '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-          displayName,
+          this.getName() || 'ReactCompositeComponent',
           name
         );
       }
@@ -512,8 +549,7 @@ var ReactCompositeComponentMixin = assign({},
   _checkPropTypes: function(propTypes, props, location) {
     // TODO: Stop validating prop types here and only use the element
     // validation.
-    var componentName = this._instance.constructor.displayName ||
-                        this._instance.constructor.name;
+    var componentName = this.getName();
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error;
@@ -614,7 +650,7 @@ var ReactCompositeComponentMixin = assign({},
    _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
     var ownerKeys = Object.keys(ownerBasedContext).sort();
     var parentKeys = Object.keys(parentBasedContext).sort();
-    var displayName = this._instance.constructor.displayName || 'ReactCompositeComponent';
+    var displayName = this.getName() || 'ReactCompositeComponent';
     if (ownerKeys.length !== parentKeys.length ||
         ownerKeys.toString() !== parentKeys.toString()) {
       warning(
@@ -706,7 +742,7 @@ var ReactCompositeComponentMixin = assign({},
     if (__DEV__) {
       if (typeof shouldUpdate === "undefined") {
         console.warn(
-          (inst.constructor.displayName || 'ReactCompositeComponent') +
+          (this.getName() || 'ReactCompositeComponent') +
           '.shouldComponentUpdate(): Returned undefined instead of a ' +
           'boolean value. Make sure to return true or false.'
         );
@@ -863,7 +899,7 @@ var ReactCompositeComponentMixin = assign({},
       ReactElement.isValidElement(renderedComponent),
       '%s.render(): A valid ReactComponent must be returned. You may have ' +
         'returned undefined, an array or some other invalid object.',
-      inst.constructor.displayName || 'ReactCompositeComponent'
+      this.getName() || 'ReactCompositeComponent'
     );
     return renderedComponent;
   },
@@ -892,6 +928,22 @@ var ReactCompositeComponentMixin = assign({},
   detachRef: function(ref) {
     var refs = this.getPublicInstance().refs;
     delete refs[ref];
+  },
+ 
+  /**
+   * Get a text description of the component that can be used to identify it
+   * in error messages.
+   * @return {string} The name or null.
+   * @internal
+   */
+  getName: function() {
+    var type = this._currentElement.type;
+    var constructor = this._instance.constructor;
+    return (
+      type.displayName || (constructor && constructor.displayName) ||
+      type.name || (constructor && constructor.name) ||
+      null
+    );
   },
 
   /**
@@ -954,7 +1006,7 @@ var ShallowMixin = assign({},
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
       '%s.getInitialState(): must return an object or null',
-      inst.constructor.displayName || 'ReactCompositeComponent'
+      this.getName() || 'ReactCompositeComponent'
     );
     inst.state = initialState;
 
