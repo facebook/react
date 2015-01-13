@@ -38,6 +38,7 @@
     "envify": "^3.0.0",
     "es3ify": "~0.1.2",
     "es5-shim": "^4.0.0",
+    "eslint": "0.11.0-alpha.0",
     "grunt": "~0.4.2",
     "grunt-cli": "~0.1.9",
     "grunt-compare-size": "~0.4.0",
@@ -70,7 +71,8 @@
   },
   "scripts": {
     "test": "jest",
-    "jest": "jest"
+    "jest": "jest",
+    "lint": "eslint src"
   },
   "jest": {
     "rootDir": "",
