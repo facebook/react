@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 describe('memoizeStringOnly', function() {
   var memoizeStringOnly;

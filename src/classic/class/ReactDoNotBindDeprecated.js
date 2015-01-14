@@ -9,7 +9,7 @@
  * @providesModule ReactDoNotBindDeprecated
  */
 
-"use strict";
+'use strict';
 
 var ReactDoNotBindDeprecated = {
   /**

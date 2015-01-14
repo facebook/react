@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 
@@ -58,19 +58,21 @@ assign(FallbackCompositionState.prototype, {
       return this._fallbackText;
     }
 
-    var endValue = this.getText();
+    var start;
     var startValue = this._startText;
     var startLength = startValue.length;
+    var end;
+    var endValue = this.getText();
     var endLength = endValue.length;
 
-    for (var start = 0; start < startLength; start++) {
+    for (start = 0; start < startLength; start++) {
       if (startValue[start] !== endValue[start]) {
         break;
       }
     }
 
     var minEnd = startLength - start;
-    for (var end = 1; end <= minEnd; end++) {
+    for (end = 1; end <= minEnd; end++) {
       if (startValue[startLength - end] !== endValue[endLength - end]) {
         break;
       }

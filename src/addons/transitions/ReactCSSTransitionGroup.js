@@ -10,7 +10,7 @@
  * @providesModule ReactCSSTransitionGroup
  */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 

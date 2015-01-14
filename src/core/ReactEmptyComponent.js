@@ -9,7 +9,7 @@
  * @providesModule ReactEmptyComponent
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');

@@ -1,5 +1,5 @@
 /* jshint worker: true */
-"use strict";
+'use strict';
 
 if (typeof console == 'undefined') {
   this.console = {

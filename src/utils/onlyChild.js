@@ -8,7 +8,7 @@
  *
  * @providesModule onlyChild
  */
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 

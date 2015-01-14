@@ -9,7 +9,7 @@
  * @providesModule traverseAllChildren
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactInstanceHandles = require('ReactInstanceHandles');

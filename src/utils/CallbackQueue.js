@@ -9,7 +9,7 @@
  * @providesModule CallbackQueue
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 
@@ -60,7 +60,7 @@ assign(CallbackQueue.prototype, {
     if (callbacks) {
       invariant(
         callbacks.length === contexts.length,
-        "Mismatched list of contexts in callback queue"
+        'Mismatched list of contexts in callback queue'
       );
       this._callbacks = null;
       this._contexts = null;

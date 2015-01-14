@@ -11,7 +11,7 @@
 
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 describe('ReactWebWorker', function() {
   ;(typeof Worker == 'undefined' ? xit : it)('can run React in a web worker', function() {

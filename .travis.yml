@@ -51,7 +51,6 @@ env:
 matrix:
   fast_finish: true
   allow_failures:
-    - env: TEST_TYPE=lint
     - env: TEST_TYPE=test:coverage
     - env: TEST_TYPE=perf:full
     - env: TEST_TYPE=test:webdriver:saucelabs:modern

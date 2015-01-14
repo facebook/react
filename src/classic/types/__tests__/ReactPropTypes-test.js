@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 var PropTypes;
 var React;
@@ -41,7 +41,7 @@ function typeCheckPass(declaration, value) {
     'testComponent',
     ReactPropTypeLocations.prop
   );
-  expect(error).toBe(undefined);
+  expect(error).toBe(null);
 }
 
 describe('ReactPropTypes', function() {

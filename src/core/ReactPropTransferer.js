@@ -9,7 +9,7 @@
  * @providesModule ReactPropTransferer
  */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var emptyFunction = require('emptyFunction');
@@ -101,7 +101,7 @@ var ReactPropTransferer = {
    */
   mergeProps: function(oldProps, newProps) {
     return transferInto(assign({}, oldProps), newProps);
-  },
+  }
 
 };
 

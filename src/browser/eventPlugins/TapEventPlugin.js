@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');
@@ -117,7 +117,7 @@ var TapEventPlugin = {
       usedTouchTime = Date.now();
     } else {
       if (usedTouch && (Date.now() - usedTouchTime < TOUCH_DELAY)) {
-        return;
+        return null;
       }
     }
     var event = null;

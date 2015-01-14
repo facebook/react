@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 var emptyFunction = require('emptyFunction');
 var LinkPropTypes = require('ReactLink').PropTypes;
@@ -40,7 +40,7 @@ function typeCheckPass(declaration, value) {
     'testComponent',
     ReactPropTypeLocations.prop
   );
-  expect(error).toBe(undefined);
+  expect(error).toBe(null);
 }
 
 describe('ReactLink', function() {

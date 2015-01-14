@@ -9,7 +9,7 @@
  * @providesModule ReactBrowserComponentMixin
  */
 
-"use strict";
+'use strict';
 
 var findDOMNode = require('findDOMNode');
 

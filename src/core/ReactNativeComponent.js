@@ -9,7 +9,7 @@
  * @providesModule ReactNativeComponent
  */
 
-"use strict";
+'use strict';
 
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');

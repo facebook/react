@@ -11,7 +11,7 @@
 
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 var assign = require('Object.assign');
 var mocks = require('mocks');
