@@ -266,7 +266,77 @@ function checkPropTypes(componentName, propTypes, props, location) {
   }
 }
 
+var warnedPropsMutations = {};
+
+/**
+ * Warn about mutating props when setting `propName` on `element`.
+ *
+ * @param {string} propName The string key within props that was set
+ * @param {ReactElement} element
+ */
+function warnForPropsMutation(propName, element) {
+  var type = element.type;
+  var elementName = typeof type === 'string' ? type : type.displayName;
+  var ownerName = element._owner ?
+    element._owner.getPublicInstance().constructor.displayName : null;
+
+  var warningKey = propName + '|' + elementName + '|' + ownerName;
+  if (warnedPropsMutations.hasOwnProperty(warningKey)) {
+    return;
+  }
+  warnedPropsMutations[warningKey] = true;
+
+  var elementInfo = '';
+  if (elementName) {
+    elementInfo = ' <' + elementName + ' />';
+  }
+  var ownerInfo = '';
+  if (ownerName) {
+    ownerInfo = ' The element was created by ' + ownerName + '.';
+  }
+
+  warning(
+    false,
+    'Don\'t set .props.' + propName + ' of the React component' +
+    elementInfo + '. Instead, specify the correct value when ' +
+    'initially creating the element.' + ownerInfo
+  );
+}
+
+/**
+ * Given an element, check if its props have been mutated since element
+ * creation (or the last call to this function). In particular, check if any
+ * new props have been added, which we can't directly catch by defining warning
+ * properties on the props object.
+ *
+ * @param {ReactElement} element
+ */
+function checkAndWarnForMutatedProps(element) {
+  if (!element._store) {
+    // Element was created using `new ReactElement` directly or with
+    // `ReactElement.createElement`; skip mutation checking
+    return;
+  }
+
+  var originalProps = element._store.originalProps;
+  var props = element.props;
+
+  for (var propName in props) {
+    if (props.hasOwnProperty(propName)) {
+      if (!originalProps.hasOwnProperty(propName) ||
+          originalProps[propName] !== props[propName]) {
+        warnForPropsMutation(propName, element);
+
+        // Copy over the new value so that the two props objects match again
+        originalProps[propName] = props[propName];
+      }
+    }
+  }
+}
+
 var ReactElementValidator = {
+
+  checkAndWarnForMutatedProps: checkAndWarnForMutatedProps,
 
   createElement: function(type, props, children) {
     // We warn in this case but don't throw. We expect the element creation to

@@ -14,6 +14,7 @@
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 
+var assign = require('Object.assign');
 var warning = require('warning');
 
 var RESERVED_PROPS = {
@@ -44,8 +45,8 @@ function defineWarningProperty(object, key) {
     set: function(value) {
       warning(
         false,
-        'Don\'t set the ' + key + ' property of the component. ' +
-        'Mutate the existing props object instead.'
+        'Don\'t set the ' + key + ' property of the React element. Instead, ' +
+        'specify the correct value when initially creating the element.'
       );
       this._store[key] = value;
     }
@@ -106,7 +107,7 @@ var ReactElement = function(type, key, ref, owner, context, props) {
     // an external backing store so that we can freeze the whole object.
     // This can be replaced with a WeakMap once they are implemented in
     // commonly used development environments.
-    this._store = { props: props };
+    this._store = { props: props, originalProps: assign({}, props) };
 
     // To make comparing ReactElements easier for testing purposes, we make
     // the validation flag non-enumerable (where possible, which should
