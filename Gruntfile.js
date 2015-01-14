@@ -45,8 +45,13 @@ module.exports = function(grunt) {
       cmd: 'node_modules/.bin/eslint',
       args: ['src']
     }, function(err, result, code) {
+      if (code === 0) {
+        grunt.log.ok('Lint passed (but may contain warnings)');
+      } else {
+        grunt.log.error('Lint failed');
+      }
       if (result.stdout.length) {
-        grunt.warn(result.stdout);
+        grunt.log.writeln(result.stdout);
       }
 
       done(code === 0);
