@@ -41,11 +41,11 @@ function ReactComponentBase(props) {
  * @protected
  */
 ReactComponentBase.prototype.setState = function(partialState, callback) {
-  invariant(
-    typeof partialState === 'object' || partialState == null,
-    'setState(...): takes an object of state variables to update.'
-  );
   if (__DEV__) {
+    invariant(
+      typeof partialState === 'object' || partialState == null,
+      'setState(...): takes an object of state variables to update.'
+    );
     warning(
       partialState != null,
       'setState(...): You passed an undefined or null state object; ' +
@@ -54,12 +54,14 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
   }
 
   var internalInstance = ReactInstanceMap.get(this);
-  invariant(
-    internalInstance,
-    'setState(...): Can only update a mounted or mounting component. ' +
-    'This usually means you called setState() on an unmounted ' +
-    'component.'
-  );
+  if (__DEV__) {
+    invariant(
+      internalInstance,
+      'setState(...): Can only update a mounted or mounting component. ' +
+      'This usually means you called setState() on an unmounted ' +
+      'component.'
+    );
+  }
   internalInstance.setState(
     partialState, callback && callback.bind(this)
   );
@@ -81,12 +83,14 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
  */
 ReactComponentBase.prototype.forceUpdate = function(callback) {
   var internalInstance = ReactInstanceMap.get(this);
-  invariant(
-    internalInstance,
-    'forceUpdate(...): Can only force an update on mounted or mounting ' +
-    'components. This usually means you called forceUpdate() on an ' +
-    'unmounted component.'
-  );
+  if (__DEV__) {
+    invariant(
+      internalInstance,
+      'forceUpdate(...): Can only force an update on mounted or mounting ' +
+      'components. This usually means you called forceUpdate() on an ' +
+      'unmounted component.'
+    );
+  }
   internalInstance.forceUpdate(callback && callback.bind(this));
 };
 

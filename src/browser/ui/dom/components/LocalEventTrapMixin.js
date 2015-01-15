@@ -23,7 +23,9 @@ function remove(event) {
 
 var LocalEventTrapMixin = {
   trapBubbledEvent(topLevelType, handlerBaseName) {
-    invariant(this.isMounted(), 'Must be mounted to trap events');
+    if (__DEV__) {
+      invariant(this.isMounted(), 'Must be mounted to trap events');
+    }
     var listener = ReactBrowserEventEmitter.trapBubbledEvent(
       topLevelType,
       handlerBaseName,

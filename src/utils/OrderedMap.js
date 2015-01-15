@@ -32,12 +32,17 @@ function extractObjectFromArray(arr, keyExtractor) {
   for (var i = 0; i < arr.length; i++) {
     var item = arr[i];
     var key = keyExtractor(item);
-    assertValidPublicKey(key);
+    if (__DEV__) {
+      assertValidPublicKey(key);
+    }
     var normalizedKey = PREFIX + key;
-    invariant(
-      !(normalizedKey in normalizedObj),
-      'OrderedMap: IDs returned by the key extraction function must be unique.'
-    );
+    if (__DEV__) {
+      invariant(
+        !(normalizedKey in normalizedObj),
+        'OrderedMap: IDs returned by the key extraction function must ' +
+        'be unique.'
+      );
+    }
     normalizedObj[normalizedKey] = item;
   }
   return normalizedObj;
@@ -121,10 +126,12 @@ function assertValidRangeIndices(start, length, actualLen) {
  */
 function _fromNormalizedObjects(a, b) {
   // Second optional, both must be plain JavaScript objects.
-  invariant(
-    a && a.constructor === Object && (!b || b.constructor === Object),
-    'OrderedMap: Corrupted instance of OrderedMap detected.'
-  );
+  if (__DEV__) {
+    invariant(
+      a && a.constructor === Object && (!b || b.constructor === Object),
+      'OrderedMap: Corrupted instance of OrderedMap detected.'
+    );
+  }
 
   var newSet = {};
   var length = 0;
@@ -168,7 +175,9 @@ var OrderedMapMethods = {
    * @throws Error if provided known invalid key.
    */
   has: function(key) {
-    assertValidPublicKey(key);
+    if (__DEV__) {
+      assertValidPublicKey(key);
+    }
     var normalizedKey = PREFIX + key;
     return normalizedKey in this._normalizedObj;
   },
@@ -182,7 +191,9 @@ var OrderedMapMethods = {
    * @throws Error if provided known invalid key.
    */
   get: function(key) {
-    assertValidPublicKey(key);
+    if (__DEV__) {
+      assertValidPublicKey(key);
+    }
     var normalizedKey = PREFIX + key;
     return this.has(key) ? this._normalizedObj[normalizedKey] : undefined;
   },
@@ -200,10 +211,12 @@ var OrderedMapMethods = {
    * merge.
    */
   merge: function(orderedMap) {
-    invariant(
-      orderedMap instanceof OrderedMapImpl,
-      'OrderedMap.merge(...): Expected an OrderedMap instance.'
-    );
+    if (__DEV__) {
+      invariant(
+        orderedMap instanceof OrderedMapImpl,
+        'OrderedMap.merge(...): Expected an OrderedMap instance.'
+      );
+    }
     return _fromNormalizedObjects(
       this._normalizedObj,
       orderedMap._normalizedObj
@@ -235,7 +248,9 @@ var OrderedMapMethods = {
     var thisSet = this._normalizedObj;
     var newSet = {};
     var i = 0;
-    assertValidRangeIndices(start, length, this.length);
+    if (__DEV__) {
+      assertValidRangeIndices(start, length, this.length);
+    }
     var end = start + length - 1;
     for (var key in thisSet) {
       if (thisSet.hasOwnProperty(key)) {
@@ -291,7 +306,9 @@ var OrderedMapMethods = {
   },
 
   forEachRange: function(cb, start, length, context) {
-    assertValidRangeIndices(start, length, this.length);
+    if (__DEV__) {
+      assertValidRangeIndices(start, length, this.length);
+    }
     var thisSet = this._normalizedObj;
     var i = 0;
     var end = start + length - 1;
@@ -318,29 +335,34 @@ var OrderedMapMethods = {
   mapKeyRange: function(cb, startKey, endKey, context) {
     var startIndex = this.indexOfKey(startKey);
     var endIndex = this.indexOfKey(endKey);
-    invariant(
-      startIndex !== undefined && endIndex !== undefined,
-      'mapKeyRange must be given keys that are present.'
-    );
-    invariant(
-      endIndex >= startIndex,
-      'OrderedMap.mapKeyRange(...): `endKey` must not come before `startIndex`.'
-    );
+    if (__DEV__) {
+      invariant(
+        startIndex !== undefined && endIndex !== undefined,
+        'mapKeyRange must be given keys that are present.'
+      );
+      invariant(
+        endIndex >= startIndex,
+        'OrderedMap.mapKeyRange(...): `endKey` must not come ' +
+        'before `startIndex`.'
+      );
+    }
     return this.mapRange(cb, startIndex, (endIndex - startIndex) + 1, context);
   },
 
   forEachKeyRange: function(cb, startKey, endKey, context) {
     var startIndex = this.indexOfKey(startKey);
     var endIndex = this.indexOfKey(endKey);
-    invariant(
-      startIndex !== undefined && endIndex !== undefined,
-      'forEachKeyRange must be given keys that are present.'
-    );
-    invariant(
-      endIndex >= startIndex,
-      'OrderedMap.forEachKeyRange(...): `endKey` must not come before ' +
-      '`startIndex`.'
-    );
+    if (__DEV__) {
+      invariant(
+        startIndex !== undefined && endIndex !== undefined,
+        'forEachKeyRange must be given keys that are present.'
+      );
+      invariant(
+        endIndex >= startIndex,
+        'OrderedMap.forEachKeyRange(...): `endKey` must not come before ' +
+        '`startIndex`.'
+      );
+    }
     this.forEachRange(cb, startIndex, (endIndex - startIndex) + 1, context);
   },
 
@@ -384,11 +406,13 @@ var OrderedMapMethods = {
    */
   nthKeyAfter: function(key, n) {
     var curIndex = this.indexOfKey(key);
-    invariant(
-      curIndex !== undefined,
-      'OrderedMap.nthKeyAfter: The key `%s` does not exist in this instance.',
-      key
-    );
+    if (__DEV__) {
+      invariant(
+        curIndex !== undefined,
+        'OrderedMap.nthKeyAfter: The key `%s` does not exist in this instance.',
+        key
+      );
+    }
     return this.keyAtIndex(curIndex + n);
   },
 
@@ -409,7 +433,9 @@ var OrderedMapMethods = {
    * key is not found.
    */
   indexOfKey: function(key) {
-    assertValidPublicKey(key);
+    if (__DEV__) {
+      assertValidPublicKey(key);
+    }
     var normalizedKey = PREFIX + key;
     var computedPositions = this._getOrComputePositions();
     var computedPosition = computedPositions.indexByKey[normalizedKey];
@@ -480,23 +506,27 @@ assign(OrderedMapImpl.prototype, OrderedMapMethods);
 
 var OrderedMap = {
   from: function(orderedMap) {
-    invariant(
-      orderedMap instanceof OrderedMapImpl,
-      'OrderedMap.from(...): Expected an OrderedMap instance.'
-    );
+    if (__DEV__) {
+      invariant(
+        orderedMap instanceof OrderedMapImpl,
+        'OrderedMap.from(...): Expected an OrderedMap instance.'
+      );
+    }
     return _fromNormalizedObjects(orderedMap._normalizedObj, null);
   },
 
   fromArray: function(arr, keyExtractor) {
-    invariant(
-      Array.isArray(arr),
-      'OrderedMap.fromArray(...): First argument must be an array.'
-    );
-    invariant(
-      typeof keyExtractor === 'function',
-      'OrderedMap.fromArray(...): Second argument must be a function used ' +
-      'to determine the unique key for each entry.'
-    );
+    if (__DEV__) {
+      invariant(
+        Array.isArray(arr),
+        'OrderedMap.fromArray(...): First argument must be an array.'
+      );
+      invariant(
+        typeof keyExtractor === 'function',
+        'OrderedMap.fromArray(...): Second argument must be a function used ' +
+        'to determine the unique key for each entry.'
+      );
+    }
     return new OrderedMapImpl(
       extractObjectFromArray(arr, keyExtractor),
       arr.length

@@ -38,10 +38,13 @@ var ReactComponentEnvironment = {
 
   injection: {
     injectEnvironment: function(environment) {
-      invariant(
-        !injected,
-        'ReactCompositeComponent: injectEnvironment() can only be called once.'
-      );
+      if (__DEV__) {
+        invariant(
+          !injected,
+          'ReactCompositeComponent: injectEnvironment() can only be ' +
+          'called once.'
+        );
+      }
       ReactComponentEnvironment.unmountIDFromEnvironment =
         environment.unmountIDFromEnvironment;
       ReactComponentEnvironment.replaceNodeWithMarkupByID =

@@ -240,14 +240,16 @@ function checkPropTypes(componentName, propTypes, props, location) {
       try {
         // This is intentionally an invariant that gets caught. It's the same
         // behavior as without this statement except with a better message.
-        invariant(
-          typeof propTypes[propName] === 'function',
-          '%s: %s type `%s` is invalid; it must be a function, usually from ' +
-          'React.PropTypes.',
-          componentName || 'React class',
-          ReactPropTypeLocationNames[location],
-          propName
-        );
+        if (__DEV__) {
+          invariant(
+            typeof propTypes[propName] === 'function',
+            '%s: %s type `%s` is invalid; it must be a function, usually ' +
+            'from React.PropTypes.',
+            componentName || 'React class',
+            ReactPropTypeLocationNames[location],
+            propName
+          );
+        }
         error = propTypes[propName](props, propName, componentName, location);
       } catch (ex) {
         error = ex;
@@ -295,12 +297,14 @@ function warnForPropsMutation(propName, element) {
     ownerInfo = ' The element was created by ' + ownerName + '.';
   }
 
-  warning(
-    false,
-    'Don\'t set .props.' + propName + ' of the React component' +
-    elementInfo + '. Instead, specify the correct value when ' +
-    'initially creating the element.' + ownerInfo
-  );
+  if (__DEV__) {
+    warning(
+      false,
+      'Don\'t set .props.' + propName + ' of the React component' +
+      elementInfo + '. Instead, specify the correct value when ' +
+      'initially creating the element.' + ownerInfo
+    );
+  }
 }
 
 /**
@@ -341,12 +345,14 @@ var ReactElementValidator = {
   createElement: function(type, props, children) {
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(
-      type != null,
-      'React.createElement: type should not be null or undefined. It should ' +
-        'be a string (for DOM elements) or a ReactClass (for composite ' +
-        'components).'
-    );
+    if (__DEV__) {
+      warning(
+        type != null,
+        'React.createElement: type should not be null or undefined. It ' +
+        'should be a string (for DOM elements) or a ReactClass (for ' +
+        'composite components).'
+      );
+    }
 
     var element = ReactElement.createElement.apply(this, arguments);
 
@@ -378,12 +384,14 @@ var ReactElementValidator = {
           ReactPropTypeLocations.context
         );
       }
-      if (typeof type.getDefaultProps === 'function') {
-        warning(
-          type.getDefaultProps._isReactClassApproved,
-          'getDefaultProps is only used on classic React.createClass ' +
-          'definitions. Use a static property named `defaultProps` instead.'
-        );
+      if (__DEV__) {
+        if (typeof type.getDefaultProps === 'function') {
+          warning(
+            type.getDefaultProps._isReactClassApproved,
+            'getDefaultProps is only used on classic React.createClass ' +
+            'definitions. Use a static property named `defaultProps` instead.'
+          );
+        }
       }
     }
 

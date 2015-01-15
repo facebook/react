@@ -116,11 +116,13 @@ var Mixin = {
    * @return Return value from `method`.
    */
   perform: function(method, scope, a, b, c, d, e, f) {
-    invariant(
-      !this.isInTransaction(),
-      'Transaction.perform(...): Cannot initialize a transaction when there ' +
-      'is already an outstanding transaction.'
-    );
+    if (__DEV__) {
+      invariant(
+        !this.isInTransaction(),
+        'Transaction.perform(...): Cannot initialize a transaction when ' +
+        'there is already an outstanding transaction.'
+      );
+    }
     var errorThrown;
     var ret;
     try {
@@ -188,10 +190,12 @@ var Mixin = {
    * invoked).
    */
   closeAll: function(startIndex) {
-    invariant(
-      this.isInTransaction(),
-      'Transaction.closeAll(): Cannot close transaction when none are open.'
-    );
+    if (__DEV__) {
+      invariant(
+        this.isInTransaction(),
+        'Transaction.closeAll(): Cannot close transaction when none are open.'
+      );
+    }
     var transactionWrappers = this.transactionWrappers;
     for (var i = startIndex; i < transactionWrappers.length; i++) {
       var wrapper = transactionWrappers[i];

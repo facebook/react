@@ -146,11 +146,13 @@ var EventPluginHub = {
    * @param {?function} listener The callback to store.
    */
   putListener: function(id, registrationName, listener) {
-    invariant(
-      !listener || typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
-      registrationName, typeof listener
-    );
+    if (__DEV__) {
+      invariant(
+        !listener || typeof listener === 'function',
+        'Expected %s listener to be a function, instead got type %s',
+        registrationName, typeof listener
+      );
+    }
 
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
@@ -251,11 +253,14 @@ var EventPluginHub = {
     var processingEventQueue = eventQueue;
     eventQueue = null;
     forEachAccumulated(processingEventQueue, executeDispatchesAndRelease);
-    invariant(
-      !eventQueue,
-      'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.'
-    );
+    if (__DEV__) {
+      invariant(
+        !eventQueue,
+        'processEventQueue(): Additional events were enqueued while ' +
+        'processing an event queue. Support for this has not yet been ' +
+        'implemented.'
+      );
+    }
   },
 
   /**

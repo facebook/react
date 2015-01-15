@@ -65,20 +65,24 @@ function invariantArrayCase(value, spec, command) {
 }
 
 function update(value, spec) {
-  invariant(
-    typeof spec === 'object',
-    'update(): You provided a key path to update() that did not contain one ' +
-    'of %s. Did you forget to include {%s: ...}?',
-    ALL_COMMANDS_LIST.join(', '),
-    COMMAND_SET
-  );
-
-  if (spec.hasOwnProperty(COMMAND_SET)) {
+  if (__DEV__) {
     invariant(
-      Object.keys(spec).length === 1,
-      'Cannot have more than one key in an object with %s',
+      typeof spec === 'object',
+      'update(): You provided a key path to update() that did not contain ' +
+      'one of %s. Did you forget to include {%s: ...}?',
+      ALL_COMMANDS_LIST.join(', '),
       COMMAND_SET
     );
+  }
+
+  if (spec.hasOwnProperty(COMMAND_SET)) {
+    if (__DEV__) {
+      invariant(
+        Object.keys(spec).length === 1,
+        'Cannot have more than one key in an object with %s',
+        COMMAND_SET
+      );
+    }
 
     return spec[COMMAND_SET];
   }
@@ -87,69 +91,77 @@ function update(value, spec) {
 
   if (spec.hasOwnProperty(COMMAND_MERGE)) {
     var mergeObj = spec[COMMAND_MERGE];
-    invariant(
-      mergeObj && typeof mergeObj === 'object',
-      'update(): %s expects a spec of type \'object\'; got %s',
-      COMMAND_MERGE,
-      mergeObj
-    );
-    invariant(
-      nextValue && typeof nextValue === 'object',
-      'update(): %s expects a target of type \'object\'; got %s',
-      COMMAND_MERGE,
-      nextValue
-    );
+    if (__DEV__) {
+      invariant(
+        mergeObj && typeof mergeObj === 'object',
+        'update(): %s expects a spec of type \'object\'; got %s',
+        COMMAND_MERGE,
+        mergeObj
+      );
+      invariant(
+        nextValue && typeof nextValue === 'object',
+        'update(): %s expects a target of type \'object\'; got %s',
+        COMMAND_MERGE,
+        nextValue
+      );
+    }
     assign(nextValue, spec[COMMAND_MERGE]);
   }
 
   if (spec.hasOwnProperty(COMMAND_PUSH)) {
-    invariantArrayCase(value, spec, COMMAND_PUSH);
+    if (__DEV__) {
+      invariantArrayCase(value, spec, COMMAND_PUSH);
+    }
     spec[COMMAND_PUSH].forEach(function(item) {
       nextValue.push(item);
     });
   }
 
   if (spec.hasOwnProperty(COMMAND_UNSHIFT)) {
-    invariantArrayCase(value, spec, COMMAND_UNSHIFT);
+    if (__DEV__) {
+      invariantArrayCase(value, spec, COMMAND_UNSHIFT);
+    }
     spec[COMMAND_UNSHIFT].forEach(function(item) {
       nextValue.unshift(item);
     });
   }
 
-  if (spec.hasOwnProperty(COMMAND_SPLICE)) {
-    invariant(
-      Array.isArray(value),
-      'Expected %s target to be an array; got %s',
-      COMMAND_SPLICE,
-      value
-    );
-    invariant(
-      Array.isArray(spec[COMMAND_SPLICE]),
-      'update(): expected spec of %s to be an array of arrays; got %s. ' +
-      'Did you forget to wrap your parameters in an array?',
-      COMMAND_SPLICE,
-      spec[COMMAND_SPLICE]
-    );
-    spec[COMMAND_SPLICE].forEach(function(args) {
+  if (__DEV__) {
+    if (spec.hasOwnProperty(COMMAND_SPLICE)) {
       invariant(
-        Array.isArray(args),
+        Array.isArray(value),
+        'Expected %s target to be an array; got %s',
+        COMMAND_SPLICE,
+        value
+      );
+      invariant(
+        Array.isArray(spec[COMMAND_SPLICE]),
         'update(): expected spec of %s to be an array of arrays; got %s. ' +
         'Did you forget to wrap your parameters in an array?',
         COMMAND_SPLICE,
         spec[COMMAND_SPLICE]
       );
-      nextValue.splice.apply(nextValue, args);
-    });
-  }
+      spec[COMMAND_SPLICE].forEach(function (args) {
+        invariant(
+          Array.isArray(args),
+          'update(): expected spec of %s to be an array of arrays; got %s. ' +
+          'Did you forget to wrap your parameters in an array?',
+          COMMAND_SPLICE,
+          spec[COMMAND_SPLICE]
+        );
+        nextValue.splice.apply(nextValue, args);
+      });
+    }
 
-  if (spec.hasOwnProperty(COMMAND_APPLY)) {
-    invariant(
-      typeof spec[COMMAND_APPLY] === 'function',
-      'update(): expected spec of %s to be a function; got %s.',
-      COMMAND_APPLY,
-      spec[COMMAND_APPLY]
-    );
-    nextValue = spec[COMMAND_APPLY](nextValue);
+    if (spec.hasOwnProperty(COMMAND_APPLY)) {
+      invariant(
+        typeof spec[COMMAND_APPLY] === 'function',
+        'update(): expected spec of %s to be a function; got %s.',
+        COMMAND_APPLY,
+        spec[COMMAND_APPLY]
+      );
+      nextValue = spec[COMMAND_APPLY](nextValue);
+    }
   }
 
   for (var k in spec) {

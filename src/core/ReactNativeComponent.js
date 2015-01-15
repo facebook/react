@@ -70,11 +70,13 @@ function createInstanceForTag(tag, props, parentType) {
   }
   if (parentType === tag) {
     // Avoid recursion
-    invariant(
-      genericComponentClass,
-      'There is no registered component for the tag %s',
-      tag
-    );
+    if (__DEV__) {
+      invariant(
+        genericComponentClass,
+        'There is no registered component for the tag %s',
+        tag
+      );
+    }
     return new genericComponentClass(tag, props);
   }
   return new componentClass(props);

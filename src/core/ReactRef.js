@@ -67,10 +67,12 @@ assign(ReactRef.prototype, {
    * @param {?function} failure Callback in case of failure
    */
   then: function(success, failure) {
-    invariant(
-      typeof success === 'function',
-      'ReactRef.then(...): Must provide a success callback.'
-    );
+    if (__DEV__) {
+      invariant(
+        typeof success === 'function',
+        'ReactRef.then(...): Must provide a success callback.'
+      );
+    }
     if (this._successCallbacks == null) {
       ReactUpdates.asap(dispatchCallbacks, this);
     }

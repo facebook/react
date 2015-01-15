@@ -71,14 +71,17 @@ var DOMPropertyInjection = {
     }
 
     for (var propName in Properties) {
-      invariant(
-        !DOMProperty.isStandardName.hasOwnProperty(propName),
-        'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
-        '\'%s\' which has already been injected. You may be accidentally ' +
-        'injecting the same DOM property config twice, or you may be ' +
-        'injecting two configs that have conflicting property names.',
-        propName
-      );
+      if (__DEV__) {
+        invariant(
+          !DOMProperty.isStandardName.hasOwnProperty(propName),
+          'injectDOMPropertyConfig(...): You\'re trying to inject DOM ' +
+          'property \'%s\' which has already been injected. You may be ' +
+          'accidentally injecting the same DOM property config twice, or ' +
+          'you may be injecting two configs that have conflicting ' +
+          'property names.',
+          propName
+        );
+      }
 
       DOMProperty.isStandardName[propName] = true;
 
@@ -120,26 +123,29 @@ var DOMPropertyInjection = {
       DOMProperty.hasOverloadedBooleanValue[propName] =
         checkMask(propConfig, DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE);
 
-      invariant(
-        !DOMProperty.mustUseAttribute[propName] ||
-          !DOMProperty.mustUseProperty[propName],
-        'DOMProperty: Cannot require using both attribute and property: %s',
-        propName
-      );
-      invariant(
-        DOMProperty.mustUseProperty[propName] ||
-          !DOMProperty.hasSideEffects[propName],
-        'DOMProperty: Properties that have side effects must use property: %s',
-        propName
-      );
-      invariant(
-        !!DOMProperty.hasBooleanValue[propName] +
-          !!DOMProperty.hasNumericValue[propName] +
-          !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-        'numeric value, but not a combination: %s',
-        propName
-      );
+      if (__DEV__) {
+        invariant(
+          !DOMProperty.mustUseAttribute[propName] ||
+            !DOMProperty.mustUseProperty[propName],
+          'DOMProperty: Cannot require using both attribute and property: %s',
+          propName
+        );
+        invariant(
+          DOMProperty.mustUseProperty[propName] ||
+            !DOMProperty.hasSideEffects[propName],
+          'DOMProperty: Properties that have side effects must use ' +
+          'property: %s',
+          propName
+        );
+        invariant(
+          !!DOMProperty.hasBooleanValue[propName] +
+            !!DOMProperty.hasNumericValue[propName] +
+            !!DOMProperty.hasOverloadedBooleanValue[propName] <= 1,
+          'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+          'numeric value, but not a combination: %s',
+          propName
+        );
+      }
     }
   }
 };

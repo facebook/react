@@ -108,10 +108,12 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
   updateComponent: function() {
-    invariant(
-      false,
-      'ReactDOMTextComponent: updateComponent() should never be called'
-    );
+    if (__DEV__) {
+      invariant(
+        false,
+        'ReactDOMTextComponent: updateComponent() should never be called'
+      );
+    }
   },
 
   unmountComponent: function() {

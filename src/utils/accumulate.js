@@ -21,10 +21,12 @@ var invariant = require('invariant');
  * @return {*|array<*>} An accumulation of items.
  */
 function accumulate(current, next) {
-  invariant(
-    next != null,
-    'accumulate(...): Accumulated items must be not be null or undefined.'
-  );
+  if (__DEV__) {
+    invariant(
+      next != null,
+      'accumulate(...): Accumulated items must be not be null or undefined.'
+    );
+  }
   if (current == null) {
     return next;
   } else {

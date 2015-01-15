@@ -147,17 +147,19 @@ var ReactDOMInput = ReactClass.createClass({
           continue;
         }
         var otherID = ReactMount.getID(otherNode);
-        invariant(
-          otherID,
-          'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
-          'same `name` is not supported.'
-        );
         var otherInstance = instancesByReactID[otherID];
-        invariant(
-          otherInstance,
-          'ReactDOMInput: Unknown radio button ID %s.',
-          otherID
-        );
+        if (__DEV__) {
+          invariant(
+            otherID,
+            'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
+            'same `name` is not supported.'
+          );
+          invariant(
+            otherInstance,
+            'ReactDOMInput: Unknown radio button ID %s.',
+            otherID
+          );
+        }
         // If this is a controlled radio button group, forcing the input that
         // was previously checked to update will cause it to be come re-checked
         // as appropriate.

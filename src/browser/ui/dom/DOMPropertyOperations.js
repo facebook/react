@@ -59,10 +59,12 @@ if (__DEV__) {
 
     // For now, only warn when we have a suggested correction. This prevents
     // logging too much when using transferPropsTo.
-    warning(
-      standardName == null,
-      'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
-    );
+    if (__DEV__) {
+      warning(
+        standardName == null,
+        'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
+      );
+    }
 
   };
 }
