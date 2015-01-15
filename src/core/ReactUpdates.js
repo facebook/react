@@ -152,7 +152,7 @@ function runBatchedUpdates(transaction) {
       for (var j = 0; j < callbacks.length; j++) {
         transaction.callbackQueue.enqueue(
           callbacks[j],
-          component
+          component.getPublicInstance()
         );
       }
     }

@@ -712,7 +712,7 @@ var ReactClassMixin = {
     );
     internalInstance.replaceState(
       newState,
-      callback && callback.bind(this)
+      callback
     );
   },
 
@@ -746,7 +746,7 @@ var ReactClassMixin = {
     );
     internalInstance.setProps(
       partialProps,
-      callback && callback.bind(this)
+      callback
     );
   },
 
@@ -762,7 +762,7 @@ var ReactClassMixin = {
   replaceProps: function(newProps, callback) {
     ReactInstanceMap.get(this).replaceProps(
       newProps,
-      callback && callback.bind(this)
+      callback
     );
   }
 };
