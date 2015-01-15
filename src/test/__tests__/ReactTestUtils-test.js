@@ -14,13 +14,23 @@
 var React;
 var ReactTestUtils;
 
+var mocks;
+var warn;
+
 describe('ReactTestUtils', function() {
 
   beforeEach(function() {
+    mocks = require('mocks');
+
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    this.addMatchers(ReactTestUtils.jasmineMatchers);
+    warn = console.warn;
+    console.warn = mocks.getMockFunction();
+  });
+
+  afterEach(function() {
+    console.warn = warn;
   });
 
   it('should have shallow rendering', function() {
@@ -109,18 +119,5 @@ describe('ReactTestUtils', function() {
     );
     expect(scryResults.length).toBe(0);
 
-  });
-
-  it('expect console warn message success (jasmine integration)', function() {
-    expect(function(){console.warn('candy');}).toWarn('candy');
-    expect(function(){console.warn('candy');}).toWarn(1);
-  });
-
-  it('expect console warn to return true/false (direct invocation)', function() {
-    var scope = { actual: function(){console.warn('candy');} };
-    expect((ReactTestUtils.jasmineMatchers.toWarn.bind(scope))('candy')).toBe(true);
-    expect(ReactTestUtils.jasmineMatchers.toWarn.bind(scope)('ice cream')).toBe(false);
-    expect(ReactTestUtils.jasmineMatchers.toWarn.bind(scope)(1)).toBe(true);
-    expect(ReactTestUtils.jasmineMatchers.toWarn.bind(scope)(2)).toBe(false);
   });
 });
