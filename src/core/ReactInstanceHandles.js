@@ -96,19 +96,21 @@ function getParentID(id) {
  * @private
  */
 function getNextDescendantID(ancestorID, destinationID) {
-  invariant(
-    isValidID(ancestorID) && isValidID(destinationID),
-    'getNextDescendantID(%s, %s): Received an invalid React DOM ID.',
-    ancestorID,
-    destinationID
-  );
-  invariant(
-    isAncestorIDOf(ancestorID, destinationID),
-    'getNextDescendantID(...): React has made an invalid assumption about ' +
-    'the DOM hierarchy. Expected `%s` to be an ancestor of `%s`.',
-    ancestorID,
-    destinationID
-  );
+  if (__DEV__) {
+    invariant(
+      isValidID(ancestorID) && isValidID(destinationID),
+      'getNextDescendantID(%s, %s): Received an invalid React DOM ID.',
+      ancestorID,
+      destinationID
+    );
+    invariant(
+      isAncestorIDOf(ancestorID, destinationID),
+      'getNextDescendantID(...): React has made an invalid assumption about ' +
+      'the DOM hierarchy. Expected `%s` to be an ancestor of `%s`.',
+      ancestorID,
+      destinationID
+    );
+  }
   if (ancestorID === destinationID) {
     return ancestorID;
   }
@@ -150,13 +152,15 @@ function getFirstCommonAncestorID(oneID, twoID) {
     }
   }
   var longestCommonID = oneID.substr(0, lastCommonMarkerIndex);
-  invariant(
-    isValidID(longestCommonID),
-    'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
-    oneID,
-    twoID,
-    longestCommonID
-  );
+  if (__DEV__) {
+    invariant(
+      isValidID(longestCommonID),
+      'getFirstCommonAncestorID(%s, %s): Expected a valid React DOM ID: %s',
+      oneID,
+      twoID,
+      longestCommonID
+    );
+  }
   return longestCommonID;
 }
 
@@ -175,19 +179,23 @@ function getFirstCommonAncestorID(oneID, twoID) {
 function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
   start = start || '';
   stop = stop || '';
-  invariant(
-    start !== stop,
-    'traverseParentPath(...): Cannot traverse from and to the same ID, `%s`.',
-    start
-  );
+  if (__DEV__) {
+    invariant(
+      start !== stop,
+      'traverseParentPath(...): Cannot traverse from and to the same ID, `%s`.',
+      start
+    );
+  }
   var traverseUp = isAncestorIDOf(stop, start);
-  invariant(
-    traverseUp || isAncestorIDOf(start, stop),
-    'traverseParentPath(%s, %s, ...): Cannot traverse from two IDs that do ' +
-    'not have a parent path.',
-    start,
-    stop
-  );
+  if (__DEV__) {
+    invariant(
+      traverseUp || isAncestorIDOf(start, stop),
+      'traverseParentPath(%s, %s, ...): Cannot traverse from two IDs that do ' +
+      'not have a parent path.',
+      start,
+      stop
+    );
+  }
   // Traverse from `start` to `stop` one depth at a time.
   var depth = 0;
   var traverse = traverseUp ? getParentID : getNextDescendantID;
@@ -200,12 +208,15 @@ function traverseParentPath(start, stop, cb, arg, skipFirst, skipLast) {
       // Only break //after// visiting `stop`.
       break;
     }
-    invariant(
-      depth++ < MAX_TREE_DEPTH,
-      'traverseParentPath(%s, %s, ...): Detected an infinite loop while ' +
-      'traversing the React DOM ID tree. This may be due to malformed IDs: %s',
-      start, stop
-    );
+    if (__DEV__) {
+      invariant(
+        depth++ < MAX_TREE_DEPTH,
+        'traverseParentPath(%s, %s, ...): Detected an infinite loop while ' +
+        'traversing the React DOM ID tree. This may be due to malformed ' +
+        'IDs: %s',
+        start, stop
+      );
+    }
   }
 }
 

@@ -190,13 +190,13 @@ function initAnalyticsDataForID(analyticsID, analyticsEventsArr) {
  * to be invoked. This interval has to be atleast DEFAULT_INTERVAL_MS.
  */
 var createAnalyticsPlugin = function(cb, interval) {
-  invariant(
-    ExecutionEnvironment.canUseDOM,
-    'createAnalyticsPlugin(...): The DOM is not supported in the execution ' +
-    'environment.'
-  );
-
   if (__DEV__) {
+    invariant(
+      ExecutionEnvironment.canUseDOM,
+      'createAnalyticsPlugin(...): The DOM is not supported in the execution ' +
+      'environment.'
+    );
+
     invariant(cb, 'createAnalyticsPlugin(...): You must provide a callback.');
   }
   cb = cb || emptyFunction;

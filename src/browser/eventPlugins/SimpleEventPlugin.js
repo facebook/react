@@ -304,12 +304,14 @@ var SimpleEventPlugin = {
   executeDispatch: function(event, listener, domID) {
     var returnValue = EventPluginUtils.executeDispatch(event, listener, domID);
 
-    warning(
-      typeof returnValue !== 'boolean',
-      'Returning `false` from an event handler is deprecated and will be ' +
-      'ignored in a future release. Instead, manually call ' +
-      'e.stopPropagation() or e.preventDefault(), as appropriate.'
-    );
+    if (__DEV__) {
+      warning(
+        typeof returnValue !== 'boolean',
+        'Returning `false` from an event handler is deprecated and will be ' +
+        'ignored in a future release. Instead, manually call ' +
+        'e.stopPropagation() or e.preventDefault(), as appropriate.'
+      );
+    }
 
     if (returnValue === false) {
       event.stopPropagation();
@@ -405,11 +407,13 @@ var SimpleEventPlugin = {
         EventConstructor = SyntheticClipboardEvent;
         break;
     }
-    invariant(
-      EventConstructor,
-      'SimpleEventPlugin: Unhandled event type, `%s`.',
-      topLevelType
-    );
+    if (__DEV__) {
+      invariant(
+        EventConstructor,
+        'SimpleEventPlugin: Unhandled event type, `%s`.',
+        topLevelType
+      );
+    }
     var event = EventConstructor.getPooled(
       dispatchConfig,
       topLevelTargetID,

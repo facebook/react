@@ -26,10 +26,12 @@ var invariant = require('invariant');
  * structure.
  */
 function onlyChild(children) {
-  invariant(
-    ReactElement.isValidElement(children),
-    'onlyChild must be passed a children with exactly one child.'
-  );
+  if (__DEV__) {
+    invariant(
+      ReactElement.isValidElement(children),
+      'onlyChild must be passed a children with exactly one child.'
+    );
+  }
   return children;
 }
 

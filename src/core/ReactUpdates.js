@@ -122,13 +122,15 @@ function mountOrderComparator(c1, c2) {
 
 function runBatchedUpdates(transaction) {
   var len = transaction.dirtyComponentsLength;
-  invariant(
-    len === dirtyComponents.length,
-    'Expected flush transaction\'s stored dirty-components length (%s) to ' +
-    'match dirty-components array length (%s).',
-    len,
-    dirtyComponents.length
-  );
+  if (__DEV__) {
+    invariant(
+      len === dirtyComponents.length,
+      'Expected flush transaction\'s stored dirty-components length (%s) to ' +
+      'match dirty-components array length (%s).',
+      len,
+      dirtyComponents.length
+    );
+  }
 
   // Since reconciling a component higher in the owner hierarchy usually (not
   // always -- see shouldComponentUpdate()) will reconcile children, reconcile
@@ -191,26 +193,30 @@ flushBatchedUpdates = ReactPerf.measure(
  * list of functions which will be executed once the rerender occurs.
  */
 function enqueueUpdate(component, callback) {
-  invariant(
-    !callback || typeof callback === 'function',
-    'enqueueUpdate(...): You called `setProps`, `replaceProps`, ' +
-    '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-    'isn\'t callable.'
-  );
-  ensureInjected();
+  if (__DEV__) {
+    invariant(
+      !callback || typeof callback === 'function',
+      'enqueueUpdate(...): You called `setProps`, `replaceProps`, ' +
+      '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
+      'isn\'t callable.'
+    );
+    ensureInjected();
+  }
 
   // Various parts of our code (such as ReactCompositeComponent's
   // _renderValidatedComponent) assume that calls to render aren't nested;
   // verify that that's the case. (This is called by each top-level update
   // function, like setProps, setState, forceUpdate, etc.; creation and
   // destruction of top-level components is guarded in ReactMount.)
-  warning(
-    ReactCurrentOwner.current == null,
-    'enqueueUpdate(): Render methods should be a pure function of props ' +
-    'and state; triggering nested component updates from render is not ' +
-    'allowed. If necessary, trigger nested updates in ' +
-    'componentDidUpdate.'
-  );
+  if (__DEV__) {
+    warning(
+      ReactCurrentOwner.current == null,
+      'enqueueUpdate(): Render methods should be a pure function of props ' +
+      'and state; triggering nested component updates from render is not ' +
+      'allowed. If necessary, trigger nested updates in ' +
+      'componentDidUpdate.'
+    );
+  }
 
   if (!batchingStrategy.isBatchingUpdates) {
     batchingStrategy.batchedUpdates(enqueueUpdate, component, callback);
@@ -233,37 +239,43 @@ function enqueueUpdate(component, callback) {
  * if no updates are currently being performed.
  */
 function asap(callback, context) {
-  invariant(
-    batchingStrategy.isBatchingUpdates,
-    'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
-    'updates are not being batched.'
-  );
+  if (__DEV__) {
+    invariant(
+      batchingStrategy.isBatchingUpdates,
+      'ReactUpdates.asap: Can\'t enqueue an asap callback in a context where' +
+      'updates are not being batched.'
+    );
+  }
   asapCallbackQueue.enqueue(callback, context);
   asapEnqueued = true;
 }
 
 var ReactUpdatesInjection = {
   injectReconcileTransaction: function(ReconcileTransaction) {
-    invariant(
-      ReconcileTransaction,
-      'ReactUpdates: must provide a reconcile transaction class'
-    );
+    if (__DEV__) {
+      invariant(
+        ReconcileTransaction,
+        'ReactUpdates: must provide a reconcile transaction class'
+      );
+    }
     ReactUpdates.ReactReconcileTransaction = ReconcileTransaction;
   },
 
   injectBatchingStrategy: function(_batchingStrategy) {
-    invariant(
-      _batchingStrategy,
-      'ReactUpdates: must provide a batching strategy'
-    );
-    invariant(
-      typeof _batchingStrategy.batchedUpdates === 'function',
-      'ReactUpdates: must provide a batchedUpdates() function'
-    );
-    invariant(
-      typeof _batchingStrategy.isBatchingUpdates === 'boolean',
-      'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
-    );
+    if (__DEV__) {
+      invariant(
+        _batchingStrategy,
+        'ReactUpdates: must provide a batching strategy'
+      );
+      invariant(
+        typeof _batchingStrategy.batchedUpdates === 'function',
+        'ReactUpdates: must provide a batchedUpdates() function'
+      );
+      invariant(
+        typeof _batchingStrategy.isBatchingUpdates === 'boolean',
+        'ReactUpdates: must provide an isBatchingUpdates boolean attribute'
+      );
+    }
     batchingStrategy = _batchingStrategy;
   }
 };

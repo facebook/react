@@ -238,12 +238,12 @@ var ReactCompositeComponentMixin = assign({},
         'expected to return a value.',
         (this.getName() || 'A component')
       );
+      invariant(
+        typeof initialState === 'object' && !Array.isArray(initialState),
+        '%s.getInitialState(): must return an object or null',
+        this.getName() || 'ReactCompositeComponent'
+      );
     }
-    invariant(
-      typeof initialState === 'object' && !Array.isArray(initialState),
-      '%s.getInitialState(): must return an object or null',
-      this.getName() || 'ReactCompositeComponent'
-    );
     inst.state = initialState;
 
     this._pendingState = null;
@@ -348,14 +348,16 @@ var ReactCompositeComponentMixin = assign({},
    * @public
    */
   replaceProps: function(props, callback) {
-    invariant(
-      this._isTopLevel,
-      'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
-      'component with a parent. This is an anti-pattern since props will ' +
-      'get reactively updated when rendered. Instead, change the owner\'s ' +
-      '`render` method to pass the correct value as props to the component ' +
-      'where it is created.'
-    );
+    if (__DEV__) {
+      invariant(
+        this._isTopLevel,
+        'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
+        'component with a parent. This is an anti-pattern since props will ' +
+        'get reactively updated when rendered. Instead, change the owner\'s ' +
+        '`render` method to pass the correct value as props to the component ' +
+        'where it is created.'
+      );
+    }
     // This is a deoptimized path. We optimize for always having an element.
     // This creates an extra internal element.
     this._pendingElement = ReactElement.cloneAndReplaceProps(
@@ -416,7 +418,9 @@ var ReactCompositeComponentMixin = assign({},
    * @protected
    */
   replaceState: function(completeState, callback) {
-    validateLifeCycleOnReplaceState(this);
+    if (__DEV__) {
+      validateLifeCycleOnReplaceState(this);
+    }
     this._pendingState = completeState;
     if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
       // If we're in a componentWillMount handler, don't enqueue a rerender
@@ -445,12 +449,14 @@ var ReactCompositeComponentMixin = assign({},
    */
   forceUpdate: function(callback) {
     var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-      'forceUpdate(...): Cannot force an update while unmounting component ' +
-      'or during an existing state transition (such as within `render`).'
-    );
+    if (__DEV__) {
+      invariant(
+        compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
+        compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+        'forceUpdate(...): Cannot force an update while unmounting component ' +
+        'or during an existing state transition (such as within `render`).'
+      );
+    }
     this._pendingForceUpdate = true;
     ReactUpdates.enqueueUpdate(this, callback);
   },
@@ -492,26 +498,27 @@ var ReactCompositeComponentMixin = assign({},
     var inst = this._instance;
     var childContext = inst.getChildContext && inst.getChildContext();
     if (childContext) {
-      invariant(
-        typeof inst.constructor.childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-        'use getChildContext().',
-        this.getName() || 'ReactCompositeComponent'
-      );
       if (__DEV__) {
+        invariant(
+          typeof inst.constructor.childContextTypes === 'object',
+          '%s.getChildContext(): childContextTypes must be defined in ' +
+          'order to use getChildContext().',
+          this.getName() || 'ReactCompositeComponent'
+        );
         this._checkPropTypes(
           inst.constructor.childContextTypes,
           childContext,
           ReactPropTypeLocations.childContext
         );
-      }
-      for (var name in childContext) {
-        invariant(
-          name in inst.constructor.childContextTypes,
-          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-          this.getName() || 'ReactCompositeComponent',
-          name
-        );
+        for (var name in childContext) {
+          invariant(
+            name in inst.constructor.childContextTypes,
+            '%s.getChildContext(): key "%s" is not defined in ' +
+            'childContextTypes.',
+            this.getName() || 'ReactCompositeComponent',
+            name
+          );
+        }
       }
       return assign({}, currentContext, childContext);
     }
@@ -556,14 +563,16 @@ var ReactCompositeComponentMixin = assign({},
         try {
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
-          invariant(
-            typeof propTypes[propName] === 'function',
-            '%s: %s type `%s` is invalid; it must be a function, usually ' +
-            'from React.PropTypes.',
-            componentName || 'React class',
-            ReactPropTypeLocationNames[location],
-            propName
-          );
+          if (__DEV__) {
+            invariant(
+              typeof propTypes[propName] === 'function',
+              '%s: %s type `%s` is invalid; it must be a function, usually ' +
+              'from React.PropTypes.',
+              componentName || 'React class',
+              ReactPropTypeLocationNames[location],
+              propName
+            );
+          }
           error = propTypes[propName](props, propName, componentName, location);
         } catch (ex) {
           error = ex;
@@ -573,7 +582,9 @@ var ReactCompositeComponentMixin = assign({},
           // React.render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
           var addendum = getDeclarationErrorAddendum(this);
-          warning(false, error.message + addendum);
+          if (__DEV__) {
+            warning(false, error.message + addendum);
+          }
         }
       }
     }
@@ -653,29 +664,33 @@ var ReactCompositeComponentMixin = assign({},
     var displayName = this.getName() || 'ReactCompositeComponent';
     if (ownerKeys.length !== parentKeys.length ||
         ownerKeys.toString() !== parentKeys.toString()) {
-      warning(
-        ownerKeys.length === parentKeys.length &&
-        ownerKeys.toString() === parentKeys.toString(),
-        'owner based context (keys: %s) does not equal parent based ' +
-        'context (keys: %s) while mounting %s ' +
-        '(see: http://fb.me/react-context-by-parent)',
-        Object.keys(ownerBasedContext),
-        Object.keys(parentBasedContext),
-        displayName
-      );
-    } else {
-      for (var i = 0; i < parentKeys.length; i++) {
-        var key = parentKeys[i];
+      if (__DEV__) {
         warning(
-          ownerBasedContext[key] === parentBasedContext[key],
-          'owner-based and parent-based contexts differ '  +
-          '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
+          ownerKeys.length === parentKeys.length &&
+          ownerKeys.toString() === parentKeys.toString(),
+          'owner based context (keys: %s) does not equal parent based ' +
+          'context (keys: %s) while mounting %s ' +
           '(see: http://fb.me/react-context-by-parent)',
-          ownerBasedContext[key],
-          parentBasedContext[key],
-          key,
+          Object.keys(ownerBasedContext),
+          Object.keys(parentBasedContext),
           displayName
         );
+      }
+    } else {
+      if (__DEV__) {
+        for (var i = 0; i < parentKeys.length; i++) {
+          var key = parentKeys[i];
+          warning(
+            ownerBasedContext[key] === parentBasedContext[key],
+            'owner-based and parent-based contexts differ ' +
+            '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
+            '(see: http://fb.me/react-context-by-parent)',
+            ownerBasedContext[key],
+            parentBasedContext[key],
+            key,
+            displayName
+          );
+        }
       }
     }
   },
@@ -899,14 +914,16 @@ var ReactCompositeComponentMixin = assign({},
       ReactContext.current = previousContext;
       ReactCurrentOwner.current = null;
     }
-    invariant(
-      // TODO: An `isValidNode` function would probably be more appropriate
-      renderedComponent === null || renderedComponent === false ||
-      ReactElement.isValidElement(renderedComponent),
-      '%s.render(): A valid ReactComponent must be returned. You may have ' +
-        'returned undefined, an array or some other invalid object.',
-      this.getName() || 'ReactCompositeComponent'
-    );
+    if (__DEV__) {
+      invariant(
+        // TODO: An `isValidNode` function would probably be more appropriate
+        renderedComponent === null || renderedComponent === false ||
+        ReactElement.isValidElement(renderedComponent),
+        '%s.render(): A valid ReactComponent must be returned. You may have ' +
+          'returned undefined, an array or some other invalid object.',
+        this.getName() || 'ReactCompositeComponent'
+      );
+    }
     return renderedComponent;
   },
 
@@ -1009,11 +1026,13 @@ var ShallowMixin = assign({},
         initialState = null;
       }
     }
-    invariant(
-      typeof initialState === 'object' && !Array.isArray(initialState),
-      '%s.getInitialState(): must return an object or null',
-      this.getName() || 'ReactCompositeComponent'
-    );
+    if (__DEV__) {
+      invariant(
+        typeof initialState === 'object' && !Array.isArray(initialState),
+        '%s.getInitialState(): must return an object or null',
+        this.getName() || 'ReactCompositeComponent'
+      );
+    }
     inst.state = initialState;
 
     this._pendingState = null;

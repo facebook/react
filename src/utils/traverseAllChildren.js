@@ -179,11 +179,13 @@ function traverseAllChildrenImpl(
         }
       }
     } else if (type === 'object') {
-      invariant(
-        children.nodeType !== 1,
-        'traverseAllChildren(...): Encountered an invalid child; DOM ' +
-        'elements are not valid children of React components.'
-      );
+      if (__DEV__) {
+        invariant(
+          children.nodeType !== 1,
+          'traverseAllChildren(...): Encountered an invalid child; DOM ' +
+          'elements are not valid children of React components.'
+        );
+      }
       for (var key in children) {
         if (children.hasOwnProperty(key)) {
           child = children[key];

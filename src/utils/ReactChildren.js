@@ -81,13 +81,15 @@ function mapSingleChildIntoContext(traverseContext, child, name, i) {
   var mapResult = mapBookKeeping.mapResult;
 
   var keyUnique = !mapResult.hasOwnProperty(name);
-  warning(
-    keyUnique,
-    'ReactChildren.map(...): Encountered two children with the same key, ' +
-    '`%s`. Child keys must be unique; when two children share a key, only ' +
-    'the first child will be used.',
-    name
-  );
+  if (__DEV__) {
+    warning(
+      keyUnique,
+      'ReactChildren.map(...): Encountered two children with the same key, ' +
+      '`%s`. Child keys must be unique; when two children share a key, only ' +
+      'the first child will be used.',
+      name
+    );
+  }
 
   if (keyUnique) {
     var mappedChild =

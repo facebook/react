@@ -51,21 +51,25 @@ var Danger = {
    * @internal
    */
   dangerouslyRenderMarkup: function(markupList) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
-      'thread. Make sure `window` and `document` are available globally ' +
-      'before requiring React when unit testing or use ' +
-      'React.renderToString for server rendering.'
-    );
+    if (__DEV__) {
+      invariant(
+        ExecutionEnvironment.canUseDOM,
+        'dangerouslyRenderMarkup(...): Cannot render markup in a worker ' +
+        'thread. Make sure `window` and `document` are available globally ' +
+        'before requiring React when unit testing or use ' +
+        'React.renderToString for server rendering.'
+      );
+    }
     var nodeName;
     var markupByNodeName = {};
     // Group markup by `nodeName` if a wrap is necessary, else by '*'.
     for (var i = 0; i < markupList.length; i++) {
-      invariant(
-        markupList[i],
-        'dangerouslyRenderMarkup(...): Missing markup.'
-      );
+      if (__DEV__) {
+        invariant(
+          markupList[i],
+          'dangerouslyRenderMarkup(...): Missing markup.'
+        );
+      }
       nodeName = getNodeName(markupList[i]);
       nodeName = getMarkupWrap(nodeName) ? nodeName : '*';
       markupByNodeName[nodeName] = markupByNodeName[nodeName] || [];
@@ -112,10 +116,12 @@ var Danger = {
           resultIndex = +renderNode.getAttribute(RESULT_INDEX_ATTR);
           renderNode.removeAttribute(RESULT_INDEX_ATTR);
 
-          invariant(
-            !resultList.hasOwnProperty(resultIndex),
-            'Danger: Assigning to an already-occupied result index.'
-          );
+          if (__DEV__) {
+            invariant(
+              !resultList.hasOwnProperty(resultIndex),
+              'Danger: Assigning to an already-occupied result index.'
+            );
+          }
 
           resultList[resultIndex] = renderNode;
 
@@ -134,17 +140,19 @@ var Danger = {
 
     // Although resultList was populated out of order, it should now be a dense
     // array.
-    invariant(
-      resultListAssignmentCount === resultList.length,
-      'Danger: Did not assign to every index of resultList.'
-    );
+    if (__DEV__) {
+      invariant(
+        resultListAssignmentCount === resultList.length,
+        'Danger: Did not assign to every index of resultList.'
+      );
 
-    invariant(
-      resultList.length === markupList.length,
-      'Danger: Expected markup to render %s nodes, but rendered %s.',
-      markupList.length,
-      resultList.length
-    );
+      invariant(
+        resultList.length === markupList.length,
+        'Danger: Expected markup to render %s nodes, but rendered %s.',
+        markupList.length,
+        resultList.length
+      );
+    }
 
     return resultList;
   },
@@ -158,21 +166,26 @@ var Danger = {
    * @internal
    */
   dangerouslyReplaceNodeWithMarkup: function(oldChild, markup) {
-    invariant(
-      ExecutionEnvironment.canUseDOM,
-      'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
-      'worker thread. Make sure `window` and `document` are available ' +
-      'globally before requiring React when unit testing or use ' +
-      'React.renderToString for server rendering.'
-    );
-    invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
-    invariant(
-      oldChild.tagName.toLowerCase() !== 'html',
-      'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
-      '<html> node. This is because browser quirks make this unreliable ' +
-      'and/or slow. If you want to render to the root you must use ' +
-      'server rendering. See React.renderToString().'
-    );
+    if (__DEV__) {
+      invariant(
+        ExecutionEnvironment.canUseDOM,
+        'dangerouslyReplaceNodeWithMarkup(...): Cannot render markup in a ' +
+        'worker thread. Make sure `window` and `document` are available ' +
+        'globally before requiring React when unit testing or use ' +
+        'React.renderToString for server rendering.'
+      );
+      invariant(
+        markup,
+        'dangerouslyReplaceNodeWithMarkup(...): Missing markup.'
+      );
+      invariant(
+        oldChild.tagName.toLowerCase() !== 'html',
+        'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +
+        '<html> node. This is because browser quirks make this unreliable ' +
+        'and/or slow. If you want to render to the root you must use ' +
+        'server rendering. See React.renderToString().'
+      );
+    }
 
     var newChild = createNodesFromMarkup(markup, emptyFunction)[0];
     oldChild.parentNode.replaceChild(newChild, oldChild);

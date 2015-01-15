@@ -95,11 +95,13 @@ function getID(node) {
     if (nodeCache.hasOwnProperty(id)) {
       var cached = nodeCache[id];
       if (cached !== node) {
-        invariant(
-          !isValid(cached, id),
-          'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
-          ATTR_NAME, id
-        );
+        if (__DEV__) {
+          invariant(
+            !isValid(cached, id),
+            'ReactMount: Two valid but unequal nodes with the same `%s`: %s',
+            ATTR_NAME, id
+          );
+        }
 
         nodeCache[id] = node;
       }
@@ -177,11 +179,13 @@ function getNodeFromInstance(instance) {
  */
 function isValid(node, id) {
   if (node) {
-    invariant(
-      internalGetID(node) === id,
-      'ReactMount: Unexpected modification of `%s`',
-      ATTR_NAME
-    );
+    if (__DEV__) {
+      invariant(
+        internalGetID(node) === id,
+        'ReactMount: Unexpected modification of `%s`',
+        ATTR_NAME
+      );
+    }
 
     var container = ReactMount.findReactContainerForID(id);
     if (container && containsNode(container, node)) {
@@ -318,13 +322,15 @@ var ReactMount = {
    * @return {string} reactRoot ID prefix
    */
   _registerComponent: function(nextComponent, container) {
-    invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
-      ),
-      '_registerComponent(...): Target container is not a DOM element.'
-    );
+    if (__DEV__) {
+      invariant(
+        container && (
+          container.nodeType === ELEMENT_NODE_TYPE ||
+          container.nodeType === DOC_NODE_TYPE
+        ),
+        '_registerComponent(...): Target container is not a DOM element.'
+      );
+    }
 
     ReactBrowserEventEmitter.ensureScrollValueMonitoring();
 
@@ -348,13 +354,16 @@ var ReactMount = {
     // Various parts of our code (such as ReactCompositeComponent's
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case.
-    warning(
-      ReactCurrentOwner.current == null,
-      '_renderNewRootComponent(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from ' +
-      'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.'
-    );
+
+    if (__DEV__) {
+      warning(
+        ReactCurrentOwner.current == null,
+        '_renderNewRootComponent(): Render methods should be a pure ' +
+        'function of props and state; triggering nested component updates ' +
+        'from render is not allowed. If necessary, trigger nested updates ' +
+        'in componentDidUpdate.'
+      );
+    }
 
     var componentInstance = instantiateReactComponent(nextComponent, null);
     var reactRootID = ReactMount._registerComponent(
@@ -395,23 +404,25 @@ var ReactMount = {
    * @return {ReactComponent} Component instance rendered in `container`.
    */
   render: function(nextElement, container, callback) {
-    invariant(
-      ReactElement.isValidElement(nextElement),
-      'React.render(): Invalid component element.%s',
-      (
-        typeof nextElement === 'string' ?
-          ' Instead of passing an element string, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
-        typeof nextElement === 'function' ?
-          ' Instead of passing a component class, make sure to instantiate ' +
-          'it by passing it to React.createElement.' :
-        // Check if it quacks like an element
-        nextElement != null && nextElement.props !== undefined ?
-          ' This may be caused by unintentionally loading two independent ' +
-          'copies of React.' :
-          ''
-      )
-    );
+    if (__DEV__) {
+      invariant(
+        ReactElement.isValidElement(nextElement),
+        'React.render(): Invalid component element.%s',
+        (
+          typeof nextElement === 'string' ?
+            ' Instead of passing an element string, make sure to instantiate ' +
+            'it by passing it to React.createElement.' :
+          typeof nextElement === 'function' ?
+            ' Instead of passing a component class, make sure to instantiate ' +
+            'it by passing it to React.createElement.' :
+          // Check if it quacks like an element
+          nextElement != null && nextElement.props !== undefined ?
+            ' This may be caused by unintentionally loading two independent ' +
+            'copies of React.' :
+            ''
+        )
+      );
+    }
 
     var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
@@ -471,11 +482,13 @@ var ReactMount = {
    */
   constructAndRenderComponentByID: function(constructor, props, id) {
     var domNode = document.getElementById(id);
-    invariant(
-      domNode,
-      'Tried to get element with id of "%s" but it is not present on the page.',
-      id
-    );
+    if (__DEV__) {
+      invariant(
+        domNode,
+        'Tried to get element with id of "%s" but it is not present on the page.',
+        id
+      );
+    }
     return ReactMount.constructAndRenderComponent(constructor, props, domNode);
   },
 
@@ -513,21 +526,23 @@ var ReactMount = {
     // _renderValidatedComponent) assume that calls to render aren't nested;
     // verify that that's the case. (Strictly speaking, unmounting won't cause a
     // render but we still don't expect to be in a render call here.)
-    warning(
-      ReactCurrentOwner.current == null,
-      'unmountComponentAtNode(): Render methods should be a pure function of ' +
-      'props and state; triggering nested component updates from render is ' +
-      'not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.'
-    );
+    if (__DEV__) {
+      warning(
+        ReactCurrentOwner.current == null,
+        'unmountComponentAtNode(): Render methods should be a pure function ' +
+        'of props and state; triggering nested component updates from ' +
+        'render is not allowed. If necessary, trigger nested updates in ' +
+        'componentDidUpdate.'
+      );
 
-    invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-        container.nodeType === DOC_NODE_TYPE
-      ),
-      'unmountComponentAtNode(...): Target container is not a DOM element.'
-    );
+      invariant(
+        container && (
+          container.nodeType === ELEMENT_NODE_TYPE ||
+          container.nodeType === DOC_NODE_TYPE
+        ),
+        'unmountComponentAtNode(...): Target container is not a DOM element.'
+      );
+    }
 
     var reactRootID = getReactRootID(container);
     var component = instancesByReactRootID[reactRootID];
@@ -718,27 +733,31 @@ var ReactMount = {
 
     firstChildren.length = 0;
 
-    invariant(
-      false,
-      'findComponentRoot(..., %s): Unable to find element. This probably ' +
-      'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
-      'usually due to forgetting a <tbody> when using tables, nesting tags ' +
-      'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
-      'parent. ' +
-      'Try inspecting the child nodes of the element with React ID `%s`.',
-      targetID,
-      ReactMount.getID(ancestorNode)
-    );
+    if (__DEV__) {
+      invariant(
+        false,
+        'findComponentRoot(..., %s): Unable to find element. This probably ' +
+        'means the DOM was unexpectedly mutated (e.g., by the browser), ' +
+        'usually due to forgetting a <tbody> when using tables, nesting tags ' +
+        'like <form>, <p>, or <a>, or using non-SVG elements in an <svg> ' +
+        'parent. ' +
+        'Try inspecting the child nodes of the element with React ID `%s`.',
+        targetID,
+        ReactMount.getID(ancestorNode)
+      );
+    }
   },
 
   _mountImageIntoNode: function(markup, container, shouldReuseMarkup) {
-    invariant(
-      container && (
-        container.nodeType === ELEMENT_NODE_TYPE ||
-          container.nodeType === DOC_NODE_TYPE
-      ),
-      'mountComponentIntoNode(...): Target container is not valid.'
-    );
+    if (__DEV__) {
+      invariant(
+        container && (
+          container.nodeType === ELEMENT_NODE_TYPE ||
+            container.nodeType === DOC_NODE_TYPE
+        ),
+        'mountComponentIntoNode(...): Target container is not valid.'
+      );
+    }
 
     if (shouldReuseMarkup) {
       var rootElement = getReactRootElementInContainer(container);
@@ -761,20 +780,20 @@ var ReactMount = {
           markup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
-        invariant(
-          container.nodeType !== DOC_NODE_TYPE,
-          'You\'re trying to render a component to the document using ' +
-          'server rendering but the checksum was invalid. This usually ' +
-          'means you rendered a different component type or props on ' +
-          'the client from the one on the server, or your render() ' +
-          'methods are impure. React cannot handle this case due to ' +
-          'cross-browser quirks by rendering at the document root. You ' +
-          'should look for environment dependent code in your components ' +
-          'and ensure the props are the same client and server side:\n%s',
-          difference
-        );
-
         if (__DEV__) {
+          invariant(
+            container.nodeType !== DOC_NODE_TYPE,
+            'You\'re trying to render a component to the document using ' +
+            'server rendering but the checksum was invalid. This usually ' +
+            'means you rendered a different component type or props on ' +
+            'the client from the one on the server, or your render() ' +
+            'methods are impure. React cannot handle this case due to ' +
+            'cross-browser quirks by rendering at the document root. You ' +
+            'should look for environment dependent code in your components ' +
+            'and ensure the props are the same client and server side:\n%s',
+            difference
+          );
+
           console.warn(
             'React attempted to reuse markup in a container but the ' +
             'checksum was invalid. This generally means that you are ' +
@@ -789,13 +808,15 @@ var ReactMount = {
       }
     }
 
-    invariant(
-      container.nodeType !== DOC_NODE_TYPE,
-      'You\'re trying to render a component to the document but ' +
-        'you didn\'t use server rendering. We can\'t do this ' +
-        'without using server rendering due to cross-browser quirks. ' +
-        'See React.renderToString() for server rendering.'
-    );
+    if (__DEV__) {
+      invariant(
+        container.nodeType !== DOC_NODE_TYPE,
+        'You\'re trying to render a component to the document but ' +
+          'you didn\'t use server rendering. We can\'t do this ' +
+          'without using server rendering due to cross-browser quirks. ' +
+          'See React.renderToString() for server rendering.'
+      );
+    }
 
     setInnerHTML(container, markup);
   },

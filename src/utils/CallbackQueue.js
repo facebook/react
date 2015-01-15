@@ -58,10 +58,12 @@ assign(CallbackQueue.prototype, {
     var callbacks = this._callbacks;
     var contexts = this._contexts;
     if (callbacks) {
-      invariant(
-        callbacks.length === contexts.length,
-        'Mismatched list of contexts in callback queue'
-      );
+      if (__DEV__) {
+        invariant(
+          callbacks.length === contexts.length,
+          'Mismatched list of contexts in callback queue'
+        );
+      }
       this._callbacks = null;
       this._contexts = null;
       for (var i = 0, l = callbacks.length; i < l; i++) {

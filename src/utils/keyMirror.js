@@ -35,10 +35,12 @@ var invariant = require('invariant');
 var keyMirror = function(obj) {
   var ret = {};
   var key;
-  invariant(
-    obj instanceof Object && !Array.isArray(obj),
-    'keyMirror(...): Argument must be an object.'
-  );
+  if (__DEV__) {
+    invariant(
+      obj instanceof Object && !Array.isArray(obj),
+      'keyMirror(...): Argument must be an object.'
+    );
+  }
   for (key in obj) {
     if (!obj.hasOwnProperty(key)) {
       continue;

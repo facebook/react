@@ -108,17 +108,19 @@ var DOMChildrenOperations = {
         var updatedChild = update.parentNode.childNodes[updatedIndex];
         var parentID = update.parentID;
 
-        invariant(
-          updatedChild,
-          'processUpdates(): Unable to find child %s of element. This ' +
-          'probably means the DOM was unexpectedly mutated (e.g., by the ' +
-          'browser), usually due to forgetting a <tbody> when using tables, ' +
-          'nesting tags like <form>, <p>, or <a>, or using non-SVG elements ' +
-          'in an <svg> parent. Try inspecting the child nodes of the element ' +
-          'with React ID `%s`.',
-          updatedIndex,
-          parentID
-        );
+        if (__DEV__) {
+          invariant(
+            updatedChild,
+            'processUpdates(): Unable to find child %s of element. This ' +
+            'probably means the DOM was unexpectedly mutated (e.g., by the ' +
+            'browser), usually due to forgetting a <tbody> when using ' +
+            'tables, nesting tags like <form>, <p>, or <a>, or using ' +
+            'non-SVG elements in an <svg> parent. Try inspecting the child ' +
+            'nodes of the element with React ID `%s`.',
+            updatedIndex,
+            parentID
+          );
+        }
 
         initialChildren = initialChildren || {};
         initialChildren[parentID] = initialChildren[parentID] || [];

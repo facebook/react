@@ -28,10 +28,12 @@ var invariant = require('invariant');
  */
 
 function accumulateInto(current, next) {
-  invariant(
-    next != null,
-    'accumulateInto(...): Accumulated items must not be null or undefined.'
-  );
+  if (__DEV__) {
+    invariant(
+      next != null,
+      'accumulateInto(...): Accumulated items must not be null or undefined.'
+    );
+  }
   if (current == null) {
     return next;
   }

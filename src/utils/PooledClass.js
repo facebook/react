@@ -66,10 +66,12 @@ var fiveArgumentPooler = function(a1, a2, a3, a4, a5) {
 
 var standardReleaser = function(instance) {
   var Klass = this;
-  invariant(
-    instance instanceof Klass,
-    'Trying to release an instance into a pool of a different type.'
-  );
+  if (__DEV__) {
+    invariant(
+      instance instanceof Klass,
+      'Trying to release an instance into a pool of a different type.'
+    );
+  }
   if (instance.destructor) {
     instance.destructor();
   }

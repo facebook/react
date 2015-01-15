@@ -52,11 +52,13 @@ var ReactDOMIDOperations = {
    */
   updatePropertyByID: function(id, name, value) {
     var node = ReactMount.getNode(id);
-    invariant(
-      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-      'updatePropertyByID(...): %s',
-      INVALID_PROPERTY_ERRORS[name]
-    );
+    if (__DEV__) {
+      invariant(
+        !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+        'updatePropertyByID(...): %s',
+        INVALID_PROPERTY_ERRORS[name]
+      );
+    }
 
     // If we're updating to null or undefined, we should remove the property
     // from the DOM node instead of inadvertantly setting to a string. This
@@ -78,11 +80,13 @@ var ReactDOMIDOperations = {
    */
   deletePropertyByID: function(id, name, value) {
     var node = ReactMount.getNode(id);
-    invariant(
-      !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
-      'updatePropertyByID(...): %s',
-      INVALID_PROPERTY_ERRORS[name]
-    );
+    if (__DEV__) {
+      invariant(
+        !INVALID_PROPERTY_ERRORS.hasOwnProperty(name),
+        'updatePropertyByID(...): %s',
+        INVALID_PROPERTY_ERRORS[name]
+      );
+    }
     DOMPropertyOperations.deleteValueForProperty(node, name, value);
   },
 

@@ -33,18 +33,20 @@ function findDOMNode(componentOrElement) {
   if (ReactInstanceMap.has(componentOrElement)) {
     return ReactMount.getNodeFromInstance(componentOrElement);
   }
-  invariant(
-    componentOrElement.render == null ||
-    typeof componentOrElement.render !== 'function',
-    'Component (with keys: %s) contains `render` method ' +
-    'but is not mounted in the DOM',
-    Object.keys(componentOrElement)
-  );
-  invariant(
-    false,
-    'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
-    Object.keys(componentOrElement)
-  );
+  if (__DEV__) {
+    invariant(
+      componentOrElement.render == null ||
+      typeof componentOrElement.render !== 'function',
+      'Component (with keys: %s) contains `render` method ' +
+      'but is not mounted in the DOM',
+      Object.keys(componentOrElement)
+    );
+    invariant(
+      false,
+      'Element appears to be neither ReactComponent nor DOMNode (keys: %s)',
+      Object.keys(componentOrElement)
+    );
+  }
 }
 
 module.exports = findDOMNode;

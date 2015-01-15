@@ -26,10 +26,12 @@ var invariant = require('invariant');
  * @return {string} the HTML markup
  */
 function renderToString(element) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.'
-  );
+  if (__DEV__) {
+    invariant(
+      ReactElement.isValidElement(element),
+      'renderToString(): You must pass a valid ReactElement.'
+    );
+  }
 
   var transaction;
   try {
@@ -53,10 +55,12 @@ function renderToString(element) {
  * (for generating static pages)
  */
 function renderToStaticMarkup(element) {
-  invariant(
-    ReactElement.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.'
-  );
+  if (__DEV__) {
+    invariant(
+      ReactElement.isValidElement(element),
+      'renderToStaticMarkup(): You must pass a valid ReactElement.'
+    );
+  }
 
   var transaction;
   try {

@@ -324,11 +324,13 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   childContextTypes: function(Constructor, childContextTypes) {
-    validateTypeDef(
-      Constructor,
-      childContextTypes,
-      ReactPropTypeLocations.childContext
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        childContextTypes,
+        ReactPropTypeLocations.childContext
+      );
+    }
     Constructor.childContextTypes = assign(
       {},
       Constructor.childContextTypes,
@@ -336,11 +338,13 @@ var RESERVED_SPEC_KEYS = {
     );
   },
   contextTypes: function(Constructor, contextTypes) {
-    validateTypeDef(
-      Constructor,
-      contextTypes,
-      ReactPropTypeLocations.context
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        contextTypes,
+        ReactPropTypeLocations.context
+      );
+    }
     Constructor.contextTypes = assign(
       {},
       Constructor.contextTypes,
@@ -362,11 +366,13 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   propTypes: function(Constructor, propTypes) {
-    validateTypeDef(
-      Constructor,
-      propTypes,
-      ReactPropTypeLocations.prop
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        propTypes,
+        ReactPropTypeLocations.prop
+      );
+    }
     Constructor.propTypes = assign(
       {},
       Constructor.propTypes,
@@ -431,16 +437,18 @@ function mixSpecIntoComponent(Constructor, spec) {
     return;
   }
 
-  invariant(
-    typeof spec !== 'function',
-    'ReactClass: You\'re attempting to ' +
-    'use a component class as a mixin. Instead, just use a regular object.'
-  );
-  invariant(
-    !ReactElement.isValidElement(spec),
-    'ReactClass: You\'re attempting to ' +
-    'use a component as a mixin. Instead, just use a regular object.'
-  );
+  if (__DEV__) {
+    invariant(
+      typeof spec !== 'function',
+      'ReactClass: You\'re attempting to ' +
+      'use a component class as a mixin. Instead, just use a regular object.'
+    );
+    invariant(
+      !ReactElement.isValidElement(spec),
+      'ReactClass: You\'re attempting to ' +
+      'use a component as a mixin. Instead, just use a regular object.'
+    );
+  }
 
   var proto = Constructor.prototype;
 
@@ -462,7 +470,9 @@ function mixSpecIntoComponent(Constructor, spec) {
     }
 
     var property = spec[name];
-    validateMethodOverride(proto, name);
+    if (__DEV__) {
+      validateMethodOverride(proto, name);
+    }
 
     if (RESERVED_SPEC_KEYS.hasOwnProperty(name)) {
       RESERVED_SPEC_KEYS[name](Constructor, property);
@@ -493,16 +503,18 @@ function mixSpecIntoComponent(Constructor, spec) {
           var specPolicy = ReactClassInterface[name];
 
           // These cases should already be caught by validateMethodOverride
-          invariant(
-            isReactClassMethod && (
-              specPolicy === SpecPolicy.DEFINE_MANY_MERGED ||
-              specPolicy === SpecPolicy.DEFINE_MANY
-            ),
-            'ReactClass: Unexpected spec policy %s for key %s ' +
-            'when mixing in component specs.',
-            specPolicy,
-            name
-          );
+          if (__DEV__) {
+            invariant(
+              isReactClassMethod && (
+                specPolicy === SpecPolicy.DEFINE_MANY_MERGED ||
+                specPolicy === SpecPolicy.DEFINE_MANY
+              ),
+              'ReactClass: Unexpected spec policy %s for key %s ' +
+              'when mixing in component specs.',
+              specPolicy,
+              name
+            );
+          }
 
           // For methods which are defined more than once, call the existing
           // methods before calling the new property, merging if appropriate.
@@ -537,23 +549,25 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
     }
 
     var isReserved = name in RESERVED_SPEC_KEYS;
-    invariant(
-      !isReserved,
-      'ReactClass: You are attempting to define a reserved ' +
-      'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' +
-      'as an instance property instead; it will still be accessible on the ' +
-      'constructor.',
-      name
-    );
+    if (__DEV__) {
+      invariant(
+        !isReserved,
+        'ReactClass: You are attempting to define a reserved ' +
+        'property, `%s`, that shouldn\'t be on the "statics" key. Define it ' +
+        'as an instance property instead; it will still be accessible on the ' +
+        'constructor.',
+        name
+      );
 
-    var isInherited = name in Constructor;
-    invariant(
-      !isInherited,
-      'ReactClass: You are attempting to define ' +
-      '`%s` on your component more than once. This conflict may be ' +
-      'due to a mixin.',
-      name
-    );
+      var isInherited = name in Constructor;
+      invariant(
+        !isInherited,
+        'ReactClass: You are attempting to define ' +
+        '`%s` on your component more than once. This conflict may be ' +
+        'due to a mixin.',
+        name
+      );
+    }
     Constructor[name] = property;
   }
 }
@@ -566,22 +580,26 @@ function mixStaticSpecIntoComponent(Constructor, statics) {
  * @return {object} one after it has been mutated to contain everything in two.
  */
 function mergeIntoWithNoDuplicateKeys(one, two) {
-  invariant(
-    one && two && typeof one === 'object' && typeof two === 'object',
-    'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
-  );
+  if (__DEV__) {
+    invariant(
+      one && two && typeof one === 'object' && typeof two === 'object',
+      'mergeIntoWithNoDuplicateKeys(): Cannot merge non-objects.'
+    );
+  }
 
   for (var key in two) {
     if (two.hasOwnProperty(key)) {
-      invariant(
-        one[key] === undefined,
-        'mergeIntoWithNoDuplicateKeys(): ' +
-        'Tried to merge two objects with the same key: `%s`. This conflict ' +
-        'may be due to a mixin; in particular, this may be caused by two ' +
-        'getInitialState() or getDefaultProps() methods returning objects ' +
-        'with clashing keys.',
-        key
-      );
+      if (__DEV__) {
+        invariant(
+          one[key] === undefined,
+          'mergeIntoWithNoDuplicateKeys(): ' +
+          'Tried to merge two objects with the same key: `%s`. This conflict ' +
+          'may be due to a mixin; in particular, this may be caused by two ' +
+          'getInitialState() or getDefaultProps() methods returning objects ' +
+          'with clashing keys.',
+          key
+        );
+      }
       one[key] = two[key];
     }
   }
@@ -705,11 +723,14 @@ var ReactClassMixin = {
    */
   replaceState: function(newState, callback) {
     var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'replaceState(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called replaceState() on an unmounted component.'
-    );
+    if (__DEV__) {
+      invariant(
+        internalInstance,
+        'replaceState(...): Can only update a mounted or mounting ' +
+        'component. This usually means you called replaceState() on an ' +
+        'unmounted component.'
+      );
+    }
     internalInstance.replaceState(
       newState,
       callback && callback.bind(this)
@@ -740,14 +761,16 @@ var ReactClassMixin = {
    */
   setProps: function(partialProps, callback) {
     var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'setProps(...): Can only update a mounted component.'
-    );
-    internalInstance.setProps(
-      partialProps,
-      callback && callback.bind(this)
-    );
+    if (__DEV__) {
+      invariant(
+        internalInstance,
+        'setProps(...): Can only update a mounted component.'
+      );
+      internalInstance.setProps(
+        partialProps,
+        callback && callback.bind(this)
+      );
+    }
   },
 
   /**
@@ -828,12 +851,12 @@ var ReactClass = {
       }
     }
 
-    invariant(
-      Constructor.prototype.render,
-      'createClass(...): Class specification must implement a `render` method.'
-    );
-
     if (__DEV__) {
+      invariant(
+        Constructor.prototype.render,
+        'createClass(...): Class specification must implement a `render` ' +
+        'method.'
+      );
       if (Constructor.prototype.componentShouldUpdate) {
         monitorCodeUse(
           'react_component_should_update_warning',

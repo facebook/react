@@ -68,10 +68,12 @@ if (__DEV__) {
       dispatchListeners.length :
       dispatchListeners ? 1 : 0;
 
-    invariant(
-      idsIsArr === listenersIsArr && IDsLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.'
-    );
+    if (__DEV__) {
+      invariant(
+        idsIsArr === listenersIsArr && IDsLen === listenersLen,
+        'EventPluginUtils: Invalid `event`.'
+      );
+    }
   };
 }
 
@@ -177,10 +179,12 @@ function executeDirectDispatch(event) {
   }
   var dispatchListener = event._dispatchListeners;
   var dispatchID = event._dispatchIDs;
-  invariant(
-    !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.'
-  );
+  if (__DEV__) {
+    invariant(
+      !Array.isArray(dispatchListener),
+      'executeDirectDispatch(...): Invalid `event`.'
+    );
+  }
   var res = dispatchListener ?
     dispatchListener(event, dispatchID) :
     null;

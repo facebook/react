@@ -27,29 +27,35 @@ var hasReadOnlyValue = {
 };
 
 function _assertSingleLink(input) {
-  invariant(
-    input.props.checkedLink == null || input.props.valueLink == null,
-    'Cannot provide a checkedLink and a valueLink. If you want to use ' +
-    'checkedLink, you probably don\'t want to use valueLink and vice versa.'
-  );
+  if (__DEV__) {
+    invariant(
+      input.props.checkedLink == null || input.props.valueLink == null,
+      'Cannot provide a checkedLink and a valueLink. If you want to use ' +
+      'checkedLink, you probably don\'t want to use valueLink and vice versa.'
+    );
+  }
 }
 function _assertValueLink(input) {
   _assertSingleLink(input);
-  invariant(
-    input.props.value == null && input.props.onChange == null,
-    'Cannot provide a valueLink and a value or onChange event. If you want ' +
-    'to use value or onChange, you probably don\'t want to use valueLink.'
-  );
+  if (__DEV__) {
+    invariant(
+      input.props.value == null && input.props.onChange == null,
+      'Cannot provide a valueLink and a value or onChange event. If you want ' +
+      'to use value or onChange, you probably don\'t want to use valueLink.'
+    );
+  }
 }
 
 function _assertCheckedLink(input) {
   _assertSingleLink(input);
-  invariant(
-    input.props.checked == null && input.props.onChange == null,
-    'Cannot provide a checkedLink and a checked property or onChange event. ' +
-    'If you want to use checked or onChange, you probably don\'t want to ' +
-    'use checkedLink'
-  );
+  if (__DEV__) {
+    invariant(
+      input.props.checked == null && input.props.onChange == null,
+      'Cannot provide a checkedLink and a checked property or onChange ' +
+      'event. If you want to use checked or onChange, you probably don\'t ' +
+      'want to use checkedLink'
+    );
+  }
 }
 
 /**

@@ -99,11 +99,13 @@ function instantiateReactComponent(node, parentCompositeType) {
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactNativeComponent.createInstanceForText(node);
   } else {
-    invariant(
-      false,
-      'Encountered invalid React node of type %s',
-      typeof node
-    );
+    if (__DEV__) {
+      invariant(
+        false,
+        'Encountered invalid React node of type %s',
+        typeof node
+      );
+    }
   }
 
   if (__DEV__) {

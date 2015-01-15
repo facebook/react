@@ -55,18 +55,19 @@ function assertValidProps(props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
-  if (props.dangerouslySetInnerHTML != null) {
-    invariant(
-      props.children == null,
-      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
-    );
-    invariant(
-      props.dangerouslySetInnerHTML.__html != null,
-      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-      'For more information, lookup documentation on `dangerouslySetInnerHTML`.'
-    );
-  }
   if (__DEV__) {
+    if (props.dangerouslySetInnerHTML != null) {
+      invariant(
+        props.children == null,
+        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.'
+      );
+      invariant(
+        props.dangerouslySetInnerHTML.__html != null,
+        '`props.dangerouslySetInnerHTML` must be in the form ' +
+        '`{__html: ...}`. For more information, lookup documentation on ' +
+        '`dangerouslySetInnerHTML`.'
+      );
+    }
     warning(
       props.innerHTML == null,
       'Directly setting property `innerHTML` is not permitted. ' +
@@ -80,13 +81,13 @@ function assertValidProps(props) {
         'probably not intentional.'
       );
     }
+    invariant(
+      props.style == null || typeof props.style === 'object',
+      'The `style` prop expects a mapping from style properties ' +
+      'to values, not a string. For example, ' +
+      'style={{marginRight: spacing + \'em\'}} when using JSX.'
+    );
   }
-  invariant(
-    props.style == null || typeof props.style === 'object',
-    'The `style` prop expects a mapping from style properties to values, ' +
-    'not a string. For example, style={{marginRight: spacing + \'em\'}} when ' +
-    'using JSX.'
-  );
 }
 
 function putListener(id, registrationName, listener, transaction) {
@@ -145,7 +146,9 @@ var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    if (__DEV__) {
+      invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    }
     validatedTagCache[tag] = true;
   }
 }

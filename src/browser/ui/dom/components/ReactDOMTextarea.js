@@ -65,16 +65,18 @@ var ReactDOMTextarea = ReactClass.createClass({
           'Use the `defaultValue` or `value` props instead of setting ' +
           'children on <textarea>.'
         );
-      }
-      invariant(
-        defaultValue == null,
-        'If you supply `defaultValue` on a <textarea>, do not pass children.'
-      );
-      if (Array.isArray(children)) {
         invariant(
-          children.length <= 1,
-          '<textarea> can only have at most one child.'
+          defaultValue == null,
+          'If you supply `defaultValue` on a <textarea>, do not pass children.'
         );
+      }
+      if (Array.isArray(children)) {
+        if (__DEV__) {
+          invariant(
+            children.length <= 1,
+            '<textarea> can only have at most one child.'
+          );
+        }
         children = children[0];
       }
 
@@ -97,10 +99,12 @@ var ReactDOMTextarea = ReactClass.createClass({
     // Clone `this.props` so we don't mutate the input.
     var props = assign({}, this.props);
 
-    invariant(
-      props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
-    );
+    if (__DEV__) {
+      invariant(
+        props.dangerouslySetInnerHTML == null,
+        '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      );
+    }
 
     props.defaultValue = null;
     props.value = null;
