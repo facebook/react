@@ -1,5 +1,5 @@
 ---
-id: multiple-componentsm-zh-CN
+id: multiple-components-zh-CN
 title: 复合组件
 permalink: multiple-components-zh-CN.html
 prev: interactivity-and-dynamic-uis-zh-CN.html
@@ -59,12 +59,12 @@ React.render(
 上面例子中，`Avatar` 拥有 `ProfilePic` 和 `ProfileLink` 的实例。`拥有者` 就是给其它组件设置 `props` 的那个组件。更正式地说，
 如果组件 `Y` 在 `render()` 方法是创建了组件 `X`，那么 `Y` 就拥有 `X`。上面讲过，组件不能修改自身的 `props` - 它们总是与它们拥有者设置的保持一致。这是保持用户界面一致性的关键性原则。
 
-把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，父子关系与你所熟知的 DOM 里的是一样的。在上一个例子中，`Avatar` 拥有 `div`、`ProfilePic` 和 `ProfileLink` 实例，`div` 是 `ProfilePic` 和 `ProfileLink` 实例的**父级**（但不是拥有者）。
+把从属关系与父子关系加以区别至关重要。从属关系是 React 特有的，而父子关系简单来讲就是DOM 里的标签的关系。在上一个例子中，`Avatar` 拥有 `div`、`ProfilePic` 和 `ProfileLink` 实例，`div` 是 `ProfilePic` 和 `ProfileLink` 实例的**父级**（但不是拥有者）。
 
 
 ## 子级
 
-实例化 React 组件时，可以在标签开始和关闭的位置包含其它 React 组件：
+实例化 React 组件时，你可以在开始标签和结束标签之间引用在React 组件或者Javascript 表达式：
 
 ```javascript
 <Parent><Child /></Parent>
@@ -90,7 +90,7 @@ React.render(
 
 直观来看，只是删除了`<p>Paragraph 1</p>`。事实上，React 先更新第一个子级的内容，然后删除最后一个组件。React 是根据子级的*顺序*来校正的。
 
-### 状态化子级
+### 子组件状态管理
 
 对于大多数组件，这没什么大碍。但是，对于使用 `this.state` 来在多次渲染过程中里维持数据的状态化组件，这样做潜在很多问题。
 
@@ -111,7 +111,7 @@ React.render(
 
 ### 动态子级
 
-如果子级被打乱（如在搜索结果中）或者有新组件添加到列表开头（如在流中）情况会变得更加复杂。如果子级要在多个渲染阶段保持自己的特征和状态，在这种情况下，你可以通过给子级设置惟一的 `key` 来区分。
+如果子组件位置会改变（如在搜索结果中）或者有新组件添加到列表开头（如在流中）情况会变得更加复杂。如果子级要在多个渲染阶段保持自己的特征和状态，在这种情况下，你可以通过给子级设置惟一标识的 `key` 来区分。
 
 ```javascript
   render: function() {
