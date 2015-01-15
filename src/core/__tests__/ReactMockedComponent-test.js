@@ -31,6 +31,9 @@ describe('ReactMockedComponent', function() {
     ReactTestUtils = require('ReactTestUtils');
 
     OriginalComponent = React.createClass({
+      getDefaultProps: function() {
+        return { bar: 'baz' };
+      },
 
       getInitialState: function() {
         return { foo: 'bar' };
@@ -54,8 +57,10 @@ describe('ReactMockedComponent', function() {
     ReactTestUtils.mockComponent(MockedComponent);
   });
 
-  it('should allow an implicitly mocked component to be rendered', () => {
+  it('should allow an implicitly mocked component to be rendered without warnings', () => {
+    spyOn(console, 'warn');
     ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
+    expect(console.warn.calls.length).toBe(0);
   });
 
   it('should allow an implicitly mocked component to be updated', () => {

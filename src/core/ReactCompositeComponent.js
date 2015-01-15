@@ -204,7 +204,7 @@ var ReactCompositeComponentMixin = assign({},
       // catch them here, at initialization time, instead.
       warning(
         !inst.getInitialState ||
-        inst.getInitialState._isReactClassApproved,
+        inst.getInitialState.isReactClassApproved,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',
@@ -212,7 +212,7 @@ var ReactCompositeComponentMixin = assign({},
       );
       warning(
         !inst.componentWillMount ||
-        inst.componentWillMount._isReactClassApproved,
+        inst.componentWillMount.isReactClassApproved,
         'componentWillMount was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a constructor instead?',

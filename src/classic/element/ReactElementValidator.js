@@ -380,7 +380,7 @@ var ReactElementValidator = {
       }
       if (typeof type.getDefaultProps === 'function') {
         warning(
-          type.getDefaultProps._isReactClassApproved,
+          type.getDefaultProps.isReactClassApproved,
           'getDefaultProps is only used on classic React.createClass ' +
           'definitions. Use a static property named `defaultProps` instead.'
         );
