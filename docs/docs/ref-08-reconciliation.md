@@ -46,9 +46,9 @@ renderB: <Content />
 => [removeNode <Header />], [insertNode <Content />]
 ```
 
-Having this high level knowledge is a very important aspect of why React diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.
+Having this high level knowledge is a very important aspect of why React's diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.
 
-It is very unlikely that a `<Header>` element is going generate a DOM that is going to look like what a `<Content>` would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.
+It is very unlikely that a `<Header>` element is going to generate a DOM that is going to look like what a `<Content>` would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.
 
 As a corollary, if there is a `<Header>` element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.
 
@@ -121,7 +121,7 @@ In practice, finding a key is not really hard. Most of the time, the element you
 
 ## Trade-offs
 
-It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action, the end-result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
+It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action; the end result would be the same. We are regularly refining the heuristics in order to make common use cases faster.
 
 In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.
 
