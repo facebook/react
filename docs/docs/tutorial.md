@@ -23,12 +23,18 @@ It'll also have a few neat features:
 
 [It's all on GitHub.](https://github.com/reactjs/react-tutorial)
 
+### Running a server
+
+While it's not necessary to get started with this tutorial, later on we'll be adding functionality that requires `POST`ing to a running server. If this is something you are intimately familiar with and want to create your own server, please do. For the rest of you who might want to focus on learning about React without having to worry about the server-side aspects, we have written simple servers in a number of languages - JavaScript (using Node.js), Python, and Ruby. These are all available on GitHub. You can [view the source](https://github.com/reactjs/react-tutorial/) or [download a zip file](https://github.com/reactjs/react-tutorial/archive/master.zip) to get started.
+
+To get started using the tutorial download, just start editing `public/index.html`.
+
 ### Getting started
 
 For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:
 
 ```html
-<!-- template.html -->
+<!-- index.html -->
 <html>
   <head>
     <title>Hello React</title>
@@ -209,7 +215,7 @@ Markdown is a simple way to format your text inline. For example, surrounding te
 First, add the third-party **Showdown** library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):
 
 ```html{7}
-<!-- template.html -->
+<!-- index.html -->
 <head>
   <title>Hello React</title>
   <script src="http://fb.me/react-{{site.react_version}}.js"></script>
@@ -379,7 +385,7 @@ When the component is first created, we want to GET some JSON from the server an
 
 We'll use jQuery to help make an asynchronous request to the server.
 
-Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run `python -m SimpleHTTPServer` in your application's directory.
+Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. [As mentioned above](#running-a-server), we have provided serveral servers you can use [on GitHub](https://github.com/reactjs/react-tutorial/). They provide the functionality you need for the rest of this tutorial.
 
 ```javascript{6-17}
 // tutorial13.js
