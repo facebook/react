@@ -157,7 +157,6 @@ var ReactEventListener = {
   monitorScrollValue: function(refresh) {
     var callback = scrollValueMonitor.bind(null, refresh);
     EventListener.listen(window, 'scroll', callback);
-    EventListener.listen(window, 'resize', callback);
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {
