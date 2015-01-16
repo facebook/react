@@ -17,6 +17,7 @@ var EventPluginUtils = require('EventPluginUtils');
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
+var warning = require('warning');
 
 /**
  * Internal store for event listeners
@@ -62,7 +63,7 @@ function validateInstanceHandle() {
     InstanceHandle &&
     InstanceHandle.traverseTwoPhase &&
     InstanceHandle.traverseEnterLeave;
-  invariant(
+  warning(
     valid,
     'InstanceHandle not injected before use!'
   );

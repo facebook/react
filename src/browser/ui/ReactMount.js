@@ -633,13 +633,12 @@ var ReactMount = {
     if (__DEV__) {
       var rootElement = rootElementsByReactRootID[reactRootID];
       if (rootElement && rootElement.parentNode !== container) {
-        invariant(
+        warning(
           // Call internalGetID here because getID calls isValid which calls
           // findReactContainerForID (this function).
           internalGetID(rootElement) === reactRootID,
           'ReactMount: Root element ID differed from reactRootID.'
         );
-
         var containerChild = container.firstChild;
         if (containerChild &&
             reactRootID === internalGetID(containerChild)) {
