@@ -818,13 +818,13 @@ var ReactClass = {
       // mistake so we'll warn you to use the static property, property
       // initializer or constructor respectively.
       if (Constructor.getDefaultProps) {
-        Constructor.getDefaultProps._isReactClassApproved = true;
+        Constructor.getDefaultProps.isReactClassApproved = {};
       }
       if (Constructor.prototype.getInitialState) {
-        Constructor.prototype.getInitialState._isReactClassApproved = true;
+        Constructor.prototype.getInitialState.isReactClassApproved = {};
       }
       if (Constructor.prototype.componentWillMount) {
-        Constructor.prototype.componentWillMount._isReactClassApproved = true;
+        Constructor.prototype.componentWillMount.isReactClassApproved = {};
       }
     }
 
