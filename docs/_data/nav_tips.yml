@@ -34,3 +34,5 @@
     title: References to Components
   - id: children-undefined
     title: this.props.children undefined
+  - id: use-react-with-other-libraries
+    title: Use React with Other Libraries
