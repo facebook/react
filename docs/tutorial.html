@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -398,9 +402,13 @@
 </ul>
 <h3><a class="anchor" name="want-to-skip-all-this-and-just-see-the-source"></a>Want to skip all this and just see the source? <a class="hash-link" href="#want-to-skip-all-this-and-just-see-the-source">#</a></h3>
 <p><a href="https://github.com/reactjs/react-tutorial">It&#39;s all on GitHub.</a></p>
+<h3><a class="anchor" name="running-a-server"></a>Running a server <a class="hash-link" href="#running-a-server">#</a></h3>
+<p>While it&#39;s not necessary to get started with this tutorial, later on we&#39;ll be adding functionality that requires <code>POST</code>ing to a running server. If this is something you are intimately familiar with and want to create your own server, please do. For the rest of you who might want to focus on learning about React without having to worry about the server-side aspects, we have written simple servers in a number of languages - JavaScript (using Node.js), Python, and Ruby. These are all available on GitHub. You can <a href="https://github.com/reactjs/react-tutorial/">view the source</a> or <a href="https://github.com/reactjs/react-tutorial/archive/master.zip">download a zip file</a> to get started.</p>
+
+<p>To get started using the tutorial download, just start editing <code>public/index.html</code>.</p>
 <h3><a class="anchor" name="getting-started"></a>Getting started <a class="hash-link" href="#getting-started">#</a></h3>
 <p>For this tutorial, we&#39;ll use prebuilt JavaScript files on a CDN. Open up your favorite editor and create a new HTML document:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;html&gt;</span>
   <span class="nt">&lt;head&gt;</span>
     <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
@@ -545,7 +553,7 @@
 <p>Markdown is a simple way to format your text inline. For example, surrounding text with asterisks will make it emphasized.</p>
 
 <p>First, add the third-party <strong>Showdown</strong> library to your application. This is a JavaScript library which takes Markdown text and converts it to raw HTML. This requires a script tag in your head (which we have already included in the React playground):</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- template.html --&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="c">&lt;!-- index.html --&gt;</span>
 <span class="nt">&lt;head&gt;</span>
   <span class="nt">&lt;title&gt;</span>Hello React<span class="nt">&lt;/title&gt;</span>
   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;http://fb.me/react-0.12.2.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
@@ -683,7 +691,7 @@
 </code></pre></div>
 <p>We&#39;ll use jQuery to help make an asynchronous request to the server.</p>
 
-<p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. The easiest way to do this is to run <code>python -m SimpleHTTPServer</code> in your application&#39;s directory.</p>
+<p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. <a href="#running-a-server">As mentioned above</a>, we have provided serveral servers you can use <a href="https://github.com/reactjs/react-tutorial/">on GitHub</a>. They provide the functionality you need for the rest of this tutorial.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -726,8 +734,8 @@
         <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">url</span><span class="p">,</span> <span class="nx">status</span><span class="p">,</span> <span class="nx">err</span><span class="p">.</span><span class="nx">toString</span><span class="p">());</span>
       <span class="p">}.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)</span>
     <span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">  <span class="p">},</span>
+</span>  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">{</span><span class="nx">data</span><span class="o">:</span> <span class="p">[]};</span>
   <span class="p">},</span>
   <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -783,11 +791,11 @@
 </span><span class="hll">  <span class="p">},</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
-<span class="hll">      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
-</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">form</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;commentForm&quot;</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleSubmit</span><span class="p">}</span><span class="o">&gt;</span>
+<span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Your name&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;author&quot;</span> <span class="o">/&gt;</span>
 </span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="nx">placeholder</span><span class="o">=</span><span class="s2">&quot;Say something...&quot;</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;text&quot;</span> <span class="o">/&gt;</span>
-</span>        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/form&gt;</span>
+</span><span class="hll">        <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;submit&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Post&quot;</span> <span class="o">/&gt;</span>
+</span>      <span class="o">&lt;</span><span class="err">/form&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">});</span>

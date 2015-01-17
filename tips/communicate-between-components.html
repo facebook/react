@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -403,7 +407,7 @@ Say your <code>GroceryList</code> component has a list of items generated throug
 </code></pre></div>
 <p>Notice the use of <code>bind(this, arg1, arg2, ...)</code>: we&#39;re simply passing more arguments to <code>handleClick</code>. This is not a new React concept; it&#39;s just JavaScript.</p>
 
-<p>For communication between two components that don&#39;t have a parent-child relationship, you can set up your own global event system. Subscribe to events in <code>componentDidMount()</code>, unsubscribe in <code>componentWillUnmount()</code>, and when you receive an event, call <code>setState()</code>.</p>
+<p>For communication between two components that don&#39;t have a parent-child relationship, you can set up your own global event system. Subscribe to events in <code>componentDidMount()</code>, unsubscribe in <code>componentWillUnmount()</code>, and call <code>setState()</code> when you receive an event.</p>
 
 
     <div class="docs-prevnext">

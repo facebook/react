@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -406,9 +410,9 @@ renderB: <span class="nt">&lt;span</span> <span class="nt">/&gt;</span>
 renderB: <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>
 =&gt; [removeNode <span class="nt">&lt;Header</span> <span class="nt">/&gt;</span>], [insertNode <span class="nt">&lt;Content</span> <span class="nt">/&gt;</span>]
 </code></pre></div>
-<p>Having this high level knowledge is a very important aspect of why React diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.</p>
+<p>Having this high level knowledge is a very important aspect of why React&#39;s diff algorithm is both fast and precise. It provides a good heuristic to quickly prune big parts of the tree and focus on parts likely to be similar.</p>
 
-<p>It is very unlikely that a <code>&lt;Header&gt;</code> element is going generate a DOM that is going to look like what a <code>&lt;Content&gt;</code> would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.</p>
+<p>It is very unlikely that a <code>&lt;Header&gt;</code> element is going to generate a DOM that is going to look like what a <code>&lt;Content&gt;</code> would generate. Instead of spending time trying to match those two structures, React just re-builds the tree from scratch.</p>
 
 <p>As a corollary, if there is a <code>&lt;Header&gt;</code> element at the same position in two consecutive renders, you would expect to see a very similar structure and it is worth exploring it.</p>
 <h3><a class="anchor" name="dom-nodes"></a>DOM Nodes <a class="hash-link" href="#dom-nodes">#</a></h3>
@@ -449,7 +453,7 @@ renderB: <span class="nt">&lt;div&gt;&lt;span</span> <span class="na">key=</span
 </code></pre></div>
 <p>In practice, finding a key is not really hard. Most of the time, the element you are going to display already has a unique id. When that&#39;s not the case, you can add a new ID property to your model or hash some parts of the content to generate a key. Remember that the key only has to be unique among its siblings, not globally unique.</p>
 <h2><a class="anchor" name="trade-offs"></a>Trade-offs <a class="hash-link" href="#trade-offs">#</a></h2>
-<p>It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action, the end-result would be the same. We are regularly refining the heuristics in order to make common use cases faster.</p>
+<p>It is important to remember that the reconciliation algorithm is an implementation detail. React could re-render the whole app on every action; the end result would be the same. We are regularly refining the heuristics in order to make common use cases faster.</p>
 
 <p>In the current implementation, you can express the fact that a sub-tree has been moved amongst its siblings, but you cannot tell that it has moved somewhere else. The algorithm will re-render that full sub-tree.</p>
 

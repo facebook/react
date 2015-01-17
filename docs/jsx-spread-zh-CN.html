@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>JSX 展开属性 （Spread Attributes） | React</title>
+  <title>JSX 展开属性 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="JSX 展开属性 （Spread Attributes） | React">
+  <meta property="og:title" content="JSX 展开属性 | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-spread-zh-CN.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -374,12 +378,12 @@
 
   <div class="inner-content">
     <h1>
-      JSX 展开属性 （Spread Attributes）
+      JSX 展开属性
       <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02.2-jsx-spread.zh-CN.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>如果你事先知道模块需要的全部 Props（属性），JSX 很容易地这样写：</p>
+    <p>如果你事先知道组件需要的全部 Props（属性），JSX 很容易地这样写：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="nx">x</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="nx">y</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div><h2><a class="anchor" name="-props-"></a>修改 Props 是不好的，明白吗 <a class="hash-link" href="#-props-">#</a></h2>
 <p>如果你不知道要设置哪些 Props，那么现在最好不要设置它：</p>
@@ -390,14 +394,14 @@
 <p>这样是反模式，因为 React 不能帮你检查属性类型（propTypes）。这样即使你的 属性类型有错误也不能得到清晰的错误提示。</p>
 
 <p>Props 应该被当作禁止修改的。修改 props 对象可能会导致预料之外的结果，所以最好不要去修改 props 对象。</p>
-<h2><a class="anchor" name="-spread-attributes"></a>扩展属性 （Spread Attributes） <a class="hash-link" href="#-spread-attributes">#</a></h2>
-<p>现在你可以使用 JSX 的新特性 - 扩展属性：</p>
+<h2><a class="anchor" name="spread-attributes"></a>展开属性（Spread Attributes） <a class="hash-link" href="#spread-attributes">#</a></h2>
+<p>现在你可以使用 JSX 的新特性 - 展开属性：</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
   <span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="nx">x</span><span class="p">;</span>
   <span class="nx">props</span><span class="p">.</span><span class="nx">bar</span> <span class="o">=</span> <span class="nx">y</span><span class="p">;</span>
   <span class="kd">var</span> <span class="nx">component</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Component</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 </code></pre></div>
-<p>传入对象的属性会被复制到模块内。</p>
+<p>传入对象的属性会被复制到组件内。</p>
 
 <p>它能被多次使用，也可以和其它属性一起用。注意顺序很重要，后面的会覆盖掉前面的。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;default&#39;</span> <span class="p">};</span>

@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -483,7 +487,7 @@ transition to the new props and state will not require a component update.</p>
 </blockquote>
 <h3><a class="anchor" name="updating-componentdidupdate"></a>Updating: componentDidUpdate <a class="hash-link" href="#updating-componentdidupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">componentDidUpdate</span><span class="p">(</span><span class="nx">object</span> <span class="nx">prevProps</span><span class="p">,</span> <span class="nx">object</span> <span class="nx">prevState</span><span class="p">)</span>
 </code></pre></div>
-<p>Invoked immediately after updating occurs. This method is not called for the initial render.</p>
+<p>Invoked immediately after the component&#39;s updates are flushed to the DOM. This method is not called for the initial render.</p>
 
 <p>Use this as an opportunity to operate on the DOM when the component has been updated.</p>
 

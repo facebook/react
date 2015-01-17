@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>False in JSX | React</title>
+  <title>Use React with Other Libraries | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="False in JSX | React">
+  <meta property="og:title" content="Use React with Other Libraries | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/tips/false-in-jsx.html">
+  <meta property="og:url" content="http://facebook.github.io/react/tips/use-react-with-other-libraries.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -347,7 +347,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/false-in-jsx.html" class="active">False in JSX</a>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
           </li>
         
           <li>
@@ -367,7 +367,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+            <a href="/react/tips/use-react-with-other-libraries.html" class="active">Use React with Other Libraries</a>
           </li>
         
       </ul>
@@ -377,28 +377,41 @@
 
 
   <div class="inner-content">
-    <h1>False in JSX</h1>
+    <h1>Use React with Other Libraries</h1>
     <div class="subHeader"></div>
-    <p>Here&#39;s how <code>false</code> renders in different contexts:</p>
+    <p>You don&#39;t have to go full React. The component <a href="/react/docs/component-specs.html#lifecycle-methods">lifecycle events</a>, especially <code>componentDidMount</code> and <code>componentDidUpdate</code>, are good places to put your other libraries&#39; logic.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span><span class="nx">myModel</span><span class="o">:</span> <span class="k">new</span> <span class="nx">myBackboneModel</span><span class="p">({</span><span class="nx">items</span><span class="o">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]})};</span>
+  <span class="p">},</span>
 
-<p>Renders as <code>id=&quot;false&quot;</code>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
+  <span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">placeholder</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">()).</span><span class="nx">append</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="s1">&#39;&lt;span /&gt;&#39;</span><span class="p">));</span>
+  <span class="p">},</span>
+
+  <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Clean up work here.</span>
+  <span class="p">},</span>
+
+  <span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Let&#39;s just never update this component again.</span>
+    <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
+  <span class="p">},</span>
+
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;placeholder&quot;</span><span class="o">/&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
 </code></pre></div>
-<p>String <code>&quot;false&quot;</code> as input value:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
-</code></pre></div>
-<p>No child:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;, mountNode);</span>
-</code></pre></div>
-<p>The reason why this one doesn&#39;t render as the string <code>&quot;false&quot;</code> as a <code>div</code> child is to allow the more common use-case: <code>&lt;div&gt;{x &gt; 1 &amp;&amp; &#39;You have more than one item&#39;}&lt;/div&gt;</code>.</p>
+<p>You can attach your own <a href="/react/tips/dom-event-listeners.html">event listeners</a> and even <a href="https://baconjs.github.io">event streams</a> this way.</p>
 
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/initial-ajax.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/tips/children-undefined.html">&larr; Prev</a>
       
-      
-        <a class="docs-next" href="/react/tips/communicate-between-components.html">Next &rarr;</a>
       
     </div>
   </div>

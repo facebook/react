@@ -4,11 +4,11 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>False in JSX | React</title>
+  <title>JSX 陷阱 | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="False in JSX | React">
+  <meta property="og:title" content="JSX 陷阱 | React">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="http://facebook.github.io/react/tips/false-in-jsx.html">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/jsx-gotchas-zh-CN.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
   <meta property="og:description" content="A JavaScript library for building user interfaces">
   <meta property="fb:app_id" content="623268441017527">
@@ -347,7 +347,7 @@
           </li>
         
           <li>
-            <a href="/react/tips/false-in-jsx.html" class="active">False in JSX</a>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
           </li>
         
           <li>
@@ -377,28 +377,53 @@
 
 
   <div class="inner-content">
-    <h1>False in JSX</h1>
+    <h1>
+      JSX 陷阱
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/02.3-jsx-gotchas.zh-CN.md" target="_blank">Edit on GitHub</a>
+    </h1>
     <div class="subHeader"></div>
-    <p>Here&#39;s how <code>false</code> renders in different contexts:</p>
 
-<p>Renders as <code>id=&quot;false&quot;</code>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">id</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
-</code></pre></div>
-<p>String <code>&quot;false&quot;</code> as input value:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">input</span> <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
-</code></pre></div>
-<p>No child:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;, mountNode);</span>
-</code></pre></div>
-<p>The reason why this one doesn&#39;t render as the string <code>&quot;false&quot;</code> as a <code>div</code> child is to allow the more common use-case: <code>&lt;div&gt;{x &gt; 1 &amp;&amp; &#39;You have more than one item&#39;}&lt;/div&gt;</code>.</p>
+    <p>JSX 与 HTML 非常相似，但是有些关键区别要注意。</p>
 
+<blockquote>
+<p>提示:</p>
+
+<p>关于 DOM 的区别，如行内样式属性 <code>style</code>，参考 <a href="/react/docs/dom-differences.html">DOM 区别</a></p>
+</blockquote>
+<h2><a class="anchor" name="html-"></a>HTML 实体 <a class="hash-link" href="#html-">#</a></h2>
+<p>HTML 实体可以插入到 JSX 的文本中。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">First</span> <span class="o">&amp;</span><span class="nx">middot</span><span class="p">;</span> <span class="nx">Second</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>如果想在 JSX 表达式中显示 HTML 实体，可以会遇到二次转义的问题，因为 React 默认会转义所有字符串，为了防止各种 XSS 攻击。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// 错误: 会显示 “First &amp;middot; Second”</span>
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>有多种绕过的方法。最简单的是直接用 Unicode 字符。这时要确保文件是 UTF-8 编码且网页也指定为 UTF-8 编码。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First · Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>安全的做法是先找到 <a href="http://www.fileformat.info/info/unicode/char/b7/index.htm">实体的 Unicode 编号</a> ，然后在 JavaScript 字符串里使用。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First \u00b7 Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="s1">&#39;First &#39;</span> <span class="o">+</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="mi">183</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; Second&#39;</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>可以在数组里混合使用字符串和 JSX 元素。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{[</span><span class="s1">&#39;First &#39;</span><span class="p">,</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;&amp;</span><span class="nx">middot</span><span class="p">;</span><span class="o">&lt;</span><span class="err">/span&gt;, &#39; Second&#39;]}&lt;/div&gt;</span>
+</code></pre></div>
+<p>万不得已，可以直接使用原始 HTML。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">dangerouslySetInnerHTML</span><span class="o">=</span><span class="p">{{</span><span class="nx">__html</span><span class="o">:</span> <span class="s1">&#39;First &amp;middot; Second&#39;</span><span class="p">}}</span> <span class="o">/&gt;</span>
+</code></pre></div><h2><a class="anchor" name="-html-"></a>自定义 HTML 属性 <a class="hash-link" href="#-html-">#</a></h2>
+<p>如果往原生 HTML 元素里传入 HTML 规范里不存在的属性，React 不会显示它们。如果需要使用自定义属性，要加 <code>data-</code> 前缀。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">custom</span><span class="o">-</span><span class="nx">attribute</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>以 <code>aria-</code> 开头的 [网络无障碍] 属性可以正常使用。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">hidden</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
 
     <div class="docs-prevnext">
       
-        <a class="docs-prev" href="/react/tips/initial-ajax.html">&larr; Prev</a>
+        <a class="docs-prev" href="/react/docs/jsx-spread-zh-CN.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/tips/communicate-between-components.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/interactivity-and-dynamic-uis-zh-CN.html">Next &rarr;</a>
       
     </div>
   </div>

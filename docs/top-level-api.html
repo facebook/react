@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -380,21 +384,27 @@
     <div class="subHeader"></div>
 
     <h2><a class="anchor" name="react"></a>React <a class="hash-link" href="#react">#</a></h2>
-<p><code>React</code> is the entry point to the React framework. If you&#39;re using one of the prebuilt packages it&#39;s available as a global; if you&#39;re using CommonJS modules you can <code>require()</code> it.</p>
-<h3><a class="anchor" name="react.createclass"></a>React.createClass <a class="hash-link" href="#react.createclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
+<p><code>React</code> is the entry point to the React library. If you&#39;re using one of the prebuilt packages it&#39;s available as a global; if you&#39;re using CommonJS modules you can <code>require()</code> it.</p>
+<h3><a class="anchor" name="react.createclass"></a>React.createClass <a class="hash-link" href="#react.createclass">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactClass</span> <span class="nx">createClass</span><span class="p">(</span><span class="nx">object</span> <span class="nx">specification</span><span class="p">)</span>
 </code></pre></div>
-<p>Create a component given a specification. A component implements a <code>render</code> method which returns <strong>one single</strong> child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don&#39;t need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.</p>
+<p>Create a component class, given a specification. A component implements a <code>render</code> method which returns <strong>one single</strong> child. That child may have an arbitrarily deep child structure. One thing that makes components different than standard prototypal classes is that you don&#39;t need to call new on them. They are convenience wrappers that construct backing instances (via new) for you.</p>
 
 <p>For more information about the specification object, see <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>.</p>
-<h3><a class="anchor" name="react.createelement"></a>React.createElement <a class="hash-link" href="#react.createelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">createElement</span><span class="p">(</span>
-  <span class="nx">string</span><span class="o">/</span><span class="nx">ReactComponent</span> <span class="nx">type</span><span class="p">,</span>
+<h3><a class="anchor" name="react.createelement"></a>React.createElement <a class="hash-link" href="#react.createelement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">createElement</span><span class="p">(</span>
+  <span class="nx">string</span><span class="o">/</span><span class="nx">ReactClass</span> <span class="nx">type</span><span class="p">,</span>
   <span class="p">[</span><span class="nx">object</span> <span class="nx">props</span><span class="p">],</span>
   <span class="p">[</span><span class="nx">children</span> <span class="p">...]</span>
 <span class="p">)</span>
 </code></pre></div>
-<p>Create and return a new ReactElement of the given type. The type argument can be either an
-html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactComponent</code> class that was created
-with <code>React.createClass</code>.</p>
+<p>Create and return a new <code>ReactElement</code> of the given type. The type argument can be either an
+html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a <code>ReactClass</code> (created via <code>React.createClass</code>).</p>
+<h3><a class="anchor" name="react.createfactory"></a>React.createFactory <a class="hash-link" href="#react.createfactory">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">factoryFunction</span> <span class="nx">createFactory</span><span class="p">(</span>
+  <span class="nx">string</span><span class="o">/</span><span class="nx">ReactClass</span> <span class="nx">type</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Return a function that produces ReactElements of a given type. Like <code>React.createElement</code>,
+the type argument can be either an html tag name string (eg. &#39;div&#39;, &#39;span&#39;, etc), or a
+<code>ReactClass</code>.</p>
 <h3><a class="anchor" name="react.render"></a>React.render <a class="hash-link" href="#react.render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">(</span>
   <span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span>
   <span class="nx">DOMElement</span> <span class="nx">container</span><span class="p">,</span>

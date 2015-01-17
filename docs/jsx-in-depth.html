@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -444,6 +448,56 @@ JSX.</p>
 implementation details may vary. An optimized mode could inline the 
 ReactElement as an object literal to bypass the validation code in
 <code>React.createElement</code>.</p>
+</blockquote>
+<h2><a class="anchor" name="namespaced-components"></a>Namespaced Components <a class="hash-link" href="#namespaced-components">#</a></h2>
+<p>If you are building a component that have a lot of childrens, or if you are building your application with some categories of reusable components (like a <code>Form</code> category), to make more simple and easiest, you can use a <em>namespaced component</em> to avoid something like this:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormRow</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormLabel</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
+<span class="kd">var</span> <span class="nx">FormInput</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">FormRow</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">FormLabel</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">FormInput</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/FormRow&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>Instead of declare a bunch of variables at the top, you&#39;ll get just one component that have other components as attributes.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
+
+<span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Form</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span> <span class="o">/&gt;</span>
+      <span class="o">&lt;</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span> <span class="o">/&gt;</span>
+    <span class="o">&lt;</span><span class="err">/Form.Row&gt;</span>
+  <span class="o">&lt;</span><span class="err">/Form&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>For doing this, you just need to create your <em>&quot;sub-components&quot;</em> as attributes of the main component:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyFormComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Row</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Label</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+<span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Input</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
+</code></pre></div>
+<p>JSX will take care to make the things right when compile your code.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> 
+    <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> 
+      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">,</span> <span class="kc">null</span><span class="p">),</span> 
+      <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">,</span> <span class="kc">null</span><span class="p">)</span>
+    <span class="p">)</span>
+  <span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>This feature is available in <a href="http://facebook.github.io/react/blog/2014/07/17/react-v0.11.html#jsx">v0.11</a> and above.</p>
 </blockquote>
 <h2><a class="anchor" name="javascript-expressions"></a>JavaScript Expressions <a class="hash-link" href="#javascript-expressions">#</a></h2><h3><a class="anchor" name="attribute-expressions"></a>Attribute Expressions <a class="hash-link" href="#attribute-expressions">#</a></h3>
 <p>To use a JavaScript expression as an attribute value, wrap the expression in a

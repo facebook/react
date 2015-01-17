@@ -366,6 +366,10 @@
             <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
           </li>
         
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -388,19 +392,19 @@
 <p>XML 有固定的标签开启和闭合的优点。这能让复杂的树更易于阅读，优于方法调用和对象字面量的形式。</p>
 
 <p>它没有修改 JavaScript 语义。</p>
-<h2><a class="anchor" name="html---react-"></a>HTML 标签 对比 React 模块 <a class="hash-link" href="#html---react-">#</a></h2>
-<p>React 可以渲染 HTML 标签 (strings) 或 React 模块 (classes)。</p>
+<h2><a class="anchor" name="html--react-"></a>HTML 标签对比 React 组件 <a class="hash-link" href="#html--react-">#</a></h2>
+<p>React 可以渲染 HTML 标签 (strings) 或 React 组件 (classes)。</p>
 
 <p>要渲染 HTML 标签，只需在 JSX 里使用小写字母开头的标签名。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myDivElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myDivElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 </code></pre></div>
-<p>要渲染 React 模块，只需创建一个大写字母开头的本地变量。</p>
+<p>要渲染 React 组件，只需创建一个大写字母开头的本地变量。</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="cm">/*...*/</span><span class="p">});</span>
 <span class="kd">var</span> <span class="nx">myElement</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">someProperty</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
 <span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">myElement</span><span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
 </code></pre></div>
-<p>React 的 JSX 里约定分别使用首字母大、小写来区分本地模块的类和 HTML 标签。</p>
+<p>React 的 JSX 里约定分别使用首字母大、小写来区分本地组件的类和 HTML 标签。</p>
 
 <blockquote>
 <p>提示:</p>
