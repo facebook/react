@@ -9,8 +9,9 @@
  * @providesModule ReactClass
  */
 
-"use strict";
+'use strict';
 
+var ReactComponentBase = require('ReactComponentBase');
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -22,7 +23,6 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
 var monitorCodeUse = require('monitorCodeUse');
-var warning = require('warning');
 
 var MIXINS_KEY = keyOf({mixins: null});
 
@@ -382,7 +382,7 @@ function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
       invariant(
-        typeof typeDef[propName] == 'function',
+        typeof typeDef[propName] === 'function',
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
         'React.PropTypes.',
         Constructor.displayName || 'ReactClass',
@@ -642,6 +642,7 @@ function bindAutoBindMethod(component, method) {
     boundMethod.__reactBoundArguments = null;
     var componentName = component.constructor.displayName;
     var _bind = boundMethod.bind;
+    /* eslint-disable block-scoped-var, no-undef */
     boundMethod.bind = function(newThis, ...args) {
       // User is trying to bind() an autobound method; we effectively will
       // ignore the value of "this" that the user is trying to use, so
@@ -666,6 +667,7 @@ function bindAutoBindMethod(component, method) {
       reboundMethod.__reactBoundMethod = method;
       reboundMethod.__reactBoundArguments = args;
       return reboundMethod;
+      /* eslint-enable */
     };
   }
   return boundMethod;
@@ -692,48 +694,10 @@ function bindAutoBindMethods(component) {
 }
 
 /**
- * @lends {ReactClass.prototype}
+ * Add more to the ReactClass base class. These are all legacy features and
+ * therefore not already part of the modern ReactComponentBase.
  */
 var ReactClassMixin = {
-
-  /**
-   * Sets a subset of the state. Always use this or `replaceState` to mutate
-   * state. You should treat `this.state` as immutable.
-   *
-   * There is no guarantee that `this.state` will be immediately updated, so
-   * accessing `this.state` after calling this method may return the old value.
-   *
-   * There is no guarantee that calls to `setState` will run synchronously,
-   * as they may eventually be batched together.  You can provide an optional
-   * callback that will be executed when the call to setState is actually
-   * completed.
-   *
-   * @param {object} partialState Next partial state to be merged with state.
-   * @param {?function} callback Called after state is updated.
-   * @final
-   * @protected
-   */
-  setState: function(partialState, callback) {
-    invariant(
-      typeof partialState === 'object' || partialState == null,
-      'setState(...): takes an object of state variables to update.'
-    );
-    if (__DEV__) {
-      warning(
-        partialState != null,
-        'setState(...): You passed an undefined or null state object; ' +
-        'instead, use forceUpdate().'
-      );
-    }
-    var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'setState(...): Can only update a mounted or mounting component.'
-    );
-    internalInstance.setState(
-      partialState, callback && callback.bind(this)
-    );
-  },
 
   /**
    * TODO: This will be deprecated because state should always keep a consistent
@@ -743,36 +707,13 @@ var ReactClassMixin = {
     var internalInstance = ReactInstanceMap.get(this);
     invariant(
       internalInstance,
-      'replaceState(...): Can only update a mounted or mounting component.'
+      'replaceState(...): Can only update a mounted or mounting component. ' +
+      'This usually means you called replaceState() on an unmounted component.'
     );
     internalInstance.replaceState(
       newState,
       callback && callback.bind(this)
     );
-  },
-
-  /**
-   * Forces an update. This should only be invoked when it is known with
-   * certainty that we are **not** in a DOM transaction.
-   *
-   * You may want to call this when you know that some deeper aspect of the
-   * component's state has changed but `setState` was not called.
-   *
-   * This will not invoke `shouldUpdateComponent`, but it will invoke
-   * `componentWillUpdate` and `componentDidUpdate`.
-   *
-   * @param {?function} callback Called after update is complete.
-   * @final
-   * @protected
-   */
-  forceUpdate: function(callback) {
-    var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'forceUpdate(...): Can only force an update on mounted or mounting ' +
-        'components.'
-    );
-    internalInstance.forceUpdate(callback && callback.bind(this));
   },
 
   /**
@@ -829,6 +770,7 @@ var ReactClassMixin = {
 var ReactClassBase = function() {};
 assign(
   ReactClassBase.prototype,
+  ReactComponentBase.prototype,
   ReactClassMixin
 );
 
@@ -868,11 +810,21 @@ var ReactClass = {
     // Initialize the defaultProps property after all mixins have been merged
     if (Constructor.getDefaultProps) {
       Constructor.defaultProps = Constructor.getDefaultProps();
-      if (__DEV__) {
-        // This is a tag to indicate that this use of getDefaultProps is ok,
-        // since it's used with createClass. If it's not, then it's likely a
-        // mistake so we'll warn you to use the static property instead.
+    }
+
+    if (__DEV__) {
+      // This is a tag to indicate that the use of these method names is ok,
+      // since it's used with createClass. If it's not, then it's likely a
+      // mistake so we'll warn you to use the static property, property
+      // initializer or constructor respectively.
+      if (Constructor.getDefaultProps) {
         Constructor.getDefaultProps._isReactClassApproved = true;
+      }
+      if (Constructor.prototype.getInitialState) {
+        Constructor.prototype.getInitialState._isReactClassApproved = true;
+      }
+      if (Constructor.prototype.componentWillMount) {
+        Constructor.prototype.componentWillMount._isReactClassApproved = true;
       }
     }
 

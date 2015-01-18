@@ -9,7 +9,7 @@
 * @providesModule ReactComponentWithPureRenderMixin
 */
 
-"use strict";
+'use strict';
 
 var shallowEqual = require('shallowEqual');
 

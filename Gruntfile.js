@@ -1,6 +1,5 @@
 'use strict';
 
-var exec = require('child_process').exec;
 var jsxTask = require('./grunt/tasks/jsx');
 var browserifyTask = require('./grunt/tasks/browserify');
 var populistTask = require('./grunt/tasks/populist');
@@ -38,8 +37,28 @@ module.exports = function(grunt) {
     .filter(function(npmTaskName) { return npmTaskName != 'grunt-cli'; })
     .forEach(function(npmTaskName) { grunt.loadNpmTasks(npmTaskName); });
 
-  // Alias 'jshint' to 'lint' to better match the workflow we know
-  grunt.registerTask('lint', ['jshint']);
+  // Super simplified eslint task that we can use to replace linting. This just
+  // shells out to eslint.
+  grunt.registerTask('eslint', function() {
+    var done = this.async();
+    grunt.util.spawn({
+      cmd: 'node_modules/.bin/eslint',
+      args: ['src']
+    }, function(err, result, code) {
+      if (code === 0) {
+        grunt.log.ok('Lint passed (but may contain warnings)');
+      } else {
+        grunt.log.error('Lint failed');
+      }
+      if (result.stdout.length) {
+        grunt.log.writeln(result.stdout);
+      }
+
+      done(code === 0);
+    });
+  });
+
+  grunt.registerTask('lint', ['eslint']);
 
   grunt.registerTask('download-previous-version', require('./grunt/tasks/download-previous-version.js'));
 

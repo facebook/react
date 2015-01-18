@@ -9,7 +9,7 @@
  * @providesModule ReactCurrentOwner
  */
 
-"use strict";
+'use strict';
 
 /**
  * Keeps track of the current owner.

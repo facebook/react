@@ -10,7 +10,7 @@
  * @typechecks
  */
 
-"use strict";
+'use strict';
 
 // Defeat circular references by requiring this directly.
 var ReactClass = require('ReactClass');

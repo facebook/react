@@ -9,7 +9,7 @@
  * @providesModule ReactDOMOption
  */
 
-"use strict";
+'use strict';
 
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');

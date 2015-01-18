@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');

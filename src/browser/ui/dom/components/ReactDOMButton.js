@@ -9,7 +9,7 @@
  * @providesModule ReactDOMButton
  */
 
-"use strict";
+'use strict';
 
 var AutoFocusMixin = require('AutoFocusMixin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');

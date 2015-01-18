@@ -11,7 +11,7 @@
 
 // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-object.assign
 
-"use strict";
+'use strict';
 
 function assign(target, sources) {
   if (target == null) {

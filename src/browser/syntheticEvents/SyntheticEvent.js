@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var PooledClass = require('PooledClass');
 
@@ -88,13 +88,21 @@ assign(SyntheticEvent.prototype, {
   preventDefault: function() {
     this.defaultPrevented = true;
     var event = this.nativeEvent;
-    event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    if (event.preventDefault) {
+      event.preventDefault();
+    } else {
+      event.returnValue = false;
+    }
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
   },
 
   stopPropagation: function() {
     var event = this.nativeEvent;
-    event.stopPropagation ? event.stopPropagation() : event.cancelBubble = true;
+    if (event.stopPropagation) {
+      event.stopPropagation();
+    } else {
+      event.cancelBubble = true;
+    }
     this.isPropagationStopped = emptyFunction.thatReturnsTrue;
   },
 

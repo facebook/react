@@ -9,7 +9,7 @@
  * @emails react-core
  */
 /*global global:true*/
-"use strict";
+'use strict';
 
 var mocks = require('mocks');
 var React = require('React');

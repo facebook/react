@@ -9,7 +9,7 @@
  * @providesModule LocalEventTrapMixin
  */
 
-"use strict";
+'use strict';
 
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 

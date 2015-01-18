@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 var React;
 var ReactTransitionGroup;

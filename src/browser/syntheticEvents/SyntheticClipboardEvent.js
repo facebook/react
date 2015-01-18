@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -41,4 +41,3 @@ function SyntheticClipboardEvent(dispatchConfig, dispatchMarker, nativeEvent) {
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);
 
 module.exports = SyntheticClipboardEvent;
-

@@ -15,7 +15,7 @@
 // test suite but I'll leave it here to indicate that this is an issue that
 // needs to be fixed.
 
-"use strict";
+'use strict';
 
 var React;
 var ReactTestUtils;

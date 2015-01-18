@@ -9,7 +9,7 @@
  * @providesModule ReactDefaultInjection
  */
 
-"use strict";
+'use strict';
 
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');

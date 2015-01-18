@@ -9,7 +9,7 @@
  * @providesModule DefaultEventPluginOrder
  */
 
-"use strict";
+'use strict';
 
  var keyOf = require('keyOf');
 

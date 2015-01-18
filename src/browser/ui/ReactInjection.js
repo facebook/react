@@ -9,7 +9,7 @@
  * @providesModule ReactInjection
  */
 
-"use strict";
+'use strict';
 
 var DOMProperty = require('DOMProperty');
 var EventPluginHub = require('EventPluginHub');

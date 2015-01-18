@@ -9,7 +9,7 @@
  * @providesModule ReactDefaultBatchingStrategy
  */
 
-"use strict";
+'use strict';
 
 var ReactUpdates = require('ReactUpdates');
 var Transaction = require('Transaction');

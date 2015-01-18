@@ -9,7 +9,7 @@
  * @providesModule EventConstants
  */
 
-"use strict";
+'use strict';
 
 var keyMirror = require('keyMirror');
 

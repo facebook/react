@@ -9,7 +9,7 @@
  * @providesModule ReactInputSelection
  */
 
-"use strict";
+'use strict';
 
 var ReactDOMSelection = require('ReactDOMSelection');
 

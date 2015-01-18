@@ -9,7 +9,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
@@ -48,4 +48,3 @@ describe('findDOMNode', function() {
   });
 
 });
-

@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -41,4 +41,3 @@ SyntheticEvent.augmentClass(
 );
 
 module.exports = SyntheticCompositionEvent;
-

@@ -9,7 +9,7 @@
  * @providesModule CSSProperty
  */
 
-"use strict";
+'use strict';
 
 /**
  * CSS properties which accept numbers but are not in units of "px".

@@ -11,7 +11,7 @@
 
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 describe('ReactDOMIDOperations', function() {
   var DOMPropertyOperations = require('DOMPropertyOperations');

@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var EventConstants = require('EventConstants');
 var EventPropagators = require('EventPropagators');
@@ -256,7 +256,7 @@ function extractCompositionEvent(
   }
 
   if (!eventType) {
-    return;
+    return null;
   }
 
   if (useFallbackCompositionData) {
@@ -427,7 +427,7 @@ function extractBeforeInputEvent(
   // If no characters are being inserted, no BeforeInput event should
   // be fired.
   if (!chars) {
-    return;
+    return null;
   }
 
   var event = SyntheticInputEvent.getPooled(
@@ -490,7 +490,7 @@ var BeforeInputEventPlugin = {
         topLevelTarget,
         topLevelTargetID,
         nativeEvent
-      ),
+      )
     ];
   }
 };

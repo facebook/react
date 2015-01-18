@@ -11,7 +11,7 @@
 
 /*jslint evil: true */
 
-"use strict";
+'use strict';
 
 var EnterLeaveEventPlugin;
 var EventConstants;

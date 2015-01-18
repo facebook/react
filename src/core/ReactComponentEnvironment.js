@@ -9,7 +9,7 @@
  * @providesModule ReactComponentEnvironment
  */
 
-"use strict";
+'use strict';
 
 var invariant = require('invariant');
 
@@ -50,7 +50,7 @@ var ReactComponentEnvironment = {
         environment.processChildrenUpdates;
       injected = true;
     }
-  },
+  }
 
 };
 

@@ -10,7 +10,7 @@
  * @providesModule ReactTransitionChildMapping
  */
 
-"use strict";
+'use strict';
 
 var ReactChildren = require('ReactChildren');
 

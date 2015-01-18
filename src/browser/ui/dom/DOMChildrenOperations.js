@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var Danger = require('Danger');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
@@ -100,7 +100,8 @@ var DOMChildrenOperations = {
     // List of children that will be moved or removed.
     var updatedChildren = null;
 
-    for (var i = 0; update = updates[i]; i++) {
+    for (var i = 0; i < updates.length; i++) {
+      update = updates[i];
       if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {
         var updatedIndex = update.fromIndex;
@@ -112,7 +113,7 @@ var DOMChildrenOperations = {
           'processUpdates(): Unable to find child %s of element. This ' +
           'probably means the DOM was unexpectedly mutated (e.g., by the ' +
           'browser), usually due to forgetting a <tbody> when using tables, ' +
-          'nesting tags like <form>, <p>, or <a>, or using non-SVG elements '+
+          'nesting tags like <form>, <p>, or <a>, or using non-SVG elements ' +
           'in an <svg> parent. Try inspecting the child nodes of the element ' +
           'with React ID `%s`.',
           updatedIndex,
@@ -137,7 +138,8 @@ var DOMChildrenOperations = {
       }
     }
 
-    for (var k = 0; update = updates[k]; k++) {
+    for (var k = 0; k < updates.length; k++) {
+      update = updates[k];
       switch (update.type) {
         case ReactMultiChildUpdateTypes.INSERT_MARKUP:
           insertChildAt(

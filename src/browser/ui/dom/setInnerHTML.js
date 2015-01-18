@@ -9,7 +9,9 @@
  * @providesModule setInnerHTML
  */
 
-"use strict";
+/* globals MSApp */
+
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 
@@ -27,6 +29,15 @@ var NONVISIBLE_TEST = /<(!--|link|noscript|meta|script|style)[ \r\n\t\f\/>]/;
 var setInnerHTML = function(node, html) {
   node.innerHTML = html;
 };
+
+// Win8 apps: Allow all html to be inserted
+if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
+  setInnerHTML = function(node, html) {
+    MSApp.execUnsafeLocalFunction(function() {
+      node.innerHTML = html;
+    });
+  };
+}
 
 if (ExecutionEnvironment.canUseDOM) {
   // IE8: When updating a just created node with innerHTML only leading

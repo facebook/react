@@ -9,7 +9,7 @@
  * @providesModule EventPluginHub
  */
 
-"use strict";
+'use strict';
 
 var EventPluginRegistry = require('EventPluginRegistry');
 var EventPluginUtils = require('EventPluginUtils');
@@ -58,12 +58,14 @@ var executeDispatchesAndRelease = function(event) {
 var InstanceHandle = null;
 
 function validateInstanceHandle() {
-  var invalid = !InstanceHandle||
-    !InstanceHandle.traverseTwoPhase ||
-    !InstanceHandle.traverseEnterLeave;
-  if (invalid) {
-    throw new Error('InstanceHandle not injected before use!');
-  }
+  var valid =
+    InstanceHandle &&
+    InstanceHandle.traverseTwoPhase &&
+    InstanceHandle.traverseEnterLeave;
+  invariant(
+    valid,
+    'InstanceHandle not injected before use!'
+  );
 }
 
 /**

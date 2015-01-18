@@ -10,7 +10,9 @@
  * @typechecks static-only
  */
 
-"use strict";
+/* global requestAnimationFrame:true */
+
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactUpdates = require('ReactUpdates');

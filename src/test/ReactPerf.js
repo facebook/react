@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 /**
  * ReactPerf is a general AOP system designed to measure performance. This

@@ -9,7 +9,7 @@
  * @providesModule accumulateInto
  */
 
-"use strict";
+'use strict';
 
 var invariant = require('invariant');
 

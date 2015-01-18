@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 /**
  * Gets the target node from a native browser event by accounting for
