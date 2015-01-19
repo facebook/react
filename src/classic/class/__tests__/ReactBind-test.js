@@ -124,4 +124,46 @@ describe('autobinding', function() {
     expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
   });
 
+  it('warns if you try to bind to this', function() {
+    spyOn(console, 'warn');
+
+    var TestBindComponent = React.createClass({
+      handleClick: function() { },
+      render: function() {
+        return <div onClick={this.handleClick.bind(this)} />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'You are binding a component method to the component. ' +
+      'React does this for you automatically'
+    );
+  });
+
+  it('does not warn if you pass an auto-bound method to setState', function() {
+    spyOn(console, 'warn');
+
+    var TestBindComponent = React.createClass({
+      getInitialState: function() {
+        return { foo: 1 };
+      },
+      componentDidMount: function() {
+        this.setState({ foo: 2 }, this.handleUpdate);
+      },
+      handleUpdate: function() {
+
+      },
+      render: function() {
+        return <div onClick={this.handleClick} />;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<TestBindComponent />)
+
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
 });

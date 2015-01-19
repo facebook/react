@@ -61,7 +61,7 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
     'component.'
   );
   internalInstance.setState(
-    partialState, callback && callback.bind(this)
+    partialState, callback
   );
 };
 
@@ -87,7 +87,7 @@ ReactComponentBase.prototype.forceUpdate = function(callback) {
     'components. This usually means you called forceUpdate() on an ' +
     'unmounted component.'
   );
-  internalInstance.forceUpdate(callback && callback.bind(this));
+  internalInstance.forceUpdate(callback);
 };
 
 /**

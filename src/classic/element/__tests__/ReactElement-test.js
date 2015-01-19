@@ -269,4 +269,83 @@ describe('ReactElement', function() {
     expect(inst2.props.prop).toBe(null);
   });
 
+  it('warns when changing a prop after element creation', function() {
+    spyOn(console, 'warn');
+    var Outer = React.createClass({
+      render: function() {
+        var el = <div className="moo" />;
+
+        // This assignment warns but should still work for now.
+        el.props.className = 'quack';
+        expect(el.props.className).toBe('quack');
+
+        return el;
+      }
+    });
+    var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
+    expect(outer.getDOMNode().className).toBe('quack');
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Don\'t set .props.className of the React component <div />.'
+    );
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'The element was created by Outer.'
+    );
+
+    console.warn.reset();
+
+    // This also warns (just once per key/type pair)
+    outer.props.color = 'green';
+    outer.forceUpdate();
+    outer.props.color = 'purple';
+    outer.forceUpdate();
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Don\'t set .props.color of the React component <Outer />.'
+    );
+  });
+
+  it('warns when adding a prop after element creation', function() {
+    spyOn(console, 'warn');
+    var el = document.createElement('div');
+    var Outer = React.createClass({
+      getDefaultProps: () => ({sound: 'meow'}),
+      render: function() {
+        var el = <div>{this.props.sound}</div>;
+
+        // This assignment doesn't warn immediately (because we can't) but it
+        // warns upon mount.
+        el.props.className = 'quack';
+        expect(el.props.className).toBe('quack');
+
+        return el;
+      }
+    });
+    var outer = React.render(<Outer />, el);
+    expect(outer.getDOMNode().textContent).toBe('meow');
+    expect(outer.getDOMNode().className).toBe('quack');
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Don\'t set .props.className of the React component <div />.'
+    );
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'The element was created by Outer.'
+    );
+
+    console.warn.reset();
+
+    var newOuterEl = <Outer />;
+    newOuterEl.props.sound = 'oink';
+    outer = React.render(newOuterEl, el);
+    expect(outer.getDOMNode().textContent).toBe('oink');
+    expect(outer.getDOMNode().className).toBe('quack');
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Don\'t set .props.sound of the React component <Outer />.'
+    );
+  });
 });
