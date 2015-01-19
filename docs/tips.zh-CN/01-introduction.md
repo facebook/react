@@ -1,6 +1,6 @@
 ---
 id: introduction
-title: Introduction
+title: 介绍说明
 layout: tips.zh-CN
 permalink: introduction.html
 next: inline-styles.html

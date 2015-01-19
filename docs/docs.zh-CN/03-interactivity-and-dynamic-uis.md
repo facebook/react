@@ -7,7 +7,7 @@ prev: jsx-gotchas.html
 next: multiple-components.html
 ---
 
-你已经学会了[如何通过React展示数据](/react/docs.zh-CN/displaying-data.html)。现在让我们来看下如何来使这些用户界面产生交互。
+你已经学会了如何通过React[展示数据](/react/docs.zh-CN/displaying-data.html)。现在让我们来看下如何来使这些用户界面产生交互。
 
 ## 一个简单的例子
 

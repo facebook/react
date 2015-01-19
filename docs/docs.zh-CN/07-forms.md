@@ -1,9 +1,10 @@
 ---
-id: forms-zh-CN
+id: forms
 title: 表单组件
-permalink: forms-zh-CN.html
-prev: transferring-props-zh-CN.html
-next: working-with-the-browser-zh-CN.html
+layout: docs.zh-CN
+permalink: forms.html
+prev: transferring-props.html
+next: working-with-the-browser.html
 ---
 
 诸如 `<input>`、`<textarea>`、`<option>` 这样的表单组件不同于其他组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。
