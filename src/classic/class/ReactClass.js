@@ -801,10 +801,10 @@ var ReactClass = {
 
       this.props = props;
       this.state = null;
- 
+
       // ReactClasses doesn't have constructors. Instead, they use the
       // getInitialState and componentWillMount methods for initialization.
- 
+
       var initialState = this.getInitialState ? this.getInitialState() : null;
       if (__DEV__) {
         // We allow auto-mocks to proceed as if they're returning null.
@@ -820,7 +820,7 @@ var ReactClass = {
         '%s.getInitialState(): must return an object or null',
         Constructor.displayName || 'ReactCompositeComponent'
       );
- 
+
       this.state = initialState;
     };
     Constructor.prototype = new ReactClassBase();
