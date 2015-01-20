@@ -22,7 +22,7 @@ describe('ReactES6Class', function() {
 
   beforeEach(function() {
     React = require('React');
-    container = document.createElement();
+    container = document.createElement('div');
     attachedListener = null;
     renderedName = null;
     Inner = class extends React.Component {
