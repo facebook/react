@@ -1,0 +1,36 @@
+- title: 小提示
+  items:
+  - id: introduction
+    title: 介绍
+  - id: inline-styles
+    title: 内联样式
+  - id: if-else-in-JSX
+    title: JSX中得If-Else
+  - id: self-closing-tag
+    title: 自关闭标签
+  - id: maximum-number-of-jsx-root-nodes
+    title: 最大JSX根节点数
+  - id: style-props-value-px
+    title: 样式中属性为像素单位值简写
+  - id: children-props-type
+    title: 子属性的类型
+  - id: controlled-input-null-value
+    title: 空值的输入限制
+  - id: componentWillReceiveProps-not-triggered-after-mounting
+    title: 在Mounting后，componentWillReceiveProps 不触发 
+  - id: props-in-getInitialState-as-anti-pattern
+    title: 在getInitialState中的属性是一种反模式
+  - id: dom-event-listeners
+    title: 在组件中的DOM事件监听
+  - id: initial-ajax
+    title: 通过AJAX来加载初始化数据
+  - id: false-in-jsx
+    title: JSX中的false
+  - id: communicate-between-components
+    title: 组件之间的通讯
+  - id: expose-component-functions
+    title: 揭示组件功能
+  - id: references-to-components
+    title: 组件的参考说明
+  - id: children-undefined
+    title: this.props.children 未定义

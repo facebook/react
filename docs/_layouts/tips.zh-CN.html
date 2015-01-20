@@ -1,0 +1,23 @@
+---
+layout: default
+sectionid: tips.zh-CN
+---
+
+<section class="content wrap documentationContent">
+  {% include nav_docs.zh-CN.html %}
+
+  <div class="inner-content">
+    <h1>{{ page.title }}</h1>
+    <div class="subHeader">{{ page.description }}</div>
+    {{ content }}
+
+    <div class="docs-prevnext">
+      {% if page.prev %}
+        <a class="docs-prev" href="/react/tips/{{ page.prev }}">&larr; 上一篇</a>
+      {% endif %}
+      {% if page.next %}
+        <a class="docs-next" href="/react/tips/{{ page.next }}">下一篇 &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+</section>

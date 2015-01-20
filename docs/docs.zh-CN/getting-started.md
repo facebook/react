@@ -1,5 +1,6 @@
 ---
-id: getting-started-zh-CN
+id: getting-started
+layout: docs.zh-CN
 title: 入门教程
 next: tutorial-zh-CN.html
 redirect_from: "docs/index-zh-CN.html"
