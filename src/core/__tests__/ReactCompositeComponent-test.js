@@ -343,9 +343,8 @@ describe('ReactCompositeComponent', function() {
       },
       componentWillUnmount: function() {
         expect(() => this.setState({ value: 2 })).toThrow(
-          'Invariant Violation: replaceState(...): Cannot update while ' +
-          'unmounting component. This usually means you called setState() ' +
-          'on an unmounted component.'
+          'Invariant Violation: setState(...): Cannot call setState() on an ' +
+          'unmounting component.'
         );
       },
       render: function() {
@@ -383,8 +382,9 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.setProps({ value: 2 });
     }).toThrow(
-      'Invariant Violation: setProps(...): Can only update a mounted ' +
-      'component.'
+      'Invariant Violation: setProps(...): Can only update a mounted or ' +
+      'mounting component. This usually means you called setProps() on an ' +
+      'unmounted component.'
     );
   });
 

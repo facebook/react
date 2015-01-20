@@ -104,7 +104,11 @@ describe('ReactComponentLifeCycle', function() {
     ReactInstanceMap = require('ReactInstanceMap');
 
     getCompositeLifeCycle = function(instance) {
-      return ReactInstanceMap.get(instance)._compositeLifeCycleState;
+      var internalInstance = ReactInstanceMap.get(instance);
+      if (!internalInstance) {
+        return null;
+      }
+      return internalInstance._compositeLifeCycleState;
     };
 
     getLifeCycleState = function(instance) {
@@ -221,7 +225,7 @@ describe('ReactComponentLifeCycle', function() {
     }).not.toThrow();
   });
 
-  it('should allow update state inside of getInitialState', function() {
+  it('should not allow update state inside of getInitialState', function() {
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         this.setState({stateField: 'something'});
@@ -234,15 +238,14 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    var instance = <StatefulComponent />;
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(instance);
-    }).not.toThrow();
-
-    // The return value of getInitialState overrides anything from setState
-    expect(instance.state.stateField).toEqual('somethingelse');
+      instance = ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    }).toThrow(
+      'Invariant Violation: setState(...): Can only update a mounted or ' +
+      'mounting component. This usually means you called setState() on an ' + 
+      'unmounted component.'
+    );
   });
-
 
   it('should carry through each of the phases of setup', function() {
     var LifeCycleComponent = React.createClass({
@@ -317,9 +320,9 @@ describe('ReactComponentLifeCycle', function() {
       GET_INIT_STATE_RETURN_VAL
     );
     expect(instance._testJournal.lifeCycleAtStartOfGetInitialState)
-      .toBe(ComponentLifeCycle.MOUNTED);
+      .toBe(ComponentLifeCycle.UNMOUNTED);
     expect(instance._testJournal.compositeLifeCycleAtStartOfGetInitialState)
-      .toBe(CompositeComponentLifeCycle.MOUNTING);
+      .toBe(null);
 
     // componentWillMount
     expect(instance._testJournal.stateAtStartOfWillMount).toEqual(

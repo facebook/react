@@ -742,7 +742,8 @@ var ReactClassMixin = {
     var internalInstance = ReactInstanceMap.get(this);
     invariant(
       internalInstance,
-      'setProps(...): Can only update a mounted component.'
+      'setProps(...): Can only update a mounted or mounting component. ' +
+      'This usually means you called setProps() on an unmounted component.'
     );
     internalInstance.setProps(
       partialProps,
@@ -797,6 +798,30 @@ var ReactClass = {
       if (this.__reactAutoBindMap) {
         bindAutoBindMethods(this);
       }
+
+      this.props = props;
+      this.state = null;
+ 
+      // ReactClasses doesn't have constructors. Instead, they use the
+      // getInitialState and componentWillMount methods for initialization.
+ 
+      var initialState = this.getInitialState ? this.getInitialState() : null;
+      if (__DEV__) {
+        // We allow auto-mocks to proceed as if they're returning null.
+        if (typeof initialState === 'undefined' &&
+            this.getInitialState._isMockFunction) {
+          // This is probably bad practice. Consider warning here and
+          // deprecating this convenience.
+          initialState = null;
+        }
+      }
+      invariant(
+        typeof initialState === 'object' && !Array.isArray(initialState),
+        '%s.getInitialState(): must return an object or null',
+        Constructor.displayName || 'ReactCompositeComponent'
+      );
+ 
+      this.state = initialState;
     };
     Constructor.prototype = new ReactClassBase();
     Constructor.prototype.constructor = Constructor;
@@ -822,9 +847,6 @@ var ReactClass = {
       }
       if (Constructor.prototype.getInitialState) {
         Constructor.prototype.getInitialState.isReactClassApproved = {};
-      }
-      if (Constructor.prototype.componentWillMount) {
-        Constructor.prototype.componentWillMount.isReactClassApproved = {};
       }
     }
 
