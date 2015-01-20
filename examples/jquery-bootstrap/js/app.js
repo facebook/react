@@ -3,7 +3,7 @@
 var BootstrapButton = React.createClass({
   render: function() {
     return (
-      <a onClick={this.props.onclick}
+      <a onClick={this.props.onClick}
         href="javascript:;"
         role="button"
         className={(this.props.className || '') + ' btn'} >{this.props.children}</a>
@@ -35,7 +35,7 @@ var BootstrapModal = React.createClass({
     if (this.props.confirm) {
       confirmButton = (
         <BootstrapButton
-          onclick={this.handleConfirm}
+          onClick={this.handleConfirm}
           className="btn-primary">
           {this.props.confirm}
         </BootstrapButton>
@@ -43,7 +43,7 @@ var BootstrapModal = React.createClass({
     }
     if (this.props.cancel) {
       cancelButton = (
-        <BootstrapButton onclick={this.handleCancel} className="btn-default">
+        <BootstrapButton onClick={this.handleCancel} className="btn-default">
           {this.props.cancel}
         </BootstrapButton>
       );
