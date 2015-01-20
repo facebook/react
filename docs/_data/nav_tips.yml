@@ -36,3 +36,5 @@
     title: this.props.children undefined
   - id: use-react-with-other-libraries
     title: Use React with Other Libraries
+  - id: dangerously-set-inner-html
+    title: Dangerously Set innerHTML
