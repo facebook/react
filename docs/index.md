@@ -4,6 +4,13 @@ title: A JavaScript library for building user interfaces
 id: home
 ---
 
+<section id="react-europe">
+  <a class="button" id="react-europe-link" href="http://www.react-europe.org" target=_blank>
+    <img src="http://www.react-europe.org/images/reacteurope.png" id="react-europe-logo">
+    Come meet the core team in Paris at the ReactEurope conference this July 2-3, 2015.
+  </a>
+</section>
+
 <section class="light home-section">
   <div class="marketing-row">
     <div class="marketing-col">
