@@ -457,13 +457,13 @@ var ReactCompositeComponentMixin = assign({},
 
   /**
    * Filters the context object to only contain keys specified in
-   * `contextTypes`, and asserts that they are valid.
+   * `contextTypes`
    *
    * @param {object} context
    * @return {?object}
    * @private
    */
-  _processContext: function(context) {
+  _maskContext: function(context) {
     var maskedContext = null;
     var contextTypes = this._instance.constructor.contextTypes;
     if (!contextTypes) {
@@ -472,6 +472,23 @@ var ReactCompositeComponentMixin = assign({},
     maskedContext = {};
     for (var contextName in contextTypes) {
       maskedContext[contextName] = context[contextName];
+    }
+    return maskedContext;
+  },
+
+  /**
+   * Filters the context object to only contain keys specified in
+   * `contextTypes`, and asserts that they are valid.
+   *
+   * @param {object} context
+   * @return {?object}
+   * @private
+   */
+  _processContext: function(context) {
+    var maskedContext = this._maskContext(context);
+    var contextTypes = this._instance.constructor.contextTypes;
+    if (!contextTypes) {
+      return emptyObject;
     }
     if (__DEV__) {
       this._checkPropTypes(
@@ -648,35 +665,23 @@ var ReactCompositeComponentMixin = assign({},
    * TODO: Remove this check when owner-context is removed
    */
    _warnIfContextsDiffer: function(ownerBasedContext, parentBasedContext) {
+    ownerBasedContext = this._maskContext(ownerBasedContext);
+    parentBasedContext = this._maskContext(parentBasedContext);
     var ownerKeys = Object.keys(ownerBasedContext).sort();
     var parentKeys = Object.keys(parentBasedContext).sort();
     var displayName = this.getName() || 'ReactCompositeComponent';
-    if (ownerKeys.length !== parentKeys.length ||
-        ownerKeys.toString() !== parentKeys.toString()) {
+    for (var i = 0; i < parentKeys.length; i++) {
+      var key = parentKeys[i];
       warning(
-        ownerKeys.length === parentKeys.length &&
-        ownerKeys.toString() === parentKeys.toString(),
-        'owner based context (keys: %s) does not equal parent based ' +
-        'context (keys: %s) while mounting %s ' +
+        ownerBasedContext[key] === parentBasedContext[key],
+        'owner-based and parent-based contexts differ '  +
+        '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
         '(see: http://fb.me/react-context-by-parent)',
-        Object.keys(ownerBasedContext),
-        Object.keys(parentBasedContext),
+        ownerBasedContext[key],
+        parentBasedContext[key],
+        key,
         displayName
       );
-    } else {
-      for (var i = 0; i < parentKeys.length; i++) {
-        var key = parentKeys[i];
-        warning(
-          ownerBasedContext[key] === parentBasedContext[key],
-          'owner-based and parent-based contexts differ '  +
-          '(values: `%s` vs `%s`) for key (%s) while mounting %s ' +
-          '(see: http://fb.me/react-context-by-parent)',
-          ownerBasedContext[key],
-          parentBasedContext[key],
-          key,
-          displayName
-        );
-      }
     }
   },
 
