@@ -809,15 +809,22 @@ div[data-twttr-id] iframe {
 
 /* ReactEurope front page section */
 #react-europe {
-text-align: center; font-size: 28px;
+  text-align: center;
+  font-size: 28px;
 }
 
 #react-europe-link {
-background:#49201a; color: #fff;
+  background: #49201a;
+  color: #fff;
 }
+
 #react-europe-link:hover{
-color: #fff;
+  color: #fff;
 }
+
 #react-europe-logo {
-width: 30px;height:30px; border-radius: 50%; vertical-align:middle;
+  width: 30px;
+  height:30px;
+  border-radius: 50%;
+  vertical-align:middle;
 }
