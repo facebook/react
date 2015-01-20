@@ -40,20 +40,6 @@ function getDeclarationErrorAddendum(component) {
   return '';
 }
 
-function validateLifeCycleOnReplaceState(instance) {
-  var compositeLifeCycleState = instance._compositeLifeCycleState;
-  invariant(
-    ReactCurrentOwner.current == null,
-    'replaceState(...): Cannot update during an existing state transition ' +
-    '(such as within `render`). Render methods should be a pure function ' +
-    'of props and state.'
-  );
-  invariant(compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-    'replaceState(...): Cannot update while unmounting component. This ' +
-    'usually means you called setState() on an unmounted component.'
-  );
-}
-
 /**
  * `ReactCompositeComponent` maintains an auxiliary life cycle state in
  * `this._compositeLifeCycleState` (which can be null).
@@ -123,7 +109,8 @@ var ReactCompositeComponentMixin = assign({},
     this._rootNodeID = null;
 
     this._instance.props = element.props;
-    this._instance.state = null;
+    // instance.state get set up to its proper initial value in mount
+    // which may be null.
     this._instance.context = null;
     this._instance.refs = emptyObject;
 
@@ -190,15 +177,7 @@ var ReactCompositeComponentMixin = assign({},
     }
     inst.props = this._processProps(this._currentElement.props);
 
-    var initialState = inst.getInitialState ? inst.getInitialState() : null;
     if (__DEV__) {
-      // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof initialState === 'undefined' &&
-          inst.getInitialState._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        initialState = null;
-      }
       // Since plain JS classes are defined without any special initialization
       // logic, we can not catch common errors early. Therefore, we have to
       // catch them here, at initialization time, instead.
@@ -208,14 +187,6 @@ var ReactCompositeComponentMixin = assign({},
         'getInitialState was defined on %s, a plain JavaScript class. ' +
         'This is only supported for classes created using React.createClass. ' +
         'Did you mean to define a state property instead?',
-        this.getName() || 'a component'
-      );
-      warning(
-        !inst.componentWillMount ||
-        inst.componentWillMount.isReactClassApproved,
-        'componentWillMount was defined on %s, a plain JavaScript class. ' +
-        'This is only supported for classes created using React.createClass. ' +
-        'Did you mean to define a constructor instead?',
         this.getName() || 'a component'
       );
       warning(
@@ -239,9 +210,14 @@ var ReactCompositeComponentMixin = assign({},
         (this.getName() || 'A component')
       );
     }
+
+    var initialState = inst.state;
+    if (initialState === undefined) {
+      inst.state = initialState = null;
+    }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
-      '%s.getInitialState(): must return an object or null',
+      '%s.state: must be set to an object or null',
       this.getName() || 'ReactCompositeComponent'
     );
     inst.state = initialState;
@@ -396,11 +372,32 @@ var ReactCompositeComponentMixin = assign({},
    * @protected
    */
   setState: function(partialState, callback) {
-    // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this.replaceState(
-      assign({}, this._pendingState || this._instance.state, partialState),
-      callback
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      ReactCurrentOwner.current == null,
+      'setState(...): Cannot update during an existing state transition ' +
+      '(such as within `render`). Render methods should be a pure function ' +
+      'of props and state.'
     );
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'setState(...): Cannot call setState() on an unmounting component.'
+    );
+    // Merge with `_pendingState` if it exists, otherwise with existing state.
+    this._pendingState = assign(
+      {},
+      this._pendingState || this._instance.state,
+      partialState
+    );
+    if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
+      // If we're in a componentWillMount handler, don't enqueue a rerender
+      // because ReactUpdates assumes we're in a browser context (which is wrong
+      // for server rendering) and we're about to do a render anyway.
+      // TODO: The callback here is ignored when setState is called from
+      // componentWillMount. Either fix it or disallow doing so completely in
+      // favor of getInitialState.
+      ReactUpdates.enqueueUpdate(this, callback);
+    }
   },
 
   /**
@@ -416,7 +413,18 @@ var ReactCompositeComponentMixin = assign({},
    * @protected
    */
   replaceState: function(completeState, callback) {
-    validateLifeCycleOnReplaceState(this);
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    invariant(
+      ReactCurrentOwner.current == null,
+      'replaceState(...): Cannot update during an existing state transition ' +
+      '(such as within `render`). Render methods should be a pure function ' +
+      'of props and state.'
+    );
+    invariant(
+      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
+      'replaceState(...): Cannot call replaceState() on an unmounting ' +
+      'component.'
+    );
     this._pendingState = completeState;
     if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
       // If we're in a componentWillMount handler, don't enqueue a rerender
@@ -1004,22 +1012,15 @@ var ShallowMixin = assign({},
     // No context for shallow-mounted components.
     inst.props = this._processProps(this._currentElement.props);
 
-    var initialState = inst.getInitialState ? inst.getInitialState() : null;
-    if (__DEV__) {
-      // We allow auto-mocks to proceed as if they're returning null.
-      if (typeof initialState === 'undefined' &&
-          inst.getInitialState._isMockFunction) {
-        // This is probably bad practice. Consider warning here and
-        // deprecating this convenience.
-        initialState = null;
-      }
+    var initialState = inst.state;
+    if (initialState === undefined) {
+      inst.state = initialState = null;
     }
     invariant(
       typeof initialState === 'object' && !Array.isArray(initialState),
-      '%s.getInitialState(): must return an object or null',
+      '%s.state: must be set to an object or null',
       this.getName() || 'ReactCompositeComponent'
     );
-    inst.state = initialState;
 
     this._pendingState = null;
     this._pendingForceUpdate = false;

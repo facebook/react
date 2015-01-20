@@ -65,6 +65,129 @@ describe('ReactES6Class', function() {
     test(<Foo bar="bar" />, 'DIV', 'bar');
   });
 
+  it('renders based on state using initial values in this.props', function() {
+    class Foo extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { bar: this.props.initialValue };
+      }
+      render() {
+        return <span className={this.state.bar} />;
+      }
+    }
+    test(<Foo initialValue="foo" />, 'SPAN', 'foo');
+  });
+
+  it('renders based on state using props in the constructor', function() {
+    class Foo extends React.Component {
+      constructor(props) {
+        this.state = { bar: props.initialValue };
+      }
+      changeState() {
+        this.setState({ bar: 'bar' });
+      }
+      render() {
+        if (this.state.bar === 'foo') {
+          return <div className="foo" />;
+        }
+        return <span className={this.state.bar} />;
+      }
+    }
+    var instance = test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    instance.changeState();
+    test(<Foo />, 'SPAN', 'bar');
+  });
+
+  it('renders only once when setting state in componentWillMount', function() {
+    var renderCount = 0;
+    class Foo extends React.Component {
+      constructor(props) {
+        this.state = { bar: props.initialValue };
+      }
+      componentWillMount() {
+        this.setState({ bar: 'bar' });
+      }
+      render() {
+        renderCount++;
+        return <span className={this.state.bar} />;
+      }
+    }
+    test(<Foo initialValue="foo" />, 'SPAN', 'bar');
+    expect(renderCount).toBe(1);
+  });
+
+  it('should throw with non-object in the initial state property', function() {
+    [['an array'], 'a string', 1234].forEach(function(state) {
+      class Foo {
+        constructor() {
+          this.state = state;
+        }
+        render() {
+          return <span />;
+        }
+      }
+      expect(() => test(<Foo />, 'span', '')).toThrow(
+        'Invariant Violation: Foo.state: ' + 
+        'must be set to an object or null'
+      );
+    });
+  });
+
+  it('should render with null in the initial state property', function() {
+    class Foo extends React.Component {
+      constructor() {
+        this.state = null;
+      }
+      render() {
+        return <span />;
+      }
+    }
+    test(<Foo />, 'SPAN', '');
+  });
+
+  it('setState through an event handler', function() {
+    class Foo extends React.Component {
+      constructor(props) {
+        this.state = { bar: props.initialValue };
+      }
+      handleClick() {
+        this.setState({ bar: 'bar' });
+      }
+      render() {
+        return (
+          <Inner
+            name={this.state.bar}
+            onClick={this.handleClick.bind(this)}
+          />
+        );
+      }
+    }
+    test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    attachedListener();
+    expect(renderedName).toBe('bar');
+  });
+
+  it('should not implicitly bind event handlers', function() {
+    class Foo extends React.Component {
+      constructor(props) {
+        this.state = { bar: props.initialValue };
+      }
+      handleClick() {
+        this.setState({ bar: 'bar' });
+      }
+      render() {
+        return (
+          <Inner
+            name={this.state.bar}
+            onClick={this.handleClick}
+          />
+        );
+      }
+    }
+    test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    expect(attachedListener).toThrow();
+  });
+
   it('renders using forceUpdate even when there is no state', function() {
     class Foo extends React.Component {
       constructor(props) {
@@ -88,11 +211,62 @@ describe('ReactES6Class', function() {
     expect(renderedName).toBe('bar');
   });
 
+  it('will call all the normal life cycle methods', function() {
+    var lifeCycles = [];
+    class Foo {
+      constructor() {
+        this.state = {};
+      }
+      componentWillMount() {
+        lifeCycles.push('will-mount');
+      }
+      componentDidMount() {
+        lifeCycles.push('did-mount');
+      }
+      componentWillReceiveProps(nextProps) {
+        lifeCycles.push('receive-props', nextProps);
+      }
+      shouldComponentUpdate(nextProps, nextState) {
+        lifeCycles.push('should-update', nextProps, nextState);
+        return true;
+      }
+      componentWillUpdate(nextProps, nextState) {
+        lifeCycles.push('will-update', nextProps, nextState);
+      }
+      componentDidUpdate(prevProps, prevState) {
+        lifeCycles.push('did-update', prevProps, prevState);
+      }
+      componentWillUnmount() {
+        lifeCycles.push('will-unmount');
+      }
+      render() {
+        return <span className={this.props.value} />;
+      }
+    }
+    var instance = test(<Foo value="foo" />, 'SPAN', 'foo');
+    expect(lifeCycles).toEqual([
+      'will-mount',
+      'did-mount'
+    ]);
+    lifeCycles = []; // reset
+    test(<Foo value="bar" />, 'SPAN', 'bar');
+    expect(lifeCycles).toEqual([
+      'receive-props', { value: 'bar' },
+      'should-update', { value: 'bar' }, {},
+      'will-update', { value: 'bar' }, {},
+      'did-update', { value: 'foo' }, {}
+    ]);
+    lifeCycles = []; // reset
+    React.unmountComponentAtNode(container);
+    expect(lifeCycles).toEqual([
+      'will-unmount'
+    ]);
+  });
+
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
     spyOn(console, 'warn');
     var getInitialStateWasCalled = false;
-    var componentWillMountWasCalled = false;
     class Foo extends React.Component {
       constructor() {
         this.contextTypes = {};
@@ -102,27 +276,20 @@ describe('ReactES6Class', function() {
         getInitialStateWasCalled = true;
         return {};
       }
-      componentWillMount() {
-        componentWillMountWasCalled = true;
-      }
       render() {
         return <span className="foo" />;
       }
     }
     test(<Foo />, 'SPAN', 'foo');
-    // TODO: expect(getInitialStateWasCalled).toBe(false);
-    // TODO: expect(componentWillMountWasCalled).toBe(false);
-    expect(console.warn.calls.length).toBe(4);
+    expect(getInitialStateWasCalled).toBe(false);
+    expect(console.warn.calls.length).toBe(3);
     expect(console.warn.calls[0].args[0]).toContain(
       'getInitialState was defined on Foo, a plain JavaScript class.'
     );
     expect(console.warn.calls[1].args[0]).toContain(
-      'componentWillMount was defined on Foo, a plain JavaScript class.'
-    );
-    expect(console.warn.calls[2].args[0]).toContain(
       'propTypes was defined as an instance property on Foo.'
     );
-    expect(console.warn.calls[3].args[0]).toContain(
+    expect(console.warn.calls[2].args[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     );
   });
