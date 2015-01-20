@@ -83,7 +83,11 @@ var transformer = {
   debug: false,
   standalone: 'JSXTransformer',
   transforms: [],
-  plugins: [collapser],
+  // Source-map-generator uses amdefine, which looks at the type of __dereq__.
+  // If it's not a string, it assumes something else (array of strings), but
+  // collapser passes a number; this would throw.
+
+  // plugins: [collapser],
   after: [es3ify.transform, derequire, simpleBannerify]
 };
 
