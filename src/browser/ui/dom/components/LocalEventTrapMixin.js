@@ -24,10 +24,17 @@ function remove(event) {
 var LocalEventTrapMixin = {
   trapBubbledEvent(topLevelType, handlerBaseName) {
     invariant(this.isMounted(), 'Must be mounted to trap events');
+    // If a component renders to null or if another component fatals and causes
+    // the state of the tree to be corrupted, `node` here can be null.
+    var node = this.getDOMNode();
+    invariant(
+      node,
+      'LocalEventTrapMixin.trapBubbledEvent(...): Requires node to be rendered.'
+    );
     var listener = ReactBrowserEventEmitter.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
-      this.getDOMNode()
+      node
     );
     this._localEventListeners =
       accumulateInto(this._localEventListeners, listener);
