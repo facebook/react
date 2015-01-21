@@ -806,3 +806,26 @@ div[data-twttr-id] iframe {
 .three-column > ul:first-child {
   margin-left: 20px;
 }
+
+/* ReactEurope front page section */
+
+#react-europe {
+  text-align: center;
+  font-size: 28px;
+}
+
+#react-europe-link {
+  background: #49201a;
+  color: #fff;
+}
+
+#react-europe-link:hover{
+  color: #fff;
+}
+
+#react-europe-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
