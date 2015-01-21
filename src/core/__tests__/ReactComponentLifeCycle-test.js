@@ -239,10 +239,10 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     expect(function() {
-      instance = ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
     }).toThrow(
       'Invariant Violation: setState(...): Can only update a mounted or ' +
-      'mounting component. This usually means you called setState() on an ' + 
+      'mounting component. This usually means you called setState() on an ' +
       'unmounted component.'
     );
   });
