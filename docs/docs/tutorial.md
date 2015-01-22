@@ -459,7 +459,7 @@ React.render(
 
 ```
 
-All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. Try running this in your browser and changing the `comments.json` file; within 2 seconds, the changes will show!
+All we have done here is move the AJAX call to a separate method and call it when the component is first loaded and every 2 seconds after that. We will see the benefits of this live-updating once we build out the comment form and actually start adding comments. For now, try opening the page in your browser. Then edit `comments.json` in your text editor and restart your local server to pick up the changes. Within two seconds, the changes should show in your browser!
 
 ### Adding new comments
 
