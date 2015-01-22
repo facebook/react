@@ -43,6 +43,21 @@ describe('ReactClass-spec', function() {
       .toBe('TestComponent');
   });
 
+  it('should warn when accessing .type on a React class', function() {
+    var TestComponent = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    console.warn = mocks.getMockFunction();
+    expect(TestComponent.type).toBe(TestComponent);
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: TestComponent.type is deprecated. Use TestComponent ' +
+      'directly to access the class.'
+    );
+  });
+
   it('should copy prop types onto the Constructor', function() {
     var propValidator = mocks.getMockFunction();
     var TestComponent = React.createClass({
