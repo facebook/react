@@ -24,7 +24,7 @@ describe('LocalEventTrapMixin', function() {
     ReactTestUtils = require('ReactTestUtils');
   });
 
-  it('does not fatal when trapping bubbled state on null', function() {
+  it('throws when trapping bubbled state on null', function() {
     var BadImage = React.createClass({
       mixins: [LocalEventTrapMixin],
       render: function() {
