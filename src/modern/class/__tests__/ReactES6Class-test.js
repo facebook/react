@@ -127,7 +127,7 @@ describe('ReactES6Class', function() {
         }
       }
       expect(() => test(<Foo />, 'span', '')).toThrow(
-        'Invariant Violation: Foo.state: ' + 
+        'Invariant Violation: Foo.state: ' +
         'must be set to an object or null'
       );
     });
@@ -243,7 +243,7 @@ describe('ReactES6Class', function() {
         return <span className={this.props.value} />;
       }
     }
-    var instance = test(<Foo value="foo" />, 'SPAN', 'foo');
+    test(<Foo value="foo" />, 'SPAN', 'foo');
     expect(lifeCycles).toEqual([
       'will-mount',
       'did-mount'
