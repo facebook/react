@@ -82,6 +82,13 @@ function exec(source, options) {
  */
 function createSourceCodeErrorMessage(code, e) {
   var sourceLines = code.split('\n');
+  // e.lineNumber is non-standard so we can't depend on its availability. If
+  // we're in a browser where it isn't supported, don't even bother trying to
+  // format anything. We may also hit a case where the line number is reported
+  // incorrectly and is outside the bounds of the actual code. Handle that too.
+  if (!e.lineNumber || e.lineNumber > sourceLines.length) {
+    return '';
+  }
   var erroneousLine = sourceLines[e.lineNumber - 1];
 
   // Removes any leading indenting spaces and gets the number of
@@ -130,7 +137,7 @@ function transformCode(code, url, options) {
         // The error will correctly point to `url` in Firefox.
         e.fileName = url;
       }
-      e.message += url + ':' + e.lineNumber + ':' + e.column;
+      e.message += url + ':' + e.lineNumber + ':' + e.columnNumber;
     } else {
       e.message += location.href;
     }
