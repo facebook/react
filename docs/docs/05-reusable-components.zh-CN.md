@@ -113,7 +113,6 @@ React.render(
 );
 ```
 
-
 ## 单个子级
 
 `React.PropTypes.element` 可以限定只能有一个子级传入。
@@ -127,7 +126,7 @@ var MyComponent = React.createClass({
   render: function() {
     return (
       <div>
-        {this.props.children} // 只能有一个元素，否则会抛异常。
+        {this.props.children} // 有且仅有一个元素，否则会抛异常。
       </div>
     );
   }
