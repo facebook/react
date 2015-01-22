@@ -23,6 +23,7 @@ var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
 var monitorCodeUse = require('monitorCodeUse');
+var warning = require('warning');
 
 var MIXINS_KEY = keyOf({mixins: null});
 
@@ -693,6 +694,20 @@ function bindAutoBindMethods(component) {
   }
 }
 
+var typeDeprecationDescriptor = {
+  enumerable: false,
+  get: function() {
+    var displayName = this.displayName || this.name || 'Component';
+    warning(
+      false,
+      '%s.type is deprecated. Use %s directly to access the class.',
+      displayName,
+      displayName
+    );
+    return this;
+  }
+};
+
 /**
  * Add more to the ReactClass base class. These are all legacy features and
  * therefore not already part of the modern ReactComponentBase.
@@ -877,8 +892,13 @@ var ReactClass = {
       }
     }
 
-    // Legacy hook TODO: Warn if this is accessed
+    // Legacy hook
     Constructor.type = Constructor;
+    if (__DEV__) {
+      if (Object.defineProperty) {
+        Object.defineProperty(Constructor, 'type', typeDeprecationDescriptor);
+      }
+    }
 
     return Constructor;
   },
