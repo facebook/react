@@ -72,7 +72,8 @@
   "scripts": {
     "test": "jest",
     "jest": "jest",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "build": "grunt build"
   },
   "jest": {
     "rootDir": "",
