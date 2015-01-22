@@ -20,6 +20,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactRef = require('ReactRef');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -173,6 +174,8 @@ var ReactCompositeComponentMixin = assign({},
       context
     );
 
+    ReactRef.attachRefs(this, this._currentElement);
+
     this._context = context;
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
@@ -301,6 +304,8 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingForceUpdate = false;
     this._pendingCallbacks = null;
     this._pendingElement = null;
+
+    ReactRef.detachRefs(this, this._currentElement);
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
@@ -702,7 +707,6 @@ var ReactCompositeComponentMixin = assign({},
     prevUnmaskedContext,
     nextUnmaskedContext
   ) {
-    // Update refs regardless of what shouldComponentUpdate returns
     ReactComponent.Mixin.updateComponent.call(
       this,
       transaction,
@@ -711,6 +715,9 @@ var ReactCompositeComponentMixin = assign({},
       prevUnmaskedContext,
       nextUnmaskedContext
     );
+
+    // Update refs regardless of what shouldComponentUpdate returns
+    ReactRef.updateRefs(this, prevParentElement, nextParentElement);
 
     var inst = this._instance;
 
