@@ -278,6 +278,36 @@ describe('ReactClass-spec', function() {
     expect(instance.state.occupation).toEqual('clown');
   });
 
+  it('renders based on context getInitialState', function() {
+    var Foo = React.createClass({
+      contextTypes: {
+        className: React.PropTypes.string
+      },
+      getInitialState() {
+        return { className: this.context.className };
+      },
+      render() {
+        return <span className={this.state.className} />;
+      }
+    });
+
+    var Outer = React.createClass({
+      childContextTypes: {
+        className: React.PropTypes.string
+      },
+      getChildContext() {
+        return { className: 'foo' };
+      },
+      render() {
+        return <Foo />;
+      }
+    });
+
+    var container = document.createElement('div');
+    React.render(<Outer />, container);
+    expect(container.firstChild.className).toBe('foo');
+  });
+
   it('should throw with non-object getInitialState() return values', function() {
     [['an array'], 'a string', 1234].forEach(function(state) {
       var Component = React.createClass({

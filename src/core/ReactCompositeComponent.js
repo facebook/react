@@ -169,7 +169,7 @@ var ReactCompositeComponentMixin = assign({},
     );
 
     // Initialize the public class
-    var inst = new Component(publicProps);
+    var inst = new Component(publicProps, publicContext);
     // These should be set up in the constructor, but as a convenience for
     // simpler class abstractions, we set them up after the fact.
     inst.props = publicProps;

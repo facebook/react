@@ -805,7 +805,7 @@ var ReactClass = {
    * @public
    */
   createClass: function(spec) {
-    var Constructor = function(props) {
+    var Constructor = function(props, context) {
       // This constructor is overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
@@ -815,6 +815,7 @@ var ReactClass = {
       }
 
       this.props = props;
+      this.context = context;
       this.state = null;
 
       // ReactClasses doesn't have constructors. Instead, they use the
