@@ -12,7 +12,6 @@
 'use strict';
 
 var React;
-var ReactComponent;
 var ReactTestUtils;
 
 var mocks;
@@ -27,7 +26,6 @@ describe('ReactMockedComponent', function() {
     mocks = require('mocks');
 
     React = require('React');
-    ReactComponent = require('ReactComponent');
     ReactTestUtils = require('ReactTestUtils');
 
     OriginalComponent = React.createClass({

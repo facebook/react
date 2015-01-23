@@ -16,7 +16,6 @@
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
-var ReactComponent = require('ReactComponent');
 var ReactComponentBase = require('ReactComponentBase');
 var ReactClass = require('ReactClass');
 var ReactContext = require('ReactContext');
@@ -86,7 +85,7 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    Component: ReactComponent,
+    // TODO: Inject a hook for notifying devtools of updates
     CurrentOwner: ReactCurrentOwner,
     DOMComponent: ReactDOMComponent,
     DOMPropertyOperations: DOMPropertyOperations,

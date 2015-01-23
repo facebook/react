@@ -17,7 +17,6 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
 var ReactMultiChild = require('ReactMultiChild');
@@ -162,7 +161,6 @@ function validateDangerousTag(tag) {
  * object mapping of style properties to values.
  *
  * @constructor ReactDOMComponent
- * @extends ReactComponent
  * @extends ReactMultiChild
  */
 function ReactDOMComponent(tag) {
@@ -177,6 +175,10 @@ ReactDOMComponent.displayName = 'ReactDOMComponent';
 
 ReactDOMComponent.Mixin = {
 
+  construct: function(element) {
+    this._currentElement = element;
+  },
+
   /**
    * Generates root tag markup then recurses. This method has side effects and
    * is not idempotent.
@@ -187,12 +189,6 @@ ReactDOMComponent.Mixin = {
    * @return {string} The computed markup.
    */
   mountComponent: function(rootID, transaction, context) {
-    ReactComponent.Mixin.mountComponent.call(
-      this,
-      rootID,
-      transaction,
-      context
-    );
     this._rootNodeID = rootID;
     assertValidProps(this._currentElement.props);
     var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
@@ -300,18 +296,6 @@ ReactDOMComponent.Mixin = {
   },
 
   receiveComponent: function(nextElement, transaction, context) {
-    if (nextElement === this._currentElement &&
-        nextElement._owner != null) {
-      // Since elements are immutable after the owner is rendered,
-      // we can do a cheap identity compare here to determine if this is a
-      // superfluous reconcile. It's possible for state to be mutable but such
-      // change should trigger an update of the owner which would recreate
-      // the element. We explicitly check for the existence of an owner since
-      // it's possible for an element created outside a composite to be
-      // deeply mutated and reused.
-      return;
-    }
-
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
     this.updateComponent(transaction, prevElement, nextElement, context);
@@ -329,13 +313,6 @@ ReactDOMComponent.Mixin = {
    */
   updateComponent: function(transaction, prevElement, nextElement, context) {
     assertValidProps(this._currentElement.props);
-    ReactComponent.Mixin.updateComponent.call(
-      this,
-      transaction,
-      prevElement,
-      nextElement,
-      context
-    );
     this._updateDOMProperties(prevElement.props, transaction);
     this._updateDOMChildren(prevElement.props, transaction, context);
   },
@@ -498,7 +475,6 @@ ReactDOMComponent.Mixin = {
   unmountComponent: function() {
     this.unmountChildren();
     ReactBrowserEventEmitter.deleteAllListeners(this._rootNodeID);
-    ReactComponent.Mixin.unmountComponent.call(this);
     ReactMount.purgeID(this._rootNodeID);
     this._rootNodeID = null;
   }
@@ -512,7 +488,6 @@ ReactPerf.measureMethods(ReactDOMComponent, 'ReactDOMComponent', {
 
 assign(
   ReactDOMComponent.prototype,
-  ReactComponent.Mixin,
   ReactDOMComponent.Mixin,
   ReactMultiChild.Mixin
 );

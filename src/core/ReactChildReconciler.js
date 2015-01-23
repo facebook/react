@@ -12,6 +12,8 @@
 
 'use strict';
 
+var ReactReconciler = require('ReactReconciler');
+
 var flattenChildren = require('flattenChildren');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
@@ -78,11 +80,13 @@ var ReactChildReconciler = {
       var prevElement = prevChild && prevChild._currentElement;
       var nextElement = nextChildren[name];
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
-        prevChild.receiveComponent(nextElement, transaction, context);
+        ReactReconciler.receiveComponent(
+          prevChild, nextElement, transaction, context
+        );
         nextChildren[name] = prevChild;
       } else {
         if (prevChild) {
-          prevChild.unmountComponent();
+          ReactReconciler.unmountComponent(prevChild, name);
         }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(
@@ -96,7 +100,7 @@ var ReactChildReconciler = {
     for (name in prevChildren) {
       if (prevChildren.hasOwnProperty(name) &&
           !(nextChildren && nextChildren.hasOwnProperty(name))) {
-        prevChildren[name].unmountComponent();
+        ReactReconciler.unmountComponent(prevChildren[name]);
       }
     }
     return nextChildren;
@@ -112,7 +116,7 @@ var ReactChildReconciler = {
   unmountChildren: function(renderedChildren) {
     for (var name in renderedChildren) {
       var renderedChild = renderedChildren[name];
-      renderedChild.unmountComponent();
+      ReactReconciler.unmountComponent(renderedChild);
     }
   }
 

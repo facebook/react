@@ -11,17 +11,17 @@
 
 'use strict';
 
-var ReactComponent = require('ReactComponent');
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
+var ReactElementValidator = require('ReactElementValidator');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
-var ReactRef = require('ReactRef');
+var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
@@ -97,8 +97,7 @@ var nextMountID = 1;
 /**
  * @lends {ReactCompositeComponent.prototype}
  */
-var ReactCompositeComponentMixin = assign({},
-  ReactComponent.Mixin, {
+var ReactCompositeComponentMixin = {
 
   /**
    * Base constructor for all composite component.
@@ -108,6 +107,8 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   construct: function(element) {
+    this._currentElement = element;
+
     this._rootNodeID = null;
     this._instance = null;
 
@@ -118,9 +119,6 @@ var ReactCompositeComponentMixin = assign({},
     this._compositeLifeCycleState = null;
 
     this._renderedComponent = null;
-
-    // Children can be either an array or more than one argument
-    ReactComponent.Mixin.construct.apply(this, arguments);
 
     this._context = null;
     this._mountOrder = 0;
@@ -150,13 +148,6 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   mountComponent: function(rootID, transaction, context) {
-    ReactComponent.Mixin.mountComponent.call(
-      this,
-      rootID,
-      transaction,
-      context
-    );
-
     this._context = context;
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
@@ -253,7 +244,8 @@ var ReactCompositeComponentMixin = assign({},
 
     // Done with mounting, `setState` will now trigger UI changes.
     this._compositeLifeCycleState = null;
-    var markup = this._renderedComponent.mountComponent(
+    var markup = ReactReconciler.mountComponent(
+      this._renderedComponent,
       rootID,
       transaction,
       this._processChildContext(context)
@@ -261,16 +253,8 @@ var ReactCompositeComponentMixin = assign({},
     if (inst.componentDidMount) {
       transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
     }
-    transaction.getReactMountReady().enqueue(this.attachRefs, this);
-    return markup;
-  },
 
-  /**
-   * Helper to call ReactRef.attachRefs with this composite component, split out
-   * to avoid allocations in the transaction mount-ready queue.
-   */
-  attachRefs: function() {
-    ReactRef.attachRefs(this, this._currentElement);
+    return markup;
   },
 
   /**
@@ -282,15 +266,13 @@ var ReactCompositeComponentMixin = assign({},
   unmountComponent: function() {
     var inst = this._instance;
 
-    ReactRef.detachRefs(this, this._currentElement);
-
     this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
     if (inst.componentWillUnmount) {
       inst.componentWillUnmount();
     }
     this._compositeLifeCycleState = null;
 
-    this._renderedComponent.unmountComponent();
+    ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
 
     // Reset pending fields
@@ -298,8 +280,6 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingForceUpdate = false;
     this._pendingCallbacks = null;
     this._pendingElement = null;
-
-    ReactComponent.Mixin.unmountComponent.call(this);
 
     ReactComponentEnvironment.unmountIDFromEnvironment(this._rootNodeID);
 
@@ -636,22 +616,28 @@ var ReactCompositeComponentMixin = assign({},
     }
   },
 
-  receiveComponent: function(nextElement, transaction, context) {
-    if (nextElement === this._currentElement &&
-        nextElement._owner != null) {
-      // Since elements are immutable after the owner is rendered,
-      // we can do a cheap identity compare here to determine if this is a
-      // superfluous reconcile. It's possible for state to be mutable but such
-      // change should trigger an update of the owner which would recreate
-      // the element. We explicitly check for the existence of an owner since
-      // it's possible for an element created outside a composite to be
-      // deeply mutated and reused.
+  receiveComponent: function(nextElement, transaction, nextContext) {
+    var compositeLifeCycleState = this._compositeLifeCycleState;
+    // Do not trigger a state transition if we are in the middle of mounting or
+    // receiving props because both of those will already be doing this.
+    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
+        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
       return;
     }
 
-    this._pendingElement = nextElement;
-    this._pendingContext = context;
-    this.performUpdateIfNecessary(transaction);
+    var prevElement = this._currentElement;
+    var prevContext = this._context;
+
+    this._pendingElement = null;
+    this._pendingContext = null;
+
+    this.updateComponent(
+      transaction,
+      prevElement,
+      nextElement,
+      prevContext,
+      nextContext
+    );
   },
 
   /**
@@ -662,42 +648,30 @@ var ReactCompositeComponentMixin = assign({},
    * @internal
    */
   performUpdateIfNecessary: function(transaction) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    // Do not trigger a state transition if we are in the middle of mounting or
-    // receiving props because both of those will already be doing this.
-    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
-        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
-      return;
+    if (this._pendingElement != null || this._pendingContext != null) {
+      ReactReconciler.receiveComponent(
+        this,
+        this._pendingElement || this._currentElement,
+        transaction,
+        this._pendingContext || this._context
+      );
     }
 
-    if (this._pendingElement == null &&
-        this._pendingState == null &&
-        this._pendingContext == null &&
-        !this._pendingForceUpdate) {
-      return;
-    }
+    if (this._pendingState != null || this._pendingForceUpdate) {
+      if (__DEV__) {
+        ReactElementValidator.checkAndWarnForMutatedProps(
+          this._currentElement
+        );
+      }
 
-    var prevElement = this._currentElement;
-    var nextElement = prevElement;
-    if (this._pendingElement != null) {
-      nextElement = this._pendingElement;
-      this._pendingElement = null;
+      this.updateComponent(
+        transaction,
+        this._currentElement,
+        this._currentElement,
+        this._context,
+        this._context
+      );
     }
-
-    var prevContext = this._context;
-    var nextContext = prevContext;
-    if (this._pendingContext != null) {
-      nextContext = this._pendingContext;
-      this._pendingContext = null;
-    }
-
-    this.updateComponent(
-      transaction,
-      prevElement,
-      nextElement,
-      prevContext,
-      nextContext
-    );
   },
 
   /**
@@ -746,31 +720,12 @@ var ReactCompositeComponentMixin = assign({},
     prevUnmaskedContext,
     nextUnmaskedContext
   ) {
-    ReactComponent.Mixin.updateComponent.call(
-      this,
-      transaction,
-      prevParentElement,
-      nextParentElement,
-      prevUnmaskedContext,
-      nextUnmaskedContext
-    );
-
     var inst = this._instance;
 
     var prevContext = inst.context;
     var prevProps = inst.props;
     var nextContext = prevContext;
     var nextProps = prevProps;
-
-    var refsChanged = ReactRef.shouldUpdateRefs(
-      this,
-      prevParentElement,
-      nextParentElement
-    );
-
-    if (refsChanged) {
-      ReactRef.detachRefs(this, prevParentElement);
-    }
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
@@ -828,11 +783,6 @@ var ReactCompositeComponentMixin = assign({},
       inst.props = nextProps;
       inst.state = nextState;
       inst.context = nextContext;
-    }
-
-    // Update refs regardless of what shouldComponentUpdate returns
-    if (refsChanged) {
-      transaction.getReactMountReady().enqueue(this.attachRefs, this);
     }
   },
 
@@ -894,7 +844,8 @@ var ReactCompositeComponentMixin = assign({},
     var prevRenderedElement = prevComponentInstance._currentElement;
     var nextRenderedElement = this._renderValidatedComponent();
     if (shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement)) {
-      prevComponentInstance.receiveComponent(
+      ReactReconciler.receiveComponent(
+        prevComponentInstance,
         nextRenderedElement,
         transaction,
         this._processChildContext(context)
@@ -903,13 +854,14 @@ var ReactCompositeComponentMixin = assign({},
       // These two IDs are actually the same! But nothing should rely on that.
       var thisID = this._rootNodeID;
       var prevComponentID = prevComponentInstance._rootNodeID;
-      prevComponentInstance.unmountComponent();
+      ReactReconciler.unmountComponent(prevComponentInstance);
 
       this._renderedComponent = this._instantiateReactComponent(
         nextRenderedElement,
         this._currentElement.type
       );
-      var nextMarkup = this._renderedComponent.mountComponent(
+      var nextMarkup = ReactReconciler.mountComponent(
+        this._renderedComponent,
         thisID,
         transaction,
         context
@@ -957,7 +909,6 @@ var ReactCompositeComponentMixin = assign({},
       this._currentElement._context
     );
     ReactCurrentOwner.current = this;
-    var inst = this._instance;
     try {
       renderedComponent =
         this._renderValidatedComponentWithoutOwnerOrContext();
@@ -1033,7 +984,7 @@ var ReactCompositeComponentMixin = assign({},
   // Stub
   _instantiateReactComponent: null
 
-});
+};
 
 ReactPerf.measureMethods(
   ReactCompositeComponentMixin,

@@ -15,6 +15,7 @@
 var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
+var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
 
 /**
@@ -184,11 +185,12 @@ var ReactMultiChild = {
       var mountImages = [];
       var index = 0;
       for (var name in children) {
-        var child = children[name];
         if (children.hasOwnProperty(name)) {
+          var child = children[name];
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + name;
-          var mountImage = child.mountComponent(
+          var mountImage = ReactReconciler.mountComponent(
+            child,
             rootID,
             transaction,
             context
@@ -395,7 +397,8 @@ var ReactMultiChild = {
       context) {
       // Inlined for performance, see `ReactInstanceHandles.createReactID`.
       var rootID = this._rootNodeID + name;
-      var mountImage = child.mountComponent(
+      var mountImage = ReactReconciler.mountComponent(
+        child,
         rootID,
         transaction,
         context

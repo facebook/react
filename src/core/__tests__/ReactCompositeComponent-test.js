@@ -14,7 +14,6 @@
 var ChildUpdates;
 var MorphingComponent;
 var React;
-var ReactComponent;
 var ReactCurrentOwner;
 var ReactDoNotBindDeprecated;
 var ReactMount;
@@ -36,7 +35,6 @@ describe('ReactCompositeComponent', function() {
 
     reactComponentExpect = require('reactComponentExpect');
     React = require('React');
-    ReactComponent = require('ReactComponent');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');
