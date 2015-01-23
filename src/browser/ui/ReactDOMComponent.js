@@ -17,6 +17,7 @@
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ExecutionEnvironment = require('ExecutionEnvironment');
 var ReactComponent = require('ReactComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactMount = require('ReactMount');
@@ -89,6 +90,25 @@ function assertValidProps(props) {
   );
 }
 
+var ShadowRoot = ExecutionEnvironment.canUseDOM ? window.ShadowRoot : false;
+
+/**
+ * @param {object}  node
+ */
+var realContainer = !!ShadowRoot ?
+  function(node) { // if browser supports shadow DOM
+    var _node = node;
+    // iterates until we find the shadow root or until the parent is reached
+    while (!(_node instanceof ShadowRoot) && _node.parentNode)
+    {
+      _node = node.parentNode;
+    }
+    return _node;
+  } :
+  function(node) {
+    return node.ownerDocument;
+  };
+  
 function putListener(id, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
@@ -102,7 +122,7 @@ function putListener(id, registrationName, listener, transaction) {
   var container = ReactMount.findReactContainerForID(id);
   if (container) {
     var doc = container.nodeType === ELEMENT_NODE_TYPE ?
-      container.ownerDocument :
+      realContainer(container) :
       container;
     listenTo(registrationName, doc);
   }
