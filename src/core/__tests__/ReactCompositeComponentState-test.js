@@ -30,7 +30,7 @@ describe('ReactCompositeComponent-state', function() {
 
     TestComponent = React.createClass({
       peekAtState: function(from, state) {
-        if (state) {
+        if (state !== undefined) {
           this.props.stateListener(from, state && state.color);
         } else {
           var internalInstance = ReactInstanceMap.get(this);
@@ -55,7 +55,7 @@ describe('ReactCompositeComponent-state', function() {
 
       render: function() {
         this.peekAtState('render');
-        return <div>{this.state.color}</div>;
+        return <div>{this.state && this.state.color}</div>;
       },
 
       componentWillMount: function() {
@@ -113,9 +113,9 @@ describe('ReactCompositeComponent-state', function() {
     instance.setProps({nextColor: 'green'});
     instance.setFavoriteColor('blue');
     instance.forceUpdate();
+    instance.replaceState(null);
 
     React.unmountComponentAtNode(container);
-
     expect(stateListener.mock.calls).toEqual([
       // there is no state when getInitialState() is called
       [ 'getInitialState', null, null ],
@@ -162,9 +162,17 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'blue', null ],
       [ 'componentDidUpdate-currentState', 'blue', null ],
       [ 'componentDidUpdate-prevState', 'blue' ],
+      // replaceState(null)
+      [ 'shouldComponentUpdate-currentState', 'blue', null ],
+      [ 'shouldComponentUpdate-nextState', null ],
+      [ 'componentWillUpdate-currentState', 'blue', null ],
+      [ 'componentWillUpdate-nextState', null ],
+      [ 'render', null, null ],
+      [ 'componentDidUpdate-currentState', null, null ],
+      [ 'componentDidUpdate-prevState', 'blue' ],
       // unmountComponent()
       // state is available within `componentWillUnmount()`
-      [ 'componentWillUnmount', 'blue', null ]
+      [ 'componentWillUnmount', null, null ]
     ]);
   });
 });

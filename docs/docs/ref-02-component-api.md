@@ -36,7 +36,7 @@ Merges nextState with the current state. This is the primary method you use to t
 replaceState(object nextState[, function callback])
 ```
 
-Like `setState()` but deletes any pre-existing state keys that are not in nextState.
+Like `setState()` but deletes any pre-existing state keys that are not in nextState. If you pass `null` instead of object, `this.state` will be reset back to `null`.
 
 
 ### forceUpdate()
