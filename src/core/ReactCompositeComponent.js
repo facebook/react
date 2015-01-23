@@ -161,8 +161,6 @@ var ReactCompositeComponentMixin = assign({},
       context
     );
 
-    ReactRef.attachRefs(this, this._currentElement);
-
     this._context = context;
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
@@ -254,7 +252,16 @@ var ReactCompositeComponentMixin = assign({},
     if (inst.componentDidMount) {
       transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
     }
+    transaction.getReactMountReady().enqueue(this.attachRefs, this);
     return markup;
+  },
+
+  /**
+   * Helper to call ReactRef.attachRefs with this composite component, split out
+   * to avoid allocations in the transaction mount-ready queue.
+   */
+  attachRefs: function() {
+    ReactRef.attachRefs(this, this._currentElement);
   },
 
   /**
@@ -265,6 +272,8 @@ var ReactCompositeComponentMixin = assign({},
    */
   unmountComponent: function() {
     var inst = this._instance;
+
+    ReactRef.detachRefs(this, this._currentElement);
 
     this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
     if (inst.componentWillUnmount) {
@@ -280,8 +289,6 @@ var ReactCompositeComponentMixin = assign({},
     this._pendingForceUpdate = false;
     this._pendingCallbacks = null;
     this._pendingElement = null;
-
-    ReactRef.detachRefs(this, this._currentElement);
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
@@ -728,15 +735,23 @@ var ReactCompositeComponentMixin = assign({},
       nextUnmaskedContext
     );
 
-    // Update refs regardless of what shouldComponentUpdate returns
-    ReactRef.updateRefs(this, prevParentElement, nextParentElement);
-
     var inst = this._instance;
 
     var prevContext = inst.context;
     var prevProps = inst.props;
     var nextContext = prevContext;
     var nextProps = prevProps;
+
+    var refsChanged = ReactRef.shouldUpdateRefs(
+      this,
+      prevParentElement,
+      nextParentElement
+    );
+
+    if (refsChanged) {
+      ReactRef.detachRefs(this, prevParentElement);
+    }
+
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
       nextContext = this._processContext(nextParentElement._context);
@@ -774,7 +789,18 @@ var ReactCompositeComponentMixin = assign({},
       }
     }
 
-    if (!shouldUpdate) {
+    if (shouldUpdate) {
+      this._pendingForceUpdate = false;
+      // Will set `this.props`, `this.state` and `this.context`.
+      this._performComponentUpdate(
+        nextParentElement,
+        nextProps,
+        nextState,
+        nextContext,
+        transaction,
+        nextUnmaskedContext
+      );
+    } else {
       // If it's determined that a component should not update, we still want
       // to set props and state but we shortcut the rest of the update.
       this._currentElement = nextParentElement;
@@ -782,19 +808,12 @@ var ReactCompositeComponentMixin = assign({},
       inst.props = nextProps;
       inst.state = nextState;
       inst.context = nextContext;
-      return;
     }
 
-    this._pendingForceUpdate = false;
-    // Will set `this.props`, `this.state` and `this.context`.
-    this._performComponentUpdate(
-      nextParentElement,
-      nextProps,
-      nextState,
-      nextContext,
-      transaction,
-      nextUnmaskedContext
-    );
+    // Update refs regardless of what shouldComponentUpdate returns
+    if (refsChanged) {
+      transaction.getReactMountReady().enqueue(this.attachRefs, this);
+    }
   },
 
   /**
@@ -819,6 +838,7 @@ var ReactCompositeComponentMixin = assign({},
   ) {
     var inst = this._instance;
 
+    var prevElement = this._currentElement;
     var prevProps = inst.props;
     var prevState = inst.state;
     var prevContext = inst.context;

@@ -112,50 +112,27 @@ describe('ReactComponent', function() {
       }
     });
 
-    var refsResolved = 0;
-    var refsErrored = 0;
+    var mounted = false;
     var Component = React.createClass({
-      componentWillMount: function() {
-        this.innerRef = React.createRef();
-        this.outerRef = React.createRef();
-        this.unusedRef = React.createRef();
-      },
       render: function() {
-        var inner = <Wrapper object={innerObj} ref={this.innerRef} />;
+        var inner = <Wrapper object={innerObj} ref={(c) => this.innerRef = c} />;
         var outer = (
-          <Wrapper object={outerObj} ref={this.outerRef}>
+          <Wrapper object={outerObj} ref={(c) => this.outerRef = c}>
             {inner}
           </Wrapper>
         );
         return outer;
       },
       componentDidMount: function() {
-        // TODO: Currently new refs aren't available on initial render
-      },
-      componentDidUpdate: function() {
-        this.innerRef.then(function(inner) {
-          expect(inner.getObject()).toEqual(innerObj);
-          refsResolved++;
-        });
-        this.outerRef.then(function(outer) {
-          expect(outer.getObject()).toEqual(outerObj);
-          refsResolved++;
-        });
-        this.unusedRef.then(function() {
-          throw new Error("Unused ref should not be resolved");
-        }, function() {
-          refsErrored++;
-        });
-        expect(refsResolved).toBe(0);
-        expect(refsErrored).toBe(0);
+        expect(this.innerRef.getObject()).toEqual(innerObj);
+        expect(this.outerRef.getObject()).toEqual(outerObj);
+        mounted = true;
       }
     });
 
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.forceUpdate();
-    expect(refsResolved).toBe(2);
-    expect(refsErrored).toBe(1);
+    expect(mounted).toBe(true);
   });
 
   it('should support new-style refs with mixed-up owners', function() {
@@ -165,47 +142,114 @@ describe('ReactComponent', function() {
       }
     });
 
-    var refsResolved = 0;
+    var mounted = false;
     var Component = React.createClass({
-      componentWillMount: function() {
-        this.wrapperRef = React.createRef();
-        this.innerRef = React.createRef();
-      },
       getInner: function() {
         // (With old-style refs, it's impossible to get a ref to this div
         // because Wrapper is the current owner when this function is called.)
-        return <div title="inner" ref={this.innerRef} />;
+        return <div title="inner" ref={(c) => this.innerRef = c} />;
       },
       render: function() {
         return (
           <Wrapper
             title="wrapper"
-            ref={this.wrapperRef}
+            ref={(c) => this.wrapperRef = c}
             getContent={this.getInner}
             />
         );
       },
       componentDidMount: function() {
-        // TODO: Currently new refs aren't available on initial render
-      },
-      componentDidUpdate: function() {
         // Check .props.title to make sure we got the right elements back
-        this.wrapperRef.then(function(wrapper) {
-          expect(wrapper.props.title).toBe("wrapper");
-          refsResolved++;
-        });
-        this.innerRef.then(function(inner) {
-          expect(inner.props.title).toEqual("inner");
-          refsResolved++;
-        });
-        expect(refsResolved).toBe(0);
+        expect(this.wrapperRef.props.title).toBe('wrapper');
+        expect(this.innerRef.props.title).toBe('inner');
+        mounted = true;
       }
     });
 
     var instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
-    instance.forceUpdate();
-    expect(refsResolved).toBe(2);
+    expect(mounted).toBe(true);
+  });
+
+  it('should call refs at the correct time', function() {
+    var log = [];
+
+    var Inner = React.createClass({
+      render: function() {
+        log.push(`inner ${this.props.id} render`);
+        return <div />;
+      },
+      componentDidMount: function() {
+        log.push(`inner ${this.props.id} componentDidMount`);
+      },
+      componentDidUpdate: function() {
+        log.push(`inner ${this.props.id} componentDidUpdate`);
+      },
+      componentWillUnmount: function() {
+        log.push(`inner ${this.props.id} componentWillUnmount`);
+      }
+    });
+
+    var Outer = React.createClass({
+      render: function() {
+        return (
+          <div>
+            <Inner id={1} ref={(c) => {
+              log.push(`ref 1 got ${c ? `instance ${c.props.id}` : 'null'}`);
+            }}/>
+            <Inner id={2} ref={(c) => {
+              log.push(`ref 2 got ${c ? `instance ${c.props.id}` : 'null'}`);
+            }}/>
+          </div>
+        );
+      },
+      componentDidMount: function() {
+        log.push('outer componentDidMount');
+      },
+      componentDidUpdate: function() {
+        log.push('outer componentDidUpdate');
+      },
+      componentWillUnmount: function() {
+        log.push('outer componentWillUnmount');
+      }
+    });
+
+    // mount, update, unmount
+    var el = document.createElement('div');
+    log.push('start mount');
+    React.render(<Outer />, el);
+    log.push('start update');
+    React.render(<Outer />, el);
+    log.push('start unmount');
+    React.unmountComponentAtNode(el);
+
+    expect(log).toEqual([
+      'start mount',
+        'inner 1 render',
+        'inner 2 render',
+        'inner 1 componentDidMount',
+        'ref 1 got instance 1',
+        'inner 2 componentDidMount',
+        'ref 2 got instance 2',
+        'outer componentDidMount',
+      'start update',
+        // Previous (equivalent) refs get cleared
+        'ref 1 got null',
+        'inner 1 render',
+        'ref 2 got null',
+        'inner 2 render',
+        'inner 1 componentDidUpdate',
+        'ref 1 got instance 1',
+        'inner 2 componentDidUpdate',
+        'ref 2 got instance 2',
+        'outer componentDidUpdate',
+      'start unmount',
+        'outer componentWillUnmount',
+        'ref 1 got null',
+        'inner 1 componentWillUnmount',
+        'ref 2 got null',
+        'inner 2 componentWillUnmount'
+    ]);
   });
 
   it('should correctly determine if a component is mounted', function() {
