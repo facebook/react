@@ -21,9 +21,7 @@ var invariant = require('invariant');
 var warning = require('warning');
 
 // To avoid a cyclic dependency, we create the final class in this module
-var ReactCompositeComponentWrapper = function(inst) {
-  this._instance = inst;
-};
+var ReactCompositeComponentWrapper = function() { };
 assign(
   ReactCompositeComponentWrapper.prototype,
   ReactCompositeComponent.Mixin,
@@ -73,28 +71,19 @@ function instantiateReactComponent(node, parentCompositeType) {
     }
 
     // Special case string values
-    if (typeof element.type === 'string') {
-      instance = ReactNativeComponent.createInstanceForTag(
-        element.type,
-        element.props,
-        parentCompositeType
-      );
-      // If the injected special class is not an internal class, but another
-      // composite, then we must wrap it.
-      // TODO: Move this resolution around to something cleaner.
-      if (typeof instance.mountComponent !== 'function') {
-        instance = new ReactCompositeComponentWrapper(instance);
-      }
+    if (parentCompositeType === element.type &&
+        typeof element.type === 'string') {
+      // Avoid recursion if the wrapper renders itself.
+      instance = ReactNativeComponent.createInternalComponent(element);
+      // All native components are currently wrapped in a composite so we're
+      // safe to assume that this is what we should instantiate.
     } else if (isInternalComponentType(element.type)) {
       // This is temporarily available for custom components that are not string
       // represenations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
       instance = new element.type(element);
     } else {
-      // TODO: Update to follow new ES6 initialization. Ideally, we can use
-      // props in property initializers.
-      var inst = new element.type(element.props);
-      instance = new ReactCompositeComponentWrapper(inst);
+      instance = new ReactCompositeComponentWrapper();
     }
   } else if (typeof node === 'string' || typeof node === 'number') {
     instance = ReactNativeComponent.createInstanceForText(node);

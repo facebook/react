@@ -321,15 +321,44 @@ var ReactShallowRenderer = function() {
 };
 
 ReactShallowRenderer.prototype.getRenderOutput = function() {
-  return (this._instance && this._instance._renderedComponent) || null;
+  return (
+    (this._instance && this._instance._renderedComponent &&
+     this._instance._renderedComponent._currentElement)
+    || null
+  );
 };
 
-var ShallowComponentWrapper = function(inst) {
-  this._instance = inst;
+var NoopInternalComponent = function(element) {
+  this._currentElement = element;
+}
+
+NoopInternalComponent.prototype = {
+
+  mountComponent: function() {
+  },
+
+  receiveComponent: function(element) {
+    this._currentElement = element;
+  },
+
+  unmountComponent: function() {
+
+  }
+
 };
+
+var ShallowComponentWrapper = function() { };
 assign(
   ShallowComponentWrapper.prototype,
-  ReactCompositeComponent.ShallowMixin
+  ReactCompositeComponent.Mixin, {
+    _instantiateReactComponent: function(element) {
+      return new NoopInternalComponent(element);
+    },
+    _replaceNodeWithMarkupByID: function() {},
+    _renderValidatedComponent:
+      ReactCompositeComponent.Mixin.
+        _renderValidatedComponentWithoutOwnerOrContext
+  }
 );
 
 ReactShallowRenderer.prototype.render = function(element, context) {
@@ -341,7 +370,7 @@ ReactShallowRenderer.prototype.render = function(element, context) {
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
   if (!this._instance) {
     var rootID = ReactInstanceHandles.createReactRootID();
-    var instance = new ShallowComponentWrapper(new element.type(element.props));
+    var instance = new ShallowComponentWrapper(element.type);
     instance.construct(element);
 
     instance.mountComponent(rootID, transaction, context);

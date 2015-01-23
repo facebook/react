@@ -17,6 +17,7 @@ var ReactContext = require('ReactContext');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
@@ -108,12 +109,7 @@ var ReactCompositeComponentMixin = assign({},
    */
   construct: function(element) {
     this._rootNodeID = null;
-
-    this._instance.props = element.props;
-    // instance.state get set up to its proper initial value in mount
-    // which may be null.
-    this._instance.context = null;
-    this._instance.refs = emptyObject;
+    this._instance = null;
 
     this._pendingElement = null;
     this._pendingContext = null;
@@ -165,18 +161,31 @@ var ReactCompositeComponentMixin = assign({},
     this._mountOrder = nextMountID++;
     this._rootNodeID = rootID;
 
-    var inst = this._instance;
+    var publicProps = this._processProps(this._currentElement.props);
+    var publicContext = this._processContext(this._currentElement._context);
+
+    var Component = ReactNativeComponent.getComponentClassForElement(
+      this._currentElement
+    );
+
+    // Initialize the public class
+    var inst = new Component(publicProps);
+    // These should be set up in the constructor, but as a convenience for
+    // simpler class abstractions, we set them up after the fact.
+    inst.props = publicProps;
+    inst.context = publicContext;
+    inst.refs = emptyObject;
+
+    this._instance = inst;
 
     // Store a reference from the instance back to the internal representation
     ReactInstanceMap.set(inst, this);
 
     this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
-    inst.context = this._processContext(this._currentElement._context);
     if (__DEV__) {
       this._warnIfContextsDiffer(this._currentElement._context, context);
     }
-    inst.props = this._processProps(this._currentElement.props);
 
     if (__DEV__) {
       // Since plain JS classes are defined without any special initialization
@@ -485,7 +494,12 @@ var ReactCompositeComponentMixin = assign({},
    */
   _maskContext: function(context) {
     var maskedContext = null;
-    var contextTypes = this._instance.constructor.contextTypes;
+    // This really should be getting the component class for the element,
+    // but we know that we're not going to need it for built-ins.
+    if (typeof this._currentElement.type === 'string') {
+      return emptyObject;
+    }
+    var contextTypes = this._currentElement.type.contextTypes;
     if (!contextTypes) {
       return emptyObject;
     }
@@ -506,16 +520,17 @@ var ReactCompositeComponentMixin = assign({},
    */
   _processContext: function(context) {
     var maskedContext = this._maskContext(context);
-    var contextTypes = this._instance.constructor.contextTypes;
-    if (!contextTypes) {
-      return emptyObject;
-    }
     if (__DEV__) {
-      this._checkPropTypes(
-        contextTypes,
-        maskedContext,
-        ReactPropTypeLocations.context
+      var Component = ReactNativeComponent.getComponentClassForElement(
+        this._currentElement
       );
+      if (Component.contextTypes) {
+        this._checkPropTypes(
+          Component.contextTypes,
+          maskedContext,
+          ReactPropTypeLocations.context
+        );
+      }
     }
     return maskedContext;
   },
@@ -566,10 +581,15 @@ var ReactCompositeComponentMixin = assign({},
    */
   _processProps: function(newProps) {
     if (__DEV__) {
-      var inst = this._instance;
-      var propTypes = inst.constructor.propTypes;
-      if (propTypes) {
-        this._checkPropTypes(propTypes, newProps, ReactPropTypeLocations.prop);
+      var Component = ReactNativeComponent.getComponentClassForElement(
+        this._currentElement
+      );
+      if (Component.propTypes) {
+        this._checkPropTypes(
+          Component.propTypes,
+          newProps,
+          ReactPropTypeLocations.prop
+        );
       }
     }
     return newProps;
@@ -894,15 +914,22 @@ var ReactCompositeComponentMixin = assign({},
         transaction,
         context
       );
-      ReactComponentEnvironment.replaceNodeWithMarkupByID(
-        prevComponentID,
-        nextMarkup
-      );
+      this._replaceNodeWithMarkupByID(prevComponentID, nextMarkup);
     }
   },
 
   /**
-   * @private
+   * @protected
+   */
+  _replaceNodeWithMarkupByID: function(prevComponentID, nextMarkup) {
+    ReactComponentEnvironment.replaceNodeWithMarkupByID(
+      prevComponentID,
+      nextMarkup
+    );
+  },
+
+  /**
+   * @protected
    */
   _renderValidatedComponentWithoutOwnerOrContext: function() {
     var inst = this._instance;
@@ -983,7 +1010,7 @@ var ReactCompositeComponentMixin = assign({},
    */
   getName: function() {
     var type = this._currentElement.type;
-    var constructor = this._instance.constructor;
+    var constructor = this._instance && this._instance.constructor;
     return (
       type.displayName || (constructor && constructor.displayName) ||
       type.name || (constructor && constructor.name) ||
@@ -1008,95 +1035,6 @@ var ReactCompositeComponentMixin = assign({},
 
 });
 
-var ShallowMixin = assign({},
-  ReactCompositeComponentMixin, {
-
-  /**
-   * Initializes the component, renders markup, and registers event listeners.
-   *
-   * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @return {ReactElement} Shallow rendering of the component.
-   * @final
-   * @internal
-   */
-  mountComponent: function(rootID, transaction, context) {
-    ReactComponent.Mixin.mountComponent.call(
-      this,
-      rootID,
-      transaction,
-      context
-    );
-
-    var inst = this._instance;
-
-    // Store a reference from the instance back to the internal representation
-    ReactInstanceMap.set(inst, this);
-
-    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
-
-    // No context for shallow-mounted components.
-    inst.props = this._processProps(this._currentElement.props);
-
-    var initialState = inst.state;
-    if (initialState === undefined) {
-      inst.state = initialState = null;
-    }
-    invariant(
-      typeof initialState === 'object' && !Array.isArray(initialState),
-      '%s.state: must be set to an object or null',
-      this.getName() || 'ReactCompositeComponent'
-    );
-
-    this._pendingState = null;
-    this._pendingForceUpdate = false;
-
-    if (inst.componentWillMount) {
-      inst.componentWillMount();
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingState` without triggering a re-render.
-      if (this._pendingState) {
-        inst.state = this._pendingState;
-        this._pendingState = null;
-      }
-    }
-
-    // No recursive call to instantiateReactComponent for shallow rendering.
-    this._renderedComponent =
-      this._renderValidatedComponentWithoutOwnerOrContext();
-
-    // Done with mounting, `setState` will now trigger UI changes.
-    this._compositeLifeCycleState = null;
-
-    // No call to this._renderedComponent.mountComponent for shallow
-    // rendering.
-
-    if (inst.componentDidMount) {
-      transaction.getReactMountReady().enqueue(inst.componentDidMount, inst);
-    }
-
-    return this._renderedComponent;
-  },
-
-  /**
-   * Call the component's `render` method and update the DOM accordingly.
-   *
-   * @param {ReactReconcileTransaction} transaction
-   * @internal
-   */
-  _updateRenderedComponent: function(transaction) {
-    var prevComponentInstance = this._renderedComponent;
-    var prevRenderedElement = prevComponentInstance._currentElement;
-    // Use the without-owner-or-context variant of _rVC below:
-    var nextRenderedElement =
-      this._renderValidatedComponentWithoutOwnerOrContext();
-    // This is a noop in shallow render
-    shouldUpdateReactComponent(prevRenderedElement, nextRenderedElement);
-    this._renderedComponent = nextRenderedElement;
-  }
-
-});
-
 ReactPerf.measureMethods(
   ReactCompositeComponentMixin,
   'ReactCompositeComponent',
@@ -1111,9 +1049,7 @@ var ReactCompositeComponent = {
 
   LifeCycle: CompositeLifeCycle,
 
-  Mixin: ReactCompositeComponentMixin,
-
-  ShallowMixin: ShallowMixin
+  Mixin: ReactCompositeComponentMixin
 
 };
 

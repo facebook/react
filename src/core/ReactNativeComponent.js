@@ -57,27 +57,36 @@ function autoGenerateWrapperClass(type) {
 }
 
 /**
- * Create an internal class for a specific tag.
+ * Get a composite component wrapper class for a specific tag.
  *
- * @param {string} tag The tag for which to create an internal instance.
- * @param {any} props The props passed to the instance constructor.
- * @return {ReactComponent} component The injected empty component.
+ * @param {ReactElement} element The tag for which to get the class.
+ * @return {function} The React class constructor function.
  */
-function createInstanceForTag(tag, props, parentType) {
+function getComponentClassForElement(element) {
+  if (typeof element.type === 'function') {
+    return element.type;
+  }
+  var tag = element.type;
   var componentClass = tagToComponentClass[tag];
   if (componentClass == null) {
     tagToComponentClass[tag] = componentClass = autoGenerateWrapperClass(tag);
   }
-  if (parentType === tag) {
-    // Avoid recursion
-    invariant(
-      genericComponentClass,
-      'There is no registered component for the tag %s',
-      tag
-    );
-    return new genericComponentClass(tag, props);
-  }
-  return new componentClass(props);
+  return componentClass;
+}
+
+/**
+ * Get a native internal component class for a specific tag.
+ *
+ * @param {ReactElement} element The element to create.
+ * @return {function} The internal class constructor function.
+ */
+function createInternalComponent(element) {
+  invariant(
+    genericComponentClass,
+    'There is no registered component for the tag %s',
+    element.type
+  );
+  return new genericComponentClass(element.type, element.props);
 }
 
 /**
@@ -97,7 +106,8 @@ function isTextComponent(component) {
 }
 
 var ReactNativeComponent = {
-  createInstanceForTag: createInstanceForTag,
+  getComponentClassForElement: getComponentClassForElement,
+  createInternalComponent: createInternalComponent,
   createInstanceForText: createInstanceForText,
   isTextComponent: isTextComponent,
   injection: ReactNativeComponentInjection
