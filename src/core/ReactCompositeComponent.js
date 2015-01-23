@@ -108,7 +108,6 @@ var ReactCompositeComponentMixin = {
    */
   construct: function(element) {
     this._currentElement = element;
-
     this._rootNodeID = null;
     this._instance = null;
 
