@@ -31,6 +31,10 @@ if (__DEV__) {
       );
     }
 
+    if (format.indexOf('Failed CompositeComponent proptype check. ') === 0) {
+      return; // Ignore CompositeComponent proptype check.
+    }
+
     if (!condition) {
       var argIndex = 0;
       var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);

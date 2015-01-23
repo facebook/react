@@ -28,6 +28,7 @@ var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
+var monitorCodeUse = require('monitorCodeUse');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -608,7 +609,14 @@ var ReactCompositeComponentMixin = {
           // React.render calls, so I'm abstracting it away into
           // a function to minimize refactoring in the future
           var addendum = getDeclarationErrorAddendum(this);
-          warning(false, error.message + addendum);
+
+          if (location === ReactPropTypeLocations.prop) {
+            // Preface gives us something to blacklist in warning module
+            var preface = 'Failed CompositeComponent proptype check. ';
+            warning(false, preface + error.message + addendum);
+          } else {
+            warning(false, error.message + addendum);
+          }
         }
       }
     }
