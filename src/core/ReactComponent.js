@@ -12,26 +12,8 @@
 'use strict';
 
 var ReactElementValidator = require('ReactElementValidator');
-var ReactOwner = require('ReactOwner');
-var ReactRef = require('ReactRef');
 
 var invariant = require('invariant');
-
-function attachRef(ref, component, owner) {
-  if (ref instanceof ReactRef) {
-    ReactRef.attachRef(ref, component);
-  } else {
-    ReactOwner.addComponentAsRefTo(component, ref, owner);
-  }
-}
-
-function detachRef(ref, component, owner) {
-  if (ref instanceof ReactRef) {
-    ReactRef.detachRef(ref, component);
-  } else {
-    ReactOwner.removeComponentAsRefFrom(component, ref, owner);
-  }
-}
 
 /**
  * Components are the basic units of composition in React.
@@ -114,12 +96,6 @@ var ReactComponent = {
       if (__DEV__) {
         ReactElementValidator.checkAndWarnForMutatedProps(this._currentElement);
       }
-
-      var ref = this._currentElement.ref;
-      if (ref != null) {
-        var owner = this._currentElement._owner;
-        attachRef(ref, this, owner);
-      }
       // Effectively: return '';
     },
 
@@ -134,10 +110,6 @@ var ReactComponent = {
      * @internal
      */
     unmountComponent: function() {
-      var ref = this._currentElement.ref;
-      if (ref != null) {
-        detachRef(ref, this, this._currentElement._owner);
-      }
     },
 
     /**
@@ -151,29 +123,6 @@ var ReactComponent = {
     updateComponent: function(transaction, prevElement, nextElement, context) {
       if (__DEV__) {
         ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
-      }
-
-      // If either the owner or a `ref` has changed, make sure the newest owner
-      // has stored a reference to `this`, and the previous owner (if different)
-      // has forgotten the reference to `this`. We use the element instead
-      // of the public this.props because the post processing cannot determine
-      // a ref. The ref conceptually lives on the element.
-
-      // TODO: Should this even be possible? The owner cannot change because
-      // it's forbidden by shouldUpdateReactComponent. The ref can change
-      // if you swap the keys of but not the refs. Reconsider where this check
-      // is made. It probably belongs where the key checking and
-      // instantiateReactComponent is done.
-
-      if (nextElement._owner !== prevElement._owner ||
-          nextElement.ref !== prevElement.ref) {
-        if (prevElement.ref != null) {
-          detachRef(prevElement.ref, this, prevElement._owner);
-        }
-        // Correct, even if the owner is the same, and only the ref has changed.
-        if (nextElement.ref != null) {
-          attachRef(nextElement.ref, this, nextElement._owner);
-        }
       }
     },
 
