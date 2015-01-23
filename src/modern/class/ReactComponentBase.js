@@ -19,8 +19,9 @@ var warning = require('warning');
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponentBase(props) {
+function ReactComponentBase(props, context) {
   this.props = props;
+  this.context = context;
 }
 
 /**

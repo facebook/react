@@ -22,6 +22,7 @@ var ReactElement = require('ReactElement');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactNativeComponent = require('ReactNativeComponent');
 
 var getIteratorFn = require('getIteratorFn');
 var monitorCodeUse = require('monitorCodeUse');
@@ -361,26 +362,33 @@ var ReactElementValidator = {
     }
 
     if (type) {
-      var name = type.displayName || type.name;
-      if (type.propTypes) {
+      // Extract the component class from the element. Converts string types
+      // to a composite class which may have propTypes.
+      // TODO: Validating a string's propTypes is not decoupled from the
+      // rendering target which is problematic.
+      var componentClass = ReactNativeComponent.getComponentClassForElement(
+        element
+      );
+      var name = componentClass.displayName || componentClass.name;
+      if (componentClass.propTypes) {
         checkPropTypes(
           name,
-          type.propTypes,
+          componentClass.propTypes,
           element.props,
           ReactPropTypeLocations.prop
         );
       }
-      if (type.contextTypes) {
+      if (componentClass.contextTypes) {
         checkPropTypes(
           name,
-          type.contextTypes,
+          componentClass.contextTypes,
           element._context,
           ReactPropTypeLocations.context
         );
       }
-      if (typeof type.getDefaultProps === 'function') {
+      if (typeof componentClass.getDefaultProps === 'function') {
         warning(
-          type.getDefaultProps.isReactClassApproved,
+          componentClass.getDefaultProps.isReactClassApproved,
           'getDefaultProps is only used on classic React.createClass ' +
           'definitions. Use a static property named `defaultProps` instead.'
         );
