@@ -108,6 +108,12 @@ function instantiateReactComponent(node, parentCompositeType) {
   // Sets up the instance. This can probably just move into the constructor now.
   instance.construct(node);
 
+  // These two fields are used by the DOM and ART diffing algorithms
+  // respectively. Instead of using expandos on components, we should be
+  // storing the state needed by the diffing algorithms elsewhere.
+  instance._mountIndex = 0;
+  instance._mountImage = null;
+
   // Internal instances should fully constructed at this point, so they should
   // not get any new fields added to them at this point.
   if (__DEV__) {

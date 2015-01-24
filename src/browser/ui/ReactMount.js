@@ -21,6 +21,7 @@ var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
+var ReactReconciler = require('ReactReconciler');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
@@ -241,7 +242,9 @@ function mountComponentIntoNode(
     container,
     transaction,
     shouldReuseMarkup) {
-  var markup = this.mountComponent(rootID, transaction, emptyObject);
+  var markup = ReactReconciler.mountComponent(
+    this, rootID, transaction, emptyObject
+  );
   this._isTopLevel = true;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
 }
@@ -553,7 +556,7 @@ var ReactMount = {
    * @see {ReactMount.unmountComponentAtNode}
    */
   unmountComponentFromNode: function(instance, container) {
-    instance.unmountComponent();
+    ReactReconciler.unmountComponent(instance);
 
     if (container.nodeType === DOC_NODE_TYPE) {
       container = container.documentElement;

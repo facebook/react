@@ -308,15 +308,13 @@ describe('ReactDOMComponent', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
 
-      var ReactComponent = require('ReactComponent');
       var ReactMultiChild = require('ReactMultiChild');
       var ReactDOMComponent = require('ReactDOMComponent');
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var StubNativeComponent = function(element) {
-        ReactComponent.Mixin.construct.call(this, element);
+        this._currentElement = element;
       };
-      assign(StubNativeComponent.prototype, ReactComponent.Mixin);
       assign(StubNativeComponent.prototype, ReactDOMComponent.Mixin);
       assign(StubNativeComponent.prototype, ReactMultiChild.Mixin);
 

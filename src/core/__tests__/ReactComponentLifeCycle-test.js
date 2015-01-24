@@ -15,7 +15,6 @@ var keyMirror = require('keyMirror');
 
 var React;
 var ReactTestUtils;
-var ReactComponent;
 var ReactCompositeComponent;
 var ReactInstanceMap;
 var CompositeComponentLifeCycle;
@@ -97,7 +96,6 @@ describe('ReactComponentLifeCycle', function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    ReactComponent = require('ReactComponent');
     ReactCompositeComponent = require('ReactCompositeComponent');
     CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
 
