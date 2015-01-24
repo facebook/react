@@ -40,6 +40,8 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should gracefully handle various style value types", function() {
+      spyOn(console, 'warn');
+
       var container = document.createElement('div');
       React.render(<div style={{}} />, container);
       var stubStyle = container.firstChild.style;
@@ -50,6 +52,13 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.fontFamily).toEqual('Arial');
+      expect(console.warn.argsForCall.length).toBe(2);
+      expect(console.warn.argsForCall[0][0]).toContain(
+        'Warning: Unitless css property (`left`) specified with value `1`; assuming `1px`.'
+      );
+      expect(console.warn.argsForCall[1][0]).toContain(
+        'Warning: Unitless css property (`top`) specified with value `2`; assuming `2px`.'
+      );
 
       // reset the style to their default state
       var reset = { display: '', left: null, top: false, fontFamily: true };

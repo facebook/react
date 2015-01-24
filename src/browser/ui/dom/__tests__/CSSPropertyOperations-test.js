@@ -17,10 +17,17 @@ var React = require('React');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;
+  var warn;
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
     CSSPropertyOperations = require('CSSPropertyOperations');
+
+    warn = console.warn;
+  });
+
+  afterEach(function() {
+    console.warn = warn;
   });
 
   it('should create markup for simple styles', function() {
@@ -51,21 +58,42 @@ describe('CSSPropertyOperations', function() {
     })).toBe(null);
   });
 
-  it('should automatically append `px` to relevant styles', function() {
+  it('should automatically append `px` to relevant styles (and warn)', function() {
+
+    var mocks = require('mocks');
+    console.warn = mocks.getMockFunction();
+
     expect(CSSPropertyOperations.createMarkupForStyles({
       left: 0,
       margin: 16,
       opacity: 0.5,
       padding: '4px'
     })).toBe('left:0;margin:16px;opacity:0.5;padding:4px;');
+
+    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Unitless css property (`margin`) specified with value `16`; assuming `16px`.'
+    );
   });
 
-  it('should trim values so `px` will be appended correctly', function() {
+  it('should trim values so `px` will be appended correctly (and warn)', function() {
+
+    var mocks = require('mocks');
+    console.warn = mocks.getMockFunction();
+
     expect(CSSPropertyOperations.createMarkupForStyles({
       margin: '16 ',
       opacity: 0.5,
       padding: ' 4 '
     })).toBe('margin:16px;opacity:0.5;padding:4px;');
+
+    expect(console.warn.mock.calls.length).toBe(2);
+    expect(console.warn.mock.calls[0][0]).toBe(
+      'Warning: Unitless css property (`margin`) specified with value `16`; assuming `16px`.'
+    );
+    expect(console.warn.mock.calls[1][0]).toBe(
+      'Warning: Unitless css property (`padding`) specified with value `4`; assuming `4px`.'
+    );
   });
 
   it('should not append `px` to styles that might need a number', function() {
