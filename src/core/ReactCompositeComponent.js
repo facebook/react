@@ -113,7 +113,6 @@ var ReactCompositeComponentMixin = {
     this._instance = null;
 
     this._pendingElement = null;
-    this._pendingContext = null;
     this._pendingState = null;
     this._pendingForceUpdate = false;
     this._compositeLifeCycleState = null;
@@ -629,7 +628,6 @@ var ReactCompositeComponentMixin = {
     var prevContext = this._context;
 
     this._pendingElement = null;
-    this._pendingContext = null;
 
     this.updateComponent(
       transaction,
@@ -648,12 +646,12 @@ var ReactCompositeComponentMixin = {
    * @internal
    */
   performUpdateIfNecessary: function(transaction) {
-    if (this._pendingElement != null || this._pendingContext != null) {
+    if (this._pendingElement != null) {
       ReactReconciler.receiveComponent(
         this,
         this._pendingElement || this._currentElement,
         transaction,
-        this._pendingContext || this._context
+        this._context
       );
     }
 
