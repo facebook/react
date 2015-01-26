@@ -48,6 +48,7 @@ describe('ReactServerRendering', function() {
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
+    spyOn(console, 'warn');
   });
 
   describe('renderToString', function() {
@@ -215,15 +216,12 @@ describe('ReactServerRendering', function() {
 
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
-      var _warn = console.warn;
-      console.warn = mocks.getMockFunction();
       element.innerHTML = lastMarkup;
       var instance = React.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.argsForCall.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
-      console.warn = _warn;
 
       // Ensure the events system works
       expect(numClicks).toEqual(0);

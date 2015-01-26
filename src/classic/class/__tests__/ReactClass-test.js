@@ -21,6 +21,7 @@ describe('ReactClass-spec', function() {
   beforeEach(function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
+    spyOn(console, 'warn');
   });
 
   it('should throw when `render` is not specified', function() {
@@ -49,10 +50,9 @@ describe('ReactClass-spec', function() {
         return <div />;
       }
     });
-    console.warn = mocks.getMockFunction();
     expect(TestComponent.type).toBe(TestComponent);
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: TestComponent.type is deprecated. Use TestComponent ' +
       'directly to access the class.'
     );
@@ -126,44 +126,37 @@ describe('ReactClass-spec', function() {
   });
 
   it('should warn when mispelling shouldComponentUpdate', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
+    React.createClass({
+      componentShouldUpdate: function() {
+        return false;
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'A component has a method called componentShouldUpdate(). Did you ' +
+      'mean shouldComponentUpdate()? The name is phrased as a question ' +
+      'because the function is expected to return a value.'
+    );
 
-    try {
-      React.createClass({
-        componentShouldUpdate: function() {
-          return false;
-        },
-        render: function() {
-          return <div />;
-        }
-      });
-      expect(console.warn.mock.calls.length).toBe(1);
-      expect(console.warn.mock.calls[0][0]).toBe(
-        'A component has a method called componentShouldUpdate(). Did you ' +
-        'mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.'
-      );
+    var NamedComponent = React.createClass({
+      componentShouldUpdate: function() {
+        return false;
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+    expect(console.warn.argsForCall.length).toBe(2);
+    expect(console.warn.argsForCall[1][0]).toBe(
+      'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+      'mean shouldComponentUpdate()? The name is phrased as a question ' +
+      'because the function is expected to return a value.'
+    );
 
-      var NamedComponent = React.createClass({
-        componentShouldUpdate: function() {
-          return false;
-        },
-        render: function() {
-          return <div />;
-        }
-      });
-      expect(console.warn.mock.calls.length).toBe(2);
-      expect(console.warn.mock.calls[1][0]).toBe(
-        'NamedComponent has a method called componentShouldUpdate(). Did you ' +
-        'mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.'
-      );
-
-      <NamedComponent />; // Shut up lint
-    } finally {
-      console.warn = warn;
-    }
+    <NamedComponent />; // Shut up lint
   });
 
   it('should throw if a reserved property is in statics', function() {
@@ -192,44 +185,38 @@ describe('ReactClass-spec', function() {
   // TODO: Consider actually moving these to statics or drop this unit test.
 
   xit('should warn when using deprecated non-static spec keys', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
-    try {
-      React.createClass({
-        mixins: [{}],
-        propTypes: {
-          foo: React.PropTypes.string
-        },
-        contextTypes: {
-          foo: React.PropTypes.string
-        },
-        childContextTypes: {
-          foo: React.PropTypes.string
-        },
-        render: function() {
-          return <div />;
-        }
-      });
-      expect(console.warn.mock.calls.length).toBe(4);
-      expect(console.warn.mock.calls[0][0]).toBe(
-        'createClass(...): `mixins` is now a static property and should ' +
-        'be defined inside "statics".'
-      );
-      expect(console.warn.mock.calls[1][0]).toBe(
-        'createClass(...): `propTypes` is now a static property and should ' +
-        'be defined inside "statics".'
-      );
-      expect(console.warn.mock.calls[2][0]).toBe(
-        'createClass(...): `contextTypes` is now a static property and ' +
-        'should be defined inside "statics".'
-      );
-      expect(console.warn.mock.calls[3][0]).toBe(
-        'createClass(...): `childContextTypes` is now a static property and ' +
-        'should be defined inside "statics".'
-      );
-    } finally {
-      console.warn = warn;
-    }
+    React.createClass({
+      mixins: [{}],
+      propTypes: {
+        foo: React.PropTypes.string
+      },
+      contextTypes: {
+        foo: React.PropTypes.string
+      },
+      childContextTypes: {
+        foo: React.PropTypes.string
+      },
+      render: function() {
+        return <div />;
+      }
+    });
+    expect(console.warn.argsForCall.length).toBe(4);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'createClass(...): `mixins` is now a static property and should ' +
+      'be defined inside "statics".'
+    );
+    expect(console.warn.argsForCall[1][0]).toBe(
+      'createClass(...): `propTypes` is now a static property and should ' +
+      'be defined inside "statics".'
+    );
+    expect(console.warn.argsForCall[2][0]).toBe(
+      'createClass(...): `contextTypes` is now a static property and ' +
+      'should be defined inside "statics".'
+    );
+    expect(console.warn.argsForCall[3][0]).toBe(
+      'createClass(...): `childContextTypes` is now a static property and ' +
+      'should be defined inside "statics".'
+    );
   });
 
   it('should support statics', function() {
