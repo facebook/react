@@ -61,9 +61,8 @@ if (__DEV__) {
     // logging too much when using transferPropsTo.
     var warnedValue = '';
     if (value != null) {
-      warnedValue =  ' (with value ' + value + ')';
+      warnedValue = ' (with value ' + escapeTextForBrowser(value) + ')';
     }
-    
     warning(
       standardName == null,
       'Unknown DOM property %s%s. Did you mean %s?',
