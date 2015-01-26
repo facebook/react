@@ -74,8 +74,11 @@ describe('ReactClass-spec', function() {
       .toBe(propValidator);
   });
 
-  it('should throw on invalid prop types', function() {
-    expect(function() {
+  it('should warn on invalid prop types', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+    try {
+
       React.createClass({
         displayName: 'Component',
         propTypes: {
@@ -85,14 +88,20 @@ describe('ReactClass-spec', function() {
           return <span>{this.props.prop}</span>;
         }
       });
-    }).toThrow(
-      'Invariant Violation: Component: prop type `prop` is invalid; ' +
-      'it must be a function, usually from React.PropTypes.'
-    );
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Component: prop type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.'
+      );
+    } finally {
+      console.warn = warn;
+    }
   });
 
-  it('should throw on invalid context types', function() {
-    expect(function() {
+  it('should warn on invalid context types', function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+    try {
       React.createClass({
         displayName: 'Component',
         contextTypes: {
@@ -102,14 +111,20 @@ describe('ReactClass-spec', function() {
           return <span>{this.props.prop}</span>;
         }
       });
-    }).toThrow(
-      'Invariant Violation: Component: context type `prop` is invalid; ' +
-      'it must be a function, usually from React.PropTypes.'
-    );
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Component: context type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.'
+      );
+    } finally {
+      console.warn = warn;
+    }
   });
 
   it('should throw on invalid child context types', function() {
-    expect(function() {
+    var warn = console.warn;
+    console.warn = mocks.getMockFunction();
+    try {
       React.createClass({
         displayName: 'Component',
         childContextTypes: {
@@ -119,10 +134,14 @@ describe('ReactClass-spec', function() {
           return <span>{this.props.prop}</span>;
         }
       });
-    }).toThrow(
-      'Invariant Violation: Component: child context type `prop` is invalid; ' +
-      'it must be a function, usually from React.PropTypes.'
-    );
+      expect(console.warn.mock.calls.length).toBe(1);
+      expect(console.warn.mock.calls[0][0]).toBe(
+        'Warning: Component: child context type `prop` is invalid; ' +
+        'it must be a function, usually from React.PropTypes.'
+      );
+    } finally {
+      console.warn = warn;
+    }
   });
 
   it('should warn when mispelling shouldComponentUpdate', function() {

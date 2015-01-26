@@ -327,11 +327,13 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   childContextTypes: function(Constructor, childContextTypes) {
-    validateTypeDef(
-      Constructor,
-      childContextTypes,
-      ReactPropTypeLocations.childContext
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        childContextTypes,
+        ReactPropTypeLocations.childContext
+      );
+    }
     Constructor.childContextTypes = assign(
       {},
       Constructor.childContextTypes,
@@ -339,11 +341,13 @@ var RESERVED_SPEC_KEYS = {
     );
   },
   contextTypes: function(Constructor, contextTypes) {
-    validateTypeDef(
-      Constructor,
-      contextTypes,
-      ReactPropTypeLocations.context
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        contextTypes,
+        ReactPropTypeLocations.context
+      );
+    }
     Constructor.contextTypes = assign(
       {},
       Constructor.contextTypes,
@@ -365,11 +369,13 @@ var RESERVED_SPEC_KEYS = {
     }
   },
   propTypes: function(Constructor, propTypes) {
-    validateTypeDef(
-      Constructor,
-      propTypes,
-      ReactPropTypeLocations.prop
-    );
+    if (__DEV__) {
+      validateTypeDef(
+        Constructor,
+        propTypes,
+        ReactPropTypeLocations.prop
+      );
+    }
     Constructor.propTypes = assign(
       {},
       Constructor.propTypes,
@@ -384,7 +390,9 @@ var RESERVED_SPEC_KEYS = {
 function validateTypeDef(Constructor, typeDef, location) {
   for (var propName in typeDef) {
     if (typeDef.hasOwnProperty(propName)) {
-      invariant(
+      // use a warning instead of an invariant so components
+      // don't show up in prod but not in __DEV__
+      warning(
         typeof typeDef[propName] === 'function',
         '%s: %s type `%s` is invalid; it must be a function, usually from ' +
         'React.PropTypes.',
