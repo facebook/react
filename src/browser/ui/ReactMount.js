@@ -353,10 +353,11 @@ var ReactMount = {
     // verify that that's the case.
     warning(
       ReactCurrentOwner.current == null,
-      '_renderNewRootComponent(): Render methods should be a pure function ' +
-      'of props and state; triggering nested component updates from ' +
+      '%s._renderNewRootComponent(): Render methods should be a pure ' +
+      'function of props and state; triggering nested component updates from ' +
       'render is not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.'
+      'componentDidUpdate.',
+      this.constructor.displayName || 'ReactCompositeComponent'
     );
 
     var componentInstance = instantiateReactComponent(nextComponent, null);
@@ -518,10 +519,11 @@ var ReactMount = {
     // render but we still don't expect to be in a render call here.)
     warning(
       ReactCurrentOwner.current == null,
-      'unmountComponentAtNode(): Render methods should be a pure function of ' +
-      'props and state; triggering nested component updates from render is ' +
-      'not allowed. If necessary, trigger nested updates in ' +
-      'componentDidUpdate.'
+      '%s.unmountComponentAtNode(): Render methods should be a pure function ' +
+      'of props and state; triggering nested component updates from render ' +
+      'is not allowed. If necessary, trigger nested updates in ' +
+      'componentDidUpdate.',
+      this.constructor.displayName || 'ReactCompositeComponent'
     );
 
     invariant(
