@@ -39,7 +39,7 @@ if (__DEV__) {
   };
   var warnedProperties = {};
 
-  var warnUnknownProperty = function(name) {
+  var warnUnknownProperty = function(name, value) {
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||
         warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return;
@@ -59,10 +59,16 @@ if (__DEV__) {
 
     // For now, only warn when we have a suggested correction. This prevents
     // logging too much when using transferPropsTo.
+    var warnedValue = '';
+    if (value != null) {
+      warnedValue =  ' (with value ' + value + ')';
+    }
+    
     warning(
       standardName == null,
-      'Unknown DOM property %s. Did you mean %s?',
+      'Unknown DOM property %s%s. Did you mean %s?',
       name,
+      warnedValue,
       standardName
     );
 
@@ -112,7 +118,7 @@ var DOMPropertyOperations = {
       return processAttributeNameAndPrefix(name) +
         escapeTextForBrowser(value) + '"';
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, value);
     }
     return null;
   },
@@ -154,7 +160,7 @@ var DOMPropertyOperations = {
         node.setAttribute(name, '' + value);
       }
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, value);
     }
   },
 
@@ -186,7 +192,7 @@ var DOMPropertyOperations = {
     } else if (DOMProperty.isCustomAttribute(name)) {
       node.removeAttribute(name);
     } else if (__DEV__) {
-      warnUnknownProperty(name);
+      warnUnknownProperty(name, '');
     }
   }
 
