@@ -9,9 +9,13 @@
  * @emails react-core
  */
 
-require('meta-matchers');
+var MetaMatchers = require('meta-matchers');
 
 describe('ReactClassEquivalence', function() {
+
+  beforeEach(function() {
+    this.addMatchers(MetaMatchers);
+  });
 
   var es6 = () => require('./ReactES6Class-test.js');
   var coffee = () => require('./ReactCoffeeScriptClass-test.coffee');

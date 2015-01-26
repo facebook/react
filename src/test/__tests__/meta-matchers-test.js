@@ -9,9 +9,13 @@
  * @emails react-core
  */
 
-require('meta-matchers');
+var MetaMatchers = require('meta-matchers');
 
 describe('meta-matchers', function() {
+
+  beforeEach(function() {
+    this.addMatchers(MetaMatchers);
+  });
 
   function a() {
     it('should add 1 and 2', function() {

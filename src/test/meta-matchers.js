@@ -101,26 +101,26 @@ function compareRunners(actual, expected) {
   );
 }
 
-jasmine.getEnv().beforeEach(function() {
-  this.addMatchers({
-    toEqualSpecsIn: function(expectedDescribeFunction) {
-      var actualDescribeFunction = this.actual;
-      if (typeof actualDescribeFunction !== 'function') {
-        throw Error('toEqualSpecsIn() should be used on a describe function');
-      }
-      if (typeof expectedDescribeFunction !== 'function') {
-        throw Error('toEqualSpecsIn() should be passed a describe function');
-      }
-      var actual = getRunnerWithResults(actualDescribeFunction);
-      var expected = getRunnerWithResults(expectedDescribeFunction);
-      var errorMessage = compareRunners(actual, expected);
-      this.message = function() {
-        return [
-          errorMessage,
-          'The specs are equal. Expected them to be different.'
-        ];
-      };
-      return !errorMessage;
+var MetaMatchers = {
+  toEqualSpecsIn: function(expectedDescribeFunction) {
+    var actualDescribeFunction = this.actual;
+    if (typeof actualDescribeFunction !== 'function') {
+      throw Error('toEqualSpecsIn() should be used on a describe function');
     }
-  });
-});
+    if (typeof expectedDescribeFunction !== 'function') {
+      throw Error('toEqualSpecsIn() should be passed a describe function');
+    }
+    var actual = getRunnerWithResults(actualDescribeFunction);
+    var expected = getRunnerWithResults(expectedDescribeFunction);
+    var errorMessage = compareRunners(actual, expected);
+    this.message = function() {
+      return [
+        errorMessage,
+        'The specs are equal. Expected them to be different.'
+      ];
+    };
+    return !errorMessage;
+  }
+};
+
+module.exports = MetaMatchers;
