@@ -306,9 +306,12 @@ function warnForPropsMutation(propName, element) {
 
   warning(
     false,
-    'Don\'t set .props.' + propName + ' of the React component' +
-    elementInfo + '. Instead, specify the correct value when ' +
-    'initially creating the element.' + ownerInfo
+    'Don\'t set .props.%s of the React component%s. ' +
+    'Instead, specify the correct value when ' +
+    'initially creating the element.%s',
+    propName,
+    elementInfo,
+    ownerInfo
   );
 }
 

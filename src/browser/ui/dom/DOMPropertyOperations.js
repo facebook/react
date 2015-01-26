@@ -61,7 +61,9 @@ if (__DEV__) {
     // logging too much when using transferPropsTo.
     warning(
       standardName == null,
-      'Unknown DOM property ' + name + '. Did you mean ' + standardName + '?'
+      'Unknown DOM property %s. Did you mean %s?',
+      name,
+      standardName
     );
 
   };
