@@ -294,9 +294,9 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.forceUpdate();
     }).toThrow(
-      'Invariant Violation: forceUpdate(...): Can only force an update on ' +
-      'mounted or mounting components. This usually means you called ' +
-      'forceUpdate() on an unmounted component.'
+      'Invariant Violation: forceUpdate(...): Can only update a mounted or ' +
+      'mounting component. This usually means you called forceUpdate() on ' +
+      'an unmounted component.'
     );
   });
 
@@ -406,11 +406,11 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       innerInstance.setProps({value: 1});
     }).toThrow(
-      'Invariant Violation: replaceProps(...): You called `setProps` or ' +
-      '`replaceProps` on a component with a parent. This is an anti-pattern ' +
-      'since props will get reactively updated when rendered. Instead, ' +
-      'change the owner\'s `render` method to pass the correct value as ' +
-      'props to the component where it is created.'
+      'Invariant Violation: setProps(...): You called `setProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will get ' +
+      'reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
     );
   });
 

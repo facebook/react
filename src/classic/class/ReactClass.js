@@ -17,6 +17,7 @@ var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
@@ -719,16 +720,10 @@ var ReactClassMixin = {
    * type signature and the only use case for this, is to avoid that.
    */
   replaceState: function(newState, callback) {
-    var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'replaceState(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called replaceState() on an unmounted component.'
-    );
-    internalInstance.replaceState(
-      newState,
-      callback
-    );
+    ReactUpdateQueue.enqueueReplaceState(this, newState);
+    if (callback) {
+      ReactUpdateQueue.enqueueCallback(this, callback);
+    }
   },
 
   /**
@@ -754,16 +749,10 @@ var ReactClassMixin = {
    * @deprecated
    */
   setProps: function(partialProps, callback) {
-    var internalInstance = ReactInstanceMap.get(this);
-    invariant(
-      internalInstance,
-      'setProps(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called setProps() on an unmounted component.'
-    );
-    internalInstance.setProps(
-      partialProps,
-      callback
-    );
+    ReactUpdateQueue.enqueueSetProps(this, partialProps);
+    if (callback) {
+      ReactUpdateQueue.enqueueCallback(this, callback);
+    }
   },
 
   /**
@@ -776,10 +765,10 @@ var ReactClassMixin = {
    * @deprecated
    */
   replaceProps: function(newProps, callback) {
-    ReactInstanceMap.get(this).replaceProps(
-      newProps,
-      callback
-    );
+    ReactUpdateQueue.enqueueReplaceProps(this, newProps);
+    if (callback) {
+      ReactUpdateQueue.enqueueCallback(this, callback);
+    }
   }
 };
 

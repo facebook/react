@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 
 var invariant = require('invariant');
 var warning = require('warning');
@@ -53,17 +53,10 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
       'instead, use forceUpdate().'
     );
   }
-
-  var internalInstance = ReactInstanceMap.get(this);
-  invariant(
-    internalInstance,
-    'setState(...): Can only update a mounted or mounting component. ' +
-    'This usually means you called setState() on an unmounted ' +
-    'component.'
-  );
-  internalInstance.setState(
-    partialState, callback
-  );
+  ReactUpdateQueue.enqueueSetState(this, partialState);
+  if (callback) {
+    ReactUpdateQueue.enqueueCallback(this, callback);
+  }
 };
 
 /**
@@ -81,14 +74,10 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
  * @protected
  */
 ReactComponentBase.prototype.forceUpdate = function(callback) {
-  var internalInstance = ReactInstanceMap.get(this);
-  invariant(
-    internalInstance,
-    'forceUpdate(...): Can only force an update on mounted or mounting ' +
-    'components. This usually means you called forceUpdate() on an ' +
-    'unmounted component.'
-  );
-  internalInstance.forceUpdate(callback);
+  ReactUpdateQueue.enqueueForceUpdate(this);
+  if (callback) {
+    ReactUpdateQueue.enqueueCallback(this, callback);
+  }
 };
 
 /**

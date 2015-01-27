@@ -17,6 +17,7 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactLifeCycle = require('ReactLifeCycle');
 var ReactNativeComponent = require('ReactNativeComponent');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
@@ -27,8 +28,6 @@ var ReactUpdates = require('ReactUpdates');
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
 var invariant = require('invariant');
-var keyMirror = require('keyMirror');
-var monitorCodeUse = require('monitorCodeUse');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('warning');
 
@@ -42,50 +41,6 @@ function getDeclarationErrorAddendum(component) {
   }
   return '';
 }
-
-/**
- * `ReactCompositeComponent` maintains an auxiliary life cycle state in
- * `this._compositeLifeCycleState` (which can be null).
- *
- * This is different from the life cycle state maintained by `ReactComponent`.
- * The following diagram shows how the states overlap in
- * time. There are times when the CompositeLifeCycle is null - at those times it
- * is only meaningful to look at ComponentLifeCycle alone.
- *
- * Top Row: ReactComponent.ComponentLifeCycle
- * Low Row: ReactComponent.CompositeLifeCycle
- *
- * +-------+---------------------------------+--------+
- * |  UN   |             MOUNTED             |   UN   |
- * |MOUNTED|                                 | MOUNTED|
- * +-------+---------------------------------+--------+
- * |       ^--------+   +-------+   +--------^        |
- * |       |        |   |       |   |        |        |
- * |    0--|MOUNTING|-0-|RECEIVE|-0-|   UN   |--->0   |
- * |       |        |   |PROPS  |   |MOUNTING|        |
- * |       |        |   |       |   |        |        |
- * |       |        |   |       |   |        |        |
- * |       +--------+   +-------+   +--------+        |
- * |       |                                 |        |
- * +-------+---------------------------------+--------+
- */
-var CompositeLifeCycle = keyMirror({
-  /**
-   * Components in the process of being mounted respond to state changes
-   * differently.
-   */
-  MOUNTING: null,
-  /**
-   * Components in the process of being unmounted are guarded against state
-   * changes.
-   */
-  UNMOUNTING: null,
-  /**
-   * Components that are mounted and receiving new props respond to state
-   * changes differently.
-   */
-  RECEIVING_PROPS: null
-});
 
 /**
  * An incrementing ID assigned to each component when it is mounted. This is
@@ -112,6 +67,7 @@ var ReactCompositeComponentMixin = {
     this._rootNodeID = null;
     this._instance = null;
 
+    // See ReactUpdateQueue
     this._pendingElement = null;
     this._pendingState = null;
     this._pendingForceUpdate = false;
@@ -123,7 +79,7 @@ var ReactCompositeComponentMixin = {
     this._mountOrder = 0;
     this._isTopLevel = false;
 
-    // See ReactUpdates.
+    // See ReactUpdates and ReactUpdateQueue.
     this._pendingCallbacks = null;
   },
 
@@ -134,7 +90,7 @@ var ReactCompositeComponentMixin = {
    * @final
    */
   isMounted: function() {
-    return this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING;
+    return this._compositeLifeCycleState !== ReactLifeCycle.MOUNTING;
   },
 
   /**
@@ -171,7 +127,7 @@ var ReactCompositeComponentMixin = {
     // Store a reference from the instance back to the internal representation
     ReactInstanceMap.set(inst, this);
 
-    this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
+    this._compositeLifeCycleState = ReactLifeCycle.MOUNTING;
 
     if (__DEV__) {
       this._warnIfContextsDiffer(this._currentElement._context, context);
@@ -265,7 +221,7 @@ var ReactCompositeComponentMixin = {
   unmountComponent: function() {
     var inst = this._instance;
 
-    this._compositeLifeCycleState = CompositeLifeCycle.UNMOUNTING;
+    this._compositeLifeCycleState = ReactLifeCycle.UNMOUNTING;
     if (inst.componentWillUnmount) {
       inst.componentWillUnmount();
     }
@@ -298,50 +254,6 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * Sets a subset of the props.
-   *
-   * @param {object} partialProps Subset of the next props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @public
-   */
-  setProps: function(partialProps, callback) {
-    // Merge with the pending element if it exists, otherwise with existing
-    // element props.
-    var element = this._pendingElement || this._currentElement;
-    this.replaceProps(
-      assign({}, element.props, partialProps),
-      callback
-    );
-  },
-
-  /**
-   * Replaces all of the props.
-   *
-   * @param {object} props New props.
-   * @param {?function} callback Called after props are updated.
-   * @final
-   * @public
-   */
-  replaceProps: function(props, callback) {
-    invariant(
-      this._isTopLevel,
-      'replaceProps(...): You called `setProps` or `replaceProps` on a ' +
-      'component with a parent. This is an anti-pattern since props will ' +
-      'get reactively updated when rendered. Instead, change the owner\'s ' +
-      '`render` method to pass the correct value as props to the component ' +
-      'where it is created.'
-    );
-    // This is a deoptimized path. We optimize for always having an element.
-    // This creates an extra internal element.
-    this._pendingElement = ReactElement.cloneAndReplaceProps(
-      this._pendingElement || this._currentElement,
-      props
-    );
-    ReactUpdates.enqueueUpdate(this, callback);
-  },
-
-  /**
    * Schedule a partial update to the props. Only used for internal testing.
    *
    * @param {object} partialProps Subset of the next props.
@@ -357,109 +269,6 @@ var ReactCompositeComponentMixin = {
       element,
       assign({}, element.props, partialProps)
     );
-    ReactUpdates.enqueueUpdate(this, callback);
-  },
-
-  /**
-   * Sets a subset of the state. This only exists because _pendingState is
-   * internal. This provides a merging strategy that is not available to deep
-   * properties which is confusing. TODO: Expose pendingState or don't use it
-   * during the merge.
-   *
-   * @param {object} partialState Next partial state to be merged with state.
-   * @param {?function} callback Called after state is updated.
-   * @final
-   * @protected
-   */
-  setState: function(partialState, callback) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      ReactCurrentOwner.current == null,
-      'setState(...): Cannot update during an existing state transition ' +
-      '(such as within `render`). Render methods should be a pure function ' +
-      'of props and state.'
-    );
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-      'setState(...): Cannot call setState() on an unmounting component.'
-    );
-    // Merge with `_pendingState` if it exists, otherwise with existing state.
-    this._pendingState = assign(
-      {},
-      this._pendingState || this._instance.state,
-      partialState
-    );
-    if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
-      // If we're in a componentWillMount handler, don't enqueue a rerender
-      // because ReactUpdates assumes we're in a browser context (which is wrong
-      // for server rendering) and we're about to do a render anyway.
-      // TODO: The callback here is ignored when setState is called from
-      // componentWillMount. Either fix it or disallow doing so completely in
-      // favor of getInitialState.
-      ReactUpdates.enqueueUpdate(this, callback);
-    }
-  },
-
-  /**
-   * Replaces all of the state. Always use this or `setState` to mutate state.
-   * You should treat `this.state` as immutable.
-   *
-   * There is no guarantee that `this.state` will be immediately updated, so
-   * accessing `this.state` after calling this method may return the old value.
-   *
-   * @param {object} completeState Next state.
-   * @param {?function} callback Called after state is updated.
-   * @final
-   * @protected
-   */
-  replaceState: function(completeState, callback) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      ReactCurrentOwner.current == null,
-      'replaceState(...): Cannot update during an existing state transition ' +
-      '(such as within `render`). Render methods should be a pure function ' +
-      'of props and state.'
-    );
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-      'replaceState(...): Cannot call replaceState() on an unmounting ' +
-      'component.'
-    );
-    this._pendingState = completeState;
-    if (this._compositeLifeCycleState !== CompositeLifeCycle.MOUNTING) {
-      // If we're in a componentWillMount handler, don't enqueue a rerender
-      // because ReactUpdates assumes we're in a browser context (which is wrong
-      // for server rendering) and we're about to do a render anyway.
-      // TODO: The callback here is ignored when setState is called from
-      // componentWillMount. Either fix it or disallow doing so completely in
-      // favor of getInitialState.
-      ReactUpdates.enqueueUpdate(this, callback);
-    }
-  },
-
-  /**
-   * Forces an update. This should only be invoked when it is known with
-   * certainty that we are **not** in a DOM transaction.
-   *
-   * You may want to call this when you know that some deeper aspect of the
-   * component's state has changed but `setState` was not called.
-   *
-   * This will not invoke `shouldUpdateComponent`, but it will invoke
-   * `componentWillUpdate` and `componentDidUpdate`.
-   *
-   * @param {?function} callback Called after update is complete.isM
-   * @final
-   * @protected
-   */
-  forceUpdate: function(callback) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    invariant(
-      compositeLifeCycleState !== CompositeLifeCycle.RECEIVING_STATE &&
-      compositeLifeCycleState !== CompositeLifeCycle.UNMOUNTING,
-      'forceUpdate(...): Cannot force an update while unmounting component ' +
-      'or during an existing state transition (such as within `render`).'
-    );
-    this._pendingForceUpdate = true;
     ReactUpdates.enqueueUpdate(this, callback);
   },
 
@@ -626,8 +435,8 @@ var ReactCompositeComponentMixin = {
     var compositeLifeCycleState = this._compositeLifeCycleState;
     // Do not trigger a state transition if we are in the middle of mounting or
     // receiving props because both of those will already be doing this.
-    if (compositeLifeCycleState === CompositeLifeCycle.MOUNTING ||
-        compositeLifeCycleState === CompositeLifeCycle.RECEIVING_PROPS) {
+    if (compositeLifeCycleState === ReactLifeCycle.MOUNTING ||
+        compositeLifeCycleState === ReactLifeCycle.RECEIVING_PROPS) {
       return;
     }
 
@@ -743,7 +552,7 @@ var ReactCompositeComponentMixin = {
         }
       }
 
-      this._compositeLifeCycleState = CompositeLifeCycle.RECEIVING_PROPS;
+      this._compositeLifeCycleState = ReactLifeCycle.RECEIVING_PROPS;
       if (inst.componentWillReceiveProps) {
         inst.componentWillReceiveProps(nextProps, nextContext);
       }
@@ -1002,8 +811,6 @@ ReactPerf.measureMethods(
 );
 
 var ReactCompositeComponent = {
-
-  LifeCycle: CompositeLifeCycle,
 
   Mixin: ReactCompositeComponentMixin
 

@@ -97,7 +97,7 @@ describe('ReactComponentLifeCycle', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     ReactCompositeComponent = require('ReactCompositeComponent');
-    CompositeComponentLifeCycle = ReactCompositeComponent.LifeCycle;
+    CompositeComponentLifeCycle = require('ReactLifeCycle');
 
     ReactInstanceMap = require('ReactInstanceMap');
 
@@ -403,11 +403,11 @@ describe('ReactComponentLifeCycle', function() {
     expect(function() {
       instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
-      'Invariant Violation: replaceProps(...): You called `setProps` or ' +
-      '`replaceProps` on a component with a parent. This is an anti-pattern ' +
-      'since props will get reactively updated when rendered. Instead, ' +
-      'change the owner\'s `render` method to pass the correct value as ' +
-      'props to the component where it is created.'
+      'Invariant Violation: setProps(...): You called `setProps` on a ' +
+      'component with a parent. This is an anti-pattern since props will get ' +
+      'reactively updated when rendered. Instead, change the owner\'s ' +
+      '`render` method to pass the correct value as props to the component ' +
+      'where it is created.'
     );
   });
 
