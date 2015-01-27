@@ -157,6 +157,8 @@ describe('CSSPropertyOperations', function() {
     spyOn(console, 'warn');
 
     CSSPropertyOperations.createMarkupForStyles({
+      fontFamily: 'Helvetica, arial',
+      backgroundImage: 'url(foo;bar)',
       backgroundColor: 'blue;',
       color: 'red;   '
     });
