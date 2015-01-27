@@ -381,13 +381,15 @@ var ReactElementValidator = {
         element
       );
       var name = componentClass.displayName || componentClass.name;
-      if (componentClass.propTypes) {
-        checkPropTypes(
-          name,
-          componentClass.propTypes,
-          element.props,
-          ReactPropTypeLocations.prop
-        );
+      if (__DEV__) {
+        if (componentClass.propTypes) {
+          checkPropTypes(
+            name,
+            componentClass.propTypes,
+            element.props,
+            ReactPropTypeLocations.prop
+          );
+        }
       }
       if (typeof componentClass.getDefaultProps === 'function') {
         warning(
