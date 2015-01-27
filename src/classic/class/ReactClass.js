@@ -15,6 +15,7 @@ var ReactComponentBase = require('ReactComponentBase');
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
+var ReactLifeCycle = require('ReactLifeCycle');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdateQueue = require('ReactUpdateQueue');
@@ -734,9 +735,10 @@ var ReactClassMixin = {
    */
   isMounted: function() {
     var internalInstance = ReactInstanceMap.get(this);
-    // In theory, isMounted is always true if it exists in the map.
-    // TODO: Remove the internal isMounted method.
-    return internalInstance && internalInstance.isMounted();
+    return (
+      internalInstance &&
+      internalInstance !== ReactLifeCycle.currentlyMountingInstance
+    );
   },
 
   /**

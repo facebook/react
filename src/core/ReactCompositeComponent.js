@@ -43,6 +43,33 @@ function getDeclarationErrorAddendum(component) {
 }
 
 /**
+ * ------------------ The Life-Cycle of a Composite Component ------------------
+ *
+ * - constructor: Initialization of state. The instance is now retained.
+ *   - componentWillMount
+ *   - render
+ *   - [children's constructors]
+ *     - [children's componentWillMount and render]
+ *     - [children's componentDidMount]
+ *     - componentDidMount
+ *
+ *       Update Phases:
+ *       - componentWillReceiveProps (only called if parent updated)
+ *       - shouldComponentUpdate
+ *         - componentWillUpdate
+ *           - render
+ *           - [children's constructors or receive props phases]
+ *         - componentDidUpdate
+ *
+ *     - componentWillUnmount
+ *     - [children's componentWillUnmount]
+ *   - [children destroyed]
+ * - (destroyed): The instance is now blank, released by React and ready for GC.
+ *
+ * -----------------------------------------------------------------------------
+ */
+
+/**
  * An incrementing ID assigned to each component when it is mounted. This is
  * used to enforce the order in which `ReactUpdates` updates dirty components.
  *
@@ -71,7 +98,6 @@ var ReactCompositeComponentMixin = {
     this._pendingElement = null;
     this._pendingState = null;
     this._pendingForceUpdate = false;
-    this._compositeLifeCycleState = null;
 
     this._renderedComponent = null;
 
@@ -81,16 +107,6 @@ var ReactCompositeComponentMixin = {
 
     // See ReactUpdates and ReactUpdateQueue.
     this._pendingCallbacks = null;
-  },
-
-  /**
-   * Checks whether or not this composite component is mounted.
-   * @return {boolean} True if mounted, false otherwise.
-   * @protected
-   * @final
-   */
-  isMounted: function() {
-    return this._compositeLifeCycleState !== ReactLifeCycle.MOUNTING;
   },
 
   /**
@@ -126,8 +142,6 @@ var ReactCompositeComponentMixin = {
 
     // Store a reference from the instance back to the internal representation
     ReactInstanceMap.set(inst, this);
-
-    this._compositeLifeCycleState = ReactLifeCycle.MOUNTING;
 
     if (__DEV__) {
       this._warnIfContextsDiffer(this._currentElement._context, context);
@@ -176,13 +190,18 @@ var ReactCompositeComponentMixin = {
       '%s.state: must be set to an object or null',
       this.getName() || 'ReactCompositeComponent'
     );
-    inst.state = initialState;
 
     this._pendingState = null;
     this._pendingForceUpdate = false;
 
     if (inst.componentWillMount) {
-      inst.componentWillMount();
+      var previouslyMounting = ReactLifeCycle.currentlyMountingInstance;
+      ReactLifeCycle.currentlyMountingInstance = this;
+      try {
+        inst.componentWillMount();
+      } finally {
+        ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
+      }
       // When mounting, calls to `setState` by `componentWillMount` will set
       // `this._pendingState` without triggering a re-render.
       if (this._pendingState) {
@@ -197,8 +216,6 @@ var ReactCompositeComponentMixin = {
       this._currentElement.type // The wrapping type
     );
 
-    // Done with mounting, `setState` will now trigger UI changes.
-    this._compositeLifeCycleState = null;
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,
       rootID,
@@ -221,11 +238,15 @@ var ReactCompositeComponentMixin = {
   unmountComponent: function() {
     var inst = this._instance;
 
-    this._compositeLifeCycleState = ReactLifeCycle.UNMOUNTING;
     if (inst.componentWillUnmount) {
-      inst.componentWillUnmount();
+      var previouslyUnmounting = ReactLifeCycle.currentlyUnmountingInstance;
+      ReactLifeCycle.currentlyUnmountingInstance = this;
+      try {
+        inst.componentWillUnmount();
+      } finally {
+        ReactLifeCycle.currentlyUnmountingInstance = previouslyUnmounting;
+      }
     }
-    this._compositeLifeCycleState = null;
 
     ReactReconciler.unmountComponent(this._renderedComponent);
     this._renderedComponent = null;
@@ -238,6 +259,8 @@ var ReactCompositeComponentMixin = {
 
     ReactComponentEnvironment.unmountIDFromEnvironment(this._rootNodeID);
 
+    // These fields do not really need to be reset since this object is no
+    // longer accessible.
     this._context = null;
     this._rootNodeID = null;
 
@@ -432,14 +455,6 @@ var ReactCompositeComponentMixin = {
   },
 
   receiveComponent: function(nextElement, transaction, nextContext) {
-    var compositeLifeCycleState = this._compositeLifeCycleState;
-    // Do not trigger a state transition if we are in the middle of mounting or
-    // receiving props because both of those will already be doing this.
-    if (compositeLifeCycleState === ReactLifeCycle.MOUNTING ||
-        compositeLifeCycleState === ReactLifeCycle.RECEIVING_PROPS) {
-      return;
-    }
-
     var prevElement = this._currentElement;
     var prevContext = this._context;
 
@@ -552,13 +567,14 @@ var ReactCompositeComponentMixin = {
         }
       }
 
-      this._compositeLifeCycleState = ReactLifeCycle.RECEIVING_PROPS;
+      // An update here will schedule an update but immediately set
+      // _pendingState which will ensure that any state updates gets
+      // immediately reconciled instead of waiting for the next batch.
+
       if (inst.componentWillReceiveProps) {
         inst.componentWillReceiveProps(nextProps, nextContext);
       }
     }
-
-    this._compositeLifeCycleState = null;
 
     var nextState = this._pendingState || inst.state;
     this._pendingState = null;
