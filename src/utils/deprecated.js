@@ -31,8 +31,12 @@ function deprecated(namespace, oldName, newName, ctx, fn) {
     var newFn = function() {
       warning(
         warned,
-        `${namespace}.${oldName} will be deprecated in a future version. ` +
-        `Use ${namespace}.${newName} instead.`
+        '%s.%s will be deprecated in a future version. ' +
+        'Use %s.%s instead.',
+        namespace,
+        oldName,
+        namespace,
+        newName
       );
       warned = true;
       return fn.apply(ctx, arguments);

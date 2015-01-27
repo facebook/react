@@ -51,8 +51,9 @@ if (__DEV__) {
     warnedStyleNames[name] = true;
     warning(
       false,
-      'Unsupported style property ' + name + '. Did you mean ' +
-      camelizeStyleName(name) + '?'
+      'Unsupported style property %s. Did you mean %s?',
+      name,
+      camelizeStyleName(name)
     );
   };
 
@@ -64,8 +65,9 @@ if (__DEV__) {
     warnedStyleNames[name] = true;
     warning(
       false,
-      'Unsupported vendor-prefixed style property ' + name + '. Did you mean ' +
-      name.charAt(0).toUpperCase() + name.slice(1) + '?'
+      'Unsupported vendor-prefixed style property %s. Did you mean %s?',
+      name,
+      name.charAt(0).toUpperCase() + name.slice(1)
     );
   };
 

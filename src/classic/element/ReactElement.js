@@ -45,8 +45,9 @@ function defineWarningProperty(object, key) {
     set: function(value) {
       warning(
         false,
-        'Don\'t set the ' + key + ' property of the React element. Instead, ' +
-        'specify the correct value when initially creating the element.'
+        'Don\'t set the %s property of the React element. Instead, ' +
+        'specify the correct value when initially creating the element.',
+        key
       );
       this._store[key] = value;
     }
