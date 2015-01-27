@@ -44,8 +44,15 @@ describe('ReactCompositeComponent-state', function() {
         }
       },
 
+      peekAtCallback: function(from) {
+        return () => this.peekAtState(from);
+      },
+
       setFavoriteColor: function(nextColor) {
-        this.setState({color: nextColor});
+        this.setState(
+          {color: nextColor},
+          this.peekAtCallback('setFavoriteColor')
+        );
       },
 
       getInitialState: function() {
@@ -60,22 +67,34 @@ describe('ReactCompositeComponent-state', function() {
 
       componentWillMount: function() {
         this.peekAtState('componentWillMount-start');
-        this.setState({color: 'sunrise'});
+        this.setState(
+          {color: 'sunrise'},
+          this.peekAtCallback('setState-sunrise')
+        );
         this.peekAtState('componentWillMount-after-sunrise');
-        this.setState({color: 'orange'});
+        this.setState(
+          {color: 'orange'},
+          this.peekAtCallback('setState-orange')
+        );
         this.peekAtState('componentWillMount-end');
       },
 
       componentDidMount: function() {
         this.peekAtState('componentDidMount-start');
-        this.setState({color: 'yellow'});
+        this.setState(
+          {color: 'yellow'},
+          this.peekAtCallback('setState-yellow')
+        );
         this.peekAtState('componentDidMount-end');
       },
 
       componentWillReceiveProps: function(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
-          this.setState({color: newProps.nextColor});
+          this.setState(
+            {color: newProps.nextColor},
+            this.peekAtCallback('setState-receiveProps')
+          );
         }
         this.peekAtState('componentWillReceiveProps-end');
       },
@@ -108,11 +127,19 @@ describe('ReactCompositeComponent-state', function() {
     document.documentElement.appendChild(container);
 
     var stateListener = mocks.getMockFunction();
-    var instance = <TestComponent stateListener={stateListener} />;
-    instance = React.render(instance, container);
-    instance.setProps({nextColor: 'green'});
+    var instance = React.render(
+      <TestComponent stateListener={stateListener} />,
+      container,
+      function peekAtInitialCallback() {
+        this.peekAtState('initial-callback');
+      }
+    );
+    instance.setProps(
+      {nextColor: 'green'},
+      instance.peekAtCallback('setProps')
+    );
     instance.setFavoriteColor('blue');
-    instance.forceUpdate();
+    instance.forceUpdate(instance.peekAtCallback('forceUpdate'));
 
     React.unmountComponentAtNode(container);
 
@@ -126,6 +153,8 @@ describe('ReactCompositeComponent-state', function() {
       // pending state has been applied
       [ 'render', 'orange', null ],
       [ 'componentDidMount-start', 'orange', null ],
+      // setState-sunrise and setState-orange should be called here,
+      // after the bug in #
       // componentDidMount() called setState({color:'yellow'}), currently this
       // occurs inline.
       // In a future where setState() is async, this test result will change.
@@ -136,8 +165,10 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'yellow', null ],
       [ 'componentDidUpdate-currentState', 'yellow', null ],
       [ 'componentDidUpdate-prevState', 'orange' ],
+      [ 'setState-yellow', 'yellow', null ],
       // componentDidMount() finally closes.
       [ 'componentDidMount-end', 'yellow', null ],
+      [ 'initial-callback', 'yellow', null ],
       [ 'componentWillReceiveProps-start', 'yellow', null ],
       // setState({color:'green'}) only enqueues a pending state.
       [ 'componentWillReceiveProps-end', 'yellow', 'green' ],
@@ -148,6 +179,8 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'green', null ],
       [ 'componentDidUpdate-currentState', 'green', null ],
       [ 'componentDidUpdate-prevState', 'yellow' ],
+      [ 'setState-receiveProps', 'green', null ],
+      [ 'setProps', 'green', null ],
       // setFavoriteColor('blue')
       [ 'shouldComponentUpdate-currentState', 'green', null ],
       [ 'shouldComponentUpdate-nextState', 'blue' ],
@@ -156,12 +189,14 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'blue', null ],
       [ 'componentDidUpdate-currentState', 'blue', null ],
       [ 'componentDidUpdate-prevState', 'green' ],
+      [ 'setFavoriteColor', 'blue', null ],
       // forceUpdate()
       [ 'componentWillUpdate-currentState', 'blue', null ],
       [ 'componentWillUpdate-nextState', 'blue' ],
       [ 'render', 'blue', null ],
       [ 'componentDidUpdate-currentState', 'blue', null ],
       [ 'componentDidUpdate-prevState', 'blue' ],
+      [ 'forceUpdate', 'blue', null ],
       // unmountComponent()
       // state is available within `componentWillUnmount()`
       [ 'componentWillUnmount', 'blue', null ]
