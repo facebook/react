@@ -157,10 +157,12 @@ describe('CSSPropertyOperations', function() {
     spyOn(console, 'warn');
 
     CSSPropertyOperations.createMarkupForStyles({
-      backgroundColor: 'blue;'
+      backgroundColor: 'blue;',
+      color: 'red;   '
     });
 
-    expect(console.warn.callCount).toBe(1);
+    expect(console.warn.callCount).toBe(2);
     expect(console.warn.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
+    expect(console.warn.argsForCall[1][0]).toContain('Try "color: red" instead');
   });
 });

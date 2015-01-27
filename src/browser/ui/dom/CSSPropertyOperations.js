@@ -38,7 +38,7 @@ if (__DEV__) {
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
   // style values shouldn't contain a semicolon
-  var badStyleValueWithSemicolonPattern = /;(\s*)$/;
+  var badStyleValueWithSemicolonPattern = /;\s*$/;
 
   var warnedStyleNames = {};
   var warnedStyleValues = {};
