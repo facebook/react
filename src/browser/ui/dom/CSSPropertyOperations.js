@@ -37,7 +37,11 @@ if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
+  // style values shouldn't contain a semicolon
+  var badStyleValueWithSemicolonPattern = /;(\s*)$/;
+
   var warnedStyleNames = {};
+  var warnedStyleValues = {};
 
   var warnHyphenatedStyleName = function(name) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
@@ -64,6 +68,33 @@ if (__DEV__) {
       name.charAt(0).toUpperCase() + name.slice(1) + '?'
     );
   };
+
+  var warnStyleValueWithSemicolon = function(name, value) {
+    if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
+      return;
+    }
+    
+    warnedStyleValues[value] = true;
+    warning(
+      false,
+      'Style property values shouldn\'t contain a semicolon. Try "' +
+      name + ': ' + value.replace(badStyleValueWithSemicolonPattern, '') + '" instead.'
+    );
+  };
+
+  /**
+   * @param {string} name
+   * @param {string|number} value
+   */
+  var assertValidStyle = function(name, value) {
+    if (name.indexOf('-') > -1) {
+      warnHyphenatedStyleName(name);
+    } else if (badVendoredStyleNamePattern.test(name)) {
+      warnBadVendoredStyleName(name);
+    } else if (badStyleValueWithSemicolonPattern.test(value)) {
+      warnStyleValueWithSemicolon(name, value);
+    }
+  };
 }
 
 /**
@@ -89,14 +120,10 @@ var CSSPropertyOperations = {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
-      if (__DEV__) {
-        if (styleName.indexOf('-') > -1) {
-          warnHyphenatedStyleName(styleName);
-        } else if (badVendoredStyleNamePattern.test(styleName)) {
-          warnBadVendoredStyleName(styleName);
-        }
-      }
       var styleValue = styles[styleName];
+      if (__DEV__) {
+        assertValidStyle(styleName, styleValue);
+      }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
         serialized += dangerousStyleValue(styleName, styleValue) + ';';
@@ -119,11 +146,7 @@ var CSSPropertyOperations = {
         continue;
       }
       if (__DEV__) {
-        if (styleName.indexOf('-') > -1) {
-          warnHyphenatedStyleName(styleName);
-        } else if (badVendoredStyleNamePattern.test(styleName)) {
-          warnBadVendoredStyleName(styleName);
-        }
+        assertValidStyle(styleName, styles[styleName]); 
       }
       var styleValue = dangerousStyleValue(styleName, styles[styleName]);
       if (styleName === 'float') {
