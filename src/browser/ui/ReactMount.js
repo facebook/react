@@ -22,6 +22,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactPerf = require('ReactPerf');
 var ReactReconciler = require('ReactReconciler');
+var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
 
 var emptyObject = require('emptyObject');
@@ -299,9 +300,11 @@ var ReactMount = {
       ReactElementValidator.checkAndWarnForMutatedProps(nextElement);
     }
 
-    var nextProps = nextElement.props;
     ReactMount.scrollMonitor(container, function() {
-      prevComponent.replaceProps(nextProps, callback);
+      ReactUpdateQueue.enqueueElementInternal(prevComponent, nextElement);
+      if (callback) {
+        ReactUpdateQueue.enqueueCallbackInternal(prevComponent, callback);
+      }
     });
 
     if (__DEV__) {

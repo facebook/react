@@ -190,13 +190,7 @@ flushBatchedUpdates = ReactPerf.measure(
  * Mark a component as needing a rerender, adding an optional callback to a
  * list of functions which will be executed once the rerender occurs.
  */
-function enqueueUpdate(component, callback) {
-  invariant(
-    !callback || typeof callback === 'function',
-    'enqueueUpdate(...): You called `setProps`, `replaceProps`, ' +
-    '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
-    'isn\'t callable.'
-  );
+function enqueueUpdate(component) {
   ensureInjected();
 
   // Various parts of our code (such as ReactCompositeComponent's
@@ -213,19 +207,11 @@ function enqueueUpdate(component, callback) {
   );
 
   if (!batchingStrategy.isBatchingUpdates) {
-    batchingStrategy.batchedUpdates(enqueueUpdate, component, callback);
+    batchingStrategy.batchedUpdates(enqueueUpdate, component);
     return;
   }
 
   dirtyComponents.push(component);
-
-  if (callback) {
-    if (component._pendingCallbacks) {
-      component._pendingCallbacks.push(callback);
-    } else {
-      component._pendingCallbacks = [callback];
-    }
-  }
 }
 
 /**

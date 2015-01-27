@@ -154,7 +154,7 @@ describe('ReactCompositeComponent-state', function() {
       [ 'render', 'orange', null ],
       [ 'componentDidMount-start', 'orange', null ],
       // setState-sunrise and setState-orange should be called here,
-      // after the bug in #
+      // after the bug in #1740
       // componentDidMount() called setState({color:'yellow'}), currently this
       // occurs inline.
       // In a future where setState() is async, this test result will change.
