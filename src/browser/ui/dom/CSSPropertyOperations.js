@@ -73,12 +73,13 @@ if (__DEV__) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
-    
+
     warnedStyleValues[value] = true;
     warning(
       false,
       'Style property values shouldn\'t contain a semicolon. Try "' +
-      name + ': ' + value.replace(badStyleValueWithSemicolonPattern, '') + '" instead.'
+      name + ': ' + value.replace(badStyleValueWithSemicolonPattern, '') +
+      '" instead.'
     );
   };
 
@@ -146,7 +147,7 @@ var CSSPropertyOperations = {
         continue;
       }
       if (__DEV__) {
-        assertValidStyle(styleName, styles[styleName]); 
+        assertValidStyle(styleName, styles[styleName]);
       }
       var styleValue = dangerousStyleValue(styleName, styles[styleName]);
       if (styleName === 'float') {
