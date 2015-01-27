@@ -11,7 +11,7 @@
 
 'use strict';
 
-var ReactComponentBase = require('ReactComponentBase');
+var ReactComponent = require('ReactComponent');
 var ReactElement = require('ReactElement');
 var ReactErrorUtils = require('ReactErrorUtils');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -712,7 +712,7 @@ var typeDeprecationDescriptor = {
 
 /**
  * Add more to the ReactClass base class. These are all legacy features and
- * therefore not already part of the modern ReactComponentBase.
+ * therefore not already part of the modern ReactComponent.
  */
 var ReactClassMixin = {
 
@@ -774,10 +774,10 @@ var ReactClassMixin = {
   }
 };
 
-var ReactClassBase = function() {};
+var ReactClassComponent = function() {};
 assign(
-  ReactClassBase.prototype,
-  ReactComponentBase.prototype,
+  ReactClassComponent.prototype,
+  ReactComponent.prototype,
   ReactClassMixin
 );
 
@@ -830,7 +830,7 @@ var ReactClass = {
 
       this.state = initialState;
     };
-    Constructor.prototype = new ReactClassBase();
+    Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
 
     injectedMixins.forEach(

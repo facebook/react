@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactComponentBase
+ * @providesModule ReactComponent
  */
 
 'use strict';
@@ -19,7 +19,7 @@ var warning = require('warning');
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponentBase(props, context) {
+function ReactComponent(props, context) {
   this.props = props;
   this.context = context;
 }
@@ -41,7 +41,7 @@ function ReactComponentBase(props, context) {
  * @final
  * @protected
  */
-ReactComponentBase.prototype.setState = function(partialState, callback) {
+ReactComponent.prototype.setState = function(partialState, callback) {
   invariant(
     typeof partialState === 'object' || partialState == null,
     'setState(...): takes an object of state variables to update.'
@@ -73,7 +73,7 @@ ReactComponentBase.prototype.setState = function(partialState, callback) {
  * @final
  * @protected
  */
-ReactComponentBase.prototype.forceUpdate = function(callback) {
+ReactComponent.prototype.forceUpdate = function(callback) {
   ReactUpdateQueue.enqueueForceUpdate(this);
   if (callback) {
     ReactUpdateQueue.enqueueCallback(this, callback);
@@ -94,7 +94,7 @@ if (__DEV__) {
       setProps: 'setProps'
     };
     var defineDeprecationWarning = function(methodName, displayName) {
-      Object.defineProperty(ReactComponentBase.prototype, methodName, {
+      Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
             false,
@@ -113,4 +113,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactComponentBase;
+module.exports = ReactComponent;
