@@ -58,6 +58,7 @@
     "populist": "~0.1.6",
     "recast": "^0.9.11",
     "sauce-tunnel": "~1.1.0",
+    "ts-compiler": "^2.0.0",
     "tmp": "~0.0.18",
     "uglify-js": "~2.4.0",
     "uglifyify": "^2.4.0",
@@ -82,7 +83,8 @@
     "setupEnvScriptFile": "jest/environment.js",
     "testFileExtensions": [
       "js",
-      "coffee"
+      "coffee",
+      "ts"
     ],
     "modulePathIgnorePatterns": [
       "/build/",
