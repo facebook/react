@@ -752,7 +752,8 @@ describe('ReactPropTypes', function() {
       var instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
       expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toBe('Warning: num must be 5!');
+      expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Failed propType: num must be 5!');
     });
 
     it('should not warn if the validator returned anything else than an error',

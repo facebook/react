@@ -206,7 +206,8 @@ describe('ReactElementValidator', function() {
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     expect(console.warn.calls[0].args[0]).toBe(
-      'Warning: Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+      'Warning: Failed propType: ' +
+      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
       'expected `string`. Check the render method of `ParentComp`.'
     );
   });
@@ -247,7 +248,8 @@ describe('ReactElementValidator', function() {
 
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toBe(
-      'Warning: Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed propType: ' +
+      'Required prop `prop` was not specified in `Component`.'
     );
   });
 
@@ -270,7 +272,8 @@ describe('ReactElementValidator', function() {
 
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toBe(
-      'Warning: Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed propType: ' +
+      'Required prop `prop` was not specified in `Component`.'
     );
   });
 
@@ -295,11 +298,13 @@ describe('ReactElementValidator', function() {
 
     expect(console.warn.calls.length).toBe(2);
     expect(console.warn.calls[0].args[0]).toBe(
-      'Warning: Required prop `prop` was not specified in `Component`.'
+      'Warning: Failed propType: ' +
+      'Required prop `prop` was not specified in `Component`.'
     );
 
     expect(console.warn.calls[1].args[0]).toBe(
-      'Warning: Invalid prop `prop` of type `number` supplied to ' +
+      'Warning: Failed propType: ' +
+      'Invalid prop `prop` of type `number` supplied to ' +
       '`Component`, expected `string`.'
     );
 

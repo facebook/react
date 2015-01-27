@@ -269,7 +269,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         loggedTypeFailures[error.message] = true;
 
         var addendum = getDeclarationErrorAddendum(this);
-        warning(false, error.message + addendum);
+        warning(false, 'Failed propType: ' + error.message + addendum);
       }
     }
   }
