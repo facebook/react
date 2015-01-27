@@ -77,9 +77,10 @@ if (__DEV__) {
     warnedStyleValues[value] = true;
     warning(
       false,
-      'Style property values shouldn\'t contain a semicolon. Try "' +
-      name + ': ' + value.replace(badStyleValueWithSemicolonPattern, '') +
-      '" instead.'
+      'Style property values shouldn\'t contain a semicolon. ' +
+      'Try "%s: %s" instead.',
+      name,
+      value.replace(badStyleValueWithSemicolonPattern, '')
     );
   };
 
