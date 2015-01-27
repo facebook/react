@@ -153,4 +153,18 @@ describe('CSSPropertyOperations', function() {
     expect(console.warn.argsForCall[1][0]).toContain('WebkitTransform');
   });
 
+  it('should warn about style having a trailing semicolon', function() {
+    spyOn(console, 'warn');
+
+    CSSPropertyOperations.createMarkupForStyles({
+      fontFamily: 'Helvetica, arial',
+      backgroundImage: 'url(foo;bar)',
+      backgroundColor: 'blue;',
+      color: 'red;   '
+    });
+
+    expect(console.warn.callCount).toBe(2);
+    expect(console.warn.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
+    expect(console.warn.argsForCall[1][0]).toContain('Try "color: red" instead');
+  });
 });
