@@ -72,7 +72,10 @@ var min = {
   standalone: 'React',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
   plugins: [collapser],
-  after: [es3ify.transform, derequire, minify, bannerify]
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [es3ify.transform, /*derequire,*/ minify, bannerify]
 };
 
 var transformer = {
@@ -114,7 +117,10 @@ var addonsMin = {
   packageName: 'React (with addons)',
   transforms: [envify({NODE_ENV: 'production'}), uglifyify],
   plugins: [collapser],
-  after: [es3ify.transform, derequire, minify, bannerify]
+  // No need to derequire because the minifier will mangle
+  // the "require" calls.
+
+  after: [es3ify.transform, /*derequire,*/ minify, bannerify]
 };
 
 var withCodeCoverageLogging = {
