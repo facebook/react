@@ -14,13 +14,9 @@
 var keyMirror = require('keyMirror');
 
 var React;
-var ReactTestUtils;
-var ReactCompositeComponent;
+var ReactLifeCycle;
 var ReactInstanceMap;
-var CompositeComponentLifeCycle;
-
-var getCompositeLifeCycle;
-var getLifeCycleState;
+var ReactTestUtils;
 
 var clone = function(o) {
   return JSON.parse(JSON.stringify(o));
@@ -85,6 +81,44 @@ var ComponentLifeCycle = keyMirror({
 });
 
 /**
+ * Composite components can also be in one of these life cycles.
+ */
+var CompositeComponentLifeCycle = keyMirror({
+  /**
+   * Mounted components have a DOM node representation and are capable of
+   * receiving new props.
+   */
+  MOUNTING: null,
+  /**
+   * Unmounted components are inactive and cannot receive new props.
+   */
+  UNMOUNTING: null
+});
+
+function getCompositeLifeCycle(instance) {
+  var internalInstance = ReactInstanceMap.get(instance);
+  if (!internalInstance) {
+    return null;
+  }
+  if (ReactLifeCycle.currentlyMountingInstance === internalInstance) {
+    return CompositeComponentLifeCycle.MOUNTING;
+  }
+  if (ReactLifeCycle.currentlyUnmountingInstance === internalInstance) {
+    return CompositeComponentLifeCycle.UNMOUNTING;
+  }
+  return null;
+}
+
+function getLifeCycleState(instance) {
+  var internalInstance = ReactInstanceMap.get(instance);
+  // Once a component gets mounted, it has an internal instance, once it
+  // gets unmounted, it loses that internal instance.
+  return internalInstance ?
+         ComponentLifeCycle.MOUNTED :
+         ComponentLifeCycle.UNMOUNTED;
+}
+
+/**
  * TODO: We should make any setState calls fail in
  * `getInitialState` and `componentWillMount`. They will usually fail
  * anyways because `this._renderedComponent` is empty, however, if a component
@@ -96,27 +130,8 @@ describe('ReactComponentLifeCycle', function() {
     require('mock-modules').dumpCache();
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
-    ReactCompositeComponent = require('ReactCompositeComponent');
-    CompositeComponentLifeCycle = require('ReactLifeCycle');
-
+    ReactLifeCycle = require('ReactLifeCycle');
     ReactInstanceMap = require('ReactInstanceMap');
-
-    getCompositeLifeCycle = function(instance) {
-      var internalInstance = ReactInstanceMap.get(instance);
-      if (!internalInstance) {
-        return null;
-      }
-      return internalInstance._compositeLifeCycleState;
-    };
-
-    getLifeCycleState = function(instance) {
-      var internalInstance = ReactInstanceMap.get(instance);
-      // Once a component gets mounted, it has an internal instance, once it
-      // gets unmounted, it loses that internal instance.
-      return internalInstance ?
-             ComponentLifeCycle.MOUNTED :
-             ComponentLifeCycle.UNMOUNTED;
-    };
   });
 
   it('should not reuse an instance when it has been unmounted', function() {
@@ -345,7 +360,7 @@ describe('ReactComponentLifeCycle', function() {
       ComponentLifeCycle.MOUNTED
     );
     expect(instance._testJournal.compositeLifeCycleInInitialRender).toBe(
-      CompositeComponentLifeCycle.MOUNTING
+      null
     );
 
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);

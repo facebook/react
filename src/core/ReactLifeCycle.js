@@ -11,50 +11,25 @@
 
 "use strict";
 
-var keyMirror = require('keyMirror');
-
 /**
- * `ReactCompositeComponent` maintains an auxiliary life cycle state in
- * `this._compositeLifeCycleState` (which can be null).
+ * This module manages the bookkeeping when a component is in the process
+ * of being mounted or being unmounted. This is used as a way to enforce
+ * invariants (or warnings) when it is not recommended to call
+ * setState/forceUpdate.
  *
- * This is different from the life cycle state maintained by `ReactComponent`.
- * The following diagram shows how the states overlap in
- * time. There are times when the CompositeLifeCycle is null - at those times it
- * is only meaningful to look at ComponentLifeCycle alone.
+ * currentlyMountingInstance: During the construction phase, it is not possible
+ * to trigger an update since the instance is not fully mounted yet. However, we
+ * currently allow this as a convenience for mutating the initial state.
  *
- * Top Row: ReactComponent.ComponentLifeCycle
- * Low Row: ReactComponent.CompositeLifeCycle
- *
- * +-------+---------------------------------+--------+
- * |  UN   |             MOUNTED             |   UN   |
- * |MOUNTED|                                 | MOUNTED|
- * +-------+---------------------------------+--------+
- * |       ^--------+   +-------+   +--------^        |
- * |       |        |   |       |   |        |        |
- * |    0--|MOUNTING|-0-|RECEIVE|-0-|   UN   |--->0   |
- * |       |        |   |PROPS  |   |MOUNTING|        |
- * |       |        |   |       |   |        |        |
- * |       |        |   |       |   |        |        |
- * |       +--------+   +-------+   +--------+        |
- * |       |                                 |        |
- * +-------+---------------------------------+--------+
+ * currentlyUnmountingInstance: During the unmounting phase, the instance is
+ * still mounted and can therefore schedule an update. However, this is not
+ * recommended and probably an error since it's about to be unmounted.
+ * Therefore we still want to trigger in an error for that case.
  */
-var ReactLifeCycle = keyMirror({
-  /**
-   * Components in the process of being mounted respond to state changes
-   * differently.
-   */
-  MOUNTING: null,
-  /**
-   * Components in the process of being unmounted are guarded against state
-   * changes.
-   */
-  UNMOUNTING: null,
-  /**
-   * Components that are mounted and receiving new props respond to state
-   * changes differently.
-   */
-  RECEIVING_PROPS: null
-});
+
+var ReactLifeCycle = {
+  currentlyMountingInstance: null,
+  currentlyUnmountingInstance: null
+};
 
 module.exports = ReactLifeCycle;

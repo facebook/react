@@ -21,7 +21,7 @@ var assign = require('Object.assign');
 var invariant = require('invariant');
 
 function enqueueUpdate(internalInstance) {
-  if (internalInstance._compositeLifeCycleState !== ReactLifeCycle.MOUNTING) {
+  if (internalInstance !== ReactLifeCycle.currentlyMountingInstance) {
     // If we're in a componentWillMount handler, don't enqueue a rerender
     // because ReactUpdates assumes we're in a browser context (which is
     // wrong for server rendering) and we're about to do a render anyway.
@@ -49,8 +49,7 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
     callerName
   );
   invariant(
-    internalInstance._compositeLifeCycleState !==
-    ReactLifeCycle.UNMOUNTING,
+    internalInstance !== ReactLifeCycle.currentlyUnmountingInstance,
     '%s(...): Cannot call %s() on an unmounting component.',
     callerName,
     callerName
@@ -84,7 +83,7 @@ var ReactUpdateQueue = {
       internalInstance,
       'Cannot enqueue a callback on an instance that is unmounted.'
     );
-    if (internalInstance._compositeLifeCycleState === ReactLifeCycle.MOUNTING) {
+    if (internalInstance === ReactLifeCycle.currentlyMountingInstance) {
       // Ignore callbacks in componentWillMount. See enqueueUpdate.
       return;
     }
@@ -95,7 +94,8 @@ var ReactUpdateQueue = {
     }
     // TODO: The callback here is ignored when setState is called from
     // componentWillMount. Either fix it or disallow doing so completely in
-    // favor of getInitialState.
+    // favor of getInitialState. Alternatively, we can disallow
+    // componentWillMount during server-side rendering.
     enqueueUpdate(internalInstance);
   },
 
