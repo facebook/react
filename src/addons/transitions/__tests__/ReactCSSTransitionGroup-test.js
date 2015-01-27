@@ -26,6 +26,7 @@ describe('ReactCSSTransitionGroup', function() {
     mocks = require('mocks');
 
     container = document.createElement('div');
+    spyOn(console, 'warn');
   });
 
   it('should warn after time with no transitionend', function() {
@@ -49,8 +50,6 @@ describe('ReactCSSTransitionGroup', function() {
     expect(a.getDOMNode().childNodes[0].id).toBe('two');
     expect(a.getDOMNode().childNodes[1].id).toBe('one');
 
-    console.warn = mocks.getMockFunction();
-
     // For some reason jst is adding extra setTimeout()s and grunt test isn't,
     // so we need to do this disgusting hack.
     for (var i = 0 ; i < setTimeout.mock.calls.length; i++) {
@@ -61,7 +60,7 @@ describe('ReactCSSTransitionGroup', function() {
     }
 
     expect(a.getDOMNode().childNodes.length).toBe(2);
-    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.warn.argsForCall.length).toBe(1);
   });
 
   it('should keep both sets of DOM nodes around', function() {

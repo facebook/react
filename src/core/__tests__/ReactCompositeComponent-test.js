@@ -24,8 +24,6 @@ var ReactTestUtils;
 var cx;
 var reactComponentExpect;
 var mocks;
-var warn;
-
 
 describe('ReactCompositeComponent', function() {
 
@@ -75,12 +73,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    warn = console.warn;
-    console.warn = mocks.getMockFunction();
-  });
-
-  afterEach(function() {
-    console.warn = warn;
+    spyOn(console, 'warn');
   });
 
   it('should support rendering to different child types over time', function() {
@@ -118,7 +111,6 @@ describe('ReactCompositeComponent', function() {
     var container = document.createElement('div');
     container.innerHTML = markup;
 
-    spyOn(console, 'warn');
     React.render(<Parent />, container);
     expect(console.warn).not.toHaveBeenCalled();
   });
@@ -161,8 +153,6 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should auto bind methods and values correctly', function() {
-    spyOn(console, 'warn');
-
     var ComponentClass = React.createClass({
       getInitialState: function() {
         return {valueToReturn: 'hi'};
@@ -470,35 +460,28 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
-    var warn = console.warn;
-    console.warn = mocks.getMockFunction();
+    var Component = React.createClass({
+      getInitialState: function () {
+        return {bogus: false};
+      },
 
-    try {
-      var Component = React.createClass({
-        getInitialState: function () {
-          return {bogus: false};
-        },
+      shouldComponentUpdate: function() {
+        return undefined;
+      },
 
-        shouldComponentUpdate: function() {
-          return undefined;
-        },
+      render: function() {
+        return <div />;
+      }
+    });
 
-        render: function() {
-          return <div />;
-        }
-      });
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    instance.setState({bogus: true});
 
-      var instance = ReactTestUtils.renderIntoDocument(<Component />);
-      instance.setState({bogus: true});
-
-      expect(console.warn.mock.calls.length).toBe(1);
-      expect(console.warn.mock.calls[0][0]).toBe(
-        'Component.shouldComponentUpdate(): Returned undefined instead of a ' +
-        'boolean value. Make sure to return true or false.'
-      );
-    } finally {
-      console.warn = warn;
-    }
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Component.shouldComponentUpdate(): Returned undefined instead of a ' +
+      'boolean value. Make sure to return true or false.'
+    );
   });
 
   it('should pass context', function() {
@@ -579,8 +562,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ '+
       '(values: `bar` vs `undefined`) for key (foo) '+
       'while mounting Component (see: http://fb.me/react-context-by-parent)'
@@ -622,8 +605,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -665,7 +648,7 @@ describe('ReactCompositeComponent', function() {
     });
     React.render(<Parent>{componentWithSameContext}</Parent>, div);
 
-    expect(console.warn.mock.calls.length).toBe(0);
+    expect(console.warn.argsForCall.length).toBe(0);
 
     var componentWithDifferentContext = React.withContext({foo: 'noise'}, function() {
       return <Component />;
@@ -674,8 +657,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -728,8 +711,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.mock.calls.length).toBe(1);
-    expect(console.warn.mock.calls[0][0]).toBe(
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -810,7 +793,6 @@ describe('ReactCompositeComponent', function() {
   });
 
   it('should disallow nested render calls', function() {
-    spyOn(console, 'warn');
     var Inner = React.createClass({
       render: function() {
         return <div />;
