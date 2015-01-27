@@ -29,6 +29,16 @@ var monitorCodeUse = require('monitorCodeUse');
 var invariant = require('invariant');
 var warning = require('warning');
 
+function getDeclarationErrorAddendum() {
+  if (ReactCurrentOwner.current) {
+    var name = ReactCurrentOwner.current.getName();
+    if (name) {
+      return ' Check the render method of `' + name + '`.';
+    }
+  }
+  return '';
+}
+
 /**
  * Warn if there's no key explicitly set on dynamic arrays of children or
  * object keys are not valid. This allows us to keep track of children between
@@ -257,11 +267,9 @@ function checkPropTypes(componentName, propTypes, props, location) {
         // Only monitor this failure once because there tends to be a lot of the
         // same error.
         loggedTypeFailures[error.message] = true;
-        // This will soon use the warning module
-        monitorCodeUse(
-          'react_failed_descriptor_type_check',
-          { message: error.message }
-        );
+
+        var addendum = getDeclarationErrorAddendum(this);
+        warning(false, error.message + addendum);
       }
     }
   }
@@ -376,14 +384,6 @@ var ReactElementValidator = {
           componentClass.propTypes,
           element.props,
           ReactPropTypeLocations.prop
-        );
-      }
-      if (componentClass.contextTypes) {
-        checkPropTypes(
-          name,
-          componentClass.contextTypes,
-          element._context,
-          ReactPropTypeLocations.context
         );
       }
       if (typeof componentClass.getDefaultProps === 'function') {

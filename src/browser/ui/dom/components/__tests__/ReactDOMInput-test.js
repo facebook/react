@@ -216,31 +216,35 @@ describe('ReactDOMInput', function() {
     try {
       console.warn = mocks.getMockFunction();
 
-      var node = document.createElement('div');
       var link = new ReactLink('yolo', mocks.getMockFunction());
-      React.render(<input type="text" valueLink={link} />, node);
+      ReactTestUtils.renderIntoDocument(<input type="text" valueLink={link} />);
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.render(
-        <input type="text" value="zoink" onChange={mocks.getMockFunction()} />,
-        node
+      ReactTestUtils.renderIntoDocument(
+        <input type="text" value="zoink" onChange={mocks.getMockFunction()} />
       );
       expect(console.warn.mock.calls.length).toBe(0);
-
-      React.render(
-        <input type="text" value="zoink" readOnly={true} />,
-        node
-      );
-      expect(console.warn.mock.calls.length).toBe(0);
-
-      React.render(<input type="text" value="zoink" />, node);
+      ReactTestUtils.renderIntoDocument(<input type="text" value="zoink" />);
       expect(console.warn.mock.calls.length).toBe(1);
+    } finally {
+      console.warn = oldWarn;
+    }
+  });
 
-      React.render(
-        <input type="text" value="zoink" readOnly={false} />,
-        node
+  it('should warn with value and no onChange handler and readOnly specified', function() {
+    var oldWarn = console.warn;
+    try {
+      console.warn = mocks.getMockFunction();
+
+      ReactTestUtils.renderIntoDocument(
+        <input type="text" value="zoink" readOnly={true} />
       );
-      expect(console.warn.mock.calls.length).toBe(2);
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(
+        <input type="text" value="zoink" readOnly={false} />
+      );
+      expect(console.warn.mock.calls.length).toBe(1);
     } finally {
       console.warn = oldWarn;
     }
@@ -299,30 +303,41 @@ describe('ReactDOMInput', function() {
       React.render(<input type="checkbox" checkedLink={link} />, node);
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.render(
+      ReactTestUtils.renderIntoDocument(
         <input
           type="checkbox"
           checked="false"
           onChange={mocks.getMockFunction()}
-        />,
-        node
+        />
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.render(
-        <input type="checkbox" checked="false" readOnly={true} />,
-        node
+      ReactTestUtils.renderIntoDocument(
+        <input type="checkbox" checked="false" readOnly={true} />
       );
       expect(console.warn.mock.calls.length).toBe(0);
 
-      React.render(<input type="checkbox" checked="false" />, node);
+      ReactTestUtils.renderIntoDocument(<input type="checkbox" checked="false" />);
       expect(console.warn.mock.calls.length).toBe(1);
+    } finally {
+      console.warn = oldWarn;
+    }
+  });
 
-      React.render(
-        <input type="checkbox" checked="false" readOnly={false} />,
-        node
+  it('should warn with checked and no onChange handler with readOnly specified', function() {
+    var oldWarn = console.warn;
+    try {
+      console.warn = mocks.getMockFunction();
+
+      ReactTestUtils.renderIntoDocument(
+        <input type="checkbox" checked="false" readOnly={true} />
       );
-      expect(console.warn.mock.calls.length).toBe(2);
+      expect(console.warn.mock.calls.length).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(
+        <input type="checkbox" checked="false" readOnly={false} />
+      );
+      expect(console.warn.mock.calls.length).toBe(1);
     } finally {
       console.warn = oldWarn;
     }
