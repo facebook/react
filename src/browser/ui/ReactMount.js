@@ -233,21 +233,49 @@ function findDeepestCachedAncestor(targetID) {
 /**
  * Mounts this component and inserts it into the DOM.
  *
+ * @param {ReactComponent} componentInstance The instance to mount.
  * @param {string} rootID DOM ID of the root node.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
  */
 function mountComponentIntoNode(
+    componentInstance,
     rootID,
     container,
     transaction,
     shouldReuseMarkup) {
   var markup = ReactReconciler.mountComponent(
-    this, rootID, transaction, emptyObject
+    componentInstance, rootID, transaction, emptyObject
   );
-  this._isTopLevel = true;
+  componentInstance._isTopLevel = true;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
+}
+
+/**
+ * Batched mount.
+ *
+ * @param {ReactComponent} componentInstance The instance to mount.
+ * @param {string} rootID DOM ID of the root node.
+ * @param {DOMElement} container DOM element to mount into.
+ * @param {boolean} shouldReuseMarkup If true, do not insert markup
+ */
+function batchedMountComponentIntoNode(
+    componentInstance,
+    rootID,
+    container,
+    shouldReuseMarkup) {
+  var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
+  transaction.perform(
+    mountComponentIntoNode,
+    null,
+    componentInstance,
+    rootID,
+    container,
+    transaction,
+    shouldReuseMarkup
+  );
+  ReactUpdates.ReactReconcileTransaction.release(transaction);
 }
 
 /**
@@ -368,16 +396,17 @@ var ReactMount = {
       container
     );
 
-    var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
-    transaction.perform(
-      mountComponentIntoNode,
+    // The initial render is synchronous but any updates that happen during
+    // rendering, in componentWillMount or componentDidMount, will be batched
+    // according to the current batching strategy.
+
+    ReactUpdates.batchedUpdates(
+      batchedMountComponentIntoNode,
       componentInstance,
       reactRootID,
       container,
-      transaction,
       shouldReuseMarkup
     );
-    ReactUpdates.ReactReconcileTransaction.release(transaction);
 
     if (__DEV__) {
       // Record the root element in case it later gets transplanted.

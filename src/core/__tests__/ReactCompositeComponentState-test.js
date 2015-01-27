@@ -155,9 +155,9 @@ describe('ReactCompositeComponent-state', function() {
       [ 'componentDidMount-start', 'orange', null ],
       // setState-sunrise and setState-orange should be called here,
       // after the bug in #1740
-      // componentDidMount() called setState({color:'yellow'}), currently this
-      // occurs inline.
-      // In a future where setState() is async, this test result will change.
+      // componentDidMount() called setState({color:'yellow'}), which is async.
+      // The update doesn't happen until the next flush.
+      [ 'componentDidMount-end', 'orange', 'yellow' ],
       [ 'shouldComponentUpdate-currentState', 'orange', null ],
       [ 'shouldComponentUpdate-nextState', 'yellow' ],
       [ 'componentWillUpdate-currentState', 'orange', null ],
@@ -166,8 +166,6 @@ describe('ReactCompositeComponent-state', function() {
       [ 'componentDidUpdate-currentState', 'yellow', null ],
       [ 'componentDidUpdate-prevState', 'orange' ],
       [ 'setState-yellow', 'yellow', null ],
-      // componentDidMount() finally closes.
-      [ 'componentDidMount-end', 'yellow', null ],
       [ 'initial-callback', 'yellow', null ],
       [ 'componentWillReceiveProps-start', 'yellow', null ],
       // setState({color:'green'}) only enqueues a pending state.

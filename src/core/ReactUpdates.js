@@ -104,9 +104,9 @@ assign(
 
 PooledClass.addPoolingTo(ReactUpdatesFlushTransaction);
 
-function batchedUpdates(callback, a, b) {
+function batchedUpdates(callback, a, b, c, d) {
   ensureInjected();
-  batchingStrategy.batchedUpdates(callback, a, b);
+  batchingStrategy.batchedUpdates(callback, a, b, c, d);
 }
 
 /**
