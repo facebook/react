@@ -8,7 +8,7 @@
  */
 
 ///<reference path='../../../../jest/jest.d.ts'/>
-///<reference path='./react.d.ts'/>
+///<reference path='../React.d.ts'/>
 
 import React = require('React');
 
