@@ -85,9 +85,9 @@ if (__DEV__) {
 
   /**
    * @param {string} name
-   * @param {string|number} value
+   * @param {*} value
    */
-  var assertValidStyle = function(name, value) {
+  var warnValidStyle = function(name, value) {
     if (name.indexOf('-') > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
@@ -123,7 +123,7 @@ var CSSPropertyOperations = {
       }
       var styleValue = styles[styleName];
       if (__DEV__) {
-        assertValidStyle(styleName, styleValue);
+        warnValidStyle(styleName, styleValue);
       }
       if (styleValue != null) {
         serialized += processStyleName(styleName) + ':';
@@ -147,7 +147,7 @@ var CSSPropertyOperations = {
         continue;
       }
       if (__DEV__) {
-        assertValidStyle(styleName, styles[styleName]);
+        warnValidStyle(styleName, styles[styleName]);
       }
       var styleValue = dangerousStyleValue(styleName, styles[styleName]);
       if (styleName === 'float') {
