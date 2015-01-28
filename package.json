@@ -81,6 +81,7 @@
     "rootDir": "",
     "scriptPreprocessor": "jest/preprocessor.js",
     "setupEnvScriptFile": "jest/environment.js",
+    "persistModuleRegistryBetweenSpecs": true,
     "testFileExtensions": [
       "js",
       "coffee",
