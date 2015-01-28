@@ -48,6 +48,7 @@
     "grunt-contrib-connect": "~0.6.0",
     "grunt-contrib-copy": "^0.7.0",
     "grunt-contrib-jshint": "^0.10.0",
+    "grunt-jest": "^0.1.2",
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
     "jest-cli": "^0.2.1",
@@ -58,8 +59,8 @@
     "populist": "~0.1.6",
     "recast": "^0.9.11",
     "sauce-tunnel": "~1.1.0",
-    "ts-compiler": "^2.0.0",
     "tmp": "~0.0.18",
+    "ts-compiler": "^2.0.0",
     "uglify-js": "~2.4.0",
     "uglifyify": "^2.4.0",
     "wd": "~0.2.6"

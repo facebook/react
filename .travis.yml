@@ -41,6 +41,7 @@ after_script:
 env:
   matrix:
   - TEST_TYPE=test
+  - TEST_TYPE=jest
   - TEST_TYPE=lint
   - TEST_TYPE=test:webdriver:saucelabs:modern
   global:
