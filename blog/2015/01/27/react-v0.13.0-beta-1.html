@@ -139,8 +139,8 @@
 <p>Wait, assigning to properties seems like a very imperative way of defining classes! You&#39;re right, however, we designed it this way because it&#39;s idiomatic. We fully expect a more declarative syntax for property initialization to arrive in future version of JavaScript. It might look something like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Future Version</span>
 <span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
-  <span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
+  <span class="kr">static</span> <span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
+  <span class="kr">static</span> <span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
   <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span> <span class="p">};</span>
   <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">});</span>
@@ -180,7 +180,7 @@
 </code></pre></div><h3><a class="anchor" name="mixins"></a>Mixins <a class="hash-link" href="#mixins">#</a></h3>
 <p>Unfortunately, we will not launch any mixin support for ES6 classes in React. That would defeat the purpose of only using idiomatic JavaScript concepts.</p>
 
-<p>There is no standard and universal way to define mixins in JavaScript. In fact, several features to support mixins was dropped from ES6 today. There are a lot of libraries with different semantics. We think that there should be one way of defining mixins that you can use for any JavaScript class. Us making another standard doesn&#39;t help that effort.</p>
+<p>There is no standard and universal way to define mixins in JavaScript. In fact, several features to support mixins were dropped from ES6 today. There are a lot of libraries with different semantics. We think that there should be one way of defining mixins that you can use for any JavaScript class. React just making another doesn&#39;t help that effort.</p>
 
 <p>Therefore, we will keep working with the larger JS community to create a standard for mixins. We will also start designing a new compositional API that will help make common tasks easier to do without mixins. E.g. first-class subscriptions to any kind of Flux store.</p>
 
@@ -195,7 +195,7 @@
 <p>Since these classes are just plain old JavaScript classes, you can use other languages that compile to JavaScript classes, such as TypeScript.</p>
 
 <p>You can also use CoffeeScript classes:</p>
-<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">div = </span><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span><span class="p">(</span><span class="s">&#39;div&#39;</span><span class="p">)</span>
+<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">div = </span><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span> <span class="s">&#39;div&#39;</span>
 
 <span class="k">class</span> <span class="nx">Counter</span> <span class="k">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span>
   <span class="vi">@propTypes =</span>
@@ -204,11 +204,21 @@
     <span class="nv">initialCount: </span><span class="mi">0</span>
   <span class="nv">constructor: </span><span class="nf">-&gt;</span>
     <span class="vi">@state =</span>
-      <span class="nv">count: </span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span>
+      <span class="nv">count: </span><span class="nx">@props</span><span class="p">.</span><span class="nx">initialCount</span>
   <span class="nv">tick: </span><span class="nf">=&gt;</span>
-    <span class="nx">@setState</span><span class="p">(</span><span class="nv">count: </span><span class="nx">@state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="nx">@setState</span> <span class="nv">count: </span><span class="nx">@state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span>
   <span class="nv">render: </span><span class="nf">-&gt;</span>
-    <span class="nx">div</span><span class="p">(</span><span class="nv">onClick: </span><span class="nx">@tick</span><span class="p">,</span> <span class="s">&#39;Clicks: &#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">)</span>
+    <span class="nx">div</span><span class="p">(</span><span class="nv">onClick: </span><span class="nx">@tick</span><span class="p">,</span> <span class="s">&#39;Clicks: &#39;</span><span class="p">,</span> <span class="nx">@state</span><span class="p">.</span><span class="nx">count</span><span class="p">)</span>
+</code></pre></div>
+<p>You can even use the old ES3 module pattern if you want:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">initialProps</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="nx">state</span><span class="o">:</span> <span class="p">{</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">initialProps</span><span class="p">.</span><span class="nx">initialValue</span> <span class="p">},</span>
+    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="o">/&gt;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">}</span>
 </code></pre></div>
     </div>
 
