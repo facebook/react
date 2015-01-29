@@ -275,7 +275,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
             );
           } else if (isEventSupported('focusin')) {
             // IE has `focusin` and `focusout` events which bubble.
-            // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            // @see http://goo.gl/QEDI07
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               topLevelTypes.topFocus,
               'focusin',
