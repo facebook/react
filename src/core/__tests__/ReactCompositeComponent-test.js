@@ -431,6 +431,7 @@ describe('ReactCompositeComponent', function() {
       render: function() {
         return <div>
           <Inner />
+          Text
         </div>;
       }
     });
@@ -452,11 +453,11 @@ describe('ReactCompositeComponent', function() {
     React.unmountComponentAtNode(container);
     expect(innerUnmounted).toBe(true);
 
-    // <Component />, <Inner />, and both <div /> elements and their wrappers
-    // each call unmountIDFromEnvironment which calls purgeID, for a total of 6.
+    // The text and both <div /> elements and their wrappers each call
+    // unmountIDFromEnvironment which calls purgeID, for a total of 3.
     // TODO: Test the effect of this. E.g. does the node cache get repopulated
     // after a getDOMNode call?
-    expect(ReactMount.purgeID.callCount).toBe(6);
+    expect(ReactMount.purgeID.callCount).toBe(3);
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
