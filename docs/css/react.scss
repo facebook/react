@@ -684,6 +684,10 @@ p code {
   height: 100px
 }
 
+.MarkdownEditor .content {
+  white-space: pre-wrap;
+}
+
 .hll {
   background-color: #f7ebc6;
   border-left: 5px solid #f7d87c;
