@@ -20,7 +20,7 @@ var LICENSE_TEMPLATE =
 '/**\n\
  * @PACKAGE@ v@VERSION@\n\
  *\n\
- * Copyright 2013-2014, Facebook, Inc.\n\
+ * Copyright 2013-2015, Facebook, Inc.\n\
  * All rights reserved.\n\
  *\n\
  * This source code is licensed under the BSD-style license found in the\n\
