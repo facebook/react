@@ -48,11 +48,14 @@ var ReactCSSTransitionGroupChild = React.createClass({
     var className = this.props.name + '-' + animationType;
     var activeClassName = className + '-active';
     var noEventTimeout = null;
+    var count = 0;
 
     var endListener = function(e) {
-      if (e && e.target !== node) {
+      count = count + 1;
+      if (count < this.props.count) {
         return;
       }
+
       if (__DEV__) {
         clearTimeout(noEventTimeout);
       }
