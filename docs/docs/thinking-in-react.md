@@ -2,7 +2,7 @@
 id: thinking-in-react
 title: Thinking in React
 prev: tutorial.html
-next: videos.html
+next: conferences.html
 ---
 
 This was originally a [blog post](/react/blog/2013/11/05/thinking-in-react.html) from the [official React blog](/react/blog).

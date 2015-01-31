@@ -8,6 +8,8 @@
     title: Thinking in React
 - title: Community Resources
   items:
+  - id: conferences
+    title: Conferences
   - id: videos
     title: Videos
   - id: complementary-tools
