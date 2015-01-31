@@ -21,14 +21,12 @@ var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
 
-var cx;
 var reactComponentExpect;
 var mocks;
 
 describe('ReactCompositeComponent', function() {
 
   beforeEach(function() {
-    cx = require('cx');
     mocks = require('mocks');
 
     reactComponentExpect = require('reactComponentExpect');
@@ -66,7 +64,7 @@ describe('ReactCompositeComponent', function() {
         return this.refs.anch;
       },
       render: function() {
-        var className = cx({'anchorClass': this.props.anchorClassOn});
+        var className = this.props.anchorClassOn ? 'anchorClass' : '';
         return this.props.renderAnchor ?
           <a ref="anch" className={className}></a> :
           <b></b>;
