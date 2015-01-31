@@ -108,7 +108,6 @@ assign(ReactDOMTextComponent.prototype, {
   },
 
   unmountComponent: function() {
-    // TODO: Is this necessary?
     ReactComponentBrowserEnvironment.unmountIDFromEnvironment(this._rootNodeID);
   }
 

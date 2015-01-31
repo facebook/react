@@ -257,8 +257,6 @@ var ReactCompositeComponentMixin = {
     this._pendingCallbacks = null;
     this._pendingElement = null;
 
-    ReactComponentEnvironment.unmountIDFromEnvironment(this._rootNodeID);
-
     // These fields do not really need to be reset since this object is no
     // longer accessible.
     this._context = null;
