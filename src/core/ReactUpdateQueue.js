@@ -154,7 +154,8 @@ var ReactUpdateQueue = {
       'replaceState'
     );
 
-    internalInstance._pendingState = completeState;
+    internalInstance._pendingStateQueue = [completeState];
+    internalInstance._pendingReplaceState = true;
 
     enqueueUpdate(internalInstance);
   },
@@ -175,12 +176,10 @@ var ReactUpdateQueue = {
       'setState'
     );
 
-    // Merge with `_pendingState` if it exists, otherwise with existing state.
-    internalInstance._pendingState = assign(
-      {},
-      internalInstance._pendingState || internalInstance._instance.state,
-      partialState
-    );
+    var queue =
+      internalInstance._pendingStateQueue ||
+      (internalInstance._pendingStateQueue = []);
+    queue.push(partialState);
 
     enqueueUpdate(internalInstance);
   },
