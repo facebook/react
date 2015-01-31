@@ -465,18 +465,22 @@ var ReactMount = {
     }
 
     var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup =
-      reactRootElement && ReactMount.isRenderedByReact(reactRootElement);
+    var containerHasReactMarkup = (
+      reactRootElement &&
+      !reactRootElement.nextSibling &&
+      ReactMount.isRenderedByReact(reactRootElement)
+    );
 
     if (__DEV__) {
-      if (!containerHasReactMarkup || reactRootElement.nextSibling) {
+      if (!prevComponent && reactRootElement && reactRootElement.nextSibling) {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
           if (ReactMount.isRenderedByReact(rootElementSibling)) {
             console.warn(
               'render(): Target node has markup rendered by React, but there ' +
-              'are unrelated nodes as well. This is most commonly caused by ' +
-              'white-space inserted around server-rendered markup.'
+              'are unrelated nodes as well. The markup rendered by React has ' +
+              'not been reused. This is most commonly caused by white-space ' +
+              'inserted around server-rendered markup.'
             );
             break;
           }

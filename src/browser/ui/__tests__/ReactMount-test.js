@@ -134,6 +134,12 @@ describe('ReactMount', function() {
     console.warn = mocks.getMockFunction();
     ReactMount.render(<div />, container);
     expect(console.warn.mock.calls.length).toBe(1);
+
+    container.innerHTML = React.renderToString(<div />);
+
+    console.warn = mocks.getMockFunction();
+    ReactMount.render(<div />, container);
+    expect(console.warn.mock.calls.length).toBe(0);
   });
 
   it('should not warn if mounting into non-empty node', function() {
@@ -143,5 +149,32 @@ describe('ReactMount', function() {
     console.warn = mocks.getMockFunction();
     ReactMount.render(<div />, container);
     expect(console.warn.mock.calls.length).toBe(0);
+  });
+
+  it('should reuse if mounting into rendered markup', function() {
+    var container = document.createElement('container');
+    container.innerHTML = React.renderToString(<div />);
+
+    var renderedNode = container.firstChild;
+    ReactMount.render(<div />, container);
+    expect(container.firstChild).toBe(renderedNode);
+  });
+
+  it('should not reuse if mounting into dirty rendered markup', function() {
+    var container = document.createElement('container');
+    var renderedMarkup = React.renderToString(<div />);
+    var renderedNode;
+
+    container.innerHTML = renderedMarkup + ' ';
+
+    renderedNode = container.firstChild;
+    ReactMount.render(<div />, container);
+    expect(container.firstChild).not.toBe(renderedNode);
+
+    container.innerHTML = ' ' + renderedMarkup;
+
+    renderedNode = container.firstChild;
+    ReactMount.render(<div />, container);
+    expect(container.firstChild).not.toBe(renderedNode);
   });
 });
