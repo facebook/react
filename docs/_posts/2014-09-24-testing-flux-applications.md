@@ -3,6 +3,8 @@ title: "Testing Flux Applications"
 author: Bill Fisher
 ---
 
+**A more up-to-date version of this post is available as part of the [Flux documentation](http://facebook.github.io/flux/docs/testing-flux-applications.html).**
+
 [Flux](http://facebook.github.io/flux/) is the application architecture that Facebook uses to build web applications with [React](http://facebook.github.io/react/). It's based on a unidirectional data flow. In previous blog posts and documentation articles, we've shown the [basic structure and data flow](http://facebook.github.io/flux/docs/overview.html), more closely examined the [dispatcher and action creators](http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html), and shown how to put it all together with a [tutorial](http://facebook.github.io/flux/docs/todo-list.html). Now let's look at how to do formal unit testing of Flux applications with [Jest](http://facebook.github.io/jest/), Facebook's auto-mocking testing framework.
 
 
