@@ -39,7 +39,7 @@ replaceState(object nextState[, function callback])
 Like `setState()` but deletes any pre-existing state keys that are not in nextState.
 
 
-### forceUpdate()
+### forceUpdate
 
 ```javascript
 forceUpdate([function callback])
@@ -61,7 +61,7 @@ DOMElement getDOMNode()
 If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
 
 
-### isMounted()
+### isMounted
 
 ```javascript
 bool isMounted()
