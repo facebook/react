@@ -495,7 +495,6 @@ var CommentForm = React.createClass({
     // TODO: send request to the server
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
-    return;
   },
   render: function() {
     return (
@@ -577,7 +576,6 @@ var CommentForm = React.createClass({
     this.props.onCommentSubmit({author: author, text: text});
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
-    return;
   },
   render: function() {
     return (
