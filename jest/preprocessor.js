@@ -3,7 +3,14 @@
 var ReactTools = require('../main.js');
 
 var coffee = require('coffee-script');
-var ts = require('ts-compiler');
+var tsPreprocessor = require('./ts-preprocessor');
+
+var defaultLibraries = [
+  require.resolve('./jest.d.ts'),
+  require.resolve('../src/modern/class/React.d.ts')
+];
+
+var ts = tsPreprocessor(defaultLibraries);
 
 module.exports = {
   process: function(src, path) {
@@ -11,20 +18,7 @@ module.exports = {
       return coffee.compile(src, {'bare': true});
     }
     if (path.match(/\.ts$/) && !path.match(/\.d\.ts$/)) {
-      ts.compile([path], {
-        skipWrite: true,
-        module: 'commonjs'
-      }, function(err, results) {
-        if (err) {
-          throw err;
-        }
-        results.forEach(function(file) {
-          // This is gross, but jest doesn't provide an asynchronous way to
-          // process a module, and ts currently runs syncronously.
-          src = file.text;
-        });
-      });
-      return src;
+      return ts.compile(src, path);
     }
     return ReactTools.transform(src, {harmony: true});
   }

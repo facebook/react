@@ -7,9 +7,6 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-///<reference path='../../../../jest/jest.d.ts'/>
-///<reference path='../React.d.ts'/>
-
 import React = require('React');
 
 // Before Each
