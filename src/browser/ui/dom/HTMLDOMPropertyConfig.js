@@ -120,7 +120,7 @@ var HTMLDOMPropertyConfig = {
     muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     name: null,
     noValidate: HAS_BOOLEAN_VALUE,
-    open: null,
+    open: HAS_BOOLEAN_VALUE,
     pattern: null,
     placeholder: null,
     poster: null,
