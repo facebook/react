@@ -895,8 +895,10 @@ var ReactClass = {
     // Legacy hook
     Constructor.type = Constructor;
     if (__DEV__) {
-      if (Object.defineProperty) {
+      try {
         Object.defineProperty(Constructor, 'type', typeDeprecationDescriptor);
+      } catch (x) {
+        // IE will fail on defineProperty (es5-shim/sham too)
       }
     }
 
