@@ -60,7 +60,7 @@
     "recast": "^0.9.11",
     "sauce-tunnel": "~1.1.0",
     "tmp": "~0.0.18",
-    "ts-compiler": "^2.0.0",
+    "typescript": "^1.4.0",
     "uglify-js": "~2.4.0",
     "uglifyify": "^2.4.0",
     "wd": "~0.2.6"
