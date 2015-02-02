@@ -57,7 +57,6 @@ function visitReactTag(traverse, object, path, state) {
   // We assume that the React runtime is already in scope
   utils.append('React.createElement(', state);
 
-  // XJSMemberExpressions are not.
   if (nameObject.type === Syntax.XJSIdentifier && isTagName(nameObject.name)) {
     utils.append('"' + nameObject.name + '"', state);
     utils.move(nameObject.range[1], state);
