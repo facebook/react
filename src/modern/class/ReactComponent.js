@@ -86,14 +86,14 @@ ReactComponent.prototype.forceUpdate = function(callback) {
  * modern base class. Instead, we define a getter that warns if it's accessed.
  */
 if (__DEV__) {
-  if (Object.defineProperty) {
-    var deprecatedAPIs = {
-      getDOMNode: 'getDOMNode',
-      isMounted: 'isMounted',
-      replaceState: 'replaceState',
-      setProps: 'setProps'
-    };
-    var defineDeprecationWarning = function(methodName, displayName) {
+  var deprecatedAPIs = {
+    getDOMNode: 'getDOMNode',
+    isMounted: 'isMounted',
+    replaceState: 'replaceState',
+    setProps: 'setProps'
+  };
+  var defineDeprecationWarning = function(methodName, displayName) {
+    try {
       Object.defineProperty(ReactComponent.prototype, methodName, {
         get: function() {
           warning(
@@ -104,11 +104,13 @@ if (__DEV__) {
           return undefined;
         }
       });
-    };
-    for (var methodName in deprecatedAPIs) {
-      if (deprecatedAPIs.hasOwnProperty(methodName)) {
-        defineDeprecationWarning(methodName, deprecatedAPIs[methodName]);
-      }
+    } catch (x) {
+      // IE will fail on defineProperty (es5-shim/sham too)
+    }
+  };
+  for (var methodName in deprecatedAPIs) {
+    if (deprecatedAPIs.hasOwnProperty(methodName)) {
+      defineDeprecationWarning(methodName, deprecatedAPIs[methodName]);
     }
   }
 }
