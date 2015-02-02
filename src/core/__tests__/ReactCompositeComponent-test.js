@@ -826,10 +826,10 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(<Outer />);
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
-      'Warning: ReactCompositeComponent._renderNewRootComponent(): Render methods should ' +
+      'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate.'
+      'updates in componentDidUpdate. Check the render method of Outer.'
     );
   });
 
