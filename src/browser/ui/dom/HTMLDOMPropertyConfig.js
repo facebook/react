@@ -164,11 +164,13 @@ var HTMLDOMPropertyConfig = {
     // keyboard hints.
     autoCapitalize: null,
     autoCorrect: null,
-    // itemProp, itemScope, itemType are for Microdata support. See
-    // http://schema.org/docs/gs.html
+    // itemProp, itemScope, itemType, itemType, itemId are for
+    // Microdata support. See http://schema.org/docs/gs.html
     itemProp: MUST_USE_ATTRIBUTE,
     itemScope: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
     itemType: MUST_USE_ATTRIBUTE,
+    itemId: MUST_USE_ATTRIBUTE,
+    itemRef: MUST_USE_ATTRIBUTE,
     // property is supported for OpenGraph in meta tags.
     property: null
   },

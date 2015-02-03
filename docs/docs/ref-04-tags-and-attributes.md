@@ -69,7 +69,7 @@ In addition, the following non-standard attributes are supported:
 
 - `autoCapitalize autoCorrect` for Mobile Safari.
 - `property` for [Open Graph](http://ogp.me/) meta tags.
-- `itemProp itemScope itemType` for [HTML5 microdata](http://schema.org/docs/gs.html).
+- `itemProp itemScope itemType itemRef itemId` for [HTML5 microdata](http://schema.org/docs/gs.html).
 
 There is also the React-specific attribute `dangerouslySetInnerHTML` ([more here](/react/docs/special-non-dom-attributes.html)), used for directly inserting HTML strings into a component.
 
