@@ -20,6 +20,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var MobileSafariClickEventPlugin = require('MobileSafariClickEventPlugin');
 var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
+var ReactClass = require('ReactClass');
 var ReactComponentBrowserEnvironment =
   require('ReactComponentBrowserEnvironment');
 var ReactDefaultBatchingStrategy = require('ReactDefaultBatchingStrategy');
@@ -33,6 +34,7 @@ var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
 var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
+var ReactElement = require('ReactElement');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -44,6 +46,22 @@ var SimpleEventPlugin = require('SimpleEventPlugin');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
 var createFullPageComponent = require('createFullPageComponent');
+
+function autoGenerateWrapperClass(type) {
+  return ReactClass.createClass({
+    tagName: type.toUpperCase(),
+    render: function() {
+      return new ReactElement(
+        type,
+        null,
+        null,
+        null,
+        null,
+        this.props
+      );
+    }
+  });
+}
 
 function inject() {
   ReactInjection.EventEmitter.injectReactEventListener(
@@ -76,6 +94,10 @@ function inject() {
 
   ReactInjection.NativeComponent.injectTextComponentClass(
     ReactDOMTextComponent
+  );
+
+  ReactInjection.NativeComponent.injectAutoWrapper(
+    autoGenerateWrapperClass
   );
 
   // This needs to happen before createFullPageComponent() otherwise the mixin
