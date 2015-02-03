@@ -13,7 +13,7 @@
 
 var emptyFunction = require('emptyFunction');
 var LinkPropTypes = require('ReactLink').PropTypes;
-var React = require('React');
+var React = require('react');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
 var invalidMessage = 'Invalid prop `testProp` supplied to `testComponent`.';

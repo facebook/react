@@ -21,7 +21,7 @@ describe('ReactES6Class', function() {
   var renderedName = null;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     container = document.createElement('div');
     attachedListener = null;
     renderedName = null;

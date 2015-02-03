@@ -19,7 +19,7 @@
 'use strict';
 
 var LinkedStateMixin = require('LinkedStateMixin');
-var React = require('React');
+var React = require('react');
 var ReactComponentWithPureRenderMixin =
   require('ReactComponentWithPureRenderMixin');
 var ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');

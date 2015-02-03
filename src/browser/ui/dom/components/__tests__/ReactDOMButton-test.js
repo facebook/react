@@ -39,7 +39,7 @@ describe('ReactDOMButton', function() {
   }
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 

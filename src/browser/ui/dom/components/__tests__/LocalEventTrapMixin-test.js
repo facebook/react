@@ -20,7 +20,7 @@ describe('LocalEventTrapMixin', function() {
   beforeEach(function() {
     EventConstants = require('EventConstants');
     LocalEventTrapMixin = require('LocalEventTrapMixin');
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
   });
 

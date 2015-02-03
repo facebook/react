@@ -14,7 +14,7 @@
  * just helpers for the unit test.
  */
 
-declare module 'React' {
+declare module 'react' {
   export class Component {
     props: any;
     state: any;

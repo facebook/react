@@ -23,7 +23,7 @@ describe('ReactDOMComponent', function() {
     var ReactTestUtils;
 
     beforeEach(function() {
-      React = require('React');
+      React = require('react');
       ReactTestUtils = require('ReactTestUtils');
     });
 
@@ -392,7 +392,7 @@ describe('ReactDOMComponent', function() {
     var container;
 
     beforeEach(function() {
-      React = require('React');
+      React = require('react');
       container = document.createElement('div');
     });
 
@@ -435,7 +435,7 @@ describe('ReactDOMComponent', function() {
 
   describe('unmountComponent', function() {
     it("should clean up listeners", function() {
-      var React = require('React');
+      var React = require('react');
       var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
       var ReactMount = require('ReactMount');
 
@@ -470,7 +470,7 @@ describe('ReactDOMComponent', function() {
       var isEventSupported = require('isEventSupported');
       isEventSupported.mockReturnValueOnce(false);
 
-      var React = require('React');
+      var React = require('react');
       var ReactTestUtils = require('ReactTestUtils');
 
       spyOn(console, 'warn');
@@ -484,7 +484,7 @@ describe('ReactDOMComponent', function() {
 
   describe('tag sanitization', function() {
     it('should throw when an invalid tag name is used', () => {
-      var React = require('React');
+      var React = require('react');
       var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('script tag');
       expect(
@@ -495,7 +495,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should throw when an attack vector is used', () => {
-      var React = require('React');
+      var React = require('react');
       var ReactTestUtils = require('ReactTestUtils');
       var hackzor = React.createElement('div><img /><div');
       expect(

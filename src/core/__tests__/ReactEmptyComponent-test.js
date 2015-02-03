@@ -22,7 +22,7 @@ describe('ReactEmptyComponent', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    React = require('React');
+    React = require('react');
     ReactEmptyComponent = require('ReactEmptyComponent');
     ReactTestUtils = require('ReactTestUtils');
 

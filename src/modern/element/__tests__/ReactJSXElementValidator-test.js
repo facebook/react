@@ -23,7 +23,7 @@ describe('ReactJSXElementValidator', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class {

@@ -21,7 +21,7 @@ describe('ReactDOMSelect', function() {
   var ReactTestUtils;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });

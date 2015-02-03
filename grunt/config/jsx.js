@@ -4,7 +4,7 @@ var grunt = require('grunt');
 var _ = require('lodash');
 
 var rootIDs = [
-  "React",
+  "react",
   "ReactWithAddons"
 ];
 

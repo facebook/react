@@ -31,7 +31,7 @@ describe('ReactCompositeComponentDOMMinimalism', function() {
 
   beforeEach(function() {
     reactComponentExpect = require('reactComponentExpect');
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     LowerLevelComposite = React.createClass({

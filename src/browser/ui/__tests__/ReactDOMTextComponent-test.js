@@ -15,7 +15,7 @@ var React;
 
 describe('ReactDOMTextComponent', function() {
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
   });
 
   it('should escape the rootID', function() {

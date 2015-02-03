@@ -25,7 +25,7 @@ describe('ReactMockedComponent', function() {
   beforeEach(function() {
     mocks = require('mocks');
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     OriginalComponent = React.createClass({

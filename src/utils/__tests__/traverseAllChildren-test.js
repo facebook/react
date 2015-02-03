@@ -16,7 +16,7 @@ describe('traverseAllChildren', function() {
   var React;
   beforeEach(function() {
     traverseAllChildren = require('traverseAllChildren');
-    React = require('React');
+    React = require('react');
   });
 
 

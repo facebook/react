@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 
-import React = require('React');
+import React = require('react');
 
 // Before Each
 

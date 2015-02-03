@@ -18,7 +18,7 @@ describe('ReactMultiChild', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    React = require('React');
+    React = require('react');
   });
 
   describe('reconciliation', function() {

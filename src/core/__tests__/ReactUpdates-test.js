@@ -17,7 +17,7 @@ var ReactUpdates;
 
 describe('ReactUpdates', function() {
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     ReactUpdates = require('ReactUpdates');
   });

@@ -9,7 +9,7 @@
  * @providesModule createHierarchyRenderer
  */
 
-var React = require('React');
+var React = require('react');
 
 /**
  * Creates a render method that makes it easier to create, render, and inspect a

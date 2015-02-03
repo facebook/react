@@ -128,7 +128,7 @@ function getLifeCycleState(instance) {
 describe('ReactComponentLifeCycle', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     ReactLifeCycle = require('ReactLifeCycle');
     ReactInstanceMap = require('ReactInstanceMap');

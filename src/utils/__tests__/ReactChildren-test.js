@@ -17,7 +17,7 @@ describe('ReactChildren', function() {
 
   beforeEach(function() {
     ReactChildren = require('ReactChildren');
-    React = require('React');
+    React = require('react');
   });
 
 

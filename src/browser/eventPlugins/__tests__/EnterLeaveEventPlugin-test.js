@@ -26,7 +26,7 @@ describe('EnterLeaveEventPlugin', function() {
 
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
     EventConstants = require('EventConstants');
-    React = require('React');
+    React = require('react');
     ReactMount = require('ReactMount');
 
     topLevelTypes = EventConstants.topLevelTypes;

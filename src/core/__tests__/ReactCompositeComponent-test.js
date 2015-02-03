@@ -32,7 +32,7 @@ describe('ReactCompositeComponent', function() {
     mocks = require('mocks');
 
     reactComponentExpect = require('reactComponentExpect');
-    React = require('React');
+    React = require('react');
     ReactCurrentOwner = require('ReactCurrentOwner');
     ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
     ReactPropTypes = require('ReactPropTypes');

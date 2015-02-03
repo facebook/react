@@ -23,7 +23,7 @@ var TestComponent;
 describe('ReactCompositeComponent-state', function() {
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
