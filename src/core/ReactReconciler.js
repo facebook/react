@@ -100,6 +100,20 @@ var ReactReconciler = {
     if (refsChanged) {
       transaction.getReactMountReady().enqueue(attachRefs, internalInstance);
     }
+  },
+
+  /**
+   * Flush any dirty changes in a component.
+   *
+   * @param {ReactComponent} internalInstance
+   * @param {ReactReconcileTransaction} transaction
+   * @internal
+   */
+  performUpdateIfNecessary: function(
+    internalInstance,
+    transaction
+  ) {
+    internalInstance.performUpdateIfNecessary(transaction);
   }
 
 };
