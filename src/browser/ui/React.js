@@ -13,7 +13,6 @@
 
 'use strict';
 
-var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
@@ -23,14 +22,13 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 var ReactDOM = require('ReactDOM');
-var ReactDOMComponent = require('ReactDOMComponent');
 var ReactDOMTextComponent = require('ReactDOMTextComponent');
 var ReactDefaultInjection = require('ReactDefaultInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ReactMount = require('ReactMount');
-var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 var ReactPropTypes = require('ReactPropTypes');
+var ReactReconciler = require('ReactReconciler');
 var ReactServerRendering = require('ReactServerRendering');
 
 var assign = require('Object.assign');
@@ -89,13 +87,10 @@ if (
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.inject === 'function') {
   __REACT_DEVTOOLS_GLOBAL_HOOK__.inject({
-    // TODO: Inject a hook for notifying devtools of updates
     CurrentOwner: ReactCurrentOwner,
-    DOMComponent: ReactDOMComponent,
-    DOMPropertyOperations: DOMPropertyOperations,
     InstanceHandles: ReactInstanceHandles,
     Mount: ReactMount,
-    MultiChild: ReactMultiChild,
+    Reconciler: ReactReconciler,
     TextComponent: ReactDOMTextComponent
   });
 }

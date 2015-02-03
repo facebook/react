@@ -15,6 +15,7 @@ var CallbackQueue = require('CallbackQueue');
 var PooledClass = require('PooledClass');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactPerf = require('ReactPerf');
+var ReactReconciler = require('ReactReconciler');
 var Transaction = require('Transaction');
 
 var assign = require('Object.assign');
@@ -146,7 +147,11 @@ function runBatchedUpdates(transaction) {
     // stash the callbacks first
     var callbacks = component._pendingCallbacks;
     component._pendingCallbacks = null;
-    component.performUpdateIfNecessary(transaction.reconcileTransaction);
+
+    ReactReconciler.performUpdateIfNecessary(
+      component,
+      transaction.reconcileTransaction
+    );
 
     if (callbacks) {
       for (var j = 0; j < callbacks.length; j++) {
