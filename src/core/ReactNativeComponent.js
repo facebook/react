@@ -11,12 +11,10 @@
 
 'use strict';
 
-var ReactClass = require('ReactClass');
-var ReactElement = require('ReactElement');
-
 var assign = require('Object.assign');
 var invariant = require('invariant');
 
+var autoGenerateWrapperClass = null;
 var genericComponentClass = null;
 // This registry keeps track of wrapper classes around native tags
 var tagToComponentClass = {};
@@ -37,24 +35,13 @@ var ReactNativeComponentInjection = {
   // tag. That particular tag will use this class instead of the generic one.
   injectComponentClasses: function(componentClasses) {
     assign(tagToComponentClass, componentClasses);
+  },
+  // Temporary hack since we expect DOM refs to behave like composites,
+  // for this release.
+  injectAutoWrapper: function(wrapperFactory) {
+    autoGenerateWrapperClass = wrapperFactory;
   }
 };
-
-function autoGenerateWrapperClass(type) {
-  return ReactClass.createClass({
-    tagName: type.toUpperCase(),
-    render: function() {
-      return new ReactElement(
-        type,
-        null,
-        null,
-        null,
-        null,
-        this.props
-      );
-    }
-  });
-}
 
 /**
  * Get a composite component wrapper class for a specific tag.

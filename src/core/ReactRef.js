@@ -12,7 +12,6 @@
 'use strict';
 
 var ReactOwner = require('ReactOwner');
-var ReactUpdates = require('ReactUpdates');
 
 var ReactRef = {};
 
