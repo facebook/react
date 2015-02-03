@@ -111,6 +111,7 @@ var ReactUpdateQueue = {
     } else {
       internalInstance._pendingCallbacks = [callback];
     }
+    enqueueUpdate(internalInstance);
   },
 
   /**

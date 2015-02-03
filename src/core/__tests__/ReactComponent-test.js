@@ -15,10 +15,12 @@ var React;
 var ReactInstanceMap;
 var ReactTestUtils;
 
+var mocks;
 var reactComponentExpect;
 
 describe('ReactComponent', function() {
   beforeEach(function() {
+    mocks = require('mocks');
     React = require('React');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactTestUtils = require('ReactTestUtils');
@@ -270,4 +272,16 @@ describe('ReactComponent', function() {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
   });
+
+  it('fires the callback after a component is rendered', function() {
+    var callback = mocks.getMockFunction();
+    var container = document.createElement('div');
+    React.render(<div />, container, callback);
+    expect(callback.mock.calls.length).toBe(1);
+    React.render(<div className="foo" />, container, callback);
+    expect(callback.mock.calls.length).toBe(2);
+    React.render(<span />, container, callback);
+    expect(callback.mock.calls.length).toBe(3);
+  });
+
 });
