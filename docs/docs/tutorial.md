@@ -385,7 +385,7 @@ When the component is first created, we want to GET some JSON from the server an
 
 We'll use jQuery to help make an asynchronous request to the server.
 
-Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. [As mentioned above](#running-a-server), we have provided serveral servers you can use [on GitHub](https://github.com/reactjs/react-tutorial/). They provide the functionality you need for the rest of this tutorial.
+Note: because this is becoming an AJAX application you'll need to develop your app using a web server rather than as a file sitting on your file system. [As mentioned above](#running-a-server), we have provided several servers you can use [on GitHub](https://github.com/reactjs/react-tutorial/). They provide the functionality you need for the rest of this tutorial.
 
 ```javascript{6-17}
 // tutorial13.js
