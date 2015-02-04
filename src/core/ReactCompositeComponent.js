@@ -96,7 +96,8 @@ var ReactCompositeComponentMixin = {
 
     // See ReactUpdateQueue
     this._pendingElement = null;
-    this._pendingState = null;
+    this._pendingStateQueue = null;
+    this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
     this._renderedComponent = null;
@@ -191,7 +192,8 @@ var ReactCompositeComponentMixin = {
       this.getName() || 'ReactCompositeComponent'
     );
 
-    this._pendingState = null;
+    this._pendingStateQueue = null;
+    this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
     if (inst.componentWillMount) {
@@ -203,10 +205,9 @@ var ReactCompositeComponentMixin = {
         ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
       }
       // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingState` without triggering a re-render.
-      if (this._pendingState) {
-        inst.state = this._pendingState;
-        this._pendingState = null;
+      // `this._pendingStateQueue` without triggering a re-render.
+      if (this._pendingStateQueue) {
+        inst.state = this._processPendingState(inst.props, inst.context);
       }
     }
 
@@ -252,7 +253,8 @@ var ReactCompositeComponentMixin = {
     this._renderedComponent = null;
 
     // Reset pending fields
-    this._pendingState = null;
+    this._pendingStateQueue = null;
+    this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
     this._pendingCallbacks = null;
     this._pendingElement = null;
@@ -468,7 +470,7 @@ var ReactCompositeComponentMixin = {
   },
 
   /**
-   * If any of `_pendingElement`, `_pendingState`, or `_pendingForceUpdate`
+   * If any of `_pendingElement`, `_pendingStateQueue`, or `_pendingForceUpdate`
    * is set, update the component.
    *
    * @param {ReactReconcileTransaction} transaction
@@ -484,7 +486,7 @@ var ReactCompositeComponentMixin = {
       );
     }
 
-    if (this._pendingState != null || this._pendingForceUpdate) {
+    if (this._pendingStateQueue !== null || this._pendingForceUpdate) {
       if (__DEV__) {
         ReactElementValidator.checkAndWarnForMutatedProps(
           this._currentElement
@@ -549,10 +551,8 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var prevContext = inst.context;
-    var prevProps = inst.props;
-    var nextContext = prevContext;
-    var nextProps = prevProps;
+    var nextContext = inst.context;
+    var nextProps = inst.props;
 
     // Distinguish between a props update versus a simple state update
     if (prevParentElement !== nextParentElement) {
@@ -566,7 +566,7 @@ var ReactCompositeComponentMixin = {
       }
 
       // An update here will schedule an update but immediately set
-      // _pendingState which will ensure that any state updates gets
+      // _pendingStateQueue which will ensure that any state updates gets
       // immediately reconciled instead of waiting for the next batch.
 
       if (inst.componentWillReceiveProps) {
@@ -574,8 +574,7 @@ var ReactCompositeComponentMixin = {
       }
     }
 
-    var nextState = this._pendingState || inst.state;
-    this._pendingState = null;
+    var nextState = this._processPendingState(nextProps, nextContext);
 
     var shouldUpdate =
       this._pendingForceUpdate ||
@@ -612,6 +611,31 @@ var ReactCompositeComponentMixin = {
       inst.state = nextState;
       inst.context = nextContext;
     }
+  },
+
+  _processPendingState: function(props, context) {
+    var inst = this._instance;
+    var queue = this._pendingStateQueue;
+    var replace = this._pendingReplaceState;
+    this._pendingReplaceState = false;
+    this._pendingStateQueue = null;
+
+    if (!queue) {
+      return inst.state;
+    }
+
+    var nextState = assign({}, replace ? queue[0] : inst.state);
+    for (var i = replace ? 1 : 0; i < queue.length; i++) {
+      var partial = queue[i];
+      assign(
+        nextState,
+        typeof partial === 'function' ?
+          partial.call(inst, nextState, props, context) :
+          partial
+      );
+    }
+
+    return nextState;
   },
 
   /**
