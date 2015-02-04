@@ -263,6 +263,7 @@ describe('ReactComponent', function() {
         expect(this.isMounted()).toBeTruthy();
       },
       render: function() {
+        expect(this.isMounted()).toBeFalsy()
         return <div/>;
       }
     });

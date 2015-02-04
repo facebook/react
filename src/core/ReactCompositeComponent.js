@@ -196,22 +196,25 @@ var ReactCompositeComponentMixin = {
     this._pendingReplaceState = false;
     this._pendingForceUpdate = false;
 
-    if (inst.componentWillMount) {
-      var previouslyMounting = ReactLifeCycle.currentlyMountingInstance;
-      ReactLifeCycle.currentlyMountingInstance = this;
-      try {
-        inst.componentWillMount();
-      } finally {
-        ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
+    var renderedElement;
+
+    var previouslyMounting = ReactLifeCycle.currentlyMountingInstance;
+    ReactLifeCycle.currentlyMountingInstance = this;
+    try {
+      if (inst.componentWillMount) {
+          inst.componentWillMount();
+        // When mounting, calls to `setState` by `componentWillMount` will set
+        // `this._pendingStateQueue` without triggering a re-render.
+        if (this._pendingStateQueue) {
+          inst.state = this._processPendingState(inst.props, inst.context);
+        }
       }
-      // When mounting, calls to `setState` by `componentWillMount` will set
-      // `this._pendingStateQueue` without triggering a re-render.
-      if (this._pendingStateQueue) {
-        inst.state = this._processPendingState(inst.props, inst.context);
-      }
+
+      renderedElement = this._renderValidatedComponent();
+    } finally {
+      ReactLifeCycle.currentlyMountingInstance = previouslyMounting;
     }
 
-    var renderedElement = this._renderValidatedComponent();
     this._renderedComponent = this._instantiateReactComponent(
       renderedElement,
       this._currentElement.type // The wrapping type
