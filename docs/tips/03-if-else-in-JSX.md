@@ -35,8 +35,8 @@ React.render(<div id={condition ? 'msg' : ''}>Hello World!</div>, mountNode);
 
 You can also use ternary expression to determine which tags or components should be used.
 
-```js
-var loginButton = isLoggedIn ? (
+
+var loginInformation = isLoggedIn ? (
     <cite>Hello!</cite>
 ) : (
     <strong>Log in, please...</strong>
@@ -46,7 +46,7 @@ var signupButton = isLoggedIn ? null : <SignUpButton/>;
 
 return (
   <nav>
-    {loginButton}
+    {loginInformation}
     {signupButton}
   </nav>
 );
