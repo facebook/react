@@ -9,7 +9,11 @@ This was originally a [blog post](/react/blog/2013/11/05/thinking-in-react.html)
 
 React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.
 
-One of the many great parts of React is how it makes you think about apps as you build them. In this post I'll walk you through the thought process of building a searchable product data table using React. *Note if you can't see the embeded jsfiddles on this page make sure your browser is pointing to the `http` version of this page not `https`*
+One of the many great parts of React is how it makes you think about apps as you build them. In this post I'll walk you through the thought process of building a searchable product data table using React.
+
+> Note:
+>
+> If you can't see the embedded code snippets on this page, make sure you're NOT loading this page on `https`.
 
 ## Start with a mock
 
