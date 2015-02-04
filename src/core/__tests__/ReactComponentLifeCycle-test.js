@@ -260,6 +260,18 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
+  it('is not mounted inside initial render', function() {
+    var InitialRender = React.createClass({
+      render: function() {
+        expect(this.isMounted()).toBe(false);
+        return (
+          <div></div>
+        );
+      }
+    });
+    ReactTestUtils.renderIntoDocument(<InitialRender />);
+  });
+
   it('should carry through each of the phases of setup', function() {
     var LifeCycleComponent = React.createClass({
       getInitialState: function() {
@@ -360,7 +372,7 @@ describe('ReactComponentLifeCycle', function() {
       ComponentLifeCycle.MOUNTED
     );
     expect(instance._testJournal.compositeLifeCycleInInitialRender).toBe(
-      null
+      CompositeComponentLifeCycle.MOUNTING
     );
 
     expect(getLifeCycleState(instance)).toBe(ComponentLifeCycle.MOUNTED);
