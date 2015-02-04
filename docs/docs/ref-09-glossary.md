@@ -76,6 +76,7 @@ If you are using JSX you have no need for factories. JSX already provides a conv
 ## React Nodes
 
 A `ReactNode` can be either:
+
 - `ReactElement`
 - `string` (aka `ReactText`)
 - `number` (aka `ReactText`)
