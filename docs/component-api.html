@@ -403,7 +403,7 @@
 <h3><a class="anchor" name="replacestate"></a>replaceState <a class="hash-link" href="#replacestate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">replaceState</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextState</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>Like <code>setState()</code> but deletes any pre-existing state keys that are not in nextState.</p>
-<h3><a class="anchor" name="forceupdate"></a>forceUpdate() <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
+<h3><a class="anchor" name="forceupdate"></a>forceUpdate <a class="hash-link" href="#forceupdate">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">forceUpdate</span><span class="p">([</span><span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>
 </code></pre></div>
 <p>If your <code>render()</code> method reads from something other than <code>this.props</code> or <code>this.state</code>, you&#39;ll need to tell React when it needs to re-run <code>render()</code> by calling <code>forceUpdate()</code>. You&#39;ll also need to call <code>forceUpdate()</code> if you mutate <code>this.state</code> directly.</p>
 
@@ -413,7 +413,7 @@
 <h3><a class="anchor" name="getdomnode"></a>getDOMNode <a class="hash-link" href="#getdomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">getDOMNode</span><span class="p">()</span>
 </code></pre></div>
 <p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
-<h3><a class="anchor" name="ismounted"></a>isMounted() <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
+<h3><a class="anchor" name="ismounted"></a>isMounted <a class="hash-link" href="#ismounted">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">bool</span> <span class="nx">isMounted</span><span class="p">()</span>
 </code></pre></div>
 <p><code>isMounted()</code> returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to <code>setState()</code> or <code>forceUpdate()</code>.</p>
 <h3><a class="anchor" name="setprops"></a>setProps <a class="hash-link" href="#setprops">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">setProps</span><span class="p">(</span><span class="nx">object</span> <span class="nx">nextProps</span><span class="p">[,</span> <span class="kd">function</span> <span class="nx">callback</span><span class="p">])</span>

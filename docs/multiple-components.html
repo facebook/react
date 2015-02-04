@@ -509,7 +509,7 @@
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>You can also key children by passing an object. The object keys will be used as <code>key</code> for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order <strong>except</strong> for properties that can be parsed as a 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:</p>
+<p>You can also key children by passing an object. The object keys will be used as <code>key</code> for each value. However it is important to remember that JavaScript does not guarantee the ordering of properties will be preserved. In practice browsers will preserve property order <strong>except</strong> for properties that can be parsed as 32-bit unsigned integers. Numeric properties will be ordered sequentially and before other properties. If this happens React will render components out of order. This can be avoided by adding a string prefix to the key:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">items</span> <span class="o">=</span> <span class="p">{};</span>
 

@@ -401,6 +401,9 @@
 <h3><a class="anchor" name="mockcomponent"></a>mockComponent <a class="hash-link" href="#mockcomponent">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">object</span> <span class="nx">mockComponent</span><span class="p">(</span><span class="kd">function</span> <span class="nx">componentClass</span><span class="p">,</span> <span class="nx">string</span><span class="o">?</span> <span class="nx">mockTagName</span><span class="p">)</span>
 </code></pre></div>
 <p>Pass a mocked component module to this method to augment it with useful methods that allow it to be used as a dummy React component. Instead of rendering as usual, the component will become a simple <code>&lt;div&gt;</code> (or other tag if <code>mockTagName</code> is provided) containing any provided children.</p>
+<h3><a class="anchor" name="iselement"></a>isElement <a class="hash-link" href="#iselement">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElement</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Returns true if <code>element</code> is any ReactElement.</p>
 <h3><a class="anchor" name="iselementoftype"></a>isElementOfType <a class="hash-link" href="#iselementoftype">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">isElementOfType</span><span class="p">(</span><span class="nx">ReactElement</span> <span class="nx">element</span><span class="p">,</span> <span class="kd">function</span> <span class="nx">componentClass</span><span class="p">)</span>
 </code></pre></div>
 <p>Returns true if <code>element</code> is a ReactElement whose type is of a React <code>componentClass</code>.</p>

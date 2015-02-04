@@ -414,7 +414,7 @@ as XML attribute names. Instead, React DOM components expect DOM property
 names like <code>className</code> and <code>htmlFor</code>, respectively.</p>
 </blockquote>
 <h2><a class="anchor" name="the-transform"></a>The Transform <a class="hash-link" href="#the-transform">#</a></h2>
-<p>React JSX transforms from an XML-like syntax into native JavaScript. XML elements, attributes and children are transformed into arguments to <code>React.createElement</code>.</p>
+<p>React JSX transforms from an XML-like syntax into native JavaScript. XML elements, attributes and children are transformed into arguments that are passed to <code>React.createElement</code>.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Nav</span><span class="p">;</span>
 <span class="c1">// Input (JSX):</span>
 <span class="kd">var</span> <span class="nx">app</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Nav</span> <span class="nx">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
@@ -484,7 +484,7 @@ ReactElement as an object literal to bypass the validation code in
 <span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Label</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
 <span class="nx">MyFormComponent</span><span class="p">.</span><span class="nx">Input</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">...</span> <span class="p">});</span>
 </code></pre></div>
-<p>JSX will take care to make the things right when compile your code.</p>
+<p>JSX will handle this properly when compiling your code.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> 
     <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> 

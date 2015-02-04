@@ -383,7 +383,7 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>We&#39;ll be building a simple, but realistic comments box that you can drop into a blog, a basic version of the realtime comments offered by Disqus, LiveFyre or Facebook comments.</p>
+    <p>We&#39;ll be building a simple but realistic comments box that you can drop into a blog, a basic version of the realtime comments offered by Disqus, LiveFyre or Facebook comments.</p>
 
 <p>We&#39;ll provide:</p>
 
@@ -691,7 +691,7 @@
 </code></pre></div>
 <p>We&#39;ll use jQuery to help make an asynchronous request to the server.</p>
 
-<p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. <a href="#running-a-server">As mentioned above</a>, we have provided serveral servers you can use <a href="https://github.com/reactjs/react-tutorial/">on GitHub</a>. They provide the functionality you need for the rest of this tutorial.</p>
+<p>Note: because this is becoming an AJAX application you&#39;ll need to develop your app using a web server rather than as a file sitting on your file system. <a href="#running-a-server">As mentioned above</a>, we have provided several servers you can use <a href="https://github.com/reactjs/react-tutorial/">on GitHub</a>. They provide the functionality you need for the rest of this tutorial.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// tutorial13.js</span>
 <span class="kd">var</span> <span class="nx">CommentBox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
@@ -787,7 +787,6 @@
 </span><span class="hll">    <span class="c1">// TODO: send request to the server</span>
 </span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
 </span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-</span><span class="hll">    <span class="k">return</span><span class="p">;</span>
 </span><span class="hll">  <span class="p">},</span>
 </span>  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
@@ -857,7 +856,6 @@
 <span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">onCommentSubmit</span><span class="p">({</span><span class="nx">author</span><span class="o">:</span> <span class="nx">author</span><span class="p">,</span> <span class="nx">text</span><span class="o">:</span> <span class="nx">text</span><span class="p">});</span>
 </span>    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">author</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">text</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">value</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">;</span>
-    <span class="k">return</span><span class="p">;</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>

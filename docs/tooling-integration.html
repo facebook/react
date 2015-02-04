@@ -397,7 +397,11 @@
 <p>The in-browser JSX transformer is fairly large and results in extraneous computation client-side that can be avoided. Do not use it in production — see the next section.</p>
 </blockquote>
 <h3><a class="anchor" name="productionizing-precompiled-jsx"></a>Productionizing: Precompiled JSX <a class="hash-link" href="#productionizing-precompiled-jsx">#</a></h3>
-<p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>. Run <code>jsx --help</code> for more information on how to use this tool.</p>
+<p>If you have <a href="http://npmjs.org/">npm</a>, you can simply run <code>npm install -g react-tools</code> to install our command-line <code>jsx</code> tool. This tool will translate files that use JSX syntax to plain JavaScript files that can run directly in the browser. It will also watch directories for you and automatically transform files when they are changed; for example: <code>jsx --watch src/ build/</code>.</p>
+
+<p>By default JSX files with a <code>.js</code> extension are transformed. Use <code>jsx --extension jsx src/ build/</code> to transform files with a <code>.jsx</code> extension.</p>
+
+<p>Run <code>jsx --help</code> for more information on how to use this tool.</p>
 <h3><a class="anchor" name="helpful-open-source-projects"></a>Helpful Open-Source Projects <a class="hash-link" href="#helpful-open-source-projects">#</a></h3>
 <p>The open-source community has built tools that integrate JSX with several editors and build systems. See <a href="https://github.com/facebook/react/wiki/Complementary-Tools#jsx-integrations">JSX integrations</a> for the full list.</p>
 

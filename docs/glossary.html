@@ -429,11 +429,14 @@
 </code></pre></div>
 <p>If you are using JSX you have no need for factories. JSX already provides a convenient short-hand for creating <code>ReactElement</code>s.</p>
 <h2><a class="anchor" name="react-nodes"></a>React Nodes <a class="hash-link" href="#react-nodes">#</a></h2>
-<p>A <code>ReactNode</code> can be either:
-- <code>ReactElement</code>
-- <code>string</code> (aka <code>ReactText</code>)
-- <code>number</code> (aka <code>ReactText</code>)
-- Array of <code>ReactNode</code>s (aka <code>ReactFragment</code>)</p>
+<p>A <code>ReactNode</code> can be either:</p>
+
+<ul>
+<li><code>ReactElement</code></li>
+<li><code>string</code> (aka <code>ReactText</code>)</li>
+<li><code>number</code> (aka <code>ReactText</code>)</li>
+<li>Array of <code>ReactNode</code>s (aka <code>ReactFragment</code>)</li>
+</ul>
 
 <p>These are used as properties of other <code>ReactElement</code>s to represent children. Effectively they create a tree of <code>ReactElement</code>s.</p>
 <h2><a class="anchor" name="react-components"></a>React Components <a class="hash-link" href="#react-components">#</a></h2>
