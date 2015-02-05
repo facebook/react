@@ -11,16 +11,33 @@
 
 "use strict";
 
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+// `'` is not escaped; OWASP asserts "Properly quoted attributes can only be
+// escaped with the corresponding quote.". All attribute value quoting must use
+// this function which exclusively quotes with `"`. However, `<` and `>` are
+// still escaped as a precaution for when markup is served within inline
+// scripts or comments without sufficient escaping.
+
+var ESCAPE_LOOKUP = {
+  '&': '&amp;',
+  '>': '&gt;',
+  '<': '&lt;',
+  '"': '&quot;'
+};
+
+var ESCAPE_REGEX = /[&><"]/g;
+
+function escaper(match) {
+  return ESCAPE_LOOKUP[match];
+}
 
 /**
  * Escapes attribute value to prevent scripting attacks.
  *
- * @param {*} value Value to escape.
+ * @param {*} value Attribute value to escape.
  * @return {string} An escaped string.
  */
 function quoteAttributeValueForBrowser(value) {
-  return '"' + escapeTextContentForBrowser(value) + '"';
+  return '"' + ('' + value).replace(ESCAPE_REGEX, escaper) + '"';
 }
 
 module.exports = quoteAttributeValueForBrowser;
