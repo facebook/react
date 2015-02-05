@@ -50,12 +50,27 @@ describe('ReactClass-spec', function() {
         return <div />;
       }
     });
+    var SecondTestComponent = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
     expect(TestComponent.type).toBe(TestComponent);
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: TestComponent.type is deprecated. Use TestComponent ' +
       'directly to access the class.'
     );
+    // Warn once per class
+    expect(SecondTestComponent.type).toBe(SecondTestComponent);
+    expect(console.warn.argsForCall.length).toBe(2);
+    expect(console.warn.argsForCall[1][0]).toBe(
+      'Warning: SecondTestComponent.type is deprecated. Use ' +
+      'SecondTestComponent directly to access the class.'
+    );
+    // Not again
+    expect(TestComponent.type).toBe(TestComponent);
+    expect(console.warn.argsForCall.length).toBe(2);
   });
 
   it('should copy prop types onto the Constructor', function() {

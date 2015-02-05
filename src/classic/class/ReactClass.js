@@ -714,6 +714,9 @@ var typeDeprecationDescriptor = {
       displayName,
       displayName
     );
+    Object.defineProperty(this, 'type', {
+      value: this
+    });
     return this;
   }
 };
