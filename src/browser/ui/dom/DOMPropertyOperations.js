@@ -16,7 +16,6 @@ var DOMProperty = require('DOMProperty');
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-var memoizeStringOnly = require('memoizeStringOnly');
 var warning = require('warning');
 
 function shouldIgnoreValue(name, value) {
@@ -26,10 +25,6 @@ function shouldIgnoreValue(name, value) {
     (DOMProperty.hasPositiveNumericValue[name] && (value < 1)) ||
     (DOMProperty.hasOverloadedBooleanValue[name] && value === false);
 }
-
-var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
-  return escapeTextContentForBrowser(name) + '=';
-});
 
 if (__DEV__) {
   var reactProps = {
@@ -82,7 +77,7 @@ var DOMPropertyOperations = {
    * @return {string} Markup string.
    */
   createMarkupForID: function(id) {
-    return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
+    return DOMProperty.ID_ATTRIBUTE_NAME + '=' +
       quoteAttributeValueForBrowser(id);
   },
 
@@ -102,16 +97,14 @@ var DOMPropertyOperations = {
       var attributeName = DOMProperty.getAttributeName[name];
       if (DOMProperty.hasBooleanValue[name] ||
           (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
-        return escapeTextContentForBrowser(attributeName);
+        return attributeName;
       }
-      return processAttributeNameAndPrefix(attributeName) +
-        quoteAttributeValueForBrowser(value);
+      return attributeName + '=' + quoteAttributeValueForBrowser(value);
     } else if (DOMProperty.isCustomAttribute(name)) {
       if (value == null) {
         return '';
       }
-      return processAttributeNameAndPrefix(name) +
-        quoteAttributeValueForBrowser(value);
+      return name + '=' + quoteAttributeValueForBrowser(value);
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }
