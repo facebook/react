@@ -53,7 +53,7 @@ These standard attributes are supported:
 
 ```
 accept acceptCharset accessKey action allowFullScreen allowTransparency alt
-async autoComplete autoPlay cellPadding cellSpacing charSet checked classID
+async autoComplete autoFocus autoPlay cellPadding cellSpacing charSet checked classID
 className cols colSpan content contentEditable contextMenu controls coords
 crossOrigin data dateTime defer dir disabled download draggable encType form
 formAction formEncType formMethod formNoValidate formTarget frameBorder height
