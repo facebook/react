@@ -35,10 +35,9 @@ describe('escapeTextContentForBrowser', function() {
   });
 
   it('should escape string', function() {
-    var escaped = escapeTextContentForBrowser('<script type=\'\' src=""></script>');
+    var escaped = escapeTextContentForBrowser('<script src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
     expect(escaped).not.toContain('\"');
 
     escaped = escapeTextContentForBrowser('&');
