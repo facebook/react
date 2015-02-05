@@ -25,7 +25,7 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactPerf = require('ReactPerf');
 
 var assign = require('Object.assign');
-var escapeTextForBrowser = require('escapeTextForBrowser');
+var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
@@ -284,7 +284,7 @@ ReactDOMComponent.Mixin = {
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
-        return prefix + escapeTextForBrowser(contentToUse);
+        return prefix + escapeTextContentForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,

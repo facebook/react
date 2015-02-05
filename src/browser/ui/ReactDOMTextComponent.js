@@ -18,7 +18,7 @@ var ReactComponentBrowserEnvironment =
 var ReactDOMComponent = require('ReactDOMComponent');
 
 var assign = require('Object.assign');
-var escapeTextForBrowser = require('escapeTextForBrowser');
+var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 
 /**
@@ -67,7 +67,7 @@ assign(ReactDOMTextComponent.prototype, {
    */
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
-    var escapedText = escapeTextForBrowser(this._stringText);
+    var escapedText = escapeTextContentForBrowser(this._stringText);
 
     if (transaction.renderToStaticMarkup) {
       // Normally we'd wrap this in a `span` for the reasons stated above, but

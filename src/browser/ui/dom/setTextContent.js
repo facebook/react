@@ -19,7 +19,7 @@
 "use strict";
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
-var escapeTextForBrowser = require('escapeTextForBrowser');
+var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var setInnerHTML = require('setInnerHTML');
 
 /**
@@ -39,7 +39,7 @@ var setTextContent = function(node, text) {
 if (ExecutionEnvironment.canUseDOM) {
   if (!('textContent' in document.documentElement)) {
     setTextContent = function(node, text) {
-      setInnerHTML(node, escapeTextForBrowser(text));
+      setInnerHTML(node, escapeTextContentForBrowser(text));
     };
   }
 }

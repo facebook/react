@@ -14,7 +14,8 @@
 
 var DOMProperty = require('DOMProperty');
 
-var escapeTextForBrowser = require('escapeTextForBrowser');
+var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var memoizeStringOnly = require('memoizeStringOnly');
 var warning = require('warning');
 
@@ -27,7 +28,7 @@ function shouldIgnoreValue(name, value) {
 }
 
 var processAttributeNameAndPrefix = memoizeStringOnly(function(name) {
-  return escapeTextForBrowser(name) + '="';
+  return escapeTextContentForBrowser(name) + '=';
 });
 
 if (__DEV__) {
@@ -82,7 +83,7 @@ var DOMPropertyOperations = {
    */
   createMarkupForID: function(id) {
     return processAttributeNameAndPrefix(DOMProperty.ID_ATTRIBUTE_NAME) +
-      escapeTextForBrowser(id) + '"';
+      quoteAttributeValueForBrowser(id);
   },
 
   /**
@@ -101,16 +102,16 @@ var DOMPropertyOperations = {
       var attributeName = DOMProperty.getAttributeName[name];
       if (DOMProperty.hasBooleanValue[name] ||
           (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
-        return escapeTextForBrowser(attributeName);
+        return escapeTextContentForBrowser(attributeName);
       }
       return processAttributeNameAndPrefix(attributeName) +
-        escapeTextForBrowser(value) + '"';
+        quoteAttributeValueForBrowser(value);
     } else if (DOMProperty.isCustomAttribute(name)) {
       if (value == null) {
         return '';
       }
       return processAttributeNameAndPrefix(name) +
-        escapeTextForBrowser(value) + '"';
+        quoteAttributeValueForBrowser(value);
     } else if (__DEV__) {
       warnUnknownProperty(name);
     }

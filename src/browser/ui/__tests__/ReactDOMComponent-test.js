@@ -431,6 +431,23 @@ describe('ReactDOMComponent', function() {
         'style={{marginRight: spacing + \'em\'}} when using JSX.'
       );
     });
+
+    it("should properly escape text content and attributes values", function() {
+      expect(
+        React.renderToStaticMarkup(
+          React.DOM.div({
+            title: '\'"<>&',
+            style: {
+              textAlign: '\'"<>&'
+            }
+          }, '\'"<>&')
+        )
+      ).toBe(
+        '<div title="&#x27;&quot;&lt;&gt;&amp;" style="text-align:&#x27;&quot;&lt;&gt;&amp;;">' +
+          '&#x27;&quot;&lt;&gt;&amp;' +
+        '</div>'
+      );
+    });
   });
 
   describe('unmountComponent', function() {

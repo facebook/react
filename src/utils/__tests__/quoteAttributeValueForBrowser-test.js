@@ -9,40 +9,40 @@
  * @emails react-core
  */
 
-'use strict';
+"use strict";
 
-describe('escapeTextForBrowser', function() {
+describe('quoteAttributeValueForBrowser', function() {
 
-  var escapeTextForBrowser = require('escapeTextForBrowser');
+  var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 
   it('should escape boolean to string', function() {
-    expect(escapeTextForBrowser(true)).toBe('true');
-    expect(escapeTextForBrowser(false)).toBe('false');
+    expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
+    expect(quoteAttributeValueForBrowser(false)).toBe('"false"');
   });
 
   it('should escape object to string', function() {
-    var escaped = escapeTextForBrowser({
+    var escaped = quoteAttributeValueForBrowser({
       toString: function() {
         return 'ponys';
       }
     });
 
-    expect(escaped).toBe('ponys');
+    expect(escaped).toBe('"ponys"');
   });
 
   it('should escape number to string', function() {
-    expect(escapeTextForBrowser(42)).toBe('42');
+    expect(quoteAttributeValueForBrowser(42)).toBe('"42"');
   });
 
   it('should escape string', function() {
-    var escaped = escapeTextForBrowser('<script type=\'\' src=""></script>');
+    var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
     expect(escaped).not.toContain('\'');
-    expect(escaped).not.toContain('\"');
+    expect(escaped.substr(1, -1)).not.toContain('\"');
 
-    escaped = escapeTextForBrowser('&');
-    expect(escaped).toBe('&amp;');
+    escaped = quoteAttributeValueForBrowser('&');
+    expect(escaped).toBe('"&amp;"');
   });
 
 });
