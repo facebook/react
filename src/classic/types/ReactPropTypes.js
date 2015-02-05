@@ -284,7 +284,7 @@ function createShapeTypeChecker(shapeTypes) {
     }
     return null;
   }
-  return createChainableTypeChecker(validate, 'expected `object`');
+  return createChainableTypeChecker(validate);
 }
 
 function isNode(propValue) {
