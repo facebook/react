@@ -24,7 +24,7 @@ var warning = require('warning');
  * Returns the DOM node rendered by this element.
  *
  * @param {ReactComponent|DOMElement} componentOrElement
- * @return {DOMElement} The root node of this element.
+ * @return {?DOMElement} The root node of this element.
  */
 function findDOMNode(componentOrElement) {
   if (__DEV__) {

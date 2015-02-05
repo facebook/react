@@ -302,8 +302,8 @@ var SimpleEventPlugin = {
    * Same as the default implementation, except cancels the event when return
    * value is false. This behavior will be disabled in a future release.
    *
-   * @param {object} Event to be dispatched.
-   * @param {function} Application-level callback.
+   * @param {object} event Event to be dispatched.
+   * @param {function} listener Application-level callback.
    * @param {string} domID DOM ID to pass to the callback.
    */
   executeDispatch: function(event, listener, domID) {

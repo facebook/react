@@ -168,6 +168,7 @@ function getFirstCommonAncestorID(oneID, twoID) {
  * @param {?string} start ID at which to start traversal.
  * @param {?string} stop ID at which to end traversal.
  * @param {function} cb Callback to invoke each ID with.
+ * @param {*} arg Argument to invoke the callback with.
  * @param {?boolean} skipFirst Whether or not to skip the first node.
  * @param {?boolean} skipLast Whether or not to skip the last node.
  * @private

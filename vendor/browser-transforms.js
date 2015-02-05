@@ -184,7 +184,8 @@ function run(code, url, options) {
  * Load script from the provided url and pass the content to the callback.
  *
  * @param {string} url The location of the script src
- * @param {function} callback Function to call with the content of url
+ * @param {function} successCallback Function to call with the content of url
+ * @param {function} errorCallback Function to call if error
  * @internal
  */
 function load(url, successCallback, errorCallback) {

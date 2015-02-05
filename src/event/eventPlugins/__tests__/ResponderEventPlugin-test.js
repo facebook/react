@@ -206,7 +206,8 @@ var oneEventLoopTestConfig = function(readableIDToID) {
 };
 
 /**
- * @param {object} sequence See `oneEventLoopTestConfig`.
+ * @param {object} eventTestConfig
+ * @param {object} readableIDToID
  */
 var registerTestHandlers = function(eventTestConfig, readableIDToID) {
   var runs = {dispatchCount: 0};

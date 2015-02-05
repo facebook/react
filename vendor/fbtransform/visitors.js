@@ -96,7 +96,7 @@ function getAllVisitors(excludes) {
  * Given a list of visitor set names, return the ordered list of visitors to be
  * passed to jstransform.
  *
- * @param {array}
+ * @param {array} sets
  * @return {array}
  */
 function getVisitorsBySet(sets) {

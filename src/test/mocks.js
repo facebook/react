@@ -374,7 +374,7 @@ module.exports = {
    *
    * defines an object with a slot named 'self' that refers back to the object.
    *
-   * @param component The component for which to retrieve metadata.
+   * @param {*} component The component for which to retrieve metadata.
    */
   getMetadata: function(component) {
     var metadata = _getMetadata(component);

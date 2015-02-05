@@ -64,7 +64,7 @@ var useMutationMembrane = false;
  * Warn for mutations.
  *
  * @internal
- * @param {object} element
+ * @param {object} prototype
  */
 function defineMutationMembrane(prototype) {
   try {
@@ -85,8 +85,10 @@ function defineMutationMembrane(prototype) {
  * work with a dynamic instanceof check. Nothing should live on this prototype.
  *
  * @param {*} type
- * @param {string|object} ref
  * @param {*} key
+ * @param {string|object} ref
+ * @param {*} owner
+ * @param {*} context
  * @param {*} props
  * @internal
  */

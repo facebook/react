@@ -58,7 +58,7 @@ var ON_SELECT_KEY = keyOf({onSelect: null});
  * two identical selections on the same node will return identical objects.
  *
  * @param {DOMElement} node
- * @param {object}
+ * @return {object}
  */
 function getSelection(node) {
   if ('selectionStart' in node &&
