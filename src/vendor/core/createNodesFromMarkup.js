@@ -17,6 +17,7 @@ var ExecutionEnvironment = require('ExecutionEnvironment');
 var createArrayFrom = require('createArrayFrom');
 var getMarkupWrap = require('getMarkupWrap');
 var invariant = require('invariant');
+var removeAllChildren = require('removeAllChildren');
 
 /**
  * Dummy container used to render all markup.
@@ -77,9 +78,7 @@ function createNodesFromMarkup(markup, handleScript) {
   }
 
   var nodes = createArrayFrom(node.childNodes);
-  while (node.lastChild) {
-    node.removeChild(node.lastChild);
-  }
+  removeAllChildren(node);
   return nodes;
 }
 
