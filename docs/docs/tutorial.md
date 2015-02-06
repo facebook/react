@@ -168,7 +168,7 @@ Notice how we're mixing HTML tags and components we've built. HTML components ar
 
 ### Using props
 
-Let's create the Comment component. Using **props** we will be able to read the data passed to it from the `CommentList`, and render some markup:
+Let's create the `Comment` component, which will depend on data passed in from it's parent. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
 
 ```javascript
 // tutorial4.js
@@ -190,7 +190,7 @@ By surrounding a JavaScript expression in braces inside JSX (as either an attrib
 
 ### Component Properties
 
-Let's create our third component, `Comment`. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let's add some comments to the `CommentList`:
+Now that we have defined the `Comment` component, we will want to pass it the author name and comment text. This allows us to reuse the same code for each unique comment. Now let's add some comments within our `CommentList`:
 
 ```javascript{6-7}
 // tutorial5.js
@@ -206,7 +206,7 @@ var CommentList = React.createClass({
 });
 ```
 
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. Data passed from parent to children components is called **props**, short for properties.
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
 
 ### Adding Markdown
 
