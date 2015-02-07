@@ -20,8 +20,6 @@ var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 
-var select = ReactElement.createFactory('select');
-
 function updateOptionsIfPendingUpdateAndMounted() {
   /*jshint validthis:true */
   if (this._pendingUpdate) {
@@ -125,7 +123,7 @@ var ReactDOMSelect = ReactClass.createClass({
     props.onChange = this._handleChange;
     props.value = null;
 
-    return select(props, this.props.children);
+    return ReactElement.createElement(props, this.props.children);
   },
 
   componentWillMount: function() {
