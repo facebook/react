@@ -17,8 +17,6 @@ var ReactElement = require('ReactElement');
 
 var warning = require('warning');
 
-var option = ReactElement.createFactory('option');
-
 /**
  * Implements an <option> native component that warns when `selected` is set.
  */
@@ -40,7 +38,7 @@ var ReactDOMOption = ReactClass.createClass({
   },
 
   render: function() {
-    return option(this.props, this.props.children);
+    return ReactElement.createElement('option', this.props, this.props.children);
   }
 
 });
