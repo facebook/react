@@ -24,8 +24,6 @@ var invariant = require('invariant');
 
 var warning = require('warning');
 
-var textarea = ReactElement.createFactory('textarea');
-
 function forceUpdateIfMounted() {
   /*jshint validthis:true */
   if (this.isMounted()) {
@@ -108,7 +106,7 @@ var ReactDOMTextarea = ReactClass.createClass({
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.
-    return textarea(props, this.state.initialValue);
+    return ReactElement.createElement('textarea', props, this.state.initialValue);
   },
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {

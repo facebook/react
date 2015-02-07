@@ -23,8 +23,6 @@ var ReactUpdates = require('ReactUpdates');
 var assign = require('Object.assign');
 var invariant = require('invariant');
 
-var input = ReactElement.createFactory('input');
-
 var instancesByReactID = {};
 
 function forceUpdateIfMounted() {
@@ -79,7 +77,7 @@ var ReactDOMInput = ReactClass.createClass({
 
     props.onChange = this._handleChange;
 
-    return input(props, this.props.children);
+    return ReactElement.createElement('input', props, this.props.children);
   },
 
   componentDidMount: function() {
