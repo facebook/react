@@ -4,7 +4,7 @@ title: 显示数据
 layout: docs
 permalink: displaying-data-zh-CN.html
 prev: why-react-zh-CN.html
-next: jsx-in-depth.html
+next: jsx-in-depth-zh-CN.html
 ---
 
 用户界面能做的最基础的事就是显示一些数据。React 让显示数据变得简单，当数据变化的时候，用户界面会自动同步更新。
@@ -80,11 +80,19 @@ React 组件非常简单。你可以认为它们就是简单的函数，接受 `
 
 我们得出解决这个问题最好的方案是通过 JavaScript 直接生成模板，这样你就可以用一个真正语言的所有表达能力去构建用户界面。为了使这变得更简单，我们做了一个非常简单、**可选**类似 HTML 语法 ，通过函数调用即可生成模板的编译器，称为 JSX。
 
-**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： `React.createElement('a', {href: 'http://facebook.github.io/react/'}, 'Hello React!')`。通过 JSX 这就变成了 `<a href="http://facebook.github.io/react/">Hello React!</a>`。我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以**JSX 不是必须用的。**
+**JSX 让你可以用 HTML 语法去写 JavaScript 函数调用** 为了在 React 生成一个链接，通过纯 JavaScript 你可以这么写： 
 
-JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 [深入理解 JSX](/react/docs/jsx-in-depth.html)。或者直接使用[在线 JSX 编译器](/react/jsx-compiler.html)观察变化过程。
+`React.createElement('a', {href: 'http://facebook.github.io/react/'}, 'Hello React!')`。
 
-JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas.html) 学习关键区别。
+通过 JSX 这就变成了
+
+`<a href="http://facebook.github.io/react/">Hello React!</a>`。
+
+我们发现这会使搭建 React 应用更加简单，设计师也偏向用这用语法，但是每个人可以有它们自己的工作流，所以**JSX 不是必须用的。**
+
+JSX 非常小；上面“hello, world”的例子使用了 JSX 所有的特性。想要了解更多，请看 [深入理解 JSX](/react/docs/jsx-in-depth-zh-CN.html)。或者直接使用[在线 JSX 编译器](/react/jsx-compiler.html)观察变化过程。
+
+JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx-gotchas-zh-CN.html) 学习关键区别。
 
 最简单开始学习 JSX 的方法就是使用浏览器端的 `JSXTransformer`。我们强烈建议你不要在生产环境中使用它。你可以通过我们的命令行工具 [react-tools](http://npmjs.org/package/react-tools) 包来预编译你的代码。
 
@@ -112,6 +120,6 @@ React 已经为 HTML 标签提供内置工厂方法。
 
 ```javascript
 var root = React.DOM.ul({ className: 'my-list' },
-             React.DOM.li(null, 'Text Content')
-           );
+  React.DOM.li(null, 'Text Content')
+);
 ```

@@ -8,7 +8,7 @@ next: working-with-the-browser-zh-CN.html
 
 诸如 `<input>`、`<textarea>`、`<option>` 这样的表单组件不同于其他组件，因为他们可以通过用户交互发生变化。这些组件提供的界面使响应用户交互的表单数据处理更加容易。
   
-关于 `<form>` 事件详情请查看 [表单事件](/react/docs/events.html#form-events)。
+关于 `<form>` 事件详情请查看 [表单事件](/react/docs/events-zh-CN.html#form-events)。
 
 ## 交互属性    
     

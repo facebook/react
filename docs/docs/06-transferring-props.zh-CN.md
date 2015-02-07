@@ -149,6 +149,7 @@ z; // { a: 3, b: 4 }
 ## 使用 Underscore 来传递
 
 如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 `_.omit` 来过滤属性，`_.extend` 复制属性到新的对象。
+
 ```javascript
 var FancyCheckbox = React.createClass({
   render: function() {
