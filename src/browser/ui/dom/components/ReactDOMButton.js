@@ -18,8 +18,6 @@ var ReactElement = require('ReactElement');
 
 var keyMirror = require('keyMirror');
 
-var button = ReactElement.createFactory('button');
-
 var mouseListenerNames = keyMirror({
   onClick: true,
   onDoubleClick: true,
@@ -54,7 +52,7 @@ var ReactDOMButton = ReactClass.createClass({
       }
     }
 
-    return button(props, this.props.children);
+    return ReactElement.createElement('button', props, this.props.children);
   }
 
 });
