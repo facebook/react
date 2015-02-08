@@ -29,6 +29,7 @@ markdown: redcarpet
 redcarpet:
   extensions:
   - fenced_code_blocks
+  - footnotes
 sass:
   style: :compressed
   sass_dir: _css
