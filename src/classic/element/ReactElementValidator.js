@@ -49,7 +49,6 @@ var ownerHasKeyUseWarning = {
   'react_key_warning': {},
   'react_numeric_key_warning': {}
 };
-var ownerHasMonitoredObjectMap = {};
 
 var loggedTypeFailures = {};
 
