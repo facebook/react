@@ -15,6 +15,7 @@
 // classic JS without JSX.
 
 var React;
+var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactElementValidator', function() {
@@ -24,11 +25,16 @@ describe('ReactElementValidator', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
       render: function() { return React.createElement('div'); }
     });
   });
+
+  function frag(obj) {
+    return ReactFragment.create(obj);
+  }
 
   it('warns for keys for arrays of elements in rest args', function() {
     spyOn(console, 'warn');
@@ -135,7 +141,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, { 1: Component(), 2: Component() });
+    Component(null, frag({ 1: Component(), 2: Component() }));
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -314,6 +320,14 @@ describe('ReactElementValidator', function() {
 
     // Should not error for strings
     expect(console.warn.calls.length).toBe(2);
+  });
+
+  it('should warn if a fragment is used without the wrapper', function () {
+    spyOn(console, 'warn');
+    var child = React.createElement('span');
+    React.createElement('div', null, { a: child, b: child });
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain('use of a keyed object');
   });
 
 });

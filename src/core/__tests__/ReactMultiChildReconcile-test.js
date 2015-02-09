@@ -39,7 +39,7 @@ var stripEmptyValues = function(obj) {
  * here. This relies on an implementation detail of the rendering system.
  */
 var getOriginalKey = function(childName) {
-  var match = childName.match(/^\.\$([^.]+)\:0$/);
+  var match = childName.match(/^\.\$([^.]+)$/);
   expect(match).not.toBeNull();
   return match[1];
 };
@@ -107,13 +107,14 @@ var FriendsStatusDisplay = React.createClass({
     return res;
   },
   render: function() {
-    var children = null;
+    var children = [];
     var key;
     for (key in this.props.usernameToStatus) {
       var status = this.props.usernameToStatus[key];
-      children = children || {};
-      children[key] = !status ? null :
-          <StatusDisplay ref={key} status={status} />;
+      children.push(
+        !status ? null :
+        <StatusDisplay key={key} ref={key} status={status} />
+      );
     }
     return (
       <div>

@@ -202,7 +202,7 @@ var ReactTransitionGroup = React.createClass({
   render: function() {
     // TODO: we could get rid of the need for the wrapper node
     // by cloning a single child
-    var childrenToRender = {};
+    var childrenToRender = [];
     for (var key in this.state.children) {
       var child = this.state.children[key];
       if (child) {
@@ -211,10 +211,10 @@ var ReactTransitionGroup = React.createClass({
         // already been removed. In case you need this behavior you can provide
         // a childFactory function to wrap every child, even the ones that are
         // leaving.
-        childrenToRender[key] = cloneWithProps(
+        childrenToRender.push(cloneWithProps(
           this.props.childFactory(child),
-          {ref: key}
-        );
+          {ref: key, key: key}
+        ));
       }
     }
     return React.createElement(

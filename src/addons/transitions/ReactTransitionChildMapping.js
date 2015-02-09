@@ -13,6 +13,7 @@
 'use strict';
 
 var ReactChildren = require('ReactChildren');
+var ReactFragment = require('ReactFragment');
 
 var ReactTransitionChildMapping = {
   /**
@@ -23,9 +24,12 @@ var ReactTransitionChildMapping = {
    * @return {object} Mapping of key to child
    */
   getChildMapping: function(children) {
-    return ReactChildren.map(children, function(child) {
+    if (!children) {
+      return children;
+    }
+    return ReactFragment.extract(ReactChildren.map(children, function(child) {
       return child;
-    });
+    }));
   },
 
   /**

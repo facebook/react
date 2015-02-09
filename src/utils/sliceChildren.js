@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactFragment = require('ReactFragment');
+
 var flattenChildren = require('flattenChildren');
 
 /**
@@ -43,7 +45,7 @@ function sliceChildren(children, start, end) {
       break;
     }
   }
-  return slicedChildren;
+  return ReactFragment.create(slicedChildren);
 }
 
 module.exports = sliceChildren;

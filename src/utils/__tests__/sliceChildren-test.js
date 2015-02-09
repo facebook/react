@@ -14,6 +14,7 @@
 describe('sliceChildren', function() {
 
   var React;
+  var ReactFragment;
   var ReactTestUtils;
 
   var sliceChildren;
@@ -23,6 +24,7 @@ describe('sliceChildren', function() {
 
   beforeEach(function() {
     React = require('React');
+    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
 
     sliceChildren = require('sliceChildren');
@@ -52,6 +54,11 @@ describe('sliceChildren', function() {
     return rendered.props.children;
   }
 
+  function testKeyValuePairs(children, expectedPairs) {
+    var obj = ReactFragment.extract(children);
+    expect(obj).toEqual(expectedPairs);
+  }
+
   it('should render the whole set if start zero is supplied', function() {
     var fullSet = [
       <div key="A" />,
@@ -59,7 +66,7 @@ describe('sliceChildren', function() {
       <div key="C" />
     ];
     var children = renderAndSlice(fullSet, 0);
-    expect(children).toEqual({
+    testKeyValuePairs(children, {
       '.$A': fullSet[0],
       '.$B': fullSet[1],
       '.$C': fullSet[2]
@@ -73,7 +80,7 @@ describe('sliceChildren', function() {
       <div key="C" />
     ];
     var children = renderAndSlice(fullSet, 1);
-    expect(children).toEqual({
+    testKeyValuePairs(children, {
       '.$B': fullSet[1],
       '.$C': fullSet[2]
     });
@@ -87,7 +94,7 @@ describe('sliceChildren', function() {
       <div key="D" />
     ];
     var children = renderAndSlice(fullSet, 1, 2);
-    expect(children).toEqual({
+    testKeyValuePairs(children, {
       '.$B': fullSet[1]
     });
   });
@@ -103,7 +110,7 @@ describe('sliceChildren', function() {
       .expectRenderedChild()
       .instance();
 
-    expect(rendered.props.children).toEqual({
+    testKeyValuePairs(rendered.props.children, {
       '.1': b
     });
   });

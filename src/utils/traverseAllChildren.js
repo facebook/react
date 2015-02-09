@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
+var ReactFragment = require('ReactFragment');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 
 var getIteratorFn = require('getIteratorFn');
@@ -184,9 +185,10 @@ function traverseAllChildrenImpl(
         'traverseAllChildren(...): Encountered an invalid child; DOM ' +
         'elements are not valid children of React components.'
       );
-      for (var key in children) {
-        if (children.hasOwnProperty(key)) {
-          child = children[key];
+      var fragment = ReactFragment.extract(children);
+      for (var key in fragment) {
+        if (fragment.hasOwnProperty(key)) {
+          child = fragment[key];
           nextName = (
             (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +
             wrapUserProvidedKey(key) + SUBSEPARATOR +

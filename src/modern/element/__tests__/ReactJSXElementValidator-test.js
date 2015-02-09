@@ -15,6 +15,7 @@
 // of dynamic errors when using JSX with Flow.
 
 var React;
+var ReactFragment;
 var ReactTestUtils;
 
 describe('ReactJSXElementValidator', function() {
@@ -24,12 +25,17 @@ describe('ReactJSXElementValidator', function() {
     require('mock-modules').dumpCache();
 
     React = require('React');
+    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
 
     Component = class {
       render() { return <div />; }
     };
   });
+
+  function frag(obj) {
+    return ReactFragment.create(obj);
+  }
 
   it('warns for keys for arrays of elements in children position', function() {
     spyOn(console, 'warn');
@@ -128,7 +134,7 @@ describe('ReactJSXElementValidator', function() {
   it('warns for numeric keys on objects as children', function() {
     spyOn(console, 'warn');
 
-    <Component>{{ 1: <Component />, 2: <Component /> }}</Component>;
+    <Component>{frag({ 1: <Component />, 2: <Component /> })}</Component>;
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
