@@ -47,7 +47,7 @@ function typeCheckPass(declaration, value) {
 describe('ReactPropTypes', function() {
   beforeEach(function() {
     PropTypes = require('ReactPropTypes');
-    React = require('React');
+    React = require('react');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
   });

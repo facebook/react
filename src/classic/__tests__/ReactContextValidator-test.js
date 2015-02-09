@@ -27,7 +27,7 @@ describe('ReactContextValidator', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
     mocks = require('mocks');

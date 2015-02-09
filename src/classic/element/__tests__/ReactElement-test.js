@@ -27,7 +27,7 @@ describe('ReactElement', function() {
 
     mocks = require('mocks');
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
       render: function() { return React.createElement('div'); }

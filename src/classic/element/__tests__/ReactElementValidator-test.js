@@ -23,7 +23,7 @@ describe('ReactElementValidator', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     ComponentClass = React.createClass({
       render: function() { return React.createElement('div'); }

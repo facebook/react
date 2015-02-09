@@ -23,7 +23,7 @@ describe('ReactDOMInput', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    React = require('React');
+    React = require('react');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
     spyOn(console, 'warn');

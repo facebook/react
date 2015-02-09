@@ -15,7 +15,7 @@
 
 require('mock-modules')
   .dontMock('ExecutionEnvironment')
-  .dontMock('React')
+  .dontMock('react')
   .dontMock('ReactMount')
   .dontMock('ReactServerRendering')
   .dontMock('ReactTestUtils')
@@ -36,7 +36,7 @@ var ID_ATTRIBUTE_NAME;
 describe('ReactServerRendering', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    React = require('React');
+    React = require('react');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactMount = require('ReactMount');
     ReactTestUtils = require('ReactTestUtils');

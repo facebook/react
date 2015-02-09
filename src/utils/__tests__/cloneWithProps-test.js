@@ -27,7 +27,7 @@ var emptyObject;
 describe('cloneWithProps', function() {
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
     cloneWithProps = require('cloneWithProps');

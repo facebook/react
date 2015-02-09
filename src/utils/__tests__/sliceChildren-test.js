@@ -22,7 +22,7 @@ describe('sliceChildren', function() {
   var Partial;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
 
     sliceChildren = require('sliceChildren');

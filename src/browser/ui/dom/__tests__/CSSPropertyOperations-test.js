@@ -13,7 +13,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 
 describe('CSSPropertyOperations', function() {
   var CSSPropertyOperations;

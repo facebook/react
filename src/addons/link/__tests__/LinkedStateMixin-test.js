@@ -21,7 +21,7 @@ describe('LinkedStateMixin', function() {
 
   beforeEach(function() {
     LinkedStateMixin = require('LinkedStateMixin');
-    React = require('React');
+    React = require('react');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
   });

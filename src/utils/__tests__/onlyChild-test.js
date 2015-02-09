@@ -18,7 +18,7 @@ describe('onlyChild', function() {
   var WrapComponent;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     onlyChild = require('onlyChild');
     WrapComponent = React.createClass({
       render: function() {

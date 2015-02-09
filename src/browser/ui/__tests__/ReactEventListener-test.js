@@ -26,7 +26,7 @@ describe('ReactEventListener', function() {
 
   beforeEach(function() {
     require('mock-modules').dumpCache();
-    React = require('React');
+    React = require('react');
 
     ReactMount = require('ReactMount');
     ReactEventListener = require('ReactEventListener');

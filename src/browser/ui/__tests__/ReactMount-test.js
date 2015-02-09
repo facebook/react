@@ -14,7 +14,7 @@
 var mocks = require('mocks');
 
 describe('ReactMount', function() {
-  var React = require('React');
+  var React = require('react');
   var ReactMount = require('ReactMount');
   var ReactTestUtils = require('ReactTestUtils');
 

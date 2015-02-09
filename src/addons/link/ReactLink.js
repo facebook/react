@@ -35,7 +35,7 @@
  * consumption of ReactLink easier; see LinkedValueUtils and LinkedStateMixin.
  */
 
-var React = require('React');
+var React = require('react');
 
 /**
  * @param {*} value current value of the link

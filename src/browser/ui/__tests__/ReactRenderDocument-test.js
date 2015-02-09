@@ -32,7 +32,7 @@ describe('rendering React components at document', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
 
-    React = require('React');
+    React = require('react');
     ReactInstanceMap = require('ReactInstanceMap');
     ReactMount = require('ReactMount');
     getTestDocument = require('getTestDocument');

@@ -11,7 +11,7 @@
 
 'use strict';
 
-var React = require('React');
+var React = require('react');
 
 describe('ReactMount', function() {
   it("should destroy a react root upon request", function() {

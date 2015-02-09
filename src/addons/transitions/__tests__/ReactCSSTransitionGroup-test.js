@@ -21,7 +21,7 @@ describe('ReactCSSTransitionGroup', function() {
   var container;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactCSSTransitionGroup = require('ReactCSSTransitionGroup');
     mocks = require('mocks');
 

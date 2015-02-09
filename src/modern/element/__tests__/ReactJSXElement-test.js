@@ -24,7 +24,7 @@ describe('ReactJSXElement', function() {
 
     mocks = require('mocks');
 
-    React = require('React');
+    React = require('react');
     ReactTestUtils = require('ReactTestUtils');
     Component = class {
       render() { return <div />; }

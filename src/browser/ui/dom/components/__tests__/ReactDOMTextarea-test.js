@@ -22,7 +22,7 @@ describe('ReactDOMTextarea', function() {
   var renderTextarea;
 
   beforeEach(function() {
-    React = require('React');
+    React = require('react');
     ReactLink = require('ReactLink');
     ReactTestUtils = require('ReactTestUtils');
 

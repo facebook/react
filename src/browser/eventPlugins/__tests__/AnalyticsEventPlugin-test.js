@@ -31,7 +31,7 @@ describe('AnalyticsEventPlugin', function() {
     AnalyticsEventPluginFactory = require('AnalyticsEventPluginFactory');
     EventPluginHub = require('EventPluginHub');
     EventPluginRegistry = require('EventPluginRegistry');
-    React = require('React');
+    React = require('react');
     ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
     ReactTestUtils = require('ReactTestUtils');
 

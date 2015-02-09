@@ -12,7 +12,7 @@
 'use strict';
 
 var mocks = require('mocks');
-var React = require('React');
+var React = require('react');
 var ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
