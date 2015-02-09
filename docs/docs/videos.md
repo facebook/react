@@ -140,3 +140,9 @@ Facebook engineers [Bill Fisher](http://twitter.com/fisherwebdev) and [Jing Chen
 Walk-through by [Andres Suarez](https://github.com/zertosh) on how [SoundCloud](https://developers.soundcloud.com/blog/) is using React and Flux for server-side rendering.
 
 [Slides and sample code](https://github.com/zertosh/ssr-demo-kit)
+
+### Introducing React Native (+Playlist) - React.js Conf 2015
+
+<iframe width="650" height="315" src="//www.youtube.com/watch?v=KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+
+[Tom Occhino](https://twitter.com/tomocchino) reviews the past and present of React in 2015, and teases where it's going next.
