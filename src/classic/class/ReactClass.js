@@ -472,6 +472,13 @@ function mixSpecIntoComponent(Constructor, spec) {
       continue;
     }
 
+    if (spec[name] === proto[name]) {
+      // If the spec property and the proto property is the same, continue
+      // This case is useful when one common mixin is shared among other
+      // mixins used at the same time.
+      continue;
+    }
+
     var property = spec[name];
     validateMethodOverride(proto, name);
 
