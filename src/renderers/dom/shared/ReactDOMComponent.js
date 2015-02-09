@@ -333,8 +333,12 @@ ReactDOMComponent.Mixin = {
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
         }
-        var markup =
-          DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
+        var markup = null;
+        if (this._tag != null && this._tag.indexOf('-') >= 0) {
+          markup = DOMPropertyOperations.createMarkupForCustomAttribute(propKey, propValue);
+        } else {
+          markup = DOMPropertyOperations.createMarkupForProperty(propKey, propValue);
+        }
         if (markup) {
           ret += ' ' + markup;
         }
@@ -535,6 +539,12 @@ ReactDOMComponent.Mixin = {
         } else if (lastProp) {
           deleteListener(this._rootNodeID, propKey);
         }
+      } else if (this._tag.indexOf('-') >= 0) {
+        BackendIDOperations.updateAttributeByID(
+          this._rootNodeID,
+          propKey,
+          nextProp
+        );
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {

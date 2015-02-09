@@ -21,6 +21,7 @@ describe('ReactDOMComponent', function() {
     var ReactTestUtils;
 
     beforeEach(function() {
+      require('mock-modules').dumpCache();
       React = require('React');
       ReactTestUtils = require('ReactTestUtils');
     });
@@ -201,6 +202,55 @@ describe('ReactDOMComponent', function() {
       React.render(<div style={styles} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('green');
+    });
+
+    it('should reject attribute key injection attack on markup', function() {
+      spyOn(console, 'error');
+      for (var i = 0; i < 3; i++) {
+        var container = document.createElement('div');
+        var element = React.createElement(
+          'x-foo-component',
+          {'blah" onclick="beevil" noise="hi': 'selected'},
+          null
+        );
+        React.render(element, container);
+      }
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`'
+      );
+    });
+
+    it('should reject attribute key injection attack on update', function() {
+      spyOn(console, 'error');
+      for (var i = 0; i < 3; i++) {
+        var container = document.createElement('div');
+        var beforeUpdate = React.createElement('x-foo-component', {}, null);
+        React.render(beforeUpdate, container);
+
+        var afterUpdate = React.createElement(
+          'x-foo-component',
+          {'blah" onclick="beevil" noise="hi': 'selected'},
+          null
+        );
+        React.render(afterUpdate, container);
+      }
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`'
+      );
+    });
+
+    it('should update arbitrary attributes for tags containing dashes', function() {
+      var container = document.createElement('div');
+
+      var beforeUpdate = React.createElement('x-foo-component', {}, null);
+      React.render(beforeUpdate, container);
+
+      var afterUpdate = <x-foo-component myattr="myval" />;
+      React.render(afterUpdate, container);
+
+      expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
     });
 
     it('should clear all the styles when removing `style`', function() {
