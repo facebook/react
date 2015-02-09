@@ -19,7 +19,6 @@ var ReactDOMComponent = require('ReactDOMComponent');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('invariant');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:

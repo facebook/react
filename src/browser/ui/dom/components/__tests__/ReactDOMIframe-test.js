@@ -10,7 +10,7 @@
  * @emails react-core
  */
 
-"use strict";
+'use strict';
 
 describe('ReactDOMIframe', function() {
   var React;

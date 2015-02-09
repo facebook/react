@@ -119,9 +119,9 @@ if (__DEV__) {
       // IE will fail on defineProperty (es5-shim/sham too)
     }
   };
-  for (var methodName in deprecatedAPIs) {
-    if (deprecatedAPIs.hasOwnProperty(methodName)) {
-      defineDeprecationWarning(methodName, deprecatedAPIs[methodName]);
+  for (var fnName in deprecatedAPIs) {
+    if (deprecatedAPIs.hasOwnProperty(fnName)) {
+      defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     }
   }
 }

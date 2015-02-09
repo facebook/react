@@ -9,7 +9,7 @@
  * @providesModule ReactLifeCycle
  */
 
-"use strict";
+'use strict';
 
 /**
  * This module manages the bookkeeping when a component is in the process

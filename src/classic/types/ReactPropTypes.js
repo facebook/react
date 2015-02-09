@@ -94,7 +94,7 @@ function createChainableTypeChecker(validate) {
       var locationName = ReactPropTypeLocationNames[location];
       if (isRequired) {
         return new Error(
-          `Required ${locationName} \`${propName}\` was not specified in `+
+          `Required ${locationName} \`${propName}\` was not specified in ` +
           `\`${componentName}\`.`
         );
       }
