@@ -1,4 +1,4 @@
-﻿---
+---
 id: conferences
 title: Conferences
 permalink: conferences.html
