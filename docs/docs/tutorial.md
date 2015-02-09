@@ -166,32 +166,12 @@ var CommentBox = React.createClass({
 
 Notice how we're mixing HTML tags and components we've built. HTML components are regular React components, just like the ones you define, with one difference. The JSX compiler will automatically rewrite HTML tags to `React.createElement(tagName)` expressions and leave everything else alone. This is to prevent the pollution of the global namespace.
 
-### Component Properties
-
-Let's create our third component, `Comment`. We will want to pass it the author name and comment text so we can reuse the same code for each unique comment. First let's add some comments to the `CommentList`:
-
-```javascript{6-7}
-// tutorial4.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        <Comment author="Pete Hunt">This is one comment</Comment>
-        <Comment author="Jordan Walke">This is *another* comment</Comment>
-      </div>
-    );
-  }
-});
-```
-
-Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. Data passed from parent to children components is called **props**, short for properties.
-
 ### Using props
 
-Let's create the Comment component. Using **props** we will be able to read the data passed to it from the `CommentList`, and render some markup:
+Let's create the `Comment` component, which will depend on data passed in from it's parent. Data passed in from a parent component is available as a 'property' on the child component. These 'properties' are accessed through `this.props`. Using props we will be able to read the data passed to the `Comment` from the `CommentList`, and render some markup:
 
 ```javascript
-// tutorial5.js
+// tutorial4.js
 var Comment = React.createClass({
   render: function() {
     return (
@@ -207,6 +187,26 @@ var Comment = React.createClass({
 ```
 
 By surrounding a JavaScript expression in braces inside JSX (as either an attribute or child), you can drop text or React components into the tree. We access named attributes passed to the component as keys on `this.props` and any nested elements as `this.props.children`.
+
+### Component Properties
+
+Now that we have defined the `Comment` component, we will want to pass it the author name and comment text. This allows us to reuse the same code for each unique comment. Now let's add some comments within our `CommentList`:
+
+```javascript{6-7}
+// tutorial5.js
+var CommentList = React.createClass({
+  render: function() {
+    return (
+      <div className="commentList">
+        <Comment author="Pete Hunt">This is one comment</Comment>
+        <Comment author="Jordan Walke">This is *another* comment</Comment>
+      </div>
+    );
+  }
+});
+```
+
+Note that we have passed some data from the parent `CommentList` component to the child `Comment` components. For example, we passed *Pete Hunt* (via an attribute) and *This is one comment* (via an XML-like child node) to the first `Comment`. As noted above, the `Comment` component will access these 'properties' through `this.props.author`, and `this.props.children`.
 
 ### Adding Markdown
 
