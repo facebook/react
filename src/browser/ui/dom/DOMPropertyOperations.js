@@ -14,7 +14,6 @@
 
 var DOMProperty = require('DOMProperty');
 
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 var warning = require('warning');
 

@@ -9,7 +9,7 @@
  * @providesModule ReactUpdateQueue
  */
 
-"use strict";
+'use strict';
 
 var ReactLifeCycle = require('ReactLifeCycle');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -101,7 +101,7 @@ var ReactUpdateQueue = {
 
   enqueueCallbackInternal: function(internalInstance, callback) {
     invariant(
-      typeof callback === "function",
+      typeof callback === 'function',
       'enqueueCallback(...): You called `setProps`, `replaceProps`, ' +
       '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
       'isn\'t callable.'

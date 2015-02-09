@@ -131,9 +131,6 @@ var eventTypes = {
   }
 };
 
-// Track characters inserted via keypress and composition events.
-var fallbackBeforeInputChars = null;
-
 // Track whether we've ever handled a keypress on the space key.
 var hasSpaceKeypress = false;
 
@@ -437,7 +434,6 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  fallbackBeforeInputChars = null;
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }

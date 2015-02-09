@@ -16,7 +16,7 @@
  * @providesModule setTextContent
  */
 
-"use strict";
+'use strict';
 
 var ExecutionEnvironment = require('ExecutionEnvironment');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');

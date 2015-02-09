@@ -9,7 +9,7 @@
  * @providesModule quoteAttributeValueForBrowser
  */
 
-"use strict";
+'use strict';
 
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 

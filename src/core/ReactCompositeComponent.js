@@ -564,7 +564,10 @@ var ReactCompositeComponentMixin = {
 
       if (__DEV__) {
         if (nextUnmaskedContext != null) {
-          this._warnIfContextsDiffer(nextParentElement._context, nextUnmaskedContext);
+          this._warnIfContextsDiffer(
+            nextParentElement._context,
+            nextUnmaskedContext
+          );
         }
       }
 
@@ -663,7 +666,6 @@ var ReactCompositeComponentMixin = {
   ) {
     var inst = this._instance;
 
-    var prevElement = this._currentElement;
     var prevProps = inst.props;
     var prevState = inst.state;
     var prevContext = inst.context;
