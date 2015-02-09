@@ -2,7 +2,7 @@
 id: videos
 title: Videos
 permalink: videos.html
-prev: thinking-in-react.html
+prev: conferences.html
 next: complementary-tools.html
 ---
 
