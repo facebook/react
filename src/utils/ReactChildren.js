@@ -12,6 +12,7 @@
 'use strict';
 
 var PooledClass = require('PooledClass');
+var ReactFragment = require('ReactFragment');
 
 var traverseAllChildren = require('traverseAllChildren');
 var warning = require('warning');
@@ -121,7 +122,7 @@ function mapChildren(children, func, context) {
   var traverseContext = MapBookKeeping.getPooled(mapResult, func, context);
   traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
   MapBookKeeping.release(traverseContext);
-  return mapResult;
+  return ReactFragment.create(mapResult);
 }
 
 function forEachSingleChildDummy(traverseContext, child, name, i) {

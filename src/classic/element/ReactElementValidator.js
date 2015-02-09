@@ -19,6 +19,7 @@
 'use strict';
 
 var ReactElement = require('ReactElement');
+var ReactFragment = require('ReactFragment');
 var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactCurrentOwner = require('ReactCurrentOwner');
@@ -176,21 +177,6 @@ function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
 }
 
 /**
- * Log that we're using an object map. We're considering deprecating this
- * feature and replace it with proper Map and ImmutableMap data structures.
- *
- * @internal
- */
-function monitorUseOfObjectMap() {
-  var currentName = getCurrentOwnerDisplayName() || '';
-  if (ownerHasMonitoredObjectMap.hasOwnProperty(currentName)) {
-    return;
-  }
-  ownerHasMonitoredObjectMap[currentName] = true;
-  monitorCodeUse('react_object_map_children');
-}
-
-/**
  * Ensure that every element either is passed in a static location, in an
  * array with an explicit keys property defined, or in an object literal
  * with valid key property.
@@ -213,19 +199,21 @@ function validateChildKeys(node, parentType) {
   } else if (node) {
     var iteratorFn = getIteratorFn(node);
     // Entry iterators provide implicit keys.
-    if (iteratorFn && iteratorFn !== node.entries) {
-      var iterator = iteratorFn.call(node);
-      var step;
-      while (!(step = iterator.next()).done) {
-        if (ReactElement.isValidElement(step.value)) {
-          validateExplicitKey(step.value, parentType);
+    if (iteratorFn) {
+      if (iteratorFn !== node.entries) {
+        var iterator = iteratorFn.call(node);
+        var step;
+        while (!(step = iterator.next()).done) {
+          if (ReactElement.isValidElement(step.value)) {
+            validateExplicitKey(step.value, parentType);
+          }
         }
       }
     } else if (typeof node === 'object') {
-      monitorUseOfObjectMap();
-      for (var key in node) {
-        if (node.hasOwnProperty(key)) {
-          validatePropertyKey(key, node[key], parentType);
+      var fragment = ReactFragment.extractIfFragment(node);
+      for (var key in fragment) {
+        if (fragment.hasOwnProperty(key)) {
+          validatePropertyKey(key, fragment[key], parentType);
         }
       }
     }

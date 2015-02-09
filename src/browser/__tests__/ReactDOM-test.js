@@ -75,37 +75,37 @@ describe('ReactDOM', function() {
    */
   it("should purge the DOM cache when removing nodes", function() {
     var myDiv = ReactTestUtils.renderIntoDocument(
-      <div>{{
-        theDog: <div className="dog" />,
-        theBird: <div className="bird" />
-      }}</div>
+      <div>
+        <div key="theDog" className="dog" />,
+        <div key="theBird" className="bird" />
+      </div>
     );
     // Warm the cache with theDog
     myDiv.setProps({
-      children: {
-        theDog: <div className="dogbeforedelete" />,
-        theBird: <div className="bird" />
-      }
+      children: [
+        <div key="theDog" className="dogbeforedelete" />,
+        <div key="theBird" className="bird" />
+      ]
     });
     // Remove theDog - this should purge the cache
     myDiv.setProps({
-      children: {
-        theBird: <div className="bird" />
-      }
+      children: [
+        <div key="theBird" className="bird" />
+      ]
     });
     // Now, put theDog back. It's now a different DOM node.
     myDiv.setProps({
-      children: {
-        theDog: <div className="dog" />,
-        theBird: <div className="bird" />
-      }
+      children: [
+        <div key="theDog" className="dog" />,
+        <div key="theBird" className="bird" />
+      ]
     });
     // Change the className of theDog. It will use the same element
     myDiv.setProps({
-      children: {
-        theDog: <div className="bigdog" />,
-        theBird: <div className="bird" />
-      }
+      children: [
+        <div key="theDog" className="bigdog" />,
+        <div key="theBird" className="bird" />
+      ]
     });
     var root = myDiv.getDOMNode();
     var dog = root.childNodes[0];

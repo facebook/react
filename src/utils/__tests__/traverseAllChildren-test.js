@@ -14,11 +14,16 @@
 describe('traverseAllChildren', function() {
   var traverseAllChildren;
   var React;
+  var ReactFragment;
   beforeEach(function() {
     traverseAllChildren = require('traverseAllChildren');
     React = require('React');
+    ReactFragment = require('ReactFragment');
   });
 
+  function frag(obj) {
+    return ReactFragment.create(obj);
+  }
 
   it('should support identity for simple', function() {
     var traverseContext = [];
@@ -139,8 +144,8 @@ describe('traverseAllChildren', function() {
     var instance = (
       <div>
         {div}
-        {[{span}]}
-        {{a: a}}
+        {[frag({span})]}
+        {frag({a: a})}
         {'string'}
         {1234}
         {true}
@@ -206,11 +211,11 @@ describe('traverseAllChildren', function() {
 
     var instance = (
       <div>{
-        [{
+        [frag({
           firstHalfKey: [zero, one, two],
           secondHalfKey: [three, four],
           keyFive: five
-        }]
+        })]
       }</div>
     );
 

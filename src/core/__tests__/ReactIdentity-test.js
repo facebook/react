@@ -12,6 +12,7 @@
 'use strict';
 
 var React;
+var ReactFragment;
 var ReactTestUtils;
 var reactComponentExpect;
 var ReactMount;
@@ -21,6 +22,7 @@ describe('ReactIdentity', function() {
   beforeEach(function() {
     require('mock-modules').dumpCache();
     React = require('React');
+    ReactFragment = require('ReactFragment');
     ReactTestUtils = require('ReactTestUtils');
     reactComponentExpect = require('reactComponentExpect');
     ReactMount = require('ReactMount');
@@ -35,13 +37,17 @@ describe('ReactIdentity', function() {
     expect(actual[1]).toEqual(expected[1]);
   }
 
+  function frag(obj) {
+    return ReactFragment.create(obj);
+  }
+
   it('should allow keyed objects to express identity', function() {
     var instance =
       <div>
-        {{
+        {frag({
           first: <div />,
           second: <div />
-        }}
+        })}
       </div>;
 
     instance = React.render(instance, document.createElement('div'));
@@ -106,7 +112,7 @@ describe('ReactIdentity', function() {
 
         var map = {};
         map[key] = span2;
-        return <div>{[span1, map]}</div>;
+        return <div>{[span1, frag(map)]}</div>;
       }
 
     });

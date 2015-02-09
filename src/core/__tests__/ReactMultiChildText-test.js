@@ -16,9 +16,12 @@
 require('mock-modules');
 
 var React = require('React');
+var ReactFragment = require('ReactFragment');
 var ReactTestUtils = require('ReactTestUtils');
 
 var reactComponentExpect = require('reactComponentExpect');
+
+var frag = ReactFragment.create;
 
 // Helpers
 var testAllPermutations = function(testCases) {
@@ -182,18 +185,18 @@ describe('ReactMultiChildText', function() {
       ['', 'foo', [true, <div />, 1.2, ''], 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
 
       // values inside objects
-      [{a: true}, {a: true}], [],
-      [{a: 1.2}, {a: 1.2}], ['1.2', '1.2'],
-      [{a: ''}, {a: ''}], ['', ''],
-      [{a: 'foo'}, {a: 'foo'}], ['foo', 'foo'],
-      [{a: <div />}, {a: <div />}], [<div />, <div />],
+      [frag({a: true}), frag({a: true})], [],
+      [frag({a: 1.2}), frag({a: 1.2})], ['1.2', '1.2'],
+      [frag({a: ''}), frag({a: ''})], ['', ''],
+      [frag({a: 'foo'}), frag({a: 'foo'})], ['foo', 'foo'],
+      [frag({a: <div />}), frag({a: <div />})], [<div />, <div />],
 
-      [{a: true, b: 1.2, c: <div />}, '', 'foo'], ['1.2', <div />, '', 'foo'],
-      [1.2, '', {a: <div />, b: 'foo', c: true}], ['1.2', '', <div />, 'foo'],
-      ['', {a: 'foo', b: <div />, c: true}, 1.2], ['', 'foo', <div />, '1.2'],
+      [frag({a: true, b: 1.2, c: <div />}), '', 'foo'], ['1.2', <div />, '', 'foo'],
+      [1.2, '', frag({a: <div />, b: 'foo', c: true})], ['1.2', '', <div />, 'foo'],
+      ['', frag({a: 'foo', b: <div />, c: true}), 1.2], ['', 'foo', <div />, '1.2'],
 
-      [true, {a: 1.2, b: '', c: <div />, d: 'foo'}, true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
-      ['', 'foo', {a: true, b: <div />, c: 1.2, d: ''}, 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
+      [true, frag({a: 1.2, b: '', c: <div />, d: 'foo'}), true, 1.2], ['1.2', '', <div />, 'foo', '1.2'],
+      ['', 'foo', frag({a: true, b: <div />, c: 1.2, d: ''}), 'foo'], ['', 'foo', <div />, '1.2', '', 'foo'],
 
       // values inside elements
       [<div>{true}{1.2}{<div />}</div>, '', 'foo'], [<div />, '', 'foo'],
