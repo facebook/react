@@ -49,8 +49,7 @@ This will render an input that always has a value of `Hello!`. Any user input wi
     this.setState({value: event.target.value});
   },
   render: function() {
-    var value = this.state.value;
-    return <input type="text" value={value} onChange={this.handleChange} />;
+    return <input type="text" value={this.state.value} onChange={this.handleChange} />;
   }
 ```
 
