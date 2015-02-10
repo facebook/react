@@ -43,6 +43,20 @@ function isTagName(name) {
   return tagConvention.test(name);
 }
 
+function visitReactDeps(traverse, node, path, state) {
+  var nodeSrcText = utils.getNodeSourceText(node, state);
+  if (nodeSrcText.indexOf('.jsx') > 0) {
+    utils.append(nodeSrcText.replace('.jsx', '.js'), state);
+    utils.move(node.range[1], state);
+  }
+}
+visitReactDeps.test = function(node, path, state) {
+  return node.type === Syntax.CallExpression && 
+          node.callee && 
+          node.callee.type === Syntax.Identifier && 
+          node.callee.name === 'require';
+};
+
 function visitReactTag(traverse, object, path, state) {
   var openingElement = object.openingElement;
   var nameObject = openingElement.name;
@@ -238,5 +252,6 @@ visitReactTag.test = function(object, path, state) {
 };
 
 exports.visitorList = [
-  visitReactTag
+  visitReactTag,
+  visitReactDeps
 ];
