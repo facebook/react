@@ -36,7 +36,7 @@ describe('ReactDOMIDOperations', function() {
     ).toBe('testID');
 
     expect(
-      DOMPropertyOperations.setValueForProperty.callCount
+      DOMPropertyOperations.setValueForProperty.calls.length
     ).toBe(0);
   });
 

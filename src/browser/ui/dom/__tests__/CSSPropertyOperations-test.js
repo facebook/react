@@ -163,7 +163,7 @@ describe('CSSPropertyOperations', function() {
       color: 'red;   '
     });
 
-    expect(console.warn.callCount).toBe(2);
+    expect(console.warn.calls.length).toBe(2);
     expect(console.warn.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
     expect(console.warn.argsForCall[1][0]).toContain('Try "color: red" instead');
   });

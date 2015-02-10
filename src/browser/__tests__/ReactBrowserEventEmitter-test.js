@@ -377,7 +377,7 @@ describe('ReactBrowserEventEmitter', function() {
     spyOn(EventListener, 'listen');
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    expect(EventListener.listen.callCount).toBe(1);
+    expect(EventListener.listen.calls.length).toBe(1);
   });
 
   it('should work with event plugins without dependencies', function() {

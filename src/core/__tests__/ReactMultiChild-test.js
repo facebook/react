@@ -190,7 +190,7 @@ describe('ReactMultiChild', function() {
         container
       );
       expect(setInnerHTML).toHaveBeenCalled();
-      var callCountOnMount = setInnerHTML.callCount;
+      var callCountOnMount = setInnerHTML.calls.length;
 
       React.render(
         <div>
@@ -200,7 +200,7 @@ describe('ReactMultiChild', function() {
         </div>,
         container
       );
-      expect(setInnerHTML.callCount).toBe(callCountOnMount + 1);
+      expect(setInnerHTML.calls.length).toBe(callCountOnMount + 1);
     });
   });
 });
