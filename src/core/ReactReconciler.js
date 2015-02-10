@@ -23,7 +23,7 @@ function attachRefs() {
 }
 
 var ReactReconciler = {
-
+  /*eslint-disable max-len */
   /**
    * Initializes the component, renders markup, and registers event listeners.
    *
@@ -34,6 +34,7 @@ var ReactReconciler = {
    * @final
    * @internal
    */
+  /*eslint-enable max-len */
   mountComponent: function(internalInstance, rootID, transaction, context) {
     var markup = internalInstance.mountComponent(rootID, transaction, context);
     if (__DEV__) {

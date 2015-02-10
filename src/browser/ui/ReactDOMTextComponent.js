@@ -55,6 +55,7 @@ assign(ReactDOMTextComponent.prototype, {
     this._mountIndex = 0;
   },
 
+  /*eslint-disable max-len */
   /**
    * Creates the markup for this text node. This node is not intended to have
    * any features besides containing text content.
@@ -64,6 +65,7 @@ assign(ReactDOMTextComponent.prototype, {
    * @return {string} Markup for this text node.
    * @internal
    */
+  /*eslint-enable max-len */
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     var escapedText = escapeTextContentForBrowser(this._stringText);
