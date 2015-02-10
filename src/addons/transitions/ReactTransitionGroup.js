@@ -217,9 +217,16 @@ var ReactTransitionGroup = React.createClass({
         ));
       }
     }
+
+    var {
+      component,
+      childFactory,
+      ...transferredProps
+    } = this.props;
+
     return React.createElement(
       this.props.component,
-      this.props,
+      transferredProps,
       childrenToRender
     );
   }

@@ -94,8 +94,7 @@ var ReactDOMTextarea = ReactClass.createClass({
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+    var { valueLink, checkedLink, ...props } = this.props;
 
     invariant(
       props.dangerouslySetInnerHTML == null,

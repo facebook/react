@@ -32,7 +32,9 @@ if (__DEV__) {
     key: true,
     ref: true
   };
-  var warnedProperties = {};
+
+  // We already have a warning prohibiting usage of innerHTML, contentEditable
+  var warnedProperties = {innerHTML: true, contentEditable: true};
 
   var warnUnknownProperty = function(name) {
     if (reactProps.hasOwnProperty(name) && reactProps[name] ||
@@ -52,8 +54,6 @@ if (__DEV__) {
         null
     );
 
-    // For now, only warn when we have a suggested correction. This prevents
-    // logging too much when using transferPropsTo.
     warning(
       standardName == null,
       'Unknown DOM property %s. Did you mean %s?',
@@ -61,6 +61,7 @@ if (__DEV__) {
       standardName
     );
 
+    warning(standardName != null, 'Unknown DOM property %s.', name);
   };
 }
 
