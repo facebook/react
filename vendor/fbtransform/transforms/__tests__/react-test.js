@@ -377,4 +377,11 @@ describe('react jsx', function() {
     ).toBeCalledWith({x: "1"}, { y: 2 }, {z: 3});
   });
 
+  it('replace any jsx extensions with js', function() {
+    var code = 'var foo = require("file.jsx");';
+    var result = 'var foo = require("file.js");';
+
+    expect(transform(code).code).toBe(result);
+  });
+
 });
