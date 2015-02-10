@@ -96,6 +96,14 @@ var ReactFragment = {
   // of its properties.
   create: function(object) {
     if (__DEV__) {
+      if (typeof object !== 'object' || !object) {
+        warning(
+          false,
+          'React.addons.createFragment only accepts a single object. Not %s',
+          object
+        );
+        return object;
+      }
       if (canWarnForReactFragment) {
         var proxy = {};
         Object.defineProperty(proxy, fragmentKey, {
