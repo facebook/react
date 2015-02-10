@@ -24,7 +24,6 @@ var assign = require('Object.assign');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var keyOf = require('keyOf');
-var monitorCodeUse = require('monitorCodeUse');
 var warning = require('warning');
 
 var MIXINS_KEY = keyOf({mixins: null});
@@ -659,17 +658,19 @@ function bindAutoBindMethod(component, method) {
       // ignore the value of "this" that the user is trying to use, so
       // let's warn.
       if (newThis !== component && newThis !== null) {
-        monitorCodeUse('react_bind_warning', { component: componentName });
-        console.warn(
+        warning(
+          false,
           'bind(): React component methods may only be bound to the ' +
-          'component instance. See ' + componentName
+          'component instance. See %s',
+          componentName
         );
       } else if (!args.length) {
-        monitorCodeUse('react_bind_warning', { component: componentName });
-        console.warn(
+        warning(
+          false,
           'bind(): You are binding a component method to the component. ' +
           'React does this for you automatically in a high-performance ' +
-          'way, so you can safely remove this call. See ' + componentName
+          'way, so you can safely remove this call. See ',
+          componentName
         );
         return boundMethod;
       }
@@ -874,18 +875,14 @@ var ReactClass = {
     );
 
     if (__DEV__) {
-      if (Constructor.prototype.componentShouldUpdate) {
-        monitorCodeUse(
-          'react_component_should_update_warning',
-          { component: spec.displayName }
-        );
-        console.warn(
-          (spec.displayName || 'A component') + ' has a method called ' +
-          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
-          'The name is phrased as a question because the function is ' +
-          'expected to return a value.'
-        );
-      }
+      warning(
+        !Constructor.prototype.componentShouldUpdate,
+        '%s has a method called ' +
+        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+        'The name is phrased as a question because the function is ' +
+        'expected to return a value.',
+        spec.displayName || 'A component'
+      );
     }
 
     // Reduce time spent doing lookups by setting these on the prototype.

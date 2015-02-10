@@ -490,7 +490,7 @@ describe('ReactCompositeComponent', function() {
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
-      'Component.shouldComponentUpdate(): Returned undefined instead of a ' +
+      'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
       'boolean value. Make sure to return true or false.'
     );
   });

@@ -26,7 +26,6 @@ var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactNativeComponent = require('ReactNativeComponent');
 
 var getIteratorFn = require('getIteratorFn');
-var monitorCodeUse = require('monitorCodeUse');
 var invariant = require('invariant');
 var warning = require('warning');
 
@@ -157,22 +156,17 @@ function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
-  var childOwnerName = null;
   if (element &&
       element._owner &&
       element._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
-    childOwnerName = getName(element._owner);
+    var childOwnerName = getName(element._owner);
 
     message += ` It was passed a child from ${childOwnerName}.`;
   }
 
   message += ' See http://fb.me/react-warning-keys for more information.';
-  monitorCodeUse(warningID, {
-    component: useName,
-    componentOwner: childOwnerName
-  });
-  console.warn(message);
+  warning(false, '%s', warningID + ': ' + message);
 }
 
 /**
