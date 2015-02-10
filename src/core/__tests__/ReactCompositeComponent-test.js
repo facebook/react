@@ -441,7 +441,7 @@ describe('ReactCompositeComponent', function() {
         // lifecycle methods, because a componentWillMount implementation is
         // likely call this.getDOMNode(), which will repopulate the node cache
         // after it's been cleared, causing a memory leak.
-        expect(ReactMount.purgeID.callCount).toBe(0);
+        expect(ReactMount.purgeID.calls.length).toBe(0);
         innerUnmounted = true;
       },
       render: function() {

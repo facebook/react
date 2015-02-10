@@ -492,7 +492,7 @@ describe('ReactDOMComponent', function() {
 
       spyOn(console, 'warn');
       ReactTestUtils.renderIntoDocument(<div onScroll={function(){}} />);
-      expect(console.warn.callCount).toBe(1);
+      expect(console.warn.calls.length).toBe(1);
       expect(console.warn.mostRecentCall.args[0]).toBe(
         'This browser doesn\'t support the `onScroll` event'
       );

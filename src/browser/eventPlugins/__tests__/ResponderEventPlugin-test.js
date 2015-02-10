@@ -268,7 +268,7 @@ describe('ResponderEventPlugin', function() {
     extracted = extractForMouseMove(CHILD_ID);
     assertNothingExtracted(extracted);
     // Not going to call `onMoveShould`* if not touching.
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(0);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(0);
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
 
     // Now try the move extraction again, this time while holding down, and not
@@ -280,7 +280,7 @@ describe('ResponderEventPlugin', function() {
     // Now moving can set the responder, if pressing down, even if there is no
     // current responder.
     extracted = extractForMouseMove(CHILD_ID);
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(1);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(1);
     expect(ResponderEventPlugin.getResponderID()).toBe(PARENT_ID);
     assertGrantEvent(PARENT_ID, extracted);
 
@@ -297,7 +297,7 @@ describe('ResponderEventPlugin', function() {
 
     extracted = extractForTouchStart(CHILD_ID);
     assertGrantEvent(CHILD_ID, extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
 
     // Now we do *not* clear out the touch via a simulated touch end. This mocks
     // out an environment that likely will never happen, but could in some odd
@@ -305,7 +305,7 @@ describe('ResponderEventPlugin', function() {
     // extractForTouchEnd(CHILD_ID); // Clear the responder
     extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted();
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(2);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(2);
   });
 
   it('should bubble/capture responder on start', function() {
@@ -324,8 +324,8 @@ describe('ResponderEventPlugin', function() {
 
     extracted = extractForTouchStart(CHILD_ID);
     assertGrantEvent(CHILD_ID, extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
-    expect(spies.onStartShouldSetResponderParent.callCount).toBe(0);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
+    expect(spies.onStartShouldSetResponderParent.calls.length).toBe(0);
 
     // Even if moving on the grandparent, the child will receive responder moves
     // (This is even true for mouse interactions - which we should absolutely
@@ -372,7 +372,7 @@ describe('ResponderEventPlugin', function() {
 
     var extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted(extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
     expect(ResponderEventPlugin.getResponderID()).toBe(CHILD_ID);
     extractForTouchEnd(CHILD_ID); // Clear the responder
 
@@ -381,7 +381,7 @@ describe('ResponderEventPlugin', function() {
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted(extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(2);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(2);
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
     extractForTouchEnd(CHILD_ID);
     expect(ResponderEventPlugin.getResponderID()).toBe(null); // Still null
@@ -391,7 +391,7 @@ describe('ResponderEventPlugin', function() {
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     onResponderGrant(CHILD_ID, onGrantChild);
     extracted = extractForTouchStart(CHILD_ID);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(3);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(3);
     assertGrantEvent(CHILD_ID, extracted);
     extracted = extractForTouchEnd(CHILD_ID); // Clear the responder
     assertRelease(CHILD_ID, extracted);
@@ -410,12 +410,12 @@ describe('ResponderEventPlugin', function() {
     spies.onStartShouldSetResponderChild.andReturn(true);
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     extracted = extractForTouchStart(CHILD_ID);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(0); // none yet
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(0); // none yet
     assertGrantEvent(CHILD_ID, extracted);    // Child is the current responder
 
     extracted = extractForTouchMove(CHILD_ID);
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(1);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(1);
     assertGrantEvent(PARENT_ID, extracted);
     assertTerminateEvent(CHILD_ID, extracted);
 
@@ -430,7 +430,7 @@ describe('ResponderEventPlugin', function() {
 
     var extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted(extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
     expect(ResponderEventPlugin.getResponderID()).toBe(CHILD_ID);
     extractForTouchEnd(CHILD_ID); // Clear the responder
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
@@ -440,7 +440,7 @@ describe('ResponderEventPlugin', function() {
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     extracted = extractForTouchStart(CHILD_ID);
     assertNothingExtracted(extracted);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(2);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(2);
     expect(ResponderEventPlugin.getResponderID()).toBe(null);
     extractForTouchEnd(CHILD_ID); // Clear the responder
 
@@ -449,7 +449,7 @@ describe('ResponderEventPlugin', function() {
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     onResponderGrant(CHILD_ID, onGrantChild);
     extracted = extractForTouchStart(CHILD_ID);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(3);
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(3);
     assertGrantEvent(CHILD_ID, extracted);
     extracted = extractForTouchEnd(CHILD_ID); // Clear the responder
     assertRelease(CHILD_ID, extracted);
@@ -473,16 +473,16 @@ describe('ResponderEventPlugin', function() {
     spies.onStartShouldSetResponderChild.andReturn(true);
     onStartShouldSetResponder(CHILD_ID, spies.onStartShouldSetResponderChild);
     extracted = extractForTouchStart(CHILD_ID);
-    expect(spies.onStartShouldSetResponderChild.callCount).toBe(1);
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(0); // none yet
+    expect(spies.onStartShouldSetResponderChild.calls.length).toBe(1);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(0); // none yet
     assertGrantEvent(CHILD_ID, extracted);    // Child is the current responder
 
     extracted = extractForTouchMove(CHILD_ID);
-    expect(spies.onMoveShouldSetResponderParent.callCount).toBe(1);
+    expect(spies.onMoveShouldSetResponderParent.calls.length).toBe(1);
     assertNothingExtracted(extracted);
 
     extracted = extractForScroll(CHILD_ID); // Could have been parent here too.
-    expect(spies.onScrollShouldSetResponderParent.callCount).toBe(1);
+    expect(spies.onScrollShouldSetResponderParent.calls.length).toBe(1);
     assertGrantEvent(PARENT_ID, extracted);
     assertTerminateEvent(CHILD_ID, extracted);
 
