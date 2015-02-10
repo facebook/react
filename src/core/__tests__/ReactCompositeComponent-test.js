@@ -262,7 +262,7 @@ describe('ReactCompositeComponent', function() {
     expect(inputProps.prop).not.toBeDefined();
   });
 
-  it('should not allow `forceUpdate` on unmounted components', function() {
+  it('should warn about `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
 
@@ -276,21 +276,22 @@ describe('ReactCompositeComponent', function() {
     expect(instance.forceUpdate).not.toBeDefined();
 
     instance = React.render(instance, container);
-    expect(function() {
-      instance.forceUpdate();
-    }).not.toThrow();
+    instance.forceUpdate();
+
+    expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
-    expect(function() {
-      instance.forceUpdate();
-    }).toThrow(
-      'Invariant Violation: forceUpdate(...): Can only update a mounted or ' +
+
+    instance.forceUpdate();
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: forceUpdate(...): Can only update a mounted or ' +
       'mounting component. This usually means you called forceUpdate() on ' +
-      'an unmounted component.'
+      'an unmounted component. This is a no-op.'
     );
   });
 
-  it('should not allow `setState` on unmounted components', function() {
+  it('should warn about `setState` on unmounted components', function() {
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
 
@@ -307,21 +308,23 @@ describe('ReactCompositeComponent', function() {
     expect(instance.setState).not.toBeDefined();
 
     instance = React.render(instance, container);
-    expect(function() {
-      instance.setState({ value: 1 });
-    }).not.toThrow();
+    instance.setState({ value: 1 });
+
+    expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
-    expect(function() {
-      instance.setState({ value: 2 });
-    }).toThrow(
-      'Invariant Violation: setState(...): Can only update a mounted or ' +
+    instance.setState({ value: 2 });
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component.'
+      'unmounted component. This is a no-op.'
     );
   });
 
-  it('should not allow `setState` on unmounting components', function() {
+  it('should silently allow `setState`, not call cb on unmounting components',
+     function() {
+    var cbCalled = false;
     var container = document.createElement('div');
     document.documentElement.appendChild(container);
 
@@ -330,10 +333,11 @@ describe('ReactCompositeComponent', function() {
         return { value: 0 };
       },
       componentWillUnmount: function() {
-        expect(() => this.setState({ value: 2 })).toThrow(
-          'Invariant Violation: setState(...): Cannot call setState() on an ' +
-          'unmounting component.'
-        );
+        expect(() => {
+          this.setState({ value: 2 }, function() {
+            cbCalled = true;
+          })
+        }).not.toThrow();
       },
       render: function() {
         return <div />;
@@ -341,11 +345,13 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance = React.render(<Component />, container);
-    expect(function() {
-      instance.setState({ value: 1 });
-    }).not.toThrow();
+
+    instance.setState({ value: 1 });
+    expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
+    expect(console.warn.calls.length).toBe(0);
+    expect(cbCalled).toBe(false);
   });
 
   it('should not allow `setProps` on unmounted components', function() {
@@ -365,14 +371,18 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.setProps({ value: 1 });
     }).not.toThrow();
+    expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
     expect(function() {
       instance.setProps({ value: 2 });
-    }).toThrow(
-      'Invariant Violation: setProps(...): Can only update a mounted or ' +
+    }).not.toThrow();
+
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: setProps(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setProps() on an ' +
-      'unmounted component.'
+      'unmounted component. This is a no-op.'
     );
   });
 

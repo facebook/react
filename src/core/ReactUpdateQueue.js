@@ -19,6 +19,7 @@ var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
 var invariant = require('invariant');
+var warning = require('warning');
 
 function enqueueUpdate(internalInstance) {
   if (internalInstance !== ReactLifeCycle.currentlyMountingInstance) {
@@ -40,20 +41,27 @@ function getInternalInstanceReadyForUpdate(publicInstance, callerName) {
   );
 
   var internalInstance = ReactInstanceMap.get(publicInstance);
-  invariant(
-    internalInstance,
-    '%s(...): Can only update a mounted or mounting component. ' +
-    'This usually means you called %s() on an unmounted ' +
-    'component.',
-    callerName,
-    callerName
-  );
-  invariant(
-    internalInstance !== ReactLifeCycle.currentlyUnmountingInstance,
-    '%s(...): Cannot call %s() on an unmounting component.',
-    callerName,
-    callerName
-  );
+  if (!internalInstance) {
+    if (__DEV__) {
+      // Only warn when we have a callerName. Otherwise we should be silent.
+      // We're probably calling from enqueueCallback. We don't want to warn
+      // there because we already warned for the corresponding lifecycle method.
+      warning(
+        !callerName,
+        '%s(...): Can only update a mounted or mounting component. ' +
+        'This usually means you called %s() on an unmounted ' +
+        'component. This is a no-op.',
+        callerName,
+        callerName
+      );
+    }
+    return null;
+  }
+
+  if (internalInstance === ReactLifeCycle.currentlyUnmountingInstance) {
+    return null;
+  }
+
   return internalInstance;
 }
 
@@ -78,15 +86,18 @@ var ReactUpdateQueue = {
       '`setState`, `replaceState`, or `forceUpdate` with a callback that ' +
       'isn\'t callable.'
     );
-    var internalInstance = ReactInstanceMap.get(publicInstance);
-    invariant(
-      internalInstance,
-      'Cannot enqueue a callback on an instance that is unmounted.'
-    );
-    if (internalInstance === ReactLifeCycle.currentlyMountingInstance) {
-      // Ignore callbacks in componentWillMount. See enqueueUpdate.
-      return;
+    var internalInstance = getInternalInstanceReadyForUpdate(publicInstance);
+
+    // Previously we would throw an error if we didn't have an internal
+    // instance. Since we want to make it a no-op instead, we mirror the same
+    // behavior we have in other enqueue* methods.
+    // We also need to ignore callbacks in componentWillMount. See
+    // enqueueUpdates.
+    if (!internalInstance ||
+        internalInstance === ReactLifeCycle.currentlyMountingInstance) {
+      return null;
     }
+
     if (internalInstance._pendingCallbacks) {
       internalInstance._pendingCallbacks.push(callback);
     } else {
@@ -133,6 +144,10 @@ var ReactUpdateQueue = {
       'forceUpdate'
     );
 
+    if (!internalInstance) {
+      return;
+    }
+
     internalInstance._pendingForceUpdate = true;
 
     enqueueUpdate(internalInstance);
@@ -154,6 +169,10 @@ var ReactUpdateQueue = {
       publicInstance,
       'replaceState'
     );
+
+    if (!internalInstance) {
+      return;
+    }
 
     internalInstance._pendingStateQueue = [completeState];
     internalInstance._pendingReplaceState = true;
@@ -177,6 +196,10 @@ var ReactUpdateQueue = {
       'setState'
     );
 
+    if (!internalInstance) {
+      return;
+    }
+
     var queue =
       internalInstance._pendingStateQueue ||
       (internalInstance._pendingStateQueue = []);
@@ -197,6 +220,10 @@ var ReactUpdateQueue = {
       publicInstance,
       'setProps'
     );
+
+    if (!internalInstance) {
+      return;
+    }
 
     invariant(
       internalInstance._isTopLevel,
@@ -232,6 +259,10 @@ var ReactUpdateQueue = {
       publicInstance,
       'replaceProps'
     );
+
+    if (!internalInstance) {
+      return;
+    }
 
     invariant(
       internalInstance._isTopLevel,
