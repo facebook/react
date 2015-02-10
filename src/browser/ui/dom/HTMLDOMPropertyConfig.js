@@ -164,7 +164,7 @@ var HTMLDOMPropertyConfig = {
     // keyboard hints.
     autoCapitalize: null,
     autoCorrect: null,
-    // itemProp, itemScope, itemType, itemType, itemId are for
+    // itemProp, itemScope, itemType, itemType, itemID are for
     // Microdata support. See http://schema.org/docs/gs.html
     itemProp: MUST_USE_ATTRIBUTE,
     itemScope: MUST_USE_ATTRIBUTE | HAS_BOOLEAN_VALUE,
