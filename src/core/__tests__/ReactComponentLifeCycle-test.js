@@ -239,6 +239,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should not allow update state inside of getInitialState', function() {
+    spyOn(console, 'warn');
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         this.setState({stateField: 'something'});
@@ -251,12 +252,12 @@ describe('ReactComponentLifeCycle', function() {
         );
       }
     });
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    }).toThrow(
-      'Invariant Violation: setState(...): Can only update a mounted or ' +
+    ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
-      'unmounted component.'
+      'unmounted component. This is a no-op.'
     );
   });
 
