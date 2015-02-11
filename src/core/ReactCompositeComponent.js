@@ -110,6 +110,7 @@ var ReactCompositeComponentMixin = {
     this._pendingCallbacks = null;
   },
 
+  /*eslint-disable max-len */
   /**
    * Initializes the component, renders markup, and registers event listeners.
    *
@@ -119,6 +120,7 @@ var ReactCompositeComponentMixin = {
    * @final
    * @internal
    */
+  /*eslint-enable max-len */
   mountComponent: function(rootID, transaction, context) {
     this._context = context;
     this._mountOrder = nextMountID++;

@@ -274,8 +274,10 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
               mountAt
             );
           } else if (isEventSupported('focusin')) {
+            /*eslint-disable max-len */
             // IE has `focusin` and `focusout` events which bubble.
             // @see http://www.quirksmode.org/blog/archives/2008/04/delegating_the.html
+            /*eslint-enable max-len */
             ReactBrowserEventEmitter.ReactEventListener.trapBubbledEvent(
               topLevelTypes.topFocus,
               'focusin',

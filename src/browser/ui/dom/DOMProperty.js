@@ -118,7 +118,9 @@ var DOMPropertyInjection = {
       DOMProperty.hasPositiveNumericValue[propName] =
         checkMask(propConfig, DOMPropertyInjection.HAS_POSITIVE_NUMERIC_VALUE);
       DOMProperty.hasOverloadedBooleanValue[propName] =
+        /*eslint-disable max-len */
         checkMask(propConfig, DOMPropertyInjection.HAS_OVERLOADED_BOOLEAN_VALUE);
+        /*eslint-enable max-len */
 
       invariant(
         !DOMProperty.mustUseAttribute[propName] ||

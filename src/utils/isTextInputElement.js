@@ -11,9 +11,11 @@
 
 'use strict';
 
+/*eslint-disable max-len */
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
+/*eslint-enable max-len */
 var supportedInputTypes = {
   'color': true,
   'date': true,

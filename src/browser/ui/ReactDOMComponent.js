@@ -178,7 +178,7 @@ ReactDOMComponent.Mixin = {
   construct: function(element) {
     this._currentElement = element;
   },
-
+  /*eslint-disable max-len */
   /**
    * Generates root tag markup then recurses. This method has side effects and
    * is not idempotent.
@@ -188,6 +188,7 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} The computed markup.
    */
+  /*eslint-enable max-len */
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     assertValidProps(this._currentElement.props);
@@ -199,6 +200,7 @@ ReactDOMComponent.Mixin = {
     );
   },
 
+  /*eslint-disable max-len */
   /**
    * Creates markup for the open tag and all attributes.
    *
@@ -211,6 +213,7 @@ ReactDOMComponent.Mixin = {
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup of opening tag.
    */
+  /*eslint-enable max-len */
   _createOpenTagMarkupAndPutListeners: function(transaction) {
     var props = this._currentElement.props;
     var ret = '<' + this._tag;
@@ -250,6 +253,7 @@ ReactDOMComponent.Mixin = {
     return ret + ' ' + markupForID + '>';
   },
 
+  /*eslint-disable max-len */
   /**
    * Creates markup for the content between the tags.
    *
@@ -258,6 +262,7 @@ ReactDOMComponent.Mixin = {
    * @param {object} context
    * @return {string} Content markup.
    */
+  /*eslint-disable max-len */
   _createContentMarkup: function(transaction, context) {
     var prefix = '';
     if (this._tag === 'listing' ||
