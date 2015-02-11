@@ -63,6 +63,8 @@
       title: PureRenderMixin
     - id: perf
       title: Performance Tools
+  - id: advanced-performance
+    title: Advanced Performance
 - title: Reference
   items:
   - id: top-level-api
