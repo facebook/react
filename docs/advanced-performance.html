@@ -390,35 +390,35 @@
 
     <p>One of the first questions people ask when considering React for a project is whether their application will be as fast and responsive as an equivalent non-React version. The idea of re-rendering an entire subtree of components in response to every state change makes people wonder whether this process negatively impacts performance. React uses several clever techniques to minimize the number of costly DOM operations required to update the UI.</p>
 <h2><a class="anchor" name="avoiding-reconciling-the-dom"></a>Avoiding reconciling the DOM <a class="hash-link" href="#avoiding-reconciling-the-dom">#</a></h2>
-<p>React makes use of a <em>virtual DOM</em>, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component&#39;s props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will <a href="http://facebook.github.io/react/docs/reconciliation.html">React reconcile</a> the DOM, applying as few mutations as possible.</p>
+<p>React makes use of a <em>virtual DOM</em>, which is a descriptor of a DOM subtree rendered in the browser. This parallel representation allows React to avoid creating DOM nodes and accessing existing ones, which is slower than operations on JavaScript objects. When a component&#39;s props or state change, React decides whether an actual DOM update is necessary by constructing a new virtual DOM and comparing it to the old one. Only in the case they are not equal, will React <a href="http://facebook.github.io/react/docs/reconciliation.html">reconcile</a> the DOM, applying as few mutations as possible.</p>
 
-<p>On top of this, React provides a component lifecycle function, shouldComponentUpdate, which is triggered before the re-rendering process starts, giving the developer the ability to short circuit this process. The default implementation of this function returns true, leaving React to perform the update:</p>
+<p>On top of this, React provides a component lifecycle function, <code>shouldComponentUpdate</code>, which is triggered before the re-rendering process starts, giving the developer the ability to short circuit this process. The default implementation of this function returns <code>true</code>, leaving React to perform the update:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>Keep in mind that React will invoke this function pretty often, so the implementation has to be fast.</p>
 
-<p>Say you have a messaging application with several chat threads. Suppose only one of the threads has changed. If we implement shouldComponentUpdate on the ChatThread component, React can skip the rendering step for the other threads:</p>
+<p>Say you have a messaging application with several chat threads. Suppose only one of the threads has changed. If we implement <code>shouldComponentUpdate</code> on the <code>ChatThread</code> component, React can skip the rendering step for the other threads:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="c1">// TODO: return whether or not current chat thread is</span>
   <span class="c1">// different to former one.</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>So, in summary, React avoids carrying out expensive DOM operations required to reconcile subtrees of the DOM by allowing the user to short circuit the process using shouldComponentUpdate, and, for those which should update, by comparing virtual DOMs.</p>
+<p>So, in summary, React avoids carrying out expensive DOM operations required to reconcile subtrees of the DOM by allowing the user to short circuit the process using <code>shouldComponentUpdate</code>, and, for those which should update, by comparing virtual DOMs.</p>
 <h2><a class="anchor" name="shouldcomponentupdate-in-action"></a>shouldComponentUpdate in action <a class="hash-link" href="#shouldcomponentupdate-in-action">#</a></h2>
-<p>Here&#39;s a subtree of components. For each one is indicated what shouldComponentUpdate returned and whether or not the virtual DOMs were equivalent. Finally, the circle&#39;s color indicates whether the component had to be reconciled or not.</p>
+<p>Here&#39;s a subtree of components. For each one is indicated what <code>shouldComponentUpdate</code> returned and whether or not the virtual DOMs were equivalent. Finally, the circle&#39;s color indicates whether the component had to be reconciled or not.</p>
 
 <figure><img src="/react/img/docs/should-component-update.png" /></figure>
 
-<p>In the example above,  since shouldComponentUpdate returned false for the subtree rooted at C2, React had no need to generate the new virtual DOM, and therefore, it neither needed to reconcile the DOM. Note that React didn&#39;t even had to invoke shouldComponentUpdate on C4 and C5.</p>
+<p>In the example above, since <code>shouldComponentUpdate</code> returned <code>false</code> for the subtree rooted at C2, React had no need to generate the new virtual DOM, and therefore, it neither needed to reconcile the DOM. Note that React didn&#39;t even had to invoke <code>shouldComponentUpdate</code> on C4 and C5.</p>
 
-<p>For C1 and C3 shouldComponentUpdate returned true, so React had to go down to the leaves and check them. For C6 it returned true; since the virtual DOMs weren&#39;t equivalent it had to reconcile the DOM.
+<p>For C1 and C3 <code>shouldComponentUpdate</code> returned <code>true</code>, so React had to go down to the leaves and check them. For C6 it returned <code>true</code>; since the virtual DOMs weren&#39;t equivalent it had to reconcile the DOM.
 The last interesting case is C8. For this node React had to compute the virtual DOM, but since it was equal to the old one, it didn&#39;t have to reconcile it&#39;s DOM.</p>
 
-<p>Note that React only had to do DOM mutations for C6, which was inevitable. For C8 it bailed out by comparing the virtual DOMs, and for C2&#39;s subtree and C7, it didn&#39;t even have to compute the virtual DOM as we bailed out on shouldComponentUpdate.</p>
+<p>Note that React only had to do DOM mutations for C6, which was inevitable. For C8 it bailed out by comparing the virtual DOMs, and for C2&#39;s subtree and C7, it didn&#39;t even have to compute the virtual DOM as we bailed out on <code>shouldComponentUpdate</code>.</p>
 
-<p>So, how should we implement shouldComponentUpdate? Say that you have a component that just renders a string value:</p>
+<p>So, how should we implement <code>shouldComponentUpdate</code>? Say that you have a component that just renders a string value:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">.</span><span class="nx">isRequired</span>
@@ -429,14 +429,14 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>We could easily implement shouldComponentUpdate as follow:</p>
+<p>We could easily implement <code>shouldComponentUpdate</code> as follow:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span> <span class="o">!==</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span>
 <span class="p">}</span>
 </code></pre></div>
 <p>So far so good, dealing with such simple props/state structures is easy. We could even generalize an implementation based on shallow equality and mix it into components. In fact, React already provides such implementation: <a href="http://facebook.github.io/react/docs/pure-render-mixin.html">PureRenderMixin</a>.</p>
 
-<p>But what if your components&#39; props or state are mutable data structures?. Say the prop the component receives, instead of being a string like &#39;bar&#39;, is a Javascript object that contains a string such as, { foo: &#39;bar&#39; }:</p>
+<p>But what if your components&#39; props or state are mutable data structures?. Say the prop the component receives, instead of being a string like <code>&#39;bar&#39;</code>, is a Javascript object that contains a string such as, <code>{ foo: &#39;bar&#39; }</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">propsTypes</span><span class="o">:</span> <span class="p">{</span>
     <span class="nx">value</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">.</span><span class="nx">isRequired</span>
@@ -447,13 +447,13 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="p">}</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The implementation of shouldComponentUpdate we had before wouldn&#39;t always work as expected :</p>
+<p>The implementation of <code>shouldComponentUpdate</code> we had before wouldn&#39;t always work as expected:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// assume this.props.value is { foo: &#39;bar&#39; }</span>
 <span class="c1">// assume nextProps.value is { foo: &#39;bar&#39; },</span>
 <span class="c1">// but this reference is different to this.props.value</span>
 <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span> <span class="o">!==</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">value</span><span class="p">;</span> <span class="c1">// true</span>
 </code></pre></div>
-<p>The problem is shouldComponentUpdate will return true when the prop actually didn&#39;t change. To fix this we could come up with this alternative implementation:</p>
+<p>The problem is <code>shouldComponentUpdate</code> will return <code>true</code> when the prop actually didn&#39;t change. To fix this we could come up with this alternative implementation:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">foo</span> <span class="o">!==</span> <span class="nx">nextProps</span><span class="p">.</span><span class="nx">value</span><span class="p">.</span><span class="nx">foo</span><span class="p">;</span>
 <span class="p">}</span>
@@ -482,11 +482,11 @@ The last interesting case is C8. For this node React had to compute the virtual 
 </code></pre></div>
 <p>The first time the inner component gets rendered it will have <code>{ foo: &#39;bar&#39; }</code> as the value prop. If the user clicks on the anchor, the parent component&#39;s state will get updated to <code>{ value: { foo: &#39;barbar&#39; } }</code>, triggering the re-rendering process of the inner component, which will receive <code>{ foo: &#39;barbar&#39; }</code> as the new value for the prop.</p>
 
-<p>The problem is that since the parent and inner components share a reference to the same object, when the object gets mutated on line 2 of the onClick function, the prop the inner component had will change. So, when the re-rendering process starts, and shouldComponentUpdate gets invoked, <code>this.props.value.foo</code> will be equal to <code>nextProps.value.foo</code>, because in fact, <code>this.props.value</code> references the same object as <code>nextProps.value</code>.</p>
+<p>The problem is that since the parent and inner components share a reference to the same object, when the object gets mutated on line 2 of the <code>onClick</code> function, the prop the inner component had will change. So, when the re-rendering process starts, and <code>shouldComponentUpdate</code> gets invoked, <code>this.props.value.foo</code> will be equal to <code>nextProps.value.foo</code>, because in fact, <code>this.props.value</code> references the same object as <code>nextProps.value</code>.</p>
 
 <p>Consequently, since we&#39;ll miss the change on the prop and short circuit the re-rendering process, the UI won&#39;t get updated from <code>&#39;bar&#39;</code> to <code>&#39;barbar&#39;</code>.</p>
 <h2><a class="anchor" name="immutable-js-to-the-rescue"></a>Immutable-js to the rescue <a class="hash-link" href="#immutable-js-to-the-rescue">#</a></h2>
-<p><a href="https://github.com/facebook/immutable-js">Immutable-js</a> is a Javascript collections library  written by Lee Byron, which Facebook recently open-sourced. It provides <em>immutable</em>* persistent* collections via <em>structural sharing</em>. Lets see what these properties mean:</p>
+<p><a href="https://github.com/facebook/immutable-js">Immutable-js</a> is a Javascript collections library  written by Lee Byron, which Facebook recently open-sourced. It provides <em>immutable persistent</em> collections via <em>structural sharing</em>. Lets see what these properties mean:</p>
 
 <ul>
 <li><em>Immutable</em>: once created, a collection cannot be altered at another point in time.</li>
@@ -500,21 +500,21 @@ The last interesting case is C8. For this node React had to compute the virtual 
 <span class="nx">y</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="s2">&quot;baz&quot;</span><span class="p">;</span>
 <span class="nx">x</span> <span class="o">===</span> <span class="nx">y</span><span class="p">;</span> <span class="c1">// true</span>
 </code></pre></div>
-<p>Although y was edited, since it&#39;s a reference to the same object as x, this comparison returns true. However, this code could be written using immutable-js as follows:</p>
+<p>Although <code>y</code> was edited, since it&#39;s a reference to the same object as <code>x</code>, this comparison returns <code>true</code>. However, this code could be written using immutable-js as follows:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">SomeRecord</span> <span class="o">=</span> <span class="nx">Immutable</span><span class="p">.</span><span class="nx">Record</span><span class="p">({</span> <span class="nx">foo</span><span class="o">:</span> <span class="kc">null</span> <span class="p">});</span>
 <span class="kd">var</span> <span class="nx">x</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">SomeRecord</span><span class="p">({</span> <span class="nx">foo</span><span class="o">:</span> <span class="s1">&#39;bar&#39;</span>  <span class="p">});</span>
 <span class="kd">var</span> <span class="nx">y</span> <span class="o">=</span> <span class="nx">x</span><span class="p">.</span><span class="nx">set</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;baz&#39;</span><span class="p">);</span>
 <span class="nx">x</span> <span class="o">===</span> <span class="nx">y</span><span class="p">;</span> <span class="c1">// false</span>
 </code></pre></div>
-<p>In this case, since a new reference is returned when mutating x, we can safely assume that x has changed.</p>
+<p>In this case, since a new reference is returned when mutating <code>x</code>, we can safely assume that <code>x</code> has changed.</p>
 
 <p>Another possible way to track changes could be doing dirty checking by having a flag set by setters. A problem with this approach is that it forces you to use setters and, either write a lot of additional code, or somehow instrument your classes. Alternatively, you could deep copy the object just before the mutations and deep compare to determine whether there was a change or not. A problem with this approach is both deepCopy and deepCompare are expensive operations.</p>
 
-<p>So, Immutable data structures provides you a cheap and less verbose way to track changes on objects, which is all we need to implement shouldComponentUpdate. Therefore, if we model props and state attributes using the abstractions provided by immutable-js we&#39;ll be able to use PureRenderMixin and get a nice boost in perf.</p>
+<p>So, Immutable data structures provides you a cheap and less verbose way to track changes on objects, which is all we need to implement <code>shouldComponentUpdate</code>. Therefore, if we model props and state attributes using the abstractions provided by immutable-js we&#39;ll be able to use <code>PureRenderMixin</code> and get a nice boost in perf.</p>
 <h2><a class="anchor" name="immutable-js-and-flux"></a>Immutable-js and Flux <a class="hash-link" href="#immutable-js-and-flux">#</a></h2>
 <p>If you&#39;re using <a href="http://facebook.github.io/flux/">Flux</a>, you should start writing your stores using immutable-js. Take a look at the <a href="http://facebook.github.io/immutable-js/docs/#/">full API</a>.</p>
 
-<p>Let&#39;s see one possible way to model the thread example using Immutable data structures. First, we need to define a Record for each of the entities we&#39;re trying to model. Records are just immutable containers that hold values for a specific set of fields:</p>
+<p>Let&#39;s see one possible way to model the thread example using Immutable data structures. First, we need to define a <code>Record</code> for each of the entities we&#39;re trying to model. Records are just immutable containers that hold values for a specific set of fields:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">User</span> <span class="o">=</span> <span class="nx">Immutable</span><span class="p">.</span><span class="nx">Record</span><span class="p">({</span>
   <span class="nx">id</span><span class="o">:</span> <span class="kc">undefined</span><span class="p">,</span>
   <span class="nx">name</span><span class="o">:</span> <span class="kc">undefined</span><span class="p">,</span>
@@ -527,7 +527,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
   <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;&#39;</span>
 <span class="p">});</span>
 </code></pre></div>
-<p>The object the Record function receives defines the fields the object has and their default values.</p>
+<p>The object the <code>Record</code> function receives defines the fields the object has and their default values.</p>
 
 <p>The messages <em>store</em> could keep track of the users and messages using two lists:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">this</span><span class="p">.</span><span class="nx">users</span> <span class="o">=</span> <span class="nx">Immutable</span><span class="p">.</span><span class="nx">List</span><span class="p">();</span>
@@ -542,7 +542,7 @@ The last interesting case is C8. For this node React had to compute the virtual 
 </code></pre></div>
 <p>Note that since the data structures are immutable, we need to assign the result of the push function to this.messages.</p>
 
-<p>On the React side, if we also use immutable-js data structures to hold the components&#39; state, we could mix PureRenderMixin into all our components and short circuit the re-rendering process.</p>
+<p>On the React side, if we also use immutable-js data structures to hold the components&#39; state, we could mix <code>PureRenderMixin</code> into all our components and short circuit the re-rendering process.</p>
 
 
     <div class="docs-prevnext">
