@@ -73,4 +73,13 @@ describe('ReactFragment', function() {
     );
   });
 
+  it('should warn if accessing any property on a fragment', function() {
+    spyOn(console, 'warn');
+    ReactFragment.create(null);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'React.addons.createFragment only accepts a single object. Not null'
+    );
+  });
+
 });
