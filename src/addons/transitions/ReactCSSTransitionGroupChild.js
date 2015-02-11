@@ -18,6 +18,7 @@ var CSSCore = require('CSSCore');
 var ReactTransitionEvents = require('ReactTransitionEvents');
 
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 // We don't remove the element from the DOM until we receive an animationend or
 // transitionend event. If the user screws up and forgets to add an animation
@@ -31,11 +32,13 @@ var noEventListener = null;
 
 if (__DEV__) {
   noEventListener = function() {
-    console.warn(
+    warning(
+      false,
       'transition(): tried to perform an animation without ' +
       'an animationend or transitionend event after timeout (' +
-      NO_EVENT_TIMEOUT + 'ms). You should either disable this ' +
-      'transition in JS or add a CSS animation/transition.'
+      '%sms). You should either disable this ' +
+      'transition in JS or add a CSS animation/transition.',
+      NO_EVENT_TIMEOUT
     );
   };
 }

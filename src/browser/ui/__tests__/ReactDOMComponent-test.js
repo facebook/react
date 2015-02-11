@@ -494,7 +494,7 @@ describe('ReactDOMComponent', function() {
       ReactTestUtils.renderIntoDocument(<div onScroll={function(){}} />);
       expect(console.warn.calls.length).toBe(1);
       expect(console.warn.mostRecentCall.args[0]).toBe(
-        'This browser doesn\'t support the `onScroll` event'
+        'Warning: This browser doesn\'t support the `onScroll` event'
       );
     });
   });

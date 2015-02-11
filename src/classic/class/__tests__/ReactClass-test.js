@@ -170,7 +170,7 @@ describe('ReactClass-spec', function() {
     });
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
-      'A component has a method called componentShouldUpdate(). Did you ' +
+      'Warning: A component has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
     );
@@ -185,7 +185,7 @@ describe('ReactClass-spec', function() {
     });
     expect(console.warn.argsForCall.length).toBe(2);
     expect(console.warn.argsForCall[1][0]).toBe(
-      'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+      'Warning: NamedComponent has a method called componentShouldUpdate(). Did you ' +
       'mean shouldComponentUpdate()? The name is phrased as a question ' +
       'because the function is expected to return a value.'
     );

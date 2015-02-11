@@ -588,13 +588,12 @@ var ReactCompositeComponentMixin = {
       inst.shouldComponentUpdate(nextProps, nextState, nextContext);
 
     if (__DEV__) {
-      if (typeof shouldUpdate === 'undefined') {
-        console.warn(
-          (this.getName() || 'ReactCompositeComponent') +
-          '.shouldComponentUpdate(): Returned undefined instead of a ' +
-          'boolean value. Make sure to return true or false.'
-        );
-      }
+      warning(
+        typeof shouldUpdate !== 'undefined',
+        '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
+        'boolean value. Make sure to return true or false.',
+        this.getName() || 'ReactCompositeComponent'
+      );
     }
 
     if (shouldUpdate) {

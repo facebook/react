@@ -473,7 +473,8 @@ var ReactMount = {
         var rootElementSibling = reactRootElement;
         while (rootElementSibling) {
           if (ReactMount.isRenderedByReact(rootElementSibling)) {
-            console.warn(
+            warning(
+              false,
               'render(): Target node has markup rendered by React, but there ' +
               'are unrelated nodes as well. This is most commonly caused by ' +
               'white-space inserted around server-rendered markup.'
@@ -648,7 +649,8 @@ var ReactMount = {
           // warning is when the container is empty.
           rootElementsByReactRootID[reactRootID] = containerChild;
         } else {
-          console.warn(
+          warning(
+            false,
             'ReactMount: Root element has been removed from its original ' +
             'container. New container:', rootElement.parentNode
           );
@@ -828,7 +830,8 @@ var ReactMount = {
         );
 
         if (__DEV__) {
-          console.warn(
+          warning(
+            false,
             'React attempted to reuse markup in a container but the ' +
             'checksum was invalid. This generally means that you are ' +
             'using server rendering and the markup generated on the ' +
@@ -836,7 +839,8 @@ var ReactMount = {
             'new markup to compensate which works but you have lost many ' +
             'of the benefits of server rendering. Instead, figure out ' +
             'why the markup being generated is different on the client ' +
-            'or server:\n' + difference
+            'or server:\n%s',
+            difference
           );
         }
       }
