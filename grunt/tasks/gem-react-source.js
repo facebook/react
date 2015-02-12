@@ -12,19 +12,21 @@ var buildFiles = [
 ];
 
 function buildRelease() {
-  grunt.file.exists(dest) && grunt.file.delete(dest);
+  if (grunt.file.exists(dest)) {
+    grunt.file.delete(dest);
+  }
 
   // Copy gem-react-source/**/* to build/gem-react-source
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src})
   );
   mappings.forEach(function(mapping) {
-    var src = mapping.src[0];
-    var dest = mapping.dest;
-    if (grunt.file.isDir(src)) {
-      grunt.file.mkdir(dest);
+    var mappingSrc = mapping.src[0];
+    var mappingDest = mapping.dest;
+    if (grunt.file.isDir(mappingSrc)) {
+      grunt.file.mkdir(mappingDest);
     } else {
-      grunt.file.copy(src, dest);
+      grunt.file.copy(mappingSrc, mappingDest);
     }
   });
 
@@ -36,7 +38,6 @@ function buildRelease() {
 }
 
 function packRelease() {
-  /*jshint validthis:true */
   var done = this.async();
   var spawnCmd = {
     cmd: 'gem',
@@ -46,12 +47,15 @@ function packRelease() {
     }
   };
   grunt.util.spawn(spawnCmd, function(err, result) {
+    if (err) {
+      grunt.log.error(err);
+    }
     // Gem packing does weird things to versions so 0.12.0-alpha becomes
     // 0.12.0.pre.alpha. We need to get the filename printed to stdout.
     var filename = result.stdout.match(/File: (.*)$/)[1];
-    var src = 'build/gem-react-source/' + filename;
-    var dest = 'build/react-source.tgz';
-    fs.rename(src, dest, done);
+    var buildSrc = 'build/gem-react-source/' + filename;
+    var buildDest = 'build/react-source.tgz';
+    fs.rename(buildSrc, buildDest, done);
   });
 }
 
