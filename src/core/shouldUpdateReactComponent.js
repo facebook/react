@@ -57,19 +57,26 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
                 nextElement.type.displayName != null) {
               nextDisplayName = nextElement.type.displayName;
             }
-            warning(
-              false,
-              '<%s /> is being rendered by both %s and %s using the same key ' +
-              '(%s) in the same place. Currently, this means that they ' +
-              'don\'t preserve state. This behavior should be very rare ' +
-              'so we\'re considering deprecating it. Please contact the ' +
-              'React team and explain your use case so that we can take that ' +
-              'into consideration.',
-              nextDisplayName || 'Unknown Component',
-              prevName || '[Unknown]',
-              nextName || '[Unknown]',
-              prevElement.key
-            );
+            if (nextElement.type != null && typeof nextElement.type === 'string') {
+              nextDisplayName = nextElement.type;
+            }
+            if (typeof nextElement.type !== 'string' ||
+                nextElement.type === 'input' ||
+                nextElement.type === 'textarea') {
+              warning(
+                false,
+                '<%s /> is being rendered by both %s and %s using the same key ' +
+                '(%s) in the same place. Currently, this means that they ' +
+                'don\'t preserve state. This behavior should be very rare ' +
+                'so we\'re considering deprecating it. Please contact the ' +
+                'React team and explain your use case so that we can take that ' +
+                'into consideration.',
+                nextDisplayName || 'Unknown Component',
+                prevName || '[Unknown]',
+                nextName || '[Unknown]',
+                prevElement.key
+              );
+            }
           }
         }
         return ownersMatch;
