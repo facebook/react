@@ -15,46 +15,38 @@ function commaAfterLastParen(value) {
     var state = "normal";
     var commaPos = 0;
     for (var i=0;i<value.length;++i) {
-        switch (state) {
-            case "normal":
-                switch (value.charAt(i)) {
-                    case "/":
-                        if (i+1 < value.length) {
-                            if (value.charAt(i+1) === "/") {
-                                state = "singleline";
-                                i+=1;
+        if (state === "normal") {
+            if (value.charAt(i) == "/") {
+                if (i+1 < value.length) {
+                    if (value.charAt(i+1) === "/") {
+                        state = "singleline";
+                        i+=1;
 
-                            }
-                            else if (value.charAt(i+1) === "*") {
-                                state = "multiline"
-                                    i+=1;
-                            }
-                            else {
-                                commaPos = i+1;
-                            }
-                        }
-                        else {
-                            commaPos = i+1;
-                        }
-                        break;
-                    default:
-                        if (value.charAt(i).trim() !== "") {
-                            commaPos = i+1;
-                        }
-                }
-                break;
-            case "singleline":
-                if(value.charAt(i) === "\n") {
-                    state = "normal"
-                }
-                break;
-            case "multiline":
-                if(value.charAt(i) === "*" &&
-                        i+1 < value.length &&
-                        value.charAt(i+1) == "/") {
+                    }
+                    else if (value.charAt(i+1) === "*") {
+                        state = "multiline"
                             i+=1;
-                            state = "normal"
-                        }
+                    }
+                    else {
+                        commaPos = i+1;
+                    }
+                }
+                else {
+                    commaPos = i+1;
+                }
+            }
+            else if (value.charAt(i).trim() !== "") {
+                commaPos = i+1;
+            }
+        }
+        else if (state == "singleline" && value.charAt(i) === "\n") {
+            state = "normal"
+        } else if (state == "multiline" &&
+                value.charAt(i) === "*" &&
+                i+1 < value.length &&
+                value.charAt(i+1) == "/") {
+                    i+=1;
+                    state = "normal"
         }
     }
     return value.substring(0,commaPos) + ', ' + trimLeft(value.substring(commaPos));
