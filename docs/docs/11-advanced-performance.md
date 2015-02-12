@@ -195,13 +195,13 @@ this.messages = Immutable.List();
 It should be pretty straightforward to implement functions to process each *payload* type. For instance, when the store sees a payload representing a new message,  we can just create a new record and append it to the messages list:
 
 ```javascript
-this.messages = this.messages.push(new Message({
+this.messages = this.messages.concat(new Message({
   timestamp: payload.timestamp,
   sender: payload.sender,
   text: payload.text
 });
 ```
 
-Note that since the data structures are immutable, we need to assign the result of the push function to this.messages.
+Note that since the data structures are immutable, we need to assign the result of the concat function to this.messages.
 
 On the React side, if we also use immutable-js data structures to hold the components' state, we could mix `PureRenderMixin` into all our components and short circuit the re-rendering process.
