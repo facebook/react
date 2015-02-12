@@ -53,7 +53,7 @@ var BrowserPerfRunnerApp = React.createClass({
         return key.indexOf(queueItem.test) === 0;
       })
       .map(function(key) {
-          return this.state.results[key];
+        return this.state.results[key];
       }, this);
     this.props.onCompleteEach(resultsForAllVersions);
 
