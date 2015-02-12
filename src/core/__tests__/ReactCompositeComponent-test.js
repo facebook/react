@@ -73,6 +73,12 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
+    // Ignore the first warning which is fired by using withContext at all.
+    // That way we don't have to reset and assert it on every subsequent test.
+    // This will be killed soon anyway.
+    console.warn = mocks.getMockFunction();
+    React.withContext({}, function() { });
+
     spyOn(console, 'warn');
   });
 
@@ -571,8 +577,6 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     });
 
-    // Two warnings, one for the component and one for the div
-    // We may want to make this expect one warning in the future
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ '+

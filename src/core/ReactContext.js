@@ -13,7 +13,9 @@
 
 var assign = require('Object.assign');
 var emptyObject = require('emptyObject');
-var monitorCodeUse = require('monitorCodeUse');
+var warning = require('warning');
+
+var didWarn = false;
 
 /**
  * Keeps track of the current context.
@@ -46,7 +48,15 @@ var ReactContext = {
    * @return {ReactComponent|array<ReactComponent>}
    */
   withContext: function(newContext, scopedCallback) {
-    monitorCodeUse('react_with_context', {newContext: newContext});
+    if (__DEV__) {
+      warning(
+        didWarn,
+        'withContext is deprecated and will be removed in a future version. ' +
+        'Use a wrapper component with getChildContext instead.'
+      );
+
+      didWarn = true;
+    }
 
     var result;
     var previousContext = ReactContext.current;
