@@ -324,6 +324,19 @@ describe('react jsx', function() {
     expect(transform(code).code).toBe(result);
   });
 
+  it('handles overparenthesized JS', function() {
+    var code =
+    '<foo a={(b)} c={(d)}>Foo {(e+f //A line comment\n' +
+        '/* A multiline comment */)\n' +
+      '} bar\n' +
+    '</foo>';
+    var result = 'React.createElement("foo", {a: (b), c: (d)}, "Foo ", (e+f //A line comment\n' +
+            '/* A multiline comment */), \n' +
+    '" bar"\n' +
+    ')';
+    expect(transform(code).code).toBe(result);
+  });
+
   it('should transform known hyphenated tags', function() {
     var code = '<font-face />;';
     var result = 'React.createElement("font-face", null);';
