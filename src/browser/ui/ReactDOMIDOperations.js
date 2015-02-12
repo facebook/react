@@ -132,8 +132,8 @@ var ReactDOMIDOperations = {
    * @see {Danger.dangerouslyReplaceNodeWithMarkup}
    */
   dangerouslyReplaceNodeWithMarkupByID: function(id, markup) {
-      var node = ReactMount.getNode(id);
-      DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
+    var node = ReactMount.getNode(id);
+    DOMChildrenOperations.dangerouslyReplaceNodeWithMarkup(node, markup);
   },
 
   /**
