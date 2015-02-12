@@ -10,7 +10,8 @@ globals:
 
 rules:
   # ERRORS
-  space-before-blocks: [2, 'always']
+  space-before-blocks: 2
+  indent: [2, 2, indentSwitchCase: true]
   brace-style: 2
   space-after-keywords: 2
   strict: 2
