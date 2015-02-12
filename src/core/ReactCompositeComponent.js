@@ -447,10 +447,17 @@ var ReactCompositeComponentMixin = {
 
           if (location === ReactPropTypeLocations.prop) {
             // Preface gives us something to blacklist in warning module
-            var preface = 'Failed CompositeComponent proptype check. ';
-            warning(false, preface + error.message + addendum);
+            warning(
+              false,
+              'Failed Composite propType: %s',
+              error.message + addendum
+            );
           } else {
-            warning(false, error.message + addendum);
+            warning(
+              false,
+              'Failed Context Types: %s',
+              error.message + addendum
+            );
           }
         }
       }

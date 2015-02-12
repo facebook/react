@@ -12,7 +12,7 @@
 
 'use strict';
 
-var monitorCodeUse = require('monitorCodeUse');
+var warning = require('warning');
 
 /**
  * Given a `prevElement` and `nextElement`, determines if the existing
@@ -57,14 +57,18 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
                 nextElement.type.displayName != null) {
               nextDisplayName = nextElement.type.displayName;
             }
-            monitorCodeUse(
-              'react_should_update_owner_is_useful',
-              {
-                key: prevElement.key,
-                prevOwner: prevName,
-                nextOwner: nextName,
-                nextDisplayName: nextDisplayName
-              }
+            warning(
+              false,
+              '<%s /> is being rendered by both %s and %s using the same key ' +
+              '(%s) in the same place. Currently, this means that they ' +
+              'don\'t preserve state. This behavior should be very rare ' +
+              'so we\'re considering deprecating it. Please contact the ' +
+              'React team and explain your use case so that we can take that ' +
+              'into consideration.',
+              nextDisplayName || 'Unknown Component',
+              prevName || '[Unknown]',
+              nextName || '[Unknown]',
+              prevElement.key
             );
           }
         }

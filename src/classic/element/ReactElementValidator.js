@@ -44,10 +44,7 @@ function getDeclarationErrorAddendum() {
  * object keys are not valid. This allows us to keep track of children between
  * updates.
  */
-var ownerHasKeyUseWarning = {
-  'react_key_warning': {},
-  'react_numeric_key_warning': {}
-};
+var ownerHasKeyUseWarning = {};
 
 var loggedTypeFailures = {};
 
@@ -101,7 +98,6 @@ function validateExplicitKey(element, parentType) {
   element._store.validated = true;
 
   warnAndMonitorForKeyUse(
-    'react_key_warning',
     'Each child in an array or iterator should have a unique "key" prop.',
     element,
     parentType
@@ -122,7 +118,6 @@ function validatePropertyKey(name, element, parentType) {
     return;
   }
   warnAndMonitorForKeyUse(
-    'react_numeric_key_warning',
     'Child objects should have non-numeric keys so ordering is preserved.',
     element,
     parentType
@@ -133,17 +128,18 @@ function validatePropertyKey(name, element, parentType) {
  * Shared warning and monitoring code for the key warnings.
  *
  * @internal
- * @param {string} warningID The id used when logging.
  * @param {string} message The base warning that gets output.
  * @param {ReactElement} element Component that requires a key.
  * @param {*} parentType element's parent's type.
  */
-function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
+function warnAndMonitorForKeyUse(message, element, parentType) {
   var ownerName = getCurrentOwnerDisplayName();
   var parentName = parentType.displayName || parentType.name;
 
   var useName = ownerName || parentName;
-  var memoizer = ownerHasKeyUseWarning[warningID];
+  var memoizer = ownerHasKeyUseWarning[message] || (
+    ownerHasKeyUseWarning[message] = {}
+  );
   if (memoizer.hasOwnProperty(useName)) {
     return;
   }
@@ -166,7 +162,7 @@ function warnAndMonitorForKeyUse(warningID, message, element, parentType) {
   }
 
   message += ' See http://fb.me/react-warning-keys for more information.';
-  warning(false, '%s', warningID + ': ' + message);
+  warning(false, message);
 }
 
 /**
