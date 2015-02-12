@@ -202,7 +202,7 @@ var ReactCompositeComponentMixin = {
     ReactLifeCycle.currentlyMountingInstance = this;
     try {
       if (inst.componentWillMount) {
-          inst.componentWillMount();
+        inst.componentWillMount();
         // When mounting, calls to `setState` by `componentWillMount` will set
         // `this._pendingStateQueue` without triggering a re-render.
         if (this._pendingStateQueue) {
