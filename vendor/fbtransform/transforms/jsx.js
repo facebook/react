@@ -21,21 +21,17 @@ function commaAfterLastParen(value) {
                     if (value.charAt(i+1) === "/") {
                         state = "singleline";
                         i+=1;
+                        continue;
 
                     }
-                    else if (value.charAt(i+1) === "*") {
+                    if (value.charAt(i+1) === "*") {
                         state = "multiline"
                             i+=1;
+                        continue;
                     }
-                    else {
-                        commaPos = i+1;
-                    }
-                }
-                else {
-                    commaPos = i+1;
                 }
             }
-            else if (value.charAt(i).trim() !== "") {
+            if (value.charAt(i).trim() !== "") {
                 commaPos = i+1;
             }
         }
