@@ -7,7 +7,9 @@ var src = 'npm-react-tools';
 var dest = 'build/npm-react-tools/';
 
 function buildRelease() {
-  grunt.file.exists(dest) && grunt.file.delete(dest);
+  if (grunt.file.exists(dest)) {
+    grunt.file.delete(dest);
+  }
 
   // read our required files from package.json
   var pkgFiles = grunt.config.data.pkg.files;
@@ -27,18 +29,17 @@ function buildRelease() {
   });
 
   mappings.forEach(function(mapping) {
-    var src = mapping.src[0];
-    var dest = mapping.dest;
-    if (grunt.file.isDir(src)) {
-      grunt.file.mkdir(dest);
+    var mappingSrc = mapping.src[0];
+    var mappingDest = mapping.dest;
+    if (grunt.file.isDir(mappingSrc)) {
+      grunt.file.mkdir(mappingDest);
     } else {
-      grunt.file.copy(src, dest);
+      grunt.file.copy(mappingSrc, mappingDest);
     }
   });
 }
 
 function packRelease() {
-  /*jshint validthis:true */
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
@@ -48,9 +49,9 @@ function packRelease() {
     }
   };
   grunt.util.spawn(spawnCmd, function() {
-    var src = 'build/react-tools-' + grunt.config.data.pkg.version + '.tgz';
-    var dest = 'build/react-tools.tgz';
-    fs.rename(src, dest, done);
+    var buildSrc = 'build/react-tools-' + grunt.config.data.pkg.version + '.tgz';
+    var buildDest = 'build/react-tools.tgz';
+    fs.rename(buildSrc, buildDest, done);
   });
 }
 

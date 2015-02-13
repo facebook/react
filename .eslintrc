@@ -10,6 +10,8 @@ globals:
 
 rules:
   # ERRORS
+  space-before-blocks: 2
+  indent: [2, 2, indentSwitchCase: true]
   brace-style: 2
   space-after-keywords: 2
   strict: 2
@@ -25,8 +27,6 @@ rules:
   consistent-return: 2
   no-unused-vars: [2, args: none]
   quotes: [2, 'single']
-  space-before-blocks: 2
-  indent: [2, 2, indentSwitchCase: true]
 
   # WARNINGS
   # This is the only one that's hard to track since we don't lint just changes.

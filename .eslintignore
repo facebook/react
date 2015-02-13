@@ -7,3 +7,4 @@ src/vendor_deprecated
 src/**/__tests__/**
 # This should be enabled but that folder has too much in it that doesn't belong
 src/test
+test/the-files-to-test.generated.js

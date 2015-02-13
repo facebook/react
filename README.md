@@ -86,7 +86,7 @@ grunt test
 grunt test --debug
 # For speed, you can use fasttest and add --filter to only run one test
 grunt fasttest --filter=ReactIdentity
-# Lint the code with JSHint
+# Lint the code with ESLint
 grunt lint
 # Wipe out build directory
 grunt clean
