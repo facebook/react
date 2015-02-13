@@ -6,8 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @npm-react react
- */
+ *
 /*global exports:true*/
 "use strict";
 var Syntax = require('esprima-fb').Syntax;
