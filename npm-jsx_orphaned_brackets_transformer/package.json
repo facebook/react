@@ -13,6 +13,6 @@
   "bin": {
     "jsx_orphaned_brackets_transformer": "./run.js"
   },
-  "license": "Apache-2.0",
+  "license": "BSD-3-Clause",
   "preferGlobal": true
 }
