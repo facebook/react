@@ -15,7 +15,9 @@ var distFiles = [
 
 function buildRelease() {
   // delete build/react-core for fresh start
-  grunt.file.exists(dest) && grunt.file.delete(dest);
+  if (grunt.file.exists(dest)) {
+    grunt.file.delete(dest);
+  }
 
   // mkdir -p build/react-core/lib
   grunt.file.mkdir(lib);
@@ -27,12 +29,12 @@ function buildRelease() {
     grunt.file.expandMapping('**/*', lib, {cwd: modSrc})
   );
   mappings.forEach(function(mapping) {
-    var src = mapping.src[0];
-    var dest = mapping.dest;
-    if (grunt.file.isDir(src)) {
-      grunt.file.mkdir(dest);
+    var mappingSrc = mapping.src[0];
+    var mappingDest = mapping.dest;
+    if (grunt.file.isDir(mappingSrc)) {
+      grunt.file.mkdir(mappingDest);
     } else {
-      grunt.file.copy(src, dest);
+      grunt.file.copy(mappingSrc, mappingDest);
     }
   });
 
@@ -49,7 +51,6 @@ function buildRelease() {
 }
 
 function packRelease() {
-  /*jshint validthis:true */
   var done = this.async();
   var spawnCmd = {
     cmd: 'npm',
@@ -59,9 +60,9 @@ function packRelease() {
     }
   };
   grunt.util.spawn(spawnCmd, function() {
-    var src = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
-    var dest = 'build/react.tgz';
-    fs.rename(src, dest, done);
+    var buildSrc = 'build/react-' + grunt.config.data.pkg.version + '.tgz';
+    var buildDest = 'build/react.tgz';
+    fs.rename(buildSrc, buildDest, done);
   });
 }
 

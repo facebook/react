@@ -22,7 +22,7 @@ module.exports = function() {
   var taskCompletedSuccessfully = task.async();
 
   var stunnel = new SauceTunnel(SAUCE_USERNAME, SAUCE_ACCESS_KEY, IDENTIFIER, /*tunneled*/true, /*tunnelTimeout*/5);
-  process.on('exit', stunnel.stop.bind(stunnel, function(){}));
+  process.on('exit', stunnel.stop.bind(stunnel, function() {}));
 
   stunnel.on('log:error', grunt.log.error.bind(grunt.log));
   stunnel.on('log:writeln', grunt.log.writeln.bind(grunt.log));
@@ -32,7 +32,7 @@ module.exports = function() {
   stunnel.on('verbose:debug', grunt.verbose.debug.bind(grunt.verbose));
   stunnel.on('verbose:writeln', grunt.verbose.writeln.bind(grunt.verbose));
 
-  stunnel.openTunnel(function(isOpen){
+  stunnel.openTunnel(function(isOpen) {
     if (shouldStayAliveForever && isOpen) {
       grunt.verbose.writeln('Keeping the sauce-tunnel open forever because you used the keepalive flag `' + task.nameArgs + '`');
       return;

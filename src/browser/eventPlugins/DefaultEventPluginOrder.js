@@ -11,7 +11,7 @@
 
 'use strict';
 
- var keyOf = require('keyOf');
+var keyOf = require('keyOf');
 
 /**
  * Module that is injectable into `EventPluginHub`, that specifies a

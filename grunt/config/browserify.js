@@ -1,5 +1,4 @@
-/* jshint multistr:true */
-/* jshint -W040 */
+/*eslint-disable no-multi-str */
 
 'use strict';
 

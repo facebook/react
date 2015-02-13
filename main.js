@@ -1,5 +1,5 @@
 'use strict';
-
+/*eslint-disable no-undef*/
 var visitors = require('./vendor/fbtransform/visitors');
 var transform = require('jstransform').transform;
 var typesSyntax = require('jstransform/visitors/type-syntax');

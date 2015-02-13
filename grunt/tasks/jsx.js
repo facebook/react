@@ -1,7 +1,7 @@
 'use strict';
 
-var path = require("path");
-var grunt = require("grunt");
+var path = require('path');
+var grunt = require('grunt');
 var expand = grunt.file.expand;
 var spawn = grunt.util.spawn;
 
@@ -10,27 +10,27 @@ module.exports = function() {
   var config = this.data;
 
   var args = [
-    "--cache-dir", ".module-cache",
-    "--relativize",
-    "--follow-requires",
-    "--use-provides-module",
+    '--cache-dir', '.module-cache',
+    '--relativize',
+    '--follow-requires',
+    '--use-provides-module',
     config.sourceDir,
     config.outputDir
   ];
 
   var rootIDs = expand({
     nonull: true, // Keep IDs that don't expand to anything.
-    cwd: "src"
+    cwd: 'src'
   }, config.rootIDs).map(function(id) {
-    return id.replace(/\.js$/i, "");
+    return id.replace(/\.js$/i, '');
   });
 
   args.push.apply(args, rootIDs);
-  args.push("--config" /* from stdin */);
+  args.push('--config' /* from stdin */);
 
   var child = spawn({
-    cmd: "node",
-    args: [path.join("bin", "jsx-internal")].concat(args)
+    cmd: 'node',
+    args: [path.join('bin', 'jsx-internal')].concat(args)
   }, function(error, result, code) {
     if (error) {
       grunt.log.error(error);

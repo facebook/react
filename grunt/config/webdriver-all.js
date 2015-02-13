@@ -2,20 +2,20 @@
 
 var grunt = require('grunt');
 
-module.exports = function(props){
-  if (typeof props.url != 'string') {
+module.exports = function(props) {
+  if (typeof props.url !== 'string') {
     throw TypeError('expected url string');
   }
-  if ('isDoneTimeout' in props && typeof props.isDoneTimeout != 'number') {
+  if ('isDoneTimeout' in props && typeof props.isDoneTimeout !== 'number') {
     throw TypeError('expected isDoneTimeout to be a number');
   }
-  if ('onStart' in props && typeof props.onStart != 'function') {
+  if ('onStart' in props && typeof props.onStart !== 'function') {
     throw TypeError('expected onStart to be a function');
   }
-  if ('onComplete' in props && typeof props.onComplete != 'function') {
+  if ('onComplete' in props && typeof props.onComplete !== 'function') {
     throw TypeError('expected onComplete to be a function');
   }
-  if ('onError' in props && typeof props.onError != 'function') {
+  if ('onError' in props && typeof props.onError !== 'function') {
     throw TypeError('expected onError to be a function');
   }
 
@@ -33,7 +33,7 @@ module.exports = function(props){
   };
 
   if (grunt.option('debug')) {
-    exports.local.url += (exports.local.url.indexOf('?') == -1 ? '?' : '&') + 'debug=' + grunt.option('debug');
+    exports.local.url += (exports.local.url.indexOf('?') === -1 ? '?' : '&') + 'debug=' + grunt.option('debug');
   }
 
   exports.saucelabs = {
@@ -49,13 +49,13 @@ module.exports = function(props){
       }
     },
     desiredCapabilities: {
-      "build": process.env.TRAVIS_BUILD_NUMBER || 'dev' + Date.now(),
-      "tunnel-identifier": process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel',
-      "browserName": "chrome"
+      'build': process.env.TRAVIS_BUILD_NUMBER || 'dev' + Date.now(),
+      'tunnel-identifier': process.env.TRAVIS_JOB_NUMBER || 'my awesome tunnel',
+      'browserName': 'chrome'
     },
     url: exports.local.url,
-    onStart: function(browser){
-      grunt.log.writeln("Starting WebDriver Test. Watch results here: http://saucelabs.com/tests/" + browser.sessionID);
+    onStart: function(browser) {
+      grunt.log.writeln('Starting WebDriver Test. Watch results here: http://saucelabs.com/tests/' + browser.sessionID);
       if (props.onStart) {
         return props.onStart(browser);
       }
@@ -65,6 +65,7 @@ module.exports = function(props){
     isDoneTimeout: exports.local.isDoneTimeout
   };
 
+  /*eslint-disable camelcase*/
   /* https://saucelabs.com/platforms */
   exports.saucelabs_ios =
   exports.saucelabs_ios7 = sauceItUp({ browserName: 'iphone', version: '7', platform:'OS X 10.9' });
@@ -94,10 +95,11 @@ module.exports = function(props){
   exports.saucelabs_ie9 = sauceItUp({ browserName: 'internet explorer', version: 9 });
   exports.saucelabs_ie10 = sauceItUp({ browserName: 'internet explorer', version: 10 });
   exports.saucelabs_ie11 = sauceItUp({ browserName: 'internet explorer', version: 11, platform:'Windows 8.1' });
+  /*eslint-enable camelcase*/
 
   function sauceItUp(desiredCapabilities) {
-    desiredCapabilities["build"] = exports.saucelabs.desiredCapabilities["build"];
-    desiredCapabilities["tunnel-identifier"] = exports.saucelabs.desiredCapabilities["tunnel-identifier"];
+    desiredCapabilities.build = exports.saucelabs.desiredCapabilities.build;
+    desiredCapabilities['tunnel-identifier'] = exports.saucelabs.desiredCapabilities['tunnel-identifier'];
     return {
       webdriver: exports.saucelabs.webdriver,
       url: exports.saucelabs.url,
@@ -105,7 +107,7 @@ module.exports = function(props){
       onComplete: exports.saucelabs.onComplete,
       onError: exports.saucelabs.onError,
       isDoneTimeout: exports.saucelabs.isDoneTimeout,
-      desiredCapabilities: desiredCapabilities,
+      desiredCapabilities: desiredCapabilities
     };
   }
 

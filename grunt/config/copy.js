@@ -1,5 +1,5 @@
 'use strict';
-
+/*eslint-disable camelcase*/
 module.exports = {
 
   react_docs: {

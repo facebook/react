@@ -1,6 +1,3 @@
-// function calls get bound so "possible strict mode violations" aren't
-// jshint -W040
-
 'use strict';
 
 var grunt = require('grunt');
@@ -59,8 +56,7 @@ function _gitCommitAndTag(cwd, commitMsg, tag, cb) {
       grunt.util.spawn(gitCommit, function() {
         if (tag) {
           grunt.util.spawn(gitTag, cb);
-        }
-        else {
+        } else {
           cb();
         }
       });
