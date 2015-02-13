@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // -*- mode: js -*-
-"use strict";
+'use strict';
 
 var transform = require('../main').transform;
 
@@ -15,14 +15,32 @@ require('commoner').version(
   '--strip-types',
   'Strips out type annotations.'
 ).option(
+  '--es6module',
+  'Parses the file as a valid ES6 module. ' +
+  '(Note that this means implicit strict mode)'
+).option(
+  '--non-strict-es6module',
+  'Parses the file as an ES6 module, except disables implicit strict-mode. ' +
+  '(This is useful if you\'re porting non-ES6 modules to ES6, but haven\'t ' +
+  'yet verified that they are strict-mode safe yet)'
+).option(
   '--source-map-inline',
   'Embed inline sourcemap in transformed source'
 ).process(function(id, source) {
+  var sourceType;
+  if (this.options.es6module) {
+    sourceType = 'module';
+  }
+  if (this.options.nonStrictEs6module) {
+    sourceType = 'nonStrictModule';
+  }
+
   // This is where JSX, ES6, etc. desugaring happens.
   var options = {
     harmony: this.options.harmony,
     sourceMap: this.options.sourceMapInline,
-    stripTypes: this.options.stripTypes
+    stripTypes: this.options.stripTypes,
+    sourceType: sourceType,
   };
   return transform(source, options);
 });
