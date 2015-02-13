@@ -61,7 +61,7 @@ GEM
     rb-inotify (0.9.5)
       ffi (>= 0.5.0)
     redcarpet (3.1.2)
-    safe_yaml (1.0.3)
+    safe_yaml (1.0.4)
     sanitize (2.0.6)
       nokogiri (>= 1.4.4)
     sass (3.3.14)
