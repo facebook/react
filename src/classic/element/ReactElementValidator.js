@@ -312,8 +312,14 @@ function checkAndWarnForMutatedProps(element) {
 
   for (var propName in props) {
     if (props.hasOwnProperty(propName)) {
-      if (!originalProps.hasOwnProperty(propName) ||
-          originalProps[propName] !== props[propName]) {
+      var valueChanged = originalProps[propName] !== props[propName];
+      // Necessary because NaN !== NaN
+      if (typeof originalProps[propName] === 'number' &&
+          typeof props[propName] === 'number' &&
+          isNaN(originalProps[propName]) && isNaN(props[propName])) {
+        valueChanged = false;
+      }
+      if (!originalProps.hasOwnProperty(propName) || valueChanged) {
         warnForPropsMutation(propName, element);
 
         // Copy over the new value so that the two props objects match again
