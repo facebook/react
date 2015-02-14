@@ -8,13 +8,6 @@ var rootIDs = [
   'ReactWithAddons'
 ];
 
-// TODO: stop packaging these libraries
-rootIDs = rootIDs.concat([
-  'merge',
-  'mergeInto',
-  'copyProperties'
-]);
-
 var normal = {
   rootIDs: rootIDs,
   getConfig: function() {
