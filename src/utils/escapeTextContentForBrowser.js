@@ -15,11 +15,10 @@ var ESCAPE_LOOKUP = {
   '&': '&amp;',
   '>': '&gt;',
   '<': '&lt;',
-  '"': '&quot;',
-  '\'': '&#x27;'
+  '"': '&quot;'
 };
 
-var ESCAPE_REGEX = /[&><"']/g;
+var ESCAPE_REGEX = /[&><"]/g;
 
 function escaper(match) {
   return ESCAPE_LOOKUP[match];

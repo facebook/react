@@ -35,10 +35,9 @@ describe('quoteAttributeValueForBrowser', function() {
   });
 
   it('should escape string', function() {
-    var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
+    var escaped = quoteAttributeValueForBrowser('<script src=""></script>');
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
     expect(escaped.substr(1, -1)).not.toContain('\"');
 
     escaped = quoteAttributeValueForBrowser('&');
