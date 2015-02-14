@@ -57,10 +57,10 @@ function runCli(argv) {
   var source = '';
   process.stdin.resume();
   process.stdin.setEncoding('utf8');
-  process.stdin.on('data', function (chunk) {
+  process.stdin.on('data', function(chunk) {
     source += chunk;
   });
-  process.stdin.on('end', function () {
+  process.stdin.on('end', function() {
     try {
       source = transformAll(source, options, excludes);
     } catch (e) {

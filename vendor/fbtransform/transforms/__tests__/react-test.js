@@ -338,7 +338,7 @@ describe('react jsx', function() {
 
   it('should not throw for unknown hyphenated tags', function() {
     var code = '<x-component />;';
-    expect(function(){transform(code);}).not.toThrow();
+    expect(function() {transform(code);}).not.toThrow();
   });
 
   it('calls assign with a new target object for spreads', function() {
