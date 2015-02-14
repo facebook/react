@@ -78,7 +78,7 @@ var hasUndefinedStringKey = [
 var hasPositiveNumericKey = [
   {uniqueID: 'notANumber', data: []},
   {uniqueID: '5', data: []},
-  {uniqueID: 'notAnotherNumber',data: []}
+  {uniqueID: 'notAnotherNumber', data: []}
 ];
 
 var hasZeroStringKey = [

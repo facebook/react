@@ -3,14 +3,14 @@
 
 if (typeof console == 'undefined') {
   this.console = {
-    error: function(e){
+    error: function(e) {
       postMessage(JSON.stringify({
         type: 'error',
         message: e.message,
         stack: e.stack
       }));
     },
-    log: function(message){
+    log: function(message) {
       postMessage(JSON.stringify({
         type: 'log',
         message: message

@@ -109,7 +109,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
       [ 'setState-args', 'dark blue', 'green' ],
       [ 'render', 'light green', 'green' ],
       [ 'parent-after-setState', 'green' ],
-      [ 'after-setState', 'light green', 'green' ],
+      [ 'after-setState', 'light green', 'green' ]
     ]);
   });
 });

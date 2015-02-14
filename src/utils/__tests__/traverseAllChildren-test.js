@@ -351,7 +351,7 @@ describe('traverseAllChildren', function() {
         return {
           next: function() {
             if (i++ < 3) {
-              return { value: <div key={'#'+i} />, done: false };
+              return { value: <div key={'#' + i} />, done: false };
             } else {
               return { value: undefined, done: true };
             }
@@ -402,7 +402,7 @@ describe('traverseAllChildren', function() {
         return {
           next: function() {
             if (i++ < 3) {
-              return { value: ['#'+i, <div />], done: false };
+              return { value: ['#' + i, <div />], done: false };
             } else {
               return { value: undefined, done: true };
             }
