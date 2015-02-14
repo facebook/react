@@ -31,7 +31,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
 
       handleColor: function(color) {
         this.props.logger('parent-handleColor', this.state.color);
-        this.setState({ color: color }, function () {
+        this.setState({ color: color }, function() {
           this.props.logger('parent-after-setState', this.state.color);
         });
       },
@@ -55,11 +55,11 @@ describe('ReactCompositeComponentNestedState-state', function() {
       handleHue: function(shade, color) {
         this.props.logger('handleHue', this.state.hue, this.props.color);
         this.props.onSelectColor(color);
-        this.setState(function (state, props) {
+        this.setState(function(state, props) {
           this.props.logger('setState-this', this.state.hue, this.props.color);
           this.props.logger('setState-args', state.hue, props.color);
           return { hue: shade + ' ' + props.color }
-        }, function () {
+        }, function() {
           this.props.logger('after-setState', this.state.hue, this.props.color);
         });
       },

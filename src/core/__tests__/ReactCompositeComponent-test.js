@@ -478,7 +478,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
     var Component = React.createClass({
-      getInitialState: function () {
+      getInitialState: function() {
         return {bogus: false};
       },
 
