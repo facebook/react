@@ -63,19 +63,30 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
             if (typeof nextElement.type !== 'string' ||
                 nextElement.type === 'input' ||
                 nextElement.type === 'textarea') {
-              warning(
-                false,
-                '<%s /> is being rendered by both %s and %s using the same key ' +
-                '(%s) in the same place. Currently, this means that they ' +
-                'don\'t preserve state. This behavior should be very rare ' +
-                'so we\'re considering deprecating it. Please contact the ' +
-                'React team and explain your use case so that we can take that ' +
-                'into consideration.',
-                nextDisplayName || 'Unknown Component',
-                prevName || '[Unknown]',
-                nextName || '[Unknown]',
-                prevElement.key
-              );
+              if ((prevElement._owner != null &&
+                  prevElement._owner._isOwnerNecessary === false) ||
+                  (nextElement._owner != null &&
+                  nextElement._owner._isOwnerNecessary === false)) {
+                if (prevElement._owner != null) {
+                  prevElement._owner._isOwnerNecessary = true;
+                }
+                if (nextElement._owner != null) {
+                  nextElement._owner._isOwnerNecessary = true;
+                }
+                warning(
+                  false,
+                  '<%s /> is being rendered by both %s and %s using the same ' +
+                  'key (%s) in the same place. Currently, this means that ' +
+                  'they don\'t preserve state. This behavior should be very ' +
+                  'rare so we\'re considering deprecating it. Please contact ' +
+                  'the React team and explain your use case so that we can ' +
+                  'take that into consideration.',
+                  nextDisplayName || 'Unknown Component',
+                  prevName || '[Unknown]',
+                  nextName || '[Unknown]',
+                  prevElement.key
+                );
+              }
             }
           }
         }

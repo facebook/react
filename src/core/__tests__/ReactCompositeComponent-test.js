@@ -501,6 +501,50 @@ describe('ReactCompositeComponent', function() {
     );
   });
 
+  it('should warn when owner is necessary', function() {
+
+    var Chooser = React.createClass({
+      render: function() {
+        return this.props.selection == 1 ? this.props.child1 : this.props.child2;
+      }
+    });
+
+    var CoolParent1 = React.createClass({
+      render: function() {
+        return <Chooser
+          selection={this.props.selection}
+          child1={<input value='foo' readOnly='true' />}
+          child2={this.props.child2} />;
+      }
+    });
+
+    var CoolParent2 = React.createClass({
+      render: function() {
+        return <CoolParent1
+          selection={this.props.selection}
+          child2={<input value='foo' readOnly='true' />} />;
+      }
+    });
+
+    var div = document.createElement('div');
+    React.render(<CoolParent2 selection={1} />, div);
+    expect(console.warn.argsForCall.length).toBe(0);
+    React.render(<CoolParent2 selection={2} />, div);
+    expect(console.warn.argsForCall.length).toBe(1);
+    React.render(<CoolParent2 selection={1} />, div);
+    React.render(<CoolParent2 selection={2} />, div);
+    expect(console.warn.argsForCall.length).toBe(1);
+
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: <input /> is being rendered by both CoolParent1 and ' +
+      'CoolParent2 using the same key (null) in the same place. Currently, ' +
+      'this means that they don\'t preserve state. This behavior should be ' +
+      'very rare so we\'re considering deprecating it. Please contact the ' +
+      'React team and explain your use case so that we can take that into ' +
+      'consideration.'
+    );
+  });
+
   it('should pass context', function() {
     var childInstance = null;
     var grandchildInstance = null;
