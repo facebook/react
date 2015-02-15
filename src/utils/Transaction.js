@@ -61,7 +61,7 @@ var invariant = require('invariant');
  *   content.
  * - (Future use case): Wrapping particular flushes of the `ReactWorker` queue
  *   to preserve the `scrollTop` (an automatic scroll aware DOM).
- * - (Future use case): Layout calculations before and after DOM upates.
+ * - (Future use case): Layout calculations before and after DOM updates.
  *
  * Transactional plugin API:
  * - A module that has an `initialize` method that returns any precomputation.
