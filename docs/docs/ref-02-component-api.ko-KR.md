@@ -39,7 +39,7 @@ replaceState(object nextState[, function callback])
 `setState()`와 비슷하지만 기존에 존재하는 state 중 nextState에 없는 키는 모두 삭제됩니다.
 
 
-### forceUpdate()
+### forceUpdate
 
 ```javascript
 forceUpdate([function callback])
@@ -61,7 +61,7 @@ DOMElement getDOMNode()
 이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 요소를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴하였다면 `this.getDOMNode()`는 `null`을 리턴합니다.
 
 
-### isMounted()
+### isMounted
 
 ```javascript
 bool isMounted()

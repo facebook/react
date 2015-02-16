@@ -166,32 +166,13 @@ var CommentBox = React.createClass({
 
 방금 만든 컴포넌트들을 어떤방식으로 HTML 태그들과 섞어 사용하는지 살펴보세요. HTML 컴포넌트들도 한가지 차이만 제외한다면 우리가 정의한 것과 같은 표준적인 React 컴포넌트입니다. JSX 컴파일러가 자동으로 HTML 태그들을 `React.createElement(tagName)` 표현식으로 재작성하고 나머지는 그대로 둘 것입니다. 이는 전역 네임스페이스가 오염되는 것을 막아줍니다.
 
-### 컴포넌트 프로퍼티 (Component Properties)
-
-이제 세 번째 컴포넌트인 `Comment`를 만들어 봅시다. 개별 댓글마다 글쓴이와 내용을 포함하게 될 것입니다. 먼저 댓글 몇 개를 `CommentList`에 추가해 봅시다:
-
-```javascript{6-7}
-// tutorial4.js
-var CommentList = React.createClass({
-  render: function() {
-    return (
-      <div className="commentList">
-        <Comment author="Pete Hunt">댓글입니다</Comment>
-        <Comment author="Jordan Walke">*또 다른* 댓글입니다</Comment>
-      </div>
-    );
-  }
-});
-```
-
-부모 컴포넌트인 `CommentList`에서 자식 컴포넌트인 `Comment`에 데이터들을 전달하고 있는것을 확인할 수 있습니다. 예를 들어, 우리는 어트리뷰트로 *Pete Hunt*를, XML 형식의 자식 노드로 *댓글입니다*를 첫 번째 `Comment`로 넘겼습니다. 부모에서 자식 컴포넌트로 전달되는 데이터는 **props**라 합니다. properties의 축약어지요.
-
 ### props 사용하기
 
-Comment 컴포넌트를 만들어 봅시다. **props**를 사용해 `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
+부모로 부터 받은 데이터에 의존하는 `Comment` 컴포넌트를 만들어 봅시다. 부모 컴포넌트로 부터 받은 데이터는 자식 컴포넌트에서 '프로퍼티'로 사용가능 합니다.  이 '프로퍼티들'은 `this.props`를 통해 접근합니다.  props를 사용해 `CommentList`에서 전달받은 데이터를 읽어들이고, 마크업을 렌더할 수 있을 것입니다.
+
 
 ```javascript
-// tutorial5.js
+// tutorial4.js
 var Comment = React.createClass({
   render: function() {
     return (
@@ -207,6 +188,26 @@ var Comment = React.createClass({
 ```
 
 JSX 내부의 중괄호로 둘러싸인 JavaScript 표현식(어트리뷰트나 엘리먼트의 자식으로 사용된)을 통해 텍스트나 React 컴포넌트를 트리에 더할 수 있습니다. `this.props`를 통해 컴포넌트에 전달된 특정한 어트리뷰트들에, `this.props.children`을 통해 중첩된 엘리먼트들에 접근할 수 있습니다.
+
+### 컴포넌트 프로퍼티 (Component Properties)
+
+`Comment` 컴포넌트를 만들었으니, 여기에 글쓴이와 내용을 넘겨보도록 합시다. 이렇게 함으로써 각 고유한 comment에서 같은 코드를 재사용할 수 있습니다. 먼저 댓글 몇 개를 `CommentList`에 추가해 봅시다:
+
+```javascript{6-7}
+// tutorial5.js
+var CommentList = React.createClass({
+  render: function() {
+    return (
+      <div className="commentList">
+        <Comment author="Pete Hunt">댓글입니다</Comment>
+        <Comment author="Jordan Walke">*또 다른* 댓글입니다</Comment>
+      </div>
+    );
+  }
+});
+```
+
+부모 컴포넌트인 `CommentList`에서 자식 컴포넌트인 `Comment`에 데이터들을 전달하고 있는것을 확인할 수 있습니다. 예를 들어, 우리는 어트리뷰트로 *Pete Hunt*를, XML 형식의 자식 노드로 *댓글입니다*를 첫 번째 `Comment`로 넘겼습니다. 위에서 언급했듯이 `Comment` 컴포넌트는 그들의 '프로퍼티'를 `this.props.author`, `this.props.children`를 통해 접근합니다.
 
 ### Markdown 추가하기
 
@@ -483,7 +484,7 @@ var CommentForm = React.createClass({
 
 이제 폼의 상호작용을 만들어 보겠습니다. 사용자가 폼을 섭밋하는 시점에 우리는 폼을 초기화하고 서버에 요청을 전송하고 댓글목록을 갱신해야 합니다. 폼의 섭밋 이벤트를 감시하고 초기화 해주는 부분부터 시작해 보죠.
 
-```javascript{3-14,17-20}
+```javascript{3-13,16-19}
 // tutorial16.js
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
@@ -496,7 +497,6 @@ var CommentForm = React.createClass({
     // TODO: 서버에 요청을 전송합니다
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
-    return;
   },
   render: function() {
     return (
@@ -578,7 +578,6 @@ var CommentForm = React.createClass({
     this.props.onCommentSubmit({author: author, text: text});
     this.refs.author.getDOMNode().value = '';
     this.refs.text.getDOMNode().value = '';
-    return;
   },
   render: function() {
     return (

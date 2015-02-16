@@ -2,7 +2,7 @@
 id: videos-ko-KR
 title: 비디오들
 permalink: videos-ko-KR.html
-prev: thinking-in-react-ko-KR.html
+prev: conferences-ko-KR.html
 next: complementary-tools-ko-KR.html
 ---
 
@@ -139,3 +139,9 @@ Facebook 개발자 [Bill Fisher](http://twitter.com/fisherwebdev)와 [Jing Chen]
 
 Server-side rendering을 위해 [SoundCloud](https://developers.soundcloud.com/blog/)가 React 와 Flux를 사용하는지 by [Andres Suarez](https://github.com/zertosh)
 [발표 자료와 예제 코드](https://github.com/zertosh/ssr-demo-kit)
+
+### Introducing React Native (+Playlist) - React.js Conf 2015
+
+<iframe width="650" height="315" src="//www.youtube.com/watch?v=KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+
+2015년에 [Tom Occhino](https://twitter.com/tomocchino)님이 React의 과거와 현재를 리뷰하고 나아갈 방향을 제시했습니다.

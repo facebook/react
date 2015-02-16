@@ -76,6 +76,7 @@ JSX를 사용하면 팩토리가 필요하지 않습니다. 이미 JSX가 `React
 ## React 노드
 
 `ReactNode`는 다음 중 하나가 될 수 있습니다:
+
 - `ReactElement`
 - `string` (`ReactText`로 부르기도 함)
 - `number` (`ReactText`로 부르기도 함)
