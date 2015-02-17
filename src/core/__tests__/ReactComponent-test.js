@@ -254,26 +254,6 @@ describe('ReactComponent', function() {
     ]);
   });
 
-  it('should correctly determine if a component is mounted', function() {
-    var Component = React.createClass({
-      componentWillMount: function() {
-        expect(this.isMounted()).toBeFalsy();
-      },
-      componentDidMount: function() {
-        expect(this.isMounted()).toBeTruthy();
-      },
-      render: function() {
-        expect(this.isMounted()).toBeFalsy()
-        return <div/>;
-      }
-    });
-
-    var element = <Component />;
-
-    var instance = ReactTestUtils.renderIntoDocument(element);
-    expect(instance.isMounted()).toBeTruthy();
-  });
-
   it('fires the callback after a component is rendered', function() {
     var callback = mocks.getMockFunction();
     var container = document.createElement('div');

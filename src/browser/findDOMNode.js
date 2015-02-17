@@ -11,11 +11,14 @@
  */
 
 'use strict';
+
+var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 
 var invariant = require('invariant');
 var isNode = require('isNode');
+var warning = require('warning');
 
 /**
  * Returns the DOM node rendered by this element.
@@ -24,6 +27,21 @@ var isNode = require('isNode');
  * @return {DOMElement} The root node of this element.
  */
 function findDOMNode(componentOrElement) {
+  if (__DEV__) {
+    var owner = ReactCurrentOwner.current;
+    if (owner !== null) {
+      warning(
+        owner._warnedAboutRefsInRender,
+        '%s is accessing getDOMNode or findDOMNode inside its render(). ' +
+        'render() should be a pure function of props and state. It should ' +
+        'never access something that requires stale data from the previous ' +
+        'render, such as refs. Move this logic to componentDidMount and ' +
+        'componentDidUpdate instead.',
+        owner.getName() || 'A component'
+      );
+      owner._warnedAboutRefsInRender = true;
+    }
+  }
   if (componentOrElement == null) {
     return null;
   }

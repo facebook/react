@@ -116,6 +116,7 @@ function instantiateReactComponent(node, parentCompositeType) {
 
   if (__DEV__) {
     instance._isOwnerNecessary = false;
+    instance._warnedAboutRefsInRender = false;
   }
 
   // Internal instances should fully constructed at this point, so they should

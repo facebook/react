@@ -118,4 +118,5 @@ describe('ReactDOM', function() {
     expect(element.type).toBe('div');
     expect(console.warn.argsForCall.length).toBe(0);
   });
+
 });
