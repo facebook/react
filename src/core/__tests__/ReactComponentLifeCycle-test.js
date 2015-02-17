@@ -261,16 +261,54 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('is not mounted inside initial render', function() {
-    var InitialRender = React.createClass({
+  it('should correctly determine if a component is mounted', function() {
+    spyOn(console, 'warn');
+    var Component = React.createClass({
+      componentWillMount: function() {
+        expect(this.isMounted()).toBeFalsy();
+      },
+      componentDidMount: function() {
+        expect(this.isMounted()).toBeTruthy();
+      },
       render: function() {
-        expect(this.isMounted()).toBe(false);
-        return (
-          <div></div>
-        );
+        expect(this.isMounted()).toBeFalsy()
+        return <div/>;
       }
     });
-    ReactTestUtils.renderIntoDocument(<InitialRender />);
+
+    var element = <Component />;
+
+    var instance = ReactTestUtils.renderIntoDocument(element);
+    expect(instance.isMounted()).toBeTruthy();
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Component is accessing isMounted inside its render()'
+    );
+  });
+
+  it('warns if getDOMNode is used inside render', function() {
+    spyOn(console, 'warn');
+    var Component = React.createClass({
+      getInitialState: function() {
+        return { isMounted: false };
+      },
+      componentDidMount: function() {
+        this.setState({ isMounted: true });
+      },
+      render: function() {
+        if (this.state.isMounted) {
+          expect(this.getDOMNode().tagName).toBe('DIV');
+        }
+        return <div/>;
+      }
+    });
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toContain(
+      'Component is accessing getDOMNode or findDOMNode inside its render()'
+    );
   });
 
   it('should carry through each of the phases of setup', function() {

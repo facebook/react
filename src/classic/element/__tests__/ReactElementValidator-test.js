@@ -330,4 +330,23 @@ describe('ReactElementValidator', function() {
     expect(console.warn.calls[0].args[0]).toContain('use of a keyed object');
   });
 
+  it('should warn when accessing .type on an element factory', function() {
+    spyOn(console, 'warn');
+    var TestComponent = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    var TestFactory = React.createFactory(TestComponent);
+    expect(TestFactory.type).toBe(TestComponent);
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Factory.type is deprecated. Access the class directly before ' +
+      'passing it to createFactory.'
+    );
+    // Warn once, not again
+    expect(TestFactory.type).toBe(TestComponent);
+    expect(console.warn.argsForCall.length).toBe(1);
+  });
+
 });
