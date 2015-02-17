@@ -279,7 +279,7 @@ function batchedMountComponentIntoNode(
 }
 
 /**
- * Mounting is the process of initializing a React component by creatings its
+ * Mounting is the process of initializing a React component by creating its
  * representative DOM elements and inserting them into a supplied `container`.
  * Any prior content inside `container` is destroyed in the process.
  *
@@ -369,13 +369,13 @@ var ReactMount = {
 
   /**
    * Render a new component into the DOM.
-   * @param {ReactComponent} nextComponent component instance to render
+   * @param {ReactElement} nextElement element to render
    * @param {DOMElement} container container to render into
    * @param {boolean} shouldReuseMarkup if we should skip the markup insertion
    * @return {ReactComponent} nextComponent
    */
   _renderNewRootComponent: function(
-    nextComponent,
+    nextElement,
     container,
     shouldReuseMarkup
   ) {
@@ -390,7 +390,7 @@ var ReactMount = {
       'componentDidUpdate.'
     );
 
-    var componentInstance = instantiateReactComponent(nextComponent, null);
+    var componentInstance = instantiateReactComponent(nextElement, null);
     var reactRootID = ReactMount._registerComponent(
       componentInstance,
       container
