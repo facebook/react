@@ -57,6 +57,7 @@ var LISTENER = mocks.getMockFunction();
 var ON_CLICK_KEY = keyOf({onClick: null});
 var ON_TOUCH_TAP_KEY = keyOf({onTouchTap: null});
 var ON_CHANGE_KEY = keyOf({onChange: null});
+var ON_MOUSE_ENTER_KEY = keyOf({onMouseEnter: null});
 
 
 /**
@@ -318,6 +319,17 @@ describe('ReactBrowserEventEmitter', function() {
     );
     ReactTestUtils.Simulate.click(CHILD);
     expect(handleParentClick.mock.calls.length).toBe(0);
+  });
+
+  it('should have mouse enter simulated by test utils', function() {
+    ReactBrowserEventEmitter.putListener(
+      getID(CHILD),
+      ON_MOUSE_ENTER_KEY,
+      recordID.bind(null, getID(CHILD))
+    );
+    ReactTestUtils.Simulate.mouseEnter(CHILD);
+    expect(idCallOrder.length).toBe(1);
+    expect(idCallOrder[0]).toBe(getID(CHILD));
   });
 
   it('should infer onTouchTap from a touchStart/End', function() {
