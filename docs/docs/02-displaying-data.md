@@ -100,11 +100,12 @@ The easiest way to get started with JSX is to use the in-browser `JSXTransformer
 
 ## React without JSX
 
-JSX is completely optional. You don't have to use JSX with React. You can create these trees through `React.createElement`. The first argument is the tag, pass a properties object as the second argument and children to the third argument.
+JSX is completely optional; you don't have to use JSX with React. You can create React elements in plain JavaScript using `React.createElement`, which takes a tag name or component, a properties object, and variable number of optional child arguments.
 
 ```javascript
-var child = React.createElement('li', null, 'Text Content');
-var root = React.createElement('ul', { className: 'my-list' }, child);
+var child1 = React.createElement('li', null, 'First Text Content');
+var child2 = React.createElement('li', null, 'Second Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
 React.render(root, document.body);
 ```
 
