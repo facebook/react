@@ -41,7 +41,7 @@ describe('findDOMNode', function() {
   });
 
   it('findDOMNode should reject unmounted objects with render func', function() {
-    expect(function() {React.findDOMNode({render: function(){}});})
+    expect(function() {React.findDOMNode({render: function() {}});})
       .toThrow('Invariant Violation: Component (with keys: render) ' +
         'contains `render` method but is not mounted in the DOM'
       );

@@ -322,7 +322,7 @@ describe('ReactElementValidator', function() {
     expect(console.warn.calls.length).toBe(2);
   });
 
-  it('should warn if a fragment is used without the wrapper', function () {
+  it('should warn if a fragment is used without the wrapper', function() {
     spyOn(console, 'warn');
     var child = React.createElement('span');
     React.createElement('div', null, { a: child, b: child });

@@ -478,7 +478,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should warn when shouldComponentUpdate() returns undefined', function() {
     var Component = React.createClass({
-      getInitialState: function () {
+      getInitialState: function() {
         return {bogus: false};
       },
 
@@ -623,8 +623,8 @@ describe('ReactCompositeComponent', function() {
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
-      'Warning: owner-based and parent-based contexts differ '+
-      '(values: `bar` vs `undefined`) for key (foo) '+
+      'Warning: owner-based and parent-based contexts differ ' +
+      '(values: `bar` vs `undefined`) for key (foo) ' +
       'while mounting Component (see: http://fb.me/react-context-by-parent)'
     );
 

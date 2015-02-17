@@ -20,13 +20,13 @@ function renderXJSLiteral(object, isLast, state, start, end) {
 
   var lastNonEmptyLine = 0;
 
-  lines.forEach(function (line, index) {
+  lines.forEach(function(line, index) {
     if (line.match(/[^ \t]/)) {
       lastNonEmptyLine = index;
     }
   });
 
-  lines.forEach(function (line, index) {
+  lines.forEach(function(line, index) {
     var isFirstLine = index === 0;
     var isLastLine = index === lines.length - 1;
     var isLastNonEmptyLine = index === lastNonEmptyLine;

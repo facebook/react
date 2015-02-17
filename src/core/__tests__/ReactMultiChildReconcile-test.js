@@ -192,7 +192,7 @@ function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
   var statusDisplayNodes = containerNode.childNodes;
   var i;
   var orderedDomIds = [];
-  for (i=0; i < statusDisplayNodes.length; i++) {
+  for (i = 0; i < statusDisplayNodes.length; i++) {
     orderedDomIds.push(ReactMount.getID(statusDisplayNodes[i]));
   }
 

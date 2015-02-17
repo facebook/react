@@ -116,8 +116,8 @@ function makeComponent(metadata) {
       f._isMockFunction = true;
 
       f.mock = {
-        calls : calls,
-        instances : instances
+        calls: calls,
+        instances: instances
       };
 
       f.mockClear = function() {
@@ -218,7 +218,7 @@ function _getMetadata(component, _refs) {
     return null;
   }
 
-  var metadata = {type : type};
+  var metadata = {type: type};
   if (type == 'constant') {
     metadata.value = component;
     return metadata;

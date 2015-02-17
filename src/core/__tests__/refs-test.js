@@ -14,7 +14,7 @@
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
 
-var reactComponentExpect= require('reactComponentExpect');
+var reactComponentExpect = require('reactComponentExpect');
 
 
 /**
@@ -34,7 +34,7 @@ var ClickCounter = React.createClass({
   render: function() {
     var children = [];
     var i;
-    for (i=0; i < this.state.count; i++) {
+    for (i = 0; i < this.state.count; i++) {
       children.push(
         <div
           className="clickLogDiv"

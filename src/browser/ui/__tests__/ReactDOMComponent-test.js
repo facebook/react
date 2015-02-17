@@ -213,7 +213,7 @@ describe('ReactDOMComponent', function() {
     var genMarkup;
 
     function quoteRegexp(str) {
-      return (str+'').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
+      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
     }
 
     beforeEach(function() {
@@ -266,7 +266,7 @@ describe('ReactDOMComponent', function() {
     var genMarkup;
 
     function quoteRegexp(str) {
-      return (str+'').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
+      return (str + '').replace(/([.?*+\^$\[\]\\(){}|-])/g, "\\$1");
     }
 
     beforeEach(function() {
@@ -491,7 +491,7 @@ describe('ReactDOMComponent', function() {
       var ReactTestUtils = require('ReactTestUtils');
 
       spyOn(console, 'warn');
-      ReactTestUtils.renderIntoDocument(<div onScroll={function(){}} />);
+      ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
       expect(console.warn.calls.length).toBe(1);
       expect(console.warn.mostRecentCall.args[0]).toBe(
         'Warning: This browser doesn\'t support the `onScroll` event'

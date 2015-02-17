@@ -42,7 +42,7 @@ describe('update', function() {
     expect(update([1, 4, 3], {$splice: [[1, 1, 2]]})).toEqual([1, 2, 3]);
     expect(update.bind(null, [], {$splice: 1})).toThrow(
       'Invariant Violation: update(): expected spec of $splice to be an ' +
-      'array of arrays; got 1. Did you forget to wrap your parameters in an '+
+      'array of arrays; got 1. Did you forget to wrap your parameters in an ' +
       'array?'
     );
     expect(update.bind(null, [], {$splice: [1]})).toThrow(

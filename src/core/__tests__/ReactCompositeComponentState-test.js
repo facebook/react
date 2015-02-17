@@ -57,14 +57,14 @@ describe('ReactCompositeComponent-state', function() {
 
       componentWillMount: function() {
         this.peekAtState('componentWillMount-start');
-        this.setState(function (state) {
+        this.setState(function(state) {
           this.peekAtState('before-setState-sunrise', state);
         });
         this.setState(
           {color: 'sunrise'},
           this.peekAtCallback('setState-sunrise')
         );
-        this.setState(function (state) {
+        this.setState(function(state) {
           this.peekAtState('after-setState-sunrise', state);
         });
         this.peekAtState('componentWillMount-after-sunrise');
@@ -72,7 +72,7 @@ describe('ReactCompositeComponent-state', function() {
           {color: 'orange'},
           this.peekAtCallback('setState-orange')
         );
-        this.setState(function (state) {
+        this.setState(function(state) {
           this.peekAtState('after-setState-orange', state);
         });
         this.peekAtState('componentWillMount-end');
@@ -90,19 +90,19 @@ describe('ReactCompositeComponent-state', function() {
       componentWillReceiveProps: function(newProps) {
         this.peekAtState('componentWillReceiveProps-start');
         if (newProps.nextColor) {
-          this.setState(function (state) {
+          this.setState(function(state) {
             this.peekAtState('before-setState-receiveProps', state);
             return {color: newProps.nextColor};
           });
           this.replaceState({ color: undefined });
           this.setState(
-            function (state) {
+            function(state) {
               this.peekAtState('before-setState-again-receiveProps', state);
               return {color: newProps.nextColor};
             },
             this.peekAtCallback('setState-receiveProps')
           );
-          this.setState(function (state) {
+          this.setState(function(state) {
             this.peekAtState('after-setState-receiveProps', state);
           });
         }

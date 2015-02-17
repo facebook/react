@@ -13,7 +13,7 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
-var reactComponentExpect= require('reactComponentExpect');
+var reactComponentExpect = require('reactComponentExpect');
 
 var TestComponent = React.createClass({
   render: function() {
