@@ -38,9 +38,9 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
 <html>
   <head>
     <title>Hello React</title>
-    <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-    <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+    <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
@@ -218,10 +218,10 @@ First, add the third-party **Showdown** library to your application. This is a J
 <!-- index.html -->
 <head>
   <title>Hello React</title>
-  <script src="http://fb.me/react-{{site.react_version}}.js"></script>
-  <script src="http://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-  <script src="http://code.jquery.com/jquery-1.10.0.min.js"></script>
-  <script src="http://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
+  <script src="https://fb.me/react-{{site.react_version}}.js"></script>
+  <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
+  <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/0.3.1/showdown.min.js"></script>
 </head>
 ```
 
