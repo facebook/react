@@ -26,6 +26,9 @@ module.exports = {
     if (options && options.sourceMap) {
       result.sourceMap = output.sourceMap.toJSON();
     }
+    if (options && options.sourceFilename) {
+      result.sourceMap.sources = [options.sourceFilename];
+    }
     return result;
   }
 };
@@ -46,6 +49,9 @@ function innerTransform(input, options) {
   }
 
   var visitorList = visitors.getVisitorsBySet(visitorSets);
+  if (options.sourceFilename) {
+    options.filename = options.sourceFilename;
+  }
   return transform(visitorList, input, options);
 }
 
