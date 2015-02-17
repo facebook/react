@@ -348,4 +348,17 @@ describe('ReactElement', function() {
       'Don\'t set .props.sound of the React component <Outer />.'
     );
   });
+
+  it('does not warn for NaN props', function() {
+    spyOn(console, 'warn');
+    var Test = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+    var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
+    expect(test.props.value).toBeNaN();
+    expect(console.warn.argsForCall.length).toBe(0);
+  });
+
 });
