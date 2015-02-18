@@ -17,6 +17,13 @@ describe('ReactMount', function() {
   var React = require('React');
   var ReactMount = require('ReactMount');
   var ReactTestUtils = require('ReactTestUtils');
+  var WebComponents = undefined;
+
+  try {
+    WebComponents = require('WebComponents');
+  } catch(e) {
+    /* leave WebComponents undefined */
+  }
 
   describe('constructAndRenderComponentByID', function() {
     it('throws if given an id for a component that doesn\'t exist', function() {
@@ -156,5 +163,29 @@ describe('ReactMount', function() {
     expect(console.warn.calls[0].args[0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
+  });
+
+  (WebComponents === undefined ? xit : it)
+      ('should allow mounting/unmounting to document fragment container', function() {
+    var shadowRoot;
+    var proto = Object.create(HTMLElement.prototype, {
+      createdCallback: {
+        value: function() {
+            var query = encodeURIComponent(this.innerHTML);
+            var url = "https://www.google.com/search?q=" + query + "&btnI";
+            shadowRoot = this.createShadowRoot();
+            React.render(<div>Hi, from within a WC!</div>, shadowRoot);
+            expect(shadowRoot.firstChild.tagName).toBe('DIV')
+            React.render(<span>Hi, from within a WC!</span>, shadowRoot);
+            expect(shadowRoot.firstChild.tagName).toBe('SPAN')
+        }
+      }
+    });
+    proto.unmount = function() {
+      React.unmountComponentAtNode(shadowRoot);
+    }
+    document.registerElement('x-foo', {prototype: proto});
+    var element = document.createElement('x-foo');
+    element.unmount();
   });
 });
