@@ -292,6 +292,19 @@ function warnForPropsMutation(propName, element) {
   );
 }
 
+// Inline Object.is polyfill
+function is(a, b) {
+  if (a !== a) {
+    // NaN
+    return b !== b;
+  }
+  if (a === 0 && b === 0) {
+    // +-0
+    return 1 / a === 1 / b;
+  }
+  return a === b;
+}
+
 /**
  * Given an element, check if its props have been mutated since element
  * creation (or the last call to this function). In particular, check if any
@@ -312,14 +325,8 @@ function checkAndWarnForMutatedProps(element) {
 
   for (var propName in props) {
     if (props.hasOwnProperty(propName)) {
-      var valueChanged = originalProps[propName] !== props[propName];
-      // Necessary because NaN !== NaN
-      if (typeof originalProps[propName] === 'number' &&
-          typeof props[propName] === 'number' &&
-          isNaN(originalProps[propName]) && isNaN(props[propName])) {
-        valueChanged = false;
-      }
-      if (!originalProps.hasOwnProperty(propName) || valueChanged) {
+      if (!originalProps.hasOwnProperty(propName) ||
+          !is(originalProps[propName], props[propName])) {
         warnForPropsMutation(propName, element);
 
         // Copy over the new value so that the two props objects match again
