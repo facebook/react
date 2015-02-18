@@ -497,20 +497,18 @@
 <p>使用 <a href="http://npmjs.org/package/react-tools">JSX 命令行工具</a> 配合 <code>--harmony</code> 标记来启用 ES7 语法。</p>
 </blockquote>
 <h2><a class="anchor" name="-underscore-"></a>使用 Underscore 来传递 <a class="hash-link" href="#-underscore-">#</a></h2>
-<p>如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 <code>_.omit</code> 来过滤属性，<code>_.extend</code> 复制属性到新的对象。
-<code>javascript
-var FancyCheckbox = React.createClass({
-  render: function() {
-    var checked = this.props.checked;
-    var other = _.omit(this.props, &#39;checked&#39;);
-    var fancyClass = checked ? &#39;FancyChecked&#39; : &#39;FancyUnchecked&#39;;
-    return (
-      React.DOM.div(_.extend({}, other, { className: fancyClass }))
-    );
-  }
-});
-</code></p>
-
+<p>如果不使用 JSX，可以使用一些库来实现相同效果。Underscore 提供 <code>_.omit</code> 来过滤属性，<code>_.extend</code> 复制属性到新的对象。</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">checked</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">checked</span><span class="p">;</span>
+    <span class="kd">var</span> <span class="nx">other</span> <span class="o">=</span> <span class="nx">_</span><span class="p">.</span><span class="nx">omit</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="s1">&#39;checked&#39;</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="nx">React</span><span class="p">.</span><span class="nx">DOM</span><span class="p">.</span><span class="nx">div</span><span class="p">(</span><span class="nx">_</span><span class="p">.</span><span class="nx">extend</span><span class="p">({},</span> <span class="nx">other</span><span class="p">,</span> <span class="p">{</span> <span class="nx">className</span><span class="o">:</span> <span class="nx">fancyClass</span> <span class="p">}))</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
 
     <div class="docs-prevnext">
       

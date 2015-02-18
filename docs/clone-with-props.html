@@ -395,11 +395,10 @@
 <blockquote>
 <p>Note:</p>
 
-<p><code>cloneWithProps</code> does not transfer <code>key</code> to the cloned component. If you wish to preserve the key, add it to the <code>extraProps</code> object:
-<code>js
-var clonedComponent = cloneWithProps(originalComponent, { key : originalComponent.key });
-</code>
-<code>ref</code> is similarly not preserved.</p>
+<p><code>cloneWithProps</code> does not transfer <code>key</code> to the cloned component. If you wish to preserve the key, add it to the <code>extraProps</code> object:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">clonedComponent</span> <span class="o">=</span> <span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">originalComponent</span><span class="p">,</span> <span class="p">{</span> <span class="nx">key</span> <span class="o">:</span> <span class="nx">originalComponent</span><span class="p">.</span><span class="nx">key</span> <span class="p">});</span>
+</code></pre></div>
+<p><code>ref</code> is similarly not preserved.</p>
 </blockquote>
 
 

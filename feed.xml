@@ -7,6 +7,262 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React.js Conf Round-up 2015</title>
+				<description>&lt;p&gt;It was a privilege to welcome the React community to Facebook HQ on January 28–29 for the first-ever React.js Conf, and a pleasure to be be able to unveil three new technologies that we&amp;#39;ve been using internally at Facebook for some time: GraphQL, Relay, and React Native.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-talks&quot;&gt;&lt;/a&gt;The talks &lt;a class=&quot;hash-link&quot; href=&quot;#the-talks&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-keynote&quot;&gt;&lt;/a&gt;Keynote &lt;a class=&quot;hash-link&quot; href=&quot;#talk-keynote&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Tom Occhino&lt;/strong&gt; opened with a history of how React came to be, before announcing Facebook’s answer to a long-looming what-if question: what if we could use React to target something other than the DOM?
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/KVZ-P-ZI6W4&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-tweak&quot;&gt;&lt;/a&gt;Tweaking in real time &lt;a class=&quot;hash-link&quot; href=&quot;#talk-tweak&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Brenton Simpson&lt;/strong&gt; showed us how eBay brings Bret Victor’s feedback loop to your favorite editor using Webpack, react-hot-loader, and &lt;a href=&quot;https://github.com/appsforartists/ambidex&quot;&gt;Ambidex&lt;/a&gt;.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/yaymfLj5tjA&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-ast&quot;&gt;&lt;/a&gt;Abstract Syntax Trees &lt;a class=&quot;hash-link&quot; href=&quot;#talk-ast&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Gurdas Nijor&lt;/strong&gt; showed us how we can leverage some conventions of React to perform source code transformations that unlock an inspirational set of use cases.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/OZGgVxFxSIs&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-relay-graphql&quot;&gt;&lt;/a&gt;Relay and GraphQL &lt;a class=&quot;hash-link&quot; href=&quot;#talk-relay-graphql&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Daniel Schafer&lt;/strong&gt; and &lt;strong&gt;Jing Chen&lt;/strong&gt; showed us how Facebook approaches data fetching with React, giving us an early peek at the forthcoming duo of Relay and GraphQL.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/9sc8Pyc51uU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-channels&quot;&gt;&lt;/a&gt;Channels &lt;a class=&quot;hash-link&quot; href=&quot;#talk-channels&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;James Long&lt;/strong&gt; explores what might happen if we introduce channels, a new style of coordinating actions, to React.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/W2DgDNQZOwo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-router&quot;&gt;&lt;/a&gt;React Router &lt;a class=&quot;hash-link&quot; href=&quot;#talk-router&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Michael Jackson&lt;/strong&gt; reminded us that URLs should be part of our design process, and showed us how &lt;a href=&quot;https://github.com/rackt/react-router&quot;&gt;react-router&lt;/a&gt; can help to manage the transitions between them.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/XZfvW1a8Xac&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-full-stack-flux&quot;&gt;&lt;/a&gt;Full-stack Flux &lt;a class=&quot;hash-link&quot; href=&quot;#talk-full-stack-flux&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Pete Hunt&lt;/strong&gt; showed us how a Flux approach can help us scale actions and questions on the backend in addition to the frontend.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/KtmjkCuV-EU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-performance&quot;&gt;&lt;/a&gt;High-performance &lt;a class=&quot;hash-link&quot; href=&quot;#talk-performance&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Jason Bonta&lt;/strong&gt; showed us how complex user interfaces can get, and how his team keeps them performant as they scale. He also had the pleasure of open-sourcing his team’s work on &lt;a href=&quot;http://facebook.github.io/fixed-data-table/&quot;&gt;FixedDataTable&lt;/a&gt;.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/KYzlpRvWZ6c&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-intl&quot;&gt;&lt;/a&gt;FormatJS and react-intl &lt;a class=&quot;hash-link&quot; href=&quot;#talk-intl&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Eric Ferraiuolo&lt;/strong&gt; showed how you can bring your app to a worldwide audience using a series of polyfills and emerging ECMAScript APIs.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/Sla-DkvmIHY&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-hype&quot;&gt;&lt;/a&gt;Hype! &lt;a class=&quot;hash-link&quot; href=&quot;#talk-hype&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Ryan Florence&lt;/strong&gt; showed us how easy it is to transition from a career selling life insurance, to a burgeoning one as a software developer. All you have to do is to learn how to say “yes.”
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/z5e7kWSHWTg&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-native&quot;&gt;&lt;/a&gt;React Native &lt;a class=&quot;hash-link&quot; href=&quot;#talk-native&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Christopher Chedeau&lt;/strong&gt; showed us how to bring the developer experience of working with React on the web to native app development, using React Native.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/7rDsRXj9-cU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-components&quot;&gt;&lt;/a&gt;Components &lt;a class=&quot;hash-link&quot; href=&quot;#talk-components&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Andrew Rota&lt;/strong&gt; explained how React and Web Components can work together, and how to avoid some common pitfalls.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/g0TD0efcwVg&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-gibbon&quot;&gt;&lt;/a&gt;Beyond the DOM &lt;a class=&quot;hash-link&quot; href=&quot;#talk-gibbon&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Jafar Husain&lt;/strong&gt; told us a story about how Netflix was able to push React into places where the DOM could not go.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/eNC0mRYGWgc&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-visualization&quot;&gt;&lt;/a&gt;Data Visualization &lt;a class=&quot;hash-link&quot; href=&quot;#talk-visualization&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Zach Nation&lt;/strong&gt; showed us how we can produce visualizations from over 45 million data points without breaking a sweat.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/2ii1lEkIv1s&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-refracted&quot;&gt;&lt;/a&gt;React Refracted &lt;a class=&quot;hash-link&quot; href=&quot;#talk-refracted&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;David Nolen&lt;/strong&gt; gave us a view of React from a non-JavaScript perspective, challenging some common intuition along the way.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/5hGHdETNteE&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-flux-panel&quot;&gt;&lt;/a&gt;Flux Panel &lt;a class=&quot;hash-link&quot; href=&quot;#talk-flux-panel&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Bill Fisher&lt;/strong&gt; coordinated a Flux panel together with &lt;strong&gt;Michael Ridgway&lt;/strong&gt;, &lt;strong&gt;Spike Brehm&lt;/strong&gt;, &lt;strong&gt;Andres Suarez&lt;/strong&gt;, &lt;strong&gt;Jing Chen&lt;/strong&gt;, &lt;strong&gt;Ian Obermiller&lt;/strong&gt;, and &lt;strong&gt;Kyle Davis&lt;/strong&gt;.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/LTj4O7WJJ98&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-communication&quot;&gt;&lt;/a&gt;Component communication &lt;a class=&quot;hash-link&quot; href=&quot;#talk-communication&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Bonnie Eisenman&lt;/strong&gt; led us through the ‘adapter’ approach to inter-component communication taken by her team at Codecademy.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/ZM6wXoFTY3o&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-typescript&quot;&gt;&lt;/a&gt;Flow and TypeScript &lt;a class=&quot;hash-link&quot; href=&quot;#talk-typescript&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;James Brantly&lt;/strong&gt; demonstrated how we can reap the benefits of static typing using both Flow and TypeScript.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/9PTa9-PPVAc&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-qa&quot;&gt;&lt;/a&gt;Core Team Q&amp;amp;A &lt;a class=&quot;hash-link&quot; href=&quot;#talk-qa&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Tom Occhino&lt;/strong&gt;, &lt;strong&gt;Ben Alpert&lt;/strong&gt;, &lt;strong&gt;Lee Byron&lt;/strong&gt;, &lt;strong&gt;Christopher Chedeau&lt;/strong&gt;, &lt;strong&gt;Sebastian Markbåge&lt;/strong&gt;, &lt;strong&gt;Jing Chen&lt;/strong&gt;, and &lt;strong&gt;Dan Schafer&lt;/strong&gt; closed the conference with a Q&amp;amp;A session.
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/EPpkboSKvPI&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reactions&quot;&gt;&lt;/a&gt;Reactions &lt;a class=&quot;hash-link&quot; href=&quot;#reactions&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The conference is over, but the conversation has just begun.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Mihai Parparita&lt;/strong&gt; detailed his efforts to &lt;a href=&quot;http://blog.persistent.info/2014/12/html-munging-my-way-to-reactjs-conf.html&quot;&gt;hack his way to a React.js Conf ticket&lt;/a&gt;; &lt;strong&gt;James Long&lt;/strong&gt; blogged about &lt;a href=&quot;http://jlongster.com/First-Impressions-using-React-Native&quot;&gt;his first encounter with React Native&lt;/a&gt;; &lt;strong&gt;Eric Florenzano&lt;/strong&gt; talked about how he perceives the &lt;a href=&quot;https://medium.com/@ericflo/facebook-just-taught-us-all-how-to-build-websites-51f1e7e996f2&quot;&gt;impact of Relay, GraphQL, and React Native&lt;/a&gt; on software development; &lt;strong&gt;Margaret Staples&lt;/strong&gt; blogged about her experience of &lt;a href=&quot;http://deadlugosi.blogspot.com/2015/02/facebook-gave-me-ice-cream.html&quot;&gt;being on-campus at Facebook HQ&lt;/a&gt;; &lt;strong&gt;Jeff Barczewski&lt;/strong&gt; tied his experience of attending the conference up with a bow in this &lt;a href=&quot;http://codewinds.com/blog/2015-02-04-reactjs-conf.html&quot;&gt;blog post filled with photos, videos, and links&lt;/a&gt;; &lt;strong&gt;Kevin Old&lt;/strong&gt; left us with &lt;a href=&quot;http://kevinold.com/2015/01/31/takeaways-from-reactjs-conf-2015.html&quot;&gt;his takeaways&lt;/a&gt;; &lt;strong&gt;Paul Wittmann&lt;/strong&gt; found React Native &lt;a href=&quot;http://www.railslove.com/stories/fresh-on-our-radar-react-native&quot;&gt;freshly on his radar&lt;/a&gt;; and finally, undeterred by not being able to attend the conference in person, &lt;strong&gt;Justin Ball&lt;/strong&gt; &lt;a href=&quot;http://www.justinball.com/2015/02/03/i-didn&amp;#x27;t-attend-react.js-conf/&quot;&gt;summarized it from afar&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;And, in case you missed a session, you can borrow &lt;strong&gt;Michael Chan’s&lt;/strong&gt; &lt;a href=&quot;http://chantastic.io/2015-reactjs-conf/&quot;&gt;drawings&lt;/a&gt;, &lt;strong&gt;Mihai Parparita’s&lt;/strong&gt; &lt;a href=&quot;https://quip.com/uJQeABv7nkFN&quot;&gt;summary&lt;/a&gt;, or &lt;strong&gt;Shaohua Zhou’s&lt;/strong&gt; &lt;a href=&quot;http://getshao.com/2015/01/29/react-js-conf-notes-day1/&quot;&gt;day 1&lt;/a&gt; / &lt;a href=&quot;http://getshao.com/2015/01/29/react-js-conf-notes-day-2/&quot;&gt;day 2&lt;/a&gt; notes.&lt;/p&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Notes from &lt;a href=&quot;https://twitter.com/dlschafer&quot;&gt;@dlschafer&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/jingc&quot;&gt;@jingc&lt;/a&gt;&amp;#39;s &lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt; talk &amp;quot;Data fetching for React applications at Facebook&amp;quot; &lt;a href=&quot;http://t.co/IUZUbDCDMQ&quot;&gt;pic.twitter.com/IUZUbDCDMQ&lt;/a&gt;&lt;/p&gt;&amp;mdash; Michael Chan (@chantastic) &lt;a href=&quot;https://twitter.com/chantastic/status/560538533161472000&quot;&gt;January 28, 2015&lt;/a&gt;&lt;/blockquote&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;This is just magical (in the good way)… GraphQL + Relay is amazing. &lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt;&lt;/p&gt;&amp;mdash; Chris Williams (@voodootikigod) &lt;a href=&quot;https://twitter.com/voodootikigod/status/560533225395589120&quot;&gt;January 28, 2015&lt;/a&gt;&lt;/blockquote&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;These… these are my people. :) &lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt;&lt;/p&gt;&amp;mdash; Thomas Beirne (@Beirnet) &lt;a href=&quot;https://twitter.com/Beirnet/status/560317879501848576&quot;&gt;January 28, 2015&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Humbled by the React team and community. Found &lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt; very mindful, practical and just real.&lt;/p&gt;&amp;mdash; xnoɹǝʃ uɐıɹq (@brianleroux) &lt;a href=&quot;https://twitter.com/brianleroux/status/560972130112655360&quot;&gt;January 30, 2015&lt;/a&gt;&lt;/blockquote&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;I say with confidence as a former UIKit author: React&amp;#39;s model for the UI layer is vastly better than UIKit&amp;#39;s. React Native is a *huge* deal.&lt;/p&gt;&amp;mdash; Andy Matuschak (@andy_matuschak) &lt;a href=&quot;https://twitter.com/andy_matuschak/status/560511204867575808&quot;&gt;January 28, 2015&lt;/a&gt;&lt;/blockquote&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt; was incredible. Amazing project stewardship and community. Boring prediction, React Native sends adoption vertical in 2015.&lt;/p&gt;&amp;mdash; David Nolen (@swannodette) &lt;a href=&quot;https://twitter.com/swannodette/status/561232290273980416&quot;&gt;January 30, 2015&lt;/a&gt;&lt;/blockquote&gt;
+    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;I really love the community shout outs by &lt;a href=&quot;https://twitter.com/Vjeux&quot;&gt;@vjeux&lt;/a&gt; between talks at &lt;a href=&quot;https://twitter.com/hashtag/reactjsconf?src=hash&quot;&gt;#reactjsconf&lt;/a&gt;!&lt;/p&gt;&amp;mdash; Andrew Rota (@AndrewRota) &lt;a href=&quot;https://twitter.com/AndrewRota/status/560927339522297856&quot;&gt;January 29, 2015&lt;/a&gt;&lt;/blockquote&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;p&gt;&lt;strong&gt;All proceeds from React.js Conf 2015 were donated to the wonderful programs at &lt;a href=&quot;http://code.org&quot;&gt;code.org&lt;/a&gt;&lt;/strong&gt;. These programs aim to increase access to the field of computer science by underrepresented members of our community. Watch this video to learn more.&lt;/p&gt;
+
+&lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/FC5FbmsH4fw&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+</description>
+				<pubDate>2015-02-18T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/02/18/react-conf-roundup-2015.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/18/react-conf-roundup-2015.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13.0 Beta 1</title>
 				<description>&lt;p&gt;React 0.13 has a lot of nice features but there is one particular feature that I&amp;#39;m really excited about. I couldn&amp;#39;t wait for React.js Conf to start tomorrow morning.&lt;/p&gt;
 
@@ -703,159 +959,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-10-16T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</guid>
-			</item>
-		
-			<item>
-				<title>Introducing React Elements</title>
-				<description>&lt;p&gt;The upcoming React 0.12 tweaks some APIs to get us close to the final 1.0 API. This release is all about setting us up for making the &lt;code&gt;ReactElement&lt;/code&gt; type really FAST, &lt;a href=&quot;http://facebook.github.io/jest/&quot;&gt;jest unit testing&lt;/a&gt; easier, making classes simpler (in preparation for ES6 classes) and better integration with third-party languages!&lt;/p&gt;
-
-&lt;p&gt;If you currently use JSX everywhere, you don&amp;#39;t really have to do anything to get these benefits! The updated transformer will do it for you.&lt;/p&gt;
-
-&lt;p&gt;If you can&amp;#39;t or don&amp;#39;t want to use JSX, then please insert some hints for us. Add a &lt;code&gt;React.createFactory&lt;/code&gt; call around your imported class when you require it:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Everything is backwards compatible for now, and as always React will provide you with descriptive console messaging to help you upgrade.&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;ReactElement&lt;/code&gt; is the primary API of React. Making it faster has shown to give us several times faster renders on common benchmarks. The API tweaks in this release helps us get there.&lt;/p&gt;
-
-&lt;p&gt;Continue reading if you want all the nitty gritty details...&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-terminology&quot;&gt;&lt;/a&gt;New Terminology &lt;a class=&quot;hash-link&quot; href=&quot;#new-terminology&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We wanted to make it easier for new users to see the parallel with the DOM (and why React is different). To align our terminology we now use the term &lt;code&gt;ReactElement&lt;/code&gt; instead of &lt;em&gt;descriptor&lt;/em&gt;. Likewise, we use the term &lt;code&gt;ReactNode&lt;/code&gt; instead of &lt;em&gt;renderable&lt;/em&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589&quot;&gt;See the full React terminology guide.&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;creating-a-reactelement&quot;&gt;&lt;/a&gt;Creating a ReactElement &lt;a class=&quot;hash-link&quot; href=&quot;#creating-a-reactelement&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We now expose an external API for programmatically creating a &lt;code&gt;ReactElement&lt;/code&gt; object.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The &lt;code&gt;type&lt;/code&gt; argument is either a string (HTML tag) or a class. It&amp;#39;s a description of what tag/class is going to be rendered and what props it will contain. You can also create factory functions for specific types. This basically just provides the type argument for you:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;div&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;reactDivElement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-auto-generated-factories&quot;&gt;&lt;/a&gt;Deprecated: Auto-generated Factories &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-auto-generated-factories&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Imagine if &lt;code&gt;React.createClass&lt;/code&gt; was just a plain JavaScript class. If you call a class as a plain function you would call the component&amp;#39;s constructor to create a Component instance, not a &lt;code&gt;ReactElement&lt;/code&gt;:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// Component, not ReactElement&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;React 0.11 gave you a factory function for free when you called &lt;code&gt;React.createClass&lt;/code&gt;. This wrapped your internal class and then returned a &lt;code&gt;ReactElement&lt;/code&gt; factory function for you.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-      &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;In future versions of React, we want to be able to support pure classes without any special React dependencies. To prepare for that we&amp;#39;re &lt;a href=&quot;https://gist.github.com/sebmarkbage/d7bce729f38730399d28&quot;&gt;deprecating the auto-generated factory&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;This is the biggest change to 0.12. Don&amp;#39;t worry though. This functionality continues to work the same for this release, it just warns you if you&amp;#39;re using a deprecated API. That way you can upgrade piece-by-piece instead of everything at once.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;upgrading-to-0.12&quot;&gt;&lt;/a&gt;Upgrading to 0.12 &lt;a class=&quot;hash-link&quot; href=&quot;#upgrading-to-0.12&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-jsx&quot;&gt;&lt;/a&gt;React With JSX &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;If you use the React specific &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;JSX&lt;/a&gt; transform, the upgrade path is simple. Just make sure you have React in scope.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// If you use node/browserify modules make sure&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// that you require React into scope.&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;React&amp;#39;s JSX will create the &lt;code&gt;ReactElement&lt;/code&gt; for you. You can continue to use JSX with regular classes:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;value&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;&lt;em&gt;NOTE: React&amp;#39;s JSX will not call arbitrary functions in future releases. This restriction is introduced so that it&amp;#39;s easier to reason about the output of JSX by both the reader of your code and optimizing compilers. The JSX syntax is not tied to React. Just the transpiler. You can still use &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;the JSX spec&lt;/a&gt; with a different transpiler for custom purposes.&lt;/em&gt;&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-without-jsx&quot;&gt;&lt;/a&gt;React Without JSX &lt;a class=&quot;hash-link&quot; href=&quot;#react-without-jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;If you don&amp;#39;t use JSX and just call components as functions, you will need to explicitly create a factory before calling it:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponentClass&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponentClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// New step&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;If you&amp;#39;re using a module system, the recommended solution is to export the class and create the factory on the requiring side.&lt;/p&gt;
-
-&lt;p&gt;Your class creation is done just like before:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyComponent.js&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(...);&lt;/span&gt;
-&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The other side uses &lt;code&gt;React.createFactory&lt;/code&gt; after &lt;code&gt;require&lt;/code&gt;ing the component class:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyOtherComponent.js&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;// All you have to do to upgrade is wrap your requires like this:&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;You ONLY have to do this for custom classes. React still has built-in factories for common HTML elements.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyDOMComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;DOM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// still ok&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;We realize that this is noisy. At least it&amp;#39;s on the top of the file (out of sight, out of mind). This a tradeoff we had to make to get &lt;a href=&quot;https://gist.github.com/sebmarkbage/d7bce729f38730399d28&quot;&gt;the other benefits&lt;/a&gt; that this model unlocks.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;anti-pattern-exporting-factories&quot;&gt;&lt;/a&gt;Anti-Pattern: Exporting Factories &lt;a class=&quot;hash-link&quot; href=&quot;#anti-pattern-exporting-factories&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;If you have an isolated project that only you use, then you could create a helper that creates both the class and the factory at once:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Anti-pattern - Please, don&amp;#39;t use&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;spec&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This makes your components incompatible with jest testing, consumers using JSX, third-party languages that implement their own optimized &lt;code&gt;ReactElement&lt;/code&gt; creation, etc.&lt;/p&gt;
-
-&lt;p&gt;It also encourages you to put more logic into these helper functions. Something that another language, a compiler or a reader of your code couldn&amp;#39;t reason about.&lt;/p&gt;
-
-&lt;p&gt;To fit into the React ecosystem we recommend that you always export pure classes from your shared modules and let the consumer decide the best strategy for generating &lt;code&gt;ReactElement&lt;/code&gt;s.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;third-party-languages&quot;&gt;&lt;/a&gt;Third-party Languages &lt;a class=&quot;hash-link&quot; href=&quot;#third-party-languages&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The signature of a &lt;code&gt;ReactElement&lt;/code&gt; is something like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;etc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;ref&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Languages with static typing that don&amp;#39;t need validation (e.g. &lt;a href=&quot;https://github.com/swannodette/om&quot;&gt;Om in ClojureScript&lt;/a&gt;), and production level compilers will be able to generate these objects inline instead of going through the validation step. This optimization will allow significant performance improvements in React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;your-thoughts-and-ideas&quot;&gt;&lt;/a&gt;Your Thoughts and Ideas &lt;a class=&quot;hash-link&quot; href=&quot;#your-thoughts-and-ideas&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We&amp;#39;d love to hear your feedback on this API and your preferred style. A plausible alternative could be to directly inline objects instead of creating factory functions:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// MyOtherComponent.js&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;react&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;require&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;MyComponent&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-
-&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createClass&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;prop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;value&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
-
-&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyOtherComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This moves the noise down into the render method though. It also doesn&amp;#39;t provide a hook for dynamic validation/type checking so you&amp;#39;ll need some other way to verify that it&amp;#39;s safe.&lt;/p&gt;
-
-&lt;p&gt;&lt;em&gt;NOTE: This won&amp;#39;t work in this version of React because it&amp;#39;s conflicting with other legacy APIs that we&amp;#39;re deprecating. (We temporarily add a &lt;code&gt;element._isReactElement = true&lt;/code&gt; marker on the object.)&lt;/em&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-next-step-es6-classes&quot;&gt;&lt;/a&gt;The Next Step: ES6 Classes &lt;a class=&quot;hash-link&quot; href=&quot;#the-next-step-es6-classes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;After 0.12 we&amp;#39;ll begin work on moving to ES6 classes. We will still support &lt;code&gt;React.createClass&lt;/code&gt; as a backwards compatible API. If you use an ES6 transpiler you will be able to declare your components like this:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kr&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This upcoming release is a stepping stone to make it as easy as this. Thanks for your support.&lt;/p&gt;
-</description>
-				<pubDate>2014-10-14T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/14/introducing-react-elements.html</guid>
 			</item>
 		
 	</channel>

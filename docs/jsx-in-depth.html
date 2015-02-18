@@ -455,8 +455,9 @@ ReactElement as an object literal to bypass the validation code in
 <code>React.createElement</code>.</p>
 </blockquote>
 <h2><a class="anchor" name="namespaced-components"></a>Namespaced Components <a class="hash-link" href="#namespaced-components">#</a></h2>
-<p>If you are building a component that has many children, or if you are building your application with some categories of reusable components (like a <code>Form</code> category), to make it simpler and easier, you can use a <em>namespaced component</em> to avoid something like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
+<p>If you are building a component that has many children, like a form, you might end up with something with a lot of variable declarations:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Awkward block of variable declarations</span>
+<span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">FormRow</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Row</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">FormLabel</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
 <span class="kd">var</span> <span class="nx">FormInput</span> <span class="o">=</span> <span class="nx">Form</span><span class="p">.</span><span class="nx">Input</span><span class="p">;</span>
@@ -470,7 +471,7 @@ ReactElement as an object literal to bypass the validation code in
   <span class="o">&lt;</span><span class="err">/Form&gt;</span>
 <span class="p">);</span>
 </code></pre></div>
-<p>Instead of declaring a bunch of variables at the top, you&#39;ll get just one component that has other components as attributes.</p>
+<p>To make it simpler and easier, <em>namespaced components</em> let you use one component that has other components as attributes:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Form</span> <span class="o">=</span> <span class="nx">MyFormComponent</span><span class="p">;</span>
 
 <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="p">(</span>
