@@ -670,7 +670,7 @@ function bindAutoBindMethod(component, method) {
           false,
           'bind(): You are binding a component method to the component. ' +
           'React does this for you automatically in a high-performance ' +
-          'way, so you can safely remove this call. See ',
+          'way, so you can safely remove this call. See %s',
           componentName
         );
         return boundMethod;
