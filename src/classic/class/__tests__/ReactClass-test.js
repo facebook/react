@@ -305,7 +305,7 @@ describe('ReactClass-spec', function() {
         className: React.PropTypes.string
       },
       getInitialState() {
-        return { className: this.context.className };
+        return {className: this.context.className};
       },
       render() {
         return <span className={this.state.className} />;
@@ -317,7 +317,7 @@ describe('ReactClass-spec', function() {
         className: React.PropTypes.string
       },
       getChildContext() {
-        return { className: 'foo' };
+        return {className: 'foo'};
       },
       render() {
         return <Foo />;

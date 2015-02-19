@@ -20,7 +20,7 @@ describe('keyMirror', function() {
     var mirror = keyMirror({
       foo: null,
       bar: true,
-      "baz": { some: "object" },
+      "baz": {some: "object"},
       qux: undefined
     });
     expect('foo' in mirror).toBe(true);
@@ -55,7 +55,7 @@ describe('keyMirror', function() {
   });
 
   it('should work when "constructor" is a key', function() {
-    var obj = { constructor: true };
+    var obj = {constructor: true};
     expect(keyMirror.bind(null, obj)).not.toThrow();
     var mirror = keyMirror(obj);
     expect('constructor' in mirror).toBe(true);

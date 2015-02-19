@@ -69,7 +69,7 @@ describe('ReactES6Class', function() {
     class Foo extends React.Component {
       constructor(props) {
         super(props);
-        this.state = { bar: this.props.initialValue };
+        this.state = {bar: this.props.initialValue};
       }
       render() {
         return <span className={this.state.bar} />;
@@ -81,10 +81,10 @@ describe('ReactES6Class', function() {
   it('renders based on state using props in the constructor', function() {
     class Foo extends React.Component {
       constructor(props) {
-        this.state = { bar: props.initialValue };
+        this.state = {bar: props.initialValue};
       }
       changeState() {
-        this.setState({ bar: 'bar' });
+        this.setState({bar: 'bar'});
       }
       render() {
         if (this.state.bar === 'foo') {
@@ -102,7 +102,7 @@ describe('ReactES6Class', function() {
     class Foo extends React.Component {
       constructor(props, context) {
         super(props, context);
-        this.state = { tag: context.tag, className: this.context.className };
+        this.state = {tag: context.tag, className: this.context.className};
       }
       render() {
         var Tag = this.state.tag;
@@ -116,7 +116,7 @@ describe('ReactES6Class', function() {
 
     class Outer extends React.Component {
       getChildContext() {
-        return { tag: 'span', className: 'foo' };
+        return {tag: 'span', className: 'foo'};
       }
       render() {
         return <Foo />;
@@ -133,10 +133,10 @@ describe('ReactES6Class', function() {
     var renderCount = 0;
     class Foo extends React.Component {
       constructor(props) {
-        this.state = { bar: props.initialValue };
+        this.state = {bar: props.initialValue};
       }
       componentWillMount() {
-        this.setState({ bar: 'bar' });
+        this.setState({bar: 'bar'});
       }
       render() {
         renderCount++;
@@ -179,10 +179,10 @@ describe('ReactES6Class', function() {
   it('setState through an event handler', function() {
     class Foo extends React.Component {
       constructor(props) {
-        this.state = { bar: props.initialValue };
+        this.state = {bar: props.initialValue};
       }
       handleClick() {
-        this.setState({ bar: 'bar' });
+        this.setState({bar: 'bar'});
       }
       render() {
         return (
@@ -201,10 +201,10 @@ describe('ReactES6Class', function() {
   it('should not implicitly bind event handlers', function() {
     class Foo extends React.Component {
       constructor(props) {
-        this.state = { bar: props.initialValue };
+        this.state = {bar: props.initialValue};
       }
       handleClick() {
-        this.setState({ bar: 'bar' });
+        this.setState({bar: 'bar'});
       }
       render() {
         return (
@@ -282,10 +282,10 @@ describe('ReactES6Class', function() {
     lifeCycles = []; // reset
     test(<Foo value="bar" />, 'SPAN', 'bar');
     expect(lifeCycles).toEqual([
-      'receive-props', { value: 'bar' },
-      'should-update', { value: 'bar' }, {},
-      'will-update', { value: 'bar' }, {},
-      'did-update', { value: 'foo' }, {}
+      'receive-props', {value: 'bar'},
+      'should-update', {value: 'bar'}, {},
+      'will-update', {value: 'bar'}, {},
+      'did-update', {value: 'foo'}, {}
     ]);
     lifeCycles = []; // reset
     React.unmountComponentAtNode(container);
@@ -353,7 +353,7 @@ describe('ReactES6Class', function() {
     expect(() => instance.getDOMNode()).toThrow();
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
-    expect(() => instance.setProps({ name: 'bar' })).toThrow();
+    expect(() => instance.setProps({name: 'bar'})).toThrow();
     expect(console.warn.calls.length).toBe(4);
     expect(console.warn.calls[0].args[0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
@@ -375,16 +375,16 @@ describe('ReactES6Class', function() {
         return <div className={this.context.bar} />;
       }
     }
-    Bar.contextTypes = { bar: React.PropTypes.string };
+    Bar.contextTypes = {bar: React.PropTypes.string};
     class Foo {
       getChildContext() {
-        return { bar: 'bar-through-context' };
+        return {bar: 'bar-through-context'};
       }
       render() {
         return <Bar />;
       }
     }
-    Foo.childContextTypes = { bar: React.PropTypes.string };
+    Foo.childContextTypes = {bar: React.PropTypes.string};
     test(<Foo />, 'DIV', 'bar-through-context');
   });
 

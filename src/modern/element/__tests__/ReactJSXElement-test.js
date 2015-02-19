@@ -62,7 +62,7 @@ describe('ReactJSXElement', function() {
   });
 
   it('does not reuse the object that is spread into props', function() {
-    var config = { foo: 1 };
+    var config = {foo: 1};
     var element = <Component {...config} />;
     expect(element.props.foo).toBe(1);
     config.foo = 2;
@@ -161,7 +161,7 @@ describe('ReactJSXElement', function() {
         return <span />;
       }
     }
-    Component.defaultProps = { fruit: 'persimmon' };
+    Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
     var instance = React.render(
@@ -180,7 +180,7 @@ describe('ReactJSXElement', function() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.defaultProps = { prop: 'testKey' };
+    Component.defaultProps = {prop: 'testKey'};
 
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(instance.props.prop).toBe('testKey');

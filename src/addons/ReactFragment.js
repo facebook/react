@@ -39,13 +39,13 @@ if (__DEV__) {
     Object.defineProperty(
       {},
       fragmentKey,
-      { enumerable: false, value: true }
+      {enumerable: false, value: true}
     );
 
     Object.defineProperty(
       {},
       'key',
-      { enumerable: true, get: dummy }
+      {enumerable: true, get: dummy}
     );
 
     canWarnForReactFragment = true;

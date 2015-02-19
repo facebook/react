@@ -50,7 +50,7 @@ todolist.App = React.createClass({
     if (callback) {
       callback = callback.bind(this, todo);
     }
-    this.setState({ timerEvent:'addItem', timerStart:todolist.now(), timerEnd:null, todos:todos }, callback);
+    this.setState({timerEvent:'addItem', timerStart:todolist.now(), timerEnd:null, todos:todos}, callback);
     return todo;
   },
   deleteItemById: function(id, callback) {
@@ -59,7 +59,7 @@ todolist.App = React.createClass({
       return callback && callback(Error('todo with id ' + id + ' not found'));
     }
     todo.deleted = true;
-    this.setState({ timerEvent:'deleteItemById', timerStart:todolist.now(), timerEnd:null, todos:this.state.todos }, callback);
+    this.setState({timerEvent:'deleteItemById', timerStart:todolist.now(), timerEnd:null, todos:this.state.todos}, callback);
   },
   setItemCompleted: function(id, completed, callback) {
     var todo = this._getById(id);
@@ -67,7 +67,7 @@ todolist.App = React.createClass({
       return callback && callback(Error('todo with id ' + id + ' not found'));
     }
     todo.completed = completed;
-    this.setState({ timerEvent:'setItemCompleted', timerStart:todolist.now(), timerEnd:null, todos:this.state.todos }, callback);
+    this.setState({timerEvent:'setItemCompleted', timerStart:todolist.now(), timerEnd:null, todos:this.state.todos}, callback);
   },
   _getById: function(id) {
     id = +id;

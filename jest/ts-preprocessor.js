@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var ts = require('typescript');
 
-var tsOptions = { module: 'commonjs' };
+var tsOptions = {module: 'commonjs'};
 
 function formatErrorMessage(error) {
   return (

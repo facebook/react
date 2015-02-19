@@ -51,7 +51,7 @@ var getOriginalKey = function(childName) {
  */
 var StatusDisplay = React.createClass({
   getInitialState: function() {
-    return { internalState: Math.random() };
+    return {internalState: Math.random()};
   },
 
   getStatus: function() {
@@ -251,7 +251,7 @@ describe('ReactMultiChildReconcile', function() {
     var startingInternalState = statusDisplays.jcw.getInternalState();
 
     // Now remove the child.
-    parentInstance.replaceProps({ usernameToStatus: {} });
+    parentInstance.replaceProps({usernameToStatus: {} });
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
@@ -271,7 +271,7 @@ describe('ReactMultiChildReconcile', function() {
       bob: 'bobStatus'
     };
 
-    testPropsSequence([ { usernameToStatus: usernameToStatus } ]);
+    testPropsSequence([ {usernameToStatus: usernameToStatus} ]);
   });
 
   it('should preserve order if children order has not changed', function() {
@@ -294,7 +294,7 @@ describe('ReactMultiChildReconcile', function() {
 
   it('should transition from zero to one children correctly', function() {
     var PROPS_SEQUENCE = [
-      { usernameToStatus: {} },
+      {usernameToStatus: {} },
       {
         usernameToStatus: {
           first: 'firstStatus'
@@ -311,7 +311,7 @@ describe('ReactMultiChildReconcile', function() {
           first: 'firstStatus'
         }
       },
-      { usernameToStatus: {} }
+      {usernameToStatus: {} }
     ];
     testPropsSequence(PROPS_SEQUENCE);
   });
@@ -323,13 +323,13 @@ describe('ReactMultiChildReconcile', function() {
           first: 'firstStatus'
         }
       },
-      { }
+      {}
     ]);
   });
 
   it('should transition from null children to one child', function() {
     testPropsSequence([
-      { },
+      {},
       {
         usernameToStatus: {
           first: 'firstStatus'
@@ -341,17 +341,17 @@ describe('ReactMultiChildReconcile', function() {
   it('should transition from zero children to null children', function() {
     testPropsSequence([
       {
-        usernameToStatus: { }
+        usernameToStatus: {}
       },
-      { }
+      {}
     ]);
   });
 
   it('should transition from null children to zero children', function() {
     testPropsSequence([
-      { },
+      {},
       {
-        usernameToStatus: { }
+        usernameToStatus: {}
       }
     ]);
   });

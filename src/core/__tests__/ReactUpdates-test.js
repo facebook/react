@@ -858,7 +858,7 @@ describe('ReactUpdates', function() {
 
     var B = React.createClass({
       getInitialState: function() {
-        return { updates: 0 };
+        return {updates: 0};
       },
       componentDidMount: function() {
         componentB = this;
@@ -871,7 +871,7 @@ describe('ReactUpdates', function() {
 
     var A = React.createClass({
       getInitialState: function() {
-        return { showB: true };
+        return {showB: true};
       },
       render: function() {
         return this.state.showB ? <B /> : <div />;
@@ -883,8 +883,8 @@ describe('ReactUpdates', function() {
     ReactUpdates.batchedUpdates(function() {
       // B will have scheduled an update but the batching should ensure that its
       // update never fires.
-      componentB.setState({ updates: 1 });
-      component.setState({ showB: false });
+      componentB.setState({updates: 1});
+      component.setState({showB: false});
     });
 
     expect(renderCount).toBe(1);

@@ -138,7 +138,7 @@ describe('ReactComponentLifeCycle', function() {
     var container = document.createElement('div');
     var StatefulComponent = React.createClass({
       getInitialState: function() {
-        return { };
+        return {};
       },
       render: function() {
         return (
@@ -291,10 +291,10 @@ describe('ReactComponentLifeCycle', function() {
     spyOn(console, 'warn');
     var Component = React.createClass({
       getInitialState: function() {
-        return { isMounted: false };
+        return {isMounted: false};
       },
       componentDidMount: function() {
-        this.setState({ isMounted: true });
+        this.setState({isMounted: true});
       },
       render: function() {
         if (this.state.isMounted) {

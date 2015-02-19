@@ -149,10 +149,10 @@ describe('autobinding', function() {
 
     var TestBindComponent = React.createClass({
       getInitialState: function() {
-        return { foo: 1 };
+        return {foo: 1};
       },
       componentDidMount: function() {
-        this.setState({ foo: 2 }, this.handleUpdate);
+        this.setState({foo: 2}, this.handleUpdate);
       },
       handleUpdate: function() {
 

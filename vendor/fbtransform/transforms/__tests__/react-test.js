@@ -350,13 +350,13 @@ describe('react jsx', function() {
   it('calls assign with an empty object when the spread is first', function() {
     expectObjectAssign(
       '<Component { ...x } y={2} />'
-    ).toBeCalledWith({}, x, { y: 2 });
+    ).toBeCalledWith({}, x, {y: 2});
   });
 
   it('coalesces consecutive properties into a single object', function() {
     expectObjectAssign(
       '<Component { ... x } y={2} z />'
-    ).toBeCalledWith({}, x, { y: 2, z: true });
+    ).toBeCalledWith({}, x, {y: 2, z: true});
   });
 
   it('avoids an unnecessary empty object when spread is not first', function() {
@@ -374,7 +374,7 @@ describe('react jsx', function() {
   it('evaluates sequences before passing them to React.__spread', function() {
     expectObjectAssign(
       '<Component x="1" {...(z = { y: 2 }, z)} z={3}>Text</Component>'
-    ).toBeCalledWith({x: "1"}, { y: 2 }, {z: 3});
+    ).toBeCalledWith({x: "1"}, {y: 2}, {z: 3});
   });
 
 });
