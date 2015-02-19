@@ -363,4 +363,19 @@ describe('ReactClass-spec', function() {
     ).not.toThrow();
   });
 
+  it('should throw when using legacy factories', function() {
+    var Component = React.createClass({
+      render() {
+        return <div />;
+      }
+    });
+
+    expect(() => Component()).toThrow();
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Something is calling a React component directly. Use a ' +
+      'factory or JSX instead. See: http://fb.me/react-legacyfactory'
+    );
+  });
+
 });
