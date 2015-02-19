@@ -53,7 +53,6 @@
     "gzip-js": "~0.3.2",
     "jasmine-tapreporter": "~0.2.2",
     "jest-cli": "^0.2.1",
-    "lodash": "~2.4.1",
     "optimist": "~0.6.0",
     "phantomjs": "~1.9",
     "platform": "^1.1.0",
