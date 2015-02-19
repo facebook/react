@@ -73,12 +73,31 @@ describe('ReactFragment', function() {
     );
   });
 
-  it('should warn if accessing any property on a fragment', function() {
+  it('should warn if passing null to createFragment', function() {
     spyOn(console, 'warn');
     ReactFragment.create(null);
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain(
-      'React.addons.createFragment only accepts a single object. Not null'
+      'React.addons.createFragment only accepts a single object.'
+    );
+  });
+
+  it('should warn if passing an array to createFragment', function() {
+    spyOn(console, 'warn');
+    ReactFragment.create([]);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'React.addons.createFragment only accepts a single object.'
+    );
+  });
+
+  it('should warn if passing a ReactElement to createFragment', function() {
+    spyOn(console, 'warn');
+    ReactFragment.create(<div />);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'React.addons.createFragment does not accept a ReactElement without a ' +
+      'wrapper object.'
     );
   });
 

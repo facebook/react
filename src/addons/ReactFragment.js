@@ -96,11 +96,19 @@ var ReactFragment = {
   // of its properties.
   create: function(object) {
     if (__DEV__) {
-      if (typeof object !== 'object' || !object) {
+      if (typeof object !== 'object' || !object || Array.isArray(object)) {
         warning(
           false,
-          'React.addons.createFragment only accepts a single object. Not %s',
+          'React.addons.createFragment only accepts a single object.',
           object
+        );
+        return object;
+      }
+      if (ReactElement.isValidElement(object)) {
+        warning(
+          false,
+          'React.addons.createFragment does not accept a ReactElement ' +
+          'without a wrapper object.'
         );
         return object;
       }
