@@ -1,7 +1,7 @@
 'use strict';
 
+var assign = require('../../src/stubs/Object.assign');
 var grunt = require('grunt');
-var _ = require('lodash');
 
 var rootIDs = [
   'React',
@@ -27,7 +27,7 @@ var test = {
     '**/__tests__/*.js'
   ]),
   getConfig: function() {
-    return _.merge({}, normal.getConfig(), {
+    return assign({}, normal.getConfig(), {
       mocking: true
     });
   },
