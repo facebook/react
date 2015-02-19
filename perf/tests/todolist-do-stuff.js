@@ -13,7 +13,7 @@ exports.defer = true;
 exports.setup = function() {
   _rootNode = document.createElement('div');
   document.body.appendChild(_rootNode);
-  var appDescriptor = todolist.App({ fakeDataCount: 333 });
+  var appDescriptor = todolist.App({fakeDataCount: 333});
   _app = React.render(appDescriptor, _rootNode);
 };
 

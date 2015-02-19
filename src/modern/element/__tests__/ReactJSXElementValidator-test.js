@@ -86,7 +86,7 @@ describe('ReactJSXElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : <Component />, done: done };
+            return {value: done ? undefined : <Component />, done: done};
           }
         };
       }
@@ -134,7 +134,7 @@ describe('ReactJSXElementValidator', function() {
   it('warns for numeric keys on objects as children', function() {
     spyOn(console, 'warn');
 
-    <Component>{frag({ 1: <Component />, 2: <Component /> })}</Component>;
+    <Component>{frag({1: <Component />, 2: <Component />})}</Component>;
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -151,7 +151,7 @@ describe('ReactJSXElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : [i, <Component />], done: done };
+            return {value: done ? undefined : [i, <Component />], done: done};
           }
         };
       }
@@ -236,8 +236,8 @@ describe('ReactJSXElementValidator', function() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.defaultProps = { prop: null };
-    Component.propTypes = { prop: React.PropTypes.string.isRequired };
+    Component.defaultProps = {prop: null};
+    Component.propTypes = {prop: React.PropTypes.string.isRequired};
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
@@ -256,8 +256,8 @@ describe('ReactJSXElementValidator', function() {
         return <span>{this.props.prop}</span>;
       }
     }
-    Component.defaultProps = { prop: 'text' };
-    Component.propTypes = { prop: React.PropTypes.string.isRequired };
+    Component.defaultProps = {prop: 'text'};
+    Component.propTypes = {prop: React.PropTypes.string.isRequired};
 
     ReactTestUtils.renderIntoDocument(<Component prop={null} />);
 

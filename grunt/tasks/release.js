@@ -30,7 +30,7 @@ function _gitCommitAndTag(cwd, commitMsg, tag, cb) {
   // `git add -u` to make sure we remove deleted files
   // `git commit -m {commitMsg}`
   // `git tag -a {tag}`
-  var opts = { cwd: cwd};
+  var opts = {cwd: cwd};
   var gitAddAll = {
     cmd: 'git',
     args: ['add', '*'],
@@ -91,7 +91,7 @@ function bower() {
   // clean out the bower folder in case we're removing files
   var files = grunt.file.expand(BOWER_GLOB);
   files.forEach(function(file) {
-    grunt.file.delete(file, { force: true });
+    grunt.file.delete(file, {force: true});
   });
 
   // Update bower package version and save the file back.
@@ -113,7 +113,7 @@ function docs() {
 
   var files = grunt.file.expand(GH_PAGES_GLOB);
   files.forEach(function(file) {
-    grunt.file.delete(file, { force: true });
+    grunt.file.delete(file, {force: true});
   });
 
   grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
@@ -123,7 +123,7 @@ function docs() {
   var rakeOpts = {
     cmd: 'rake',
     args: ['release'],
-    opts: { cwd: 'docs' }
+    opts: {cwd: 'docs'}
   };
   grunt.util.spawn(rakeOpts, function() {
     // Commit the repo. We don't really care about tagging this.

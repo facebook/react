@@ -138,7 +138,7 @@ describe('ReactComponentLifeCycle', function() {
     var container = document.createElement('div');
     var StatefulComponent = React.createClass({
       getInitialState: function() {
-        return { };
+        return {};
       },
       render: function() {
         return (

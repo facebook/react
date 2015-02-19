@@ -303,7 +303,7 @@ describe('ReactCompositeComponent', function() {
 
     var Component = React.createClass({
       getInitialState: function() {
-        return { value: 0 };
+        return {value: 0};
       },
       render: function() {
         return <div />;
@@ -314,12 +314,12 @@ describe('ReactCompositeComponent', function() {
     expect(instance.setState).not.toBeDefined();
 
     instance = React.render(instance, container);
-    instance.setState({ value: 1 });
+    instance.setState({value: 1});
 
     expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
-    instance.setState({ value: 2 });
+    instance.setState({value: 2});
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
@@ -336,11 +336,11 @@ describe('ReactCompositeComponent', function() {
 
     var Component = React.createClass({
       getInitialState: function() {
-        return { value: 0 };
+        return {value: 0};
       },
       componentWillUnmount: function() {
         expect(() => {
-          this.setState({ value: 2 }, function() {
+          this.setState({value: 2}, function() {
             cbCalled = true;
           })
         }).not.toThrow();
@@ -352,7 +352,7 @@ describe('ReactCompositeComponent', function() {
 
     var instance = React.render(<Component />, container);
 
-    instance.setState({ value: 1 });
+    instance.setState({value: 1});
     expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
@@ -375,13 +375,13 @@ describe('ReactCompositeComponent', function() {
 
     instance = React.render(instance, container);
     expect(function() {
-      instance.setProps({ value: 1 });
+      instance.setProps({value: 1});
     }).not.toThrow();
     expect(console.warn.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
     expect(function() {
-      instance.setProps({ value: 2 });
+      instance.setProps({value: 2});
     }).not.toThrow();
 
     expect(console.warn.calls.length).toBe(1);
@@ -757,7 +757,7 @@ describe('ReactCompositeComponent', function() {
       },
 
       getChildContext: function() {
-        return { foo: this.props.foo };
+        return {foo: this.props.foo};
       },
 
       render: function() { return <Parent><Component /></Parent>; }
@@ -878,11 +878,11 @@ describe('ReactCompositeComponent', function() {
     var renders = 0;
     var Component = React.createClass({
       getInitialState: function() {
-        return { updated: false };
+        return {updated: false};
       },
       componentWillReceiveProps: function(props) {
         expect(props.update).toBe(1);
-        this.setState({ updated: true });
+        this.setState({updated: true});
       },
       render: function() {
         renders++;

@@ -164,7 +164,7 @@ BrowserPerfRunnerApp.renderBenchmarkCell = function(props, row, col) {
   return (
     React.DOM.td({key:key, style:{textAlign:'center', width:234, verticalAlign:'top'}},
       benchmark.error && benchmark.error.message || '',
-      React.DOM.div({style: benchmark.isTheWinner ? { backgroundColor:'#0A5', color:'#AFA' } : {backgroundColor:'transparent', color:'inherit'}},
+      React.DOM.div({style: benchmark.isTheWinner ? {backgroundColor:'#0A5', color:'#AFA'} : {backgroundColor:'transparent', color:'inherit'}},
         Math.round(1 / benchmark.stats.mean * 100) / 100, ' op/s ',
         React.DOM.strong(null, Math.round(benchmark.stats.mean * 1000 * 100) / 100, ' ms/op '),
         React.DOM.small(null, '(±' + (Math.round(benchmark.stats.rme * 10) / 10) + '%)')
@@ -198,7 +198,7 @@ var GridViewTable = React.createClass({
   },
 
   _renderCell: function(col) {
-    return this.props.renderCell({ value:this.props.value }, this._row, col);
+    return this.props.renderCell({value:this.props.value}, this._row, col);
   },
 
   _renderRow: function(row) {

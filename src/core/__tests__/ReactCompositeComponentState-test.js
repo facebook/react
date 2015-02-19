@@ -94,7 +94,7 @@ describe('ReactCompositeComponent-state', function() {
             this.peekAtState('before-setState-receiveProps', state);
             return {color: newProps.nextColor};
           });
-          this.replaceState({ color: undefined });
+          this.replaceState({color: undefined});
           this.setState(
             function(state) {
               this.peekAtState('before-setState-again-receiveProps', state);

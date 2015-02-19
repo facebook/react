@@ -353,27 +353,27 @@ describe('ReactInstanceHandles', function() {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor from window to deep element is ''.
-        { one: null,
+        {one: null,
           two: parent.refs.P_P1_C1.refs.DIV_1,
           com: null
         },
         // Same as previous - reversed direction.
-        { one: parent.refs.P_P1_C1.refs.DIV_1,
+        {one: parent.refs.P_P1_C1.refs.DIV_1,
           two: null,
           com: null
         },
         // Common ancestor from window to shallow id is ''.
-        { one: parent.refs.P,
+        {one: parent.refs.P,
           two: null,
           com: null
         },
         // Common ancestor with self is self.
-        { one: parent.refs.P_P1_C1.refs.DIV_1,
+        {one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV_1,
           com: parent.refs.P_P1_C1.refs.DIV_1
         },
         // Common ancestor with self is self - even if topmost DOM.
-        { one: parent.refs.P, two: parent.refs.P, com: parent.refs.P },
+        {one: parent.refs.P, two: parent.refs.P, com: parent.refs.P},
         // Siblings
         {
           one: parent.refs.P_P1_C1.refs.DIV_1,

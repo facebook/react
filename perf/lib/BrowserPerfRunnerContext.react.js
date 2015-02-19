@@ -62,7 +62,7 @@ var BenchmarkQueue = React.createClass({
       if (self.props.onCompleteEach) {
         self.props.onCompleteEach(queueItem);
       }
-      self.setState({ queue:queue });
+      self.setState({queue:queue});
     });
     benchmark.run({async:true});
   },

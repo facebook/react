@@ -59,7 +59,7 @@ module.exports = function() {
           'install',
           '--production',
           tgz
-        ], { cwd: dir }, function() {
+        ], {cwd: dir}, function() {
           var nodePath = path.join(dir, 'node_modules');
           var pkgDir = path.join(nodePath, pkg.name);
           var doneCount = 2;
@@ -83,7 +83,7 @@ module.exports = function() {
                 '/** @jsx React.DOM */ <div>oyez</div>;'
               ) + ')'
           ], {
-            env: { NODE_PATH: nodePath }
+            env: {NODE_PATH: nodePath}
           }, function(result, code) {
             assert.ok(result.stdout.indexOf(
               'React.DOM.div(null, \'oyez\');'

@@ -424,7 +424,7 @@ describe('ReactChildren', function() {
   it('should warn if a fragment is used without the wrapper', function() {
     spyOn(console, 'warn');
     var child = React.createElement('span');
-    ReactChildren.forEach({ a: child, b: child}, function(c) {
+    ReactChildren.forEach({a: child, b: child}, function(c) {
       expect(c).toBe(child);
     });
     expect(console.warn.calls.length).toBe(1);

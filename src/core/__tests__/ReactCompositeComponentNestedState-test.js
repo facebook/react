@@ -26,12 +26,12 @@ describe('ReactCompositeComponentNestedState-state', function() {
   it('should provide up to date values for props', function() {
     var ParentComponent = React.createClass({
       getInitialState: function() {
-        return { color: 'blue' };
+        return {color: 'blue'};
       },
 
       handleColor: function(color) {
         this.props.logger('parent-handleColor', this.state.color);
-        this.setState({ color: color }, function() {
+        this.setState({color: color}, function() {
           this.props.logger('parent-after-setState', this.state.color);
         });
       },
@@ -49,7 +49,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
     var ChildComponent = React.createClass({
       getInitialState: function() {
         this.props.logger('getInitialState', this.props.color);
-        return { hue: 'dark ' + this.props.color };
+        return {hue: 'dark ' + this.props.color};
       },
 
       handleHue: function(shade, color) {
@@ -58,7 +58,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
         this.setState(function(state, props) {
           this.props.logger('setState-this', this.state.hue, this.props.color);
           this.props.logger('setState-args', state.hue, props.color);
-          return { hue: shade + ' ' + props.color }
+          return {hue: shade + ' ' + props.color}
         }, function() {
           this.props.logger('after-setState', this.state.hue, this.props.color);
         });
