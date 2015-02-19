@@ -140,7 +140,6 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   </div>
 </div>
 
-
 <div class="skinny-row">
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-components"></a>Components <a class="hash-link" href="#talk-components">#</a></h3>
@@ -150,6 +149,18 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   </div>
   <div class="skinny-col">
     <iframe width="305" height="171" src="https://www.youtube.com/embed/g0TD0efcwVg" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>
+
+<div class="skinny-row">
+  <div class="skinny-col">
+    <h3 style="margin-top:0"><a class="anchor" name="talk-immutable"></a>Immutability <a class="hash-link" href="#talk-immutable">#</a></h3>
+    <p>
+      <strong>Lee Byron</strong> led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps Javascript in general.
+    </p>
+  </div>
+  <div class="skinny-col">
+    <iframe width="305" height="171" src="https://www.youtube.com/embed/I7IdS-PbEgI" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
