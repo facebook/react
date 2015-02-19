@@ -828,6 +828,14 @@ var ReactClass = {
       // This constructor is overridden by mocks. The argument is used
       // by mocks to assert on what gets mounted.
 
+      if (__DEV__) {
+        warning(
+          this instanceof Constructor,
+          'Something is calling a React component directly. Use a factory or ' +
+          'JSX instead. See: http://fb.me/react-legacyfactory'
+        );
+      }
+
       // Wire up auto-binding
       if (this.__reactAutoBindMap) {
         bindAutoBindMethods(this);
