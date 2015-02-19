@@ -43,6 +43,7 @@ var App = React.createClass({
     );
   }
 });
+App = React.createFactory(App);
 
 /** jQuery Mobile button component. */
 var JQueryMobileButton = React.createClass({
@@ -58,6 +59,7 @@ var JQueryMobileButton = React.createClass({
     );
   }
 });
+JQueryMobileButton = React.createFactory(JQueryMobileButton);
 
 /** jQuery Mobile page content component. */
 var JQueryMobileContent = React.createClass({
@@ -69,6 +71,7 @@ var JQueryMobileContent = React.createClass({
     );
   }
 });
+JQueryMobileContent = React.createFactory(JQueryMobileContent);
 
 /** jQuery Mobile footer component. */
 var JQueryMobileFooter = React.createClass({
@@ -80,6 +83,7 @@ var JQueryMobileFooter = React.createClass({
     );
   }
 });
+JQueryMobileFooter = React.createFactory(JQueryMobileFooter);
 
 /** jQuery Mobile header component. */
 var JQueryMobileHeader = React.createClass({
@@ -91,6 +95,7 @@ var JQueryMobileHeader = React.createClass({
     );
   }
 });
+JQueryMobileHeader = React.createFactory(JQueryMobileHeader);
 
 /** jQuery Mobile page component. */
 var JQueryMobilePage = React.createClass({
@@ -112,6 +117,7 @@ var JQueryMobilePage = React.createClass({
     );
   }
 });
+JQueryMobilePage = React.createFactory(JQueryMobilePage);
 
 /** Application page one component. */
 var PageOneContent = React.createClass({
@@ -144,6 +150,7 @@ var PageOneContent = React.createClass({
     );
   }
 });
+PageOneContent = React.createFactory(PageOneContent);
 
 /** Application page two component. */
 var PageTwoContent = React.createClass({
@@ -160,6 +167,7 @@ var PageTwoContent = React.createClass({
     );
   }
 });
+PageTwoContent = React.createFactory(PageTwoContent);
 
 /** Application popup page component. */
 var PagePopUpContent = React.createClass({
@@ -177,6 +185,7 @@ var PagePopUpContent = React.createClass({
     );
   }
 });
+PagePopUpContent = React.createFactory(PagePopUpContent);
 
 // Render application.
 React.render(App(null), document.getElementById('content'));
