@@ -156,6 +156,18 @@
 
 &lt;div class=&quot;skinny-row&quot;&gt;
   &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-immutable&quot;&gt;&lt;/a&gt;Immutability &lt;a class=&quot;hash-link&quot; href=&quot;#talk-immutable&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+    &lt;p&gt;
+      &lt;strong&gt;Lee Byron&lt;/strong&gt; led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps Javascript in general.
+    &lt;/p&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
+    &lt;iframe width=&quot;305&quot; height=&quot;171&quot; src=&quot;https://www.youtube.com/embed/I7IdS-PbEgI&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;skinny-row&quot;&gt;
+  &lt;div class=&quot;skinny-col&quot;&gt;
     &lt;h3 style=&quot;margin-top:0&quot;&gt;&lt;a class=&quot;anchor&quot; name=&quot;talk-gibbon&quot;&gt;&lt;/a&gt;Beyond the DOM &lt;a class=&quot;hash-link&quot; href=&quot;#talk-gibbon&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
     &lt;p&gt;
       &lt;strong&gt;Jafar Husain&lt;/strong&gt; told us a story about how Netflix was able to push React into places where the DOM could not go.
