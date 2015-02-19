@@ -18,7 +18,7 @@ The two projects &mdash; Relay and GraphQL &mdash; have been in use in productio
 
 Relay is a new framework from Facebook that provides data-fetching functionality for React applications. It was announced at React.js Conf (January 2015).
 
-Each component specifies its own data dependencies declaratively using a query language called GraphQL. The data are made available to the component via properties on `this.props`.
+Each component specifies its own data dependencies declaratively using a query language called GraphQL. The data is made available to the component via properties on `this.props`.
 
 Developers compose these React components naturally, and Relay takes care of composing the data queries into efficient batches, providing each component with exactly the data that it requested (and no more), updating those components when the data changes, and maintaining a client-side store (cache) of all data.
 
@@ -52,6 +52,6 @@ By handling all data-fetching via a single abstraction, we're able to handle a b
 
 We're working very hard right now on getting both GraphQL (a spec, and a reference implementation) and Relay ready for public release (no specific dates yet, but we are super excited about getting these out there).
 
-In the meantime, we'll be providing more and more information in the form of blog posts (and in [other channels](https://gist.github.com/wincent/598fa75e22bdfa44cf47)). As we get closer to open source release, you can expect more concrete details, syntax and API descriptions and more.
+In the meantime, we'll be providing more and more information in the form of blog posts (and in [other channels](https://gist.github.com/wincent/598fa75e22bdfa44cf47)). As we get closer to the open source release, you can expect more concrete details, syntax and API descriptions and more.
 
 Watch this space!
