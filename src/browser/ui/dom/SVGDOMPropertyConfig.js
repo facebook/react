@@ -22,6 +22,7 @@ var SVGDOMPropertyConfig = {
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
+    dominantBaseline: MUST_USE_ATTRIBUTE,
     dx: MUST_USE_ATTRIBUTE,
     dy: MUST_USE_ATTRIBUTE,
     fill: MUST_USE_ATTRIBUTE,
@@ -64,6 +65,7 @@ var SVGDOMPropertyConfig = {
     y: MUST_USE_ATTRIBUTE
   },
   DOMAttributeNames: {
+    dominantBaseline: 'dominant-baseline',
     fillOpacity: 'fill-opacity',
     fontFamily: 'font-family',
     fontSize: 'font-size',
