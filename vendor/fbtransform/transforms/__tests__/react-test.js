@@ -11,13 +11,12 @@
 
 /*jshint evil:true, unused:false*/
 
-"use strict";
+'use strict';
 
 require('mock-modules').autoMockOff();
 
 describe('react jsx', function() {
   var transformAll = require('../../syntax.js').transformAll;
-  var xjs = require('../xjs.js');
 
   var transform = function(code, options, excludes) {
     return transformAll(
@@ -34,13 +33,15 @@ describe('react jsx', function() {
   var z = 345678;
 
   var expectObjectAssign = function(code) {
+    /*eslint-disable no-unused-vars, no-eval*/
     var Component = jest.genMockFunction();
     var Child = jest.genMockFunction();
     var objectAssignMock = jest.genMockFunction();
     React.__spread = objectAssignMock;
     eval(transform(code).code);
     return expect(objectAssignMock);
-  }
+    /*eslint-enable*/
+  };
 
   var React = {
     createElement: jest.genMockFunction()
@@ -338,7 +339,9 @@ describe('react jsx', function() {
 
   it('should not throw for unknown hyphenated tags', function() {
     var code = '<x-component />;';
-    expect(function() {transform(code);}).not.toThrow();
+    expect(function() {
+      transform(code);
+    }).not.toThrow();
   });
 
   it('calls assign with a new target object for spreads', function() {
@@ -368,13 +371,13 @@ describe('react jsx', function() {
   it('passes the same value multiple times to React.__spread', function() {
     expectObjectAssign(
       '<Component x={1} y="2" {...z} {...z}><Child /></Component>'
-    ).toBeCalledWith({x: 1, y: "2"}, z, z);
+    ).toBeCalledWith({x: 1, y: '2'}, z, z);
   });
 
   it('evaluates sequences before passing them to React.__spread', function() {
     expectObjectAssign(
       '<Component x="1" {...(z = { y: 2 }, z)} z={3}>Text</Component>'
-    ).toBeCalledWith({x: "1"}, {y: 2}, {z: 3});
+    ).toBeCalledWith({x: '1'}, {y: 2}, {z: 3});
   });
 
 });

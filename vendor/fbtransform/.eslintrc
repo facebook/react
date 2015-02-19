@@ -1,0 +1,9 @@
+---
+globals:
+  describe: true
+  expect: true
+  it: true
+  jest: true
+
+rules:
+  no-process-exit: 0

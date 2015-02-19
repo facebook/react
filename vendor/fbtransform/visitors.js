@@ -1,4 +1,7 @@
 /*global exports:true*/
+
+'use strict';
+
 var es6ArrowFunctions = require('jstransform/visitors/es6-arrow-function-visitors');
 var es6Classes = require('jstransform/visitors/es6-class-visitors');
 var es6Destructuring = require('jstransform/visitors/es6-destructuring-visitors');
