@@ -334,7 +334,7 @@ var NoopInternalComponent = function(element) {
   this._currentElement = element === null || element === false ?
     ReactEmptyComponent.emptyElement :
     element;
-}
+};
 
 NoopInternalComponent.prototype = {
 
@@ -349,7 +349,6 @@ NoopInternalComponent.prototype = {
   },
 
   unmountComponent: function() {
-
   }
 
 };
@@ -372,6 +371,12 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
+};
+
+ReactShallowRenderer.prototype.unmount = function() {
+  if (this._instance) {
+    this._instance.unmountComponent();
+  }
 };
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {
