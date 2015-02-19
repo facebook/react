@@ -57,6 +57,23 @@ describe('ReactTestUtils', function() {
     ]);
   });
 
+  it('should have shallow unmounting', function() {
+    var componentWillUnmount = mocks.getMockFunction();
+
+    var SomeComponent = React.createClass({
+      render: function() {
+        return <div />;
+      },
+      componentWillUnmount
+    });
+
+    var shallowRenderer = ReactTestUtils.createRenderer();
+    shallowRenderer.render(<SomeComponent />, {});
+    shallowRenderer.unmount();
+
+    expect(componentWillUnmount).toBeCalled();
+  });
+
   it('can shallow render to null', function() {
     var SomeComponent = React.createClass({
       render: function() {
