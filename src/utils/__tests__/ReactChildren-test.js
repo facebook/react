@@ -434,7 +434,7 @@ describe('ReactChildren', function() {
   it('should warn if a fragment is accessed', function() {
     spyOn(console, 'warn');
     var child = React.createElement('span');
-    var frag = ReactChildren.map([ child, child ], function(c) {
+    var frag = ReactChildren.map([child, child], function(c) {
       return c;
     });
     for (var key in frag) {
@@ -444,7 +444,7 @@ describe('ReactChildren', function() {
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain('is an opaque type');
 
-    var frag2 = ReactChildren.map([ child, child ], function(c) {
+    var frag2 = ReactChildren.map([child, child], function(c) {
       return c;
     });
     for (var key in frag2) {

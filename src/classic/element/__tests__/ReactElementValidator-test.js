@@ -40,7 +40,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component(), Component() ]);
+    Component(null, [Component(), Component()]);
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -64,7 +64,7 @@ describe('ReactElementValidator', function() {
     var ComponentWrapper = React.createClass({
       displayName: 'ComponentWrapper',
       render: function() {
-        return InnerComponent({childSet: [ Component(), Component() ] });
+        return InnerComponent({childSet: [Component(), Component()] });
       }
     });
 
@@ -108,7 +108,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
+    Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
 
     expect(console.warn.argsForCall.length).toBe(0);
   });

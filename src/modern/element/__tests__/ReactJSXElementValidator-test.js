@@ -61,7 +61,7 @@ describe('ReactJSXElementValidator', function() {
       render() {
         return (
           <InnerComponent
-            childSet={[ <Component />, <Component /> ]}
+            childSet={[<Component />, <Component />]}
           />
         );
       }
@@ -103,7 +103,7 @@ describe('ReactJSXElementValidator', function() {
   it('does not warns for arrays of elements with keys', function() {
     spyOn(console, 'warn');
 
-    <Component>{[ <Component key="#1" />, <Component key="#2" /> ]}</Component>;
+    <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>;
 
     expect(console.warn.argsForCall.length).toBe(0);
   });

@@ -99,17 +99,17 @@ describe('ReactCompositeComponentNestedState-state', function() {
     );
 
     expect(logger.mock.calls).toEqual([
-      [ 'parent-render', 'blue' ],
-      [ 'getInitialState', 'blue' ],
-      [ 'render', 'dark blue', 'blue' ],
-      [ 'handleHue', 'dark blue', 'blue' ],
-      [ 'parent-handleColor', 'blue' ],
-      [ 'parent-render', 'green' ],
-      [ 'setState-this', 'dark blue', 'blue' ],
-      [ 'setState-args', 'dark blue', 'green' ],
-      [ 'render', 'light green', 'green' ],
-      [ 'parent-after-setState', 'green' ],
-      [ 'after-setState', 'light green', 'green' ]
+      ['parent-render', 'blue'],
+      ['getInitialState', 'blue'],
+      ['render', 'dark blue', 'blue'],
+      ['handleHue', 'dark blue', 'blue'],
+      ['parent-handleColor', 'blue'],
+      ['parent-render', 'green'],
+      ['setState-this', 'dark blue', 'blue'],
+      ['setState-args', 'dark blue', 'green'],
+      ['render', 'light green', 'green'],
+      ['parent-after-setState', 'green'],
+      ['after-setState', 'light green', 'green']
     ]);
   });
 });
