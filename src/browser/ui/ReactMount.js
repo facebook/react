@@ -448,6 +448,13 @@ var ReactMount = {
       )
     );
 
+    warning(
+      container !== document.body,
+      'render(): You\'re trying to render a component into document.body, ' +
+      'whose list of children is often manipulated by third party scripts ' +
+      'and browser extensions. This may lead to subtle reconciliation issues.'
+    );
+
     var prevComponent = instancesByReactRootID[getReactRootID(container)];
 
     if (prevComponent) {

@@ -144,4 +144,13 @@ describe('ReactMount', function() {
     ReactMount.render(<div />, container);
     expect(console.warn.mock.calls.length).toBe(0);
   });
+
+  it('should warn when mounting into document.body', function () {
+    spyOn(console, 'warn')
+    ReactMount.render(<div />, document.body);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'You\'re trying to render a component into document.body'
+    );
+  });
 });
