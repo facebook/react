@@ -144,4 +144,17 @@ describe('ReactMount', function() {
     ReactMount.render(<div />, container);
     expect(console.warn.mock.calls.length).toBe(0);
   });
+
+  it('should warn when mounting into document.body', function () {
+    var iFrame = document.createElement('iframe');
+    document.body.appendChild(iFrame);
+    spyOn(console, 'warn');
+
+    ReactMount.render(<div />, iFrame.contentDocument.body);
+
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'Rendering components directly into document.body is discouraged'
+    );
+  });
 });
