@@ -450,9 +450,10 @@ var ReactMount = {
 
     warning(
       container !== document.body,
-      'render(): You\'re trying to render a component into document.body, ' +
-      'whose list of children is often manipulated by third party scripts ' +
-      'and browser extensions. This may lead to subtle reconciliation issues.'
+      'render(): Rendering components directly into document.body is ' +
+      'discouraged, since its children are often manipulated by third party' +
+      'scripts and browser extensions. This may lead to subtle reconciliation' +
+      'issues. Try rendering into a container element created for your app.'
     );
 
     var prevComponent = instancesByReactRootID[getReactRootID(container)];

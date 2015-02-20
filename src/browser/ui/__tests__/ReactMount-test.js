@@ -150,7 +150,7 @@ describe('ReactMount', function() {
     ReactMount.render(<div />, document.body);
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain(
-      'You\'re trying to render a component into document.body'
+      'Rendering components directly into document.body is discouraged'
     );
   });
 });
