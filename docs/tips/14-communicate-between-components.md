@@ -1,6 +1,6 @@
 ---
 id: communicate-between-components
-title: Communicate Between Components
+title: Communications Between Components
 layout: tips
 permalink: communicate-between-components.html
 prev: false-in-jsx.html
@@ -36,6 +36,6 @@ React.render(
 );
 ```
 
-Notice the use of `bind(this, arg1, arg2, ...)`: we're simply passing more arguments to `handleClick`. This is not a new React concept; it's just JavaScript.
+Notice the use of `bind(this, arg1, arg2, ...)`. We simply pass more arguments to `handleClick`. This is pure JavaScript.
 
-For communication between two components that don't have a parent-child relationship, you can set up your own global event system. Subscribe to events in `componentDidMount()`, unsubscribe in `componentWillUnmount()`, and call `setState()` when you receive an event.
+For communication between two components that don't have a parent-child relationship, you can create your own global event system. Subscribe to events in `componentDidMount()`, unsubscribe in `componentWillUnmount()`, and call `setState()` when you receive an event.
