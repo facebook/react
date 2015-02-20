@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 /*global exports:true*/
-"use strict";
+'use strict';
 
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
@@ -20,10 +20,10 @@ function addDisplayName(displayName, object, state) {
       object.callee.object.name === 'React' &&
       object.callee.property.type === Syntax.Identifier &&
       object.callee.property.name === 'createClass' &&
-      object['arguments'].length === 1 &&
-      object['arguments'][0].type === Syntax.ObjectExpression) {
+      object.arguments.length === 1 &&
+      object.arguments[0].type === Syntax.ObjectExpression) {
     // Verify that the displayName property isn't already set
-    var properties = object['arguments'][0].properties;
+    var properties = object.arguments[0].properties;
     var safe = properties.every(function(property) {
       var value = property.key.type === Syntax.Identifier ?
         property.key.name :
@@ -32,7 +32,7 @@ function addDisplayName(displayName, object, state) {
     });
 
     if (safe) {
-      utils.catchup(object['arguments'][0].range[0] + 1, state);
+      utils.catchup(object.arguments[0].range[0] + 1, state);
       utils.append('displayName: "' + displayName + '",', state);
     }
   }

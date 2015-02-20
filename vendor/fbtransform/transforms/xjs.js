@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 /*global exports:true*/
-"use strict";
+'use strict';
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
@@ -49,7 +49,7 @@ function renderXJSLiteral(object, isLast, state, start, end) {
     if (trimmedLine || isLastNonEmptyLine) {
       utils.append(
         JSON.stringify(trimmedLine) +
-        (!isLastNonEmptyLine ? " + ' ' +" : ''),
+        (!isLastNonEmptyLine ? ' + \' \' +' : ''),
         state);
 
       if (isLastNonEmptyLine) {

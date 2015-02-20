@@ -6,7 +6,15 @@ module.exports = function() {
   var done = this.async();
   grunt.util.spawn({
     cmd: 'node_modules/.bin/eslint',
-    args: ['src/', 'Gruntfile.js', 'grunt/', 'main.js', 'perf/', 'test/']
+    args: [
+      'src/',
+      'Gruntfile.js',
+      'grunt/',
+      'main.js',
+      'perf/',
+      'test/',
+      'vendor/fbtransform'
+    ]
   }, function(err, result, code) {
     if (err) {
       grunt.log.error('Lint failed');
