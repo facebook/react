@@ -2,14 +2,19 @@
 
 'use strict';
 
-var es6ArrowFunctions = require('jstransform/visitors/es6-arrow-function-visitors');
+var es6ArrowFunctions =
+  require('jstransform/visitors/es6-arrow-function-visitors');
 var es6Classes = require('jstransform/visitors/es6-class-visitors');
-var es6Destructuring = require('jstransform/visitors/es6-destructuring-visitors');
-var es6ObjectConciseMethod = require('jstransform/visitors/es6-object-concise-method-visitors');
-var es6ObjectShortNotation = require('jstransform/visitors/es6-object-short-notation-visitors');
+var es6Destructuring =
+  require('jstransform/visitors/es6-destructuring-visitors');
+var es6ObjectConciseMethod =
+  require('jstransform/visitors/es6-object-concise-method-visitors');
+var es6ObjectShortNotation =
+  require('jstransform/visitors/es6-object-short-notation-visitors');
 var es6RestParameters = require('jstransform/visitors/es6-rest-param-visitors');
 var es6Templates = require('jstransform/visitors/es6-template-visitors');
-var es7SpreadProperty = require('jstransform/visitors/es7-spread-property-visitors');
+var es7SpreadProperty =
+  require('jstransform/visitors/es7-spread-property-visitors');
 var react = require('./transforms/react');
 var reactDisplayName = require('./transforms/reactDisplayName');
 
