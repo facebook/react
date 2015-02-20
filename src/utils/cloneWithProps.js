@@ -24,10 +24,10 @@ var CHILDREN_PROP = keyOf({children: null});
  * Sometimes you want to change the props of a child passed to you. Usually
  * this is to add a CSS class.
  *
- * @param {object} child child component you'd like to clone
+ * @param {ReactElement} child child component you'd like to clone
  * @param {object} props props you'd like to modify. className and style will be
  * merged automatically.
- * @return {object} a clone of child with props merged in.
+ * @return {ReactElement} a clone of child with props merged in.
  */
 function cloneWithProps(child, props) {
   if (__DEV__) {
