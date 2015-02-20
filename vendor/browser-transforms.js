@@ -8,6 +8,8 @@
  */
 /* jshint browser: true */
 /* jslint evil: true */
+/*eslint-disable no-eval */
+/*eslint-disable block-scoped-var */
 
 'use strict';
 
@@ -141,7 +143,7 @@ function transformCode(code, url, options) {
 
   var source;
   if (url == null) {
-    source = "Inline JSX script";
+    source = 'Inline JSX script';
     inlineScriptCount++;
     if (inlineScriptCount > 1) {
       source += ' (' + inlineScriptCount + ')';
@@ -202,7 +204,7 @@ function load(url, successCallback, errorCallback) {
         successCallback(xhr.responseText);
       } else {
         errorCallback();
-        throw new Error("Could not load " + url);
+        throw new Error('Could not load ' + url);
       }
     }
   };
@@ -316,7 +318,7 @@ function runScripts() {
 
 // Listen for load event if we're in a browser and then kick off finding and
 // running of scripts.
-if (typeof window !== "undefined" && window !== null) {
+if (typeof window !== 'undefined' && window !== null) {
   headEl = document.getElementsByTagName('head')[0];
   dummyAnchor = document.createElement('a');
 

@@ -8,7 +8,7 @@
  */
 
 'use strict';
-
+/*eslint-disable no-undef*/
 var Buffer = require('buffer').Buffer;
 
 function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
