@@ -64,6 +64,11 @@ function processOptions(opts) {
     options.sourceType = 'nonStrict6Module';
   }
 
+  // Instead of doing any fancy validation, only look for 'es3'. If we have
+  // that, then use it. Otherwise use 'es5'.
+  options.es3 = opts.target === 'es3';
+  options.es5 = !options.es3;
+
   return options;
 }
 
@@ -72,6 +77,11 @@ function innerTransform(input, options) {
   if (options.harmony) {
     visitorSets.push('harmony');
   }
+
+  if (options.es3) {
+    visitorSets.push('es3');
+  }
+
   if (options.stripTypes) {
     // Stripping types needs to happen before the other transforms
     // unfortunately, due to bad interactions. For example,
