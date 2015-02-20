@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  */
 /*global exports:true*/
-"use strict";
+'use strict';
 var Syntax = require('esprima-fb').Syntax;
 var utils = require('jstransform/src/utils');
 

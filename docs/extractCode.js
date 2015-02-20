@@ -1,3 +1,5 @@
+'use strict';
+
 var argv = require('optimist').argv;
 var fs = require('fs');
 
@@ -5,9 +7,9 @@ var CODE_SAMPLE = /```[\S]+\s*[\s\S]*?```/g;
 var PARTS = /```[\S]+\s*\/\/\s+(.+?)\n([\s\S]*?)```/;
 
 function truncate(s, n) {
-  n = n || 256
+  n = n || 256;
   if (s.length < n) {
-   return s;
+    return s;
   }
   return s.substring(0, n) + '...';
 }
@@ -27,9 +29,9 @@ function main(dest, filenames) {
       if (!extracted) {
         throw new Error('Code sample did not match correct format in ' + filename + ': ' + truncate(codeSample));
       }
-      var filename = extracted[1];
-      var content = extracted[2].replace(/\*\*/g, '');
-      fs.writeFileSync(argv.dest + '/' + filename, content);
+      var codeSampleFilename = extracted[1];
+      var codeSampleContent = extracted[2].replace(/\*\*/g, '');
+      fs.writeFileSync(argv.dest + '/' + codeSampleFilename, codeSampleContent);
     });
   });
 }

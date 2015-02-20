@@ -31,9 +31,15 @@ function compile(defaultLib, content, contentFilename) {
         throw new Error('Expected only one dependency.');
       }
     },
-    getCanonicalFileName: function(filename) { return filename; },
-    getCurrentDirectory: function() { return ''; },
-    getNewLine: function() { return '\n'; }
+    getCanonicalFileName: function(filename) {
+      return filename;
+    },
+    getCurrentDirectory: function() {
+      return '';
+    },
+    getNewLine: function() {
+      return '\n';
+    }
   };
   var program = ts.createProgram([contentFilename], tsOptions, compilerHost);
   var errors = program.getDiagnostics();
