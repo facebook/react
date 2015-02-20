@@ -7,6 +7,62 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Introducing Relay and GraphQL</title>
+				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;data-fetching-for-react-applications&quot;&gt;&lt;/a&gt;Data fetching for React applications &lt;a class=&quot;hash-link&quot; href=&quot;#data-fetching-for-react-applications&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;There&amp;#39;s more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;React.js Conf&lt;/a&gt; we announced two projects we&amp;#39;ve created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/9sc8Pyc51uU&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;The two projects &amp;mdash; Relay and GraphQL &amp;mdash; have been in use in production at Facebook for some time, and we&amp;#39;re excited to be bringing them to the world as open source in the future. In the meantime, we wanted to share some additional information about the projects here.&lt;/p&gt;
+
+&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;7af7c2f33bf9451a892dcd91de55b7c2&quot; data-ratio=&quot;1.29456384323641&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-relay&quot;&gt;&lt;/a&gt;What is Relay? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-relay&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Relay is a new framework from Facebook that provides data-fetching functionality for React applications. It was announced at React.js Conf (January 2015).&lt;/p&gt;
+
+&lt;p&gt;Each component specifies its own data dependencies declaratively using a query language called GraphQL. The data is made available to the component via properties on &lt;code&gt;this.props&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Developers compose these React components naturally, and Relay takes care of composing the data queries into efficient batches, providing each component with exactly the data that it requested (and no more), updating those components when the data changes, and maintaining a client-side store (cache) of all data.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;what-is-graphql&quot;&gt;&lt;/a&gt;What is GraphQL? &lt;a class=&quot;hash-link&quot; href=&quot;#what-is-graphql&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;GraphQL is a data querying language designed to describe the complex, nested data dependencies of modern applications. It&amp;#39;s been in production use in Facebook&amp;#39;s native apps for several years.&lt;/p&gt;
+
+&lt;p&gt;On the server, we configure the GraphQL system to map queries to underlying data-fetching code. This configuration layer allows GraphQL to work with arbitrary underlying storage mechanisms. Relay uses GraphQL as its query language, but it is not tied to a specific implementation of GraphQL.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-value-proposition&quot;&gt;&lt;/a&gt;The value proposition &lt;a class=&quot;hash-link&quot; href=&quot;#the-value-proposition&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Relay was born out of our experiences building large applications at Facebook. Our overarching goal is to enable developers to create correct, high-performance applications in a straightforward and obvious way. The design enables even large teams to make changes with a high degree of isolation and confidence. Fetching data is hard, dealing with ever-changing data is hard, and performance is hard. Relay aims to reduce these problems to simple ones, moving the tricky bits into the framework and freeing you to concentrate on building your application.&lt;/p&gt;
+
+&lt;p&gt;By co-locating the queries with the view code, the developer can reason about what a component is doing by looking at it in isolation; it&amp;#39;s not necessary to consider the context where the component was rendered in order to understand it. Components can be moved anywhere in a render hierarchy without having to apply a cascade of modifications to parent components or to the server code which prepares the data payload.&lt;/p&gt;
+
+&lt;p&gt;Co-location leads developers to fall into the &amp;quot;pit of success&amp;quot;, because they get exactly the data they asked for and the data they asked for is explicitly defined right next to where it is used. This means that performance becomes the default (it becomes much harder to accidentally over-fetch), and components are more robust (under-fetching is also less likely for the same reason, so components won&amp;#39;t try to render missing data and blow up at runtime).&lt;/p&gt;
+
+&lt;p&gt;Relay provides a predictable environment for developers by maintaining an invariant: a component won&amp;#39;t be rendered until all the data it requested is available. Additionally, queries are defined statically (ie. we can extract queries from a component tree before rendering) and the GraphQL schema provides an authoritative description of what queries are valid, so we can validate queries early and fail fast when the developer makes a mistake.&lt;/p&gt;
+
+&lt;p&gt;Only the fields of an object that a component explicitly asks for will be accessible to that component, even if other fields are known and cached in the store (because another component requested them). This makes it impossible for implicit data dependency bugs to exist latently in the system.&lt;/p&gt;
+
+&lt;p&gt;By handling all data-fetching via a single abstraction, we&amp;#39;re able to handle a bunch of things that would otherwise have to be dealt with repeatedly and pervasively across the application:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Performance:&lt;/strong&gt; All queries flow through the framework code, where things that would otherwise be inefficient, repeated query patterns get automatically collapsed and batched into efficient, minimal queries. Likewise, the framework knows which data have been previously requested, or for which requests are currently &amp;quot;in flight&amp;quot;, so queries can be automatically de-duplicated and the minimal queries can be produced.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Subscriptions:&lt;/strong&gt; All data flows into a single store, and all reads from the store are via the framework. This means the framework knows which components care about which data and which should be re-rendered when data changes; components never have to set up individual subscriptions.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Common patterns:&lt;/strong&gt; We can make common patterns easy. Pagination is the example that &lt;a href=&quot;https://twitter.com/jingc&quot;&gt;Jing&lt;/a&gt; gave at the conference: if you have 10 records initially, getting the next page just means declaring you want 15 records in total, and the framework automatically constructs the minimal query to grab the delta between what you have and what you need, requests it, and re-renders your view when the data become available.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Simplified server implementation:&lt;/strong&gt; Rather than having a proliferation of end-points (per action, per route), a single GraphQL endpoint can serve as a facade for any number of underlying resources.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Uniform mutations:&lt;/strong&gt; There is one consistent pattern for performing mutations (writes), and it is conceptually baked into the data querying model itself. You can think of a mutation as a query with side-effects: you provide some parameters that describe the change to be made (eg. attaching a comment to a record) and a query that specifies the data you&amp;#39;ll need to update your view of the world after the mutation completes (eg. the comment count on the record), and the data flows through the system using the normal flow. We can do an immediate &amp;quot;optimistic&amp;quot; update on the client (ie. update the view under the assumption that the write will succeed), and finally commit it, retry it or roll it back in the event of an error when the server payload comes back.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;how-does-it-relate-to-flux&quot;&gt;&lt;/a&gt;How does it relate to Flux? &lt;a class=&quot;hash-link&quot; href=&quot;#how-does-it-relate-to-flux&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In some ways Relay is inspired by Flux, but the mental model is much simpler. Instead of multiple stores, there is one central store that caches all GraphQL data. Instead of explicit subscriptions, the framework itself can track which data each component requests, and which components should be updated whenever the data change. Instead of actions, modifications take the form of mutations.&lt;/p&gt;
+
+&lt;p&gt;At Facebook, we have apps built entirely using Flux, entirely using Relay, or with both. One pattern we see emerging is letting Relay manage the bulk of the data flow for an application, but using Flux stores on the side to handle a subset of application state.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;open-source-plans&quot;&gt;&lt;/a&gt;Open source plans &lt;a class=&quot;hash-link&quot; href=&quot;#open-source-plans&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We&amp;#39;re working very hard right now on getting both GraphQL (a spec, and a reference implementation) and Relay ready for public release (no specific dates yet, but we are super excited about getting these out there).&lt;/p&gt;
+
+&lt;p&gt;In the meantime, we&amp;#39;ll be providing more and more information in the form of blog posts (and in &lt;a href=&quot;https://gist.github.com/wincent/598fa75e22bdfa44cf47&quot;&gt;other channels&lt;/a&gt;). As we get closer to the open source release, you can expect more concrete details, syntax and API descriptions and more.&lt;/p&gt;
+
+&lt;p&gt;Watch this space!&lt;/p&gt;
+</description>
+				<pubDate>2015-02-20T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html</guid>
+			</item>
+		
+			<item>
 				<title>React.js Conf Round-up 2015</title>
 				<description>&lt;p&gt;It was a privilege to welcome the React community to Facebook HQ on January 28–29 for the first-ever React.js Conf, and a pleasure to be be able to unveil three new technologies that we&amp;#39;ve been using internally at Facebook for some time: GraphQL, Relay, and React Native.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-talks&quot;&gt;&lt;/a&gt;The talks &lt;a class=&quot;hash-link&quot; href=&quot;#the-talks&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -867,110 +923,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-10-17T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/10/17/community-roundup-23.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/17/community-roundup-23.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.12 RC</title>
-				<description>&lt;p&gt;We are finally ready to share the work we&amp;#39;ve been doing over the past couple months. A lot has gone into this and we want to make sure we iron out any potential issues before we make this final. So, we&amp;#39;re shipping a Release Candidate for React v0.12 today. If you get a chance, please give it a try and report any issues you find! A full changelog will accompany the final release but we&amp;#39;ve highlighted the interesting and breaking changes below.&lt;/p&gt;
-
-&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.0-rc1.js&quot;&gt;http://fb.me/react-0.12.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.0-rc1.min.js&quot;&gt;http://fb.me/react-0.12.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.12.0-rc1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.12.0-rc1.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-elements&quot;&gt;&lt;/a&gt;React Elements &lt;a class=&quot;hash-link&quot; href=&quot;#react-elements&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The biggest conceptual change we made in v0.12 is the move to React Elements. &lt;a href=&quot;/react/blog/2014/10/14/introducting-react-elements.html&quot;&gt;We talked about this topic in depth earlier this week&lt;/a&gt;. If you haven&amp;#39;t already, you should read up on the exciting changes in there!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-changes&quot;&gt;&lt;/a&gt;JSX Changes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Earlier this year we decided to write &lt;a href=&quot;http://facebook.github.io/jsx/&quot;&gt;a specification for JSX&lt;/a&gt;. This has allowed us to make some changes focused on the React specific JSX and still allow others to innovate in the same space.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-jsx-pragma-is-gone&quot;&gt;&lt;/a&gt;The &lt;code&gt;@jsx&lt;/code&gt; Pragma is Gone! &lt;a class=&quot;hash-link&quot; href=&quot;#the-jsx-pragma-is-gone&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;We have wanted to do this since before we even open sourced React. No more &lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;!. The React specific JSX transform assumes you have &lt;code&gt;React&lt;/code&gt; in scope (which had to be true before anyway).&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;JSXTransformer&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; have both been updated to account for this.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-for-function-calls-is-no-longer-supported&quot;&gt;&lt;/a&gt;JSX for Function Calls is No Longer Supported &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-for-function-calls-is-no-longer-supported&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;The React specific JSX transform no longer transforms to function calls. Instead we use &lt;code&gt;React.createElement&lt;/code&gt; and pass it arguments. This allows us to make optimizations and better support React as a compile target for things like Om. Read more in the &lt;a href=&quot;/react/blog/2014/10/14/introducting-react-elements.html&quot;&gt;React Elements introduction&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;The result of this change is that we will no longer support arbitrary function calls. We understand that the ability to do was was a convenient shortcut for many people but we believe the gains will be worth it.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-lower-case-convention&quot;&gt;&lt;/a&gt;JSX Lower-case Convention &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-lower-case-convention&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;We used to have a whitelist of HTML tags that got special treatment in JSX. However as new HTML tags got added to the spec, or we added support for more SVG tags, we had to go update our whitelist. Additionally, there was ambiguity about the behavior. There was always the chance that something new added to the tag list would result in breaking your code. For example:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;component&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Is &lt;code&gt;component&lt;/code&gt; an existing HTML tag? What if it becomes one?&lt;/p&gt;
-
-&lt;p&gt;To address this, we decided on a convention: &lt;strong&gt;All JSX tags that start with a lower-case letter or contain a dash are treated as HTML.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;This means that you no longer have to wait for us to upgrade JSX to use new tags. This also introduces the possibility to consume custom elements (Web Components) - although custom attributes are not yet fully supported.&lt;/p&gt;
-
-&lt;p&gt;Currently we still use the whitelist as a sanity check. The transform will fail when it encounters an unknown tag. This allows you to update your code without hitting errors in production.&lt;/p&gt;
-
-&lt;p&gt;In addition, the HTML tags are converted to strings instead of using &lt;code&gt;React.DOM&lt;/code&gt; directly. &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; becomes &lt;code&gt;React.createElement(&amp;#39;div&amp;#39;)&lt;/code&gt; instead of &lt;code&gt;React.DOM.div()&lt;/code&gt;.&lt;/p&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-spread-attributes&quot;&gt;&lt;/a&gt;JSX Spread Attributes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-spread-attributes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;p&gt;Previously there wasn&amp;#39;t a way to for you to pass a dynamic or unknown set of properties through JSX. This is now possible using the spread &lt;code&gt;...&lt;/code&gt; operator.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;This merges the properties of the object onto the props of &lt;code&gt;MyComponent&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://gist.github.com/sebmarkbage/07bbe37bc42b6d4aef81&quot;&gt;Read More About Spread Attributes&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;If you used to use plain function calls to pass arbitrary props objects...&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;You can now switch to using Spread Attributes instead:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-change-key-and-ref-removed-from-this.props&quot;&gt;&lt;/a&gt;Breaking Change: &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; Removed From &lt;code&gt;this.props&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-change-key-and-ref-removed-from-this.props&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The props &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; were already reserved property names. This turned out to be difficult to explicitly statically type since any object can accept these extra props. It also screws up JIT optimizations of React internals in modern VMs.&lt;/p&gt;
-
-&lt;p&gt;These are concepts that React manages from outside the Component before it even gets created so it shouldn&amp;#39;t be part of the props.&lt;/p&gt;
-
-&lt;p&gt;We made this distinction clearer by moving them off the props object and onto the &lt;code&gt;ReactElement&lt;/code&gt; itself. This means that you need to rename:&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;someElement.props.key&lt;/code&gt; -&amp;gt; &lt;code&gt;someElement.key&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;You can no longer access &lt;code&gt;this.props.ref&lt;/code&gt; and &lt;code&gt;this.props.key&lt;/code&gt; from inside the Component instance itself. So you need to use a different name for those props.&lt;/p&gt;
-
-&lt;p&gt;You do NOT need to change the way to define &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt;, only if you need to read it. E.g. &lt;code&gt;&amp;lt;div key=&amp;quot;my-key&amp;quot; /&amp;gt;&lt;/code&gt; and &lt;code&gt;div({ key: &amp;#39;my-key&amp;#39; })&lt;/code&gt; still works.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-change-default-props-resolution&quot;&gt;&lt;/a&gt;Breaking Change: Default Props Resolution &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-change-default-props-resolution&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;This is a subtle difference but &lt;code&gt;defaultProps&lt;/code&gt; are now resolved at &lt;code&gt;ReactElement&lt;/code&gt; creation time instead of when it&amp;#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.&lt;/p&gt;
-
-&lt;p&gt;You will primarily see this breaking if you&amp;#39;re also using &lt;code&gt;transferPropsTo&lt;/code&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-transferpropsto&quot;&gt;&lt;/a&gt;Deprecated: transferPropsTo &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-transferpropsto&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;code&gt;transferPropsTo&lt;/code&gt; is deprecated in v0.12 and will be removed in v0.13. This helper function was a bit magical. It auto-merged a certain whitelist of properties and excluded others. It was also transferring too many properties. This meant that we have to keep a whitelist of valid HTML attributes in the React runtime. It also means that we can&amp;#39;t catch typos on props.&lt;/p&gt;
-
-&lt;p&gt;Our suggested solution is to use the Spread Attributes.&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Or, just if you&amp;#39;re not using JSX:&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;Although to avoid passing too many props down, you&amp;#39;ll probably want to use something like ES7 rest properties. &lt;a href=&quot;https://gist.github.com/sebmarkbage/a6e220b7097eb3c79ab7&quot;&gt;Read more about upgrading from transferPropsTo&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecated-returning-false-in-event-handlers&quot;&gt;&lt;/a&gt;Deprecated: Returning &lt;code&gt;false&lt;/code&gt; in Event Handlers &lt;a class=&quot;hash-link&quot; href=&quot;#deprecated-returning-false-in-event-handlers&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;It used to be possible to return &lt;code&gt;false&lt;/code&gt; from event handlers to preventDefault. We did this because this works in most browsers. This is a confusing API and we might want to use the return value for something else. Therefore, this is deprecated. Use &lt;code&gt;event.preventDefault()&lt;/code&gt; instead.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;renamed-apis&quot;&gt;&lt;/a&gt;Renamed APIs &lt;a class=&quot;hash-link&quot; href=&quot;#renamed-apis&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;As part of the &lt;a href=&quot;https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589&quot;&gt;new React terminology&lt;/a&gt; we aliased some existing APIs to use the new naming convention:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponent&lt;/code&gt; -&amp;gt; &lt;code&gt;React.render&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; -&amp;gt; &lt;code&gt;React.renderToString&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponentToStaticMarkup&lt;/code&gt; -&amp;gt; &lt;code&gt;React.renderToStaticMarkup&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; -&amp;gt; &lt;code&gt;React.isValidElement&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.PropTypes.component&lt;/code&gt; -&amp;gt; &lt;code&gt;React.PropTypes.element&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.PropTypes.renderable&lt;/code&gt; -&amp;gt; &lt;code&gt;React.PropTypes.node&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The older APIs will log a warning but work the same. They will be removed in v0.13.&lt;/p&gt;
-</description>
-				<pubDate>2014-10-16T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/16/react-v0.12-rc1.html</guid>
 			</item>
 		
 	</channel>
