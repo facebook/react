@@ -1,3 +1,5 @@
+'use strict';
+
 // Simple pure-React component so we don't have to remember
 // Bootstrap's classes
 var BootstrapButton = React.createClass({
