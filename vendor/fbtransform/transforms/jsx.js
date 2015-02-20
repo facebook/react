@@ -121,7 +121,6 @@ function renderJSXExpressionContainer(traverse, object, isLast, path, state) {
     // If we need to append a comma, make sure to do so after the expression.
     utils.catchup(object.expression.range[1], state, trimLeft);
     utils.catchup(object.range[1] - 1, state, commaAfterLastParen);
-    //utils.append(', ', state);
   } else {
     // Minus 1 to skip `}`.
     utils.catchup(object.range[1] - 1, state, trimLeft);
