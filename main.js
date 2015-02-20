@@ -1,9 +1,18 @@
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
 'use strict';
 /*eslint-disable no-undef*/
 var visitors = require('./vendor/fbtransform/visitors');
 var transform = require('jstransform').transform;
 var typesSyntax = require('jstransform/visitors/type-syntax');
-var Buffer = require('buffer').Buffer;
+var inlineSourceMap = require('./vendor/inline-source-map');
 
 module.exports = {
   transform: function(input, options) {
@@ -73,13 +82,4 @@ function innerTransform(input, options) {
 
   var visitorList = visitors.getVisitorsBySet(visitorSets);
   return transform(visitorList, input, options);
-}
-
-function inlineSourceMap(sourceMap, sourceCode, sourceFilename) {
-  var json = sourceMap.toJSON();
-  json.sources = [sourceFilename];
-  json.sourcesContent = [sourceCode];
-  var base64 = Buffer(JSON.stringify(json)).toString('base64');
-  return '//# sourceMappingURL=data:application/json;base64,' +
-         base64;
 }
