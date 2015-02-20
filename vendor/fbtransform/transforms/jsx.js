@@ -12,40 +12,39 @@ var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
 function commaAfterLastParen(value) {
-  var state = "normal";
+  var state = 'normal';
   var commaPos = 0;
   for (var i = 0; i < value.length; ++i) {
-    if (state === "normal") {
-      if (value.charAt(i) === "/") {
+    if (state === 'normal') {
+      if (value.charAt(i) === '/') {
         if (i + 1 < value.length) {
-          if (value.charAt(i + 1) === "/") {
-            state = "singleline";
+          if (value.charAt(i + 1) === '/') {
+            state = 'singleline';
             i += 1;
             continue;
 
           }
-          if (value.charAt(i + 1) === "*") {
-            state = "multiline";
+          if (value.charAt(i + 1) === '*') {
+            state = 'multiline';
             i += 1;
             continue;
           }
         }
       }
-      if (value.charAt(i).trim() !== "") {
+      if (value.charAt(i).trim() !== '') {
         commaPos = i + 1;
       }
-    }
-    else if (state === "singleline" && value.charAt(i) === "\n") {
-      state = "normal";
-    } else if (state === "multiline" &&
-        value.charAt(i) === "*" &&
+    } else if (state === 'singleline' && value.charAt(i) === '\n') {
+      state = 'normal';
+    } else if (state === 'multiline' &&
+        value.charAt(i) === '*' &&
         i + 1 < value.length &&
-        value.charAt(i + 1) === "/") {
-          i += 1;
-          state = "normal";
-        }
+        value.charAt(i + 1) === '/') {
+      i += 1;
+      state = 'normal';
+    }
   }
-  return value.substring(0, commaPos) + ", " + trimLeft(value.substring(commaPos));
+  return value.substring(0, commaPos) + ', ' + trimLeft(value.substring(commaPos));
 }
 
 function renderJSXLiteral(object, isLast, state, start, end) {
@@ -121,12 +120,11 @@ function renderJSXExpressionContainer(traverse, object, isLast, path, state) {
   if (!isLast && object.expression.type !== Syntax.JSXEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
     utils.catchup(object.expression.range[1], state, trimLeft);
-    utils.catchup(object.range[1] -1, state, commaAfterLastParen)
+    utils.catchup(object.range[1] - 1, state, commaAfterLastParen);
     //utils.append(', ', state);
-  }
-  else {
-      // Minus 1 to skip `}`.
-      utils.catchup(object.range[1] - 1, state, trimLeft);
+  } else {
+    // Minus 1 to skip `}`.
+    utils.catchup(object.range[1] - 1, state, trimLeft);
   }
   utils.move(object.range[1], state);
   return false;

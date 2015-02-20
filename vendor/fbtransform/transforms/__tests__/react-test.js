@@ -325,13 +325,13 @@ describe('react jsx', function() {
   });
 
   it('handles overparenthesized JS', function() {
-      var code = 
-        '<foo a={(b)} c={(d)}>Foo {(e+f/* */)\n' +
-        '} bar\n' +
-        '</foo>';
-      var result = 'React.createElement("foo", {a: (b), c: (d)}, "Foo ",(e+f/* */), \n' +
-          '" bar"\n' +
-          ')';
+    var code =
+    '<foo a={(b)} c={(d)}>Foo {(e+f/* */)\n' +
+      '} bar\n' +
+    '</foo>';
+    var result = 'React.createElement("foo", {a: (b), c: (d)}, "Foo ",(e+f/* */), \n' +
+    '" bar"\n' +
+    ')';
     expect(transform(code).code).toBe(result);
   });
 
