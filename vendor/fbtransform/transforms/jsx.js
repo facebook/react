@@ -16,22 +16,13 @@ function commaAfterLastParen(value) {
   var commaPos = 0;
   for (var i = 0; i < value.length; ++i) {
     if (state === 'normal') {
-      if (value.charAt(i) === '/') {
-        if (i + 1 < value.length) {
-          if (value.charAt(i + 1) === '/') {
-            state = 'singleline';
-            i += 1;
-            continue;
-
-          }
-          if (value.charAt(i + 1) === '*') {
-            state = 'multiline';
-            i += 1;
-            continue;
-          }
-        }
-      }
-      if (value.charAt(i).trim() !== '') {
+      if (value.substr(i, 2) === '//') {
+        state = 'singleline';
+        i += 1;
+      } else if (value.substr(i, 2) === '/*') {
+        state = 'multiline';
+        i += 1;
+      } else if (value.charAt(i).trim() !== '') {
         commaPos = i + 1;
       }
     } else if (state === 'singleline' && value.charAt(i) === '\n') {
