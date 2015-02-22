@@ -9,7 +9,7 @@ next: videos-ko-KR.html
 
 제가 생각하기에, React는 JavaScript로 크고 빠른 웹 애플리케이션을 만드는데 최고입니다. 페이스북과 인스타그램에서 우리에게 잘 맞도록 조정되어 왔습니다.
 
-React의 많은 뛰어난 점들중 하나는 생각을 하면서 애플리케이션을 만들게 한다는 겁니다. 이 포스트에서 React를 이용해 검색이 가능한 상품자료 테이블을 만드는 생각 과정을 이해할 수 있게 차근차근 설명할겁니다. *만약 이 페이지에서 jsfiddle이 보이지 않는다면 https가 아니라 http페이지를 가리키고 있는지 확인해 보세요.*
+React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케이션을 만들게 한다는 겁니다. 이 포스트에서 React를 이용해 검색이 가능한 상품자료 테이블을 만드는 생각 과정을 이해할 수 있게 차근차근 설명할 겁니다.
 
 ## 모형으로 시작해보기
 
@@ -60,7 +60,7 @@ React의 많은 뛰어난 점들중 하나는 생각을 하면서 애플리케�
 
 ## 2단계: 정적 버전을 만드세요. 
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 계층구조의 컴포넌트들을 가지고 있으니, 이젠 애플리케이션을 구현할 시간입니다. 가장 쉬운 방법은 상호작용을 하지 않는채로 자료 모델을 이용해 UI를 그리는 것입니다. 정적 버전을 만드는데는 적은 생각과 많은 노동이 필요하고, 상호작용을 추가하는데는 많은 생각과 적은 노동이 필요하기때문에 둘을 분리하는게 쉽습니다. 왜그런지 봅시다.
 
@@ -104,7 +104,7 @@ product 들의 원본 리스트는 props를 통해서 전달되기 때문에, st
 
 ## 4단계: 어디서 state가 유지되어야 하는지 확인하세요.
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 이제 최소한의 state가 무엇인지 알아 내었습니다. 다음은 어떤 컴포넌트가 이 state를 변형하거나 만들어 낼지 알아내야합니다.
 
@@ -129,7 +129,7 @@ product 들의 원본 리스트는 props를 통해서 전달되기 때문에, st
 
 ## 5단계: 반대방향 자료 흐름을 추가하세요.
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 앞서 우리는 계층적으로 아랫방향 흐름의 props, state전달로 잘 동작하는 애플리케이션을 만들었습니다. 이제 다른방향의 자료 흐름을 지원할 시간입니다: form 컴포넌트들은 `FilterableProductTable`의 state를 업데이트할 필요성이 있죠.
 
