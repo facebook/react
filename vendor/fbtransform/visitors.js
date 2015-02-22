@@ -13,6 +13,8 @@ var es6ObjectShortNotation =
   require('jstransform/visitors/es6-object-short-notation-visitors');
 var es6RestParameters = require('jstransform/visitors/es6-rest-param-visitors');
 var es6Templates = require('jstransform/visitors/es6-template-visitors');
+var es6CallSpread =
+  require('jstransform/visitors/es6-call-spread-visitors');
 var es7SpreadProperty =
   require('jstransform/visitors/es7-spread-property-visitors');
 var react = require('./transforms/react');
@@ -30,6 +32,7 @@ var transformVisitors = {
   'es6-object-short-notation': es6ObjectShortNotation.visitorList,
   'es6-rest-params': es6RestParameters.visitorList,
   'es6-templates': es6Templates.visitorList,
+  'es6-call-spread': es6CallSpread.visitorList,
   'es7-spread-property': es7SpreadProperty.visitorList,
   'react': react.visitorList.concat(reactDisplayName.visitorList),
   'reserved-words': reservedWords.visitorList
@@ -44,6 +47,7 @@ var transformSets = {
     'es6-rest-params',
     'es6-templates',
     'es6-destructuring',
+    'es6-call-spread',
     'es7-spread-property'
   ],
   'es3': [
@@ -66,6 +70,7 @@ var transformRunOrder = [
   'es6-rest-params',
   'es6-templates',
   'es6-destructuring',
+  'es6-call-spread',
   'es7-spread-property',
   'react'
 ];
