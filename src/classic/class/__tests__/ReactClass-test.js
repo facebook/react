@@ -305,7 +305,7 @@ describe('ReactClass-spec', function() {
         className: React.PropTypes.string
       },
       getInitialState() {
-        return { className: this.context.className };
+        return {className: this.context.className};
       },
       render() {
         return <span className={this.state.className} />;
@@ -317,7 +317,7 @@ describe('ReactClass-spec', function() {
         className: React.PropTypes.string
       },
       getChildContext() {
-        return { className: 'foo' };
+        return {className: 'foo'};
       },
       render() {
         return <Foo />;
@@ -361,6 +361,21 @@ describe('ReactClass-spec', function() {
     expect(
       () => ReactTestUtils.renderIntoDocument(<Component />)
     ).not.toThrow();
+  });
+
+  it('should throw when using legacy factories', function() {
+    var Component = React.createClass({
+      render() {
+        return <div />;
+      }
+    });
+
+    expect(() => Component()).toThrow();
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Something is calling a React component directly. Use a ' +
+      'factory or JSX instead. See: http://fb.me/react-legacyfactory'
+    );
   });
 
 });

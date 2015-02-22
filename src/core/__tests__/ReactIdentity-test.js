@@ -267,11 +267,11 @@ describe('ReactIdentity', function() {
     var TestContainer = React.createClass({
 
       getInitialState: function() {
-        return { swapped: false };
+        return {swapped: false};
       },
 
       swap: function() {
-        this.setState({ swapped: true });
+        this.setState({swapped: true});
       },
 
       render: function() {

@@ -8,7 +8,7 @@
  *
  * @emails react-core
  */
-"use strict";
+'use strict';
 
 require('mock-modules').autoMockOff();
 

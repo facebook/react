@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 
+'use strict';
+
 var esprima = require('esprima-fb');
 var FileFinder = require('node-find-files');
 var fs = require('graceful-fs');
 var jstransform = require('jstransform');
 var path = require('path');
 var visitReactTag = require('./transforms/react').visitReactTag;
-
+/*eslint-disable no-shadow*/
 var S = esprima.Syntax;
 
 var USAGE =
@@ -143,7 +145,9 @@ if (require.main === module) {
     var absPath = path.resolve(arg);
 
     fs.stat(absPath, function(err, stat) {
-      if (err) throw err;
+      if (err) {
+        throw err;
+      }
 
       if (stat.isFile()) {
         transformFile(absPath);

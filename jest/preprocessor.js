@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 var ReactTools = require('../main.js');
 

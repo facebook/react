@@ -4,7 +4,7 @@ var fs = require('fs');
 var path = require('path');
 var ts = require('typescript');
 
-var tsOptions = { module: 'commonjs' };
+var tsOptions = {module: 'commonjs'};
 
 function formatErrorMessage(error) {
   return (
@@ -31,9 +31,15 @@ function compile(defaultLib, content, contentFilename) {
         throw new Error('Expected only one dependency.');
       }
     },
-    getCanonicalFileName: function(filename) { return filename; },
-    getCurrentDirectory: function() { return ''; },
-    getNewLine: function() { return '\n'; }
+    getCanonicalFileName: function(filename) {
+      return filename;
+    },
+    getCurrentDirectory: function() {
+      return '';
+    },
+    getNewLine: function() {
+      return '\n';
+    }
   };
   var program = ts.createProgram([contentFilename], tsOptions, compilerHost);
   var errors = program.getDiagnostics();

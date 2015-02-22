@@ -66,4 +66,4 @@ While this is not going to work for all the attributes since they are camelCased
 
 [Vjeux](http://blog.vjeux.com/) re-implemented the display part of the IRC logger in React. Just 130 lines are needed for a performant infinite scroll with timestamps and color-coded author names.
 
-<iframe width="100%" height="300" src="http://jsfiddle.net/vjeux/QL9tz/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/vjeux/QL9tz/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>

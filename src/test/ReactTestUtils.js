@@ -16,6 +16,7 @@ var EventPluginHub = require('EventPluginHub');
 var EventPropagators = require('EventPropagators');
 var React = require('React');
 var ReactElement = require('ReactElement');
+var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactInstanceHandles = require('ReactInstanceHandles');
@@ -323,14 +324,17 @@ var ReactShallowRenderer = function() {
 ReactShallowRenderer.prototype.getRenderOutput = function() {
   return (
     (this._instance && this._instance._renderedComponent &&
-     this._instance._renderedComponent._currentElement)
+     this._instance._renderedComponent._renderedOutput)
     || null
   );
 };
 
 var NoopInternalComponent = function(element) {
-  this._currentElement = element;
-}
+  this._renderedOutput = element;
+  this._currentElement = element === null || element === false ?
+    ReactEmptyComponent.emptyElement :
+    element;
+};
 
 NoopInternalComponent.prototype = {
 
@@ -338,11 +342,13 @@ NoopInternalComponent.prototype = {
   },
 
   receiveComponent: function(element) {
-    this._currentElement = element;
+    this._renderedOutput = element;
+    this._currentElement = element === null || element === false ?
+      ReactEmptyComponent.emptyElement :
+      element;
   },
 
   unmountComponent: function() {
-
   }
 
 };
@@ -365,6 +371,12 @@ ReactShallowRenderer.prototype.render = function(element, context) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled();
   this._render(element, transaction, context);
   ReactUpdates.ReactReconcileTransaction.release(transaction);
+};
+
+ReactShallowRenderer.prototype.unmount = function() {
+  if (this._instance) {
+    this._instance.unmountComponent();
+  }
 };
 
 ReactShallowRenderer.prototype._render = function(element, transaction, context) {

@@ -45,14 +45,14 @@ describe('ReactDOMComponent', function() {
       var stubStyle = container.firstChild.style;
 
       // set initial style
-      var setup = { display: 'block', left: '1', top: 2, fontFamily: 'Arial' };
+      var setup = {display: 'block', left: '1', top: 2, fontFamily: 'Arial'};
       React.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
-      var reset = { display: '', left: null, top: false, fontFamily: true };
+      var reset = {display: '', left: null, top: false, fontFamily: true};
       React.render(<div style={reset} />, container);
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
@@ -61,7 +61,7 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should update styles when mutating style object", function() {
-      var styles = { display: 'none', fontFamily: 'Arial', lineHeight: 1.2 };
+      var styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
 
@@ -226,7 +226,7 @@ describe('ReactDOMComponent', function() {
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
-        this._currentElement = { props: initialProps };
+        this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
@@ -250,9 +250,9 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should generate the correct markup with className", function() {
-      expect(genMarkup({ className: 'a' })).toHaveAttribute('class', 'a');
-      expect(genMarkup({ className: 'a b' })).toHaveAttribute('class', 'a b');
-      expect(genMarkup({ className: '' })).toHaveAttribute('class', '');
+      expect(genMarkup({className: 'a'})).toHaveAttribute('class', 'a');
+      expect(genMarkup({className: 'a b'})).toHaveAttribute('class', 'a b');
+      expect(genMarkup({className: ''})).toHaveAttribute('class', '');
     });
 
     it("should escape style names and values", function() {
@@ -276,7 +276,7 @@ describe('ReactDOMComponent', function() {
       var ReactReconcileTransaction = require('ReactReconcileTransaction');
 
       var NodeStub = function(initialProps) {
-        this._currentElement = { props: initialProps };
+        this._currentElement = {props: initialProps};
         this._rootNodeID = 'test';
       };
       assign(NodeStub.prototype, ReactDOMComponent.Mixin);
@@ -297,7 +297,7 @@ describe('ReactDOMComponent', function() {
     it("should handle dangerouslySetInnerHTML", function() {
       var innerHTML = {__html: 'testContent'};
       expect(
-        genMarkup({ dangerouslySetInnerHTML: innerHTML })
+        genMarkup({dangerouslySetInnerHTML: innerHTML})
       ).toHaveInnerhtml('testContent');
     });
   });
@@ -332,7 +332,7 @@ describe('ReactDOMComponent', function() {
 
     it("should validate against multiple children props", function() {
       expect(function() {
-        mountComponent({ children: '', dangerouslySetInnerHTML: '' });
+        mountComponent({children: '', dangerouslySetInnerHTML: ''});
       }).toThrow(
         'Invariant Violation: Can only set one of `children` or ' +
         '`props.dangerouslySetInnerHTML`.'
@@ -342,7 +342,7 @@ describe('ReactDOMComponent', function() {
     it('should validate against use of innerHTML', function() {
 
       spyOn(console, 'warn');
-      mountComponent({ innerHTML: '<span>Hi Jim!</span>' });
+      mountComponent({innerHTML: '<span>Hi Jim!</span>'});
       expect(console.warn.argsForCall.length).toBe(1);
       expect(console.warn.argsForCall[0][0]).toContain(
         'Directly setting property `innerHTML` is not permitted. '
@@ -351,7 +351,7 @@ describe('ReactDOMComponent', function() {
 
     it('should validate use of dangerouslySetInnerHTML', function() {
       expect(function() {
-        mountComponent({ dangerouslySetInnerHTML: '<span>Hi Jim!</span>' });
+        mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrow(
         'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
@@ -361,7 +361,7 @@ describe('ReactDOMComponent', function() {
 
     it('should validate use of dangerouslySetInnerHTML', function() {
       expect(function() {
-        mountComponent({ dangerouslySetInnerHTML: {foo: 'bar'} });
+        mountComponent({dangerouslySetInnerHTML: {foo: 'bar'} });
       }).toThrow(
         'Invariant Violation: ' +
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
@@ -371,14 +371,14 @@ describe('ReactDOMComponent', function() {
 
     it("should warn about contentEditable and children", function() {
       spyOn(console, 'warn');
-      mountComponent({ contentEditable: true, children: '' });
+      mountComponent({contentEditable: true, children: ''});
       expect(console.warn.argsForCall.length).toBe(1);
       expect(console.warn.argsForCall[0][0]).toContain('contentEditable');
     });
 
     it("should validate against invalid styles", function() {
       expect(function() {
-        mountComponent({ style: 'display: none' });
+        mountComponent({style: 'display: none'});
       }).toThrow(
         'Invariant Violation: The `style` prop expects a mapping from style ' +
         'properties to values, not a string. For example, ' +

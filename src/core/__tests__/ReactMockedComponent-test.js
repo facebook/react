@@ -30,11 +30,11 @@ describe('ReactMockedComponent', function() {
 
     OriginalComponent = React.createClass({
       getDefaultProps: function() {
-        return { bar: 'baz' };
+        return {bar: 'baz'};
       },
 
       getInitialState: function() {
-        return { foo: 'bar' };
+        return {foo: 'bar'};
       },
 
       hasCustomMethod: function() {
@@ -65,11 +65,11 @@ describe('ReactMockedComponent', function() {
     var Wrapper = React.createClass({
 
       getInitialState: function() {
-        return { foo: 1 };
+        return {foo: 1};
       },
 
       update: function() {
-        this.setState({ foo: 2 });
+        this.setState({foo: 2});
       },
 
       render: function() {
@@ -105,11 +105,11 @@ describe('ReactMockedComponent', function() {
     var Wrapper = React.createClass({
 
       getInitialState: function() {
-        return { foo: 1 };
+        return {foo: 1};
       },
 
       update: function() {
-        this.setState({ foo: 2 });
+        this.setState({foo: 2});
       },
 
       render: function() {

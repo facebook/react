@@ -40,7 +40,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component(), Component() ]);
+    Component(null, [Component(), Component()]);
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -64,7 +64,7 @@ describe('ReactElementValidator', function() {
     var ComponentWrapper = React.createClass({
       displayName: 'ComponentWrapper',
       render: function() {
-        return InnerComponent({ childSet: [ Component(), Component() ] });
+        return InnerComponent({childSet: [Component(), Component()] });
       }
     });
 
@@ -90,7 +90,7 @@ describe('ReactElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : Component(), done: done };
+            return {value: done ? undefined : Component(), done: done};
           }
         };
       }
@@ -108,7 +108,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, [ Component({key: '#1'}), Component({key: '#2'}) ]);
+    Component(null, [Component({key: '#1'}), Component({key: '#2'})]);
 
     expect(console.warn.argsForCall.length).toBe(0);
   });
@@ -141,7 +141,7 @@ describe('ReactElementValidator', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
 
-    Component(null, frag({ 1: Component(), 2: Component() }));
+    Component(null, frag({1: Component(), 2: Component()}));
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -159,7 +159,7 @@ describe('ReactElementValidator', function() {
         return {
           next: function() {
             var done = ++i > 2;
-            return { value: done ? undefined : [i, Component()], done: done };
+            return {value: done ? undefined : [i, Component()], done: done};
           }
         };
       }
@@ -207,7 +207,7 @@ describe('ReactElementValidator', function() {
     });
     var ParentComp = React.createClass({
       render: function() {
-        return React.createElement(MyComp, { color: 123 });
+        return React.createElement(MyComp, {color: 123});
       }
     });
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
@@ -325,7 +325,7 @@ describe('ReactElementValidator', function() {
   it('should warn if a fragment is used without the wrapper', function() {
     spyOn(console, 'warn');
     var child = React.createElement('span');
-    React.createElement('div', null, { a: child, b: child });
+    React.createElement('div', null, {a: child, b: child});
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain('use of a keyed object');
   });

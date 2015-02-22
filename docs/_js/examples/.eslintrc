@@ -1,0 +1,3 @@
+rules:
+  block-scoped-var: false
+  no-undef: false

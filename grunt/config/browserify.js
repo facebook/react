@@ -29,7 +29,7 @@ var LICENSE_TEMPLATE =
  */';
 
 function minify(src) {
-  return UglifyJS.minify(src, { fromString: true }).code;
+  return UglifyJS.minify(src, {fromString: true}).code;
 }
 
 // TODO: move this out to another build step maybe.

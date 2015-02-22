@@ -8,13 +8,13 @@
  */
 /* jshint browser: true */
 /* jslint evil: true */
+/*eslint-disable no-eval */
+/*eslint-disable block-scoped-var */
 
 'use strict';
 
-var buffer = require('buffer');
-var transform = require('jstransform').transform;
-var typesSyntax = require('jstransform/visitors/type-syntax');
-var visitors = require('./fbtransform/visitors');
+var ReactTools = require('../main');
+var inlineSourceMap = require('./inline-source-map');
 
 var headEl;
 var dummyAnchor;
@@ -34,26 +34,18 @@ var supportsAccessors = Object.prototype.hasOwnProperty('__defineGetter__');
  * @return {object} object as returned from jstransform
  */
 function transformReact(source, options) {
-  // TODO: just use react-tools
   options = options || {};
-  var visitorList;
-  if (options.harmony) {
-    visitorList = visitors.getAllVisitors();
-  } else {
-    visitorList = visitors.transformVisitors.react;
+
+  // Force the sourcemaps option manually. We don't want to use it if it will
+  // break (see above note about supportsAccessors). We'll only override the
+  // value here if sourceMap was specified and is truthy. This guarantees that
+  // we won't override any user intent (since this method is exposed publicly).
+  if (options.sourceMap) {
+    options.sourceMap = supportsAccessors;
   }
 
-  if (options.stripTypes) {
-    // Stripping types needs to happen before the other transforms
-    // unfortunately, due to bad interactions. For example,
-    // es6-rest-param-visitors conflict with stripping rest param type
-    // annotation
-    source = transform(typesSyntax.visitorList, source, options).code;
-  }
-
-  return transform(visitorList, source, {
-    sourceMap: supportsAccessors && options.sourceMap
-  });
+  // Otherwise just pass all options straight through to react-tools.
+  return ReactTools.transformWithDetails(source, options);
 }
 
 /**
@@ -149,10 +141,9 @@ function transformCode(code, url, options) {
     return transformed.code;
   }
 
-  var map = transformed.sourceMap.toJSON();
   var source;
   if (url == null) {
-    source = "Inline JSX script";
+    source = 'Inline JSX script';
     inlineScriptCount++;
     if (inlineScriptCount > 1) {
       source += ' (' + inlineScriptCount + ')';
@@ -165,13 +156,11 @@ function transformCode(code, url, options) {
     dummyAnchor.href = url;
     source = dummyAnchor.pathname.substr(1);
   }
-  map.sources = [source];
-  map.sourcesContent = [code];
 
   return (
     transformed.code +
-    '\n//# sourceMappingURL=data:application/json;base64,' +
-    buffer.Buffer(JSON.stringify(map)).toString('base64')
+    '\n' +
+    inlineSourceMap(transformed.sourceMap, code, source)
   );
 }
 
@@ -215,7 +204,7 @@ function load(url, successCallback, errorCallback) {
         successCallback(xhr.responseText);
       } else {
         errorCallback();
-        throw new Error("Could not load " + url);
+        throw new Error('Could not load ' + url);
       }
     }
   };
@@ -329,7 +318,7 @@ function runScripts() {
 
 // Listen for load event if we're in a browser and then kick off finding and
 // running of scripts.
-if (typeof window !== "undefined" && window !== null) {
+if (typeof window !== 'undefined' && window !== null) {
   headEl = document.getElementsByTagName('head')[0];
   dummyAnchor = document.createElement('a');
 

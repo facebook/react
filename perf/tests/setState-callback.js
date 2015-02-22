@@ -15,7 +15,7 @@ exports.setup = function() {
 
   var AwesomeComponent = React.createClass({
     getInitialState: function() {
-      return { random:null };
+      return {random:null};
     },
     render: function() {
       if (!setState) {
