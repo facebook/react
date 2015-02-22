@@ -15,7 +15,8 @@
     "main.js",
     "bin/jsx",
     "src/",
-    "vendor/fbtransform/"
+    "vendor/fbtransform/",
+    "vendor/inline-source-map.js"
   ],
   "main": "main.js",
   "bin": {
