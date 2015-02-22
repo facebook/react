@@ -28,11 +28,11 @@
   },
   "dependencies": {
     "commoner": "^0.10.0",
-    "jstransform": "^9.1.0"
+    "jstransform": "^9.1.1"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
-    "browserify": "^8.1.0",
+    "browserify": "^9.0.3",
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
     "coverify": "~1.0.4",
@@ -48,7 +48,7 @@
     "grunt-contrib-clean": "^0.6.0",
     "grunt-contrib-compress": "^0.13.0",
     "grunt-contrib-connect": "~0.6.0",
-    "grunt-contrib-copy": "^0.7.0",
+    "grunt-contrib-copy": "^0.8.0",
     "grunt-contrib-jshint": "^0.10.0",
     "grunt-jest": "^0.1.2",
     "gzip-js": "~0.3.2",
@@ -63,7 +63,7 @@
     "tmp": "~0.0.18",
     "typescript": "^1.4.0",
     "uglify-js": "~2.4.0",
-    "uglifyify": "^2.4.0",
+    "uglifyify": "^3.0.1",
     "wd": "~0.2.6"
   },
   "engines": {
