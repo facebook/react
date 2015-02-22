@@ -1,14 +1,14 @@
 ---
 id: component-api-ko-KR
 title: 컴포넌트 API
-permalink: component-api.ko-KR.html
-prev: top-level-api.ko-KR.html
-next: component-specs.ko-KR.html
+permalink: component-api-ko-KR.html
+prev: top-level-api-ko-KR.html
+next: component-specs-ko-KR.html
 ---
 
 ## ReactComponent
 
-React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 `this` 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 `React.render`의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 [refs](/react/docs/more-about-refs.ko-KR.html)를 사용해야 합니다.
+React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 `this` 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 `React.render`의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 [refs](/react/docs/more-about-refs-ko-KR.html)를 사용해야 합니다.
 
 
 ### setState

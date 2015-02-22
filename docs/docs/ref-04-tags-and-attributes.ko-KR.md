@@ -1,9 +1,9 @@
 ---
 id: tags-and-attributes-ko-KR
 title: 태그와 어트리뷰트
-permalink: tags-and-attributes.ko-KR.html
-prev: component-specs.ko-KR.html
-next: events.ko-KR.html
+permalink: tags-and-attributes-ko-KR.html
+prev: component-specs-ko-KR.html
+next: events-ko-KR.html
 ---
 
 ## 지원되는 태그
@@ -45,7 +45,7 @@ React는 모든 `data-*`, `aria-*` 어트리뷰트와 밑에 있는 모든 어�
 >
 > 모든 어트리뷰트는 카멜케이스이고, `class` `for` 어트리뷰트는 각각  DOM API의 사양에 맞춰서 `className` `htmlFor` 가 됩니다.
 
-이벤트의 목록을 보시려면 [지원되는 이벤트](/react/docs/events.html)를 확인하세요.
+이벤트의 목록을 보시려면 [지원되는 이벤트](/react/docs/events-ko-KR.html)를 확인하세요.
 
 ### HTML 어트리뷰트
 
@@ -71,7 +71,7 @@ tabIndex target title type useMap value width wmode
 - [오픈 그래프](http://ogp.me/) 메타 태그를 위한 `property`.
 - [HTML5 마이크로데이터](http://schema.org/docs/gs.html)를 위한 `itemProp itemScope itemType itemRef itemId`.
 
-컴포넌트에 직접 HTML 스트링을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes.html))도 있습니다.
+컴포넌트에 직접 HTML 스트링을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes-ko-KR.html))도 있습니다.
 
 ### SVG 어트리뷰트
 

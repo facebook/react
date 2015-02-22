@@ -1,9 +1,9 @@
 ---
 id: events-ko-KR
 title: 이벤트 시스템
-permalink: events.ko-KR.html
-prev: tags-and-attributes.ko-KR.html
-next: dom-differences.ko-KR.html
+permalink: events-ko-KR.html
+prev: tags-and-attributes-ko-KR.html
+next: dom-differences-ko-KR.html
 ---
 
 ## 통합적인(Synthetic) 이벤트
@@ -103,7 +103,7 @@ DOMEventTarget relatedTarget
 onChange onInput onSubmit
 ```
 
-onChange 이벤트에 대한 더 자세한 정보는 [폼](/react/docs/forms.html)에서 확인하세요.
+onChange 이벤트에 대한 더 자세한 정보는 [폼](/react/docs/forms-ko-KR.html)에서 확인하세요.
 
 
 ### 마우스 이벤트

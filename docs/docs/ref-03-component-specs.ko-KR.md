@@ -1,9 +1,9 @@
 ---
 id: component-specs-ko-KR
 title:  컴포넌트 명세와 생명주기
-permalink: component-specs.ko-KR.html
-prev: component-api.ko-KR.html
-next: tags-and-attributes.ko-KR.html
+permalink: component-specs-ko-KR.html
+prev: component-api-ko-KR.html
+next: tags-and-attributes-ko-KR.html
 ---
 
 ## 컴포넌트 명세
@@ -52,7 +52,7 @@ object getDefaultProps()
 object propTypes
 ```
 
-`propTypes` 객체는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있게 해줍니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components.ko-KR.html)를 참고하세요.
+`propTypes` 객체는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있게 해줍니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html)를 참고하세요.
 
 
 ### mixins
@@ -61,7 +61,7 @@ object propTypes
 array mixins
 ```
 
-`mixins` 배열은 여러 컴포넌트 사이에 동작을 공유하는 믹스인을 사용할 수 있게 해줍니다. 믹스인에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components.ko-KR.html)를 참고하세요.
+`mixins` 배열은 여러 컴포넌트 사이에 동작을 공유하는 믹스인을 사용할 수 있게 해줍니다. 믹스인에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html)를 참고하세요.
 
 
 ### statics
@@ -95,7 +95,7 @@ MyComponent.customMethod('bar');  // true
 string displayName
 ```
 
-`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth.html#react-composite-components)를 참고하세요.
+`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth-ko-KR.html#react-composite-components)를 참고하세요.
 
 
 ## 생명주기 메소드

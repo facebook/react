@@ -1,8 +1,9 @@
 ---
 id: tutorial-ko-KR
 title: 튜토리얼
-prev: getting-started.ko-KR.html
-next: thinking-in-react.ko-KR.html
+permalink: tutorial-ko-KR.html
+prev: getting-started-ko-KR.html
+next: thinking-in-react-ko-KR.html
 ---
 
 블로그에 붙일만한 간단하지만 실용적인 댓글상자를 만들어 볼 것입니다. Disqus, LiveFyre, Facebook에서 제공하는 것 같은 실시간 댓글의 간단한 버전이죠.

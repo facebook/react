@@ -1,9 +1,9 @@
 ---
 id: displaying-data-ko-KR
 title: 데이터를 표시하기
-permalink: displaying-data.ko-KR.html
-prev: why-react.ko-KR.html
-next: jsx-in-depth.ko-KR.html
+permalink: displaying-data-ko-KR.html
+prev: why-react-ko-KR.html
+next: jsx-in-depth-ko-KR.html
 ---
 
 UI를 가지고 할 수 있는 가장 기초적인 것은 데이터를 표시하는 것입니다. React는 데이터를 표시하고 데이터가 변할 때마다 인터페이스를 최신의 상태로 자동으로 유지하기 쉽게 해 줍니다.

@@ -1,9 +1,9 @@
 ---
 id: top-level-api-ko-KR
 title: 최상위 API
-permalink: top-level-api.ko-KR.html
-next: component-api.ko-KR.html
-redirect_from: "/docs/reference.ko-KR.html"
+permalink: top-level-api-ko-KR.html
+next: component-api-ko-KR.html
+redirect_from: "/docs/reference-ko-KR.html"
 ---
 
 ## React
@@ -19,7 +19,7 @@ ReactClass createClass(object specification)
 
 주어진 명세에 따라 컴포넌트 클래스를 만듭니다. 컴포넌트는 단 하나의 자식만을 리턴하는 `render` 메소드를 구현합니다. 그 자식은 임의 깊이의 자식 구조를 가질 수 있습니다. 컴포넌트가 일반적인 프로토타입 기반의 클래스와 다른 점은 생성할 때 `new` 연산자를 사용하지 않아도 된다는 것입니다. 컴포넌트는 (`new` 연산자를 통해) 내부 인스턴스를 만들어 주는 편의 래퍼(wrapper)입니다.
 
-명세 객체에 대한 자세한 정보는 [컴포넌트 명세와 생명주기](/react/docs/component-specs.ko-KR.html)를 참고하세요.
+명세 객체에 대한 자세한 정보는 [컴포넌트 명세와 생명주기](/react/docs/component-specs-ko-KR.html)를 참고하세요.
 
 
 ### React.createElement
@@ -113,7 +113,7 @@ boolean isValidElement(* object)
 
 ### React.PropTypes
 
-`React.PropTypes`는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있는 컴포넌트의 `propTypes` 객체에 들어가는 타입을 가집니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components.ko-KR.html)를 참고하세요.
+`React.PropTypes`는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있는 컴포넌트의 `propTypes` 객체에 들어가는 타입을 가집니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html)를 참고하세요.
 
 
 ### React.initializeTouchEvents

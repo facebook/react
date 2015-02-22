@@ -1,6 +1,7 @@
 ---
 id: thinking-in-react-ko-KR
 title: 리액트로 생각해보기
+permalink: thinking-in-react-ko-KR.html
 prev: tutorial-ko-KR.html
 next: videos-ko-KR.html
 ---
@@ -74,7 +75,7 @@ React의 많은 뛰어난 점들 중 하나는 생각을 하면서 애플리케�
 
 ### 잠시만: props vs state
 
-React 에는 두가지 타입의 자료 "모델"이 있습니다: props 와 state. 두가지의 구분점을 이해하는데 매우 중요합니다; 혹시 차이점을 확신하지 못한다면 걷어내세요 [공식 문서](http://facebook.github.io/react/docs/interactivity-and-dynamic-uis.html).
+React 에는 두가지 타입의 자료 "모델"이 있습니다: props 와 state. 두가지의 구분점을 이해하는데 매우 중요합니다; 혹시 차이점을 확신하지 못한다면 걷어내세요 [공식 문서](http://facebook.github.io/react/docs/interactivity-and-dynamic-uis-ko-KR.html).
 
 ## 3단계: UI state 의 표현을 작지만 완전하도록 확인하세요.
 

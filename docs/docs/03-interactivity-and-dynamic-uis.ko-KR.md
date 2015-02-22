@@ -1,12 +1,12 @@
 ---
 id: interactivity-and-dynamic-uis-ko-KR
 title: 상호 작용 및 동적 UI
-permalink: interactivity-and-dynamic-uis.ko-KR.html
-prev: jsx-gotchas.ko-KR.html
-next: multiple-components.ko-KR.html
+permalink: interactivity-and-dynamic-uis-ko-KR.html
+prev: jsx-gotchas-ko-KR.html
+next: multiple-components-ko-KR.html
 ---
 
-이미 React에서 [어떻게 데이터를 표시](/react/docs/displaying-data.ko-KR.html)하는지를 배웠습니다. 이제 UI와의 상호작용을 어떻게 만드는지 살펴보죠.
+이미 React에서 [어떻게 데이터를 표시](/react/docs/displaying-data-ko-KR.html)하는지를 배웠습니다. 이제 UI와의 상호작용을 어떻게 만드는지 살펴보죠.
 
 
 ## 간단한 예제
