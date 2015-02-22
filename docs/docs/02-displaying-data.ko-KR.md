@@ -99,11 +99,12 @@ JSX를 사용하기 시작하기 위한 가장 쉬운 방법은 브라우저에�
 
 ## JSX 없이 React 사용하기
 
-JSX는 완전히 선택적입니다. 당신은 React와 JSX를 함께 사용하지 않아도 상관없습니다. 당신은 이 트리들을 `React.createElement` 를 통해 만들 수 있습니다. 첫번째 인자는 태그 이름이며, 두번째 인자에 속성 오브젝트를 전달하고 세번째 인자로는 자식 엘리먼트를 전달하면 됩니다.
+JSX는 완전히 선택적입니다. 당신은 React와 JSX를 함께 사용하지 않아도 상관없습니다. 그냥 JavaScript에서 React 엘리먼트를 `React.createElement`로 만들 수 있습니다. 여기에 태그 이름이나 컴포넌트, 속성 오브젝트, 자식 엘리먼트들을 전달하면 됩니다.
 
 ```javascript
-var child = React.createElement('li', null, 'Text Content');
-var root = React.createElement('ul', { className: 'my-list' }, child);
+var child1 = React.createElement('li', null, 'First Text Content');
+var child2 = React.createElement('li', null, 'Second Text Content');
+var root = React.createElement('ul', { className: 'my-list' }, child1, child2);
 React.render(root, document.body);
 ```
 
