@@ -120,7 +120,7 @@ componentDidMount()
 
 최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 `this.getDOMNode()`로 접근 가능한 DOM 표현을 가집니다.
 
-다른 자바스크립트 프레임워크를 연동하거나, `setTimeout`/`setInterval`로 타이머를 설정하고 AJAX 요청을 보내는 등의 작업을 이 메소드에서 합니다.
+다른 JavaScript 프레임워크를 연동하거나, `setTimeout`/`setInterval`로 타이머를 설정하고 AJAX 요청을 보내는 등의 작업을 이 메소드에서 합니다.
 
 > 주의:
 >
@@ -212,4 +212,4 @@ componentWillUnmount()
 
 컴포넌트가 DOM에서 마운트 해제 되기 직전에 호출됩니다.
 
-이 메소드에서 타이머를 무효화하거나 `componentDidMount`에서 만들어진 DOM 요소를 정리하는 등 필요한 정리 작업을 수행할 수 있습니다.
+이 메소드에서 타이머를 무효화하거나 `componentDidMount`에서 만들어진 DOM 엘리먼트를 정리하는 등 필요한 정리 작업을 수행할 수 있습니다.

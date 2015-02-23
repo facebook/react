@@ -39,7 +39,7 @@ HTML에서는 `<textarea>` 태그의 값을 설정할 때 `<textarea>` 태그의
   }
 ```
 
-이것은 항상 `Hello!`의 값을 가지는 input을 렌더합니다. 어떤 사용자 입력도 렌더된 엘리멘트에는 영향을 주지 않는데, 왜냐하면 React가 값을 `Hello!`로 설정했기 때문입니다. 사용자 입력에 따라 값을 업데이트하길 원한다면, `onChange` 이벤트를 사용할 수 있습니다.
+이것은 항상 `Hello!`의 값을 가지는 input을 렌더합니다. 어떤 사용자 입력도 렌더된 엘리먼트에는 영향을 주지 않는데, 왜냐하면 React가 값을 `Hello!`로 설정했기 때문입니다. 사용자 입력에 따라 값을 업데이트하길 원한다면, `onChange` 이벤트를 사용할 수 있습니다.
 
 ```javascript
   getInitialState: function() {
@@ -111,7 +111,7 @@ HTML과 다르게, React 컴포넌트는 초기화 시점 뿐만 아니라, 어�
   }
 ```
 
-이 메서드가 어떤 시점에도 뷰를 기술하기 때문에, 텍스트 input의 값은 *언제나* `Untitled`입니다.
+이 메소드가 어떤 시점에도 뷰를 기술하기 때문에, 텍스트 input의 값은 *언제나* `Untitled`입니다.
 
 
 ### 왜 Textarea에 value를 사용하나요?
@@ -123,7 +123,7 @@ HTML에서, `<textarea>`의 값은 보통 그것의 자식들로 설정됩니다
   <textarea name="description">이것은 설명입니다.</textarea>
 ```
 
-HTML에서는 이렇게 하면 여러 줄의 값을 쉽게 개발자가 넣을 수 있게 합니다. 하지만, React는 JavaScript기 때문에, 우리는 스트링 제한이 없고 개행이 필요하면 `\n`을 사용할 수 있습니다. 이 곳에서는 `value`와 `defaultValue`가 있고, 그것이 자식들의 역할을 모호하게 합니다. 이런 이유로, `<textarea>`의 값을 설정할 때에는 자식들을 사용하지 않아야 합니다.
+HTML에서는 이렇게 하면 여러 줄의 값을 쉽게 개발자가 넣을 수 있게 합니다. 하지만, React는 JavaScript기 때문에, 우리는 문자열 제한이 없고 개행이 필요하면 `\n`을 사용할 수 있습니다. 이 곳에서는 `value`와 `defaultValue`가 있고, 그것이 자식들의 역할을 모호하게 합니다. 이런 이유로, `<textarea>`의 값을 설정할 때에는 자식들을 사용하지 않아야 합니다.
 
 ```javascript
   <textarea name="description" value="이것은 설명입니다." />

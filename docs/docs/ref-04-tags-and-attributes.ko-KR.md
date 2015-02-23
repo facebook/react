@@ -8,7 +8,7 @@ next: events-ko-KR.html
 
 ## 지원되는 태그
 
-React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 리스트에 없다면, 이슈로 등록해 주세요.
+React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리먼트가 목록에 없다면, 이슈로 등록해 주세요.
 
 ### HTML 엘리먼트
 
@@ -71,7 +71,7 @@ tabIndex target title type useMap value width wmode
 - [오픈 그래프](http://ogp.me/) 메타 태그를 위한 `property`.
 - [HTML5 마이크로데이터](http://schema.org/docs/gs.html)를 위한 `itemProp itemScope itemType itemRef itemId`.
 
-컴포넌트에 직접 HTML 스트링을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes-ko-KR.html))도 있습니다.
+컴포넌트에 직접 HTML 문자열을 넣을 때 사용하는, React 전용 어트리뷰트 `dangerouslySetInnerHTML`([자세한 정보는 여기](/react/docs/special-non-dom-attributes-ko-KR.html))도 있습니다.
 
 ### SVG 어트리뷰트
 
