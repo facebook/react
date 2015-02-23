@@ -101,10 +101,9 @@ React에서 `<input>`같은 폼 컴포넌트를 사용하면, 전통적인 폼 H
   <input type="text" name="title" value="Untitled" />
 ```
 
-이렇게 하면 input은 `Untitled` 값으로 *초기화* 됩니다. 사용자가 input을 업데이트할 때, 노드의 value *프로퍼티*가 변경될 것입니다. 하지만,  `node.getAttribute('value')`은 여전히 초기화 때 사용했던 값인 `Untitled`를 리턴합니다.
+이렇게 하면 input은 `Untitled` 값으로 *초기화* 됩니다. 사용자가 input을 업데이트할 때, 노드의 value *프로퍼티*가 변경될 것입니다. 하지만, `node.getAttribute('value')`은 여전히 초기화 때 사용했던 값인 `Untitled`를 리턴합니다.
 
-HTML과 다르게, React 컴포넌트는 초기화 시점 뿐만 아니라, 어떤 시점이라도 반드시
-뷰의 state를 나타내야 합니다. 예를 들어 React에서
+HTML과 다르게, React 컴포넌트는 초기화 시점 뿐만 아니라, 어떤 시점이라도 반드시 뷰의 state를 나타내야 합니다. 예를 들어 React에서
 
 ```javascript
   render: function() {

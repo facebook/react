@@ -5,7 +5,7 @@ permalink: glossary-ko-KR.html
 prev: reconciliation-ko-KR.html
 ---
 
-다음은 React에서 사용되는 용어들로, 이 다섯 가지 타입을 구별하는 것은 중요합니다.
+다음은 React에서 사용되는 용어들로, 이 다섯 가지의 타입을 구별하는 것은 중요합니다.
 
 - [ReactElement / ReactElement 팩토리](#react-elements)
 - [ReactNode](#react-nodes)
@@ -62,7 +62,7 @@ var root = div({ className: 'my-div' });
 React.render(root, document.body);
 ```
 
-React에는 이미 보통 HTML 태그를 위한 팩토리가 내장되어 있습니다:
+React에는 이미 보통의 HTML 태그를 위한 팩토리가 내장되어 있습니다:
 
 ```javascript
 var root = React.DOM.ul({ className: 'my-list' },

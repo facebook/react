@@ -14,7 +14,7 @@ next: complementary-tools-ko-KR.html
 
 ### Thinking in react - tagtree.tv
 
-[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react.html) 의 원리들을 전달합니다.
+[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
 <figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
 
 
@@ -27,12 +27,12 @@ next: complementary-tools-ko-KR.html
 
 ### Going big with React
 
-"이 발표에서, 이 모든 JS 프레임워크가 다음을 약속하는것처럼 보입니다: 꺠끗한 구현들, 빠른 코드 디자인, 완전한 수행. 그런데 당신이 Javascript 스트레스 테스트를 할때, 어떤 일이 발생합니까? 혹은 6MB의 코드를 던지면 무슨일이 발생합니까? 이번에는 높은 스트레스 환경에서 React가 어떻게 작동하는지, 그리고 이것이 우리 팀이 방대한 크기의 코드를 안전하게 구성하는데 어떻게 도움이 되어줄지를 조사해 볼겁니다."  
+"이 발표에서, 이 모든 JS 프레임워크가 다음을 약속하는것처럼 보입니다: 꺠끗한 구현들, 빠른 코드 디자인, 완전한 수행. 그런데 당신이 Javascript 스트레스 테스트를 할때, 어떤 일이 발생합니까? 혹은 6MB의 코드를 던지면 무슨일이 발생합니까? 이번에는 높은 스트레스 환경에서 React가 어떻게 작동하는지, 그리고 이것이 우리 팀이 방대한 크기의 코드를 안전하게 구성하는데 어떻게 도움이 되어줄지를 조사해 볼겁니다."
 [![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)
 
 ### CodeWinds
 
-CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barczewski](http://jeff.barczewski.com/)가 React에 대해서 이야기 합니다. 
+CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barczewski](http://jeff.barczewski.com/)가 React에 대해서 이야기 합니다.
 
 <figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
 
@@ -65,7 +65,7 @@ CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barcze
 
 ### JavaScript Jabber
 
-Javascript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다. 
+Javascript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
 
 <figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
 

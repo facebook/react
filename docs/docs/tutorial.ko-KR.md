@@ -17,7 +17,7 @@ next: thinking-in-react-ko-KR.html
 멋진 기능도 조금 넣어보겠습니다:
 
 * **낙관적 댓글 달기:** 댓글은 서버에 저장되기도 전에 목록에 나타납니다. 그래서 빠르게 느껴집니다.
-* **실시간 업데이트:** 다른 사용자가 남기는 댓글이 실시간으로 나타납니다. 
+* **실시간 업데이트:** 다른 사용자가 남기는 댓글이 실시간으로 나타납니다.
 * **Markdown 지원:** 사용자는 글을 꾸미기 위해 Markdown 형식을 사용할 수 있습니다.
 
 ### 그냥 다 생략하고 소스만 보고 싶나요?
@@ -26,13 +26,13 @@ next: thinking-in-react-ko-KR.html
 
 ### 서버 구동하기
 
-이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby 버전이 있고, GitHub에서 찾아보실 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
+이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby 버전이 있고, GitHub에서 찾아보실 수 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
 
 튜토리얼을 다운로드 받아 시작한다면, `public/index.html`을 열고 바로 시작하세요.
 
-### 시작하기 
+### 시작하기
 
-이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 좋아하는 에디터를 열고, 새로운 HTML 문서를 만드세요:
+이 튜토리얼에서는 CDN에 있는 미리 빌드된 JavaScript 파일들을 사용합니다. 선호하는 에디터를 열어, 새로운 HTML 문서를 만드세요:
 
 ```html
 <!-- index.html -->
@@ -90,7 +90,7 @@ React.render(
 
 #### JSX 문법
 
-JavsScript 안의 유사 XML 구문이 먼저 눈에 띌 것입니다. 우리에겐 이를 일반 JavaScript로 변환해주는 간단한 프리컴파일러(precompiler)가 있습니다.
+JavsScript 안의 유사 XML 구문이 먼저 눈에 띌 것입니다. 우리에겐 이를 JavaScript로 변환해주는 간단한 프리컴파일러(precompiler)가 있습니다.
 
 ```javascript
 // tutorial1-raw.js
@@ -115,9 +115,9 @@ JSX의 사용은 선택적이지만 JSX 문법이 일반 JavsScript보다 사용
 
 우리는 새로운 React 컴포넌트를 만들기 위해 `React.createClass()`로 JavaScript 객체에 몇 개의 메소드를 담아 넘겼습니다. 이 중 가장 중요한것은 `render` 메소드인데, 이는 React 컴포넌트 트리를 반환해서 최종적으로 실제 HTML을 그려주게 됩니다.
 
-`<div>` 태그들은 실제 DOM 노드가 아니라 React `div` 컴포넌트의 인스턴스입니다. 이것은 React가 다룰 수 있는 데이터의 표지자(markers)나 조각이라 생각하셔도 됩니다. React는 **안전합니다**. 생(raw) HTML 문자열을 생성하는것이 아니기 때문에 XSS을 기본적으로 방지합니다.
+`<div>` 태그들은 실제 DOM 노드가 아니라 React `div` 컴포넌트의 인스턴스입니다. 이것은 React가 다룰 수 있는 데이터의 표시자(markers)나 조각이라 생각하셔도 됩니다. React는 **안전합니다**. 생(raw) HTML 문자열을 생성하는 것이 아니기 때문에 XSS을 기본적으로 방지합니다.
 
-일반적인 HTML만 리턴할 수 있는 것은 아닙니다. 여러분이 직접 만든 (또는 다른 사람들이 만들어 놓은) 컴포넌트의 트리를 리턴할 수도 있습니다. 이것이 React를 **조합가능(composable)하게 만듭니다**: 유지보수 가능한 프론트엔드를 위한 핵심교리(key tenet)지요.
+일반적인 HTML만 리턴할 수 있는 것은 아닙니다. 여러분이 직접 만든 (또는 다른 사람들이 만들어 놓은) 컴포넌트의 트리를 리턴할 수도 있습니다. 이것이 React를 **조합가능(composable)하게 만듭니다**: 유지보수 가능한 프론트엔드를 위한 핵심 교리(key tenet)지요.
 
 `React.render()`는 최상위 컴포넌트의 인스턴스를 만들고, 두 번째 인수로 전달받은 DOM 엘리먼트에 마크업을 삽입해 프레임워크를 시작합니다.
 
@@ -141,7 +141,7 @@ var CommentForm = React.createClass({
   render: function() {
     return (
       <div className="commentForm">
-        안녕! 난 댓글폼이야.
+        안녕! 난 댓글 폼이야.
       </div>
     );
   }
@@ -165,7 +165,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-방금 만든 컴포넌트들을 어떤방식으로 HTML 태그들과 섞어 사용하는지 살펴보세요. HTML 컴포넌트들도 한가지 차이만 제외한다면 우리가 정의한 것과 같은 표준적인 React 컴포넌트입니다. JSX 컴파일러가 자동으로 HTML 태그들을 `React.createElement(tagName)` 표현식으로 재작성하고 나머지는 그대로 둘 것입니다. 이는 전역 네임스페이스가 오염되는 것을 막아줍니다.
+방금 만든 컴포넌트들을 어떻게 HTML 태그들과 섞어 사용하는지 살펴보세요. HTML 컴포넌트들도 한가지 차이만 제외한다면 우리가 정의한 것과 같은 표준적인 React 컴포넌트입니다. JSX 컴파일러가 자동으로 HTML 태그들을 `React.createElement(tagName)` 표현식으로 재작성하고 나머지는 그대로 둘 것입니다. 이는 전역 네임스페이스가 오염되는 것을 막아줍니다.
 
 ### props 사용하기
 
@@ -286,7 +286,7 @@ var data = [
 ];
 ```
 
-이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `React.render()` 호출을 수정합시다. 
+이 데이터를 모듈화된 방식으로 `CommentList`에 넣어야 합니다. props을 이용해 데이터를 넘기도록 `CommentBox`와 `React.render()` 호출 코드를 수정합시다.
 
 ```javascript{7,15}
 // tutorial9.js
@@ -330,7 +330,7 @@ var CommentList = React.createClass({
 });
 ```
 
-이게 답니다!
+이게 전부입니다!
 
 ### 서버에서 가져오기(Fetching)
 
@@ -348,7 +348,7 @@ React.render(
 
 ### 반응적 state
 
-지금까지, 각각의 구성요소는 props를 기반으로 한번 렌더되었습니다. `props`는 불변성을 갖습니다: 그것들은 부모에서 전달되어 부모에게 "소유" 되어 있습니다. 컴포넌트에 상호작용을 구현하기 위해서, 가변성을 갖는 **state**를 소개합니다. `this.state`는 컴포넌트에 한정(private)되며 `this.setState()`를 통해 변경할 수 있습니다. state가 업데이트 되면, 컴포넌트는 자신을 스스로 다시 렌더링합니다. 
+지금까지, 각각의 구성요소는 props를 기반으로 한번 렌더되었습니다. `props`는 불변성을 갖습니다: 그것들은 부모에서 전달되어 부모에게 "소유" 되어 있습니다. 컴포넌트에 상호작용을 구현하기 위해서, 가변성을 갖는 **state**를 소개합니다. `this.state`는 컴포넌트에 한정(private)되며 `this.setState()`를 통해 변경할 수 있습니다. state가 업데이트 되면, 컴포넌트는 자신을 스스로 다시 렌더링합니다.
 
 `render()` 메소드는 `this.props`와 `this.state`를 위한 함수로 선언적으로 작성됩니다. 프레임워크에서 입력값에 따른 UI가 항상 일관성 있음을 보장해줍니다.
 
@@ -386,9 +386,9 @@ var CommentBox = React.createClass({
 ]
 ```
 
-서버에 비동기 요청을 위해 jQuery를 사용합니다. 
+서버에 비동기 요청을 위해 jQuery를 사용합니다.
 
-주의: 우리의 앱이 AJAX 애플리케이션으로 변화하고 있기 때문에, 이제 파일 시스템의 파일을 참조하는 대신 웹서버를 사용하도록 앱을 개발해야 합니다. [위에서 언급한 바와 같이](#running-a-server), 우리는 튜토리얼의 나머지 부분에 필요한 기능을 제공하는 서버를 몇 가지 준비해 놓았습니다. [GitHub에 올려놓았으니](https://github.com/reactjs/react-tutorial) 확인해 보세요. 
+주의: 우리의 앱이 AJAX 애플리케이션으로 변화하고 있기 때문에, 이제 파일 시스템의 파일을 참조하는 대신 웹서버를 사용하도록 앱을 개발해야 합니다. [위에서 언급한 바와 같이](#running-a-server), 우리는 튜토리얼의 나머지 부분에 필요한 기능을 제공하는 서버를 몇 가지 준비해 놓았습니다. [GitHub에 올려놓았으니](https://github.com/reactjs/react-tutorial) 확인해 보세요.
 
 ```javascript{6-17}
 // tutorial13.js
@@ -483,7 +483,7 @@ var CommentForm = React.createClass({
 });
 ```
 
-이제 폼의 상호작용을 만들어 보겠습니다. 사용자가 폼을 섭밋하는 시점에 우리는 폼을 초기화하고 서버에 요청을 전송하고 댓글목록을 갱신해야 합니다. 폼의 섭밋 이벤트를 감시하고 초기화 해주는 부분부터 시작해 보죠.
+이제 폼의 상호작용을 만들어 보겠습니다. 사용자가 폼을 전송하는 시점에 우리는 폼을 초기화하고 서버에 요청을 전송하고 댓글목록을 갱신해야 합니다. 폼의 submit 이벤트를 감시하고 초기화 해주는 부분부터 시작해 보죠.
 
 ```javascript{3-13,16-19}
 // tutorial16.js
@@ -513,9 +513,9 @@ var CommentForm = React.createClass({
 
 ##### 이벤트
 
-React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸들러를 등록합니다. 폼이 유효한 값으로 섭밋되었을 때 폼필드들을 초기화하도록 `onSubmit` 핸들러를 등록합니다.
+React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸들러를 등록합니다. 폼이 유효한 값으로 submit되었을 때 폼필드들을 초기화하도록 `onSubmit` 핸들러를 등록합니다.
 
-폼 섭밋에 대한 브라우저의 기본동작을 막기 위해 이벤트시점에 `preventDefault()`를 호출합니다.
+폼 submit에 대한 브라우저의 기본동작을 막기 위해 이벤트시점에 `preventDefault()`를 호출합니다.
 
 ##### Refs
 
@@ -525,7 +525,7 @@ React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸
 
 사용자가 댓글을 등록할 때, 새로운 댓글을 추가하기 위해 댓글목록을 갱신해주어야 합니다. `CommentBox`가 댓글목록의 state를 소유하고 있기 때문에 이 로직 또한 `CommentBox`에 있는것이 타당합니다.
 
-자식 컴포넌트가 그의 부모에게 데이터를 넘겨줄 필요가 있습니다. 부모의 `render` 메소드에서 새로운 콜백(`handleCommentSubmit`)을 자식에게 넘겨주고, 자식의 `onCommentSubmit` 이벤트에 그것을 바인딩해주는 식으로 구현합니다. 이벤트가 작동될때(triggerd)마다, 콜백이 호출됩니다:
+자식 컴포넌트가 그의 부모에게 데이터를 넘겨줄 필요가 있습니다. 부모의 `render` 메소드에서 새로운 콜백(`handleCommentSubmit`)을 자식에게 넘겨주고, 자식의 `onCommentSubmit` 이벤트에 그것을 바인딩해주는 식으로 구현합니다. 이벤트가 작동될때(triggered)마다, 콜백이 호출됩니다:
 
 ```javascript{15-17,30}
 // tutorial17.js
@@ -564,7 +564,7 @@ var CommentBox = React.createClass({
 });
 ```
 
-사용자가 폼을 섭밋할 때, `CommentForm`에서 콜백을 호출해 봅시다:
+사용자가 폼을 전송할 때, `CommentForm`에서 콜백을 호출해 봅시다:
 
 ```javascript{10}
 // tutorial18.js
@@ -592,7 +592,7 @@ var CommentForm = React.createClass({
 });
 ```
 
-이제 콜백이 제자리를 찾았습니다. 우리가 할일은 서버에 요청을 날리고 목록을 갱신하는 것 뿐입니다:
+이제 콜백이 제자리를 찾았습니다. 우리가 할 일은 서버에 요청을 날리고 목록을 갱신하는 것 뿐입니다:
 
 ```javascript{16-27}
 // tutorial19.js
@@ -699,4 +699,4 @@ var CommentBox = React.createClass({
 
 ### 축하합니다!
 
-몇 단계를 거쳐 간단하게 댓글상자를 만들어 보았습니다. [왜 React인가](/react/docs/why-react.html)에서 더 알아보거나, 혹은 [API 레퍼런스](/react/docs/top-level-api.html)에 뛰어들어 해킹을 시작하세요! 행운을 빕니다!
+몇 단계를 거쳐 간단하게 댓글창을 만들어 보았습니다. [왜 React인가](/react/docs/why-react-ko-KR.html)에서 더 알아보거나, 혹은 [API 레퍼런스](/react/docs/top-level-api-ko-KR.html)에 뛰어들어 해킹을 시작하세요! 행운을 빕니다!

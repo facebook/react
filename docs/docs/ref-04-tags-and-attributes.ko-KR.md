@@ -12,7 +12,7 @@ React는 모든 공통 엘리먼트를 지원하려 합니다. 필요한 엘리�
 
 ### HTML 엘리먼트
 
-이런 HTML 엘리먼트가 지원됩니다.
+다음의 HTML 엘리먼트가 지원됩니다.
 
 ```
 a abbr address area article aside audio b base bdi bdo big blockquote body br
@@ -27,7 +27,7 @@ thead time title tr track u ul var video wbr
 
 ### SVG 엘리먼트
 
-이런 SVG 엘리먼트가 지원됩니다.
+다음의 SVG 엘리먼트가 지원됩니다.
 
 ```
 circle defs ellipse g line linearGradient mask path pattern polygon polyline

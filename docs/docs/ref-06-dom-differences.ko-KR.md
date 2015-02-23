@@ -1,12 +1,12 @@
 ---
 id: dom-differences-ko-KR
-title: DOM 차이점
+title: DOM과의 차이점
 permalink: dom-differences-ko-KR.html
 prev: events-ko-KR.html
 next: special-non-dom-attributes-ko-KR.html
 ---
 
-React는 성능과 크로스 브라우저 호환성을 이유로 브라우저에 독립적인 이벤트와 DOM 시스템으로 구현되었습니다. 브라우저 DOM 구현의 거친 부분을 정리할 기회를 가졌습니다.
+React는 성능과 크로스 브라우저 호환성을 이유로 브라우저에 독립적인 이벤트와 DOM 시스템으로 구현되었습니다. 브라우저 DOM 구현의 일관성없는 부분들을 정리할 기회를 가졌습니다.
 
 * 모든 DOM 프로퍼티와 어트리뷰트는 (이벤트 핸들러를 포함해) 표준 JavaScript 스타일과 일치하도록 카멜케이스를 사용해야 합니다. **하지만**, `data-*` 와 `aria-*` 어트리뷰트는 [사양을 준수해](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes#data-*) 소문자만 사용해야 합니다.
 * `style` 어트리뷰트는 CSS 문자열 대신에 카멜케이스로 된 프로퍼티를 가지는 JavaScript 객체를 받습니다. 이는 DOM `style` JavaScript 프로퍼티와 일치하면서도 좀 더 효율적이며, XSS 보안 취약점을 예방할 수 있습니다.

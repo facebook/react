@@ -8,9 +8,9 @@ next: dom-differences-ko-KR.html
 
 ## 통합적인(Synthetic) 이벤트
 
-이벤트 핸들러는 브라우저의 네이티브 이벤트의 크로스 브라우저 래퍼인`SyntheticEvent`의 인스턴스에 전달됩니다.  모든 브라우저에서 동작한다는 점을 제외하면, `SyntheticEvent`는 `stopPropagation()`나 `preventDefault()`를 포함해, 브라우저의 네이티브 이벤트와 같은 인터페이스를 가지고 있습니다.
+이벤트 핸들러는 브라우저의 네이티브 이벤트의 크로스 브라우저 래퍼(wrapper)인`SyntheticEvent`의 인스턴스에 전달됩니다. 모든 브라우저에서 동작한다는 점을 제외하면, `SyntheticEvent`는 `stopPropagation()`나 `preventDefault()`를 포함해, 브라우저의 네이티브 이벤트와 같은 인터페이스를 가지고 있습니다.
 
-어떤 이유로 기본 브라우저 이벤트가 필요하다면, 그냥  `nativeEvent`를 사용해 할 수 있습니다. 모든 `SyntheticEvent` 객체는 이런 어트리뷰트를 가집니다.
+어떤 이유로 기본 브라우저 이벤트가 필요하다면, 그냥 `nativeEvent`를 사용해 할 수 있습니다. 모든 `SyntheticEvent` 객체는 이런 어트리뷰트를 가집니다.
 
 ```javascript
 boolean bubbles
@@ -36,7 +36,7 @@ string type
 
 React는 다른 브라우저에서 일관된 특성을 가지도록 이벤트를 일반화합니다.
 
-밑에 있는 이벤트 핸들러들은 일으키는(bubbling) 단계에서 이벤트를 트리거합니다.  이벤트 핸들러를 캡처 단계로 등록하려면, 이벤트 이름에 `Capture`를 붙이면 됩니다.  예를 들어, 캡처 단계의 클릭 이벤트를 다루려면 `onClick`를 사용하는 대신에 `onClickCapture`를 사용해야 합니다.
+밑에 있는 이벤트 핸들러들은 일으키는(bubbling) 단계에서 이벤트를 트리거합니다. 이벤트 핸들러를 캡처 단계로 등록하려면, 이벤트 이름에 `Capture`를 붙이면 됩니다.  예를 들어, 캡처 단계의 클릭 이벤트를 다루려면 `onClick`를 사용하는 대신에 `onClickCapture`를 사용해야 합니다.
 
 
 ### 클립보드 이벤트
