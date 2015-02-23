@@ -126,6 +126,10 @@ If you want to integrate with other JavaScript frameworks, set timers using `set
 >
 > Prior to v0.9, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
+> Important:
+>
+> `componentDidMount()` will only fire on an element rendered with `React.render`, any children component will not trigger either mount lifecycles, `componentWillMount()`.
+
 
 ### Updating: componentWillReceiveProps
 
