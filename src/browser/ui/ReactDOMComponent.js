@@ -351,7 +351,12 @@ ReactDOMComponent.Mixin = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        deleteListener(this._rootNodeID, propKey);
+        if (lastProps[propKey]) {
+          // Only call deleteListener if there was a listener previously or
+          // else willDeleteListener gets called when there wasn't actually a
+          // listener (e.g., onClick={null})
+          deleteListener(this._rootNodeID, propKey);
+        }
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {
@@ -395,7 +400,11 @@ ReactDOMComponent.Mixin = {
           styleUpdates = nextProp;
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        putListener(this._rootNodeID, propKey, nextProp, transaction);
+        if (nextProp) {
+          putListener(this._rootNodeID, propKey, nextProp, transaction);
+        } else if (lastProp) {
+          deleteListener(this._rootNodeID, propKey);
+        }
       } else if (
           DOMProperty.isStandardName[propKey] ||
           DOMProperty.isCustomAttribute(propKey)) {

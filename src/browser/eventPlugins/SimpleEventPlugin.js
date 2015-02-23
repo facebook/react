@@ -431,13 +431,20 @@ var SimpleEventPlugin = {
     // listener on the target node.
     if (registrationName === ON_CLICK_KEY) {
       var node = ReactMount.getNode(id);
-      onClickListeners[id] = EventListener.listen(node, 'click', emptyFunction);
+      if (!onClickListeners[id]) {
+        onClickListeners[id] = EventListener.listen(
+          node,
+          'click',
+          emptyFunction
+        );
+      }
     }
   },
 
   willDeleteListener: function(id, registrationName) {
     if (registrationName === ON_CLICK_KEY) {
       onClickListeners[id].remove();
+      delete onClickListeners[id];
     }
   }
 
