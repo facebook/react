@@ -385,6 +385,26 @@ describe('ReactDOMComponent', function() {
         'style={{marginRight: spacing + \'em\'}} when using JSX.'
       );
     });
+
+    it("should execute custom event plugin listening behavior", function() {
+      var React = require('React');
+      var SimpleEventPlugin = require('SimpleEventPlugin');
+
+      SimpleEventPlugin.didPutListener = mocks.getMockFunction();
+      SimpleEventPlugin.willDeleteListener = mocks.getMockFunction();
+
+      var container = document.createElement('div');
+      React.render(
+        <div onClick={() => true} />,
+        container
+      );
+
+      expect(SimpleEventPlugin.didPutListener.mock.calls.length).toBe(1);
+
+      React.unmountComponentAtNode(container);
+
+      expect(SimpleEventPlugin.willDeleteListener.mock.calls.length).toBe(1);
+    });
   });
 
   describe('updateComponent', function() {
