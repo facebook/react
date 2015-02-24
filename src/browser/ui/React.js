@@ -57,6 +57,7 @@ var React = {
   Component: ReactComponent,
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
+  React: null,
   initializeTouchEvents: function(shouldUseTouch) {
     EventPluginUtils.useTouchEvents = shouldUseTouch;
   },
@@ -80,6 +81,9 @@ var React = {
   // Hook for JSX spread, don't use this for anything else.
   __spread: assign
 };
+
+// Allows for destructuring "React" and friends off this module's exports.
+React.React = React;
 
 // Inject the runtime into a devtools global hook regardless of browser.
 // Allows for debugging when the hook is injected on the page.
