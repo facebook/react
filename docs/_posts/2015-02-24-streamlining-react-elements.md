@@ -162,7 +162,7 @@ In 0.13 we introduced a new callback-refs API that doesn’t suffer from these p
 In React 0.12, and earlier, you could use keyed objects to provide an external key to an element or a set. This pattern isn’t actually widely used. It shouldn’t be an issue for most of you.
 
 ```js
-<div>{{ a: <span />, b: <span /> }}</div>
+<div>{ {a: <span />, b: <span />} }</div>
 ```
 
 ### Problem: Relies on Enumeration Order
