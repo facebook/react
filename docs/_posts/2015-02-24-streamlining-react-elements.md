@@ -1,6 +1,7 @@
 ---
 title: "Streamlining React Elements"
 author: Sebastian Markbåge
+date: 2015-02-24 11:00
 ---
 
 React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we're adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.
