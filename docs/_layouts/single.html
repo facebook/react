@@ -8,13 +8,15 @@ layout: default
     <div class="subHeader">{{ page.description }}</div>
     {{ content }}
 
-    <div class="docs-prevnext">
-      {% if page.prev %}
-        <a class="docs-prev" href="/react/docs/{{ page.prev }}">&larr; Prev</a>
-      {% endif %}
-      {% if page.next %}
-        <a class="docs-next" href="/react/docs/{{ page.next }}">Next &rarr;</a>
-      {% endif %}
-    </div>
+    {% if page.prev or page.next %}
+      <div class="docs-prevnext">
+        {% if page.prev %}
+          <a class="docs-prev" href="/react/docs/{{ page.prev }}">&larr; Prev</a>
+        {% endif %}
+        {% if page.next %}
+          <a class="docs-next" href="/react/docs/{{ page.next }}">Next &rarr;</a>
+        {% endif %}
+      </div>      
+    {% endif %}
   </div>
 </section>
