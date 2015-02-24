@@ -23,7 +23,7 @@ The problem is that we don’t have a convenient way to tell when you’re done 
 
 ### Problem: Mutating Props You Don’t Own
 
-If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imaging something like this:
+If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imagine something like this:
 
 ```js
 var element = this.props.child;
