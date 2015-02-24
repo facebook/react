@@ -7,6 +7,78 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.13 RC</title>
+				<description>&lt;p&gt;Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;ve talked a little bit about the changes that are coming. The splashiest of these changes is support for ES6 Classes. You can read more about this in &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;our beta announcement&lt;/a&gt;. We&amp;#39;re really excited about this! Sebastian also posted earlier this morning about &lt;a href=&quot;/react/blog/2015/02/24/streamlining-react-elements.html&quot;&gt;some of the other changes coming focused around ReactElement&lt;/a&gt;. The changes we&amp;#39;ve been working on there will hopefully enable lots of improvements to performance and developer experience.&lt;/p&gt;
+
+&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0-rc1.js&quot;&gt;http://fb.me/react-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0-rc1.min.js&quot;&gt;http://fb.me/react-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc1.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc1.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0-rc1.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0-rc1.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Mutating &lt;code&gt;props&lt;/code&gt; after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&amp;#39;t mutated&lt;/li&gt;
+&lt;li&gt;Static methods (defined in &lt;code&gt;statics&lt;/code&gt;) are no longer autobound to the component class&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ref&lt;/code&gt; resolution order has changed slightly such that a ref to a component is available immediately after its &lt;code&gt;componentDidMount&lt;/code&gt; method is called; this change should be observable only if your component calls a parent component&amp;#39;s callback within your &lt;code&gt;componentDidMount&lt;/code&gt;, which is an anti-pattern and should be avoided regardless&lt;/li&gt;
+&lt;li&gt;Calls to &lt;code&gt;setState&lt;/code&gt; in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; and &lt;code&gt;forceUpdate&lt;/code&gt; on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.&lt;/li&gt;
+&lt;li&gt;Access to most internal properties has been completely removed, including &lt;code&gt;this._pendingState&lt;/code&gt; and &lt;code&gt;this._rootNodeID&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details&lt;/li&gt;
+&lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
+&lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; -- this means that you no longer need to use this._pendingState, which is now gone.&lt;/li&gt;
+&lt;li&gt;Support for iterators and immutable-js sequences as children&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ComponentClass.type&lt;/code&gt; is deprecated. Just use &lt;code&gt;ComponentClass&lt;/code&gt; (usually as &lt;code&gt;element.type === ComponentClass&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;Some methods that are available on &lt;code&gt;createClass&lt;/code&gt;-based components are removed or deprecated from ES6 classes (for example, &lt;code&gt;getDOMNode&lt;/code&gt;, &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceState&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-Ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.addons.classSet&lt;/code&gt; is now deprecated. This functionality can be replaced with several freely available modules. &lt;a href=&quot;https://www.npmjs.com/package/classnames&quot;&gt;classnames&lt;/a&gt; is one such module.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;When transforming ES6 syntax, &lt;code&gt;class&lt;/code&gt; methods are no longer enumerable by default, which requires &lt;code&gt;Object.defineProperty&lt;/code&gt;; if you support browsers such as IE8, you can pass &lt;code&gt;--target es3&lt;/code&gt; to mirror the old behavior&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;--target&lt;/code&gt; option is available on the jsx command, allowing users to specify and ECMAScript version to target.
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;es5&lt;/code&gt; is the default.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;es3&lt;/code&gt; restored the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg &lt;code&gt;this.static&lt;/code&gt; will become &lt;code&gt;this[&amp;#39;static&amp;#39;]&lt;/code&gt; for IE8 compatibility).&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;The transform for the call spread operator has also been enabled.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;A change was made to how some JSX was parsed, specifically around the use of &lt;code&gt;&amp;gt;&lt;/code&gt; or &lt;code&gt;}&lt;/code&gt; when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. We will be releasing a standalone executable to find and fix potential issues in your JSX code.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-02-24T14:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/24/react-v0.13-rc1.html</guid>
+			</item>
+		
+			<item>
 				<title>Streamlining React Elements</title>
 				<description>&lt;p&gt;React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we&amp;#39;re adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.&lt;/p&gt;
 
@@ -156,7 +228,7 @@
 
 &lt;p&gt;As always, we’d love to hear your feedback and if you have any trouble upgrading, please let us know.&lt;/p&gt;
 </description>
-				<pubDate>2015-02-24T00:00:00-08:00</pubDate>
+				<pubDate>2015-02-24T11:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</guid>
 			</item>
@@ -938,23 +1010,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-10-28T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</guid>
-			</item>
-		
-			<item>
-				<title>React.js Conf</title>
-				<description>&lt;p&gt;Every few weeks someone asks us when we are going to organize a conference for React. Our answer has always been &amp;quot;some day&amp;quot;. In the mean time, people have been talking about React at other JavaScript conferences around the world. But now the time has finally come for us to have a conference of our own.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;We&amp;#39;re happy to announce &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;React.js Conf&lt;/a&gt;! It will take place January 28-29, 2015 on Facebook&amp;#39;s campus in Menlo Park, California.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Before we open registration, &lt;a href=&quot;http://conf.reactjs.com/call-for-presenters.html&quot;&gt;we&amp;#39;re looking for great talks&lt;/a&gt;. We want to see how you pushed application development forward! If you ever talked to a meet-up, pitched React to your co-workers, or done something awesome and want to talk about it, let us know!&lt;/p&gt;
-
-&lt;p&gt;Here are some areas of research we want to explore during the conference if you need some inspiration: server-side rendering, data fetching, language features (eg es6, clojure), immutability, rendering targets (eg svg, canvas), real-time updates...&lt;/p&gt;
-
-&lt;p&gt;We look forward to seeing many of you in person in just a few short months!&lt;/p&gt;
-</description>
-				<pubDate>2014-10-27T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html</guid>
 			</item>
 		
 	</channel>
