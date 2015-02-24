@@ -108,7 +108,7 @@
 </code></pre></div>
 <p>The problem is that we don’t have a convenient way to tell when you’re done mutating.</p>
 <h3><a class="anchor" name="problem-mutating-props-you-dont-own"></a>Problem: Mutating Props You Don’t Own <a class="hash-link" href="#problem-mutating-props-you-dont-own">#</a></h3>
-<p>If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imaging something like this:</p>
+<p>If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imagine something like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">child</span><span class="p">;</span>
 <span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
 <span class="k">return</span> <span class="nx">element</span><span class="p">;</span>
@@ -199,7 +199,7 @@
 <p>In 0.13 we introduced a new callback-refs API that doesn’t suffer from these problems but we’ll keep on a nice declarative alternative to the current semantics for refs. As always, we won’t deprecate something until we’re sure that you’ll have a nice upgrade path.</p>
 <h2><a class="anchor" name="keyed-objects-as-maps"></a>Keyed Objects as Maps <a class="hash-link" href="#keyed-objects-as-maps">#</a></h2>
 <p>In React 0.12, and earlier, you could use keyed objects to provide an external key to an element or a set. This pattern isn’t actually widely used. It shouldn’t be an issue for most of you.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="err">/div&gt;</span>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="o">/&gt;</span><span class="p">}</span> <span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
 </code></pre></div><h3><a class="anchor" name="problem-relies-on-enumeration-order"></a>Problem: Relies on Enumeration Order <a class="hash-link" href="#problem-relies-on-enumeration-order">#</a></h3>
 <p>The problem with this pattern is that it relies on enumeration order of objects. This is technically unspecified, even though implementations now agree to use insertion order. Except for the special case when numeric keys are used.</p>
 <h3><a class="anchor" name="problem-using-objects-as-maps-is-bad"></a>Problem: Using Objects as Maps is Bad <a class="hash-link" href="#problem-using-objects-as-maps-is-bad">#</a></h3>
