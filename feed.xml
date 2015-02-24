@@ -7,6 +7,161 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Streamlining React Elements</title>
+				<description>&lt;p&gt;React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we&amp;#39;re adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.&lt;/p&gt;
+
+&lt;p&gt;If you use React in an idiomatic way, chances are, you’ll never see any of these warnings. In that case, you can skip this blog post. You can just enjoy the benefits! These changes will unlock simplified semantics, better error messages, stack traces and compiler optimizations!&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;immutable-props&quot;&gt;&lt;/a&gt;Immutable Props &lt;a class=&quot;hash-link&quot; href=&quot;#immutable-props&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In React 0.12, the props object was mutable. It allows you to do patterns like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;shouldUseFoo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The problem is that we don’t have a convenient way to tell when you’re done mutating.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-mutating-props-you-dont-own&quot;&gt;&lt;/a&gt;Problem: Mutating Props You Don’t Own &lt;a class=&quot;hash-link&quot; href=&quot;#problem-mutating-props-you-dont-own&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imaging something like this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;You take a ReactElement through &lt;code&gt;props.child&lt;/code&gt; and mutate its property before rendering it. If this component&amp;#39;s state updates, this render function won&amp;#39;t actually get a new ReactElement in &lt;code&gt;props.child&lt;/code&gt;. It will be the same one. You&amp;#39;re mutating the same props.&lt;/p&gt;
+
+&lt;p&gt;You could imagine that this would work. However, this disables the ability for any component to use &lt;code&gt;shouldComponentUpdate&lt;/code&gt;. It looks like the component never changed because the previous value is always the same as the next one. Since the DOM layer does diffing, this pattern doesn&amp;#39;t even work in this case. The change will never propagate down to the DOM except the first time.&lt;/p&gt;
+
+&lt;p&gt;Additionally, if this element is reused in other places or used to switch back and forth between two modes, then you have all kinds of weird race conditions.&lt;/p&gt;
+
+&lt;p&gt;It has always been broken to mutate the props of something passed into you. The problem is that we can’t warn you about this special case if you accidentally do this.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-too-late-validation&quot;&gt;&lt;/a&gt;Problem: Too Late Validation &lt;a class=&quot;hash-link&quot; href=&quot;#problem-too-late-validation&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;In React 0.12, we do PropType validation very deep inside React during mounting. This means that by the time you get an error, the debugger stack is long gone. This makes it difficult to find complex issues during debugging. We have to do this since it is fairly common for extra props to be added between the call to React.createElement and the mount time. So the type is incomplete until then.&lt;/p&gt;
+
+&lt;p&gt;The static analysis in Flow is also impaired by this. There is no convenient place in the code where Flow can determine that the props are finalized.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-immutable-props&quot;&gt;&lt;/a&gt;Solution: Immutable Props &lt;a class=&quot;hash-link&quot; href=&quot;#solution-immutable-props&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Therefore, we would like to be able to freeze the element.props object so that it is immediately immutable at the JSX callsite (or createElement). In React 0.13 we will start warning you if you mutate &lt;code&gt;element.props&lt;/code&gt; after this point.&lt;/p&gt;
+
+&lt;p&gt;You can generally refactor these pattern to simply use two different JSX calls:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;shouldUseFoo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, if you really need to dynamically build up your props you can just use a temporary object and spread it into JSX:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;shouldUseFoo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;It is still OK to do deep mutations of objects. E.g:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;nestedObject&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myModel&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this case it&amp;#39;s still ok to mutate the myModel object in state. We recommend that you use fully immutable models. E.g. by using immutable-js. However, we realize that mutable models are still convenient in many cases. Therefore we&amp;#39;re only considering shallow freezing the props object that belongs to the ReactElement itself. Not nested objects.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-early-proptype-warnings&quot;&gt;&lt;/a&gt;Solution: Early PropType Warnings &lt;a class=&quot;hash-link&quot; href=&quot;#solution-early-proptype-warnings&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;We will also start warning you for PropTypes at the JSX or createElement callsite. This will help debugging as you’ll have the stack trace right there. Similarly, Flow also validates PropTypes at this callsite.&lt;/p&gt;
+
+&lt;p&gt;Note: There are valid patterns that clones a ReactElement and adds additional props to it. In that case these additional props needs to be optional.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;element1&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// extra prop is optional&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;element2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneWithProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;extra&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;prop&amp;#39;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;owner&quot;&gt;&lt;/a&gt;Owner &lt;a class=&quot;hash-link&quot; href=&quot;#owner&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In React each child has both a &amp;quot;parent&amp;quot; and an “owner”. The owner is the component that created a ReactElement. I.e. the render method which contains the JSX or createElement callsite.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Foo&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In this example, the owner of the &lt;code&gt;span&lt;/code&gt; is &lt;code&gt;Foo&lt;/code&gt; but the parent is the &lt;code&gt;div&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;There is also an undocumented feature called &amp;quot;context&amp;quot; that also relies on the concept of an “owner” to pass hidden props down the tree.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-the-semantics-are-opaque-and-confusing&quot;&gt;&lt;/a&gt;Problem: The Semantics are Opaque and Confusing &lt;a class=&quot;hash-link&quot; href=&quot;#problem-the-semantics-are-opaque-and-confusing&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The problem is that these are hidden artifacts attached to the ReactElement. In fact, you probably didn’t even know about it. It silently changes semantics. Take this for example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;foo&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;bar&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;input&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;bar&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;These two inputs have different owners, therefore React will not keep its state when the conditional switches. There is nothing in the code to indicate that. Similarly, if you use &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;, the owner changes.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-timing-matters&quot;&gt;&lt;/a&gt;Problem: Timing Matters &lt;a class=&quot;hash-link&quot; href=&quot;#problem-timing-matters&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The owner is tracked by the currently executing stack. This means that the semantics of a ReactElement varies depending on when it is executed. Take this example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;A&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;renderer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;sr&quot;&gt;/span&amp;gt;} /&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;B&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;renderer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The owner of the &lt;code&gt;span&lt;/code&gt; is actually &lt;code&gt;B&lt;/code&gt;, not &lt;code&gt;A&lt;/code&gt; because of the timing of the callback. This all adds complexity and suffers from similar problems as mutation.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-it-couples-jsx-to-react&quot;&gt;&lt;/a&gt;Problem: It Couples JSX to React &lt;a class=&quot;hash-link&quot; href=&quot;#problem-it-couples-jsx-to-react&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Have you wondered why JSX depends on React? Couldn’t the transpiler have that built-in to its runtime? The reason you need to have &lt;code&gt;React.createElement&lt;/code&gt; in scope is because we depend on internal state of React to capture the current &amp;quot;owner&amp;quot;. Without this, you wouldn’t need to have React in scope.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-make-context-parent-based-instead-of-owner-based&quot;&gt;&lt;/a&gt;Solution: Make Context Parent-Based Instead of Owner-Based &lt;a class=&quot;hash-link&quot; href=&quot;#solution-make-context-parent-based-instead-of-owner-based&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The first thing we’re doing is warning you if you’re using the &amp;quot;owner&amp;quot; feature in a way that relies on it propagating through owners. Instead, we’re planning on propagating it through parents to its children. In almost all cases, this shouldn’t matter. In fact, parent-based contexts is simply a superset.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-remove-the-semantic-implications-of-owner&quot;&gt;&lt;/a&gt;Solution: Remove the Semantic Implications of Owner &lt;a class=&quot;hash-link&quot; href=&quot;#solution-remove-the-semantic-implications-of-owner&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;It turns out that there are very few cases where owners are actually important part of state-semantics. As a precaution, we’ll warn you if it turns out that the owner is important to determine state. In almost every case this shouldn’t matter. Unless you’re doing some weird optimizations, you shouldn’t see this warning.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;pending-change-the-refs-semantics&quot;&gt;&lt;/a&gt;Pending: Change the refs Semantics &lt;a class=&quot;hash-link&quot; href=&quot;#pending-change-the-refs-semantics&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Refs are still based on &amp;quot;owner&amp;quot;. We haven’t fully solved this special case just yet.&lt;/p&gt;
+
+&lt;p&gt;In 0.13 we introduced a new callback-refs API that doesn’t suffer from these problems but we’ll keep on a nice declarative alternative to the current semantics for refs. As always, we won’t deprecate something until we’re sure that you’ll have a nice upgrade path.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;keyed-objects-as-maps&quot;&gt;&lt;/a&gt;Keyed Objects as Maps &lt;a class=&quot;hash-link&quot; href=&quot;#keyed-objects-as-maps&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In React 0.12, and earlier, you could use keyed objects to provide an external key to an element or a set. This pattern isn’t actually widely used. It shouldn’t be an issue for most of you.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-relies-on-enumeration-order&quot;&gt;&lt;/a&gt;Problem: Relies on Enumeration Order &lt;a class=&quot;hash-link&quot; href=&quot;#problem-relies-on-enumeration-order&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;The problem with this pattern is that it relies on enumeration order of objects. This is technically unspecified, even though implementations now agree to use insertion order. Except for the special case when numeric keys are used.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-using-objects-as-maps-is-bad&quot;&gt;&lt;/a&gt;Problem: Using Objects as Maps is Bad &lt;a class=&quot;hash-link&quot; href=&quot;#problem-using-objects-as-maps-is-bad&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;It is generally accepted that using objects as maps screw up type systems, VM optimizations, compilers etc. It is much better to use a dedicated data structure like ES6 Maps.&lt;/p&gt;
+
+&lt;p&gt;More importantly, this can have important security implications. For example this has a potential security problem:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{};&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;forEach&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Imagine if &lt;code&gt;item.title === &amp;#39;__proto__&amp;#39;&lt;/code&gt; for example.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;problem-cant-be-differentiated-from-arbitrary-objects&quot;&gt;&lt;/a&gt;Problem: Can’t be Differentiated from Arbitrary Objects &lt;a class=&quot;hash-link&quot; href=&quot;#problem-cant-be-differentiated-from-arbitrary-objects&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Since these objects can have any keys with almost any value, we can’t differentiate them from a mistake. If you put some random object, we will try our best to traverse it and render it, instead of failing with a helpful warning. In fact, this is one of the few places where you can accidentally get an infinite loop in React.&lt;/p&gt;
+
+&lt;p&gt;To differentiate ReactElements from one of these objects, we have to tag them with &lt;code&gt;_isReactElement&lt;/code&gt;. This is another issue preventing us from inlining ReactElements as simple object literals.&lt;/p&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-just-use-an-array-and-key&quot;&gt;&lt;/a&gt;Solution: Just use an Array and key={…} &lt;a class=&quot;hash-link&quot; href=&quot;#solution-just-use-an-array-and-key&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;Most of the time you can just use an array with keyed ReactElements.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;items&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;span&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;solution-react.addons.createfragment&quot;&gt;&lt;/a&gt;Solution: React.addons.createFragment &lt;a class=&quot;hash-link&quot; href=&quot;#solution-react.addons.createfragment&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;p&gt;However, this is not always possible if you’re trying to add a prefix key to an unknown set (e.g. this.props.children). It is also not always the easiest upgrade path. Therefore, we are adding a helper to &lt;code&gt;React.addons&lt;/code&gt; called &lt;code&gt;createFragment()&lt;/code&gt;. This accepts a keyed object and returns an opaque type.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;addons&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFragment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;a&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/div&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The exact signature of this kind of fragment will be determined later. It will likely be some kind of immutable sequence.&lt;/p&gt;
+
+&lt;p&gt;Note: This will still not be valid as the direct return value of &lt;code&gt;render()&lt;/code&gt;. Unfortunately, they still need to be wrapped in a &lt;code&gt;&amp;lt;div /&amp;gt;&lt;/code&gt; or some other element.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;compiler-optimizations-unlocked&quot;&gt;&lt;/a&gt;Compiler Optimizations: Unlocked! &lt;a class=&quot;hash-link&quot; href=&quot;#compiler-optimizations-unlocked&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;These changes also unlock several possible compiler optimizations for static content in React 0.14. These optimizations were previously only available to template-based frameworks. They will now also be possible for React code! Both for JSX and &lt;code&gt;React.createElement/Factory&lt;/code&gt;*!&lt;/p&gt;
+
+&lt;p&gt;See these GitHub Issues for a deep dive into compiler optimizations:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/issues/3226&quot;&gt;Reuse Constant Value Types&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/issues/3227&quot;&gt;Tagging ReactElements&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&quot;https://github.com/facebook/react/issues/3228&quot;&gt;Inline ReactElements&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;* If you use the recommended pattern of explicit React.createFactory calls on the consumer side - since they are easily statically analyzed.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rationale&quot;&gt;&lt;/a&gt;Rationale &lt;a class=&quot;hash-link&quot; href=&quot;#rationale&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;I thought that these changes were particularly important because the mere existence of these patterns means that even components that DON’T use these patterns have to pay the price. There are other problematic patterns such as mutating state, but they’re at least localized to a component subtree so they don’t harm the ecosystem.&lt;/p&gt;
+
+&lt;p&gt;As always, we’d love to hear your feedback and if you have any trouble upgrading, please let us know.&lt;/p&gt;
+</description>
+				<pubDate>2015-02-24T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html</guid>
+			</item>
+		
+			<item>
 				<title>Introducing Relay and GraphQL</title>
 				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;data-fetching-for-react-applications&quot;&gt;&lt;/a&gt;Data fetching for React applications &lt;a class=&quot;hash-link&quot; href=&quot;#data-fetching-for-react-applications&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;There&amp;#39;s more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;React.js Conf&lt;/a&gt; we announced two projects we&amp;#39;ve created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.&lt;/p&gt;
@@ -800,129 +955,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-10-27T00:00:00-07:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #23</title>
-				<description>&lt;p&gt;This round-up is a special edition on &lt;a href=&quot;http://facebook.github.io/flux/&quot;&gt;Flux&lt;/a&gt;. If you expect to see diagrams showing arrows that all point in the same direction, you won&amp;#39;t be disappointed!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-flux-at-forwardjs&quot;&gt;&lt;/a&gt;React And Flux at ForwardJS &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-flux-at-forwardjs&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Facebook engineers &lt;a href=&quot;https://github.com/jingc&quot;&gt;Jing Chen&lt;/a&gt; and &lt;a href=&quot;https://github.com/fisherwebdev&quot;&gt;Bill Fisher&lt;/a&gt; gave a talk about Flux and React at &lt;a href=&quot;http://forwardjs.com/&quot;&gt;ForwardJS&lt;/a&gt;, and how using an application architecture with a unidirectional data flow helped solve recurring bugs.&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/i__969noyAM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h1&gt;&lt;a class=&quot;anchor&quot; name=&quot;yahoo&quot;&gt;&lt;/a&gt;Yahoo &lt;a class=&quot;hash-link&quot; href=&quot;#yahoo&quot;&gt;#&lt;/a&gt;&lt;/h1&gt;
-&lt;p&gt;Yahoo is converting Yahoo Mail to React and Flux and in the process, they open sourced several components. This will help you get an isomorphic application up and running.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/yahoo/flux-router-component&quot;&gt;Flux Router Component&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/yahoo/dispatchr&quot;&gt;Dispatchr&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/yahoo/fetchr&quot;&gt;Fetchr&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&quot;https://github.com/yahoo/flux-examples&quot;&gt;Flux Examples&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;reflux&quot;&gt;&lt;/a&gt;Reflux &lt;a class=&quot;hash-link&quot; href=&quot;#reflux&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://spoike.ghost.io/&quot;&gt;Mikael Brassman&lt;/a&gt; wrote &lt;a href=&quot;https://github.com/spoike/refluxjs&quot;&gt;Reflux&lt;/a&gt;, a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains &lt;a href=&quot;http://spoike.ghost.io/deconstructing-reactjss-flux/&quot;&gt;the reasons why in a blog post&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;center&gt;
-&lt;a href=&quot;http://spoike.ghost.io/deconstructing-reactjss-flux/&quot;&gt;&lt;img src=&quot;/react/img/blog/reflux-flux.png&quot; width=&quot;400&quot; /&gt;&lt;/a&gt;
-&lt;/center&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-flux-interview&quot;&gt;&lt;/a&gt;React and Flux Interview &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-flux-interview&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://ianobermiller.com/&quot;&gt;Ian Obermiller&lt;/a&gt;, engineer at Facebook, &lt;a href=&quot;http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/&quot;&gt;made a lengthy interview&lt;/a&gt; on the experience of using React and Flux in order to build probably the biggest React application ever written so far.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;I’ve actually said this many times to my team too, I love React. It’s really great for making these complex applications. One thing that really surprised me with it is that React combined with a sane module system like CommonJS, and making sure that you actually modulize your stuff properly has scaled really well to a team of almost 10 developers working on hundreds of files and tens of thousands of lines of code.&lt;/p&gt;
-
-&lt;p&gt;Really, a fairly large code base... stuff just works. You don’t have to worry about mutating, and the state of the DOM just really makes stuff easy. Just conceptually it’s easier just to think about here’s what I have, here’s my data, here’s how it renders, I don’t care about anything else. For most cases that is really simplifying and makes it really fast to do stuff.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/&quot;&gt;Read the full interview...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;adobes-brackets-project-tree&quot;&gt;&lt;/a&gt;Adobe&amp;#39;s Brackets Project Tree &lt;a class=&quot;hash-link&quot; href=&quot;#adobes-brackets-project-tree&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.kevindangoor.com/&quot;&gt;Kevin Dangoor&lt;/a&gt; is converting the project tree of &lt;a href=&quot;http://brackets.io/&quot;&gt;Adobe&amp;#39;s Bracket text editor&lt;/a&gt; to React and Flux. He wrote about his experience &lt;a href=&quot;http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/&quot;&gt;using Flux&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;center&gt;
-&lt;a href=&quot;http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/&quot;&gt;&lt;img src=&quot;/react/img/blog/flux-diagram.png&quot; width=&quot;400&quot; /&gt;&lt;/a&gt;
-&lt;/center&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;async-requests-with-flux-revisited&quot;&gt;&lt;/a&gt;Async Requests with Flux Revisited &lt;a class=&quot;hash-link&quot; href=&quot;#async-requests-with-flux-revisited&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;http://www.code-experience.com/the-code-experience/&quot;&gt;Reto Schläpfer&lt;/a&gt; came back to a Flux project he hasn&amp;#39;t worked on for a month and &lt;a href=&quot;http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/&quot;&gt;saw many ways to improve the way he implemented Flux&lt;/a&gt;. He summarized his learnings in a blog post.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;The smarter way is to call the Web Api directly from an Action Creator and then make the Api dispatch an event with the request result as a payload. The Store(s) can choose to listen on those request actions and change their state accordingly.&lt;/p&gt;
-
-&lt;p&gt;Before I show some updated code snippets, let me explain why this is superior:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;There should be only one channel for all state changes: The Dispatcher. This makes debugging easy because it just requires a single console.log in the dispatcher to observe every single state change trigger.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Asynchronously executed callbacks should not leak into Stores. The consequences of it are just too hard to fully foresee. This leads to elusive bugs. Stores should only execute synchronous code. Otherwise they are too hard to understand.&lt;/p&gt;&lt;/li&gt;
-&lt;li&gt;&lt;p&gt;Avoiding actions firing other actions makes your app simple. We use the newest Dispatcher implementation from Facebook that does not allow a new dispatch while dispatching. It forces you to do things right.&lt;/p&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;undo-redo-with-immutable-data-structures&quot;&gt;&lt;/a&gt;Undo-Redo with Immutable Data Structures &lt;a class=&quot;hash-link&quot; href=&quot;#undo-redo-with-immutable-data-structures&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/ameyakarve&quot;&gt;Ameya Karve&lt;/a&gt; explained how to use &lt;a href=&quot;https://github.com/swannodette/mori&quot;&gt;Mori&lt;/a&gt;, a library that provides immutable data structures, in order to &lt;a href=&quot;http://ameyakarve.com/jekyll/update/2014/02/06/Undo-React-Flux-Mori.html&quot;&gt;implement undo-redo&lt;/a&gt;. This usually very challenging feature only takes a few lines of code with Flux!&lt;/p&gt;
-&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;nx&quot;&gt;undo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;redoStates&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;conj&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;redoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;));&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;drop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todosState&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;canUndo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;canRedo&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Mori&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;undoStates&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todos&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;JSON&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;parse&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todosState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;todos&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[];&lt;/span&gt;
-  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;emit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;change&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;flux-in-practice&quot;&gt;&lt;/a&gt;Flux in practice &lt;a class=&quot;hash-link&quot; href=&quot;#flux-in-practice&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/garychambers108&quot;&gt;Gary Chambers&lt;/a&gt; wrote a &lt;a href=&quot;https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a&quot;&gt;guide to get started with Flux&lt;/a&gt;. This is a very practical introduction to Flux.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;So, what does it actually mean to write an application in the Flux way? At that moment of inspiration, when faced with an empty text editor, how should you begin? This post follows the process of building a Flux-compliant application from scratch.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a&quot;&gt;Read the full guide...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;components-react-and-flux&quot;&gt;&lt;/a&gt;Components, React and Flux &lt;a class=&quot;hash-link&quot; href=&quot;#components-react-and-flux&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://twitter.com/dan_abramov&quot;&gt;Dan Abramov&lt;/a&gt; working at Stampsy made a talk about React and Flux. It&amp;#39;s a very good overview of the concepts at play.&lt;/p&gt;
-
-&lt;iframe src=&quot;//slides.com/danabramov/components-react-flux-wip/embed&quot;  width=&quot;650&quot; height=&quot;315&quot; scrolling=&quot;no&quot; frameborder=&quot;0&quot; webkitallowfullscreen mozallowfullscreen allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-and-flux&quot;&gt;&lt;/a&gt;React and Flux &lt;a class=&quot;hash-link&quot; href=&quot;#react-and-flux&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/christianalfoni&quot;&gt;Christian Alfoni&lt;/a&gt; wrote an article where &lt;a href=&quot;http://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html&quot;&gt;he compares Backbone, Angular and Flux&lt;/a&gt; on a simple example that&amp;#39;s representative of a real project he worked on.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Wow, that was a bit more code! Well, try to think of it like this. In the above examples, if we were to do any changes to the application we would probably have to move things around. In the FLUX example we have considered that from the start.&lt;/p&gt;
-
-&lt;p&gt;Any changes to the application is adding, not moving things around. If you need a new store, just add it and make components dependant of it. If you need more views, create a component and use it inside any other component without affecting their current &amp;quot;parent controller or models&amp;quot;.&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;http://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html&quot;&gt;Read the full article...&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;flux-step-by-step-approach&quot;&gt;&lt;/a&gt;Flux: Step by Step approach &lt;a class=&quot;hash-link&quot; href=&quot;#flux-step-by-step-approach&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/durdn&quot;&gt;Nicola Paolucci&lt;/a&gt; from Atlassian wrote a great guide to help your getting understand &lt;a href=&quot;http://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/&quot;&gt;Flux step by step&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;center&gt;
-&lt;a href=&quot;http://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/&quot;&gt;&lt;img src=&quot;/react/img/blog/flux-chart.png&quot; width=&quot;400&quot; /&gt;&lt;/a&gt;
-&lt;/center&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;delorean-back-to-the-future&quot;&gt;&lt;/a&gt;DeLorean: Back to the future! &lt;a class=&quot;hash-link&quot; href=&quot;#delorean-back-to-the-future&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;https://github.com/deloreanjs/delorean&quot;&gt;DeLorean&lt;/a&gt; is a tiny Flux pattern implementation developed by &lt;a href=&quot;https://github.com/f&quot;&gt;Fatih Kadir Akin&lt;/a&gt;.&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;ul&gt;
-&lt;li&gt;Unidirectional data flow, it makes your app logic simpler than MVC&lt;/li&gt;
-&lt;li&gt;Automatically listens to data changes and keeps your data updated&lt;/li&gt;
-&lt;li&gt;Makes data more consistent across your whole application&lt;/li&gt;
-&lt;li&gt;It&amp;#39;s framework agnostic, completely. There&amp;#39;s no view framework dependency&lt;/li&gt;
-&lt;li&gt;Very small, just 4K gzipped&lt;/li&gt;
-&lt;li&gt;Built-in React.js integration, easy to use with Flight.js and Ractive.js and probably all others&lt;/li&gt;
-&lt;li&gt;Improve your UI/data consistency using rollbacks&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/blockquote&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;facebooks-ios-infrastructure&quot;&gt;&lt;/a&gt;Facebook&amp;#39;s iOS Infrastructure &lt;a class=&quot;hash-link&quot; href=&quot;#facebooks-ios-infrastructure&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.&lt;/p&gt;
-
-&lt;iframe width=&quot;650&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/XhXC4SKOGfQ&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;random-tweet&quot;&gt;&lt;/a&gt;Random Tweet &lt;a class=&quot;hash-link&quot; href=&quot;#random-tweet&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;If you build your app with flux, you can swap out React for a canvas or svg view layer and keep 85% of your code. (or the thing after React)&lt;/p&gt;&amp;mdash; Ryan Florence (@ryanflorence) &lt;a href=&quot;https://twitter.com/ryanflorence/status/507309645372076034&quot;&gt;September 3, 2014&lt;/a&gt;&lt;/blockquote&gt;
-</description>
-				<pubDate>2014-10-17T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/17/community-roundup-23.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/17/community-roundup-23.html</guid>
 			</item>
 		
 	</channel>
