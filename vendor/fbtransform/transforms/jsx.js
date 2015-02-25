@@ -11,7 +11,7 @@
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
-function renderXJSLiteral(object, isLast, state, start, end) {
+function renderJSXLiteral(object, isLast, state, start, end) {
   var lines = object.value.split(/\r\n|\n|\r/);
 
   if (start) {
@@ -75,13 +75,13 @@ function renderXJSLiteral(object, isLast, state, start, end) {
   utils.move(object.range[1], state);
 }
 
-function renderXJSExpressionContainer(traverse, object, isLast, path, state) {
+function renderJSXExpressionContainer(traverse, object, isLast, path, state) {
   // Plus 1 to skip `{`.
   utils.move(object.range[0] + 1, state);
   utils.catchup(object.expression.range[0], state);
   traverse(object.expression, path, state);
 
-  if (!isLast && object.expression.type !== Syntax.XJSEmptyExpression) {
+  if (!isLast && object.expression.type !== Syntax.JSXEmptyExpression) {
     // If we need to append a comma, make sure to do so after the expression.
     utils.catchup(object.expression.range[1], state, trimLeft);
     utils.append(', ', state);
@@ -105,7 +105,7 @@ function trimLeft(value) {
   return value.replace(/^[ ]+/, '');
 }
 
-exports.renderXJSExpressionContainer = renderXJSExpressionContainer;
-exports.renderXJSLiteral = renderXJSLiteral;
+exports.renderJSXExpressionContainer = renderJSXExpressionContainer;
+exports.renderJSXLiteral = renderJSXLiteral;
 exports.quoteAttrName = quoteAttrName;
 exports.trimLeft = trimLeft;
