@@ -71,6 +71,9 @@ var DOMPropertyInjection = {
     }
 
     for (var propName in Properties) {
+      if (!Properties.hasOwnProperty(propName)) {
+        continue;
+      }
       invariant(
         !DOMProperty.isStandardName.hasOwnProperty(propName),
         'injectDOMPropertyConfig(...): You\'re trying to inject DOM property ' +
