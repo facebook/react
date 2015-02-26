@@ -79,15 +79,18 @@ module.exports = function(grunt) {
 
   grunt.registerMultiTask('webdriver-jasmine', webdriverJasmineTasks);
 
-  grunt.registerMultiTask('webdriver-perf', require('./grunt/tasks/webdriver-perf'));
+  grunt.registerMultiTask('webdriver-perf',
+    require('./grunt/tasks/webdriver-perf'));
 
   grunt.registerMultiTask('npm', npmTask);
 
   grunt.registerTask('npm-react:release', npmReactTasks.buildRelease);
   grunt.registerTask('npm-react:pack', npmReactTasks.packRelease);
-  grunt.registerTask('npm-react-tools:release', npmReactToolsTasks.buildRelease);
+  grunt.registerTask('npm-react-tools:release',
+    npmReactToolsTasks.buildRelease);
   grunt.registerTask('npm-react-tools:pack', npmReactToolsTasks.packRelease);
-  grunt.registerTask('gem-react-source:release', gemReactSourceTasks.buildRelease);
+  grunt.registerTask('gem-react-source:release',
+    gemReactSourceTasks.buildRelease);
   grunt.registerTask('gem-react-source:pack', gemReactSourceTasks.packRelease);
 
   grunt.registerTask('version-check', versionCheckTask);
