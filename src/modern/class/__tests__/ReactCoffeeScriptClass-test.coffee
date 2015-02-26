@@ -292,6 +292,37 @@ describe 'ReactCoffeeScriptClass', ->
       'contextTypes was defined as an instance property on Foo.'
     )
 
+  it 'does not warn when properties match propTypes', ->
+    spyOn console, 'warn'
+    class Foo extends React.Component
+      @propTypes: {
+        bar: React.PropTypes.string.isRequired
+      }
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo, { bar: 'hello' }), 'SPAN', 'foo'
+    expect(console.warn.calls.length).toBe 0
+
+  it 'warns when properties do not match propTypes', ->
+    spyOn console, 'warn'
+    class Foo extends React.Component
+      @propTypes: {
+        bar: React.PropTypes.string.isRequired
+      }
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(console.warn.calls.length).toBe 1
+    expect(console.warn.calls[0].args[0]).toContain(
+      'Warning: Failed propType: Required prop `bar` was not specified in `Foo`.'
+    )
+
   it 'should warn when mispelling shouldComponentUpdate', ->
     spyOn console, 'warn'
     class NamedComponent

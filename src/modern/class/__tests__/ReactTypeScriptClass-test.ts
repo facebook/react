@@ -247,6 +247,26 @@ class ClassicProperties extends React.Component {
   }
 }
 
+// does not warn when properties match propTypes
+class PropTypesMatch extends React.Component {
+  static propTypes = {
+    bar: React.PropTypes.string.isRequired
+  }
+  render() {
+    return React.createElement('span', { className: 'foo' });
+  }
+}
+
+// warns when properties do not match propTypes
+class PropTypesMismatch extends React.Component {
+  static propTypes = {
+    bar: React.PropTypes.string.isRequired
+  }
+  render() {
+    return React.createElement('span', { className: 'foo' });
+  }
+}
+
 // it should warn when mispelling shouldComponentUpdate
 class NamedComponent {
   componentShouldUpdate() {
@@ -422,6 +442,23 @@ describe('ReactTypeScriptClass', function() {
     );
     expect(warn.mock.calls[2][0]).toContain(
       'contextTypes was defined as an instance property on ClassicProperties.'
+    );
+  });
+
+  it('does not warn when properties match propTypes', function() {
+    var warn = jest.genMockFn();
+    console.warn = warn;
+    test(React.createElement(PropTypesMatch, { bar: 'hello'}), 'SPAN', 'foo');
+    expect(warn.mock.calls.length).toBe(0);
+  });
+
+  it('warns when properties do not match propTypes', function() {
+    var warn = jest.genMockFn();
+    console.warn = warn;
+    test(React.createElement(PropTypesMismatch), 'SPAN', 'foo');
+    expect(warn.mock.calls.length).toBe(1);
+    expect(warn.mock.calls[0][0]).toContain(
+      'Warning: Failed propType: Required prop `bar` was not specified in `PropTypesMismatch`.'
     );
   });
 
