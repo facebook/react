@@ -147,8 +147,8 @@ var DOMPropertyInjection = {
       DOMProperty.isPolyfillName[polyfillName] = true;
 
       if (DOMAttributeNames.hasOwnProperty(polyfillName)) {
-        var attributeName = DOMAttributeNames[polyfillName];
-        DOMProperty.getPossiblePolyfillName[attributeName] = polyfillName;
+        var attrName = DOMAttributeNames[polyfillName];
+        DOMProperty.getPossiblePolyfillName[attrName] = polyfillName;
       } else if (DOMPropertyNames.hasOwnProperty(polyfillName)) {
         var propertyName = DOMPropertyNames[polyfillName];
         DOMProperty.getPossiblePolyfillName[propertyName] = polyfillName;
