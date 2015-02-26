@@ -152,4 +152,31 @@ describe('ReactTestUtils', function() {
     expect(scryResults.length).toBe(0);
 
   });
+
+  it('traverses children in the correct order', function() {
+    var container = document.createElement('div');
+
+    React.render(
+      <div>
+        {null}
+        <div>purple</div>
+      </div>,
+      container
+    );
+    var tree = React.render(
+      <div>
+        <div>orange</div>
+        <div>purple</div>
+      </div>,
+      container
+    );
+
+    var log = [];
+    ReactTestUtils.findAllInRenderedTree(tree, function(child) {
+      log.push(child.getDOMNode().textContent);
+    });
+
+    // Should be document order, not mount order (which would be purple, orange)
+    expect(log).toEqual(['orangepurple', 'orange', 'purple']);
+  });
 });
