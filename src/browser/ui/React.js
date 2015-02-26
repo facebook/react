@@ -39,10 +39,12 @@ ReactDefaultInjection.inject();
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
+var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
+  cloneElement = ReactElementValidator.cloneElement;
 }
 
 var render = ReactPerf.measure('React', 'render', ReactMount.render);
@@ -62,6 +64,7 @@ var React = {
   },
   createClass: ReactClass.createClass,
   createElement: createElement,
+  cloneElement: cloneElement,
   createFactory: createFactory,
   createMixin: function(mixin) {
     // Currently a noop. Will be used to validate and trace mixins.
