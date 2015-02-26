@@ -80,6 +80,46 @@ describe('ReactElementValidator', function() {
     );
   });
 
+  it('warns for keys for arrays with no owner or parent info', function() {
+    spyOn(console, 'warn');
+
+    var Anonymous = React.createClass({
+      displayName: undefined,
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var divs = [
+      <div />,
+      <div />
+    ];
+    ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. See http://fb.me/react-warning-keys for more information.'
+    );
+  });
+
+  it('warns for keys for arrays of elements with no owner info', function() {
+    spyOn(console, 'warn');
+
+    var divs = [
+      <div />,
+      <div />
+    ];
+    ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Each child in an array or iterator should have a unique ' +
+      '"key" prop. Check the React.render call using <div>. See ' +
+      'http://fb.me/react-warning-keys for more information.'
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', function() {
     spyOn(console, 'warn');
     var Component = React.createFactory(ComponentClass);
