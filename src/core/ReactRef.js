@@ -40,7 +40,7 @@ ReactRef.attachRefs = function(instance, element) {
   }
 };
 
-ReactRef.shouldUpdateRefs = function(instance, prevElement, nextElement) {
+ReactRef.shouldUpdateRefs = function(prevElement, nextElement) {
   // If either the owner or a `ref` has changed, make sure the newest owner
   // has stored a reference to `this`, and the previous owner (if different)
   // has forgotten the reference to `this`. We use the element instead

@@ -86,7 +86,6 @@ var ReactReconciler = {
     }
 
     var refsChanged = ReactRef.shouldUpdateRefs(
-      this,
       prevElement,
       nextElement
     );
