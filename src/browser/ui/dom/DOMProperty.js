@@ -60,6 +60,7 @@ var DOMPropertyInjection = {
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Properties = domPropertyConfig.Properties || {};
+    var Polyfills = domPropertyConfig.Polyfills || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
@@ -141,6 +142,19 @@ var DOMPropertyInjection = {
         propName
       );
     }
+
+    for (var polyfillName in Polyfills) {
+      DOMProperty.isPolyfillName[polyfillName] = true;
+
+      if (DOMAttributeNames.hasOwnProperty(polyfillName)) {
+        var attributeName = DOMAttributeNames[polyfillName];
+        DOMProperty.getPossiblePolyfillName[attributeName] = polyfillName;
+      } else if (DOMPropertyNames.hasOwnProperty(polyfillName)) {
+        var propertyName = DOMPropertyNames[polyfillName];
+        DOMProperty.getPossiblePolyfillName[propertyName] = polyfillName;
+      }
+
+    }
   }
 };
 var defaultValueCache = {};
@@ -169,11 +183,24 @@ var DOMProperty = {
   isStandardName: {},
 
   /**
+   * Checks whether a property name is a polyfill
+   * @type {Object}
+   */
+  isPolyfillName: {},
+
+  /**
    * Mapping from lowercase property names to the properly cased version, used
    * to warn in the case of missing properties.
    * @type {Object}
    */
   getPossibleStandardName: {},
+
+  /**
+   * Mapping from lowercase property names to the properly cased polyfill version, used
+   * to warn in the case of missing properties.
+   * @type {Object}
+   */
+  getPossiblePolyfillName: {},
 
   /**
    * Mapping from normalized names to attribute names that differ. Attribute
