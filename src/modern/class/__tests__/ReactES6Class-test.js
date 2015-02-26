@@ -104,17 +104,27 @@ describe('ReactES6Class', function() {
         super(props, context);
         this.state = {tag: context.tag, className: this.context.className};
       }
+
+      static get contextTypes() {
+        return {
+          tag: React.PropTypes.string,
+          className: React.PropTypes.string
+        };
+      }
+
       render() {
         var Tag = this.state.tag;
         return <Tag className={this.state.className} />;
       }
     }
-    Foo.contextTypes = {
-      tag: React.PropTypes.string,
-      className: React.PropTypes.string
-    };
 
     class Outer extends React.Component {
+      static get childContextTypes() {
+        return {
+          tag: React.PropTypes.string,
+          className: React.PropTypes.string
+        };
+      }
       getChildContext() {
         return {tag: 'span', className: 'foo'};
       }
@@ -122,10 +132,6 @@ describe('ReactES6Class', function() {
         return <Foo />;
       }
     }
-    Outer.childContextTypes = {
-      tag: React.PropTypes.string,
-      className: React.PropTypes.string
-    };
     test(<Outer />, 'SPAN', 'foo');
   });
 
@@ -322,6 +328,41 @@ describe('ReactES6Class', function() {
     );
     expect(console.warn.calls[2].args[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
+    );
+  });
+
+  it('does not warn when properties match propTypes', function() {
+    spyOn(console, 'warn');
+    class Foo extends React.Component {
+      static get propTypes() {
+        return {
+          bar: React.PropTypes.string.isRequired
+        };
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<Foo bar='hello'/>, 'SPAN', 'foo');
+    expect(console.warn.calls.length).toBe(0);
+  });
+
+  it('warns when properties do not match propTypes', function() {
+    spyOn(console, 'warn');
+    class Foo extends React.Component {
+      static get propTypes() {
+        return {
+          bar: React.PropTypes.string.isRequired
+        };
+      }
+      render() {
+        return <span className="foo" />;
+      }
+    }
+    test(<Foo />, 'SPAN', 'foo');
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.calls[0].args[0]).toContain(
+      'Warning: Failed propType: Required prop `bar` was not specified in `Foo`.'
     );
   });
 
