@@ -47,7 +47,7 @@ forceUpdate([function callback])
 
 If your `render()` method reads from something other than `this.props` or `this.state`, you'll need to tell React when it needs to re-run `render()` by calling `forceUpdate()`. You'll also need to call `forceUpdate()` if you mutate `this.state` directly.
 
-Calling `forceUpdate()` will cause `render()` to be called on the component and its children, but React will still only update the DOM if the markup changes.
+Calling `forceUpdate()` will cause `render()` to be called on the component, skipping `shouldComponentUpdate()`. This will trigger the normal lifecycle methods for child components, including the `shouldComponentUpdate()` method of each child. React will still only update the DOM if the markup changes.
 
 Normally you should try to avoid all uses of `forceUpdate()` and only read from `this.props` and `this.state` in `render()`. This makes your application much simpler and more efficient.
 
