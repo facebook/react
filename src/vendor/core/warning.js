@@ -13,6 +13,8 @@
 
 var emptyFunction = require('emptyFunction');
 
+var originalWarn = console.warn;
+
 /**
  * Similar to invariant but only logs a warning if the condition is not met.
  * This can be used to log issues in development environments in critical
@@ -45,7 +47,15 @@ if (__DEV__) {
     if (!condition) {
       var argIndex = 0;
       var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
-      console.warn(message);
+
+      if (originalWarn !== console.warn) {
+        // Likely a test which is spying on console.warn, so call through
+        console.warn(message);
+      } else {
+        // In most cases, use console.error which gives a full stack trace
+        console.error(message);
+      }
+
       try {
         // --- Welcome to debugging React ---
         // This error was thrown as a convenience so that you can use this stack
