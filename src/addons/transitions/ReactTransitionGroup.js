@@ -169,7 +169,7 @@ var ReactTransitionGroup = React.createClass({
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
     } else {
-      if(this.queue.length === 0){
+      if (this.queue.length === 0) {
         this._handleDoneLeaving(key);
         // Add your own key.
         // This was just to know that there is an async call going,
@@ -182,10 +182,10 @@ var ReactTransitionGroup = React.createClass({
     }
   },
   // Calls the next _handleDoneLeaving after the previous was removed.
-  _handleNextDoneLeaving: function(){
+  _handleNextDoneLeaving: function() {
     // Remove our own key first
     this.queue.shift();
-    if(this.queue.length !== 0){
+    if (this.queue.length !== 0) {
       this._handleDoneLeaving(this.queue[0]);
     }
   },
