@@ -244,7 +244,6 @@ describe('ReactServerRendering', function() {
 
   describe('renderToStaticMarkup', function() {
     it('should not put checksum and React ID on components', function() {
-      var lifecycle = [];
       var NestedComponent = React.createClass({
         render: function() {
           return <div>inner text</div>;
@@ -253,7 +252,6 @@ describe('ReactServerRendering', function() {
 
       var TestComponent = React.createClass({
         render: function() {
-          lifecycle.push('render');
           return <span><NestedComponent /></span>;
         }
       });
