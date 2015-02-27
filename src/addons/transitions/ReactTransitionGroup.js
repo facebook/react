@@ -169,13 +169,28 @@ var ReactTransitionGroup = React.createClass({
     if (component.componentWillLeave) {
       component.componentWillLeave(this._handleDoneLeaving.bind(this, key));
     } else {
-      // Note that this is somewhat dangerous b/c it calls setState()
-      // again, effectively mutating the component before all the work
-      // is done.
-      this._handleDoneLeaving(key);
+      if(this.queue.length === 0){
+        this._handleDoneLeaving(key);
+        // Add your own key.
+        // This was just to know that there is an async call going,
+        // otherwise I had to create an extra variable for checking.
+        this.queue.push(key);
+      } else {
+        // Queue up the next key to dispatched
+        this.queue.push(key);
+      }
     }
   },
-
+  // Calls the next _handleDoneLeaving after the previous was removed.
+  _handleNextDoneLeaving: function(){
+    // Remove our own key first
+    this.queue.shift();
+    if(this.queue.length !== 0){
+      this._handleDoneLeaving(this.queue[0]);
+    }
+  },
+  // Keeps track of components to be removed.
+  queue: [],
   _handleDoneLeaving: function(key) {
     var component = this.refs[key];
 
@@ -195,7 +210,7 @@ var ReactTransitionGroup = React.createClass({
     } else {
       var newChildren = assign({}, this.state.children);
       delete newChildren[key];
-      this.setState({children: newChildren});
+      this.replaceState({children: newChildren}, this._handleNextDoneLeaving);
     }
   },
 
