@@ -1,39 +1,61 @@
 ---
-- - Adam Krebs
+- - Aaron Franks
+  - Adam Krebs
   - Adam Mark
   - Adam Solove
   - Alan deLevie
+  - Alex Boyd
+  - Alex Mykyta
   - Alex Zelenskiy
   - Alexander Solovyov
+  - Alexander Tseung
+  - Alexandre Gaudencio
   - Alexey Raspopov
+  - Alexey Shamrin
   - Andre Z Sanchez
   - Andreas Svensson
   - Andres Suarez
+  - Andrew Cobby
   - Andrew Davey
   - Andrew Rasmussen
   - Andrew Zich
   - Andrey Popp
   - Anthony van der Hoorn
+  - Antti Ahti
   - Areeb Malik
+  - Artem Nezvigin
   - Ayman Osman
+  - Bartosz Kaszubowski
+  - Beau Smith
   - Ben Alpert
   - Ben Foxall
   - Ben Newman
   - Ben Ripkens
+  - Benjamin Keen
+  - Benjamin Leiken
   - Bill Fisher
+  - Blaine Hatab
   - Bob Eagan
+  - Bob Ralian
   - Bojan Mihelac
   - Brandon Bloom
   - Brandon Tilley
   - Brian Cooke
+  - Brian Holt
+  - Brian Hsu
   - Brian Kim
+  - Brian Kung
   - Brian Reavis
   - Brian Rue
+  - Bruno Škvorc
+  - Cam Song
   - Cam Spiers
   - Cassus Adam Banko
   - Cat Chen
+  - Cedric Sohrauer
   - Charles Marsh
   - Cheng Lou
+  - Chitharanjan Das
   - Chris Sciolla
   - Christian Alfoni
   - Christian Roman
@@ -43,19 +65,26 @@
   - Connor McSheffrey
   - Cotton Hou
   - Dan Abramov
+  - Dan Fox
   - Dan Schafer
+  - Daniel Carlsson
   - Daniel Gasienica
   - Daniel Lo Nigro
+  - Daniel Mané
   - Daniel Miladinov
   - Daniel Schonfeld
   - Danny Ben-David
   - Daryl Lau
   - David Hellsing
   - David Hu
+  - Denis Sokolov
+  - Dennis Johnson
   - Devon Blandin
   - Dmitrii Abramov
   - Dmitry Mazuro
+  - Dustan Kasten
   - Dustin Getz
+  - Dylan Harrington
   - Enguerran
   - Eric Clemmons
   - Eric Florenzano
@@ -69,6 +98,8 @@
   - François-Xavier Bois
   - Fred Zhao
   - G Scott Olson
+  - G. Kay Lee
+  - Gabe Levi
   - Garren Smith
   - Geert Pasteels
   - Geert-Jan Brits
@@ -80,14 +111,20 @@
   - Guangqiang Dong
   - Guido Bouman
   - Harry Hull
-- - Harshad Sabne
+  - Harry Marr
+- - Harry Moreno
+  - Harshad Sabne
   - Hendrik Swanepoel
+  - Henry Zhu
+  - Hou Chia
   - Hugo Jobling
+  - Héliton Nordt
   - Ian Obermiller
   - Ingvar Stepanyan
   - Irae Carvalho
   - Isaac Salier-Hellendag
   - Ivan Kozik
+  - Ivan Krechetov
   - Ivan Vergiliev
   - Jacob Gable
   - Jacob Greenleaf
@@ -102,24 +139,30 @@
   - Jan Kassens
   - Jared Forsyth
   - Jason Bonta
+  - Jason Ly
   - Jason Trill
   - Jean Lauliac
   - Jed Watson
   - Jeff Barczewski
   - Jeff Carpenter
   - Jeff Chan
+  - Jeff Kolesky
   - Jeff Morrison
   - Jeff Welch
   - Jeffrey Lin
   - Jesse Skinner
   - Jignesh Kakadiya
   - Jim OBrien
+  - Jim Sproch
   - Jimmy Jea
   - Jing Chen
+  - Joel Auterson
   - Johannes Baiter
   - Johannes Emerich
+  - John Heroy
   - John Watson
   - Jon Beebe
+  - Jon Madison
   - Jonas Enlund
   - Jonas Gebhardt
   - Jonathan Hsu
@@ -127,20 +170,29 @@
   - Josh Bassett
   - Josh Duck
   - Josh Yudaken
+  - Joshua Goldberg
   - Joshua Ma
+  - João Valente
+  - Juan Serrano
   - Julen Ruiz Aizpuru
   - Julien Bordellier
   - Jun Wu
   - Juraj Dudak
   - Justin Jaffray
+  - Justin Woo
   - Karl Mikkelsen
   - Karpich Dmitry
   - Keito Uchiyama
+  - Kevin Old
+  - Kirk Steven Hansen
   - Kit Randel
   - Kunal Mehta
+  - Kurt Ruppel
   - Kyle Mathews
   - Laurence Rowe
   - Lee Byron
+  - Lei
+  - Leon Fedotov
   - Levi McCallum
   - Lily
   - Logan Allen
@@ -149,22 +201,31 @@
   - Marcin Szczepanski
   - Mariano Desanze
   - Mark Anderson
+  - Mark Funk
   - Mark Hintz
   - Mark IJbema
   - Mark Richardson
+  - Marlon Landaverde
   - Marshall Roch
   - Martin Andert
+  - Martin Jul
   - Martin Konicek
   - Mathieu M-Gosselin
+  - Matias Singers
   - Matt Harrison
+  - Matt Huggins
+  - Matt Zabriskie
   - Matthew Dapena-Tretter
   - Matti Nelimarkka
   - Max F. Albrecht
   - Michael Chan
-- - Michael Randers-Pehrson
+  - Michael Randers-Pehrson
   - Michal Srb
+  - Michelle Todd
+  - Mihai Parparita
   - Mike D Pilsbury
-  - Miorel Palii
+  - Minwe LUO
+- - Miorel Palii
   - Mouad Debbar
   - Nadeesha Cabral
   - Naman Goel
@@ -174,45 +235,69 @@
   - Nick Fitzgerald
   - Nick Gavalas
   - Nick Merwin
+  - Nick Raienko
   - Nick Thompson
   - Nick Williams
   - Niklas Boström
+  - Oiva Eskola
   - Oleg
   - Oleksii Markhovskyi
   - Oliver Zeigermann
   - Owen Coutts
   - Pablo Lacerda de Miranda
   - Pascal Hartig
+  - Patrick Laughlin
   - Paul O’Shannessy
   - Paul Seiffert
   - Paul Shen
+  - Pedro Nauck
   - Pete Hunt
+  - Peter Blazejewicz
   - Peter Cottle
+  - Peter Jaros
+  - Petri Lehtinen
   - Petri Lievonen
   - Pieter Vanderwerff
+  - Preston Parry
+  - Rafael
+  - Rafal Dittwald
   - Rajiv Tirumalareddy
   - Randall Randall
   - Ray
+  - Raymond Ha
   - Richard D. Worth
   - Richard Feldman
+  - Richard Kho
+  - Richard Littauer
   - Richard Livesey
   - Rick Beerendonk
+  - Riley Tomasek
   - Rob Arnold
+  - Robert Sedovsek
+  - Roman Vanesyan
   - Ryan Seddon
   - Sahat Yalkabov
+  - Sam Saccone
   - Sam Selikoff
   - Sander Spies
+  - Scott Feeney
   - Sean Kinsey
   - Sebastian Markbåge
   - Sergey Generalov
+  - Sergey Rubanov
   - Shane O'Sullivan
   - Shaun Trennery
   - Sheraz
+  - ShihChi Huang
   - Shripad K
   - Simon Højberg
   - Simon Welsh
+  - Sophia Westwood
+  - Spencer Handley
   - Stefan Dombrowski
   - Stephen Murphy
+  - Steve Baker
+  - Steven Luscher
   - Stoyan Stefanov
   - Sundeep Malladi
   - Sunny Juneja
@@ -223,22 +308,32 @@
   - Thomas Shaddox
   - Thomas Shafer
   - ThomasCrvsr
+  - Tienchai Wirojsaksaree
+  - Tim Schaub
   - Timothy Yung
   - Tom Haggie
   - Tom Hauburger
   - Tom MacWright
   - Tom Occhino
+  - Toru Kobayashi
   - Ville Immonen
+  - Vincent Riemer
+  - Vincent Siao
   - Vjeux
   - Volkan Unsal
   - Wayne Larsen
   - WickyNilliams
   - Wincent Colaiuta
+  - Wout Mertens
   - XuefengWu
+  - YouBao Nong
   - Yuriy Dybskiy
   - Yuval Dekel
   - Zach Bruggeman
+  - Zacharias
+  - chen
   - cutbko
   - davidxi
   - imagentleman
-  - jon madison
+  - "Árni Hermann Reynisson"
+  - "张敏"
