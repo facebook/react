@@ -47,7 +47,7 @@ forceUpdate([function callback])
 
 `render()` 메소드가 `this.props`나 `this.state`가 아닌 다른 곳에서 데이터를 읽어오는 경우 `forceUpdate()`를 호출하여 React가 `render()`를 다시 실행하도록 만들 수 있습니다. `this.state`를 직접 변경하는 경우에도 `forceUpdate()`를 호출해야 합니다.
 
-`forceUpdate()`를 호출하면 해당 컴포넌트와 그 자식들의 `render()` 함수가 호출되지만, React는 마크업이 변경된 경우에만 DOM을 업데이트합니다.
+`forceUpdate()`를 호출하면 `shouldComponentUpdate()`를 생략하고 해당 컴포넌트 `render()` 함수가 호출됩니다. 각 자식 컴포넌트에 대해서는 `shouldComponentUpdate()`를 포함해 보통 라이프 사이클 메서드를 호출합니다. React는 마크업이 변경된 경우에만 DOM을 업데이트합니다.
 
 특별한 경우가 아니면 `forceUpdate()`는 되도록 피하시고 `render()`에서는 `this.props`와 `this.state`에서만 읽어오세요. 그렇게 하는 것이 애플리케이션을 훨씬 단순하고 효율적으로 만들어줍니다.
 

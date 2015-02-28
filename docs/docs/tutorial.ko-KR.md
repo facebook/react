@@ -26,7 +26,7 @@ next: thinking-in-react-ko-KR.html
 
 ### 서버 구동하기
 
-이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby 버전이 있고, GitHub에서 찾아보실 수 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
+이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby, Go, PHP 버전이 있고, GitHub에서 찾아보실 수 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
 
 튜토리얼을 다운로드 받아 시작한다면, `public/index.html`을 열고 바로 시작하세요.
 

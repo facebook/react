@@ -116,6 +116,8 @@ onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
+`onMouseEnter`와 `onMouseLeave` 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 컴포넌트에 남겨지도록 컴포넌트에서 전달되고 캡쳐 단계가 없습니다.
+
 프로퍼티:
 
 ```javascript
