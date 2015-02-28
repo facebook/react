@@ -146,8 +146,12 @@ describe('ReactMount', function() {
   });
 
   it('should warn when mounting into document.body', function () {
-    spyOn(console, 'warn')
-    ReactMount.render(<div />, document.body);
+    var iFrame = document.createElement('iframe');
+    document.body.appendChild(iFrame);
+    spyOn(console, 'warn');
+
+    ReactMount.render(<div />, iFrame.contentDocument.body);
+
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toContain(
       'Rendering components directly into document.body is discouraged'

@@ -449,7 +449,7 @@ var ReactMount = {
     );
 
     warning(
-      container !== document.body,
+      container && container.tagName !== 'BODY',
       'render(): Rendering components directly into document.body is ' +
       'discouraged, since its children are often manipulated by third-party ' +
       'scripts and browser extensions. This may lead to subtle reconciliation ' +
