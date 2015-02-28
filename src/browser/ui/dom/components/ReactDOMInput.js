@@ -95,11 +95,12 @@ var ReactDOMInput = ReactClass.createClass({
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
     var rootNode = this.getDOMNode();
-    if (this.props.checked != null) {
+    var checked = LinkedValueUtils.getChecked(this);
+    if (checked != null) {
       DOMPropertyOperations.setValueForProperty(
         rootNode,
         'checked',
-        this.props.checked || false
+        checked
       );
     }
 
