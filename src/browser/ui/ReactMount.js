@@ -451,8 +451,8 @@ var ReactMount = {
     warning(
       container !== document.body,
       'render(): Rendering components directly into document.body is ' +
-      'discouraged, since its children are often manipulated by third party' +
-      'scripts and browser extensions. This may lead to subtle reconciliation' +
+      'discouraged, since its children are often manipulated by third-party ' +
+      'scripts and browser extensions. This may lead to subtle reconciliation ' +
       'issues. Try rendering into a container element created for your app.'
     );
 
