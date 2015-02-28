@@ -38,6 +38,9 @@ describe('ReactClass-mixin', function() {
       },
       componentDidMount: function() {
         this.props.listener('MixinA didMount');
+      },
+      componentWillUnmount: function() {
+        this.props.listener('MixinA willUnmount');
       }
     };
 
@@ -48,12 +51,18 @@ describe('ReactClass-mixin', function() {
       },
       componentDidMount: function() {
         this.props.listener('MixinB didMount');
+      },
+      componentWillUnmount: function() {
+        this.props.listener('MixinB willUnmount');
       }
     };
 
     var MixinBWithReverseSpec = {
       componentDidMount: function() {
         this.props.listener('MixinBWithReverseSpec didMount');
+      },
+      componentWillUnmount: function() {
+        this.props.listener('MixinBWithReverseSpec willUnmount');
       },
       mixins: [MixinA]
     };
@@ -64,6 +73,9 @@ describe('ReactClass-mixin', function() {
       },
       componentDidMount: function() {
         this.props.listener('MixinC didMount');
+      },
+      componentWillUnmount: function() {
+        this.props.listener('MixinC willUnmount');
       }
     };
 
@@ -84,6 +96,9 @@ describe('ReactClass-mixin', function() {
       componentDidMount: function() {
         this.props.listener('Component didMount');
       },
+      componentWillUnmount: function() {
+        this.props.listener('Component willUnmount');
+      },
       render: function() {
         return <div />;
       }
@@ -95,6 +110,9 @@ describe('ReactClass-mixin', function() {
       },
       componentDidMount: function() {
         this.props.listener('Component didMount');
+      },
+      componentWillUnmount: function() {
+        this.props.listener('Component willUnmount');
       },
       mixins: [MixinBWithReverseSpec, MixinC, MixinD]
     });
@@ -127,27 +145,39 @@ describe('ReactClass-mixin', function() {
 
   it('should support chaining delegate functions', function() {
     var listener = mocks.getMockFunction();
+    var container = document.createElement('div');
     var instance = <TestComponent listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = React.render(instance, container);
+    React.unmountComponentAtNode(container);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
       ['MixinB didMount'],
       ['MixinC didMount'],
-      ['Component didMount']
+      ['Component didMount'],
+      ['Component willUnmount'],
+      ['MixinC willUnmount'],
+      ['MixinB willUnmount'],
+      ['MixinA willUnmount']
     ]);
   });
 
   it('should chain functions regardless of spec property order', function() {
     var listener = mocks.getMockFunction();
+    var container = document.createElement('div');
     var instance = <TestComponentWithReverseSpec listener={listener} />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+    instance = React.render(instance, container);
+    React.unmountComponentAtNode(container);
 
     expect(listener.mock.calls).toEqual([
       ['MixinA didMount'],
       ['MixinBWithReverseSpec didMount'],
       ['MixinC didMount'],
-      ['Component didMount']
+      ['Component didMount'],
+      ['Component willUnmount'],
+      ['MixinC willUnmount'],
+      ['MixinBWithReverseSpec willUnmount'],
+      ['MixinA willUnmount']
     ]);
   });
 
