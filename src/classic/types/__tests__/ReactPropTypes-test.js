@@ -13,6 +13,7 @@
 
 var PropTypes;
 var React;
+var ReactFragment;
 var ReactPropTypeLocations;
 var ReactTestUtils;
 
@@ -48,6 +49,7 @@ describe('ReactPropTypes', function() {
   beforeEach(function() {
     PropTypes = require('ReactPropTypes');
     React = require('React');
+    ReactFragment = require('ReactFragment');
     ReactPropTypeLocations = require('ReactPropTypeLocations');
     ReactTestUtils = require('ReactTestUtils');
   });
@@ -356,6 +358,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for valid values', function() {
+      spyOn(console, 'warn');
       typeCheckPass(PropTypes.node, <div />);
       typeCheckPass(PropTypes.node, false);
       typeCheckPass(PropTypes.node, <MyComponent />);
@@ -371,7 +374,21 @@ describe('ReactPropTypes', function() {
         <MyComponent />
       ]);
 
-      // Object of rendereable things
+      // Object of renderable things
+      var frag = ReactFragment.create;
+      typeCheckPass(PropTypes.node, frag({
+        k0: 123,
+        k1: 'Some string',
+        k2: <div />,
+        k3: frag({
+          k30: <MyComponent />,
+          k31: frag({k310: <a />}),
+          k32: 'Another string'
+        })
+      }));
+      expect(console.warn.calls).toEqual([]);
+
+      // This should also pass, though it warns
       typeCheckPass(PropTypes.node, {
         k0: 123,
         k1: 'Some string',
