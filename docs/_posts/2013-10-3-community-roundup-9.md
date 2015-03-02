@@ -29,7 +29,7 @@ We organized a React hackathon last week-end in the Facebook Seattle office. 50 
 
 The video will be available soon on the [JSConf EU website](http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html), but in the meantime, here are Pete's slides:
 
-<figure><iframe src="http://www.slideshare.net/slideshow/embed_code/26589373" width="550" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
+<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/26589373" width="550" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
 
 
 ## Pump - Clojure bindings for React
