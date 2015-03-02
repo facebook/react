@@ -134,7 +134,8 @@ function validatePropertyKey(name, element, parentType) {
  */
 function warnAndMonitorForKeyUse(message, element, parentType) {
   var ownerName = getCurrentOwnerDisplayName();
-  var parentName = parentType.displayName || parentType.name;
+  var parentName = typeof parentType === 'string' ?
+    parentType : parentType.displayName || parentType.name;
 
   var useName = ownerName || parentName;
   var memoizer = ownerHasKeyUseWarning[message] || (
@@ -145,9 +146,10 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
   }
   memoizer[useName] = true;
 
-  message += ownerName ?
-    ` Check the render method of ${ownerName}.` :
-    ` Check the React.render call using <${parentName}>.`;
+  message +=
+    ownerName ? ` Check the render method of ${ownerName}.` :
+    parentName ? ` Check the React.render call using <${parentName}>.` :
+    '';
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
