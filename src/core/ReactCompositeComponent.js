@@ -449,14 +449,16 @@ var ReactCompositeComponentMixin = {
             // Preface gives us something to blacklist in warning module
             warning(
               false,
-              'Failed Composite propType: %s',
-              error.message + addendum
+              'Failed Composite propType: %s%s',
+              error.message,
+              addendum
             );
           } else {
             warning(
               false,
-              'Failed Context Types: %s',
-              error.message + addendum
+              'Failed Context Types: %s%s',
+              error.message,
+              addendum
             );
           }
         }

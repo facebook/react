@@ -146,7 +146,7 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
   }
   memoizer[useName] = true;
 
-  message +=
+  var parentOrOwnerAddendum =
     ownerName ? ` Check the render method of ${ownerName}.` :
     parentName ? ` Check the React.render call using <${parentName}>.` :
     '';
@@ -154,17 +154,22 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
+  var childOwnerAddendum = '';
   if (element &&
       element._owner &&
       element._owner !== ReactCurrentOwner.current) {
     // Name of the component that originally created this child.
     var childOwnerName = getName(element._owner);
 
-    message += ` It was passed a child from ${childOwnerName}.`;
+    childOwnerAddendum = ` It was passed a child from ${childOwnerName}.`;
   }
 
-  message += ' See http://fb.me/react-warning-keys for more information.';
-  warning(false, message);
+  warning(
+    false,
+    message + '%s%s See http://fb.me/react-warning-keys for more information.',
+    parentOrOwnerAddendum,
+    childOwnerAddendum
+  );
 }
 
 /**
@@ -248,7 +253,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         loggedTypeFailures[error.message] = true;
 
         var addendum = getDeclarationErrorAddendum(this);
-        warning(false, 'Failed propType: ' + error.message + addendum);
+        warning(false, 'Failed propType: %s%s', error.message, addendum);
       }
     }
   }
