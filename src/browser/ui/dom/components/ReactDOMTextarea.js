@@ -113,11 +113,17 @@ var ReactDOMTextarea = ReactClass.createClass({
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
     var value = LinkedValueUtils.getValue(this);
-    if (value != null) {
+
+    var valueIsBlank = !this.props.children &&
+      !this.props.defaultValue && value == null;
+
+    if (value != null || valueIsBlank) {
       var rootNode = this.getDOMNode();
+
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);
+      value = valueIsBlank ? '' : '' + value;
+      DOMPropertyOperations.setValueForProperty(rootNode, 'value', value);
     }
   },
 
