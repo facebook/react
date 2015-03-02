@@ -336,6 +336,42 @@ function checkAndWarnForMutatedProps(element) {
   }
 }
 
+/**
+ * Given an element, validate that its props follow the propTypes definition,
+ * provided by the type.
+ *
+ * @param {ReactElement} element
+ */
+function validatePropTypes(element) {
+  if (element.type == null) {
+    // This has already warned. Don't throw.
+    return;
+  }
+  // Extract the component class from the element. Converts string types
+  // to a composite class which may have propTypes.
+  // TODO: Validating a string's propTypes is not decoupled from the
+  // rendering target which is problematic.
+  var componentClass = ReactNativeComponent.getComponentClassForElement(
+    element
+  );
+  var name = componentClass.displayName || componentClass.name;
+  if (componentClass.propTypes) {
+    checkPropTypes(
+      name,
+      componentClass.propTypes,
+      element.props,
+      ReactPropTypeLocations.prop
+    );
+  }
+  if (typeof componentClass.getDefaultProps === 'function') {
+    warning(
+      componentClass.getDefaultProps.isReactClassApproved,
+      'getDefaultProps is only used on classic React.createClass ' +
+      'definitions. Use a static property named `defaultProps` instead.'
+    );
+  }
+}
+
 var ReactElementValidator = {
 
   checkAndWarnForMutatedProps: checkAndWarnForMutatedProps,
@@ -362,33 +398,7 @@ var ReactElementValidator = {
       validateChildKeys(arguments[i], type);
     }
 
-    if (type) {
-      // Extract the component class from the element. Converts string types
-      // to a composite class which may have propTypes.
-      // TODO: Validating a string's propTypes is not decoupled from the
-      // rendering target which is problematic.
-      var componentClass = ReactNativeComponent.getComponentClassForElement(
-        element
-      );
-      var name = componentClass.displayName || componentClass.name;
-      if (__DEV__) {
-        if (componentClass.propTypes) {
-          checkPropTypes(
-            name,
-            componentClass.propTypes,
-            element.props,
-            ReactPropTypeLocations.prop
-          );
-        }
-      }
-      if (typeof componentClass.getDefaultProps === 'function') {
-        warning(
-          componentClass.getDefaultProps.isReactClassApproved,
-          'getDefaultProps is only used on classic React.createClass ' +
-          'definitions. Use a static property named `defaultProps` instead.'
-        );
-      }
-    }
+    validatePropTypes(element);
 
     return element;
   },
@@ -428,6 +438,15 @@ var ReactElementValidator = {
 
 
     return validatedFactory;
+  },
+
+  cloneElement: function(element, props, children) {
+    var newElement = ReactElement.cloneElement.apply(this, arguments);
+    for (var i = 2; i < arguments.length; i++) {
+      validateChildKeys(arguments[i], newElement.type);
+    }
+    validatePropTypes(newElement);
+    return newElement;
   }
 
 };
