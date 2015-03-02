@@ -141,7 +141,8 @@ var ReactFragment = {
           warning(
             didWarnForFragment(fragment),
             'Any use of a keyed object should be wrapped in ' +
-            'React.addons.createFragment(object) before passed as a child.'
+            'React.addons.createFragment(object) before being passed as a ' +
+            'child.'
           );
           return fragment;
         }
