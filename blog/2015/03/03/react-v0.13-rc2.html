@@ -140,7 +140,7 @@ Minified build for production: <a href="http://fb.me/react-with-addons-0.13.0-rc
 <p>Note: <code>React.cloneElement(child, { ref: &#39;newRef&#39; })</code> <em>DOES</em> override the <code>ref</code> so it is still not possible for two parents to have a ref to the same child, unless you use callback-refs.</p>
 </blockquote>
 
-<p>This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the <code>ref</code>. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at FaceBook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.</p>
+<p>This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the <code>ref</code>. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at Facebook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.</p>
 
 <p>We plan to eventually deprecate <code>React.addons.cloneWithProps</code>. We&#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using <code>React.cloneElement</code> instead. We&#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.</p>
 
