@@ -26,7 +26,7 @@ Formidable Labs ([FormidableLabs](https://github.com/FormidableLabs)) have been 
 
 [Reactiflux.com](http://reactiflux.com/) is a new Slack community based around (you guessed it!) React, and Flux. 
 
-[React Week](http://reactweek.com/) is a recently launched, week-long learning workshop for React, Flux, and other related technologies, run by Ryan Florence ([ryanflorence](https://github.com/ryanflorence)). 
+[React Week](http://reactweek.com/) is a week-long learning workshop, happening next week, for React, Flux, and other related technologies, run by Ryan Florence ([ryanflorence](https://github.com/ryanflorence)). 
 
 [Babel-sublime](https://github.com/babel/babel-sublime) is a new package which provides Sublime with language definitions for ES6 JavaScript with React JSX syntax extensions. 
 
@@ -38,9 +38,9 @@ Rich Manalang ([rmanalan](https://github.com/rmanalan)) from Atlassian [explains
 
 [Andrew Hillel](https://twitter.com/andyhillel) of the BBC gives [an excellent and thorough breakdown](http://www.bbc.co.uk/blogs/internet/entries/47a96d23-ae04-444e-808f-678e6809765d) of the stack they used to rebuild their homepage, with React as an integral part of the front-end. 
 
-A team from New Zealand called [Atomic ](https://atomic.io/)is[ building web and mobile prototyping and design tools ](http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/)entirely in-browser, and as co-founder [Darryl Gray](http://twitter.com/darrylgray) says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.
+A team from New Zealand called [Atomic](https://atomic.io/) is [building web and mobile prototyping and design tools](http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/) entirely in-browser, and as co-founder [Darryl Gray](http://twitter.com/darrylgray) says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.
 
-Polarr ([polarrco](https://github.com/Polarrco)) have rebuilt [their browser-based photo editor ](http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here)with React.
+Polarr ([polarrco](https://github.com/Polarrco)) have rebuilt [their browser-based photo editor](http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here) with React.
 
 ## It's F8!
 
