@@ -7,6 +7,62 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.13 RC2</title>
+				<description>&lt;p&gt;Thanks to everybody who has already been testing the release candidate. We&amp;#39;ve received some good feedback and as a result we&amp;#39;re going to do a second release candidate. The changes are minimal. We haven&amp;#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&amp;#39;s a summary of the changes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Introduced a new API (&lt;code&gt;React.cloneElement&lt;/code&gt;, see below for details).&lt;/li&gt;
+&lt;li&gt;Fixed a bug related to validating &lt;code&gt;propTypes&lt;/code&gt; when using the new &lt;code&gt;React.addons.createFragment&lt;/code&gt; API.&lt;/li&gt;
+&lt;li&gt;Improved a couple warning messages.&lt;/li&gt;
+&lt;li&gt;Upgraded jstransform and esprima.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The release candidate is available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0-rc2.js&quot;&gt;http://fb.me/react-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0-rc2.min.js&quot;&gt;http://fb.me/react-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc2.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc2.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0-rc2.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0-rc2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0-rc2.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0-rc2.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0-rc2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react.cloneelement&quot;&gt;&lt;/a&gt;React.cloneElement &lt;a class=&quot;hash-link&quot; href=&quot;#react.cloneelement&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;In React v0.13 RC2 we will introduce a new API, similar to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;, with this signature:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Unlike &lt;code&gt;cloneWithProps&lt;/code&gt;, this new function does not have any magic built-in behavior for merging &lt;code&gt;style&lt;/code&gt; and &lt;code&gt;className&lt;/code&gt; for the same reason we don&amp;#39;t have that feature from &lt;code&gt;transferPropsTo&lt;/code&gt;. Nobody is sure what exactly the complete list of magic things are, which makes it difficult to reason about the code and difficult to reuse when &lt;code&gt;style&lt;/code&gt; has a different signature (e.g. in the upcoming React Native).&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;React.cloneElement&lt;/code&gt; is &lt;em&gt;almost&lt;/em&gt; equivalent to:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;type&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;element&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{...&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/element.type&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, unlike JSX and &lt;code&gt;cloneWithProps&lt;/code&gt;, it also preserves &lt;code&gt;ref&lt;/code&gt;s. This means that if you get a child with a &lt;code&gt;ref&lt;/code&gt; on it, you won&amp;#39;t accidentally steal it from your ancestor. You will get the same &lt;code&gt;ref&lt;/code&gt; attached to your new element.&lt;/p&gt;
+
+&lt;p&gt;One common pattern is to map over your children and add a new prop. There were many issues reported about &lt;code&gt;cloneWithProps&lt;/code&gt; losing the ref, making it harder to reason about your code. Now following the same pattern with &lt;code&gt;cloneElement&lt;/code&gt; will work as expected. For example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;newChildren&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;cloneElement&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;child&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;blockquote&gt;
+&lt;p&gt;Note: &lt;code&gt;React.cloneElement(child, { ref: &amp;#39;newRef&amp;#39; })&lt;/code&gt; &lt;em&gt;DOES&lt;/em&gt; override the &lt;code&gt;ref&lt;/code&gt; so it is still not possible for two parents to have a ref to the same child, unless you use callback-refs.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the &lt;code&gt;ref&lt;/code&gt;. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at FaceBook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.&lt;/p&gt;
+
+&lt;p&gt;We plan to eventually deprecate &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt;. We&amp;#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using &lt;code&gt;React.cloneElement&lt;/code&gt; instead. We&amp;#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.&lt;/p&gt;
+</description>
+				<pubDate>2015-03-03T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13 RC</title>
 				<description>&lt;p&gt;Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!&lt;/p&gt;
 
@@ -890,126 +946,6 @@ until the next conference. All the talks will be recorded and put online shortly
 				<pubDate>2014-11-24T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.12</title>
-				<description>&lt;p&gt;We&amp;#39;re happy to announce the availability of React v0.12! After over a week of baking as the release candidate, we uncovered and fixed a few small issues. Thanks to all of you who upgraded and gave us feedback!&lt;/p&gt;
-
-&lt;p&gt;We have talked a lot about some of the bigger changes in this release. &lt;a href=&quot;/react/blog/2014/10/14/introducing-react-elements.html&quot;&gt;We introduced new terminology&lt;/a&gt; and changed APIs to clean up and simplify some of the concepts of React. &lt;a href=&quot;/react/blog/2014/10/16/react-v0.12-rc1.html&quot;&gt;We also made several changes to JSX&lt;/a&gt; and deprecated a few functions. We won&amp;#39;t go into depth about these changes again but we encourage you to read up on these changes in the linked posts. We&amp;#39;ll summarize these changes and discuss some of the other changes and how they may impact you below. As always, a full changelog is also included below.&lt;/p&gt;
-
-&lt;p&gt;The release is available for download:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.0.js&quot;&gt;http://fb.me/react-0.12.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.0.min.js&quot;&gt;http://fb.me/react-0.12.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0.js&quot;&gt;http://fb.me/react-with-addons-0.12.0.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.0.js&quot;&gt;http://fb.me/JSXTransformer-0.12.0.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-terminology-amp-updated-apis&quot;&gt;&lt;/a&gt;New Terminology &amp;amp; Updated APIs &lt;a class=&quot;hash-link&quot; href=&quot;#new-terminology-amp-updated-apis&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;v0.12 is bringing about some new terminology. &lt;a href=&quot;/react/blog/2014/10/14/introducing-react-elements.html&quot;&gt;We introduced&lt;/a&gt; this 2 weeks ago and we&amp;#39;ve also documented it in &lt;a href=&quot;/react/docs/glossary.html&quot;&gt;a new section of the documentation&lt;/a&gt;. As a part of this, we also corrected many of our top-level APIs to align with the terminology. &lt;code&gt;Component&lt;/code&gt; has been removed from all of our &lt;code&gt;React.render*&lt;/code&gt; methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with &lt;code&gt;render&lt;/code&gt; methods in your component classes, we decided to keep the top-level functions short and sweet. &lt;code&gt;React.renderComponent&lt;/code&gt; is now &lt;code&gt;React.render&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;We also corrected some other misnomers. &lt;code&gt;React.isValidComponent&lt;/code&gt; actually determines if the argument is a ReactElement, so it has been renamed to &lt;code&gt;React.isValidElement&lt;/code&gt;. In the same vein, &lt;code&gt;React.PropTypes.component&lt;/code&gt; is now &lt;code&gt;React.PropTypes.element&lt;/code&gt; and &lt;code&gt;React.PropTypes.renderable&lt;/code&gt; is now &lt;code&gt;React.PropTypes.node&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;The old methods will still work but will warn upon first use. They will be removed in v0.13.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx-changes&quot;&gt;&lt;/a&gt;JSX Changes &lt;a class=&quot;hash-link&quot; href=&quot;#jsx-changes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;a href=&quot;/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes&quot;&gt;We talked more in depth about these before&lt;/a&gt;, so here are the highlights.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;No more &lt;code&gt;/** @jsx React.DOM */&lt;/code&gt;!&lt;/li&gt;
-&lt;li&gt;We no longer transform to a straight function call. &lt;code&gt;&amp;lt;Component/&amp;gt;&lt;/code&gt; now becomes &lt;code&gt;React.createElement(Component)&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;DOM components don&amp;#39;t make use of &lt;code&gt;React.DOM&lt;/code&gt;, instead we pass the tag name directly. &lt;code&gt;&amp;lt;div/&amp;gt;&lt;/code&gt; becomes &lt;code&gt;React.createElement(&amp;#39;div&amp;#39;)&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;We introduced spread attributes as a quick way to transfer props.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;devtools-improvements-no-more-__internals&quot;&gt;&lt;/a&gt;DevTools Improvements, No More &lt;code&gt;__internals&lt;/code&gt; &lt;a class=&quot;hash-link&quot; href=&quot;#devtools-improvements-no-more-__internals&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;For months we&amp;#39;ve gotten complaints about the React DevTools message. It shouldn&amp;#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!&lt;/p&gt;
-
-&lt;p&gt;As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. &lt;code&gt;React.__internals&lt;/code&gt; is no more.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;license-change---bsd&quot;&gt;&lt;/a&gt;License Change - BSD &lt;a class=&quot;hash-link&quot; href=&quot;#license-change---bsd&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.&lt;/p&gt;
-
-&lt;p&gt;You can read the full text of the &lt;a href=&quot;https://github.com/facebook/react/blob/master/LICENSE&quot;&gt;LICENSE&lt;/a&gt; and &lt;a href=&quot;https://github.com/facebook/react/blob/master/PATENTS&quot;&gt;&lt;code&gt;PATENTS&lt;/code&gt;&lt;/a&gt; files on GitHub.&lt;/p&gt;
-
-&lt;hr&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; moved off props object, now accessible on the element directly&lt;/li&gt;
-&lt;li&gt;React is now BSD licensed with accompanying Patents grant&lt;/li&gt;
-&lt;li&gt;Default prop resolution has moved to Element creation time instead of mount time, making them effectively static&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.__internals&lt;/code&gt; is removed - it was exposed for DevTools which no longer needs access&lt;/li&gt;
-&lt;li&gt;Composite Component functions can no longer be called directly - they must be wrapped with &lt;code&gt;React.createFactory&lt;/code&gt; first. This is handled for you when using JSX.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Spread operator (&lt;code&gt;{...}&lt;/code&gt;) introduced to deprecate &lt;code&gt;this.transferPropsTo&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added support for more HTML attributes: &lt;code&gt;acceptCharset&lt;/code&gt;, &lt;code&gt;classID&lt;/code&gt;, &lt;code&gt;manifest&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponent&lt;/code&gt; --&amp;gt; &lt;code&gt;React.render&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponentToString&lt;/code&gt; --&amp;gt; &lt;code&gt;React.renderToString&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.renderComponentToStaticMarkup&lt;/code&gt; --&amp;gt; &lt;code&gt;React.renderToStaticMarkup&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.isValidComponent&lt;/code&gt; --&amp;gt; &lt;code&gt;React.isValidElement&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.PropTypes.component&lt;/code&gt; --&amp;gt; &lt;code&gt;React.PropTypes.element&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;React.PropTypes.renderable&lt;/code&gt; --&amp;gt; &lt;code&gt;React.PropTypes.node&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; &lt;code&gt;React.isValidClass&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; &lt;code&gt;instance.transferPropsTo&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; Returning &lt;code&gt;false&lt;/code&gt; from event handlers to preventDefault&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; Convenience Constructor usage as function, instead wrap with &lt;code&gt;React.createFactory&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;DEPRECATED&lt;/strong&gt; use of &lt;code&gt;key={null}&lt;/code&gt; to assign implicit keys&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Better handling of events and updates in nested results, fixing value restoration in &amp;quot;layered&amp;quot; controlled components&lt;/li&gt;
-&lt;li&gt;Correctly treat &lt;code&gt;event.getModifierState&lt;/code&gt; as case sensitive&lt;/li&gt;
-&lt;li&gt;Improved normalization of &lt;code&gt;event.charCode&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Better error stacks when involving autobound methods&lt;/li&gt;
-&lt;li&gt;Removed DevTools message when the DevTools are installed&lt;/li&gt;
-&lt;li&gt;Correctly detect required language features across browsers&lt;/li&gt;
-&lt;li&gt;Fixed support for some HTML attributes:
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;list&lt;/code&gt; updates correctly now&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;scrollLeft&lt;/code&gt;, &lt;code&gt;scrollTop&lt;/code&gt; removed, these should not be specified as props&lt;/li&gt;
-&lt;/ul&gt;&lt;/li&gt;
-&lt;li&gt;Improved error messages&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-addons&quot;&gt;&lt;/a&gt;React With Addons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-addons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.addons.batchedUpdates&lt;/code&gt; added to API for hooking into update cycle&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;React.addons.update&lt;/code&gt; uses &lt;code&gt;assign&lt;/code&gt; instead of &lt;code&gt;copyProperties&lt;/code&gt; which does &lt;code&gt;hasOwnProperty&lt;/code&gt; checks. Properties on prototypes will no longer be updated correctly.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Fixed some issues with CSS Transitions&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components&lt;/li&gt;
-&lt;li&gt;JSX no longer transforms to simple function calls&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;@jsx React.DOM&lt;/code&gt; no longer required&lt;/li&gt;
-&lt;li&gt;spread (&lt;code&gt;{...}&lt;/code&gt;) operator introduced to allow easier use of props&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
-&lt;ul&gt;
-&lt;li&gt;JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-10-28T00:00:00-07:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/10/28/react-v0.12.html</guid>
 			</item>
 		
 	</channel>
