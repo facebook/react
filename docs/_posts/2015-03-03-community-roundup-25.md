@@ -28,6 +28,8 @@ Formidable Labs ([FormidableLabs](https://github.com/FormidableLabs)) have been 
 
 [React Week](http://reactweek.com/) is a recently launched, week-long learning workshop for React, Flux, and other related technologies, run by Ryan Florence ([ryanflorence](https://github.com/ryanflorence)). 
 
+[Babel-sublime](https://github.com/babel/babel-sublime) is a new package which provides Sublime with language definitions for ES6 JavaScript with React JSX syntax extensions. 
+
 ## Rebuilding with React
 
 Rich Manalang ([rmanalan](https://github.com/rmanalan)) from Atlassian [explains why](https://developer.atlassian.com/blog/2015/02/rebuilding-hipchat-with-react/) they rebuilt their HipChat web client from scratch using React, and how they're already using it to rebuild their native desktop clients. 
