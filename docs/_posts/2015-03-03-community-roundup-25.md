@@ -6,7 +6,7 @@ author: Matthew Johnston
 
 ## React 101
 
-Interest in React has been exploding recently, so it's a good time to explore some great recent tutorials and videos covering getting started. 
+Interest in React has been exploding recently, so it's a good time to explore some great recent tutorials and videos that cover getting started. 
 
 Ryan Clarke ([rynclark](https://github.com/rynclark)) provides a [great overview of the basics of React](http://ryanclark.me/getting-started-with-react/) with the goal of building a really simple dropdown nav. 
 
@@ -14,11 +14,11 @@ Formidable Labs ([FormidableLabs](https://github.com/FormidableLabs)) and [Seatt
 
 <iframe width="560" height="315" src="//www.youtube.com/embed/[Pd6Ub7Ju2RM](https://www.youtube.com/watch?v=Pd6Ub7Ju2RM)" frameborder="0" allowfullscreen></iframe>
 
-AEFlash ([aearly](https://github.com/aearly)) writeup [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React. 
+AEFlash ([aearly](https://github.com/aearly)) writes up [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React. 
 
-Black Mutt Media [take us through their usage of React](http://blackmuttmedia.com/blog/react-tmdb-api/) and Ruby to build an autocomplete field, and some of the pitfalls they encountered along the way.
+Black Mutt Media [takes us through their usage of React](http://blackmuttmedia.com/blog/react-tmdb-api/) and Ruby to build an autocomplete field, and some of the pitfalls they encountered along the way.
 
-Our own [sebmarkbage ](https://github.com/sebmarkbage)was on the[ Web Platform Podcast](http://thewebplatform.libsyn.com/31-building-with-reactjs) to have a chat about all aspects of React.
+Our own [Sebastian Markbåge](https://github.com/sebmarkbage) was on the [Web Platform Podcast](http://thewebplatform.libsyn.com/31-building-with-reactjs) to have a chat about all aspects of React.
 
 ## Community Additions
 
@@ -29,6 +29,8 @@ Formidable Labs ([FormidableLabs](https://github.com/FormidableLabs)) have been 
 [React Week](http://reactweek.com/) is a recently launched, week-long learning workshop for React, Flux, and other related technologies, run by Ryan Florence ([ryanflorence](https://github.com/ryanflorence)). 
 
 [Babel-sublime](https://github.com/babel/babel-sublime) is a new package which provides Sublime with language definitions for ES6 JavaScript with React JSX syntax extensions. 
+
+[react-meteor](https://github.com/reactjs/react-meteor), a package that replaces the default templating system of the Meteor platform with React, recently received a big update. 
 
 ## Rebuilding with React
 
