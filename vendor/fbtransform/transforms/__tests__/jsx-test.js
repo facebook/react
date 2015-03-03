@@ -9,6 +9,8 @@
  * @emails react-core
  */
 
+'use strict';
+
 require('mock-modules').autoMockOff();
 
 describe('jsx', function() {
@@ -138,4 +140,3 @@ describe('jsx', function() {
     expect(state.g.buffer).toBe('/*comment*/');
   });
 });
-
