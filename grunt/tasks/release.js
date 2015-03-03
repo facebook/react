@@ -3,7 +3,7 @@
 var grunt = require('grunt');
 
 var BOWER_PATH = '../react-bower/';
-var BOWER_GLOB = [BOWER_PATH + '*'];
+var BOWER_GLOB = [BOWER_PATH + '*.{js}'];
 var BOWER_FILES = [
   'react.js', 'react.min.js', 'JSXTransformer.js',
   'react-with-addons.js', 'react-with-addons.min.js'
