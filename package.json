@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "commoner": "^0.10.0",
-    "jstransform": "^9.1.1"
+    "jstransform": "^10.0.0"
   },
   "devDependencies": {
     "benchmark": "~1.0.0",
@@ -41,7 +41,7 @@
     "es3ify": "~0.1.2",
     "es5-shim": "^4.0.0",
     "eslint": "^0.14.1",
-    "esprima-fb": "^12001.1.0-dev-harmony-fb",
+    "esprima-fb": "^13001.1.0-dev-harmony-fb",
     "grunt": "~0.4.2",
     "grunt-cli": "~0.1.9",
     "grunt-compare-size": "~0.4.0",
