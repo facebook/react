@@ -8,7 +8,7 @@ author: Matthew Johnston
 
 Interest in React has been exploding recently, so it's a good time to explore some great recent tutorials and videos that cover getting started.
 
-[Ryan Clarke](https://github.com/rynclark) provides a [great overview of the basics of React](http://ryanclark.me/getting-started-with-react/) with the goal of building a really simple dropdown nav.
+[Ryan Clark](https://github.com/rynclark) provides a [great overview of the basics of React](http://ryanclark.me/getting-started-with-react/) with the goal of building a really simple dropdown nav.
 
 [Formidable Labs](https://github.com/FormidableLabs) and [Seattle JS](http://www.meetup.com/seattlejs/) recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:
 
