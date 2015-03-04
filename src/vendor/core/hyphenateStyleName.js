@@ -33,6 +33,10 @@ var msPattern = /^ms-/;
  * @return {string}
  */
 function hyphenateStyleName(string) {
+  if (string == 'MozMacOSXFontSmoothing') {
+    // The kebab-case of the `OSX` token should be `-osx-`, after conversion
+    string = 'MozMacOsxFontSmoothing';
+  }
   return hyphenate(string).replace(msPattern, '-ms-');
 }
 

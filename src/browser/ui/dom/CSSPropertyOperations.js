@@ -43,18 +43,22 @@ if (__DEV__) {
   var warnedStyleNames = {};
   var warnedStyleValues = {};
 
-  var warnHyphenatedStyleName = function(name) {
-    if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
+  var warnUnsupportedStyleName = function(badname, goodname) {
+    if (warnedStyleNames.hasOwnProperty(badname) && warnedStyleNames[badname]) {
       return;
     }
 
-    warnedStyleNames[name] = true;
+    warnedStyleNames[badname] = true;
     warning(
       false,
       'Unsupported style property %s. Did you mean %s?',
-      name,
-      camelizeStyleName(name)
+      badname,
+      goodname
     );
+  };
+
+  var warnHyphenatedStyleName = function(name) {
+    warnUnsupportedStyleName(name, camelizeStyleName(name));
   };
 
   var warnBadVendoredStyleName = function(name) {
@@ -91,7 +95,9 @@ if (__DEV__) {
    * @param {*} value
    */
   var warnValidStyle = function(name, value) {
-    if (name.indexOf('-') > -1) {
+    if (name === 'MozMacOsxFontSmoothing') {
+      warnUnsupportedStyleName('MozMacOsxFontSmoothing', 'MozMacOSXFontSmoothing');
+    } else if (name.indexOf('-') > -1) {
       warnHyphenatedStyleName(name);
     } else if (badVendoredStyleNamePattern.test(name)) {
       warnBadVendoredStyleName(name);
