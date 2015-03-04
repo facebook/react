@@ -63,6 +63,64 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 			</item>
 		
 			<item>
+				<title>Community Round-up #25</title>
+				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-101&quot;&gt;&lt;/a&gt;React 101 &lt;a class=&quot;hash-link&quot; href=&quot;#react-101&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Interest in React has been exploding recently, so it&amp;#39;s a good time to explore some great recent tutorials and videos that cover getting started. &lt;/p&gt;
+
+&lt;p&gt;Ryan Clarke (&lt;a href=&quot;https://github.com/rynclark&quot;&gt;rynclark&lt;/a&gt;) provides a &lt;a href=&quot;http://ryanclark.me/getting-started-with-react/&quot;&gt;great overview of the basics of React&lt;/a&gt; with the goal of building a really simple dropdown nav. &lt;/p&gt;
+
+&lt;p&gt;Formidable Labs (&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;FormidableLabs&lt;/a&gt;) and &lt;a href=&quot;http://www.meetup.com/seattlejs/&quot;&gt;Seattle JS&lt;/a&gt; recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:&lt;/p&gt;
+
+&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/[Pd6Ub7Ju2RM](https://www.youtube.com/watch?v=Pd6Ub7Ju2RM)&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
+
+&lt;p&gt;AEFlash (&lt;a href=&quot;https://github.com/aearly&quot;&gt;aearly&lt;/a&gt;) writes up &lt;a href=&quot;http://aeflash.com/2015-02/react-tips-and-best-practices.html&quot;&gt;some best practices and tips&lt;/a&gt; to help you avoid potential pitfalls when developing with React. &lt;/p&gt;
+
+&lt;p&gt;Black Mutt Media &lt;a href=&quot;http://blackmuttmedia.com/blog/react-tmdb-api/&quot;&gt;takes us through their usage of React&lt;/a&gt; and Ruby to build an autocomplete field, and some of the pitfalls they encountered along the way.&lt;/p&gt;
+
+&lt;p&gt;Our own &lt;a href=&quot;https://github.com/sebmarkbage&quot;&gt;Sebastian Markbåge&lt;/a&gt; was on the &lt;a href=&quot;http://thewebplatform.libsyn.com/31-building-with-reactjs&quot;&gt;Web Platform Podcast&lt;/a&gt; to have a chat about all aspects of React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;community-additions&quot;&gt;&lt;/a&gt;Community Additions &lt;a class=&quot;hash-link&quot; href=&quot;#community-additions&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Formidable Labs (&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;FormidableLabs&lt;/a&gt;) have been busy, as they&amp;#39;ve also&lt;a href=&quot;http://projects.formidablelabs.com/radium/&quot;&gt; just launched Radium&lt;/a&gt;, a React component that provides you with the ability to use inline styles instead of CSS. They&amp;#39;re also &lt;a href=&quot;http://projects.formidablelabs.com/radium-bootstrap/&quot;&gt;looking for some help&lt;/a&gt; contributing to a Radium Bootstrap implementation. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://reactiflux.com/&quot;&gt;Reactiflux.com&lt;/a&gt; is a new Slack community based around (you guessed it!) React, and Flux. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;http://reactweek.com/&quot;&gt;React Week&lt;/a&gt; is a week-long learning workshop, happening next week, for React, Flux, and other related technologies, run by Ryan Florence (&lt;a href=&quot;https://github.com/ryanflorence&quot;&gt;ryanflorence&lt;/a&gt;). &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/babel/babel-sublime&quot;&gt;Babel-sublime&lt;/a&gt; is a new package which provides Sublime with language definitions for ES6 JavaScript with React JSX syntax extensions. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/reactjs/react-meteor&quot;&gt;react-meteor&lt;/a&gt;, a package that replaces the default templating system of the Meteor platform with React, recently received a big update. &lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;rebuilding-with-react&quot;&gt;&lt;/a&gt;Rebuilding with React &lt;a class=&quot;hash-link&quot; href=&quot;#rebuilding-with-react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Rich Manalang (&lt;a href=&quot;https://github.com/rmanalan&quot;&gt;rmanalan&lt;/a&gt;) from Atlassian &lt;a href=&quot;https://developer.atlassian.com/blog/2015/02/rebuilding-hipchat-with-react/&quot;&gt;explains why&lt;/a&gt; they rebuilt their HipChat web client from scratch using React, and how they&amp;#39;re already using it to rebuild their native desktop clients. &lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://twitter.com/andyhillel&quot;&gt;Andrew Hillel&lt;/a&gt; of the BBC gives &lt;a href=&quot;http://www.bbc.co.uk/blogs/internet/entries/47a96d23-ae04-444e-808f-678e6809765d&quot;&gt;an excellent and thorough breakdown&lt;/a&gt; of the stack they used to rebuild their homepage, with React as an integral part of the front-end. &lt;/p&gt;
+
+&lt;p&gt;A team from New Zealand called &lt;a href=&quot;https://atomic.io/&quot;&gt;Atomic&lt;/a&gt; is &lt;a href=&quot;http://thenextweb.com/creativity/2015/02/19/meet-atomic-missing-tool-interface-design-thats-entirely-browser/&quot;&gt;building web and mobile prototyping and design tools&lt;/a&gt; entirely in-browser, and as co-founder &lt;a href=&quot;http://twitter.com/darrylgray&quot;&gt;Darryl Gray&lt;/a&gt; says, “React.js “totally changed” the fact that browser performance often wasn’t good enough for complex tools like this.”.&lt;/p&gt;
+
+&lt;p&gt;Polarr (&lt;a href=&quot;https://github.com/Polarrco&quot;&gt;polarrco&lt;/a&gt;) have rebuilt &lt;a href=&quot;http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here&quot;&gt;their browser-based photo editor&lt;/a&gt; with React.&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;its-f8&quot;&gt;&lt;/a&gt;It&amp;#39;s F8! &lt;a class=&quot;hash-link&quot; href=&quot;#its-f8&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;F8 2015 is just around the corner, and you can &lt;a href=&quot;https://www.fbf8.com/stream.html&quot;&gt;sign up for the video streams&lt;/a&gt; in advance because we&amp;#39;re sure to be covering all things React. &lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;meetups&quot;&gt;&lt;/a&gt;Meetups &lt;a class=&quot;hash-link&quot; href=&quot;#meetups&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Our &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; meetup is in full effect &lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt; &amp;#10;&amp;#10;btw bathroom code is 6012 lol &lt;a href=&quot;http://t.co/7iUpvmm3zz&quot;&gt;pic.twitter.com/7iUpvmm3zz&lt;/a&gt;&lt;/p&gt;&amp;mdash; littleBits (@littleBits) &lt;a href=&quot;https://twitter.com/littleBits/status/570373833028472832&quot;&gt;February 25, 2015&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/yrezgui&quot;&gt;@yrezgui&lt;/a&gt; captivating us with &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; at &lt;a href=&quot;https://twitter.com/DevRocketUK&quot;&gt;@DevRocketUK&lt;/a&gt;. Thanks to the amazing sponsors &lt;a href=&quot;https://twitter.com/makersacademy&quot;&gt;@makersacademy&lt;/a&gt; and &lt;a href=&quot;https://twitter.com/couchbase&quot;&gt;@couchbase&lt;/a&gt;. &lt;a href=&quot;http://t.co/xwA773omky&quot;&gt;pic.twitter.com/xwA773omky&lt;/a&gt;&lt;/p&gt;&amp;mdash; James Nocentini (@jamiltz) &lt;a href=&quot;https://twitter.com/jamiltz/status/570306188577001473&quot;&gt;February 24, 2015&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Listening to a bunch of very clever geekoids at the &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt; seminar. Nice! &lt;a href=&quot;http://t.co/0TeTOJOerO&quot;&gt;pic.twitter.com/0TeTOJOerO&lt;/a&gt;&lt;/p&gt;&amp;mdash; Nick Middleweek (@nmiddleweek) &lt;a href=&quot;https://twitter.com/nmiddleweek/status/568183658395394049&quot;&gt;February 18, 2015&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+
+&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;Watching the &lt;a href=&quot;https://twitter.com/FrontendMasters&quot;&gt;@FrontendMasters&lt;/a&gt; ReactJS workshop! &lt;a href=&quot;http://t.co/YraYIK97Lu&quot;&gt;pic.twitter.com/YraYIK97Lu&lt;/a&gt;&lt;/p&gt;&amp;mdash; ReactJS News (@ReactJSNews) &lt;a href=&quot;https://twitter.com/ReactJSNews/status/566269552112041985&quot;&gt;February 13, 2015&lt;/a&gt;&lt;/blockquote&gt;
+
+&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
+</description>
+				<pubDate>2015-03-03T00:00:00-08:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/03/03/community-roundup-25.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/03/community-roundup-25.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13 RC</title>
 				<description>&lt;p&gt;Over the weekend we pushed out our first (and hopefully only) release candidate for React v0.13!&lt;/p&gt;
 
@@ -902,50 +960,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-11-25T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</guid>
-			</item>
-		
-			<item>
-				<title>React.js Conf Updates</title>
-				<description>&lt;p&gt;Yesterday was the &lt;a href=&quot;http://conf.reactjs.com/index.html&quot;&gt;React.js Conf&lt;/a&gt; call for presenters submission deadline. We were
-surprised to have received a total of &lt;strong&gt;one hundred talk proposals&lt;/strong&gt; and were
-amazed that 600 people requested to be notified when ticket go on sale. This is incredible!&lt;/p&gt;
-
-&lt;p&gt;When we organized the conference, we decided to start small since this is the
-first React.js conference. Also, we weren&amp;#39;t sure what level of demand to expect,
-so we planned for a single-track, two-day conference on Facebook&amp;#39;s campus. The
-largest room available would accomodate 18 speaking slots and 200 attendees.
-The spacial configuration makes it difficult to add a second track and changing
-venues only two months in advance would be too difficult, so we are deciding to
-stick with the originally planned format and venue on Facebook&amp;#39;s campus.&lt;/p&gt;
-
-&lt;p&gt;Unfortunately, this means that we can only accept a small number of the awesome
-conference talk proposals. In order to make sure attendees get a fair shot at
-registering, we&amp;#39;re going to to sell tickets in three separate first-come,
-first-serve phases. &lt;strong&gt;Tickets will cost $200 regardless of which phase they are
-purchased from and all proceeds will go to charity&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Friday November 28th 2014 — Noon PST: First wave of tickets&lt;/li&gt;
-&lt;li&gt;Friday December 5th 2014 — Noon PST: Second wave of tickets&lt;/li&gt;
-&lt;li&gt;Friday December 12th 2014 — Noon PST: Third and last wave of tickets&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We really do wish that everyone could attend React.js Conf, but in order to
-ensure a quality experience for those who attend, we feel it will be best to
-limit the size of the conference to what was originally planned for. This means
-that not everyone who wants to attend will be able to, and many talks that
-would be excellent contributions to the conference will have to be postponed
-until the next conference. All the talks will be recorded and put online shortly after.&lt;/p&gt;
-
-&lt;p&gt;We hope to see many of you at React.js Conf this January.&lt;/p&gt;
-
-&lt;p&gt;Sincerely,&lt;/p&gt;
-
-&lt;p&gt;React Core Team&lt;/p&gt;
-</description>
-				<pubDate>2014-11-24T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html</guid>
 			</item>
 		
 	</channel>
