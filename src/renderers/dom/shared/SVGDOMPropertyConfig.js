@@ -23,6 +23,7 @@ var NS = {
 var SVGDOMPropertyConfig = {
   Properties: {
     clipPath: MUST_USE_ATTRIBUTE,
+    cursor: MUST_USE_ATTRIBUTE,
     cx: MUST_USE_ATTRIBUTE,
     cy: MUST_USE_ATTRIBUTE,
     d: MUST_USE_ATTRIBUTE,
