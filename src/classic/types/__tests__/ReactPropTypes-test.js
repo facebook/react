@@ -384,7 +384,9 @@ describe('ReactPropTypes', function() {
           k30: <MyComponent />,
           k31: frag({k310: <a />}),
           k32: 'Another string'
-        })
+        }),
+        k4: null,
+        k5: undefined
       }));
       expect(console.warn.calls).toEqual([]);
 
@@ -397,7 +399,9 @@ describe('ReactPropTypes', function() {
           k30: <MyComponent />,
           k31: {k310: <a />},
           k32: 'Another string'
-        }
+        },
+        k4: null,
+        k5: undefined
       });
     });
 
