@@ -34,6 +34,7 @@ var ReactServerRendering = require('ReactServerRendering');
 var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
 var onlyChild = require('onlyChild');
+var warning = require('warning');
 
 ReactDefaultInjection.inject();
 
@@ -115,13 +116,14 @@ if (__DEV__) {
 
     // If we're in IE8, check to see if we are in combatibility mode and provide
     // information on preventing compatibility mode
-    if (document.documentMode && document.documentMode < 8) {
-      console.debug(
-        'Internet Explorer is running in compatibility mode, please add the following ' +
-        'tag to your HTML to prevent this from happening: ' +
-        '<meta http-equiv="X-UA-Compatible" content="IE=edge" />'
-      );
-    }
+    var ieCompatibilityMode = document.documentMode && document.documentMode < 8;
+
+    warning(
+      !ieCompatibilityMode,
+      'Internet Explorer is running in compatibility mode, please add the following ' +
+      'tag to your HTML to prevent this from happening: ' +
+      '<meta http-equiv="X-UA-Compatible" content="IE=edge" />'
+    );
 
     var expectedFeatures = [
       // shims
