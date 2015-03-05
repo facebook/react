@@ -9,12 +9,21 @@ var IS_MOBILE = (
 );
 
 var CodeMirrorEditor = React.createClass({
+  propTypes: {
+    lineNumbers: React.PropTypes.bool,
+    onChange: React.PropTypes.func
+  },
+  getDefaultProps: function() {
+    return {
+      lineNumbers: false
+    };
+  },
   componentDidMount: function() {
     if (IS_MOBILE) return;
 
     this.editor = CodeMirror.fromTextArea(this.refs.editor.getDOMNode(), {
       mode: 'javascript',
-      lineNumbers: false,
+      lineNumbers: this.props.lineNumbers,
       lineWrapping: true,
       smartIndent: false,  // javascript mode does bad things with jsx indents
       matchBrackets: true,
@@ -75,6 +84,7 @@ var ReactPlayground = React.createClass({
     transformer: React.PropTypes.func,
     renderCode: React.PropTypes.bool,
     showCompiledJSTab: React.PropTypes.bool,
+    showLineNumbers: React.PropTypes.bool,
     editorTabTitle: React.PropTypes.string
   },
 
@@ -84,7 +94,8 @@ var ReactPlayground = React.createClass({
         return JSXTransformer.transform(code).code;
       },
       editorTabTitle: 'Live JSX Editor',
-      showCompiledJSTab: true
+      showCompiledJSTab: true,
+      showLineNumbers: false
     };
   },
 
@@ -122,6 +133,7 @@ var ReactPlayground = React.createClass({
         onChange={this.handleCodeChange}
         codeText={compiledCode}
         readOnly={true}
+        lineNumbers={this.props.showLineNumbers}
       />;
 
     var JSXContent =
@@ -130,6 +142,7 @@ var ReactPlayground = React.createClass({
         onChange={this.handleCodeChange}
         className="playgroundStage"
         codeText={this.state.code}
+        lineNumbers={this.props.showLineNumbers}
       />;
 
     var JSXTabClassName =
