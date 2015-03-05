@@ -66,9 +66,6 @@ var emptyFunction = require('emptyFunction');
 
 var ANONYMOUS = '<<anonymous>>';
 
-var elementTypeChecker = createElementTypeChecker();
-var nodeTypeChecker = createNodeChecker();
-
 var ReactPropTypes = {
   array: createPrimitiveTypeChecker('array'),
   bool: createPrimitiveTypeChecker('boolean'),
@@ -79,9 +76,9 @@ var ReactPropTypes = {
 
   any: createAnyTypeChecker(),
   arrayOf: createArrayOfTypeChecker,
-  element: elementTypeChecker,
+  element: createElementTypeChecker(),
   instanceOf: createInstanceTypeChecker,
-  node: nodeTypeChecker,
+  node: createNodeChecker(),
   objectOf: createObjectOfTypeChecker,
   oneOf: createEnumTypeChecker,
   oneOfType: createUnionTypeChecker,
