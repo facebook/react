@@ -199,4 +199,29 @@ describe('ReactMount', function() {
       element.unmount();
     });
   }
+
+  it.only('warns when using two copies of React before throwing', function() {
+    require('mock-modules').dumpCache();
+    var RD1 = require('ReactDOM');
+    require('mock-modules').dumpCache();
+    var RD2 = require('ReactDOM');
+
+    var X = React.createClass({
+      render: function() {
+        return <div />;
+      },
+    });
+
+    var container = document.createElement('div');
+    console.error = mocks.getMockFunction();
+    var component = RD1.render(<X />, container);
+    expect(console.error.mock.calls.length).toBe(0);
+
+    // This fails but logs a warning first
+    expect(function() {
+      RD2.findDOMNode(component);
+    }).toThrow();
+    expect(console.error.mock.calls.length).toBe(1);
+    expect(console.error.mock.calls[0][0]).toContain('two copies of React');
+  });
 });
