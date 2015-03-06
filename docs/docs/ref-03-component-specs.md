@@ -21,7 +21,7 @@ The `render()` method is required.
 
 When called, it should examine `this.props` and `this.state` and return a single child component. This child component can be either a virtual representation of a native DOM component (such as `<div />` or `React.DOM.div()`) or another composite component that you've defined yourself.
 
-You can also return `null` or `false` to indicate that you don't want anything rendered. Behind the scenes, React renders a `<noscript>` tag to work with our current diffing algorithm. When returning `null` or `false`, `this.getDOMNode()` will return `null`.
+You can also return `null` or `false` to indicate that you don't want anything rendered. Behind the scenes, React renders a `<noscript>` tag to work with our current diffing algorithm. When returning `null` or `false`, `React.findDOMNode(this)` will return `null`.
 
 The `render()` function should be *pure*, meaning that it does not modify component state, it returns the same result each time it's invoked, and it does not read from or write to the DOM or otherwise interact with the browser (e.g., by using `setTimeout`). If you need to interact with the browser, perform your work in `componentDidMount()` or the other lifecycle methods instead. Keeping `render()` pure makes server rendering more practical and makes components easier to think about.
 
@@ -118,13 +118,9 @@ Invoked once, both on the client and server, immediately before the initial rend
 componentDidMount()
 ```
 
-Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via `this.getDOMNode()`.
+Invoked once, only on the client (not on the server), immediately after the initial rendering occurs. At this point in the lifecycle, the component has a DOM representation which you can access via `React.findDOMNode(this)`.
 
 If you want to integrate with other JavaScript frameworks, set timers using `setTimeout` or `setInterval`, or send AJAX requests, perform those operations in this method.
-
-> Note:
->
-> Prior to v0.9, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Updating: componentWillReceiveProps
@@ -198,10 +194,6 @@ componentDidUpdate(object prevProps, object prevState)
 Invoked immediately after the component's updates are flushed to the DOM. This method is not called for the initial render.
 
 Use this as an opportunity to operate on the DOM when the component has been updated.
-
-> Note:
->
-> Prior to v0.9, the DOM node was passed in as the last argument. If you were using this, you can still access the DOM node by calling `this.getDOMNode()`.
 
 
 ### Unmounting: componentWillUnmount

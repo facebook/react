@@ -60,6 +60,10 @@ DOMElement getDOMNode()
 
 If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When `render` returns `null` or `false`, `this.getDOMNode()` returns `null`.
 
+> Note:
+>
+> getDOMNode is deprecated and has been replaced with [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode).
+
 
 ### isMounted
 
