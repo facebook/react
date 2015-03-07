@@ -95,7 +95,7 @@ Methods defined within this block are _static_, meaning that you can run them be
 string displayName
 ```
 
-The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html#react-composite-components).
+The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html#the-transform).
 
 
 ## Lifecycle Methods
