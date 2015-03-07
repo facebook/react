@@ -21,7 +21,7 @@ ReactComponent render()
 
 호출되면 `this.props`와 `this.state`를 토대로 하나의 자식 컴포넌트를 리턴합니다. 이 자식 컴포넌트는 네이티브 DOM 컴포넌트의 가상 표현 (`<div />`나 `React.DOM.div()` 등) 또는 직접 정의한 조합(composite) 컴포넌트가 될 수 있습니다.
 
-아무 것도 렌더링되지 않도록 하려면 `null`이나 `false`를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 `<noscript>` 태그를 렌더링합니다. `null`이나 `false`를 리턴한 경우, `this.getDOMNode()`는 `null`을 리턴합니다.
+아무 것도 렌더링되지 않도록 하려면 `null`이나 `false`를 리턴합니다. React는 지금의 차이 비교 알고리즘이 작동할 수 있도록 내부적으로는 `<noscript>` 태그를 렌더링합니다. `null`이나 `false`를 리턴한 경우, `React.findDOMNode(this)`는 `null`을 리턴합니다.
 
 `render()` 함수는 순수 함수여야 합니다. 즉, 컴포넌트의 상태를 변경하지 않고, 여러번 호출해도 같은 결과를 리턴하며, DOM을 읽고 쓰거나 브라우저와 상호작용(예를 들어 `setTimeout`를 사용)하지 않아야 합니다. 브라우저와 상호작용해야 한다면 `componentDidMount()`나 다른 생명주기 메소드에서 수행해야 합니다. `render()` 함수를 순수 함수로 유지하면 서버 렌더링이 훨씬 쓸만해지고 컴포넌트에 대해 생각하기 쉬워집니다.
 
@@ -118,13 +118,9 @@ componentWillMount()
 componentDidMount()
 ```
 
-최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 `this.getDOMNode()`로 접근 가능한 DOM 표현을 가집니다.
+최초 렌더링이 일어난 다음 클라이언트에서만 한번 호출됩니다. (서버에서는 호출되지 않습니다.) 이 시점에 컴포넌트는 `React.findDOMNode(this)`로 접근 가능한 DOM 표현을 가집니다.
 
 다른 JavaScript 프레임워크를 연동하거나, `setTimeout`/`setInterval`로 타이머를 설정하고 AJAX 요청을 보내는 등의 작업을 이 메소드에서 합니다.
-
-> 주의:
->
-> v0.9 이전까지 DOM 노드가 마지막 인자로 넘어왔습니다. 이것을 사용하고 있었다면 이제는 `this.getDOMNode()`로 DOM 노드에 접근할 수 있습니다.
 
 
 ### 업데이트 시: componentWillReceiveProps
@@ -198,10 +194,6 @@ componentDidUpdate(object prevProps, object prevState)
 컴포넌트의 업데이트가 DOM에 반영된 직후에 호출됩니다. 최초 렌더링 시에는 호출되지 않습니다.
 
 컴포넌트가 업데이트된 뒤 DOM을 조작해야 하는 경우 사용할 수 있습니다.
-
-> 주의:
->
-> v0.9 이전까지 DOM 노드가 마지막 인자로 넘어왔습니다. 이것을 사용하고 있었다면 이제는 `this.getDOMNode()`로 DOM 노드에 접근할 수 있습니다.
 
 
 ### 마운트 해제 시: componentWillUnmount

@@ -28,7 +28,7 @@ next: thinking-in-react-ko-KR.html
 
 이 튜토리얼을 시작할 때 필요한 건 아니지만, 나중에 실행 중인 서버에 `POST` 요청을 하는 기능을 추가하게 될 것입니다. 서버를 구성하는 것이 익숙하다면, 본인이 편한 방식대로 서버를 구성해 주세요. 서버사이드에 대한 고민없이 React의 학습 그 자체에 집중하고 싶은 분들을 위해서, 몇 가지 언어로 간단한 서버코드를 작성해 놓았습니다 - JavaScript (Node.js), Python, Ruby, Go, PHP 버전이 있고, GitHub에서 찾아보실 수 있습니다. [소스를 확인](https://github.com/reactjs/react-tutorial/)하거나 [zip 파일을 다운로드](https://github.com/reactjs/react-tutorial/archive/master.zip)하고 시작하세요.
 
-튜토리얼을 다운로드 받아 시작한다면, `public/index.html`을 열고 바로 시작하세요.
+튜토리얼을 시작하려면, `public/index.html`을 열고 바로 시작하세요.
 
 ### 시작하기
 
@@ -490,14 +490,15 @@ var CommentForm = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = this.refs.author.getDOMNode().value.trim();
-    var text = this.refs.text.getDOMNode().value.trim();
+    var author = React.findDOMNode(this.refs.author).value.trim();
+    var text = React.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     // TODO: 서버에 요청을 전송합니다
-    this.refs.author.getDOMNode().value = '';
-    this.refs.text.getDOMNode().value = '';
+    React.findDOMNode(this.refs.author).value = '';
+    React.findDOMNode(this.refs.text).value = '';
+    return;
   },
   render: function() {
     return (
@@ -519,7 +520,7 @@ React는 카멜케이스 네이밍 컨벤션으로 컴포넌트에 이벤트 핸
 
 ##### Refs
 
-우리는 자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, 컴포넌트를 참조하기 위해 `this.refs`를 사용합니다. 고유한(native) 브라우저 DOM 엘리먼트를 얻기 위해 `getDOMNode()`를 호출할 수 있습니다.
+우리는 자식 컴포넌트의 이름을 지정하기 위해 `ref` 어트리뷰트를, 컴포넌트를 참조하기 위해 `this.refs`를 사용합니다. 고유한(native) 브라우저 DOM 엘리먼트를 얻기 위해 `React.findDOMNode(component)`를 호출할 수 있습니다.
 
 ##### props으로 콜백 처리하기
 
@@ -571,14 +572,15 @@ var CommentBox = React.createClass({
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = this.refs.author.getDOMNode().value.trim();
-    var text = this.refs.text.getDOMNode().value.trim();
+    var author = React.findDOMNode(this.refs.author).value.trim();
+    var text = React.findDOMNode(this.refs.text).value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    this.refs.author.getDOMNode().value = '';
-    this.refs.text.getDOMNode().value = '';
+    React.findDOMNode(this.refs.author).value = '';
+    React.findDOMNode(this.refs.text).value = '';
+    return;
   },
   render: function() {
     return (

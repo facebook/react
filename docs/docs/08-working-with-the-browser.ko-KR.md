@@ -18,13 +18,13 @@ React는 DOM을 직접 다루지 않기 때문에 굉장히 빠릅니다. React�
 더 효율적이고 쉬우므로 대개의 경우 React의 "가짜 브라우저"를 이용해 작업을 하게 될 것입니다. 하지만 간혹 jQuery 플러그인 같은 서드파티 라이브러리를 다루다 보면 기저(underlying)의 API에 접근할 필요가 있을지도 모릅니다. React는 기저의 DOM API를 직접 다루는 회피방법을 제공합니다.
 
 
-## Refs와 getDOMNode()
+## Refs와 findDOMNode()
 
-브라우저와 상호 작용하려면 DOM 노드에 대한 참조가 필요합니다. 모든 마운트된 컴포넌트는 `getDOMNode()` 함수를 갖고 있으며, 이를 통해서 참조를 얻을 수 있습니다. 
+브라우저와 상호 작용하려면 DOM 노드에 대한 참조가 필요합니다. React는 `React.findDOMNode(component)` 함수를 갖고 있으며, 이를 통해서 컴포넌트의 DOM 노드의 참조를 얻을 수 있습니다.
 
 > 주의:
 >
-> `getDOMNode()`는 마운트 된 컴포넌트에서만 동작합니다 (DOM에 배치된 컴포넌트를 말합니다). 아직 마운트 되지 않은 컴포넌트에서 이를 호출하려고 하면 (컴포넌트가 아직 생성되기 이전인 `render()` 시점에 `getDOMNode()`를 호출한다든가) 예외가 발생합니다.
+> `findDOMNode()`는 마운트 된 컴포넌트에서만 동작합니다 (DOM에 배치된 컴포넌트를 말합니다). 아직 마운트 되지 않은 컴포넌트에서 이를 호출하려고 하면 (컴포넌트가 아직 생성되기 이전인 `render()` 시점에 `findDOMNode()`를 호출한다든가) 예외가 발생합니다.
 
 React 컴포넌트에 대한 참조는 현재의 React 컴포넌트를 위해 `this`를, 소유한 컴포넌트의 참조를 얻기 위해 refs를 사용해 얻을 수 있습니다. 다음과 같이 동작합니다:
 
@@ -32,7 +32,7 @@ React 컴포넌트에 대한 참조는 현재의 React 컴포넌트를 위해 `t
 var MyComponent = React.createClass({
   handleClick: function() {
     // raw DOM API를 사용해 명시적으로 텍스트 인풋을 포커스 합니다.
-    this.refs.myTextInput.getDOMNode().focus();
+    React.findDOMNode(this.refs.myTextInput).focus();
   },
   render: function() {
     // ref 어트리뷰트는 컴포넌트가 마운트되면 그에 대한 참조를 this.refs에 추가합니다.
@@ -96,7 +96,7 @@ React는 이 프로세스에 훅을 지정할 수 있는 생명주기 메소드�
 
 _마운트된_ 합성 컴포넌트들은 다음과 같은 메소드를 지원합니다:
 
-* `getDOMNode(): DOMElement`는 렌더링 된 DOM 노드에 대한 참조를 얻기 위해 모든 마운트된 컴포넌트에서 호출할 수 있습니다.
+* `findDOMNode(): DOMElement`는 렌더링 된 DOM 노드에 대한 참조를 얻기 위해 모든 마운트된 컴포넌트에서 호출할 수 있습니다.
 * `forceUpdate()`는 `this.setState`를 사용하지 않고 컴포넌트 state의 더 깊은 측면(deeper aspect)의 변경된 것을 알고 있을 때 모든 마운트된 컴포넌트에서 호출할 수 있습니다.
 
 
