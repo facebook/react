@@ -112,8 +112,8 @@ For more information about the onChange event, see [Forms](/react/docs/forms.htm
 Event names:
 
 ```
-onClick onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave
-onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit
+onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 
