@@ -18,8 +18,8 @@ var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
+var filterDisabledEvents = require('filterDisabledEvents');
 
 var select = ReactElement.createFactory('select');
 
@@ -122,8 +122,7 @@ var ReactDOMSelect = ReactClass.createClass({
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+    var props = filterDisabledEvents(this.props);
 
     props.onChange = this._handleChange;
     props.value = null;

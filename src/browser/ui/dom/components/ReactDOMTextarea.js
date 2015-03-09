@@ -19,9 +19,9 @@ var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactUpdates = require('ReactUpdates');
 
-var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
+var filterDisabledEvents = require('filterDisabledEvents');
 
 var warning = require('warning');
 
@@ -95,8 +95,7 @@ var ReactDOMTextarea = ReactClass.createClass({
   },
 
   render: function() {
-    // Clone `this.props` so we don't mutate the input.
-    var props = assign({}, this.props);
+    var props = filterDisabledEvents(this.props);
 
     invariant(
       props.dangerouslySetInnerHTML == null,
