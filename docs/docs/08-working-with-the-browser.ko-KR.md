@@ -58,9 +58,10 @@ React.render(
 
 ## Refs 심화
 
-[refs 심화](/react/docs/more-about-refs.html) 문서에서 refs를 효율적으로 사용하는 법을 포함해 더 많은 내용을 익혀보세요.
+[refs 심화](/react/docs/more-about-refs-ko-KR.html) 문서에서 refs를 효율적으로 사용하는 법을 포함해 더 많은 내용을 익혀보세요.
 
 
+<a name="component-lifecycle"></a>
 ## 컴포넌트 생명주기
 
 컴포넌트의 생명주기에는 세 가지 주요 부분이 있습니다:

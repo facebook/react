@@ -146,6 +146,7 @@ componentWillReceiveProps: function(nextProps) {
 > `componentWillReceiveState`에 해당하는 메소드는 없습니다. prop이 변할 때 state가 바뀔 수는 있지만, 그 역은 불가능합니다. state의 변화에 따라 작업을 실행해야 하면 `componentWillUpdate`를 사용하세요.
 
 
+<a name="updating-shouldcomponentupdate"></a>
 ### 업데이트 시: shouldComponentUpdate
 
 ```javascript
