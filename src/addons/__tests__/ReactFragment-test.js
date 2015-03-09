@@ -101,4 +101,26 @@ describe('ReactFragment', function() {
     );
   });
 
+  it('should extract from primitives', function() {
+    [
+      null,
+      undefined,
+      0,
+      5,
+      true,
+      false,
+      'string'
+    ].forEach(function(v) {
+      expect(function() {
+        ReactFragment.extract(v);
+      }).not.toThrow();
+
+      expect(function() {
+        ReactFragment.extractIfFragment(v);
+      }).not.toThrow();
+
+      expect(ReactFragment.extract(v)).toEqual(v);
+      expect(ReactFragment.extractIfFragment(v)).toEqual(v);
+    });
+  });
 });

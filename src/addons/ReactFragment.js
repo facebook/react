@@ -136,7 +136,7 @@ var ReactFragment = {
   // a plain object is passed here.
   extract: function(fragment) {
     if (__DEV__) {
-      if (canWarnForReactFragment) {
+      if (canWarnForReactFragment && fragment instanceof Object) {
         if (!fragment[fragmentKey]) {
           warning(
             didWarnForFragment(fragment),
@@ -156,7 +156,7 @@ var ReactFragment = {
   // can't determine what kind of object this is.
   extractIfFragment: function(fragment) {
     if (__DEV__) {
-      if (canWarnForReactFragment) {
+      if (canWarnForReactFragment && fragment instanceof Object) {
         // If it is the opaque type, return the keyed object.
         if (fragment[fragmentKey]) {
           return fragment[fragmentKey];
