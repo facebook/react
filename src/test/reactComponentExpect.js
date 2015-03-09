@@ -125,8 +125,7 @@ assign(reactComponentExpectInternal.prototype, {
   toBeCompositeComponent: function() {
     expect(
       typeof this.instance() === 'object' &&
-      typeof this.instance().render === 'function' &&
-      typeof this.instance().setState === 'function'
+      typeof this.instance().render === 'function'
     ).toBe(true);
     return this;
   },
