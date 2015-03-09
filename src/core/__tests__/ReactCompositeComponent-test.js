@@ -954,4 +954,21 @@ describe('ReactCompositeComponent', function() {
     expect(a).toBe(b);
   });
 
+  it ('passes the instance into its render function', function() {
+    var Component = React.createClass({
+      getDefaultProps: function() {
+        return {
+          exists: 'yes'
+        }
+      },
+      render: function(context) {
+        return <p ref="answer">{ context.props.exists }</p>
+      }
+    });
+
+    var test = ReactTestUtils.renderIntoDocument(<Component />)
+
+    expect(test.refs.answer.getDOMNode().innerHTML).toEqual('yes')
+  })
+
 });
