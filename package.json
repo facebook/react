@@ -36,7 +36,7 @@
     "bundle-collapser": "^1.1.1",
     "coffee-script": "^1.8.0",
     "coverify": "~1.0.4",
-    "derequire": "^1.2.0",
+    "derequire": "^2.0.0",
     "envify": "^3.0.0",
     "es3ify": "~0.1.2",
     "es5-shim": "^4.0.0",
