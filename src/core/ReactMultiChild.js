@@ -193,7 +193,8 @@ var ReactMultiChild = {
             child,
             rootID,
             transaction,
-            context
+            context,
+            this._tag
           );
           child._mountIndex = index;
           mountImages.push(mountImage);
@@ -401,7 +402,8 @@ var ReactMultiChild = {
         child,
         rootID,
         transaction,
-        context
+        context,
+        this._tag
       );
       child._mountIndex = index;
       this.createChild(child, mountImage);
