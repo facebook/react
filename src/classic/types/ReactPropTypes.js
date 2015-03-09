@@ -292,6 +292,7 @@ function isNode(propValue) {
   switch (typeof propValue) {
     case 'number':
     case 'string':
+    case 'undefined':
       return true;
     case 'boolean':
       return !propValue;
@@ -299,7 +300,7 @@ function isNode(propValue) {
       if (Array.isArray(propValue)) {
         return propValue.every(isNode);
       }
-      if (ReactElement.isValidElement(propValue)) {
+      if (propValue === null || ReactElement.isValidElement(propValue)) {
         return true;
       }
       propValue = ReactFragment.extractIfFragment(propValue);
