@@ -868,7 +868,7 @@ describe('ReactCompositeComponent', function() {
       'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
-      'updates in componentDidUpdate.'
+      'updates in componentDidUpdate. Check the render method of Outer.'
     );
   });
 
