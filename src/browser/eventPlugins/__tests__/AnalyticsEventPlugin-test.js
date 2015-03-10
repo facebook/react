@@ -53,6 +53,7 @@ describe('AnalyticsEventPlugin', function() {
       'ChangeEventPlugin': ChangeEventPlugin
     });
 
+    spyOn(console, 'warn');
   });
 
   it('should count events correctly', function() {
@@ -104,13 +105,15 @@ describe('AnalyticsEventPlugin', function() {
     expect(cb).toBeCalled();
   });
 
-  it('error non no callback', function() {
-    expect(function() {
-      AnalyticsEventPluginFactory.createAnalyticsPlugin(null);
-    }).toThrow();
+  it('warn on no callback', function() {
+    AnalyticsEventPluginFactory.createAnalyticsPlugin(null);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: createAnalyticsPlugin(...): You must provide a callback.'
+    );
   });
 
-  it('error on invalid analytics events', function() {
+  it('warn on invalid analytics events', function() {
     var TestInvalidEvents = React.createClass({
       render: function() {
         return (
@@ -133,13 +136,11 @@ describe('AnalyticsEventPlugin', function() {
       )
     });
 
-    var error = false;
-    try {
-      ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);
-    } catch(e) {
-      error = true;
-    }
+    ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);
 
-    expect(error).toBe(true);
+    expect(console.warn.calls.length).toBe(1);
+    expect(console.warn.argsForCall[0][0]).toBe(
+      'Warning: Invalid analyticsEvent:123 for analyticsID:test_invalid_events'
+    );
   });
 });
