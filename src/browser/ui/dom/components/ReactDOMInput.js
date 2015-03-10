@@ -21,6 +21,7 @@ var ReactMount = require('ReactMount');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
+var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 
 var input = ReactElement.createFactory('input');
@@ -83,18 +84,18 @@ var ReactDOMInput = ReactClass.createClass({
   },
 
   componentDidMount: function() {
-    var id = ReactMount.getID(this.getDOMNode());
+    var id = ReactMount.getID(findDOMNode(this));
     instancesByReactID[id] = this;
   },
 
   componentWillUnmount: function() {
-    var rootNode = this.getDOMNode();
+    var rootNode = findDOMNode(this);
     var id = ReactMount.getID(rootNode);
     delete instancesByReactID[id];
   },
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
-    var rootNode = this.getDOMNode();
+    var rootNode = findDOMNode(this);
     if (this.props.checked != null) {
       DOMPropertyOperations.setValueForProperty(
         rootNode,
@@ -124,7 +125,7 @@ var ReactDOMInput = ReactClass.createClass({
 
     var name = this.props.name;
     if (this.props.type === 'radio' && name != null) {
-      var rootNode = this.getDOMNode();
+      var rootNode = findDOMNode(this);
       var queryRoot = rootNode;
 
       while (queryRoot.parentNode) {

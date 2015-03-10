@@ -225,7 +225,7 @@ describe('ReactServerRendering', function() {
 
       // Ensure the events system works
       expect(numClicks).toEqual(0);
-      ReactTestUtils.Simulate.click(instance.refs.span.getDOMNode());
+      ReactTestUtils.Simulate.click(React.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(1);
     });
 

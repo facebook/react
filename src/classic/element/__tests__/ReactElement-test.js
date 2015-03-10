@@ -283,7 +283,7 @@ describe('ReactElement', function() {
       }
     });
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
-    expect(outer.getDOMNode().className).toBe('quack');
+    expect(React.findDOMNode(outer).className).toBe('quack');
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -324,8 +324,8 @@ describe('ReactElement', function() {
       }
     });
     var outer = React.render(<Outer />, el);
-    expect(outer.getDOMNode().textContent).toBe('meow');
-    expect(outer.getDOMNode().className).toBe('quack');
+    expect(React.findDOMNode(outer).textContent).toBe('meow');
+    expect(React.findDOMNode(outer).className).toBe('quack');
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(
@@ -340,8 +340,8 @@ describe('ReactElement', function() {
     var newOuterEl = <Outer />;
     newOuterEl.props.sound = 'oink';
     outer = React.render(newOuterEl, el);
-    expect(outer.getDOMNode().textContent).toBe('oink');
-    expect(outer.getDOMNode().className).toBe('quack');
+    expect(React.findDOMNode(outer).textContent).toBe('oink');
+    expect(React.findDOMNode(outer).className).toBe('quack');
 
     expect(console.warn.argsForCall.length).toBe(1);
     expect(console.warn.argsForCall[0][0]).toContain(

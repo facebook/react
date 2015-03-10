@@ -55,7 +55,7 @@ var updateChildren = function(d, children) {
 var expectChildren = function(d, children) {
   var textNode;
   if (typeof children === 'string') {
-    textNode = d.getDOMNode().firstChild;
+    textNode = React.findDOMNode(d).firstChild;
 
     if (children === '') {
       expect(textNode != null).toBe(false);
@@ -65,7 +65,7 @@ var expectChildren = function(d, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    expect(d.getDOMNode().childNodes.length).toBe(children.length);
+    expect(React.findDOMNode(d).childNodes.length).toBe(children.length);
 
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
@@ -75,7 +75,7 @@ var expectChildren = function(d, children) {
           .expectRenderedChildAt(i)
           .toBeTextComponentWithValue(child);
 
-        textNode = d.getDOMNode().childNodes[i].firstChild;
+        textNode = React.findDOMNode(d).childNodes[i].firstChild;
 
         if (child === '') {
           expect(textNode != null).toBe(false);
@@ -85,12 +85,11 @@ var expectChildren = function(d, children) {
           expect(textNode.data).toBe('' + child);
         }
       } else {
-        var elementDOMNode =
-          reactComponentExpect(d)
-            .expectRenderedChildAt(i)
-            .toBeComponentOfType('div')
-            .instance()
-            .getDOMNode();
+        var elementDOMNode = React.findDOMNode(reactComponentExpect(d)
+          .expectRenderedChildAt(i)
+          .toBeComponentOfType('div')
+          .instance()
+        );
 
         expect(elementDOMNode.tagName).toBe('DIV');
       }

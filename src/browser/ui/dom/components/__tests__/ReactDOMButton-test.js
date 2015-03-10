@@ -23,13 +23,13 @@ describe('ReactDOMButton', function() {
 
   function expectClickThru(button) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(button.getDOMNode());
+    ReactTestUtils.Simulate.click(React.findDOMNode(button));
     expect(onClick.mock.calls.length).toBe(1);
   }
 
   function expectNoClickThru(button) {
     onClick.mockClear();
-    ReactTestUtils.Simulate.click(button.getDOMNode());
+    ReactTestUtils.Simulate.click(React.findDOMNode(button));
     expect(onClick.mock.calls.length).toBe(0);
   }
 

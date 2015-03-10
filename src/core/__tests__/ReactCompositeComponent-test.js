@@ -152,7 +152,7 @@ describe('ReactCompositeComponent', function() {
     // rerender
     instance.setProps({renderAnchor: true, anchorClassOn: false});
     var anchor = instance.getAnchor();
-    var actualDOMAnchorNode = anchor.getDOMNode();
+    var actualDOMAnchorNode = React.findDOMNode(anchor);
     expect(actualDOMAnchorNode.className).toBe('');
   });
 
@@ -451,10 +451,10 @@ describe('ReactCompositeComponent', function() {
     });
     var Inner = React.createClass({
       componentWillUnmount: function() {
-        // It's important that ReactMount.purgeID be called after any component
+        // It's important that ReactMount.purgeID is called after any component
         // lifecycle methods, because a componentWillMount implementation is
-        // likely call this.getDOMNode(), which will repopulate the node cache
-        // after it's been cleared, causing a memory leak.
+        // likely to call React.findDOMNode(this), which will repopulate the
+        // node cache after it's been cleared, causing a memory leak.
         expect(ReactMount.purgeID.calls.length).toBe(0);
         innerUnmounted = true;
       },
@@ -923,25 +923,25 @@ describe('ReactCompositeComponent', function() {
     });
 
     var comp = ReactTestUtils.renderIntoDocument(<Component flipped={false} />);
-    expect(comp.refs.static0.getDOMNode().textContent).toBe('A');
-    expect(comp.refs.static1.getDOMNode().textContent).toBe('B');
+    expect(React.findDOMNode(comp.refs.static0).textContent).toBe('A');
+    expect(React.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
     // When flipping the order, the refs should update even though the actual
     // contents do not
     comp.setProps({flipped: true});
-    expect(comp.refs.static0.getDOMNode().textContent).toBe('B');
-    expect(comp.refs.static1.getDOMNode().textContent).toBe('A');
+    expect(React.findDOMNode(comp.refs.static0).textContent).toBe('B');
+    expect(React.findDOMNode(comp.refs.static1).textContent).toBe('A');
   });
 
-  it('should allow access to getDOMNode in componentWillUnmount', function() {
+  it('should allow access to findDOMNode in componentWillUnmount', function() {
     var a = null;
     var b = null;
     var Component = React.createClass({
       componentDidMount: function() {
-        a = this.getDOMNode();
+        a = React.findDOMNode(this);
       },
       componentWillUnmount: function() {
-        b = this.getDOMNode();
+        b = React.findDOMNode(this);
       },
       render: function() {
         return <div />;

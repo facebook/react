@@ -26,6 +26,7 @@ var ReactUpdates = require('ReactUpdates');
 var SyntheticEvent = require('SyntheticEvent');
 
 var assign = require('Object.assign');
+var findDOMNode = require('findDOMNode');
 
 var topLevelTypes = EventConstants.topLevelTypes;
 
@@ -293,7 +294,7 @@ var ReactTestUtils = {
       fakeNativeEvent) {
     ReactTestUtils.simulateNativeEventOnNode(
       topLevelType,
-      comp.getDOMNode(),
+      findDOMNode(comp),
       fakeNativeEvent
     );
   },
@@ -405,7 +406,7 @@ function makeSimulator(eventType) {
   return function(domComponentOrNode, eventData) {
     var node;
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
-      node = domComponentOrNode.getDOMNode();
+      node = findDOMNode(domComponentOrNode);
     } else if (domComponentOrNode.tagName) {
       node = domComponentOrNode;
     }

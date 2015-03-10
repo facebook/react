@@ -38,7 +38,7 @@ describe('ReactDOM', function() {
         return <form><input type="submit" value="Submit" /></form>;
       },
       componentDidMount: function() {
-        form = this.getDOMNode();
+        form = React.findDOMNode(this);
       }
     });
     var instance = ReactTestUtils.renderIntoDocument(<Parent />);
@@ -50,14 +50,14 @@ describe('ReactDOM', function() {
   it("allows a DOM element to be used with a string", function() {
     var element = React.createElement('div', {className: 'foo'});
     var instance = ReactTestUtils.renderIntoDocument(element);
-    expect(instance.getDOMNode().tagName).toBe('DIV');
+    expect(React.findDOMNode(instance).tagName).toBe('DIV');
   });
 
   it("should allow children to be passed as an argument", function() {
     var argDiv = ReactTestUtils.renderIntoDocument(
       div(null, 'child')
     );
-    var argNode = argDiv.getDOMNode();
+    var argNode = React.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
@@ -65,7 +65,7 @@ describe('ReactDOM', function() {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
       div({children: 'fakechild'}, 'child')
     );
-    var conflictNode = conflictDiv.getDOMNode();
+    var conflictNode = React.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -107,7 +107,7 @@ describe('ReactDOM', function() {
         <div key="theBird" className="bird" />
       ]
     });
-    var root = myDiv.getDOMNode();
+    var root = React.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });

@@ -287,7 +287,7 @@ describe('ReactComponentLifeCycle', function() {
     );
   });
 
-  it('warns if getDOMNode is used inside render', function() {
+  it('warns if findDOMNode is used inside render', function() {
     spyOn(console, 'warn');
     var Component = React.createClass({
       getInitialState: function() {
@@ -298,7 +298,7 @@ describe('ReactComponentLifeCycle', function() {
       },
       render: function() {
         if (this.state.isMounted) {
-          expect(this.getDOMNode().tagName).toBe('DIV');
+          expect(React.findDOMNode(this).tagName).toBe('DIV');
         }
         return <div/>;
       }

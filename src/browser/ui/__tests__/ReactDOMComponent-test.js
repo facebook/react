@@ -581,7 +581,7 @@ describe('ReactDOMComponent', function() {
       var instance = <div onClick={callback} />;
       instance = React.render(instance, container);
 
-      var rootNode = instance.getDOMNode();
+      var rootNode = React.findDOMNode(instance);
       var rootNodeID = ReactMount.getID(rootNode);
       expect(
         ReactBrowserEventEmitter.getListener(rootNodeID, 'onClick')

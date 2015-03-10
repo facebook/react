@@ -31,15 +31,15 @@ describe('ReactDOMTextComponent', function() {
     var el = document.createElement('div');
     var inst = React.render(<div>{'foo'}{'bar'}</div>, el);
 
-    var foo = inst.getDOMNode().children[0];
-    var bar = inst.getDOMNode().children[1];
+    var foo = React.findDOMNode(inst).children[0];
+    var bar = React.findDOMNode(inst).children[1];
     expect(foo.tagName).toBe('SPAN');
     expect(bar.tagName).toBe('SPAN');
 
     inst = React.render(<div>{'baz'}{'qux'}</div>, el);
     // After the update, the spans should have stayed in place (as opposed to
     // getting unmounted and remounted)
-    expect(inst.getDOMNode().children[0]).toBe(foo);
-    expect(inst.getDOMNode().children[1]).toBe(bar);
+    expect(React.findDOMNode(inst).children[0]).toBe(foo);
+    expect(React.findDOMNode(inst).children[1]).toBe(bar);
   });
 });

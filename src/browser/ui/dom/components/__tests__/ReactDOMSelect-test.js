@@ -34,7 +34,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
@@ -51,7 +51,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
@@ -69,7 +69,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -91,7 +91,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('giraffe');
 
@@ -108,7 +108,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -130,7 +130,7 @@ describe('ReactDOMSelect', function() {
         <option value="12">twelve</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // one
     expect(node.options[1].selected).toBe(false);  // two
@@ -149,7 +149,7 @@ describe('ReactDOMSelect', function() {
       ]
     });
 
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(true);  // a
     expect(node.options[1].selected).toBe(true);  // b
@@ -171,7 +171,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -194,7 +194,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -216,7 +216,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -239,7 +239,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe
@@ -260,7 +260,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     stub.setProps({value: 'gorilla'});
 
@@ -284,7 +284,7 @@ describe('ReactDOMSelect', function() {
         <option value="gorilla">A gorilla!</option>
       </select>;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.options[0].selected).toBe(false);  // monkey
     expect(node.options[1].selected).toBe(true);  // giraffe

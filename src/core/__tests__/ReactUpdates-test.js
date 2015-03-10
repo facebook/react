@@ -530,7 +530,7 @@ describe('ReactUpdates', function() {
         return {x: 0};
       },
       componentDidUpdate: function() {
-        expect(b.getDOMNode().textContent).toBe("B1");
+        expect(React.findDOMNode(b).textContent).toBe("B1");
         aUpdated = true;
       },
       render: function() {
@@ -646,7 +646,7 @@ describe('ReactUpdates', function() {
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            this.getDOMNode()
+            React.findDOMNode(this)
           );
         }
       }
@@ -709,10 +709,10 @@ describe('ReactUpdates', function() {
 
     x = ReactTestUtils.renderIntoDocument(<X />);
     y = ReactTestUtils.renderIntoDocument(<Y />);
-    expect(x.getDOMNode().textContent).toBe('0');
+    expect(React.findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
-    expect(x.getDOMNode().textContent).toBe('1');
+    expect(React.findDOMNode(x).textContent).toBe('1');
   });
 
   it('should queue updates from during mount', function() {
@@ -750,7 +750,7 @@ describe('ReactUpdates', function() {
     });
 
     expect(a.state.x).toBe(1);
-    expect(a.getDOMNode().textContent).toBe('A1');
+    expect(React.findDOMNode(a).textContent).toBe('A1');
   });
 
   it('calls componentWillReceiveProps setState callback properly', function() {
