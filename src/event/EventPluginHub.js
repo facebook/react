@@ -148,7 +148,7 @@ var EventPluginHub = {
    */
   putListener: function(id, registrationName, listener) {
     invariant(
-      !listener || typeof listener === 'function',
+      typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
       registrationName, typeof listener
     );
@@ -156,6 +156,12 @@ var EventPluginHub = {
     var bankForRegistrationName =
       listenerBank[registrationName] || (listenerBank[registrationName] = {});
     bankForRegistrationName[id] = listener;
+
+    var PluginModule =
+      EventPluginRegistry.registrationNameModules[registrationName];
+    if (PluginModule && PluginModule.didPutListener) {
+      PluginModule.didPutListener(id, registrationName, listener);
+    }
   },
 
   /**
@@ -175,7 +181,14 @@ var EventPluginHub = {
    * @param {string} registrationName Name of listener (e.g. `onClick`).
    */
   deleteListener: function(id, registrationName) {
+    var PluginModule =
+      EventPluginRegistry.registrationNameModules[registrationName];
+    if (PluginModule && PluginModule.willDeleteListener) {
+      PluginModule.willDeleteListener(id, registrationName);
+    }
+
     var bankForRegistrationName = listenerBank[registrationName];
+    // TODO: This should never be null -- when is it?
     if (bankForRegistrationName) {
       delete bankForRegistrationName[id];
     }
@@ -188,6 +201,16 @@ var EventPluginHub = {
    */
   deleteAllListeners: function(id) {
     for (var registrationName in listenerBank) {
+      if (!listenerBank[registrationName][id]) {
+        continue;
+      }
+
+      var PluginModule =
+        EventPluginRegistry.registrationNameModules[registrationName];
+      if (PluginModule && PluginModule.willDeleteListener) {
+        PluginModule.willDeleteListener(id, registrationName);
+      }
+
       delete listenerBank[registrationName][id];
     }
   },
