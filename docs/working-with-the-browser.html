@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -395,20 +408,20 @@
 <p>Additionally, React implements a full synthetic event system such that all event objects are guaranteed to conform to the W3C spec despite browser quirks, and everything bubbles consistently and in a performant way cross-browser. You can even use some HTML5 events in IE8!</p>
 
 <p>Most of the time you should stay within React&#39;s &quot;faked browser&quot; world since it&#39;s more performant and easier to reason about. However, sometimes you simply need to access the underlying API, perhaps to work with a third-party library like a jQuery plugin. React provides escape hatches for you to use the underlying DOM API directly.</p>
-<h2><a class="anchor" name="refs-and-getdomnode"></a>Refs and getDOMNode() <a class="hash-link" href="#refs-and-getdomnode">#</a></h2>
-<p>To interact with the browser, you&#39;ll need a reference to a DOM node. Every mounted React component has a <code>getDOMNode()</code> function which you can call to get a reference to it.</p>
+<h2><a class="anchor" name="refs-and-finddomnode"></a>Refs and findDOMNode() <a class="hash-link" href="#refs-and-finddomnode">#</a></h2>
+<p>To interact with the browser, you&#39;ll need a reference to a DOM node. React has a <code>React.findDOMNode(component)</code> function which you can call to get a reference to the component&#39;s DOM node.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p><code>getDOMNode()</code> only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling <code>getDOMNode()</code> in <code>render()</code> on a component that has yet to be created) an exception will be thrown.</p>
+<p><code>findDOMNode()</code> only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling <code>findDOMNode()</code> in <code>render()</code> on a component that has yet to be created) an exception will be thrown.</p>
 </blockquote>
 
 <p>In order to get a reference to a React component, you can either use <code>this</code> to get the current React component, or you can use refs to refer to a component you own. They work like this:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">handleClick</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// Explicitly focus the text input using the raw DOM API.</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">.</span><span class="nx">getDOMNode</span><span class="p">().</span><span class="nx">focus</span><span class="p">();</span>
+    <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myTextInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>
   <span class="p">},</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="c1">// The ref attribute adds a reference to the component to</span>
@@ -463,7 +476,7 @@
 <p><em>Mounted</em> composite components also support the following methods:</p>
 
 <ul>
-<li><code>getDOMNode(): DOMElement</code> can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.</li>
+<li><code>findDOMNode(): DOMElement</code> can be invoked on any mounted component in order to obtain a reference to its rendered DOM node.</li>
 <li><code>forceUpdate()</code> can be invoked on any mounted component when you know that some deeper aspect of the component&#39;s state has changed without using <code>this.setState()</code>.</li>
 </ul>
 <h2><a class="anchor" name="browser-support-and-polyfills"></a>Browser Support and Polyfills <a class="hash-link" href="#browser-support-and-polyfills">#</a></h2>
@@ -528,7 +541,7 @@ Currently a handler to this event is ignored on IE8.</p>
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -398,7 +411,7 @@
 </code></pre></div>
 <p>The rest of this tutorial explains best practices. It uses JSX and experimental ES7 syntax.</p>
 <h2><a class="anchor" name="manual-transfer"></a>Manual Transfer <a class="hash-link" href="#manual-transfer">#</a></h2>
-<p>Most of the time you should explicitly pass the properties down. That ensures that you only exposes a subset of the inner API, one that you know will work.</p>
+<p>Most of the time you should explicitly pass the properties down. That ensures that you only expose a subset of the inner API, one that you know will work.</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">FancyCheckbox</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
   <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
     <span class="kd">var</span> <span class="nx">fancyClass</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">checked</span> <span class="o">?</span> <span class="s1">&#39;FancyChecked&#39;</span> <span class="o">:</span> <span class="s1">&#39;FancyUnchecked&#39;</span><span class="p">;</span>
@@ -418,6 +431,12 @@
 </code></pre></div>
 <p>But what about the <code>name</code> prop? Or the <code>title</code> prop? Or <code>onMouseOver</code>?</p>
 <h2><a class="anchor" name="transferring-with-...-in-jsx"></a>Transferring with <code>...</code> in JSX <a class="hash-link" href="#transferring-with-...-in-jsx">#</a></h2>
+<blockquote>
+<p>NOTE:</p>
+
+<p>In the example below, the <code>--harmony</code> flag is required as this syntax is an experimental ES7 syntax. If using the in-browser JSX transformer, simply open your script with <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code>. See the <a href="http://facebook.github.io/react/docs/transferring-props.html#rest-and-spread-properties-...">Rest and Spread Properties ...</a> section below for more details.</p>
+</blockquote>
+
 <p>Sometimes it&#39;s fragile and tedious to pass every property along. In that case you can use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment">destructuring assignment</a> with rest properties to extract a set of unknown properties.</p>
 
 <p>List out all the properties that you would like to consume, followed by <code>...other</code>.</p>
@@ -529,7 +548,7 @@
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

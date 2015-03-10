@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -394,7 +407,7 @@
 
 <p>It&#39;s more familiar for casual developers such as designers.</p>
 
-<p>XML has the benefit of balanced open and closing tags. This helps make large trees easier to read than function calls or object literals.</p>
+<p>XML has the benefit of balanced opening and closing tags. This helps make large trees easier to read than function calls or object literals.</p>
 
 <p>It doesn&#39;t alter the semantics of JavaScript.</p>
 <h2><a class="anchor" name="html-tags-vs.-react-components"></a>HTML Tags vs. React Components <a class="hash-link" href="#html-tags-vs.-react-components">#</a></h2>
@@ -438,6 +451,12 @@ names like <code>className</code> and <code>htmlFor</code>, respectively.</p>
   <span class="p">{</span><span class="nx">color</span><span class="o">:</span><span class="s2">&quot;blue&quot;</span><span class="p">},</span>
   <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="nx">Profile</span><span class="p">,</span> <span class="kc">null</span><span class="p">,</span> <span class="s2">&quot;click&quot;</span><span class="p">)</span>
 <span class="p">);</span>
+</code></pre></div>
+<p>JSX will infer the class&#39;s <a href="/react/docs/component-specs.html#displayName">displayName</a> from the variable assignment when the displayName is undefined:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Input (JSX):</span>
+<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span> <span class="p">});</span>
+<span class="c1">// Output (JS):</span>
+<span class="kd">var</span> <span class="nx">Nav</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span><span class="nx">displayName</span><span class="o">:</span> <span class="s2">&quot;Nav&quot;</span><span class="p">,</span> <span class="p">});</span>
 </code></pre></div>
 <p>Use the <a href="/react/jsx-compiler.html">JSX Compiler</a> to try out JSX and see how it
 desugars into native JavaScript, and the
@@ -565,7 +584,7 @@ pair of curly braces (<code>{}</code>) instead of quotes (<code>&quot;&quot;</co
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

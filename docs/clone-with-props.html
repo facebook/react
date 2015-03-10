@@ -4,9 +4,9 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Cloning Components | React</title>
+  <title>Cloning ReactElement | React</title>
   <meta name="viewport" content="width=device-width">
-  <meta property="og:title" content="Cloning Components | React">
+  <meta property="og:title" content="Cloning ReactElement | React">
   <meta property="og:type" content="website">
   <meta property="og:url" content="http://facebook.github.io/react/docs/clone-with-props.html">
   <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html" class="active">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -383,20 +396,20 @@
 
   <div class="inner-content">
     <h1>
-      Cloning Components
+      Cloning ReactElement
       <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/10.5-clone-with-props.md" target="_blank">Edit on GitHub</a>
     </h1>
     <div class="subHeader"></div>
 
-    <p>In rare situations a component may want to change the props of a component that it doesn&#39;t own (like changing the <code>className</code> of a component passed as <code>this.props.children</code>). Other times it may want to make multiple copies of a component passed to it. <code>cloneWithProps()</code> makes this possible.</p>
-<h4><a class="anchor" name="reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops"></a><code>ReactComponent React.addons.cloneWithProps(ReactComponent component, object? extraProps)</code> <a class="hash-link" href="#reactcomponent-react.addons.clonewithpropsreactcomponent-component-object-extraprops">#</a></h4>
-<p>Do a shallow copy of <code>component</code> and merge any props provided by <code>extraProps</code>. The <code>className</code> and <code>style</code> props will be merged intelligently.</p>
+    <p>In rare situations a element may want to change the props of a element that it doesn&#39;t own (like changing the <code>className</code> of a element passed as <code>this.props.children</code>). Other times it may want to make multiple copies of a element passed to it. <code>cloneWithProps()</code> makes this possible.</p>
+<h4><a class="anchor" name="reactelement-react.addons.clonewithpropsreactelement-element-object-extraprops"></a><code>ReactElement React.addons.cloneWithProps(ReactElement element, object? extraProps)</code> <a class="hash-link" href="#reactelement-react.addons.clonewithpropsreactelement-element-object-extraprops">#</a></h4>
+<p>Do a shallow copy of <code>element</code> and merge any props provided by <code>extraProps</code>. The <code>className</code> and <code>style</code> props will be merged intelligently.</p>
 
 <blockquote>
 <p>Note:</p>
 
-<p><code>cloneWithProps</code> does not transfer <code>key</code> to the cloned component. If you wish to preserve the key, add it to the <code>extraProps</code> object:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">clonedComponent</span> <span class="o">=</span> <span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">originalComponent</span><span class="p">,</span> <span class="p">{</span> <span class="nx">key</span> <span class="o">:</span> <span class="nx">originalComponent</span><span class="p">.</span><span class="nx">key</span> <span class="p">});</span>
+<p><code>cloneWithProps</code> does not transfer <code>key</code> to the cloned element. If you wish to preserve the key, add it to the <code>extraProps</code> object:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">clonedElement</span> <span class="o">=</span> <span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">originalElement</span><span class="p">,</span> <span class="p">{</span> <span class="nx">key</span> <span class="o">:</span> <span class="nx">originalElement</span><span class="p">.</span><span class="nx">key</span> <span class="p">});</span>
 </code></pre></div>
 <p><code>ref</code> is similarly not preserved.</p>
 </blockquote>
@@ -407,7 +420,7 @@
         <a class="docs-prev" href="/react/docs/test-utils.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/update.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/create-fragment.html">Next &rarr;</a>
       
     </div>
   </div>
@@ -421,7 +434,7 @@
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

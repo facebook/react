@@ -7,11 +7,97 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.13</title>
+				<description>&lt;p&gt;Today, we&amp;#39;re happy to release React v0.13!&lt;/p&gt;
+
+&lt;p&gt;The most notable new feature is &lt;a href=&quot;/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;support for ES6 classes&lt;/a&gt;, which allows developers to have more flexibility when writing components. Our eventual goal is for ES6 classes to replace &lt;code&gt;React.createClass&lt;/code&gt; completely, but until we have a replacement for current mixin use cases and support for class property initializers in the language, we don&amp;#39;t plan to deprecate &lt;code&gt;React.createClass&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;At EmberConf and ng-conf last week, we were excited to see that Ember and Angular have been working on speed improvements and now both have performance comparable to React. We&amp;#39;ve always thought that performance isn&amp;#39;t the most important reason to choose React, but we&amp;#39;re still planning more optimizations to &lt;strong&gt;make React even faster&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Our planned optimizations require that ReactElement objects are immutable, which has always been a best practice when writing idiomatic React code. In this release, we&amp;#39;ve added runtime warnings that fire when props are changed or added between the time an element is created and when it&amp;#39;s rendered. When migrating your code, you may want to use new &lt;code&gt;React.cloneElement&lt;/code&gt; API (which is similar to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; but preserves &lt;code&gt;key&lt;/code&gt; and &lt;code&gt;ref&lt;/code&gt; and does not merge &lt;code&gt;style&lt;/code&gt; or &lt;code&gt;className&lt;/code&gt; automatically). For more information about our planned optimizations, see GitHub issues
+&lt;a href=&quot;https://github.com/facebook/react/issues/3226&quot;&gt;#3226&lt;/a&gt;,
+&lt;a href=&quot;https://github.com/facebook/react/issues/3227&quot;&gt;#3227&lt;/a&gt;,
+&lt;a href=&quot;https://github.com/facebook/react/issues/3228&quot;&gt;#3228&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.0.js&quot;&gt;http://fb.me/react-0.13.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.0.min.js&quot;&gt;http://fb.me/react-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0.js&quot;&gt;http://fb.me/react-with-addons-0.13.0.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.0.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.0.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.0.js&quot;&gt;http://fb.me/JSXTransformer-0.13.0.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.0&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Deprecated patterns that warned in 0.12 no longer work: most prominently, calling component classes without using JSX or React.createElement and using non-component functions with JSX or createElement&lt;/li&gt;
+&lt;li&gt;Mutating &lt;code&gt;props&lt;/code&gt; after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren&amp;#39;t mutated&lt;/li&gt;
+&lt;li&gt;Static methods (defined in &lt;code&gt;statics&lt;/code&gt;) are no longer autobound to the component class&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ref&lt;/code&gt; resolution order has changed slightly such that a ref to a component is available immediately after its &lt;code&gt;componentDidMount&lt;/code&gt; method is called; this change should be observable only if your component calls a parent component&amp;#39;s callback within your &lt;code&gt;componentDidMount&lt;/code&gt;, which is an anti-pattern and should be avoided regardless&lt;/li&gt;
+&lt;li&gt;Calls to &lt;code&gt;setState&lt;/code&gt; in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;setState&lt;/code&gt; and &lt;code&gt;forceUpdate&lt;/code&gt; on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.&lt;/li&gt;
+&lt;li&gt;Access to most internal properties has been completely removed, including &lt;code&gt;this._pendingState&lt;/code&gt; and &lt;code&gt;this._rootNodeID&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details.&lt;/li&gt;
+&lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
+&lt;li&gt;Added a new top-level API &lt;code&gt;React.cloneElement(el, props)&lt;/code&gt; for making copies of React elements – see the &lt;a href=&quot;/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement&quot;&gt;v0.13 RC2 notes&lt;/a&gt; for more details.&lt;/li&gt;
+&lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; – this means that you no longer need to use &lt;code&gt;this._pendingState&lt;/code&gt;, which is now gone.&lt;/li&gt;
+&lt;li&gt;Support for iterators and immutable-js sequences as children.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ComponentClass.type&lt;/code&gt; is deprecated. Just use &lt;code&gt;ComponentClass&lt;/code&gt; (usually as &lt;code&gt;element.type === ComponentClass&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;Some methods that are available on &lt;code&gt;createClass&lt;/code&gt;-based components are removed or deprecated from ES6 classes (&lt;code&gt;getDOMNode&lt;/code&gt;, &lt;code&gt;replaceState&lt;/code&gt;, &lt;code&gt;isMounted&lt;/code&gt;, &lt;code&gt;setProps&lt;/code&gt;, &lt;code&gt;replaceProps&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-Ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&quot;/react/docs/create-fragment.html&quot;&gt;&lt;code&gt;React.addons.createFragment&lt;/code&gt; was added&lt;/a&gt; for adding keys to entire sets of children.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;React.addons.classSet&lt;/code&gt; is now deprecated. This functionality can be replaced with several freely available modules. &lt;a href=&quot;https://www.npmjs.com/package/classnames&quot;&gt;classnames&lt;/a&gt; is one such module.&lt;/li&gt;
+&lt;li&gt;Calls to &lt;code&gt;React.addons.cloneWithProps&lt;/code&gt; can be migrated to use &lt;code&gt;React.cloneElement&lt;/code&gt; instead – make sure to merge &lt;code&gt;style&lt;/code&gt; and &lt;code&gt;className&lt;/code&gt; manually if desired.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;When transforming ES6 syntax, &lt;code&gt;class&lt;/code&gt; methods are no longer enumerable by default, which requires &lt;code&gt;Object.defineProperty&lt;/code&gt;; if you support browsers such as IE8, you can pass &lt;code&gt;--target es3&lt;/code&gt; to mirror the old behavior&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;new-features&quot;&gt;&lt;/a&gt;New Features &lt;a class=&quot;hash-link&quot; href=&quot;#new-features&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;--target&lt;/code&gt; option is available on the jsx command, allowing users to specify and ECMAScript version to target.
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;es5&lt;/code&gt; is the default.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;es3&lt;/code&gt; restores the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg &lt;code&gt;this.static&lt;/code&gt; will become &lt;code&gt;this[&amp;#39;static&amp;#39;]&lt;/code&gt; for IE8 compatibility).&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;The transform for the call spread operator has also been enabled.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;jsx&quot;&gt;&lt;/a&gt;JSX &lt;a class=&quot;hash-link&quot; href=&quot;#jsx&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;breaking-changes&quot;&gt;&lt;/a&gt;Breaking Changes &lt;a class=&quot;hash-link&quot; href=&quot;#breaking-changes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;A change was made to how some JSX was parsed, specifically around the use of &lt;code&gt;&amp;gt;&lt;/code&gt; or &lt;code&gt;}&lt;/code&gt; when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. The &lt;a href=&quot;https://www.npmjs.com/package/jsx_orphaned_brackets_transformer&quot;&gt;&lt;code&gt;jsx_orphaned_brackets_transformer&lt;/code&gt;&lt;/a&gt; package on npm can be used to find and fix potential issues in your JSX code.&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-03-10T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/10/react-v0.13.html</guid>
+			</item>
+		
+			<item>
 				<title>Community Round-up #25</title>
 				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-101&quot;&gt;&lt;/a&gt;React 101 &lt;a class=&quot;hash-link&quot; href=&quot;#react-101&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
 &lt;p&gt;Interest in React has been exploding recently, so it&amp;#39;s a good time to explore some great recent tutorials and videos that cover getting started.&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://github.com/rynclark&quot;&gt;Ryan Clarke&lt;/a&gt; provides a &lt;a href=&quot;http://ryanclark.me/getting-started-with-react/&quot;&gt;great overview of the basics of React&lt;/a&gt; with the goal of building a really simple dropdown nav.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://github.com/rynclark&quot;&gt;Ryan Clark&lt;/a&gt; provides a &lt;a href=&quot;http://ryanclark.me/getting-started-with-react/&quot;&gt;great overview of the basics of React&lt;/a&gt; with the goal of building a really simple dropdown nav.&lt;/p&gt;
 
 &lt;p&gt;&lt;a href=&quot;https://github.com/FormidableLabs&quot;&gt;Formidable Labs&lt;/a&gt; and &lt;a href=&quot;http://www.meetup.com/seattlejs/&quot;&gt;Seattle JS&lt;/a&gt; recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:&lt;/p&gt;
 
@@ -154,7 +240,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;li&gt;Support for using ES6 classes to build React components; see the &lt;a href=&quot;http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html&quot;&gt;v0.13.0 beta 1 notes&lt;/a&gt; for details&lt;/li&gt;
 &lt;li&gt;Added new top-level API &lt;code&gt;React.findDOMNode(component)&lt;/code&gt;, which should be used in place of &lt;code&gt;component.getDOMNode()&lt;/code&gt;. The base class for ES6-based components will not have &lt;code&gt;getDOMNode&lt;/code&gt;. This change will enable some more patterns moving forward.&lt;/li&gt;
 &lt;li&gt;New &lt;code&gt;ref&lt;/code&gt; style, allowing a callback to be used in place of a name: &lt;code&gt;&amp;lt;Photo ref={(c) =&amp;gt; this._photo = c} /&amp;gt;&lt;/code&gt; allows you to reference the component with &lt;code&gt;this._photo&lt;/code&gt; (as opposed to &lt;code&gt;ref=&amp;quot;photo&amp;quot;&lt;/code&gt; which gives &lt;code&gt;this.refs.photo&lt;/code&gt;)&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; -- this means that you no longer need to use this._pendingState, which is now gone.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;this.setState()&lt;/code&gt; can now take a function as the first argument for transactional state updates, such as &lt;code&gt;this.setState((state, props) =&amp;gt; ({count: state.count + 1}));&lt;/code&gt; -- this means that you no longer need to use &lt;code&gt;this._pendingState&lt;/code&gt;, which is now gone.&lt;/li&gt;
 &lt;li&gt;Support for iterators and immutable-js sequences as children&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;deprecations&quot;&gt;&lt;/a&gt;Deprecations &lt;a class=&quot;hash-link&quot; href=&quot;#deprecations&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
@@ -692,7 +778,7 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 
 &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;HelloMessage&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Sebastian&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mountNode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-&lt;p&gt;The API is mostly what you would expect, with the exception for &lt;code&gt;getInitialState&lt;/code&gt;. We figured that the idiomatic way to specify class state is to just use a simple instance property. Likewise &lt;code&gt;getDefaultProps&lt;/code&gt; and &lt;code&gt;propTypes&lt;/code&gt; are really just properties on the constructor.&lt;/p&gt;
+&lt;p&gt;The API is mostly what you would expect, with the exception of &lt;code&gt;getInitialState&lt;/code&gt;. We figured that the idiomatic way to specify class state is to just use a simple instance property. Likewise &lt;code&gt;getDefaultProps&lt;/code&gt; and &lt;code&gt;propTypes&lt;/code&gt; are really just properties on the constructor.&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kr&quot;&gt;export&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Counter&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
   &lt;span class=&quot;nx&quot;&gt;constructor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
     &lt;span class=&quot;kr&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
@@ -774,17 +860,20 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-coffeescript&quot; data-lang=&quot;coffeescript&quot;&gt;&lt;span class=&quot;nv&quot;&gt;div = &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createFactory&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;div&amp;#39;&lt;/span&gt;
 
 &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Counter&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt;
-  &lt;span class=&quot;vi&quot;&gt;@propTypes =&lt;/span&gt;
-    &lt;span class=&quot;nv&quot;&gt;initialCount: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;
-  &lt;span class=&quot;vi&quot;&gt;@defaultProps =&lt;/span&gt;
-    &lt;span class=&quot;nv&quot;&gt;initialCount: &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
-  &lt;span class=&quot;nv&quot;&gt;constructor: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;vi&quot;&gt;@state =&lt;/span&gt;
-      &lt;span class=&quot;nv&quot;&gt;count: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;initialCount&lt;/span&gt;
+  &lt;span class=&quot;vi&quot;&gt;@propTypes = &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;initialCount: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;PropTypes&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;number&lt;/span&gt;
+  &lt;span class=&quot;vi&quot;&gt;@defaultProps = &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;initialCount: &lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;
+
+  &lt;span class=&quot;nv&quot;&gt;constructor: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;(props) -&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;super&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;
+    &lt;span class=&quot;vi&quot;&gt;@state = &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;count: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;initialCount&lt;/span&gt;
+
   &lt;span class=&quot;nv&quot;&gt;tick: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;=&amp;gt;&lt;/span&gt;
     &lt;span class=&quot;nx&quot;&gt;@setState&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;count: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
+
   &lt;span class=&quot;nv&quot;&gt;render: &lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;-&amp;gt;&lt;/span&gt;
-    &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;onClick: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@tick&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&amp;#39;Clicks: &amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;onClick: &lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;@tick&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+      &lt;span class=&quot;s&quot;&gt;&amp;#39;Clicks: &amp;#39;&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;@state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 &lt;p&gt;You can even use the old ES3 module pattern if you want:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;MyComponent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;initialProps&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -878,86 +967,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2014-12-18T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</guid>
-			</item>
-		
-			<item>
-				<title>Community Round-up #24</title>
-				<description>&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;keep-it-simple&quot;&gt;&lt;/a&gt;Keep it Simple &lt;a class=&quot;hash-link&quot; href=&quot;#keep-it-simple&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Pedro Nauck (&lt;a href=&quot;https://github.com/pedronauck&quot;&gt;pedronauck&lt;/a&gt;) delivered an impeccably illustrated deck at Brazil&amp;#39;s &lt;em&gt;Front in Floripa&lt;/em&gt; conference. Watch him talk about how to keep delivering value as your app scales, by keeping your development process simple.&lt;/p&gt;
-
-&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;44129b9054c901328b89221e99b278fe&quot; data-ratio=&quot;1.33333333333333&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
-
-&lt;p&gt;Murilo Pereira (&lt;a href=&quot;https://github.com/mpereira&quot;&gt;mpereira&lt;/a&gt;) tussles with the topic of complexity in this blog post about &lt;a href=&quot;http://www.techsonian.net/2014/09/from-backbone-to-react-our-experience-scaling-a-web-application/&quot;&gt;coping with scaling up&lt;/a&gt;, where he describes how his team used React to make possible the “nearly impossible.”&lt;/p&gt;
-
-&lt;p&gt;I (&lt;a href=&quot;https://github.com/steveluscher&quot;&gt;steveluscher&lt;/a&gt;) spoke at Manning Publications&amp;#39; “Powered By JavaScript” Strangeloop pre-conf in St. Louis. There, I proposed a new notation to talk about development complexity – Big-Coffee Notation ☕(n) – and spoke about the features of React that help keep our Big-Coffee from going quadratic, as our user interfaces get more complex.&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/rI0GQc__0SM&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;James Pearce (&lt;a href=&quot;https://github.com/jamesgpearce&quot;&gt;jamesgpearce&lt;/a&gt;) carried Big-Coffee all the way to Raleigh, NC. At the &lt;em&gt;All Things Open&lt;/em&gt; conference, he spoke about some of the design decisions that went into React, particularly those that lend themselves to simpler, more reliable code.&lt;/p&gt;
-
-&lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/m2fuO2wl_3c&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;all-about-isomorphism&quot;&gt;&lt;/a&gt;All About Isomorphism &lt;a class=&quot;hash-link&quot; href=&quot;#all-about-isomorphism&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Michael Ridgway (&lt;a href=&quot;https://github.com/mridgway&quot;&gt;mridgway&lt;/a&gt;) shows us how Yahoo! (who recently &lt;a href=&quot;http://www.slideshare.net/rmsguhan/react-meetup-mailonreact&quot;&gt;moved Yahoo! Mail to React&lt;/a&gt;) renders their React+Flux application, server-side.&lt;/p&gt;
-
-&lt;script async class=&quot;speakerdeck-embed&quot; data-id=&quot;87ecaa3048750132f42542ffc18c6fcf&quot; data-ratio=&quot;1.77777777777778&quot; src=&quot;//speakerdeck.com/assets/embed.js&quot;&gt;&lt;/script&gt;
-
-&lt;p&gt;Péter Márton (&lt;a href=&quot;https://github.com/hekike&quot;&gt;hekike&lt;/a&gt;) helps us brew a cold one (literally) using an application that&amp;#39;s server-client &lt;a href=&quot;http://blog.risingstack.com/from-angularjs-to-react-the-isomorphic-way/&quot;&gt;isomorphic and indexable&lt;/a&gt;. Demo and sample code included – cold ones sold separately.&lt;/p&gt;
-
-&lt;p&gt;And, lest you think that client-server isomorphism exists in pursuit of crawalable, indexable HTML alone, watch as Nate Hunzaker (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;nhunzaker&lt;/a&gt;) &lt;a href=&quot;http://viget.com/extend/visualization-is-for-sharing-using-react-for-portable-data-visualization&quot;&gt;server renders data visualizations as SVG&lt;/a&gt; with React.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-router-mows-the-lawn&quot;&gt;&lt;/a&gt;React Router Mows the Lawn &lt;a class=&quot;hash-link&quot; href=&quot;#react-router-mows-the-lawn&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Ryan Florence (&lt;a href=&quot;https://github.com/rpflorence%5D&quot;&gt;rpflorence&lt;/a&gt;) and Michael Jackson (&lt;a href=&quot;https://github.com/mjackson&quot;&gt;mjackson&lt;/a&gt;) unveiled a new API for &lt;a href=&quot;https://github.com/rackt/react-router&quot;&gt;React Router&lt;/a&gt; that solves some of its user&amp;#39;s problems by eliminating the problems themselves. Read all about what React Router learned from its community of users, and how they&amp;#39;ve &lt;a href=&quot;https://github.com/rackt/react-router/wiki/Announcements&quot;&gt;rolled your ideas into their latest release&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-in-practice&quot;&gt;&lt;/a&gt;React in Practice &lt;a class=&quot;hash-link&quot; href=&quot;#react-in-practice&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Jonathan Beebe (&lt;a href=&quot;https://github.com/somethingkindawierd&quot;&gt;somethingkindawierd&lt;/a&gt;) spoke about how he uses React to build tools that deliver hope to those trying to make the best of a bad situation. Watch his talk from this year&amp;#39;s &lt;em&gt;Nodevember&lt;/em&gt; conference in Nashville&lt;/p&gt;
-
-&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/uZgAq1CZ1N8&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-
-&lt;p&gt;If you take a peek under the covers, you&amp;#39;ll find that React powers &lt;a href=&quot;https://blog.carousel.com/2014/11/introducing-carousel-for-web-ipad-and-android-tablet/&quot;&gt;Carousel&lt;/a&gt;, Dropbox&amp;#39;s new photo and video gallery app.&lt;/p&gt;
-
-&lt;p&gt;We enjoyed a cinematic/narrative experience with this React-powered, interactive story by British author William Boyd. Dive into “&lt;a href=&quot;https://thevanishinggame.wellstoried.com&quot;&gt;The Vanishing Game&lt;/a&gt;” and see for yourself.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;be-kind-rewind&quot;&gt;&lt;/a&gt;Be Kind, Rewind &lt;a class=&quot;hash-link&quot; href=&quot;#be-kind-rewind&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Spend the next 60 seconds watching Daniel Woelfel (&lt;a href=&quot;https://github.com/dwwoelfel&quot;&gt;dwwoelfel&lt;/a&gt;) serialize a React app&amp;#39;s state as a string, then deserialize it to produce a working UI. Read about how he uses this technique to &lt;a href=&quot;http://blog.circleci.com/local-state-global-concerns/&quot;&gt;reproduce bugs&lt;/a&gt; reported to him by his users.&lt;/p&gt;
-
-&lt;iframe width=&quot;420&quot; height=&quot;315&quot; src=&quot;//www.youtube.com/embed/5yHFTN-_mOo&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;community-components&quot;&gt;&lt;/a&gt;Community Components &lt;a class=&quot;hash-link&quot; href=&quot;#community-components&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Tom Chen (&lt;a href=&quot;https://github.com/tomchentw&quot;&gt;tomchentw&lt;/a&gt;) brings us a &lt;a href=&quot;http://tomchentw.github.io/react-google-maps/&quot;&gt;react-google-maps&lt;/a&gt; component, and a way to syntax highlight source code using Prism and the &lt;a href=&quot;http://tomchentw.github.io/react-prism/&quot;&gt;react-prism&lt;/a&gt; component, for good measure.&lt;/p&gt;
-
-&lt;p&gt;Jed Watson (&lt;a href=&quot;https://github.com/JedWatson&quot;&gt;jedwatson&lt;/a&gt;) helps you manage touch, tap, and press events using the &lt;a href=&quot;https://github.com/JedWatson/react-tappable&quot;&gt;react-tappable&lt;/a&gt; component.&lt;/p&gt;
-
-&lt;p&gt;To find these, and more community-built components, consult the &lt;a href=&quot;http://react-components.com/&quot;&gt;React Components&lt;/a&gt; and &lt;a href=&quot;http://react.rocks&quot;&gt;React Rocks&lt;/a&gt; component directories. React Rocks recently exceeded one-hundred listed components and counting. See one missing? Add the keyword &lt;code&gt;react-component&lt;/code&gt; to your &lt;code&gt;package.json&lt;/code&gt; to get listed on React Components, and &lt;a href=&quot;https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform&quot;&gt;submit a link to React Rocks&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;waiter-theres-a-css-in-my-javascript&quot;&gt;&lt;/a&gt;Waiter, There&amp;#39;s a CSS In My JavaScript &lt;a class=&quot;hash-link&quot; href=&quot;#waiter-theres-a-css-in-my-javascript&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;The internet is abuzz with talk of styling React components using JavaScript instead of CSS. Christopher Chedeau (&lt;a href=&quot;https://github.com/vjeux&quot;&gt;vjeux&lt;/a&gt;) talks about some of the &lt;a href=&quot;https://speakerdeck.com/vjeux/react-css-in-js&quot;&gt;fundamental style management challenges&lt;/a&gt; we grapple with, at Facebook scale. A number of implementations of JavaScript centric style management solutions have appeared in the wild, including the React-focused &lt;a href=&quot;https://github.com/js-next/react-style&quot;&gt;react-style&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;test-isolation&quot;&gt;&lt;/a&gt;Test Isolation &lt;a class=&quot;hash-link&quot; href=&quot;#test-isolation&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Yahoo! shows us how they make use of &lt;code&gt;iframe&lt;/code&gt; elements to &lt;a href=&quot;http://yahooeng.tumblr.com/post/102274727496/to-testutil-or-not-to-testutil&quot;&gt;unit test React components in isolation&lt;/a&gt;.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;youve-got-the-hang-of-flux-now-lets-flow&quot;&gt;&lt;/a&gt;You&amp;#39;ve Got The Hang of Flux, Now Let&amp;#39;s Flow &lt;a class=&quot;hash-link&quot; href=&quot;#youve-got-the-hang-of-flux-now-lets-flow&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Facebook Open Source released &lt;a href=&quot;https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/&quot;&gt;Flow&lt;/a&gt; this month – a static type checker for JavaScript. Naturally, Flow supports JSX, and you can use it to &lt;a href=&quot;https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/#compatibility&quot;&gt;type check React applications&lt;/a&gt;. There&amp;#39;s never been a better reason to start making use of &lt;code&gt;propTypes&lt;/code&gt; in your component specifications!&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;countdown-to-react.js-conf-2014&quot;&gt;&lt;/a&gt;Countdown to React.js Conf 2014 &lt;a class=&quot;hash-link&quot; href=&quot;#countdown-to-react.js-conf-2014&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;We&amp;#39;re counting down the days until &lt;a href=&quot;http://conf.reactjs.com&quot;&gt;React.js Conf&lt;/a&gt; at Facebook&amp;#39;s headquarters in Menlo Park, California, on January 28th &amp;amp; 29th, 2015. Thank you, to everyone who responded to the Call for Presenters. Mark the dates; tickets go on sale in three waves: at noon PST on November 28th, December 5th, and December 12th, 2014.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-meetups-around-the-world&quot;&gt;&lt;/a&gt;React Meetups Around the World &lt;a class=&quot;hash-link&quot; href=&quot;#react-meetups-around-the-world&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;React JS meetup having pretty good turn up rate today &lt;a href=&quot;https://twitter.com/hashtag/londonreact?src=hash&quot;&gt;#londonreact&lt;/a&gt; &lt;a href=&quot;http://t.co/c360dlVVAe&quot;&gt;pic.twitter.com/c360dlVVAe&lt;/a&gt;&lt;/p&gt;&amp;mdash; Alexander Savin (@karismafilms) &lt;a href=&quot;https://twitter.com/karismafilms/status/535152580377468928&quot;&gt;November 19, 2014&lt;/a&gt;&lt;/blockquote&gt;
-
-&lt;div class=&quot;skinny-row&quot;&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;60+ attendees at the second React.js Utah meetup. &lt;a href=&quot;https://twitter.com/ryanflorence&quot;&gt;@ryanflorence&lt;/a&gt; doing a great job, even without the internet. &lt;a href=&quot;http://t.co/fV59AQTOyu&quot;&gt;pic.twitter.com/fV59AQTOyu&lt;/a&gt;&lt;/p&gt;&amp;mdash; ReactJS Utah (@reactjsutah) &lt;a href=&quot;https://twitter.com/reactjsutah/status/527259410020573184&quot;&gt;October 29, 2014&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/hashtag/ReactJS?src=hash&quot;&gt;#ReactJS&lt;/a&gt; meetup at &lt;a href=&quot;https://twitter.com/Yahoo&quot;&gt;@Yahoo&lt;/a&gt; ! History of &lt;a href=&quot;https://twitter.com/yahoomail&quot;&gt;@yahoomail&lt;/a&gt; and why we chose react and NodeJS &lt;a href=&quot;http://t.co/Nm4EdTv45G&quot;&gt;pic.twitter.com/Nm4EdTv45G&lt;/a&gt;&lt;/p&gt;&amp;mdash; rmsguhan (@rmsguhan) &lt;a href=&quot;https://twitter.com/rmsguhan/status/515370950427029504&quot;&gt;September 26, 2014&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-
-&lt;div class=&quot;skinny-row&quot;&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; data-cards=&quot;hidden&quot; lang=&quot;en&quot;&gt;&lt;p&gt;The very first ReactJS meetup in NYC tonight, I&amp;#39;ll be speaking about the big ideas behind Om &lt;a href=&quot;http://t.co/dvPrFqE9eP&quot;&gt;http://t.co/dvPrFqE9eP&lt;/a&gt;&lt;/p&gt;&amp;mdash; David Nolen (@swannodette) &lt;a href=&quot;https://twitter.com/swannodette/status/532190993463128064&quot;&gt;November 11, 2014&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-  &lt;div class=&quot;skinny-col&quot;&gt;
-    &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;If anyone in Sydney is curious about &lt;a href=&quot;https://twitter.com/reactjs&quot;&gt;@reactjs&lt;/a&gt;, I&amp;#39;m presenting at &lt;a href=&quot;https://twitter.com/sydjs&quot;&gt;@sydjs&lt;/a&gt; tonight on how to use it and why it is the future. &lt;a href=&quot;https://twitter.com/hashtag/javascript?src=hash&quot;&gt;#javascript&lt;/a&gt;&lt;/p&gt;&amp;mdash; Jed Watson (@JedWatson) &lt;a href=&quot;https://twitter.com/JedWatson/status/534943557568565248&quot;&gt;November 19, 2014&lt;/a&gt;&lt;/blockquote&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-
-&lt;script async src=&quot;//platform.twitter.com/widgets.js&quot; charset=&quot;utf-8&quot;&gt;&lt;/script&gt;
-</description>
-				<pubDate>2014-11-25T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/11/25/community-roundup-24.html</guid>
 			</item>
 		
 	</channel>

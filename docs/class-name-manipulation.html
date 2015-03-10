@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -388,7 +401,13 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><code>classSet()</code> is a neat utility for easily manipulating the DOM <code>class</code> string.</p>
+    <blockquote>
+<p>NOTE:</p>
+
+<p>This module now exists independently at <a href="https://github.com/JedWatson/classnames">JedWatson/classnames</a> and is React-agnostic. The add-on here will thus be removed in the future.</p>
+</blockquote>
+
+<p><code>classSet()</code> is a neat utility for easily manipulating the DOM <code>class</code> string.</p>
 
 <p>Here&#39;s a common scenario and its solution without <code>classSet()</code>:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// inside some `&lt;Message /&gt;` React component</span>
@@ -418,6 +437,16 @@
 </code></pre></div>
 <p>When using <code>classSet()</code>, pass an object with keys of the CSS class names you might or might not need. Truthy values will result in the key being a part of the resulting string.</p>
 
+<p><code>classSet()</code> also lets pass class names in as arguments that are then concatenated for you:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">cx</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">classSet</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">importantModifier</span> <span class="o">=</span> <span class="s1">&#39;message-important&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">readModifier</span> <span class="o">=</span> <span class="s1">&#39;message-read&#39;</span><span class="p">;</span>
+  <span class="kd">var</span> <span class="nx">classes</span> <span class="o">=</span> <span class="nx">cx</span><span class="p">(</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="nx">importantModifier</span><span class="p">,</span> <span class="nx">readModifier</span><span class="p">);</span>
+  <span class="c1">// Final string is &#39;message message-important message-read&#39;</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">classes</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Great</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">ll</span> <span class="nx">be</span> <span class="nx">there</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+<span class="p">}</span>
+</code></pre></div>
 <p>No more hacky string concatenations!</p>
 
 
@@ -440,7 +469,7 @@
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

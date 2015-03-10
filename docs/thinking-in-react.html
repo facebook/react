@@ -50,7 +50,7 @@
           <li><a href="/react/support.html">support</a></li>
           <li><a href="/react/downloads.html">download</a></li>
           <li><a href="/react/blog/">blog</a></li>
-          <li><a href="http://github.com/facebook/react">github</a>
+          <li><a href="https://github.com/facebook/react">github</a>
         </ul>
       </div>
     </div>
@@ -86,6 +86,11 @@
     <div class="nav-docs-section">
       <h3>Community Resources</h3>
       <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
         
           <li>
             <a href="/react/docs/videos.html">Videos</a>
@@ -201,6 +206,10 @@
                 
                   <li>
                     <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
                   </li>
                 
                   <li>
@@ -375,6 +384,10 @@
             <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
           </li>
         
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
       </ul>
     </div>
   
@@ -393,12 +406,6 @@
 <p>React is, in my opinion, the premier way to build big, fast Web apps with JavaScript. It has scaled very well for us at Facebook and Instagram.</p>
 
 <p>One of the many great parts of React is how it makes you think about apps as you build them. In this post I&#39;ll walk you through the thought process of building a searchable product data table using React.</p>
-
-<blockquote>
-<p>Note:</p>
-
-<p>If you can&#39;t see the embedded code snippets on this page, make sure you&#39;re NOT loading this page on <code>https</code>.</p>
-</blockquote>
 <h2><a class="anchor" name="start-with-a-mock"></a>Start with a mock <a class="hash-link" href="#start-with-a-mock">#</a></h2>
 <p>Imagine that we already have a JSON API and a mock from our designer. Our designer apparently isn&#39;t very good because the mock looks like this:</p>
 
@@ -450,7 +457,7 @@
 </ul></li>
 </ul>
 <h2><a class="anchor" name="step-2-build-a-static-version-in-react"></a>Step 2: Build a static version in React <a class="hash-link" href="#step-2-build-a-static-version-in-react">#</a></h2>
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/yun1vgqb/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>Now that you have your component hierarchy it&#39;s time to start implementing your app. The easiest way is to build a version that takes your data model and renders the UI but has no interactivity. It&#39;s easiest to decouple these processes because building a static version requires a lot of typing and no thinking, and adding interactivity requires a lot of thinking and not a lot of typing. We&#39;ll see why.</p>
 
@@ -494,7 +501,7 @@
 <li>The value of the checkbox</li>
 </ul>
 <h2><a class="anchor" name="step-4-identify-where-your-state-should-live"></a>Step 4: Identify where your state should live <a class="hash-link" href="#step-4-identify-where-your-state-should-live">#</a></h2>
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/zafjbw1e/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>OK, so we&#39;ve identified what the minimal set of app state is. Next we need to identify which component mutates, or <em>owns</em>, this state.</p>
 
@@ -521,7 +528,7 @@
 
 <p>You can start seeing how your application will behave: set <code>filterText</code> to <code>&quot;ball&quot;</code> and refresh your app. You&#39;ll see the data table is updated correctly.</p>
 <h2><a class="anchor" name="step-5-add-inverse-data-flow"></a>Step 5: Add inverse data flow <a class="hash-link" href="#step-5-add-inverse-data-flow">#</a></h2>
-<iframe width="100%" height="300" src="http://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
+<iframe width="100%" height="300" src="https://jsfiddle.net/reactjs/n47gckhr/embedded/" allowfullscreen="allowfullscreen" frameborder="0"></iframe>
 
 <p>So far we&#39;ve built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it&#39;s time to support data flowing the other way: the form components deep in the hierarchy need to update the state in <code>FilterableProductTable</code>.</p>
 
@@ -541,7 +548,7 @@
         <a class="docs-prev" href="/react/docs/tutorial.html">&larr; Prev</a>
       
       
-        <a class="docs-next" href="/react/docs/videos.html">Next &rarr;</a>
+        <a class="docs-next" href="/react/docs/conferences.html">Next &rarr;</a>
       
     </div>
   </div>
@@ -555,7 +562,7 @@
       </div>
       <div class="right">
         &copy; 2013&ndash;2015 Facebook Inc.<br>
-        Documentation licensed under <a href="http://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
       </div>
     </footer>
   </div>

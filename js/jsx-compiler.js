@@ -26,7 +26,8 @@ var CompilerPlayground = React.createClass({displayName: "CompilerPlayground",
           codeText: HELLO_COMPONENT, 
           renderCode: true, 
           transformer: transformer.bind(null, this.state.harmony), 
-          showCompiledJSTab: false}
+          showCompiledJSTab: false, 
+          showLineNumbers: true}
         ), 
         React.createElement("label", {className: "compiler-option"}, 
           React.createElement("input", {
