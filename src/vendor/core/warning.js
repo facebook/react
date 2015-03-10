@@ -45,7 +45,9 @@ if (__DEV__) {
     if (!condition) {
       var argIndex = 0;
       var message = 'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
-      console.warn(message);
+      if (typeof console !== 'undefined') {
+        console.warn(message);
+      }
       try {
         // --- Welcome to debugging React ---
         // This error was thrown as a convenience so that you can use this stack
