@@ -1,4 +1,4 @@
-# [React](http://facebook.github.io/react) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=master)](https://travis-ci.org/facebook/react)
+# [React](http://facebook.github.io/react) [![Build Status](https://travis-ci.org/facebook/react.svg?branch=0.13-stable)](https://travis-ci.org/facebook/react)
 
 React is a JavaScript library for building user interfaces.
 
@@ -35,12 +35,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.12.2.js"></script>
+<script src="http://fb.me/react-0.13.0.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.12.2.js"></script>
+<script src="http://fb.me/JSXTransformer-0.13.0.js"></script>
 ```
 
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.12.2.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.13.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
