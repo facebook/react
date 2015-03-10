@@ -120,8 +120,8 @@ if (__DEV__) {
 
     warning(
       !ieCompatibilityMode,
-      'Internet Explorer is running in compatibility mode, please add the following ' +
-      'tag to your HTML to prevent this from happening: ' +
+      'Internet Explorer is running in compatibility mode; please add the ' +
+      'following tag to your HTML to prevent this from happening: ' +
       '<meta http-equiv="X-UA-Compatible" content="IE=edge" />'
     );
 
