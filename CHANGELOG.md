@@ -1,3 +1,60 @@
+## 0.13.0 (March 10, 2015)
+
+### React Core
+
+#### Breaking Changes
+
+* Mutating `props` after an element is created is deprecated and will cause warnings in development mode; future versions of React will incorporate performance optimizations assuming that props aren't mutated
+* Static methods (defined in `statics`) are no longer autobound to the component class
+* `ref` resolution order has changed slightly such that a ref to a component is available immediately after its `componentDidMount` method is called; this change should be observable only if your component calls a parent component's callback within your `componentDidMount`, which is an anti-pattern and should be avoided regardless
+* Calls to `setState` in life-cycle methods are now always batched and therefore asynchronous. Previously the first call on the first mount was synchronous.
+* `setState` and `forceUpdate` on an unmounted component now warns instead of throwing. That avoids a possible race condition with Promises.
+* Access to most internal properties has been completely removed, including `this._pendingState` and `this._rootNodeID`.
+
+#### New Features
+
+* Support for using ES6 classes to build React components; see the [v0.13.0 beta 1 notes](http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html) for details.
+* Added new top-level API `React.findDOMNode(component)`, which should be used in place of `component.getDOMNode()`. The base class for ES6-based components will not have `getDOMNode`. This change will enable some more patterns moving forward.
+* Added a new top-level API `React.cloneElement(el, props)` for making copies of React elements – see the [v0.13 RC2 notes](/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement) for more details.
+* New `ref` style, allowing a callback to be used in place of a name: `<Photo ref={(c) => this._photo = c} />` allows you to reference the component with `this._photo` (as opposed to `ref="photo"` which gives `this.refs.photo`).
+* `this.setState()` can now take a function as the first argument for transactional state updates, such as `this.setState((state, props) => ({count: state.count + 1}));` – this means that you no longer need to use `this._pendingState`, which is now gone.
+* Support for iterators and immutable-js sequences as children.
+
+#### Deprecations
+
+* `ComponentClass.type` is deprecated. Just use `ComponentClass` (usually as `element.type === ComponentClass`).
+* Some methods that are available on `createClass`-based components are removed or deprecated from ES6 classes (`getDOMNode`, `replaceState`, `isMounted`, `setProps`, `replaceProps`).
+
+### React with Add-Ons
+
+#### New Features
+
+* [`React.addons.createFragment` was added](/react/docs/create-fragment.html) for adding keys to entire sets of children.
+
+#### Deprecations
+
+* `React.addons.classSet` is now deprecated. This functionality can be replaced with several freely available modules. [classnames](https://www.npmjs.com/package/classnames) is one such module.
+* Calls to `React.addons.cloneWithProps` can be migrated to use `React.cloneElement` instead – make sure to merge `style` and `className` manually if desired.
+
+### React Tools
+
+#### Breaking Changes
+
+* When transforming ES6 syntax, `class` methods are no longer enumerable by default, which requires `Object.defineProperty`; if you support browsers such as IE8, you can pass `--target es3` to mirror the old behavior
+
+#### New Features
+
+* `--target` option is available on the jsx command, allowing users to specify and ECMAScript version to target.
+  * `es5` is the default.
+  * `es3` restores the previous default behavior. An additional transform is added here to ensure the use of reserved words as properties is safe (eg `this.static` will become `this['static']` for IE8 compatibility).
+* The transform for the call spread operator has also been enabled.
+
+### JSX
+
+#### Breaking Changes
+* A change was made to how some JSX was parsed, specifically around the use of `>` or `}` when inside an element. Previously it would be treated as a string but now it will be treated as a parse error. The [`jsx_orphaned_brackets_transformer`](https://www.npmjs.com/package/jsx_orphaned_brackets_transformer) package on npm can be used to find and fix potential issues in your JSX code.
+
+
 ## 0.12.2 (December 18, 2014)
 
 ### React Core
