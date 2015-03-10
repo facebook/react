@@ -36,11 +36,11 @@ function shouldUpdateReactComponent(prevElement, nextElement) {
           prevElement.type === nextElement.type &&
           prevElement.key === nextElement.key) {
         var ownersMatch = prevElement._owner === nextElement._owner;
-        var prevName = null;
-        var nextName = null;
-        var nextDisplayName = null;
         if (__DEV__) {
           if (!ownersMatch) {
+            var prevName = null;
+            var nextName = null;
+            var nextDisplayName = null;
             if (prevElement._owner != null &&
                 prevElement._owner.getPublicInstance() != null &&
                 prevElement._owner.getPublicInstance().constructor != null) {
