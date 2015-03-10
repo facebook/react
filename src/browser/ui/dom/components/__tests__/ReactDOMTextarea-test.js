@@ -127,6 +127,17 @@ describe('ReactDOMTextarea', function() {
     expect(node.value).toEqual('false');
   });
 
+  it('should allow setting `value` to `null`', function() {
+    var stub = <textarea value="giraffe" onChange={emptyFunction} />;
+    stub = renderTextarea(stub);
+    var node = stub.getDOMNode();
+
+    expect(node.value).toBe('giraffe');
+
+    stub.replaceProps({value: null, onChange: emptyFunction});
+    expect(node.value).toEqual('');
+  });
+
   it('should allow setting `value` to `objToString`', function() {
     var stub = <textarea value="giraffe" onChange={emptyFunction} />;
     stub = renderTextarea(stub);

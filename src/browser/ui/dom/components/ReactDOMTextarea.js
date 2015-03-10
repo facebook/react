@@ -113,7 +113,17 @@ var ReactDOMTextarea = ReactClass.createClass({
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
     var value = LinkedValueUtils.getValue(this);
-    if (value != null) {
+    var prevValue = LinkedValueUtils.getValue({props: prevProps});
+
+    // The existence of a previous value means that this was a controlled
+    // component which should now be reset (to the defaultValue or empty).
+    if (value != null || prevValue != null) {
+
+      if (value == null) {
+        value = this.props.defaultValue != null ?
+                this.props.defaultValue : '';
+      }
+
       var rootNode = this.getDOMNode();
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
