@@ -1,5 +1,10 @@
 <?php
 
+// Prevent this from handling anything that isn't index.php.
+if ($_SERVER["REQUEST_URI"] !== "/" && $_SERVER["REQUEST_URI"] !== "/index.php") {
+  return false;
+}
+
 // URL to the box running `node server.js`
 define('RENDER_SERVER', 'http://localhost:3000/');
 
@@ -18,6 +23,8 @@ function react_component($module, $props) {
   );
 
   $container_id = uniqid();
+  $container_id_for_js = json_encode($container_id);
+  $module_for_js = json_encode($module);
 
   // Generate the code required to run the component on the client.
   // We assume that the Browserify bundle is loaded in the page already
@@ -26,12 +33,18 @@ function react_component($module, $props) {
   // Note that this solution is simple but I don't think it scales to
   // multiple large pages very well. For that you'd be better off using
   // webpack.
-  $startup_code =
-    '<script>require(\'react\').render(require(' .
-    json_encode($module) .
-    ')(' . $props_json . '), ' .
-    'document.getElementById(' . json_encode($container_id) . '))' .
-    '</script>';
+  $startup_code = <<<SCRIPT
+<script>
+  (function() {
+    var React = require('react');
+    var Component = require($module_for_js);
+    React.render(
+      React.createElement(Component, $props_json),
+      document.getElementById($container_id_for_js)
+    );
+  })();
+</script>
+SCRIPT;
 
   $container_markup = '<div id="' . $container_id . '">' . $server_markup . '</div>';
 

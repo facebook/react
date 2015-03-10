@@ -5,7 +5,7 @@
   "devDependencies": {
     "browserify": "^6.3.3",
     "envify": "^3.2.0",
-    "react": "^0.12.0",
+    "react": "^0.13.0",
     "reactify": "^0.17.1"
   },
   "scripts": {
