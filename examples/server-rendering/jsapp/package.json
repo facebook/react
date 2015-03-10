@@ -9,8 +9,8 @@
   },
   "dependencies": {
     "envify": "^3.0.0",
-    "react": "^0.12.0",
+    "react": "^0.13.0",
     "browserify": "^3.38.0",
-    "reactify": "^0.15.0"
+    "reactify": "^1.0.0"
   }
 }

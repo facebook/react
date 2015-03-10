@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta http-equiv='Content-type' content='text/html; charset=utf-8'>
-    <title>Basic Example with JSX with Harmony</title>
+    <title>Basic Example with JSX and ES6 features</title>
     <link rel="stylesheet" href="../shared/css/base.css" />
   </head>
   <body>
-    <h1>Basic Example with JSX with Harmony</h1>
+    <h1>Basic Example with JSX and ES6 features</h1>
     <div id="container">
       <p>
         To install React, follow the instructions on
@@ -26,7 +26,7 @@
     <script src="../../build/react.js"></script>
     <script src="../../build/JSXTransformer.js"></script>
     <script type="text/jsx;harmony=true">
-      var ExampleApplication = React.createClass({
+      class ExampleApplication extends React.Component {
         render() {
           var elapsed = Math.round(this.props.elapsed  / 100);
           var seconds = elapsed / 10 + (elapsed % 10 ? '' : '.0' );
@@ -35,7 +35,7 @@
 
           return <p>{message}</p>;
         }
-      });
+      }
       var start = new Date().getTime();
       setInterval(() => {
         React.render(
