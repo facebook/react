@@ -36,6 +36,19 @@ Create and return a new `ReactElement` of the given type. The type argument can 
 html tag name string (eg. 'div', 'span', etc), or a `ReactClass` (created via `React.createClass`).
 
 
+### React.cloneElement
+
+```
+ReactElement cloneElement(
+  ReactElement element,
+  [object props],
+  [children ...]
+)
+```
+
+Clone and return a new `ReactElement` using `element` as the starting point. The resulting element will have the original element's props with the new props merged in shallowly. New children will replace existing children. Unlike `React.addons.cloneWithProps`, `key` and `ref` from the original element will be preserved. There is no special behavior for merging any props (unlike `cloneWithProps`). See the [v0.13 RC2 blog post](/react/blog/2015/03/03/react-v0.13-rc2.html) for additional details.
+
+
 ### React.createFactory
 
 ```javascript
