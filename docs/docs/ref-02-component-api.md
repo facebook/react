@@ -14,10 +14,27 @@ Instances of a React Component are created internally in React when rendering. T
 ### setState
 
 ```javascript
-setState(object nextState[, function callback])
+setState(function|object nextState[, function callback])
+```
+Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.
+
+The first argument can be an object (containing zero or more keys to update) or a function (of state and props) that returns an object containing keys to update.
+
+Here is the simple object usage...
+
+```javascript
+setState({mykey: 'my new value'});
 ```
 
-Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed and the component is re-rendered.
+It's also possible to pass a function with the signature `function(state, props)`. This can be useful in some cases when you want to enqueue an atomic update that consults the previous value of state+props before setting any values.  For instance, suppose we wanted to increment a value in state: 
+
+```javascript
+setState(function(previousState, currentProps) {
+  return {myInteger: previousState.myInteger + 1};
+});`
+```
+
+The second (optional) parameter is a callback function that will be executed once `setState` is completed and the component is re-rendered.
 
 > Notes:
 >
