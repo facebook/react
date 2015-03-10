@@ -10,10 +10,11 @@ next: animation.html
 
 - [`TransitionGroup` and `CSSTransitionGroup`](animation.html), for dealing with animations and transitions that are usually not simple to implement, such as before a component's removal.
 - [`LinkedStateMixin`](two-way-binding-helpers.html), to simplify the coordination between user's form input data and the component's state.
-- [`classSet`](class-name-manipulation.html), for manipulating the DOM `class` string a bit more cleanly.
 - [`cloneWithProps`](clone-with-props.html), to make shallow copies of React components and change their props.
+- [`createFragment`](create-fragment.html), to create a set of externally-keyed children.
 - [`update`](update.html), a helper function that makes dealing with immutable data in JavaScript easier.
 - [`PureRenderMixin`](pure-render-mixin.html), a performance booster under certain situations.
+- (DEPRECATED) [`classSet`](class-name-manipulation.html), for manipulating the DOM `class` string a bit more cleanly.
 
 The add-ons below are in the development (unminified) version of React only:
 
