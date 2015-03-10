@@ -100,6 +100,7 @@ if (__DEV__) {
   var deprecatedAPIs = {
     getDOMNode: 'getDOMNode',
     isMounted: 'isMounted',
+    replaceProps: 'replaceProps',
     replaceState: 'replaceState',
     setProps: 'setProps'
   };

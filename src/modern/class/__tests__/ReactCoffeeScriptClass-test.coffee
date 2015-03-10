@@ -318,7 +318,8 @@ describe 'ReactCoffeeScriptClass', ->
     expect(-> instance.replaceState {}).toThrow()
     expect(-> instance.isMounted()).toThrow()
     expect(-> instance.setProps name: 'bar').toThrow()
-    expect(console.warn.calls.length).toBe 4
+    expect(-> instance.replaceProps name: 'bar').toThrow()
+    expect(console.warn.calls.length).toBe 5
     expect(console.warn.calls[0].args[0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
     )
@@ -330,6 +331,9 @@ describe 'ReactCoffeeScriptClass', ->
     )
     expect(console.warn.calls[3].args[0]).toContain(
       'setProps(...) is deprecated in plain JavaScript React classes'
+    )
+    expect(console.warn.calls[4].args[0]).toContain(
+      'replaceProps(...) is deprecated in plain JavaScript React classes'
     )
 
   it 'supports this.context passed via getChildContext', ->
