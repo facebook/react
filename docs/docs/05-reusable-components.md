@@ -187,3 +187,48 @@ React.render(
 
 A nice feature of mixins is that if a component is using multiple mixins and several mixins define the same lifecycle method (i.e. several mixins want to do some cleanup when the component is destroyed), all of the lifecycle methods are guaranteed to be called. Methods defined on mixins run in the order mixins were listed, followed by a method call on the component.
 
+## ES6 Classes
+
+You may also define your React classes as a plain JavaScript class. For example using ES6 class syntax:
+
+```javascript
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello {this.props.name}</div>;
+  }
+}
+React.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+The API is similar to `React.createClass` with the exception for `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
+
+Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
+
+```javascript
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: props.initialCount};
+  }
+  tick() {
+    this.setState({count: this.state.count + 1});
+  }
+  render() {
+    return (
+      <div onClick={this.tick.bind(this)}>
+        Clicks: {this.state.count}
+      </div>
+    );
+  }
+}
+Counter.propTypes = { initialCount: React.PropTypes.number };
+Counter.defaultProps = { initialCount: 0 };
+```
+
+### No Autobinding
+
+Methods follow the same semantics as regular ES6 classes, meaning that they don't automatically bind `this` to the instance. You'll have to explicitly use `.bind(this)` or arrow functions.
+
+### No Mixins
+
+Unfortunately ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes. Instead, we're working on making it easier to support such use cases without resorting to mixins.

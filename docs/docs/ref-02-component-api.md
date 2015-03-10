@@ -6,7 +6,7 @@ prev: top-level-api.html
 next: component-specs.html
 ---
 
-## ReactComponent
+## React.Component
 
 Instances of a React Component are created internally in React when rendering. These instances are reused in subsequent renders, and can be accessed in your component methods as `this`. The only way to get a handle to a React Component instance outside of React is by storing the return value of `React.render`. Inside other Components, you may use [refs](/react/docs/more-about-refs.html) to achieve the same result.
 

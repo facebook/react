@@ -11,6 +11,15 @@ redirect_from: "/docs/reference.html"
 `React` is the entry point to the React library. If you're using one of the prebuilt packages it's available as a global; if you're using CommonJS modules you can `require()` it.
 
 
+### React.Component
+
+```javascript
+class Component
+```
+
+This is the base class for React Components when they're defined using ES6 classes. See [Reusable Components](/react/docs/reusable-components.html#es6-classes) for how to use ES6 classes with React. For what methods are actually provided by the base class, see the [Component API](/react/docs/component-api.html).
+
+
 ### React.createClass
 
 ```javascript
