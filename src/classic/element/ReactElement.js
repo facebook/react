@@ -203,7 +203,7 @@ ReactElement.createElement = function(type, config, children) {
 ReactElement.createFactory = function(type) {
   var factory = ReactElement.createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
-  // easily accessed on elements. E.g. <Foo />.type === Foo.type.
+  // easily accessed on elements. E.g. `<Foo />.type === Foo`.
   // This should not be named `constructor` since this may not be the function
   // that created the element, and it may not even be a constructor.
   // Legacy hook TODO: Warn if this is accessed
