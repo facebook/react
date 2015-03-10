@@ -29,6 +29,7 @@ var ReactUpdates = require('ReactUpdates');
 
 var cx = require('cx');
 var cloneWithProps = require('cloneWithProps');
+var shallowCompare = require('shallowCompare');
 var update = require('update');
 
 React.addons = {
@@ -41,6 +42,7 @@ React.addons = {
   classSet: cx,
   cloneWithProps: cloneWithProps,
   createFragment: ReactFragment.create,
+  shallowCompare: shallowCompare,
   update: update
 };
 
