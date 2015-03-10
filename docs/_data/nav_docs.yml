@@ -59,6 +59,8 @@
       title: Test Utilities
     - id: clone-with-props
       title: Cloning Components
+    - id: create-fragment
+      title: Keyed Fragments
     - id: update
       title: Immutability Helpers
     - id: pure-render-mixin
