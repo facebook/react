@@ -22,6 +22,11 @@ function shallowEqual(objA, objB) {
   if (objA === objB) {
     return true;
   }
+
+  if (!objA || !objB) {
+    return false;
+  }
+
   var key;
   // Test for A's keys different from B.
   for (key in objA) {
