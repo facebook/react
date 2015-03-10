@@ -38,6 +38,10 @@ replaceState(object nextState[, function callback])
 
 Like `setState()` but deletes any pre-existing state keys that are not in nextState.
 
+> Note:
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
+
 
 ### forceUpdate
 
@@ -63,6 +67,8 @@ If this component has been mounted into the DOM, this returns the corresponding 
 > Note:
 >
 > getDOMNode is deprecated and has been replaced with [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode).
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
 
 ### isMounted
@@ -72,6 +78,10 @@ bool isMounted()
 ```
 
 `isMounted()` returns true if the component is rendered into the DOM, false otherwise. You can use this method to guard asynchronous calls to `setState()` or `forceUpdate()`.
+
+> Note:
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
 
 ### setProps
@@ -89,7 +99,8 @@ Though calling `React.render()` again on the same node is the preferred way to u
 > When possible, the declarative approach of calling `React.render()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
 >
 > This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.render()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
-
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
 
 ### replaceProps
 
@@ -98,3 +109,7 @@ replaceProps(object nextProps[, function callback])
 ```
 
 Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
+
+> Note:
+>
+> This method is not available on ES6 `class` components that extend `React.Component`. It may be removed entirely in a future version of React.
