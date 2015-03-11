@@ -241,19 +241,17 @@ function assertValidProps(component, props) {
     return;
   }
   // Note the use of `==` which checks for null or undefined.
-  if (__DEV__) {
-    if (voidElementTags[component._tag]) {
-      warning(
-        props.children == null && props.dangerouslySetInnerHTML == null,
-        '%s is a void element tag and must not have `children` or ' +
-        'use `props.dangerouslySetInnerHTML`.%s',
-        component._tag,
-        component._currentElement._owner ?
-          ' Check the render method of ' +
-          component._currentElement._owner.getName() + '.' :
-          ''
-      );
-    }
+  if (voidElementTags[component._tag]) {
+    invariant(
+      props.children == null && props.dangerouslySetInnerHTML == null,
+      '%s is a void element tag and must not have `children` or ' +
+      'use `props.dangerouslySetInnerHTML`.%s',
+      component._tag,
+      component._currentElement._owner ?
+        ' Check the render method of ' +
+        component._currentElement._owner.getName() + '.' :
+        ''
+    );
   }
   if (props.dangerouslySetInnerHTML != null) {
     invariant(

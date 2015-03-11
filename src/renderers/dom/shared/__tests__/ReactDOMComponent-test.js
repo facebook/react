@@ -571,43 +571,44 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn against children for void elements', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
-      ReactDOM.render(<input>children</input>, container);
-
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(<input>children</input>, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` or ' +
+        'use `props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
-      ReactDOM.render(
-        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-        container
+      expect(function() {
+        ReactDOM.render(
+          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          container
+        );
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
       );
-
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it('should treat menuitem as a void element but still create the closing tag', function() {
-      spyOn(console, 'error');
-
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(<menu><menuitem /></menu>);
 
       expect(returnedValue).toContain('</menuitem>');
 
-      ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
+      expect(function() {
+        ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
+      }).toThrow(
+        'menuitem is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it('should validate against multiple children props', function() {
@@ -725,17 +726,17 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn for children on void elements', function() {
-      spyOn(console, 'error');
       var X = React.createClass({
         render: function() {
           return <input>moo</input>;
         },
       });
+
       var container = document.createElement('div');
-      ReactDOM.render(<X />, container);
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toBe(
-        'Warning: input is a void element tag and must not have `children` ' +
+      expect(function() {
+        ReactDOM.render(<X />, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` ' +
         'or use `props.dangerouslySetInnerHTML`. Check the render method of X.'
       );
     });
@@ -749,26 +750,28 @@ describe('ReactDOMComponent', function() {
     });
 
     it('should warn against children for void elements', function() {
-      spyOn(console, 'error');
-
       ReactDOM.render(<input />, container);
-      ReactDOM.render(<input>children</input>, container);
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(<input>children</input>, container);
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', function() {
-      spyOn(console, 'error');
-
       ReactDOM.render(<input />, container);
-      ReactDOM.render(
-        <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-        container
-      );
 
-      expect(console.error.argsForCall.length).toBe(1);
-      expect(console.error.argsForCall[0][0]).toContain('void element');
+      expect(function() {
+        ReactDOM.render(
+          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          container
+        );
+      }).toThrow(
+        'input is a void element tag and must not have `children` or use ' +
+        '`props.dangerouslySetInnerHTML`.'
+      );
     });
 
     it('should validate against multiple children props', function() {
