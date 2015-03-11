@@ -41,6 +41,15 @@ describe('shallowEqual', function() {
     ).toBe(true);
   });
 
+  it('returns true if arguments are same primitive values', function() {
+    expect(shallowEqual(1,1)).toBe(true);
+  });
+
+  it('returns false if arguments are primitive value and object', function() {
+    expect(shallowEqual(1,{})).toBe(false);
+    expect(shallowEqual({},1)).toBe(false);
+  });
+
   it('returns false if first argument has too many keys', function() {
     expect(
       shallowEqual(
