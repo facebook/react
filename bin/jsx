@@ -44,7 +44,7 @@ require('commoner').version(
     sourceMap: this.options.sourceMapInline,
     stripTypes: this.options.stripTypes,
     es6module: this.options.es6module,
-    nonStrictEs6Module: this.options.nonStrictEs6Module,
+    nonStrictEs6module: this.options.nonStrictEs6module,
     target: this.options.target
   };
   return transform(source, options);
