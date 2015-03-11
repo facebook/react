@@ -95,7 +95,7 @@ MyComponent.customMethod('bar');  // true
 string displayName
 ```
 
-`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth-ko-KR.html#react-composite-components)를 참고하세요.
+`displayName` 문자열은 디버그 메시지에 사용됩니다. JSX는 이 값을 자동으로 설정합니다. [JSX 깊이 알기](/react/docs/jsx-in-depth-ko-KR.html#the-transform)를 참고하세요.
 
 
 ## 생명주기 메소드

@@ -11,6 +11,15 @@ redirect_from: "/docs/reference-ko-KR.html"
 `React`는 React 라이브러리의 진입점입니다. 미리 빌드된 패키지를 사용하는 경우 전역 변수로 접근할 수 있습니다. CommonJS 모듈을 사용하는 경우에는 `require()`로 불러올 수 있습니다.
 
 
+### React.Component
+
+```javascript
+class Component
+```
+
+ES6 클래스 구문을 사용해 React 컴포넌트를 정의했을 때 기본 클래스가 되는 부분입니다. 어떻게 ES6 클래스 구문을 사용해 React를 다루는지는 [재사용가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html#es6-classes)를 확인하세요. 기본 클래스에서 실제 제공되는 메소드들에는 어떤것이 있는지 알아보려면 [컴포넌트 API](/react/docs/component-api-ko-KR.html)를 확인하세요.
+
+
 ### React.createClass
 
 ```javascript
@@ -33,6 +42,19 @@ ReactElement createElement(
 ```
 
 주어진 타입의 새 `ReactElement`를 만들고 리턴합니다. `type` 인자는 HTML 태그명 문자열 (예: 'div', 'span' 등) 또는 (`React.createClass`로 만든) `ReactClass`입니다.
+
+
+### React.cloneElement
+
+```
+ReactElement cloneElement(
+  ReactElement element,
+  [object props],
+  [children ...]
+)
+```
+
+`element`를 시작점으로 새로운 `ReactElement`를 클론해 반환합니다. 반환된 엘리먼트에는 원본의 props와 새로운 props가 얕게 병합됩니다. 새 자식은 존재하는 자식을 교체할 것입니다. `React.addons.cloneWithProps`와는 다르게, 원본 엘리먼트의 `key`와 `ref`는 보존될 것입니다. `cloneWithProps`와는 달리 props이 병합되는데는 어떠한 특별한 동작도 없습니다. [v0.13 RC2 블로그 포스트](/react/blog/2015/03/03/react-v0.13-rc2.html)에서 추가적인 내용을 확인하세요.
 
 
 ### React.createFactory

@@ -6,7 +6,7 @@ prev: top-level-api-ko-KR.html
 next: component-specs-ko-KR.html
 ---
 
-## ReactComponent
+## React.Component
 
 React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 만듭니다. 이때 만들어진 인스턴스는 이후의 렌더링에서 다시 사용되고 컴포넌트의 메소드들에서 `this` 변수로 접근할 수 있습니다. React 외부에서 React 컴포넌트의 핸들을 얻는 방법은 `React.render`의 리턴값을 저장하는 것이 유일합니다. 다른 컴포넌트 안에서 비슷한 결과를 얻으려면 [refs](/react/docs/more-about-refs-ko-KR.html)를 사용해야 합니다.
 
@@ -14,10 +14,28 @@ React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 
 ### setState
 
 ```javascript
-setState(object nextState[, function callback])
+setState(function|object nextState[, function callback])
 ```
 
-`nextState`를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다. 콜백 함수를 추가로 넘기면 `setState`가 완료되고 컴포넌트가 다시 렌더링된 다음에 한번 호출됩니다.
+`nextState`를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다. 
+
+첫번째 인자는 업데이트를 위한 키를 0개 이상 가진 객체이거나 업데이트를 위한 키들을 포함한 객체를 반환하는 함수(의 state나 props)일 수 있습니다.
+
+객체를 사용하는 간단한 예제입니다...
+
+```javascript
+setState({mykey: '새로운 값'});
+```
+
+`function(state, props)`처럼 인자를 포함한 함수를 넘겨주는 것도 가능합니다. 어떤 값이든 state와 props의 이전 값을 참고해서 원자적인 업데이트를 큐에 추가(enqueue)하려는 경우 이는 유용합니다. 예를 들어 state의 값을 증가 시키려는 경우 같이 처리 가능합니다:
+
+```javascript
+setState(function(previousState, currentProps) {
+  return {myInteger: previousState.myInteger + 1};
+});`
+```
+
+두번째 인자는 선택적이며, `setState`가 한번 완료되고 컴포넌트가 다시 렌더 되었을때 실행되는 콜백 함수입니다.
 
 > 주의:
 >
@@ -37,6 +55,10 @@ replaceState(object nextState[, function callback])
 ```
 
 `setState()`와 비슷하지만 기존에 존재하는 state 중 nextState에 없는 키는 모두 삭제됩니다.
+
+> 주의:
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
 
 
 ### forceUpdate
@@ -63,6 +85,8 @@ DOMElement getDOMNode()
 > 주의:
 >
 > getDOMNode는 비 추천 상태가 되었고 [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode)로 교체되었습니다.
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
 
 
 ### isMounted
@@ -72,6 +96,10 @@ bool isMounted()
 ```
 
 `isMounted()`는 컴포넌트가 DOM에 렌더링되었으면 true를, 아니면 false를 리턴합니다. 비동기적으로 `setState()`나 `forceUpdate()`를 호출할 때 이 메소드를 사용하여 오류를 방지할 수 있습니다.
+
+> 주의:
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
 
 
 ### setProps
@@ -89,6 +117,8 @@ setProps(object nextProps[, function callback])
 > 가능하다면 `React.render()`를 다시 호출하는 선언적인 방법이 더 바람직합니다. 그렇게 하는 편이 업데이트에 대해 생각하는 것을 쉽게 만듭니다. (두가지 방식에 눈에 띄는 성능 차이는 없습니다.)
 >
 > 이 메소드는 최상위 컴포넌트에만 호출 가능합니다. 다시 말해, `React.render()`에 바로 넘긴 컴포넌트에서만 사용할 수 있고 자식에서는 불가능합니다. 자식 컴포넌트에 `setProps()`를 사용하고 싶다면, 그 대신 반응적인 업데이트의 장점을 활용하여 `render()` 안에서 자식 컴포넌트를 만들 때 새로운 prop을 넘기세요.
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
 
 
 ### replaceProps
@@ -98,3 +128,7 @@ replaceProps(object nextProps[, function callback])
 ```
 
 `setProps()`와 비슷하지만 두 객체를 합치는 대신 이전에 존재하던 props를 삭제합니다.
+
+> 주의:
+>
+> 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.

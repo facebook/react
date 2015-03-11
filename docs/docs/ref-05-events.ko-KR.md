@@ -112,8 +112,7 @@ onChange 이벤트에 대한 더 자세한 정보는 [폼](/react/docs/forms-ko-
 이벤트 이름:
 
 ```
-onClick onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave
-onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
 onMouseMove onMouseOut onMouseOver onMouseUp
 ```
 

@@ -10,10 +10,11 @@ next: animation-ko-KR.html
 
 - [`TransitionGroup` 과 `CSSTransitionGroup`](animation-ko-KR.html)은 예를 들면 컴포넌트 삭제 직전의 트랜지션 처럼, 구현하기 까다로운 애니메이션과 트랜지션을 다룹니다.
 - [`LinkedStateMixin`](two-way-binding-helpers-ko-KR.html)는 사용자 입력과 컴포넌트의 state사이의 조정(coordination)을 단순화 합니다.
-- [`classSet`](class-name-manipulation-ko-KR.html)는 좀 더 알기 쉽게 DOM `class` 문자열을 다룹니다.
 - [`cloneWithProps`](clone-with-props-ko-KR.html)는 React 컴포넌트를 얕은 복사를 하고 props를 변경합니다.
+- [`createFragment`](create-fragment-ko-KR.html)는 외부에서 키가 할당된 자식들의 모음을 만듭니다.
 - [`update`](update-ko-KR.html)는 JavaScript안에서 불변 데이터를 다루기 쉽게하는 헬퍼 함수입니다.
 - [`PureRenderMixin`](pure-render-mixin-ko-KR.html)는 특정 상황에서 성능을 향상시켜 줍니다.
+- (비 추천) [`classSet`](class-name-manipulation-ko-KR.html)는 좀 더 알기 쉽게 DOM `class` 문자열을 다룹니다.
 
 밑에 있는 애드온은 React 개발 (압축되지 않은) 버전에서만 사용가능 합니다.
 

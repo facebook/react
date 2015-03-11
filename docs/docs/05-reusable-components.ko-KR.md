@@ -183,3 +183,49 @@ React.render(
 ```
 
 믹스인의 괜찮은 점은 컴포넌트가 여러 믹스인을 사용하고 여러 믹스인에서 같은 생명주기 메소드를 사용할 때(예를 들어, 여러 믹스인에서 컴포넌트가 사라질 때 뭔가 정리하려 한다면) 모든 생명주기 메소드들의 실행은 보장됩니다. 믹스인에 정의된 메소드은 컴포넌트의 메소드가 호출됨에 따라 믹스인이 나열된 순서대로 실행됩니다.
+
+## ES6 클래스
+
+React 클래스를 일반적인 JavaScript 클래스로 선언할 수도 있습니다. 다음의 예제는 ES6 클래스 문법을 사용합니다:
+
+```javascript
+class HelloMessage extends React.Component {
+  render() {
+    return <div>Hello {this.props.name}</div>;
+  }
+}
+React.render(<HelloMessage name="Sebastian" />, mountNode);
+```
+
+API는 `getInitialState`를 제외하고 `React.createClass`와 유사합니다. 별도의 `getInitialState` 메소드 대신에, 필요한 `state` 프로퍼티를 생성자에서 설정할 수 있습니다.
+
+또다른 차이점은 `propTypes`와 `defaultProps`가 클래스의 내부가 아니라 생성자의 프로퍼티로 정의되어 있다는 것입니다.
+
+```javascript
+export class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: props.initialCount};
+  }
+  tick() {
+    this.setState({count: this.state.count + 1});
+  }
+  render() {
+    return (
+      <div onClick={this.tick.bind(this)}>
+        Clicks: {this.state.count}
+      </div>
+    );
+  }
+}
+Counter.propTypes = { initialCount: React.PropTypes.number };
+Counter.defaultProps = { initialCount: 0 };
+```
+
+### 자동 바인딩 안됨
+
+메소드는 일반 ES6 클래스와 동일한 시맨틱을 따릅니다. `this`를 인스턴스에 자동으로 바인딩하지 않는다는 이야기입니다. 명시적으로 `.bind(this)`나 화살표 함수(arrow function)을 사용하세요.
+
+### 믹스인 안됨
+
+불행하게도 ES6는 믹스인에 대한 지원이 없이 출시되었기 때문에, React에서 ES6 클래스를 사용한다면 믹스인을 사용할 방법이 없습니다. 대신, 우리는 믹스인에 의존하지 않고도 동작하도록 만들기 위해 열심히 노력하고 있습니다. 
