@@ -4,9 +4,8 @@
   "version": "1.0.0",
   "main": "run.js",
   "dependencies": {
-    "esprima-fb": "10001.1.0-dev-harmony-fb",
     "graceful-fs": "~2.0.0",
-    "jstransform": "~2.0.1",
+    "jstransform": "~8.2.0",
     "node-find-files": "0.0.2",
     "optimist": "~0.6.0"
   },
