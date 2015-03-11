@@ -569,14 +569,16 @@ Let's call the callback from the `CommentForm` when the user submits the form:
 var CommentForm = React.createClass({
   handleSubmit: function(e) {
     e.preventDefault();
-    var author = React.findDOMNode(this.refs.author).value.trim();
-    var text = React.findDOMNode(this.refs.text).value.trim();
+    var authorInput = this.refs.author.getDOMNode();
+    var textInput = this.refs.text.getDOMNode();
+    var author = authorInput.value.trim();
+    var text = textInput.value.trim();
     if (!text || !author) {
       return;
     }
     this.props.onCommentSubmit({author: author, text: text});
-    React.findDOMNode(this.refs.author).value = '';
-    React.findDOMNode(this.refs.text).value = '';
+    authorInput.value = '';
+    textInput.value = '';
     return;
   },
   render: function() {
