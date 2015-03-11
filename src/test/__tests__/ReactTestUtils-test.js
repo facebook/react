@@ -173,7 +173,7 @@ describe('ReactTestUtils', function() {
 
     var log = [];
     ReactTestUtils.findAllInRenderedTree(tree, function(child) {
-      log.push(child.getDOMNode().textContent);
+      log.push(React.findDOMNode(child).textContent);
     });
 
     // Should be document order, not mount order (which would be purple, orange)

@@ -44,7 +44,7 @@ describe('EnterLeaveEventPlugin', function() {
     iframeDocument.close();
 
     var component = React.render(<div />, iframeDocument.body);
-    var div = component.getDOMNode();
+    var div = React.findDOMNode(component);
 
     var extracted = EnterLeaveEventPlugin.extractEvents(
       topLevelTypes.topMouseOver,

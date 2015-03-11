@@ -28,7 +28,7 @@ describe('ReactDOMIframe', function() {
     var loadEvent = document.createEvent('Event');
     loadEvent.initEvent('load', false, false);
 
-    iframe.getDOMNode().dispatchEvent(loadEvent);
+    React.findDOMNode(iframe).dispatchEvent(loadEvent);
 
     expect(onLoadSpy).toHaveBeenCalled();
   });

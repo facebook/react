@@ -20,6 +20,7 @@ var ReactElement = require('ReactElement');
 var ReactUpdates = require('ReactUpdates');
 
 var assign = require('Object.assign');
+var findDOMNode = require('findDOMNode');
 var invariant = require('invariant');
 
 var warning = require('warning');
@@ -114,7 +115,7 @@ var ReactDOMTextarea = ReactClass.createClass({
   componentDidUpdate: function(prevProps, prevState, prevContext) {
     var value = LinkedValueUtils.getValue(this);
     if (value != null) {
-      var rootNode = this.getDOMNode();
+      var rootNode = findDOMNode(this);
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
       DOMPropertyOperations.setValueForProperty(rootNode, 'value', '' + value);

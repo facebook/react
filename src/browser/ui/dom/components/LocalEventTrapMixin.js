@@ -14,6 +14,7 @@
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 
 var accumulateInto = require('accumulateInto');
+var findDOMNode = require('findDOMNode');
 var forEachAccumulated = require('forEachAccumulated');
 var invariant = require('invariant');
 
@@ -26,7 +27,7 @@ var LocalEventTrapMixin = {
     invariant(this.isMounted(), 'Must be mounted to trap events');
     // If a component renders to null or if another component fatals and causes
     // the state of the tree to be corrupted, `node` here can be null.
-    var node = this.getDOMNode();
+    var node = findDOMNode(this);
     invariant(
       node,
       'LocalEventTrapMixin.trapBubbledEvent(...): Requires node to be rendered.'

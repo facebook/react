@@ -32,7 +32,7 @@ describe('ReactDOMInput', function() {
   it('should display `defaultValue` of number 0', function() {
     var stub = <input type="text" defaultValue={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('0');
   });
@@ -40,7 +40,7 @@ describe('ReactDOMInput', function() {
   it('should display "true" for `defaultValue` of `true`', function() {
     var stub = <input type="text" defaultValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('true');
   });
@@ -48,7 +48,7 @@ describe('ReactDOMInput', function() {
   it('should display "false" for `defaultValue` of `false`', function() {
     var stub = <input type="text" defaultValue={false} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('false');
   });
@@ -62,7 +62,7 @@ describe('ReactDOMInput', function() {
 
     var stub = <input type="text" defaultValue={objToString} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('foobar');
   });
@@ -70,7 +70,7 @@ describe('ReactDOMInput', function() {
   it('should display `value` of number 0', function() {
     var stub = <input type="text" value={0} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('0');
   });
@@ -78,7 +78,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `true`', function() {
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
@@ -89,7 +89,7 @@ describe('ReactDOMInput', function() {
   it("should allow setting `value` to `false`", function() {
     var stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('yolo');
 
@@ -100,7 +100,7 @@ describe('ReactDOMInput', function() {
   it('should allow setting `value` to `objToString`', function() {
     var stub = <input type="text" value="foo" onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     expect(node.value).toBe('foo');
 
@@ -117,7 +117,7 @@ describe('ReactDOMInput', function() {
   it('should properly control a value of number `0`', function() {
     var stub = <input type="text" value={0} onChange={emptyFunction} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
@@ -127,7 +127,7 @@ describe('ReactDOMInput', function() {
   it('should not set a value for submit buttons unnecessarily', function() {
     var stub = <input type="submit" />;
     stub = ReactTestUtils.renderIntoDocument(stub);
-    var node = stub.getDOMNode();
+    var node = React.findDOMNode(stub);
 
     // The value shouldn't be '', or else the button will have no text; it
     // should have the default "Submit" or "Submit Query" label. Most browsers
@@ -172,9 +172,9 @@ describe('ReactDOMInput', function() {
     });
 
     var stub = ReactTestUtils.renderIntoDocument(<RadioGroup />);
-    var aNode = stub.refs.a.getDOMNode();
-    var bNode = stub.refs.b.getDOMNode();
-    var cNode = stub.refs.c.getDOMNode();
+    var aNode = React.findDOMNode(stub.refs.a);
+    var bNode = React.findDOMNode(stub.refs.b);
+    var cNode = React.findDOMNode(stub.refs.c);
 
     expect(aNode.checked).toBe(true);
     expect(bNode.checked).toBe(false);
@@ -202,12 +202,12 @@ describe('ReactDOMInput', function() {
 
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(instance.getDOMNode().value).toBe('yolo');
+    expect(React.findDOMNode(instance).value).toBe('yolo');
     expect(link.value).toBe('yolo');
     expect(link.requestChange.mock.calls.length).toBe(0);
 
-    instance.getDOMNode().value = 'test';
-    ReactTestUtils.Simulate.change(instance.getDOMNode());
+    React.findDOMNode(instance).value = 'test';
+    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual('test');
@@ -270,12 +270,12 @@ describe('ReactDOMInput', function() {
 
     instance = ReactTestUtils.renderIntoDocument(instance);
 
-    expect(instance.getDOMNode().checked).toBe(true);
+    expect(React.findDOMNode(instance).checked).toBe(true);
     expect(link.value).toBe(true);
     expect(link.requestChange.mock.calls.length).toBe(0);
 
-    instance.getDOMNode().checked = false;
-    ReactTestUtils.Simulate.change(instance.getDOMNode());
+    React.findDOMNode(instance).checked = false;
+    ReactTestUtils.Simulate.change(React.findDOMNode(instance));
 
     expect(link.requestChange.mock.calls.length).toBe(1);
     expect(link.requestChange.mock.calls[0][0]).toEqual(false);

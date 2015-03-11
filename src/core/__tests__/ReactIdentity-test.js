@@ -51,7 +51,7 @@ describe('ReactIdentity', function() {
       </div>;
 
     instance = React.render(instance, document.createElement('div'));
-    var node = instance.getDOMNode();
+    var node = React.findDOMNode(instance);
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(2);
     checkId(node.childNodes[0], '.0.$first:0');
     checkId(node.childNodes[1], '.0.$second:0');
@@ -67,7 +67,7 @@ describe('ReactIdentity', function() {
       </div>;
 
     instance = React.render(instance, document.createElement('div'));
-    var node = instance.getDOMNode();
+    var node = React.findDOMNode(instance);
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(4);
     checkId(node.childNodes[0], '.0.$apple');
     checkId(node.childNodes[1], '.0.$banana');
@@ -91,7 +91,7 @@ describe('ReactIdentity', function() {
       </div>;
 
     instance = React.render(instance, document.createElement('div'));
-    var node = instance.getDOMNode();
+    var node = React.findDOMNode(instance);
     reactComponentExpect(instance).toBeDOMComponentWithChildCount(3);
 
     checkId(node.childNodes[0], '.0.$wrap1');
@@ -121,13 +121,13 @@ describe('ReactIdentity', function() {
     var span1 = instance.refs.span1;
     var span2 = instance.refs.span2;
 
-    expect(span1.getDOMNode()).not.toBe(null);
-    expect(span2.getDOMNode()).not.toBe(null);
+    expect(React.findDOMNode(span1)).not.toBe(null);
+    expect(React.findDOMNode(span2)).not.toBe(null);
 
     key = key.replace(/=/g, '=0');
 
-    checkId(span1.getDOMNode(), '.0.$' + key);
-    checkId(span2.getDOMNode(), '.0.1:$' + key + ':0');
+    checkId(React.findDOMNode(span1), '.0.$' + key);
+    checkId(React.findDOMNode(span2), '.0.1:$' + key + ':0');
   }
 
   it('should allow any character as a key, in a detached parent', function() {
@@ -292,11 +292,11 @@ describe('ReactIdentity', function() {
 
     wrapped = React.render(wrapped, document.createElement('div'));
 
-    var beforeID = ReactMount.getID(wrapped.getDOMNode().firstChild);
+    var beforeID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
 
     wrapped.swap();
 
-    var afterID = ReactMount.getID(wrapped.getDOMNode().firstChild);
+    var afterID = ReactMount.getID(React.findDOMNode(wrapped).firstChild);
 
     expect(beforeID).not.toEqual(afterID);
 

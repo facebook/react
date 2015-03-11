@@ -50,7 +50,7 @@ describe('cloneWithProps', function() {
       }
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.getDOMNode().childNodes[0].className)
+    expect(React.findDOMNode(component).childNodes[0].className)
       .toBe('xyz child');
   });
 
@@ -77,7 +77,7 @@ describe('cloneWithProps', function() {
       }
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.getDOMNode().childNodes[0].className)
+    expect(React.findDOMNode(component).childNodes[0].className)
       .toBe('xyz child');
   });
 

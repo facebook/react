@@ -188,7 +188,7 @@ function verifyStatesPreserved(lastInternalStates, statusDisplays) {
  * accurately reflects what is in the DOM.
  */
 function verifyDomOrderingAccurate(parentInstance, statusDisplays) {
-  var containerNode = parentInstance.getDOMNode();
+  var containerNode = React.findDOMNode(parentInstance);
   var statusDisplayNodes = containerNode.childNodes;
   var i;
   var orderedDomIds = [];

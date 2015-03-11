@@ -33,11 +33,11 @@ describe('ReactEmptyComponent', function() {
         return {component: this.props.firstComponent};
       },
       componentDidMount: function() {
-        console.log(this.getDOMNode());
+        console.log(React.findDOMNode(this));
         this.setState({component: this.props.secondComponent});
       },
       componentDidUpdate: function() {
-        console.log(this.getDOMNode());
+        console.log(React.findDOMNode(this));
       },
       render: function() {
         var Component = this.state.component;
@@ -188,13 +188,13 @@ describe('ReactEmptyComponent', function() {
       componentDidMount: function() {
         // Make sure the DOM node resolves properly even if we're replacing a
         // `null` component
-        expect(this.getDOMNode()).not.toBe(null);
+        expect(React.findDOMNode(this)).not.toBe(null);
         assertions++;
       },
       componentWillUnmount: function() {
         // Even though we're getting replaced by `null`, we haven't been
         // replaced yet!
-        expect(this.getDOMNode()).not.toBe(null);
+        expect(React.findDOMNode(this)).not.toBe(null);
         assertions++;
       }
     });
@@ -209,15 +209,15 @@ describe('ReactEmptyComponent', function() {
 
     // Render the <Inner /> component...
     component = React.render(<Wrapper showInner={true} />, el);
-    expect(component.getDOMNode()).not.toBe(null);
+    expect(React.findDOMNode(component)).not.toBe(null);
 
     // Switch to null...
     component = React.render(<Wrapper showInner={false} />, el);
-    expect(component.getDOMNode()).toBe(null);
+    expect(React.findDOMNode(component)).toBe(null);
 
     // ...then switch back.
     component = React.render(<Wrapper showInner={true} />, el);
-    expect(component.getDOMNode()).not.toBe(null);
+    expect(React.findDOMNode(component)).not.toBe(null);
 
     expect(assertions).toBe(3);
   });

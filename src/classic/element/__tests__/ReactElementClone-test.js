@@ -41,7 +41,7 @@ describe('ReactElementClone', function() {
       }
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.getDOMNode().childNodes[0].className).toBe('xyz');
+    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should clone a composite component with new props', function() {
@@ -65,7 +65,7 @@ describe('ReactElementClone', function() {
       }
     });
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-    expect(component.getDOMNode().childNodes[0].className).toBe('xyz');
+    expect(React.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('should keep the original ref if it is not overridden', function() {

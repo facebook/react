@@ -45,17 +45,19 @@ describe('ReactEventListener', function() {
       childControl = ReactMount.render(childControl, childContainer);
       parentControl =
         ReactMount.render(parentControl, parentContainer);
-      parentControl.getDOMNode().appendChild(childContainer);
+      React.findDOMNode(parentControl).appendChild(childContainer);
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
-        target: childControl.getDOMNode()
+        target: React.findDOMNode(childControl)
       });
 
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(childControl.getDOMNode());
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
+      expect(calls[0][EVENT_TARGET_PARAM])
+        .toBe(React.findDOMNode(childControl));
+      expect(calls[1][EVENT_TARGET_PARAM])
+        .toBe(React.findDOMNode(parentControl));
     });
 
     it('should propagate events two levels down', function() {
@@ -70,20 +72,22 @@ describe('ReactEventListener', function() {
         ReactMount.render(parentControl, parentContainer);
       grandParentControl =
         ReactMount.render(grandParentControl, grandParentContainer);
-      parentControl.getDOMNode().appendChild(childContainer);
-      grandParentControl.getDOMNode().appendChild(parentContainer);
+      React.findDOMNode(parentControl).appendChild(childContainer);
+      React.findDOMNode(grandParentControl).appendChild(parentContainer);
 
       var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
       callback({
-        target: childControl.getDOMNode()
+        target: React.findDOMNode(childControl)
       });
 
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(3);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(childControl.getDOMNode());
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
+      expect(calls[0][EVENT_TARGET_PARAM])
+        .toBe(React.findDOMNode(childControl));
+      expect(calls[1][EVENT_TARGET_PARAM])
+        .toBe(React.findDOMNode(parentControl));
       expect(calls[2][EVENT_TARGET_PARAM])
-        .toBe(grandParentControl.getDOMNode());
+        .toBe(React.findDOMNode(grandParentControl));
     });
 
     it('should not get confused by disappearing elements', function() {
@@ -94,13 +98,13 @@ describe('ReactEventListener', function() {
       childControl = ReactMount.render(childControl, childContainer);
       parentControl =
         ReactMount.render(parentControl, parentContainer);
-      parentControl.getDOMNode().appendChild(childContainer);
+      React.findDOMNode(parentControl).appendChild(childContainer);
 
       // ReactBrowserEventEmitter.handleTopLevel might remove the
       // target from the DOM. Here, we have handleTopLevel remove the
       // node when the first event handlers are called; we'll still
       // expect to receive a second call for the parent control.
-      var childNode = childControl.getDOMNode();
+      var childNode = React.findDOMNode(childControl);
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           if (topLevelTarget === childNode) {
@@ -117,7 +121,8 @@ describe('ReactEventListener', function() {
       var calls = handleTopLevel.mock.calls;
       expect(calls.length).toBe(2);
       expect(calls[0][EVENT_TARGET_PARAM]).toBe(childNode);
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(parentControl.getDOMNode());
+      expect(calls[1][EVENT_TARGET_PARAM])
+        .toBe(React.findDOMNode(parentControl));
     });
 
     it('should batch between handlers from different roots', function() {
@@ -131,11 +136,11 @@ describe('ReactEventListener', function() {
         <div>Parent</div>,
         parentContainer
       );
-      parentControl.getDOMNode().appendChild(childContainer);
+      React.findDOMNode(parentControl).appendChild(childContainer);
 
       // Suppose an event handler in each root enqueues an update to the
       // childControl element -- the two updates should get batched together.
-      var childNode = childControl.getDOMNode();
+      var childNode = React.findDOMNode(childControl);
       handleTopLevel.mockImplementation(
         function(topLevelType, topLevelTarget, topLevelTargetID, nativeEvent) {
           ReactMount.render(
@@ -177,11 +182,12 @@ describe('ReactEventListener', function() {
 
     var callback = ReactEventListener.dispatchEvent.bind(null, 'test');
     callback({
-      target: instance.getInner().getDOMNode()
+      target: React.findDOMNode(instance.getInner())
     });
 
     var calls = handleTopLevel.mock.calls;
     expect(calls.length).toBe(1);
-    expect(calls[0][EVENT_TARGET_PARAM]).toBe(instance.getInner().getDOMNode());
+    expect(calls[0][EVENT_TARGET_PARAM])
+      .toBe(React.findDOMNode(instance.getInner()));
   });
 });
