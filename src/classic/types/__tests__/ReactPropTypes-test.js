@@ -777,11 +777,11 @@ describe('ReactPropTypes', function() {
       'Warning: Failed propType: num must be 5!');
     });
 
-    it('should not warn if the validator returned anything else than an error',
+    it('should not warn if the validator returned null',
       function() {
         var spy = jasmine.createSpy().andCallFake(
           function(props, propName, componentName) {
-            return 'This message will never reach anyone';
+            return null;
           }
         );
         var Component = React.createClass({
