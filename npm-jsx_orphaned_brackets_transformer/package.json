@@ -1,7 +1,7 @@
 {
   "name": "jsx_orphaned_brackets_transformer",
   "description": "A utility to update your JSX to work with React 0.13.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "run.js",
   "dependencies": {
     "graceful-fs": "~2.0.0",
