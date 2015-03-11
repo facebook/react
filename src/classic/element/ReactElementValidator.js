@@ -249,8 +249,8 @@ function checkPropTypes(componentName, propTypes, props, location) {
       }
       warning(
         !error || error instanceof Error,
-        '%s: the type of %s `%s` is invalid; the type checker function ' +
-        'must return `null` or an `Error`, but returned a %s. ' +
+        '%s: type specification of %s `%s` is invalid; the type checker ' +
+        'function must return `null` or an `Error`, but returned a %s. ' +
         'You may have forgotten to pass an argument to the type checker ' +
         'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' +
         'shape all require an argument).',

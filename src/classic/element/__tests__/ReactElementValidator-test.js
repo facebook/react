@@ -367,24 +367,24 @@ describe('ReactElementValidator', function() {
 
     var Component = React.createClass({
       propTypes: {
-        prop: React.PropTypes.shape
+        myProp: React.PropTypes.shape
       },
       render: function() {
-        return React.createElement('span', null, this.props.prop.value);
+        return React.createElement('span', null, this.props.myProp.value);
       }
     });
 
     ReactTestUtils.renderIntoDocument(
-      React.createElement(Component, {prop: {value: 'hi'}})
+      React.createElement(Component, {myProp: {value: 'hi'}})
     );
 
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toBe(
-      'Warning: Component: the type of prop `prop` is invalid; the type ' +
-      'checker function must return `null` or an `Error`, but returned a ' +
-      'function. You may have forgotten to pass an argument to the type ' +
-      'checker creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, ' +
-      'and shape all require an argument).'
+      'Warning: Component: type specification of prop `myProp` is invalid; ' +
+      'the type checker function must return `null` or an `Error`, but ' +
+      'returned a function. You may have forgotten to pass an argument to ' +
+      'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
+      'oneOfType, and shape all require an argument).'
     );
   });
 
