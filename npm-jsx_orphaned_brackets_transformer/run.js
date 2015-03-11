@@ -2,14 +2,13 @@
 
 'use strict';
 
-var esprima = require('esprima-fb');
 var FileFinder = require('node-find-files');
 var fs = require('graceful-fs');
 var jstransform = require('jstransform');
 var path = require('path');
 var visitReactTag = require('./transforms/react').visitReactTag;
 /*eslint-disable no-shadow*/
-var S = esprima.Syntax;
+var S = jstransform.Syntax;
 
 var USAGE =
   'Read a file (or directory of files) from disk, transform any orphaned ' +

@@ -8,11 +8,12 @@
  */
 /*global exports:true*/
 'use strict';
-var Syntax = require('esprima-fb').Syntax;
+var jstransform = require('jstransform');
+var Syntax = jstransform.Syntax;
 var utils = require('jstransform/src/utils');
 
 function visitReactTag(traverse, object, path, state) {
-  object.attributes.forEach(function(attr, index) {
+  object.openingElement.attributes.forEach(function(attr, index) {
     if (attr.value) {
       traverse(attr.value, path, state);
     }
