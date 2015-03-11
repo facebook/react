@@ -154,6 +154,7 @@ describe('ReactCompositeComponent', function() {
     var anchor = instance.getAnchor();
     var actualDOMAnchorNode = React.findDOMNode(anchor);
     expect(actualDOMAnchorNode.className).toBe('');
+    expect(actualDOMAnchorNode).toBe(anchor.getDOMNode());
   });
 
   it('should auto bind methods and values correctly', function() {
@@ -926,11 +927,21 @@ describe('ReactCompositeComponent', function() {
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('A');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('B');
 
+    expect(React.findDOMNode(comp.refs.static0))
+      .toBe(comp.refs.static0.getDOMNode());
+    expect(React.findDOMNode(comp.refs.static1))
+      .toBe(comp.refs.static1.getDOMNode());
+
     // When flipping the order, the refs should update even though the actual
     // contents do not
     comp.setProps({flipped: true});
     expect(React.findDOMNode(comp.refs.static0).textContent).toBe('B');
     expect(React.findDOMNode(comp.refs.static1).textContent).toBe('A');
+
+    expect(React.findDOMNode(comp.refs.static0))
+      .toBe(comp.refs.static0.getDOMNode());
+    expect(React.findDOMNode(comp.refs.static1))
+      .toBe(comp.refs.static1.getDOMNode());
   });
 
   it('should allow access to findDOMNode in componentWillUnmount', function() {
@@ -939,9 +950,11 @@ describe('ReactCompositeComponent', function() {
     var Component = React.createClass({
       componentDidMount: function() {
         a = React.findDOMNode(this);
+        expect(a).toBe(this.getDOMNode());
       },
       componentWillUnmount: function() {
         b = React.findDOMNode(this);
+        expect(b).toBe(this.getDOMNode());
       },
       render: function() {
         return <div />;
