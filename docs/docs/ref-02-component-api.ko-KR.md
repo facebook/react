@@ -17,7 +17,7 @@ React 컴포넌트의 인스턴스는 React가 렌더링 시에 내부적으로 
 setState(function|object nextState[, function callback])
 ```
 
-`nextState`를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다. 
+`nextState`를 현재 state에 합칩니다. 이벤트 핸들러와 서버 요청 콜백에서 UI 업데이트를 발생시키기 위해 이 메소드를 주로 사용합니다.
 
 첫번째 인자는 업데이트를 위한 키를 0개 이상 가진 객체이거나 업데이트를 위한 키들을 포함한 객체를 반환하는 함수(의 state나 props)일 수 있습니다.
 
@@ -84,7 +84,7 @@ DOMElement getDOMNode()
 
 > 주의:
 >
-> getDOMNode는 비 추천 상태가 되었고 [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode)로 교체되었습니다.
+> getDOMNode는 [React.findDOMNode()](/react/docs/top-level-api.html#react.finddomnode)로 교체되었습니다.
 >
 > 이 메소드는 `React.Component`를 확장한 ES6 `class` 컴포넌트에서는 사용할 수 없습니다. React의 미래 버전에서 이는 완전히 사라지게 될 것입니다.
 

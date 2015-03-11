@@ -19,9 +19,9 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-React가 이 함수를 자주 호출한다는 것을 명심하십시오. 따라서 구현체는 빨라야 합니다. 
+React가 이 함수를 자주 호출한다는 것을 명심하십시오. 따라서 구현체는 빨라야 합니다.
 
-대화 스레드가 여럿 돌고 있는 메시지처리 애플리케이션을 생각해 봅시다. 오직 하나의 스레드만이 변경되었다고 가정해 보죠. `ChatThread`에 `shouldComponentUpdate`를 구현했다면 React는 다른 스레드의 렌더링 프로세스를 건너뛸 수 있습니다. 
+대화 스레드가 여럿 돌고 있는 메시지처리 애플리케이션을 생각해 봅시다. 오직 하나의 스레드만이 변경되었다고 가정해 보죠. `ChatThread`에 `shouldComponentUpdate`를 구현했다면 React는 다른 스레드의 렌더링 프로세스를 건너뛸 수 있습니다.
 
 ```javascript
 shouldComponentUpdate: function(nextProps, nextState) {
@@ -29,7 +29,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 }
 ```
 
-정리하자면, React는 사용자가 `shouldComponentUpdate`를 사용해 렌더링 프로세스를 중단하고 가상의 DOM과 비교해 업데이트 여부를 결정해서 DOM의 하위 트리를 조정하는 비싼 DOM 조작을 피하도록 합니다. 
+정리하자면, React는 사용자가 `shouldComponentUpdate`를 사용해 렌더링 프로세스를 중단하고 가상의 DOM과 비교해 업데이트 여부를 결정해서 DOM의 하위 트리를 조정하는 비싼 DOM 조작을 피하도록 합니다.
 
 ## shouldComponentUpdate 실전
 
@@ -41,7 +41,7 @@ shouldComponentUpdate: function(nextProps, nextState) {
 
 C1과 C3의 `shouldComponentUpdate`가 `true`를 반환했기 때문에 React는 하위 노드로 내려가 그들을 확인합니다. C6는 `true`를 반환했네요; 이는 가상의 DOM과 같지 않기 때문에 DOM의 조정이 일어났습니다. 마지막으로 흥미로운 사례는 C8입니다. React가 이 노드를 위해 가상의 DOM을 작동했지만, 노드가 이전의 것과 일치했기 때문에 DOM의 조정을 일어나지 않았습니다.
 
-React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다. 
+React가 C6에만 DOM 변경을 수행한 것을 확인하세요. 이는 필연적이었습니다. C8의 경우는 가상의 DOM과 비교를 해 제외되었고, C2의 하위 트리와 C7은 `shouldComponentUpdate` 단계에서 제외되어 가상의 DOM은 구동조차 되지 않았습니다.
 
 자 그럼, 어떻게 `shouldComponentUpdate`를 구현해야 할까요? 문자열 값을 렌더하는 컴포넌트를 생각해보죠.
 
@@ -123,11 +123,11 @@ React.createClass({
 });
 ```
 
-처음엔 내부 컴포넌트(`<InnerComponent />`)가 `{ foo: 'bar' }`를 value prop으로 가진 채 렌더될 것입니다. 사용자가 앵커(`<a>`)를 클릭한다면 부모 컴포넌트의 state는 `{ value: { foo: 'barbar' } }`로 업데이트되고, 내부 컴포넌트 또한 `{ foo: 'barbar' }`를 새로운 value prop으로 전달받아 다시 렌더링 되는 프로세스가 일어날 것입니다. 
+처음엔 내부 컴포넌트(`<InnerComponent />`)가 `{ foo: 'bar' }`를 value prop으로 가진 채 렌더될 것입니다. 사용자가 앵커(`<a>`)를 클릭한다면 부모 컴포넌트의 state는 `{ value: { foo: 'barbar' } }`로 업데이트되고, 내부 컴포넌트 또한 `{ foo: 'barbar' }`를 새로운 value prop으로 전달받아 다시 렌더링 되는 프로세스가 일어날 것입니다.
 
 이 문제는 부모와 내부 컴포넌트가 같은 객체에 대한 참조를 공유하기 때문에 발생합니다. `onClick` 함수의 두 번째 줄에서 객체에 대한 변경이 일어날 때, 내부 컴포넌트의 prop도 변경될 것입니다. 따라서 다시 렌더링 되는 프로세스가 시작될 때 `shouldComponentUpdate`가 호출되고 `this.props.value.foo`가 `nextProps.value.foo`와 같게 됩니다. 실제로 `this.props.value`는 `nextProps.value`와 같은 객체이기 때문입니다.
 
-그에따라 prop의 변경을 놓치게 되어 다시 렌더링하는 프로세스가 중단되고, UI는 `'bar'`에서 `'barbar'`로 업데이트되지 않습니다. 
+그에따라 prop의 변경을 놓치게 되어 다시 렌더링하는 프로세스가 중단되고, UI는 `'bar'`에서 `'barbar'`로 업데이트되지 않습니다.
 
 ## 구원자 Immutable-js
 
@@ -135,7 +135,7 @@ React.createClass({
 
 * *불변성(Immutable)*: 컬렉션이 한번 생성되면, 이 후 다른 시점에 변경될 수 없습니다.
 * *영속성(Persistent)*: 새로운 컬렉션이 이전의 컬렉션이나 셋(set) 같은 뮤테이션(mutation)에서 생성될 수 있습니다. 기존의 컬렉션은 새로운 컬렉션이 생성된 후에도 여전히 유효합니다.
-* *구조의 공유(Structural Sharing)*: 새로운 컬렉션은 가능한 한 원래의 컬렉션과 같은 구조를 사용해 생성됩니다. 공간 효율성과 적절한 성능을 위해 복사를 최소화합니다. 
+* *구조의 공유(Structural Sharing)*: 새로운 컬렉션은 가능한 한 원래의 컬렉션과 같은 구조를 사용해 생성됩니다. 공간 효율성과 적절한 성능을 위해 복사를 최소화합니다.
 
 불변성은 변경의 추적을 비용을 줄여줍니다; 변경은 항상 새로운 객체에만 발생하기 때문에 객체에 대한 참조가 변경될 때만 확인하면 됩니다. 예를 들어 일반적인 JavaScript 코드에서는:
 
@@ -150,7 +150,7 @@ x === y; // true
 
 ```javascript
 var SomeRecord = Immutable.Record({ foo: null });
-var x = new SomeRecord({ foo: 'bar'  });
+var x = new SomeRecord({ foo: 'bar' });
 var y = x.set('foo', 'baz');
 x === y; // false
 ```
@@ -190,7 +190,7 @@ this.users = Immutable.List();
 this.messages = Immutable.List();
 ```
 
-각각의 *페이로드* 타입을 처리하는 기능을 구현하는 것은 꽤 간단합니다. 예를 들면, store가 새 메시지를 나타내는 페이로드를 확인할 때 레코드를 새로 생성하고 메시지 리스트에 추가할 수 있습니다. 
+각각의 *페이로드* 타입을 처리하는 기능을 구현하는 것은 꽤 간단합니다. 예를 들면, store가 새 메시지를 나타내는 페이로드를 확인할 때 레코드를 새로 생성하고 메시지 리스트에 추가할 수 있습니다.
 
 ```javascript
 this.messages = this.messages.push(new Message({
