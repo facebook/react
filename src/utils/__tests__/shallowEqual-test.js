@@ -41,6 +41,24 @@ describe('shallowEqual', function() {
     ).toBe(true);
   });
 
+  it('returns false if arguments are not objects and not equal', function() {
+    expect(
+      shallowEqual(
+        1,
+        2
+      )
+    ).toBe(false);
+  });
+
+  it('returns false if only one argument is not an object', function() {
+    expect(
+      shallowEqual(
+        1,
+        {}
+      )
+    ).toBe(false);
+  })
+
   it('returns false if first argument has too many keys', function() {
     expect(
       shallowEqual(
