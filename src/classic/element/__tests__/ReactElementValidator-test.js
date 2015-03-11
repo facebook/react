@@ -381,7 +381,7 @@ describe('ReactElementValidator', function() {
     expect(console.warn.calls.length).toBe(1);
     expect(console.warn.calls[0].args[0]).toBe(
       'Warning: Component: type specification of prop `myProp` is invalid; ' +
-      'the type checker function must return `null` or an `Error`, but ' +
+      'the type checker function must return `null` or an `Error` but ' +
       'returned a function. You may have forgotten to pass an argument to ' +
       'the type checker creator (arrayOf, instanceOf, objectOf, oneOf, ' +
       'oneOfType, and shape all require an argument).'
