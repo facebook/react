@@ -642,4 +642,37 @@ describe('ReactDOMComponent', function() {
     });
 
   });
+
+  describe('moz -osx vendor prefixed style', function() {
+    it('should render correctly', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+
+      var element = <div style={{MozMacOSXFontSmoothing: 'grayscale'}}></div>;
+      expect(React.renderToString(element)).toContain('moz-mac-osx-font-smoothing');
+    });
+
+    it('should update correctly', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+
+      var element = <div style={{MozMacOSXFontSmoothing: 'grayscale'}}></div>;;
+      var container = document.createElement("div");
+      React.render(<div></div>, container);
+      React.render(element, container);
+      expect(container.firstChild.style.MozMacOSXFontSmoothing).toBe('grayscale');
+    });
+
+    it('should warn on wrong case', () => {
+      var React = require('React');
+      var ReactTestUtils = require('ReactTestUtils');
+
+      spyOn(console, 'warn');
+      var element = <div style={{MozMacOsxFontSmoothing: 'grayscale'}}></div>;
+      expect(React.renderToString(element)).toContain('moz-mac-osx-font-smoothing');
+      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.warn.argsForCall[0][0]).toContain('MozMacOSXFontSmoothing');
+    });
+
+  });
 });

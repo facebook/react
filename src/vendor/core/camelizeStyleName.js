@@ -34,6 +34,10 @@ var msPattern = /^-ms-/;
  * @return {string}
  */
 function camelizeStyleName(string) {
+  if (string == 'moz-mac-osx-font-smoothing') {
+    // The camel-case of the `-osx-` token should be `OSX`, after conversion
+    return 'MozMacOSXFontSmoothing';
+  }
   return camelize(string.replace(msPattern, 'ms-'));
 }
 
