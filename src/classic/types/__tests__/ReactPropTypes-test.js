@@ -220,6 +220,16 @@ describe('ReactPropTypes', function() {
         requiredMessage
       );
     });
+
+    it("should warn if not passed a type argument", function() {
+      typeCheckFail(
+        PropTypes.arrayOf,
+        [],
+        'React.PropTypes.arrayOf must take one PropType argument to specify ' +
+        'the type of the array elements. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
+      );
+    });
   });
 
   describe('Component Type', function() {
@@ -336,6 +346,16 @@ describe('ReactPropTypes', function() {
       );
       typeCheckFail(
         PropTypes.instanceOf(String).isRequired, undefined, requiredMessage
+      );
+    });
+
+    it("should warn if not passed an instance argument", function() {
+      typeCheckFail(
+        PropTypes.instanceOf,
+        null,
+        'React.PropTypes.instanceOf must take one class argument to ' +
+        'specify the expected class. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
       );
     });
   });
@@ -517,6 +537,16 @@ describe('ReactPropTypes', function() {
         requiredMessage
       );
     });
+
+    it("should warn if not passed a type argument", function() {
+      typeCheckFail(
+        PropTypes.objectOf,
+        {hi: 5},
+        'React.PropTypes.objectOf must take one PropType argument to ' +
+        'specify the expected value types. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
+      );
+    });
   });
 
   describe('OneOf Types', function() {
@@ -567,6 +597,16 @@ describe('ReactPropTypes', function() {
         PropTypes.oneOf(['red', 'blue']).isRequired,
         undefined,
         requiredMessage
+      );
+    });
+
+    it("should warn if not passed an array argument", function() {
+      typeCheckFail(
+        PropTypes.oneOf,
+        'value',
+        'React.PropTypes.oneOf must take one array argument to ' +
+        'specify the expected values. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
       );
     });
   });
@@ -626,6 +666,16 @@ describe('ReactPropTypes', function() {
         PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
         undefined,
         requiredMessage
+      );
+    });
+
+    it("should warn if not passed an array argument", function() {
+      typeCheckFail(
+        PropTypes.oneOfType,
+        6,
+        'React.PropTypes.oneOfType must take one array argument to ' +
+        'specify the possible types. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
       );
     });
   });
@@ -710,6 +760,16 @@ describe('ReactPropTypes', function() {
         PropTypes.shape({key: PropTypes.number}).isRequired,
         undefined,
         requiredMessage
+      );
+    });
+
+    it("should warn if not passed a shape argument", function() {
+      typeCheckFail(
+        PropTypes.shape,
+        {hi: 5},
+        'React.PropTypes.shape must take one object argument to ' +
+        'specify the shape. You may have forgotten to pass ' +
+        'this argument in the prop type of `testProp` in `testComponent`.'
       );
     });
   });

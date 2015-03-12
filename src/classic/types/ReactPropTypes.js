@@ -134,6 +134,20 @@ function createAnyTypeChecker() {
 }
 
 function createArrayOfTypeChecker(typeChecker) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.arrayOf`
+    // with no typeChecker parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.arrayOf must take one PropType argument to specify ` +
+      `the type of the array elements. You may have forgotten to pass this ` +
+      `argument in the ${inferredLocationName} type of ` +
+      `\`${inferredPropName}\` in \`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     var propValue = props[propName];
     if (!Array.isArray(propValue)) {
@@ -170,6 +184,20 @@ function createElementTypeChecker() {
 }
 
 function createInstanceTypeChecker(expectedClass) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.instanceOf`
+    // with no shape object parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.instanceOf must take one class argument to specify ` +
+      `the expected class. You may have forgotten to pass this argument ` +
+      `in the ${inferredLocationName} type of \`${inferredPropName}\` in ` +
+      `\`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     if (!(props[propName] instanceof expectedClass)) {
       var locationName = ReactPropTypeLocationNames[location];
@@ -185,6 +213,20 @@ function createInstanceTypeChecker(expectedClass) {
 }
 
 function createEnumTypeChecker(expectedValues) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.oneOf`
+    // with no shape object parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.oneOf must take one array argument to specify ` +
+      `the expected values. You may have forgotten to pass this argument ` +
+      `in the ${inferredLocationName} type of \`${inferredPropName}\` in ` +
+      `\`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     var propValue = props[propName];
     for (var i = 0; i < expectedValues.length; i++) {
@@ -204,6 +246,20 @@ function createEnumTypeChecker(expectedValues) {
 }
 
 function createObjectOfTypeChecker(typeChecker) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.objectOf`
+    // with no typeChecker parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.objectOf must take one PropType argument to specify ` +
+      `the expected value types. You may have forgotten to pass this ` +
+      `argument in the ${inferredLocationName} type of ` +
+      `\`${inferredPropName}\` in \`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
@@ -228,6 +284,20 @@ function createObjectOfTypeChecker(typeChecker) {
 }
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.oneOfType`
+    // with no arrayOfTypeCheckers parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.oneOfType must take one array argument to specify ` +
+      `the possible types. You may have forgotten to pass this ` +
+      `argument in the ${inferredLocationName} type of ` +
+      `\`${inferredPropName}\` in \`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
@@ -260,6 +330,20 @@ function createNodeChecker() {
 }
 
 function createShapeTypeChecker(shapeTypes) {
+  if (arguments.length !== 1) {
+    // The user might have specified a propType as `React.PropTypes.shape`
+    // with no shape object parameter. Guess at where this was used.
+    var inferredPropName = arguments[1];
+    var inferredComponentName = arguments[2];
+    var inferredLocation = arguments[3];
+    var inferredLocationName = ReactPropTypeLocationNames[inferredLocation];
+    return new Error(
+      `React.PropTypes.shape must take one object argument to specify ` +
+      `the shape. You may have forgotten to pass this argument in the ` +
+      `${inferredLocationName} type of \`${inferredPropName}\` in ` +
+      `\`${inferredComponentName}\`.`
+    );
+  }
   function validate(props, propName, componentName, location) {
     var propValue = props[propName];
     var propType = getPropType(propValue);
