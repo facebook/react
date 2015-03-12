@@ -94,12 +94,11 @@ assign(reactComponentExpectInternal.prototype, {
     throw new Error('Child:' + childIndex + ' is not found');
   },
 
-  toBeDOMComponentWithChildCount: function(n) {
+  toBeDOMComponentWithChildCount: function(count) {
     this.toBeDOMComponent();
-    expect(this._instance._renderedComponent._renderedChildren).toBeTruthy();
-    var len = Object.keys(this._instance._renderedComponent._renderedChildren)
-              .length;
-    expect(len).toBe(n);
+    var renderedChildren = this._instance._renderedComponent._renderedChildren;
+    expect(renderedChildren).toBeTruthy();
+    expect(Object.keys(renderedChildren).length).toBe(count);
     return this;
   },
 
