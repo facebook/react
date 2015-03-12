@@ -84,7 +84,7 @@ function renderJSXLiteral(object, isLast, state, start, end) {
           utils.append(end, state);
         }
         if (!isLast) {
-          utils.append(',', state);
+          utils.append(', ', state);
         }
       }
 
