@@ -156,7 +156,7 @@ ReactElement.createElement = function(type, config, children) {
   var ref = null;
 
   if (config != null) {
-    if (typeof config === "string") {
+    if (typeof config === 'string') {
       config = { className: config };
     }
     ref = config.ref === undefined ? null : config.ref;

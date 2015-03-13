@@ -363,9 +363,9 @@ describe('ReactElement', function() {
 
   it('allows props to be a string specifying className', function() {
       var div = ReactTestUtils.renderIntoDocument(
-        React.createElement("div", "foo")
+        React.createElement('div', 'foo')
       );
-      expect(div.props.className).toBe("foo");
+      expect(div.props.className).toBe('foo');
   });
 
 });
