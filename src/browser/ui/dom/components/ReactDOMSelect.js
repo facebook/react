@@ -89,7 +89,9 @@ function updateOptions(component, propValue) {
         return;
       }
     }
-    options[0].selected = true;
+    if (options.length) {
+      options[0].selected = true;
+    }
   }
 }
 
