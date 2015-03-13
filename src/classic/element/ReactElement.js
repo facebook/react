@@ -156,6 +156,9 @@ ReactElement.createElement = function(type, config, children) {
   var ref = null;
 
   if (config != null) {
+    if (typeof config === "string") {
+      config = { className: config };
+    }
     ref = config.ref === undefined ? null : config.ref;
     key = config.key === undefined ? null : '' + config.key;
     // Remaining properties are added to a new props object
