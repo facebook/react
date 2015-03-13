@@ -11,7 +11,7 @@
 
 'use strict';
 
-var shallowEqual = require('shallowEqual');
+var shallowCompare = require('shallowCompare');
 
 /**
  * If your React component's render function is "pure", e.g. it will render the
@@ -39,8 +39,7 @@ var shallowEqual = require('shallowEqual');
  */
 var ReactComponentWithPureRenderMixin = {
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !shallowEqual(this.props, nextProps) ||
-           !shallowEqual(this.state, nextState);
+    return shallowCompare(this, nextProps, nextState);
   }
 };
 
