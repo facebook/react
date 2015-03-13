@@ -361,4 +361,11 @@ describe('ReactElement', function() {
     expect(console.warn.argsForCall.length).toBe(0);
   });
 
+  it('allows props to be a string specifying className', function() {
+      var div = ReactTestUtils.renderIntoDocument(
+        React.createElement('div', 'foo')
+      );
+      expect(div.props.className).toBe('foo');
+  });
+
 });
