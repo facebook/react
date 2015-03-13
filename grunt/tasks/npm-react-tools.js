@@ -49,7 +49,8 @@ function packRelease() {
     }
   };
   grunt.util.spawn(spawnCmd, function() {
-    var buildSrc = 'build/react-tools-' + grunt.config.data.pkg.version + '.tgz';
+    var buildSrc =
+      'build/react-tools-' + grunt.config.data.pkg.version + '.tgz';
     var buildDest = 'build/react-tools.tgz';
     fs.rename(buildSrc, buildDest, done);
   });

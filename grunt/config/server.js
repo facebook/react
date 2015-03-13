@@ -17,7 +17,9 @@ module.exports = function(grunt) {
   });
 
   function consoleLoggerMiddleware(req, res, next) {
-    if (!(req.method === 'POST' && req._parsedUrl.pathname.replace(/\//g, '') === 'console' && Array.isArray(req.body))) {
+    if (!(req.method === 'POST' &&
+        req._parsedUrl.pathname.replace(/\//g, '') === 'console' &&
+        Array.isArray(req.body))) {
       return next();
     }
     res.write('<!doctype html><meta charset=utf-8>');
@@ -42,7 +44,9 @@ module.exports = function(grunt) {
         grunt.log.writeln(log.message);
       } else if (log.type === 'coverage') {
         if (!coverageWriteStream) {
-          coverageWriteStream = fs.createWriteStream(path.join(__dirname, '/../../coverage.log'));
+          coverageWriteStream = fs.createWriteStream(
+            path.join(__dirname, '/../../coverage.log')
+          );
         }
         coverageWriteStream.write(log.message + '\n');
       } else if (log.type === 'coverage done') {
@@ -56,7 +60,8 @@ module.exports = function(grunt) {
   }
 
   function testResultLoggerMiddleware(req, res, next) {
-    if (!(req.method === 'POST' && req._parsedUrl.pathname.indexOf('/reportTestResults') === 0)) {
+    if (!(req.method === 'POST' &&
+        req._parsedUrl.pathname.indexOf('/reportTestResults') === 0)) {
       return next();
     }
     res.write('<!doctype html><meta charset=utf-8>');
@@ -78,7 +83,9 @@ module.exports = function(grunt) {
     if (typeof message !== 'string') {
       message = JSON.stringify(message, null, 2);
     }
-    grunt.log[logType]('[%s][%s]', req.headers['user-agent'], Date.now(), message);
+    grunt.log[logType](
+      '[%s][%s]', req.headers['user-agent'], Date.now(), message
+    );
   }
 
   return {
@@ -101,7 +108,10 @@ module.exports = function(grunt) {
             consoleLoggerMiddleware,
             testResultLoggerMiddleware,
 
-            connect.logger({format:'[:user-agent][:timestamp] :method :url', stream:grunt.verbose}),
+            connect.logger({
+              format: '[:user-agent][:timestamp] :method :url',
+              stream: grunt.verbose
+            }),
             connect.static(options.base),
             connect.directory(options.base)
           ];

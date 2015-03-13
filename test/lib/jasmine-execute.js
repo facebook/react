@@ -1,4 +1,8 @@
-document.write('<style> @import \'../vendor/jasmine/jasmine.css?_=' + (+new Date()).toString(36) + '\'; </style>');
+document.write(
+  '<style> @import \'../vendor/jasmine/jasmine.css?_=' +
+  (+new Date()).toString(36) +
+  '\'; </style>'
+);
 
 (function(env) {
   var htmlReporter = new jasmine.HtmlReporter();

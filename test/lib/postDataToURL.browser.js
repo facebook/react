@@ -36,7 +36,10 @@ function postDataToURL(data, url, callback) {
     }
     request.onreadystatechange = null;
     postDataToURL.running = (postDataToURL.running || 0) - 1;
-    callback(request.status === 200 ? null : request.status, request.responseText);
+    callback(
+      request.status === 200 ? null : request.status,
+      request.responseText
+    );
   };
   request.open('POST', url);
   request.setRequestHeader('Content-Type', 'application/json');
