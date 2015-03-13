@@ -367,6 +367,7 @@ ReactDOMComponent.Mixin = {
             styleUpdates[styleName] = '';
           }
         }
+        this._previousStyleCopy = null;
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (lastProps[propKey]) {
           // Only call deleteListener if there was a listener previously or
