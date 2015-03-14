@@ -132,7 +132,7 @@ boolean isValidElement(* object)
 ```javascript
 DOMElement findDOMNode(ReactComponent component)
 ```
-이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴할 때 `React.findDOMNode()`는 `null`을 리턴합니다.
+이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴할 때 `findDOMNode()`는 `null`을 리턴합니다.
 
 
 ### React.DOM
