@@ -179,4 +179,31 @@ describe('ReactTestUtils', function() {
     // Should be document order, not mount order (which would be purple, orange)
     expect(log).toEqual(['orangepurple', 'orange', 'purple']);
   });
+
+  it('does not warn for getDOMNode on ES6 classes', function() {
+    var Foo = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    class Bar extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+
+    spyOn(console, 'warn');
+
+    var foo = ReactTestUtils.renderIntoDocument(<Foo />);
+    expect(ReactTestUtils.isDOMComponent(foo)).toBe(false);
+
+    var bar = ReactTestUtils.renderIntoDocument(<Bar />);
+    expect(ReactTestUtils.isDOMComponent(bar)).toBe(false);
+
+    var div = ReactTestUtils.renderIntoDocument(<div />);
+    expect(ReactTestUtils.isDOMComponent(div)).toBe(true);
+
+    expect(console.warn.calls.length).toBe(0);
+  });
 });
