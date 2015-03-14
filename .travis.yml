@@ -8,10 +8,6 @@ cache:
   - node_modules
 before_install:
 - |
-    if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
-      PR_FIRST=$(curl -s https://github.com/${TRAVIS_REPO_SLUG}/pull/${TRAVIS_PULL_REQUEST}.patch | head -1 | grep -o -E '\b[0-9a-f]{40}\b' | tr -d '\n')
-      TRAVIS_COMMIT_RANGE=$PR_FIRST^..$TRAVIS_COMMIT
-    fi
     git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/' || {
       echo "Only docs were updated, stopping build process."
       exit
