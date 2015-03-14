@@ -144,6 +144,12 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
+var newlineEatingTags = {
+  'listing': true,
+  'pre': true,
+  'textarea': true
+};
+
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
@@ -300,12 +306,7 @@ ReactDOMComponent.Mixin = {
         ret = mountImages.join('');
       }
     }
-    if (
-      (this._tag === 'listing'
-       || this._tag === 'pre'
-       || this._tag === 'textarea')
-      && ret.charAt(0) === '\n'
-    ) {
+    if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
       // text/html ignores the first character in these tags if it's a newline
       // Prefer to break application/xml over text/html (for now) by adding
       // a newline specifically to get eaten by the parser.
