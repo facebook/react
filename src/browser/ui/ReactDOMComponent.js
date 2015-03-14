@@ -216,7 +216,7 @@ ReactDOMComponent.Mixin = {
     assertValidProps(this, this._currentElement.props);
     var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction);
     var tagContent = this._createContentMarkup(transaction, context);
-    if(!tagContent && omittedCloseTags[this._tag]){
+    if (!tagContent && omittedCloseTags[this._tag]) {
       return tagOpen + '/>';
     }
     return tagOpen + '>' + tagContent + '</' + this._tag + '>';
