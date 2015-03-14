@@ -152,6 +152,17 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
+    it("should update styles when 'style' changes from null to object", function() {
+      var container = document.createElement('div');
+      var styles = {color: 'red'};
+      React.render(<div style={styles} />, container);
+      React.render(<div />, container);
+      React.render(<div style={styles} />, container);
+
+      var stubStyle = container.firstChild.style;
+      expect(stubStyle.color).toEqual('red');
+    });
+
     it("should empty element when removing innerHTML", function() {
       var container = document.createElement('div');
       React.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />, container);
