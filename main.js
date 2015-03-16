@@ -60,8 +60,8 @@ function processOptions(opts) {
   if (opts.es6module) {
     options.sourceType = 'module';
   }
-  if (opts.nonStrictEs6Module) {
-    options.sourceType = 'nonStrict6Module';
+  if (opts.nonStrictEs6module) {
+    options.sourceType = 'nonStrictModule';
   }
 
   // Instead of doing any fancy validation, only look for 'es3'. If we have
