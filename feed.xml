@@ -7,6 +7,49 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>React v0.13.1</title>
+				<description>&lt;p&gt;It&amp;#39;s been less than a week since we shipped v0.13.0 but it&amp;#39;s time to do another quick release. We just released v0.13.1 which contains bugfixes for a number of small issues.&lt;/p&gt;
+
+&lt;p&gt;Thanks all of you who have been upgrading your applications and taking the time to report issues. And a huge thank you to those of you who submitted pull requests for the issues you found! 2 of the 6 fixes that went out today came from people who aren&amp;#39;t on the core team!&lt;/p&gt;
+
+&lt;p&gt;The release is now available for download:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.13.1.js&quot;&gt;http://fb.me/react-0.13.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-0.13.1.min.js&quot;&gt;http://fb.me/react-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
+Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.1.js&quot;&gt;http://fb.me/react-with-addons-0.13.1.js&lt;/a&gt;&lt;br&gt;
+Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.13.1.min.js&quot;&gt;http://fb.me/react-with-addons-0.13.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
+&lt;a href=&quot;http://fb.me/JSXTransformer-0.13.1.js&quot;&gt;http://fb.me/JSXTransformer-0.13.1.js&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.13.1&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower.&lt;/p&gt;
+
+&lt;hr&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Don&amp;#39;t throw when rendering empty &lt;code&gt;&amp;lt;select&amp;gt;&lt;/code&gt; elements&lt;/li&gt;
+&lt;li&gt;Ensure updating &lt;code&gt;style&lt;/code&gt; works when transitioning from &lt;code&gt;null&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-with-add-ons&quot;&gt;&lt;/a&gt;React with Add-Ons &lt;a class=&quot;hash-link&quot; href=&quot;#react-with-add-ons&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;TestUtils: Don&amp;#39;t warn about &lt;code&gt;getDOMNode&lt;/code&gt; for ES6 classes&lt;/li&gt;
+&lt;li&gt;TestUtils: Ensure wrapped full page components (&lt;code&gt;&amp;lt;html&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;head&amp;gt;&lt;/code&gt;, &lt;code&gt;&amp;lt;body&amp;gt;&lt;/code&gt;) are treated as DOM components&lt;/li&gt;
+&lt;li&gt;Perf: Stop double-counting DOM components&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;&lt;h4&gt;&lt;a class=&quot;anchor&quot; name=&quot;bug-fixes&quot;&gt;&lt;/a&gt;Bug Fixes &lt;a class=&quot;hash-link&quot; href=&quot;#bug-fixes&quot;&gt;#&lt;/a&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Fix option parsing for &lt;code&gt;--non-strict-es6module&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+				<pubDate>2015-03-16T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/16/react-v0.13.1.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13</title>
 				<description>&lt;p&gt;Today, we&amp;#39;re happy to release React v0.13!&lt;/p&gt;
 
@@ -928,45 +971,6 @@ Facebook will make determinations on scholarship recipients in its sole discreti
 				<pubDate>2014-12-19T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</guid>
-			</item>
-		
-			<item>
-				<title>React v0.12.2</title>
-				<description>&lt;p&gt;We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.&lt;/p&gt;
-
-&lt;p&gt;You may have noticed that we did not do an announcement for v0.12.1. That release was snuck out in anticipation of &lt;a href=&quot;http://flowtype.org/&quot;&gt;Flow&lt;/a&gt;, with only transform-related changes. Namely we added a flag to the &lt;code&gt;jsx&lt;/code&gt; executable which allowed you to safely transform Flow-based code to vanilla JS. If you didn&amp;#39;t update for that release, you can safely skip it and move directly to v0.12.2.&lt;/p&gt;
-
-&lt;p&gt;The release is available for download from the CDN:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-0.12.2.js&quot;&gt;http://fb.me/react-0.12.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-0.12.2.min.js&quot;&gt;http://fb.me/react-0.12.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.2.js&quot;&gt;http://fb.me/react-with-addons-0.12.2.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0.12.2.min.js&quot;&gt;http://fb.me/react-with-addons-0.12.2.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;In-Browser JSX transformer&lt;/strong&gt;&lt;br&gt;
-&lt;a href=&quot;http://fb.me/JSXTransformer-0.12.2.js&quot;&gt;http://fb.me/JSXTransformer-0.12.2.js&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We&amp;#39;ve also published version &lt;code&gt;0.12.2&lt;/code&gt; of the &lt;code&gt;react&lt;/code&gt; and &lt;code&gt;react-tools&lt;/code&gt; packages on npm and the &lt;code&gt;react&lt;/code&gt; package on bower. &lt;code&gt;0.12.1&lt;/code&gt; is also available in the same locations if need those.&lt;/p&gt;
-
-&lt;p&gt;Please try these builds out and &lt;a href=&quot;https://github.com/facebook/react/issues/new&quot;&gt;file an issue on GitHub&lt;/a&gt; if you see anything awry.&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;changelog&quot;&gt;&lt;/a&gt;Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-core&quot;&gt;&lt;/a&gt;React Core &lt;a class=&quot;hash-link&quot; href=&quot;#react-core&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;Added support for more HTML attributes: &lt;code&gt;formAction&lt;/code&gt;, &lt;code&gt;formEncType&lt;/code&gt;, &lt;code&gt;formMethod&lt;/code&gt;, &lt;code&gt;formTarget&lt;/code&gt;, &lt;code&gt;marginHeight&lt;/code&gt;, &lt;code&gt;marginWidth&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;Added &lt;code&gt;strokeOpacity&lt;/code&gt; to the list of unitless CSS properties&lt;/li&gt;
-&lt;li&gt;Removed trailing commas (allows npm module to be bundled and used in IE8)&lt;/li&gt;
-&lt;li&gt;Fixed bug resulting in error when passing &lt;code&gt;undefined&lt;/code&gt; to &lt;code&gt;React.createElement&lt;/code&gt; - now there is a useful warning&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-tools&quot;&gt;&lt;/a&gt;React Tools &lt;a class=&quot;hash-link&quot; href=&quot;#react-tools&quot;&gt;#&lt;/a&gt;&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;JSX-related transforms now always use double quotes for props and &lt;code&gt;displayName&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-12-18T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/18/react-v0.12.2.html</guid>
 			</item>
 		
 	</channel>
