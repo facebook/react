@@ -144,6 +144,12 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
+var newlineEatingTags = {
+  'listing': true,
+  'pre': true,
+  'textarea': true
+};
+
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
 
@@ -208,12 +214,12 @@ ReactDOMComponent.Mixin = {
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     assertValidProps(this, this._currentElement.props);
-    var closeTag = omittedCloseTags[this._tag] ? '' : '</' + this._tag + '>';
-    return (
-      this._createOpenTagMarkupAndPutListeners(transaction) +
-      this._createContentMarkup(transaction, context) +
-      closeTag
-    );
+    var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction);
+    var tagContent = this._createContentMarkup(transaction, context);
+    if (!tagContent && omittedCloseTags[this._tag]) {
+      return tagOpen + '/>';
+    }
+    return tagOpen + '>' + tagContent + '</' + this._tag + '>';
   },
 
   /**
@@ -260,11 +266,11 @@ ReactDOMComponent.Mixin = {
     // For static pages, no need to put React ID and checksum. Saves lots of
     // bytes.
     if (transaction.renderToStaticMarkup) {
-      return ret + '>';
+      return ret;
     }
 
     var markupForID = DOMPropertyOperations.createMarkupForID(this._rootNodeID);
-    return ret + ' ' + markupForID + '>';
+    return ret + ' ' + markupForID;
   },
 
   /**
@@ -276,40 +282,45 @@ ReactDOMComponent.Mixin = {
    * @return {string} Content markup.
    */
   _createContentMarkup: function(transaction, context) {
-    var prefix = '';
-    if (this._tag === 'listing' ||
-        this._tag === 'pre' ||
-        this._tag === 'textarea') {
-      // Add an initial newline because browsers ignore the first newline in
-      // a <listing>, <pre>, or <textarea> as an "authoring convenience" -- see
-      // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inbody.
-      prefix = '\n';
-    }
-
+    var ret = '';
     var props = this._currentElement.props;
 
     // Intentional use of != to avoid catching zero/false.
     var innerHTML = props.dangerouslySetInnerHTML;
     if (innerHTML != null) {
       if (innerHTML.__html != null) {
-        return prefix + innerHTML.__html;
+        ret = innerHTML.__html;
       }
     } else {
       var contentToUse =
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
-        return prefix + escapeTextContentForBrowser(contentToUse);
+        ret = escapeTextContentForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
           context
         );
-        return prefix + mountImages.join('');
+        ret = mountImages.join('');
       }
     }
-    return prefix;
+    if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
+      // text/html ignores the first character in these tags if it's a newline
+      // Prefer to break application/xml over text/html (for now) by adding
+      // a newline specifically to get eaten by the parser.
+      // (Alternately for textareas, replacing "^\n" with "\r\n" doesn't get eaten,
+      // and the first \r is normalized out by HTMLTextAreaElement#value.)
+      // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+      // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+      // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+      // See: Parsing of "textarea" "listing" and "pre" elements
+      //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+      return '\n' + ret;
+    } else {
+      return ret;
+    }
   },
 
   receiveComponent: function(nextElement, transaction, context) {

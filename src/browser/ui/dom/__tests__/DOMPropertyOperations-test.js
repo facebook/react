@@ -78,12 +78,12 @@ describe('DOMPropertyOperations', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
         'simple'
-      )).toBe('checked');
+      )).toBe('checked=""');
 
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
         true
-      )).toBe('checked');
+      )).toBe('checked=""');
 
       expect(DOMPropertyOperations.createMarkupForProperty(
         'checked',
@@ -100,7 +100,7 @@ describe('DOMPropertyOperations', function() {
       expect(DOMPropertyOperations.createMarkupForProperty(
         'download',
         true
-      )).toBe('download');
+      )).toBe('download=""');
 
       expect(DOMPropertyOperations.createMarkupForProperty(
         'download',

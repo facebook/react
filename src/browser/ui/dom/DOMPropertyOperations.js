@@ -96,7 +96,7 @@ var DOMPropertyOperations = {
       var attributeName = DOMProperty.getAttributeName[name];
       if (DOMProperty.hasBooleanValue[name] ||
           (DOMProperty.hasOverloadedBooleanValue[name] && value === true)) {
-        return attributeName;
+        return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     } else if (DOMProperty.isCustomAttribute(name)) {
