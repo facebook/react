@@ -468,7 +468,7 @@ existing DOM node without overwriting the existing children.</p>
 <p>Verifies the object is a ReactElement.</p>
 <h3><a class="anchor" name="react.finddomnode"></a>React.findDOMNode <a class="hash-link" href="#react.finddomnode">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMElement</span> <span class="nx">findDOMNode</span><span class="p">(</span><span class="nx">ReactComponent</span> <span class="nx">component</span><span class="p">)</span>
 </code></pre></div>
-<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>this.getDOMNode()</code> returns <code>null</code>.</p>
+<p>If this component has been mounted into the DOM, this returns the corresponding native browser DOM element. This method is useful for reading values out of the DOM, such as form field values and performing DOM measurements. When <code>render</code> returns <code>null</code> or <code>false</code>, <code>findDOMNode</code> returns <code>null</code>.</p>
 <h3><a class="anchor" name="react.dom"></a>React.DOM <a class="hash-link" href="#react.dom">#</a></h3>
 <p><code>React.DOM</code> provides convenience wrappers around <code>React.createElement</code> for DOM components. These should only be used when not using JSX. For example, <code>React.DOM.div(null, &#39;Hello World!&#39;)</code></p>
 <h3><a class="anchor" name="react.proptypes"></a>React.PropTypes <a class="hash-link" href="#react.proptypes">#</a></h3>
