@@ -43,6 +43,14 @@ describe('ReactDOMSelect', function() {
     expect(node.value).toEqual('giraffe');
   });
 
+  it('should not throw with `defaultValue` and without children', function() {
+    var stub = <select defaultValue="dummy"></select>;
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(stub);
+    }).not.toThrow();
+  });
+
   it('should not control when using `defaultValue`', function() {
     var stub =
       <select defaultValue="giraffe">
@@ -98,6 +106,14 @@ describe('ReactDOMSelect', function() {
     // Changing the `value` prop should change the selected option.
     stub.setProps({value: 'gorilla'});
     expect(node.value).toEqual('gorilla');
+  });
+
+  it('should not throw with `value` and without children', function() {
+    var stub = <select value="dummy"></select>;
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(stub);
+    }).not.toThrow();
   });
 
   it('should allow setting `value` with multiple', function() {
