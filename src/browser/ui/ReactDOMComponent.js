@@ -29,6 +29,7 @@ var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
+var shallowEqual = require('shallowEqual');
 var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
@@ -42,6 +43,44 @@ var CONTENT_TYPES = {'string': true, 'number': true};
 var STYLE = keyOf({style: null});
 
 var ELEMENT_NODE_TYPE = 1;
+
+var styleMutationWarning = {};
+
+function checkAndWarnForMutatedStyle(style1, style2, component) {
+  if (style1 == null || style2 == null) {
+    return;
+  }
+  if (shallowEqual(style1, style2)) {
+    return;
+  }
+
+  var componentName = component._tag;
+  var owner = component._currentElement._owner;
+  var ownerName;
+  if (owner) {
+    ownerName = owner.getName();
+  }
+
+  var hash = ownerName + '|' + componentName;
+
+  if (styleMutationWarning.hasOwnProperty(hash)) {
+    return;
+  }
+
+  styleMutationWarning[hash] = true;
+
+  warning(
+    false,
+    '`%s` was passed a style object that has previously been mutated. ' +
+    'Mutating `style` will be deprecated. Consider cloning it beforehand. ' +
+    'Check the `render` %s. Previous style: %s. Mutated style: %s.',
+    componentName,
+    owner ? 'of `' + ownerName + '`' : 'using <' + componentName + '>',
+    JSON.stringify(style1),
+    JSON.stringify(style2)
+  );
+}
+
 
 /**
  * Optionally injectable operations for mutating the DOM
@@ -201,6 +240,7 @@ function ReactDOMComponent(tag) {
   validateDangerousTag(tag);
   this._tag = tag;
   this._renderedChildren = null;
+  this._previousStyle = null;
   this._previousStyleCopy = null;
   this._rootNodeID = null;
 }
@@ -274,6 +314,10 @@ ReactDOMComponent.Mixin = {
       } else {
         if (propKey === STYLE) {
           if (propValue) {
+            if (__DEV__) {
+              // See `_updateDOMProperties`. style block
+              this._previousStyle = propValue;
+            }
             propValue = this._previousStyleCopy = assign({}, props.style);
           }
           propValue = CSSPropertyOperations.createMarkupForStyles(propValue);
@@ -441,6 +485,14 @@ ReactDOMComponent.Mixin = {
       }
       if (propKey === STYLE) {
         if (nextProp) {
+          if (__DEV__) {
+            checkAndWarnForMutatedStyle(
+              this._previousStyleCopy,
+              this._previousStyle,
+              this
+            );
+            this._previousStyle = nextProp;
+          }
           nextProp = this._previousStyleCopy = assign({}, nextProp);
         }
         if (lastProp) {

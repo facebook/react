@@ -60,7 +60,11 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.fontFamily).toEqual('');
     });
 
+    // TODO: (poshannessy) deprecate this pattern.
     it("should update styles when mutating style object", function() {
+      // not actually used. Just to suppress the style mutation warning
+      spyOn(console, 'error');
+
       var styles = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
       var container = document.createElement('div');
       React.render(<div style={styles} />, container);
@@ -94,6 +98,46 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toBe('');
       expect(stubStyle.fontFamily).toBe('');
       expect(stubStyle.lineHeight).toBe('');
+    });
+
+    it('should warn when mutating style', function() {
+      spyOn(console, 'error');
+
+      var style = {border: '1px solid black'};
+      var App = React.createClass({
+        getInitialState: function() {
+          return {style: style};
+        },
+        render: function() {
+          return <div style={this.state.style}>asd</div>;
+        }
+      });
+
+      var stub = ReactTestUtils.renderIntoDocument(<App />);
+      style.position = 'absolute';
+      stub.setState({style: style});
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toEqual(
+        'Warning: `div` was passed a style object that has previously been ' +
+        'mutated. Mutating `style` will be deprecated. Consider cloning it ' +
+        'beforehand. Check the `render` of `App`. Previous style: ' +
+        '{"border":"1px solid black"}. Mutated style: ' +
+        '{"border":"1px solid black","position":"absolute"}.'
+      );
+
+      style = {background: 'red'};
+      stub = ReactTestUtils.renderIntoDocument(<App />);
+      style.background = 'green';
+      stub.setState({style: {background: 'green'}});
+      // already warned once for the same component and owner
+      expect(console.error.argsForCall.length).toBe(1);
+
+      style = {background: 'red'};
+      var div = document.createElement('div');
+      React.render(<span style={style}></span>, div);
+      style.background = 'blue';
+      React.render(<span style={style}></span>, div);
+      expect(console.error.argsForCall.length).toBe(2);
     });
 
     it("should update styles if initially null", function() {
@@ -152,6 +196,7 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.color).toEqual('');
     });
 
+    // trouble
     it("should update styles when 'style' changes from null to object", function() {
       var container = document.createElement('div');
       var styles = {color: 'red'};
