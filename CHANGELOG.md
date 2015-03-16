@@ -1,3 +1,27 @@
+## 0.13.1 (March 16, 2015)
+
+### React Core
+
+#### Bug Fixes
+
+* Don't throw when rendering empty `<select>` elements
+* Ensure updating `style` works when transitioning from `null`
+
+### React with Add-Ons
+
+### Bug Fixes
+
+* TestUtils: Don't warn about `getDOMNode` for ES6 classes
+* TestUtils: Ensure wrapped full page components (`<html>`, `<head>`, `<body>`) are treated as DOM components
+* Perf: Stop double-counting DOM components
+
+### React Tools
+
+#### Bug Fixes
+
+* Fix option parsing for `--non-strict-es6module`
+
+
 ## 0.13.0 (March 10, 2015)
 
 ### React Core
