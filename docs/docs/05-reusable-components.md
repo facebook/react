@@ -200,7 +200,7 @@ class HelloMessage extends React.Component {
 React.render(<HelloMessage name="Sebastian" />, mountNode);
 ```
 
-The API is similar to `React.createClass` with the exception or `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
+The API is similar to `React.createClass` with the exception of `getInitialState`. Instead of providing a separate `getInitialState` method, you set up your own `state` property in the constructor.
 
 Another difference is that `propTypes` and `defaultProps` are defined as properties on the constructor instead of in the class body.
 
