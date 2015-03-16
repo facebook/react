@@ -35,12 +35,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.13.0.js"></script>
+<script src="http://fb.me/react-0.13.1.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.13.0.js"></script>
+<script src="http://fb.me/JSXTransformer-0.13.1.js"></script>
 ```
 
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.13.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.13.1.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
