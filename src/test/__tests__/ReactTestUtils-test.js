@@ -206,4 +206,28 @@ describe('ReactTestUtils', function() {
 
     expect(console.warn.calls.length).toBe(0);
   });
+
+  it('should support injected wrapper components as DOM components', function() {
+    var injectedDOMComponents = [
+      'button',
+      'form',
+      'iframe',
+      'img',
+      'input',
+      'option',
+      'select',
+      'textarea',
+      'html',
+      'head',
+      'body'
+    ];
+
+    injectedDOMComponents.forEach(function(type) {
+      var component = ReactTestUtils.renderIntoDocument(
+        React.createElement(type)
+      );
+      expect(component.tagName).toBe(type.toUpperCase());
+      expect(ReactTestUtils.isDOMComponent(component)).toBe(true);
+    });
+  });
 });
