@@ -21,7 +21,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
     React = require('React');
     ReactComponentWithPureRenderMixin =
       require('ReactComponentWithPureRenderMixin');
-    ReactTestUtils = require("../../ReactTestUtils");
+    ReactTestUtils = require('ReactTestUtils');
   });
 
   it('provides a default shouldComponentUpdate implementation', function() {
