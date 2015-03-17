@@ -309,9 +309,9 @@ ReactDOMComponent.Mixin = {
     if (newlineEatingTags[this._tag] && ret.charAt(0) === '\n') {
       // text/html ignores the first character in these tags if it's a newline
       // Prefer to break application/xml over text/html (for now) by adding
-      // a newline specifically to get eaten by the parser.
-      // (Alternately for textareas, replacing "^\n" with "\r\n" doesn't get eaten,
-      // and the first \r is normalized out by HTMLTextAreaElement#value.)
+      // a newline specifically to get eaten by the parser. (Alternately for
+      // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+      // \r is normalized out by HTMLTextAreaElement#value.)
       // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
       // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
       // See: <http://www.w3.org/TR/html5/syntax.html#newlines>

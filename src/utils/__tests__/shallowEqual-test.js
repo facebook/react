@@ -57,7 +57,7 @@ describe('shallowEqual', function() {
         {}
       )
     ).toBe(false);
-  })
+  });
 
   it('returns false if first argument has too many keys', function() {
     expect(
