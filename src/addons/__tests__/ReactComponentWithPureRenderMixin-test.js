@@ -51,7 +51,7 @@ describe('ReactComponentWithPureRenderMixin', function() {
         return {
           cut: false,
           slices: 1,
-        }
+        };
       },
 
       cut: function() {
