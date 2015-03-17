@@ -83,7 +83,7 @@ describe('ReactMultiChild', function() {
       expect(mockUnmount.mock.calls.length).toBe(1);
     });
 
-    it('should replace children with different owners', function() {
+    it('should NOT replace children with different owners', function() {
       var container = document.createElement('div');
 
       var mockMount = mocks.getMockFunction();
@@ -116,8 +116,8 @@ describe('ReactMultiChild', function() {
         container
       );
 
-      expect(mockMount.mock.calls.length).toBe(2);
-      expect(mockUnmount.mock.calls.length).toBe(1);
+      expect(mockMount.mock.calls.length).toBe(1);
+      expect(mockUnmount.mock.calls.length).toBe(0);
     });
 
     it('should replace children with different keys', function() {
