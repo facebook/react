@@ -141,9 +141,6 @@ boolean shiftKey
 
 ### Touch events
 
-To enable touch events, call `React.initializeTouchEvents(true)` before
-rendering any component.
-
 Event names:
 
 ```

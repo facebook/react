@@ -138,8 +138,6 @@ boolean shiftKey
 
 ### 触控事件
 
-在渲染任意组件之前调用 `React.initializeTouchEvents(true)`，以启用触控事件。
-
 事件名称：
 
 ```

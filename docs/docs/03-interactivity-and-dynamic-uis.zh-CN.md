@@ -40,8 +40,6 @@ React.render(
 
 React 里只需把事件处理器（event handler）以骆峰命名（camelCased）形式当作组件的 props 传入即可，就像使用普通 HTML 那样。React 内部创建一套合成事件系统来使所有事件在 IE8 和以上浏览器表现一致。也就是说，React 知道如何冒泡和捕获事件，而且你的事件处理器接收到的 events 参数与 [W3C 规范](http://www.w3.org/TR/DOM-Level-3-Events/) 一致，无论你使用哪种浏览器。
 
-如果需要在手机或平板等触摸设备上使用 React，需要调用 `React.initializeTouchEvents(true);` 启用触摸事件处理。
-
 ## 幕后原理：自动绑定（Autobinding）和事件代理（Event Delegation）
 
 在幕后，React 做了一些操作来让代码高效运行且易于理解。
