@@ -116,7 +116,8 @@ if (__DEV__) {
 
     // If we're in IE8, check to see if we are in combatibility mode and provide
     // information on preventing compatibility mode
-    var ieCompatibilityMode = document.documentMode && document.documentMode < 8;
+    var ieCompatibilityMode =
+      document.documentMode && document.documentMode < 8;
 
     warning(
       !ieCompatibilityMode,

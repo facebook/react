@@ -171,8 +171,6 @@ describe('ReactMount', function() {
     var proto = Object.create(HTMLElement.prototype, {
       createdCallback: {
         value: function() {
-            var query = encodeURIComponent(this.innerHTML);
-            var url = "https://www.google.com/search?q=" + query + "&btnI";
             shadowRoot = this.createShadowRoot();
             React.render(<div>Hi, from within a WC!</div>, shadowRoot);
             expect(shadowRoot.firstChild.tagName).toBe('DIV')
