@@ -11,7 +11,12 @@
 
 'use strict';
 
+var ReactInstanceMap = require('ReactInstanceMap');
+
 var findDOMNode = require('findDOMNode');
+var warning = require('warning');
+
+var didWarnKey = '_getDOMNodeDidWarn';
 
 var ReactBrowserComponentMixin = {
   /**
@@ -22,6 +27,13 @@ var ReactBrowserComponentMixin = {
    * @protected
    */
   getDOMNode: function() {
+    warning(
+      this.constructor[didWarnKey],
+      '%s.getDOMNode(...) is deprecated. Please use ' +
+      'React.findDOMNode(instance) instead.',
+      ReactInstanceMap.get(this).getName() || this.tagName || 'Unknown'
+    );
+    this.constructor[didWarnKey] = true;
     return findDOMNode(this);
   }
 };
