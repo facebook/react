@@ -12,7 +12,7 @@
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
-function addDisplayName(displayName, object, state) {
+function shouldAddDisplayName(object) {
   if (object &&
       object.type === Syntax.CallExpression &&
       object.callee.type === Syntax.MemberExpression &&
@@ -30,12 +30,37 @@ function addDisplayName(displayName, object, state) {
         property.key.value;
       return value !== 'displayName';
     });
+    return safe;
+  }
+  return false;
+}
 
-    if (safe) {
-      utils.catchup(object.arguments[0].range[0] + 1, state);
-      utils.append('displayName: "' + displayName + '",', state);
+/**
+ * If `expr` is an Identifier or MemberExpression node made of identifiers and
+ * dot accesses, return a list of the identifier parts. Other nodes return null.
+ *
+ * Examples:
+ *
+ * MyComponent -> ['MyComponent']
+ * namespace.MyComponent -> ['namespace', 'MyComponent']
+ * namespace['foo'] -> null
+ * namespace['foo'].bar -> ['bar']
+ */
+function flattenIdentifierOrMemberExpression(expr) {
+  if (expr.type === Syntax.Identifier) {
+    return [expr.name];
+  } else if (expr.type === Syntax.MemberExpression) {
+    if (!expr.computed && expr.property.type === Syntax.Identifier) {
+      var flattenedObject = flattenIdentifierOrMemberExpression(expr.object);
+      if (flattenedObject) {
+        flattenedObject.push(expr.property.name);
+        return flattenedObject;
+      } else {
+        return [expr.property.name];
+      }
     }
   }
+  return null;
 }
 
 /**
@@ -55,6 +80,7 @@ function addDisplayName(displayName, object, state) {
  * Also catches:
  *
  * MyComponent = React.createClass(...);
+ * namespace.MyComponent = React.createClass(...);
  * exports.MyComponent = React.createClass(...);
  * module.exports = {MyComponent: React.createClass(...)};
  */
@@ -72,11 +98,18 @@ function visitReactDisplayName(traverse, object, path, state) {
     right = object.init;
   }
 
-  if (left && left.type === Syntax.MemberExpression) {
-    left = left.property;
-  }
-  if (left && left.type === Syntax.Identifier) {
-    addDisplayName(left.name, right, state);
+  if (right && shouldAddDisplayName(right)) {
+    var displayNamePath = flattenIdentifierOrMemberExpression(left);
+    if (displayNamePath) {
+      if (displayNamePath.length > 1 && displayNamePath[0] === 'exports') {
+        displayNamePath.shift();
+      }
+
+      var displayName = displayNamePath.join('.');
+
+      utils.catchup(right.arguments[0].range[0] + 1, state);
+      utils.append('displayName: "' + displayName + '",', state);
+    }
   }
 }
 
