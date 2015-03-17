@@ -277,6 +277,27 @@ describe('ReactElementValidator', function() {
     expect(console.warn.calls.length).toBe(2);
   });
 
+  it('includes the owner name when passing null or undefined', function() {
+    spyOn(console, 'warn');
+    var ParentComp = React.createClass({
+      render: function() {
+        return React.createElement(null);
+      }
+    });
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
+    }).toThrow();
+    expect(console.warn.calls.length).toBe(2);
+    expect(console.warn.calls[0].args[0]).toBe(
+      'Warning: React.createElement: type should not be null or undefined. ' +
+      'It should be a string (for DOM elements) or a ReactClass (for ' +
+      'composite components). Check the render method of `ParentComp`.'
+    );
+    expect(console.warn.calls[1].args[0]).toBe(
+      'Warning: Only functions or strings can be mounted as React components.'
+    );
+  });
+
   it('should check default prop values', function() {
     spyOn(console, 'warn');
 

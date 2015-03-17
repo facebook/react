@@ -264,7 +264,7 @@ function checkPropTypes(componentName, propTypes, props, location) {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum(this);
+        var addendum = getDeclarationErrorAddendum();
         warning(false, 'Failed propType: %s%s', error.message, addendum);
       }
     }
@@ -402,7 +402,8 @@ var ReactElementValidator = {
       type != null,
       'React.createElement: type should not be null or undefined. It should ' +
         'be a string (for DOM elements) or a ReactClass (for composite ' +
-        'components).'
+        'components).%s',
+      getDeclarationErrorAddendum()
     );
 
     var element = ReactElement.createElement.apply(this, arguments);
