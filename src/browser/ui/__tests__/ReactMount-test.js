@@ -173,15 +173,15 @@ describe('ReactMount', function() {
         value: function() {
             shadowRoot = this.createShadowRoot();
             React.render(<div>Hi, from within a WC!</div>, shadowRoot);
-            expect(shadowRoot.firstChild.tagName).toBe('DIV')
+            expect(shadowRoot.firstChild.tagName).toBe('DIV');
             React.render(<span>Hi, from within a WC!</span>, shadowRoot);
-            expect(shadowRoot.firstChild.tagName).toBe('SPAN')
+            expect(shadowRoot.firstChild.tagName).toBe('SPAN');
         }
       }
     });
     proto.unmount = function() {
       React.unmountComponentAtNode(shadowRoot);
-    }
+    };
     document.registerElement('x-foo', {prototype: proto});
     var element = document.createElement('x-foo');
     element.unmount();
