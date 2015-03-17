@@ -13,7 +13,6 @@
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
 var ReactChildren = require('ReactChildren');
 var ReactComponent = require('ReactComponent');
 var ReactClass = require('ReactClass');
@@ -60,9 +59,6 @@ var React = {
   Component: ReactComponent,
   DOM: ReactDOM,
   PropTypes: ReactPropTypes,
-  initializeTouchEvents: function(shouldUseTouch) {
-    EventPluginUtils.useTouchEvents = shouldUseTouch;
-  },
   createClass: ReactClass.createClass,
   createElement: createElement,
   cloneElement: cloneElement,
