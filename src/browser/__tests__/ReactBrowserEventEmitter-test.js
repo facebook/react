@@ -262,12 +262,12 @@ describe('ReactBrowserEventEmitter', function() {
       ON_CLICK_KEY,
       recordID.bind(null, getID(GRANDPARENT))
     );
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(getID(CHILD));
-    expect(console.warn.calls.length).toEqual(1);
-    expect(console.warn.calls[0].args[0]).toBe(
+    expect(console.error.calls.length).toEqual(1);
+    expect(console.error.calls[0].args[0]).toBe(
       'Warning: Returning `false` from an event handler is deprecated and ' +
       'will be ignored in a future release. Instead, manually call ' +
       'e.stopPropagation() or e.preventDefault(), as appropriate.'

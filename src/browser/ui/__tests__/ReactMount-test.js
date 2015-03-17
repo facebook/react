@@ -132,35 +132,35 @@ describe('ReactMount', function() {
     var container = document.createElement('container');
     container.innerHTML = React.renderToString(<div />) + ' ';
 
-    console.warn = mocks.getMockFunction();
+    console.error = mocks.getMockFunction();
     ReactMount.render(<div />, container);
-    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.error.mock.calls.length).toBe(1);
 
     container.innerHTML = ' ' + React.renderToString(<div />);
 
-    console.warn = mocks.getMockFunction();
+    console.error = mocks.getMockFunction();
     ReactMount.render(<div />, container);
-    expect(console.warn.mock.calls.length).toBe(1);
+    expect(console.error.mock.calls.length).toBe(1);
   });
 
   it('should not warn if mounting into non-empty node', function() {
     var container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
-    console.warn = mocks.getMockFunction();
+    console.error = mocks.getMockFunction();
     ReactMount.render(<div />, container);
-    expect(console.warn.mock.calls.length).toBe(0);
+    expect(console.error.mock.calls.length).toBe(0);
   });
 
   it('should warn when mounting into document.body', function () {
     var iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     ReactMount.render(<div />, iFrame.contentDocument.body);
 
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toContain(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
       'Rendering components directly into document.body is discouraged'
     );
   });

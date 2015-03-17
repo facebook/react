@@ -25,12 +25,12 @@ describe('ReactTestUtils', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
 
-    warn = console.warn;
-    console.warn = mocks.getMockFunction();
+    warn = console.error;
+    console.error = mocks.getMockFunction();
   });
 
   afterEach(function() {
-    console.warn = warn;
+    console.error = warn;
   });
 
   it('should have shallow rendering', function() {
@@ -193,7 +193,7 @@ describe('ReactTestUtils', function() {
       }
     }
 
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var foo = ReactTestUtils.renderIntoDocument(<Foo />);
     expect(ReactTestUtils.isDOMComponent(foo)).toBe(false);
@@ -204,7 +204,7 @@ describe('ReactTestUtils', function() {
     var div = ReactTestUtils.renderIntoDocument(<div />);
     expect(ReactTestUtils.isDOMComponent(div)).toBe(true);
 
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
   });
 
   it('should support injected wrapper components as DOM components', function() {

@@ -264,7 +264,7 @@ describe 'ReactCoffeeScriptClass', ->
 
   it 'warns when classic properties are defined on the instance,
       but does not invoke them.', ->
-    spyOn console, 'warn'
+    spyOn console, 'error'
     getInitialStateWasCalled = false
     class Foo extends React.Component
       constructor: ->
@@ -281,19 +281,19 @@ describe 'ReactCoffeeScriptClass', ->
 
     test React.createElement(Foo), 'SPAN', 'foo'
     expect(getInitialStateWasCalled).toBe false
-    expect(console.warn.calls.length).toBe 3
-    expect(console.warn.calls[0].args[0]).toContain(
+    expect(console.error.calls.length).toBe 3
+    expect(console.error.calls[0].args[0]).toContain(
       'getInitialState was defined on Foo, a plain JavaScript class.'
     )
-    expect(console.warn.calls[1].args[0]).toContain(
+    expect(console.error.calls[1].args[0]).toContain(
       'propTypes was defined as an instance property on Foo.'
     )
-    expect(console.warn.calls[2].args[0]).toContain(
+    expect(console.error.calls[2].args[0]).toContain(
       'contextTypes was defined as an instance property on Foo.'
     )
 
   it 'should warn when mispelling shouldComponentUpdate', ->
-    spyOn console, 'warn'
+    spyOn console, 'error'
     class NamedComponent
       componentShouldUpdate: ->
         false
@@ -303,15 +303,15 @@ describe 'ReactCoffeeScriptClass', ->
           className: 'foo'
 
     test React.createElement(NamedComponent), 'SPAN', 'foo'
-    expect(console.warn.calls.length).toBe 1
-    expect(console.warn.calls[0].args[0]).toBe(
+    expect(console.error.calls.length).toBe 1
+    expect(console.error.calls[0].args[0]).toBe(
       'Warning: NamedComponent has a method called componentShouldUpdate().
        Did you mean shouldComponentUpdate()? The name is phrased as a
        question because the function is expected to return a value.'
     )
 
   it 'should throw AND warn when trying to access classic APIs', ->
-    spyOn console, 'warn'
+    spyOn console, 'error'
     instance =
       test Inner(name: 'foo'), 'DIV', 'foo'
     expect(-> instance.getDOMNode()).toThrow()
@@ -319,20 +319,20 @@ describe 'ReactCoffeeScriptClass', ->
     expect(-> instance.isMounted()).toThrow()
     expect(-> instance.setProps name: 'bar').toThrow()
     expect(-> instance.replaceProps name: 'bar').toThrow()
-    expect(console.warn.calls.length).toBe 5
-    expect(console.warn.calls[0].args[0]).toContain(
+    expect(console.error.calls.length).toBe 5
+    expect(console.error.calls[0].args[0]).toContain(
       'getDOMNode(...) is deprecated in plain JavaScript React classes'
     )
-    expect(console.warn.calls[1].args[0]).toContain(
+    expect(console.error.calls[1].args[0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     )
-    expect(console.warn.calls[2].args[0]).toContain(
+    expect(console.error.calls[2].args[0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     )
-    expect(console.warn.calls[3].args[0]).toContain(
+    expect(console.error.calls[3].args[0]).toContain(
       'setProps(...) is deprecated in plain JavaScript React classes'
     )
-    expect(console.warn.calls[4].args[0]).toContain(
+    expect(console.error.calls[4].args[0]).toContain(
       'replaceProps(...) is deprecated in plain JavaScript React classes'
     )
 

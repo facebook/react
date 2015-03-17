@@ -154,13 +154,13 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should treat children like `defaultValue`', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var stub = <textarea>giraffe</textarea>;
     stub = renderTextarea(stub);
     var node = React.findDOMNode(stub);
 
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
@@ -169,33 +169,33 @@ describe('ReactDOMTextarea', function() {
   });
 
   it('should allow numbers as children', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var node = React.findDOMNode(renderTextarea(<textarea>{17}</textarea>));
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('17');
   });
 
   it('should allow booleans as children', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var node = React.findDOMNode(renderTextarea(<textarea>{false}</textarea>));
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('false');
   });
 
   it('should allow objects as children', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var obj = {
       toString: function() {
         return "sharkswithlasers";
       }
     };
     var node = React.findDOMNode(renderTextarea(<textarea>{obj}</textarea>));
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     expect(node.value).toBe('sharkswithlasers');
   });
 
   it('should throw with multiple or invalid children', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(
@@ -203,7 +203,7 @@ describe('ReactDOMTextarea', function() {
       );
     }).toThrow();
 
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
 
     var node;
     expect(function() {
@@ -212,7 +212,7 @@ describe('ReactDOMTextarea', function() {
 
     expect(node.value).toBe('[object Object]');
 
-    expect(console.warn.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall.length).toBe(2);
   });
 
   it('should support ReactLink', function() {

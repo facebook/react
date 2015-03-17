@@ -125,7 +125,7 @@ describe('autobinding', function() {
   });
 
   it('warns if you try to bind to this', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
       handleClick: function() { },
@@ -136,8 +136,8 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />)
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: bind(): You are binding a component method to the component. ' +
       'React does this for you automatically in a high-performance ' +
       'way, so you can safely remove this call. See TestBindComponent'
@@ -145,7 +145,7 @@ describe('autobinding', function() {
   });
 
   it('does not warn if you pass an auto-bound method to setState', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var TestBindComponent = React.createClass({
       getInitialState: function() {
@@ -164,7 +164,7 @@ describe('autobinding', function() {
 
     ReactTestUtils.renderIntoDocument(<TestBindComponent />)
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
 });

@@ -55,23 +55,23 @@ describe('DOMPropertyOperations', function() {
     });
 
     it('should warn about incorrect casing', function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'tabindex',
         '1'
       )).toBe(null);
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('tabIndex');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('tabIndex');
     });
 
     it('should warn about class', function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       expect(DOMPropertyOperations.createMarkupForProperty(
         'class',
         'muffins'
       )).toBe(null);
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('className');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('className');
     });
 
     it('should create markup for boolean properties', function() {

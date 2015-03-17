@@ -82,7 +82,7 @@ describe('cloneWithProps', function() {
   });
 
   it('should warn when cloning with refs', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var Grandparent = React.createClass({
       render: function() {
@@ -101,7 +101,7 @@ describe('cloneWithProps', function() {
 
     var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs).toBe(emptyObject);
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
   });
 
   it('should transfer the key property', function() {

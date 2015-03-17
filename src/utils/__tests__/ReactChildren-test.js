@@ -350,10 +350,10 @@ describe('ReactChildren', function() {
       <div>{zero}{one}</div>
     );
 
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var mapped = ReactChildren.map(instance.props.children, mapFn);
 
-    expect(console.warn.calls.length).toEqual(1);
+    expect(console.error.calls.length).toEqual(1);
     expect(nthChild(mapped, 0)).toBe(zero);
     expect(keyOfNthChild(mapped, 0)).toBe('.$something');
   });
@@ -422,17 +422,17 @@ describe('ReactChildren', function() {
   });
 
   it('should warn if a fragment is used without the wrapper', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var child = React.createElement('span');
     ReactChildren.forEach({a: child, b: child}, function(c) {
       expect(c).toBe(child);
     });
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toContain('use of a keyed object');
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('use of a keyed object');
   });
 
   it('should warn if a fragment is accessed', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var child = React.createElement('span');
     var frag = ReactChildren.map([child, child], function(c) {
       return c;
@@ -441,8 +441,8 @@ describe('ReactChildren', function() {
       frag[key];
       break;
     }
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toContain('is an opaque type');
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain('is an opaque type');
 
     var frag2 = ReactChildren.map([child, child], function(c) {
       return c;
@@ -451,8 +451,8 @@ describe('ReactChildren', function() {
       frag2[key] = 123;
       break;
     }
-    expect(console.warn.calls.length).toBe(2);
-    expect(console.warn.calls[1].args[0]).toContain('is an immutable opaque');
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.calls[1].args[0]).toContain('is an immutable opaque');
   });
 
 });

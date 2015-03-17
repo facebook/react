@@ -344,18 +344,18 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should warn against children for void elements", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
 
       var container = document.createElement('div');
 
       React.render(<input>children</input>, container);
 
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('void element');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it("should warn against dangerouslySetInnerHTML for void elements", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
 
       var container = document.createElement('div');
 
@@ -364,12 +364,12 @@ describe('ReactDOMComponent', function() {
         container
       );
 
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('void element');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it("should treat menuitem as a void element but still create the closing tag", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
 
       var container = document.createElement('div');
 
@@ -379,8 +379,8 @@ describe('ReactDOMComponent', function() {
 
       React.render(<menuitem>children</menuitem>, container);
 
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('void element');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it("should validate against multiple children props", function() {
@@ -394,10 +394,10 @@ describe('ReactDOMComponent', function() {
 
     it('should validate against use of innerHTML', function() {
 
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       mountComponent({innerHTML: '<span>Hi Jim!</span>'});
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain(
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain(
         'Directly setting property `innerHTML` is not permitted. '
       );
     });
@@ -423,10 +423,10 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should warn about contentEditable and children", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       mountComponent({contentEditable: true, children: ''});
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('contentEditable');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
     it("should validate against invalid styles", function() {
@@ -503,17 +503,17 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should warn against children for void elements", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
 
       React.render(<input />, container);
       React.render(<input>children</input>, container);
 
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('void element');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it("should warn against dangerouslySetInnerHTML for void elements", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
 
       React.render(<input />, container);
       React.render(
@@ -521,8 +521,8 @@ describe('ReactDOMComponent', function() {
         container
       );
 
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('void element');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('void element');
     });
 
     it("should validate against multiple children props", function() {
@@ -540,13 +540,13 @@ describe('ReactDOMComponent', function() {
     });
 
     it("should warn about contentEditable and children", function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       React.render(
         <div contentEditable><div /></div>,
         container
       );
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toContain('contentEditable');
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toContain('contentEditable');
     });
 
     it("should validate against invalid styles", function() {
@@ -620,10 +620,10 @@ describe('ReactDOMComponent', function() {
       var React = require('React');
       var ReactTestUtils = require('ReactTestUtils');
 
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div onScroll={function() {}} />);
-      expect(console.warn.calls.length).toBe(1);
-      expect(console.warn.mostRecentCall.args[0]).toBe(
+      expect(console.error.calls.length).toBe(1);
+      expect(console.error.mostRecentCall.args[0]).toBe(
         'Warning: This browser doesn\'t support the `onScroll` event'
       );
     });
