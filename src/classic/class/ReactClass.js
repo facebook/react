@@ -74,7 +74,7 @@ var injectedMixins = [];
  * The class specification supports a specific protocol of methods that have
  * special meaning (e.g. `render`). See `ReactClassInterface` for
  * more the comprehensive protocol. Any other properties and methods in the
- * class specification will available on the prototype.
+ * class specification will be available on the prototype.
  *
  * @interface ReactClassInterface
  * @internal
