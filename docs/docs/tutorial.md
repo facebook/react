@@ -613,7 +613,7 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       type: 'POST',
-      data: comment,
+      data: JSON.stringify(comment),
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
@@ -668,7 +668,7 @@ var CommentBox = React.createClass({
       url: this.props.url,
       dataType: 'json',
       type: 'POST',
-      data: comment,
+      data: JSON.stringify(comment),
       success: function(data) {
         this.setState({data: data});
       }.bind(this),
