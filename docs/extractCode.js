@@ -27,7 +27,8 @@ function main(dest, filenames) {
       codeSample = codeSample.replace('<!--', '//').replace(' -->', '');
       var extracted = codeSample.match(PARTS);
       if (!extracted) {
-        throw new Error('Code sample did not match correct format in ' + filename + ': ' + truncate(codeSample));
+        throw new Error('Code sample did not match correct format in ' +
+          filename + ': ' + truncate(codeSample));
       }
       var codeSampleFilename = extracted[1];
       var codeSampleContent = extracted[2].replace(/\*\*/g, '');

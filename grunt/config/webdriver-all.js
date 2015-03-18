@@ -33,7 +33,8 @@ module.exports = function(props) {
   };
 
   if (grunt.option('debug')) {
-    exports.local.url += (exports.local.url.indexOf('?') === -1 ? '?' : '&') + 'debug=' + grunt.option('debug');
+    exports.local.url += (exports.local.url.indexOf('?') === -1 ? '?' : '&')
+    + 'debug=' + grunt.option('debug');
   }
 
   exports.saucelabs = {
@@ -41,7 +42,8 @@ module.exports = function(props) {
       remote: {
         /* https://github.com/admc/wd/blob/master/README.md#named-parameters */
         user: process.env.SAUCE_USERNAME || 'React',
-        pwd: process.env.SAUCE_ACCESS_KEY || '339d32ca-d594-4570-a3c2-94c50a91919b',
+        pwd: process.env.SAUCE_ACCESS_KEY
+          || '339d32ca-d594-4570-a3c2-94c50a91919b',
         protocol: 'http:',
         hostname: 'ondemand.saucelabs.com',
         port: '80',
@@ -55,7 +57,11 @@ module.exports = function(props) {
     },
     url: exports.local.url,
     onStart: function(browser) {
-      grunt.log.writeln('Starting WebDriver Test. Watch results here: http://saucelabs.com/tests/' + browser.sessionID);
+      grunt.log.writeln(
+        ['Starting WebDriver Test. Watch results here: ',
+        'http://saucelabs.com/tests/',
+        browser.sessionID].join()
+      );
       if (props.onStart) {
         return props.onStart(browser);
       }
@@ -68,38 +74,57 @@ module.exports = function(props) {
   /*eslint-disable camelcase*/
   /* https://saucelabs.com/platforms */
   exports.saucelabs_ios =
-  exports.saucelabs_ios7 = sauceItUp({browserName: 'iphone', version: '7', platform:'OS X 10.9'});
-  exports.saucelabs_ios6_1 = sauceItUp({browserName: 'iphone', version: '6.1', platform:'OS X 10.8'});
-  exports.saucelabs_ios6 = sauceItUp({browserName: 'iphone', version: '6', platform:'OS X 10.8'});
-  exports.saucelabs_ios5_1 = sauceItUp({browserName: 'iphone', version: '5.1', platform:'OS X 10.8'});
-  exports.saucelabs_ios5 = sauceItUp({browserName: 'iphone', version: '5', platform:'OS X 10.6'});
-  exports.saucelabs_ios4 = sauceItUp({browserName: 'iphone', version: '4', platform:'OS X 10.6'});
+  exports.saucelabs_ios7 = sauceItUp({browserName: 'iphone', version: '7',
+    platform:'OS X 10.9'});
+  exports.saucelabs_ios6_1 = sauceItUp({browserName: 'iphone', version: '6.1',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ios6 = sauceItUp({browserName: 'iphone', version: '6',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ios5_1 = sauceItUp({browserName: 'iphone', version: '5.1',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ios5 = sauceItUp({browserName: 'iphone', version: '5',
+    platform:'OS X 10.6'});
+  exports.saucelabs_ios4 = sauceItUp({browserName: 'iphone', version: '4',
+    platform:'OS X 10.6'});
 
   exports.saucelabs_ipad =
-  exports.saucelabs_ipad7 = sauceItUp({browserName: 'ipad', version: '7', platform:'OS X 10.9'});
-  exports.saucelabs_ipad6_1 = sauceItUp({browserName: 'ipad', version: '6.1', platform:'OS X 10.8'});
-  exports.saucelabs_ipad6 = sauceItUp({browserName: 'ipad', version: '6', platform:'OS X 10.8'});
-  exports.saucelabs_ipad5_1 = sauceItUp({browserName: 'ipad', version: '5.1', platform:'OS X 10.8'});
-  exports.saucelabs_ipad5 = sauceItUp({browserName: 'ipad', version: '5', platform:'OS X 10.6'});
-  exports.saucelabs_ipad4 = sauceItUp({browserName: 'ipad', version: '4', platform:'OS X 10.6'});
+  exports.saucelabs_ipad7 = sauceItUp({browserName: 'ipad', version: '7',
+    platform:'OS X 10.9'});
+  exports.saucelabs_ipad6_1 = sauceItUp({browserName: 'ipad', version: '6.1',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ipad6 = sauceItUp({browserName: 'ipad', version: '6',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ipad5_1 = sauceItUp({browserName: 'ipad', version: '5.1',
+    platform:'OS X 10.8'});
+  exports.saucelabs_ipad5 = sauceItUp({browserName: 'ipad', version: '5',
+    platform:'OS X 10.6'});
+  exports.saucelabs_ipad4 = sauceItUp({browserName: 'ipad', version: '4',
+    platform:'OS X 10.6'});
 
-  exports.saucelabs_android = sauceItUp({browserName: 'android', version: '4.0', platform:'Linux'});
-  exports.saucelabs_android_tablet = sauceItUp({browserName: 'android', version: '4.0', platform:'Linux', 'device-type':'tablet'});
+  exports.saucelabs_android = sauceItUp({browserName: 'android', version: '4.0',
+    platform:'Linux'});
+  exports.saucelabs_android_tablet = sauceItUp({browserName: 'android',
+    version: '4.0', platform:'Linux', 'device-type':'tablet'});
 
   exports.saucelabs_safari = sauceItUp({browserName: 'safari'});
   exports.saucelabs_chrome = sauceItUp({browserName: 'chrome'});
   exports.saucelabs_firefox = sauceItUp({browserName: 'firefox'});
 
   exports.saucelabs_ie =
-  exports.saucelabs_ie8 = sauceItUp({browserName: 'internet explorer', version: 8});
-  exports.saucelabs_ie9 = sauceItUp({browserName: 'internet explorer', version: 9});
-  exports.saucelabs_ie10 = sauceItUp({browserName: 'internet explorer', version: 10});
-  exports.saucelabs_ie11 = sauceItUp({browserName: 'internet explorer', version: 11, platform:'Windows 8.1'});
+  exports.saucelabs_ie8 = sauceItUp({browserName: 'internet explorer',
+    version: 8});
+  exports.saucelabs_ie9 = sauceItUp({browserName: 'internet explorer',
+    version: 9});
+  exports.saucelabs_ie10 = sauceItUp({browserName: 'internet explorer',
+    version: 10});
+  exports.saucelabs_ie11 = sauceItUp({browserName: 'internet explorer',
+    version: 11, platform:'Windows 8.1'});
   /*eslint-enable camelcase*/
 
   function sauceItUp(desiredCapabilities) {
     desiredCapabilities.build = exports.saucelabs.desiredCapabilities.build;
-    desiredCapabilities['tunnel-identifier'] = exports.saucelabs.desiredCapabilities['tunnel-identifier'];
+    desiredCapabilities['tunnel-identifier'] =
+      exports.saucelabs.desiredCapabilities['tunnel-identifier'];
     return {
       webdriver: exports.saucelabs.webdriver,
       url: exports.saucelabs.url,
