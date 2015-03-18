@@ -2,6 +2,7 @@
 language: node_js
 node_js:
 - '0.10'
+sudo: false
 cache:
   directories:
   - node_modules
@@ -12,8 +13,8 @@ before_install:
       exit
     }
 script:
+- cat src/utils/__tests__/accumulateInto-test.js
 - |
-    env
     if [ "$TEST_TYPE" = jest ]; then
       node_modules/.bin/jest
     else
