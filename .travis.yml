@@ -13,6 +13,7 @@ before_install:
     }
 script:
 - |
+    env
     if [ "$TEST_TYPE" = jest ]; then
       node_modules/.bin/jest
     else
