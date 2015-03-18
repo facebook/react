@@ -13,8 +13,13 @@ before_install:
       exit
     }
 script:
+- cat src/utils/__tests__/accumulateInto-test.js
 - |
-    grunt $TEST_TYPE
+    if [ "$TEST_TYPE" = jest ]; then
+      node_modules/.bin/jest
+    else
+      grunt $TEST_TYPE
+    fi
 after_script:
 - |
     if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
