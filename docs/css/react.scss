@@ -416,6 +416,12 @@ section.black content {
     border-left: 5px solid #f7ebc6;
   }
 
+  h2 > code {
+    font-size: inherit;
+    line-height: inherit;
+    color: #555;
+    background-color: rgba(0,0,0,0.04);
+  }
 }
 
 /**
