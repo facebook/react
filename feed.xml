@@ -7,6 +7,198 @@
 		<atom:link href="http://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Building The Facebook News Feed With Relay</title>
+				<description>&lt;p&gt;At React.js Conf in January we gave a preview of Relay, a new framework for building data-driven applications in React. In this post we&amp;#39;ll describe the process of creating a Relay application. This post assumes some familiarity with the concepts of Relay and GraphQL, so if you haven&amp;#39;t already we recommend reading &lt;a href=&quot;http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html&quot;&gt;our introductory blog post&lt;/a&gt; or watching &lt;a href=&quot;https://www.youtube.com/watch?v=9sc8Pyc51uU&quot;&gt;the conference talk&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;We&amp;#39;re working hard to prepare GraphQL and Relay for public release. In the meantime, we&amp;#39;ll continue to provide information about what you can expect.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-relay-architecture&quot;&gt;&lt;/a&gt;The Relay Architecture &lt;a class=&quot;hash-link&quot; href=&quot;#the-relay-architecture&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The diagram below shows the main parts of the Relay architecture on the client and the server:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/relay-components/relay-architecture.png&quot; alt=&quot;Relay Architecture&quot; width=&quot;650&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The main pieces are as follows:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Relay Components: React components annotated with declarative data descriptions.&lt;/li&gt;
+&lt;li&gt;Actions: Descriptions of how data should change in response to user actions.&lt;/li&gt;
+&lt;li&gt;Relay Store: A client-side data store that is fully managed by the framework.&lt;/li&gt;
+&lt;li&gt;Server: An HTTP server with GraphQL endpoints (one for reads, one for writes) that respond to GraphQL queries.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This post will focus on &lt;strong&gt;Relay components&lt;/strong&gt; that describe encapsulated units of UI and their data dependencies. These components form the majority of a Relay application.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-relay-application&quot;&gt;&lt;/a&gt;A Relay Application &lt;a class=&quot;hash-link&quot; href=&quot;#a-relay-application&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;To see how components work and can be composed, let&amp;#39;s implement a basic version of the Facebook News Feed in Relay. Our application will have two components: a &lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt; that renders a list of &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; items. We&amp;#39;ll introduce the plain React version of each component first and then convert it to a Relay component. The goal is something like the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/relay-components/sample-newsfeed.png&quot; alt=&quot;Sample News Feed&quot; width=&quot;360&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-ltstorygt-begins&quot;&gt;&lt;/a&gt;The &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; Begins &lt;a class=&quot;hash-link&quot; href=&quot;#the-ltstorygt-begins&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;The first step is a React &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; component that accepts a &lt;code&gt;story&lt;/code&gt; prop with the story&amp;#39;s text and author information. Note that all examples uses ES6 syntax and elide presentation details to focus on the pattern of data access.&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Story.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;View&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Image&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;uri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;author&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;profile_picture&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;uri&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;author&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Text&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Text&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/View&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;whats-the-ltstorygt&quot;&gt;&lt;/a&gt;What&amp;#39;s the &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt;? &lt;a class=&quot;hash-link&quot; href=&quot;#whats-the-ltstorygt&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Relay automates the process of fetching data for components by wrapping existing React components in Relay containers (themselves React components):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Story.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Relay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createContainer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;queries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/* TODO */&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Before adding the GraphQL query, let&amp;#39;s look at the component hierarchy this creates:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/relay-components/relay-containers.png&quot; width=&quot;397&quot; alt=&quot;React Container Data Flow&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a query is defined. In this case we&amp;#39;ll add a GraphQL query for &lt;code&gt;story&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Story.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Relay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createContainer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;queries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;graphql&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;`&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;author&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;profile_picture&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;uri&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Queries use ES6 template literals tagged with the &lt;code&gt;graphql&lt;/code&gt; function. Similar to how JSX transpiles to plain JavaScript objects and function calls, these template literals transpile to plain objects that describe queries. Note that the query&amp;#39;s structure closely matches the object structure that we expected in &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt;&amp;#39;s render function.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;ltstorygts-on-demand&quot;&gt;&lt;/a&gt;&lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt;s on Demand &lt;a class=&quot;hash-link&quot; href=&quot;#ltstorygts-on-demand&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;We can render a Relay component by providing Relay with the component (&lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt;) and the ID of the data (a story ID). Given this information, Relay will first fetch the results of the query and then &lt;code&gt;render()&lt;/code&gt; the component. The value of &lt;code&gt;props.story&lt;/code&gt; will be a plain JavaScript object such as the following:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;author&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;Greg&amp;quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;profile_picture&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;uri&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;https://…&amp;quot;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;text&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&amp;quot;The first Relay blog post is up…&amp;quot;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Relay guarantees that all data required to render a component will be available before it is rendered. This means that &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; does not need to handle a loading state; the &lt;code&gt;story&lt;/code&gt; is &lt;em&gt;guaranteed&lt;/em&gt; to be available before &lt;code&gt;render()&lt;/code&gt; is called. We have found that this invariant simplifies our application code &lt;em&gt;and&lt;/em&gt; improves the user experience. Of course, Relay also has options to delay the fetching of some parts of our queries.&lt;/p&gt;
+
+&lt;p&gt;The diagram below shows how Relay containers make data available to our React components:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/react/img/blog/relay-components/relay-containers-data-flow.png&quot; width=&quot;650&quot; alt=&quot;Relay Container Data Flow&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;ltnewsfeedgt-worthy&quot;&gt;&lt;/a&gt;&lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt; Worthy &lt;a class=&quot;hash-link&quot; href=&quot;#ltnewsfeedgt-worthy&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;Now that the &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; is over we can continue with the &lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt; component. Again, we&amp;#39;ll start with a React version:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// NewsFeed.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NewsFeed&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;stories&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;viewer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;c1&quot;&gt;// `viewer` is the active user&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;View&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;stories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;map&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onClick&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&amp;gt;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;loadMore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()}&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Load&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;More&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/Button&amp;gt;&lt;/span&gt;
+      &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/View&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;loadMore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// TODO: fetch more stories&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NewsFeed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;all-the-news-fit-to-be-relayed&quot;&gt;&lt;/a&gt;All the News Fit to be Relayed &lt;a class=&quot;hash-link&quot; href=&quot;#all-the-news-fit-to-be-relayed&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt; has two new requirements: it composes &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; and requests more data at runtime.&lt;/p&gt;
+
+&lt;p&gt;Just as React views can be nested, Relay queries can compose queries from child components. Composition in GraphQL uses ES6 template literal substitution: &lt;code&gt;${Component.getQuery(&amp;#39;prop&amp;#39;)}&lt;/code&gt;. Pagination can be accomplished with a query parameter, specified with &lt;code&gt;&amp;lt;param&amp;gt;&lt;/code&gt; (as in &lt;code&gt;stories(first: &amp;lt;count&amp;gt;)&lt;/code&gt;):&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// NewsFeed.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NewsFeed&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;nx&quot;&gt;module&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;exports&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;Relay&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;createContainer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;NewsFeed&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;queryParams&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;                             &lt;span class=&quot;cm&quot;&gt;/* default to 3 stories */&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;queries&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;nx&quot;&gt;viewer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;graphql&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;`&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;Viewer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nx&quot;&gt;stories&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;first&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;        &lt;span class=&quot;cm&quot;&gt;/* fetch viewer&amp;#39;s stories */&lt;/span&gt;
+          &lt;span class=&quot;nx&quot;&gt;edges&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;                        &lt;span class=&quot;cm&quot;&gt;/* traverse the graph */&lt;/span&gt;
+            &lt;span class=&quot;nx&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+              &lt;span class=&quot;nx&quot;&gt;$&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Story&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;getQuery&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;story&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt; &lt;span class=&quot;cm&quot;&gt;/* compose child query */&lt;/span&gt;
+            &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+          &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+      &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;err&quot;&gt;`&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Whenever &lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt; is rendered, Relay will recursively expand all the composed queries and fetch them in a single trip to the server. In this case, the &lt;code&gt;text&lt;/code&gt; and &lt;code&gt;author&lt;/code&gt; data will be fetched for each of the 3 story nodes.&lt;/p&gt;
+
+&lt;p&gt;Query parameters are available to components as &lt;code&gt;props.queryParams&lt;/code&gt; and can be modified with &lt;code&gt;props.setQueryParams(nextParams)&lt;/code&gt;. We can use these to implement pagination:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-javascript&quot; data-lang=&quot;javascript&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// NewsFeed.react.js&lt;/span&gt;
+&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;NewsFeed&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+  &lt;span class=&quot;nx&quot;&gt;loadMore&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// read current params&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;queryParams&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;c1&quot;&gt;// update params&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setQueryParams&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
+      &lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;count&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Now when &lt;code&gt;loadMore()&lt;/code&gt; is called, Relay will send a GraphQL request for the additional five stories. When these stories are fetched, the component will re-render with the new stories available in &lt;code&gt;props.viewer.stories&lt;/code&gt; and the updated count reflected in &lt;code&gt;props.queryParams.count&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;br/&gt;&lt;/p&gt;
+&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;in-conclusion&quot;&gt;&lt;/a&gt;In Conclusion &lt;a class=&quot;hash-link&quot; href=&quot;#in-conclusion&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
+&lt;p&gt;These two components form a solid core for our application. With the use of Relay containers and GraphQL queries, we&amp;#39;ve enabled the following benefits:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Automatic and efficient pre-fetching of data for an entire view hierarchy in a single network request.&lt;/li&gt;
+&lt;li&gt;Trivial pagination with automatic optimizations to fetch only the additional items.&lt;/li&gt;
+&lt;li&gt;View composition and reusability, so that &lt;code&gt;&amp;lt;Story&amp;gt;&lt;/code&gt; can be used on its own or within &lt;code&gt;&amp;lt;NewsFeed&amp;gt;&lt;/code&gt;, without any changes to either component.&lt;/li&gt;
+&lt;li&gt;Automatic subscriptions, so that components will re-render if their data changes. Unaffected components will not re-render unnecessarily.&lt;/li&gt;
+&lt;li&gt;Exactly &lt;em&gt;zero&lt;/em&gt; lines of imperative data fetching logic. Relay takes full advantage of React&amp;#39;s declarative component model.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;But Relay has many more tricks up its sleeve. For example, it&amp;#39;s built from the start to handle reads and writes, allowing for features like optimistic client updates with transactional rollback. Relay can also defer fetching select parts of queries, and it uses a local data store to avoid fetching the same data twice. These are all powerful features that we hope to explore in future posts.&lt;/p&gt;
+</description>
+				<pubDate>2015-03-19T00:00:00-07:00</pubDate>
+				<link>http://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</link>
+				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/03/19/building-the-facebook-news-feed-with-relay.html</guid>
+			</item>
+		
+			<item>
 				<title>React v0.13.1</title>
 				<description>&lt;p&gt;It&amp;#39;s been less than a week since we shipped v0.13.0 but it&amp;#39;s time to do another quick release. We just released v0.13.1 which contains bugfixes for a number of small issues.&lt;/p&gt;
 
@@ -931,46 +1123,6 @@ Minified build for production: &lt;a href=&quot;http://fb.me/react-with-addons-0
 				<pubDate>2015-01-27T00:00:00-08:00</pubDate>
 				<link>http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html</link>
 				<guid isPermaLink="true">http://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html</guid>
-			</item>
-		
-			<item>
-				<title>React.js Conf Diversity Scholarship</title>
-				<description>&lt;p&gt;Today I&amp;#39;m really happy to announce the React.js Conf Diversity Scholarship! We believe that a diverse set of viewpoints and opinions is really important to build a thriving community. In an ideal world, every part of the tech community would be made up of people from all walks of life. However the reality is that we must be proactive and make an effort to make sure everybody has a voice. As conference organizers we worked closely with the Diversity Team here at Facebook to set aside 10 tickets and provide a scholarship. 10 tickets may not be many in the grand scheme but we really believe that this will have a positive impact on the discussions we have at the conference.&lt;/p&gt;
-
-&lt;p&gt;I&amp;#39;m really excited about this and I hope you are too! The full announcement is below:&lt;/p&gt;
-
-&lt;hr&gt;
-
-&lt;p&gt;The Diversity Team at Facebook is excited to announce that we are now accepting applications for the React.js Conf scholarship!&lt;/p&gt;
-
-&lt;p&gt;Beginning today, those studying or working in computer science or a related field can apply for an all-expense paid scholarship to attend the React.js Conf at Facebook’s Headquarters in Menlo Park, CA on January 28 &amp;amp; 29, 2015. React opens a world of new possibilities such as server-side rendering, real-time updates, different rendering targets like SVG and canvas. Join us at React.js Conf to shape the future of client-side applications! For more information about the React.js conference, please see the &lt;a href=&quot;http://conf.reactjs.com/&quot;&gt;website&lt;/a&gt; and &lt;a href=&quot;http://facebook.github.io/react/blog/2014/10/27/react-js-conf.html&quot;&gt;previous&lt;/a&gt; &lt;a href=&quot;http://facebook.github.io/react/blog/2014/11/24/react-js-conf-updates.html&quot;&gt;updates&lt;/a&gt; on our blog.&lt;/p&gt;
-
-&lt;p&gt;At Facebook, we believe that anyone anywhere can make a positive impact by developing products to make the world more open and connected to the people and things they care about. Given the current realities of the tech industry and the lack of representation of communities we seek to serve, applicants currently under-represented in Computer Science and related fields are strongly encouraged to apply.
-Facebook will make determinations on scholarship recipients in its sole discretion. Facebook complies with all equal opportunity laws.&lt;/p&gt;
-
-&lt;p&gt;To apply for the scholarship, please visit the Application Page: &lt;a href=&quot;https://www.surveymonkey.com/s/XVJGK6R&quot;&gt;https://www.surveymonkey.com/s/XVJGK6R&lt;/a&gt;&lt;/p&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;award-includes&quot;&gt;&lt;/a&gt;Award Includes &lt;a class=&quot;hash-link&quot; href=&quot;#award-includes&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;Paid registration fee for the React.js Conf January 28 &amp;amp; 29th at Facebook’s Headquarters in Menlo Park, CA&lt;/li&gt;
-&lt;li&gt;Paid travel and lodging expenses&lt;/li&gt;
-&lt;li&gt;Additional $200 meal stipend&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;important-dates&quot;&gt;&lt;/a&gt;Important Dates &lt;a class=&quot;hash-link&quot; href=&quot;#important-dates&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;Monday, January 5, 2015: Applications for the React.js Conf Scholarship must be submitted in full&lt;/li&gt;
-&lt;li&gt;Friday, January 9, 2015: Award recipients will be notified by email of their acceptance&lt;/li&gt;
-&lt;li&gt;Wednesday &amp;amp; Thursday, January 28 &amp;amp; 29, 2015: React.js Conf&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;eligibility&quot;&gt;&lt;/a&gt;Eligibility &lt;a class=&quot;hash-link&quot; href=&quot;#eligibility&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;ul&gt;
-&lt;li&gt;Must currently be studying or working in Computer Science or a related field&lt;/li&gt;
-&lt;li&gt;International applicants are welcome, but you will be responsible for securing your own visa to attend the conference&lt;/li&gt;
-&lt;li&gt;You must be available to attend the full duration of React.js conf on January 28 and 29 at Facebook Headquarters in Menlo Park&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2014-12-19T00:00:00-08:00</pubDate>
-				<link>http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</link>
-				<guid isPermaLink="true">http://facebook.github.io/react/blog/2014/12/19/react-js-conf-diversity-scholarship.html</guid>
 			</item>
 		
 	</channel>
