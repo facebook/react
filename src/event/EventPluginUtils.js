@@ -211,8 +211,7 @@ var EventPluginUtils = {
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
-  injection: injection,
-  useTouchEvents: false
+  injection: injection
 };
 
 module.exports = EventPluginUtils;

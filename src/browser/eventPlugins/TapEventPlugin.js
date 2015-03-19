@@ -56,22 +56,18 @@ function getDistance(coords, nativeEvent) {
   );
 }
 
-var dependencies = [
-  topLevelTypes.topMouseDown,
-  topLevelTypes.topMouseMove,
-  topLevelTypes.topMouseUp
-];
-
-var touchDependencies = [
+var touchEvents = [
   topLevelTypes.topTouchStart,
   topLevelTypes.topTouchCancel,
   topLevelTypes.topTouchEnd,
   topLevelTypes.topTouchMove
 ];
 
-if (EventPluginUtils.useTouchEvents) {
-  dependencies = dependencies.concat(touchDependencies);
-}
+var dependencies = [
+  topLevelTypes.topMouseDown,
+  topLevelTypes.topMouseMove,
+  topLevelTypes.topMouseUp
+].concat(touchEvents);
 
 var eventTypes = {
   touchTap: {
@@ -112,7 +108,7 @@ var TapEventPlugin = {
     // on ios, there is a delay after touch event and synthetic
     // mouse events, so that user can perform double tap
     // solution: ignore mouse events following touchevent within small timeframe
-    if (touchDependencies.indexOf(topLevelType) !== -1) {
+    if (touchEvents.indexOf(topLevelType) !== -1) {
       usedTouch = true;
       usedTouchTime = Date.now();
     } else {
