@@ -157,7 +157,7 @@ var voidElementTags = assign({
   'menuitem': true
 }, omittedCloseTags);
 
-// We accept any tag to be rendered but since this gets injected into abitrary
+// We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
 
@@ -209,6 +209,7 @@ ReactDOMComponent.Mixin = {
    * @internal
    * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {object} context
    * @return {string} The computed markup.
    */
   mountComponent: function(rootID, transaction, context) {
@@ -323,6 +324,14 @@ ReactDOMComponent.Mixin = {
     }
   },
 
+  /**
+   * Receives a next element and updates the component.
+   *
+   * @internal
+   * @param {ReactElement} nextElement
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
+   * @param {object} context
+   */
   receiveComponent: function(nextElement, transaction, context) {
     var prevElement = this._currentElement;
     this._currentElement = nextElement;
