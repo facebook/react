@@ -301,7 +301,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          context
+          assign({}, context, { _svgTextDecendant: this._tag === 'text' })
         );
         ret = mountImages.join('');
       }
@@ -342,7 +342,11 @@ ReactDOMComponent.Mixin = {
   updateComponent: function(transaction, prevElement, nextElement, context) {
     assertValidProps(this, this._currentElement.props);
     this._updateDOMProperties(prevElement.props, transaction);
-    this._updateDOMChildren(prevElement.props, transaction, context);
+    this._updateDOMChildren(
+      prevElement.props,
+      transaction,
+      assign({}, context, { _svgTextDecendant: this._tag === 'text' })
+    );
   },
 
   /**

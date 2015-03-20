@@ -34,8 +34,8 @@ var ReactReconciler = {
    * @final
    * @internal
    */
-  mountComponent: function(internalInstance, rootID, transaction, context, parentTag) {
-    var markup = internalInstance.mountComponent(rootID, transaction, context, parentTag);
+  mountComponent: function(internalInstance, rootID, transaction, context) {
+    var markup = internalInstance.mountComponent(rootID, transaction, context);
     if (__DEV__) {
       ReactElementValidator.checkAndWarnForMutatedProps(
         internalInstance._currentElement

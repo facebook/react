@@ -47,6 +47,6 @@ describe('ReactSVGText', function() {
 
     expect(label.textContent).toEqual('first second');
     expect(children[0].tagName).toEqual('tspan');
-  })
+  });
 
 });

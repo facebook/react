@@ -64,7 +64,7 @@ assign(ReactDOMTextComponent.prototype, {
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, context, parentTag) {
+  mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
     var escapedText = escapeTextContentForBrowser(this._stringText);
 
@@ -76,10 +76,13 @@ assign(ReactDOMTextComponent.prototype, {
     }
 
     // SVG <text> elements use <tspan> rather than <span>
-    var tag   = parentTag === 'text' ? 'tspan' : 'span';
-    var attrs = DOMPropertyOperations.createMarkupForID(rootID);
+    var tag = context._svgTextDecendant ? 'tspan' : 'span';
 
-    return `<${ tag } ${ attrs }>${ escapedText }</${ tag }>`;
+    return (
+      '<' + tag + ' ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+        escapedText +
+      '</' + tag + '>'
+    );
   },
 
   /**
