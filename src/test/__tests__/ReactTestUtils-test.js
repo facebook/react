@@ -208,6 +208,8 @@ describe('ReactTestUtils', function() {
   });
 
   it('should support injected wrapper components as DOM components', function() {
+    var getTestDocument = require('getTestDocument');
+
     var injectedDOMComponents = [
       'button',
       'form',
@@ -216,10 +218,7 @@ describe('ReactTestUtils', function() {
       'input',
       'option',
       'select',
-      'textarea',
-      'html',
-      'head',
-      'body'
+      'textarea'
     ];
 
     injectedDOMComponents.forEach(function(type) {
@@ -229,5 +228,33 @@ describe('ReactTestUtils', function() {
       expect(component.tagName).toBe(type.toUpperCase());
       expect(ReactTestUtils.isDOMComponent(component)).toBe(true);
     });
+
+    // Full-page components (html, head, body) can't be rendered into a div
+    // directly...
+    var Root = React.createClass({
+      render: function() {
+        return (
+          <html ref="html">
+            <head ref="head">
+              <title>hello</title>
+            </head>
+            <body ref="body">
+              hello, world
+            </body>
+          </html>
+        );
+      }
+    });
+
+    var markup = React.renderToString(<Root />);
+    var testDocument = getTestDocument(markup);
+    var component = React.render(<Root />, testDocument);
+
+    expect(component.refs.html.tagName).toBe('HTML');
+    expect(component.refs.head.tagName).toBe('HEAD');
+    expect(component.refs.body.tagName).toBe('BODY');
+    expect(ReactTestUtils.isDOMComponent(component.refs.html)).toBe(true);
+    expect(ReactTestUtils.isDOMComponent(component.refs.head)).toBe(true);
+    expect(ReactTestUtils.isDOMComponent(component.refs.body)).toBe(true);
   });
 });

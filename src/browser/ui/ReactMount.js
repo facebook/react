@@ -32,6 +32,7 @@ var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
 var SEPARATOR = ReactInstanceHandles.SEPARATOR;
@@ -246,8 +247,14 @@ function mountComponentIntoNode(
     container,
     transaction,
     shouldReuseMarkup) {
+  var context = emptyObject;
+  if (__DEV__) {
+    context = {};
+    context[validateDOMNesting.parentTagContextKey] =
+      container.nodeName.toLowerCase();
+  }
   var markup = ReactReconciler.mountComponent(
-    componentInstance, rootID, transaction, emptyObject
+    componentInstance, rootID, transaction, context
   );
   componentInstance._isTopLevel = true;
   ReactMount._mountImageIntoNode(markup, container, shouldReuseMarkup);
