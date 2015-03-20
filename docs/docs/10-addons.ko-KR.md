@@ -14,7 +14,6 @@ next: animation-ko-KR.html
 - [`createFragment`](create-fragment-ko-KR.html)는 외부에서 키가 할당된 자식들의 모음을 만듭니다.
 - [`update`](update-ko-KR.html)는 JavaScript안에서 불변 데이터를 다루기 쉽게하는 헬퍼 함수입니다.
 - [`PureRenderMixin`](pure-render-mixin-ko-KR.html)는 특정 상황에서 성능을 향상시켜 줍니다.
-- (비 추천) [`classSet`](class-name-manipulation-ko-KR.html)는 좀 더 알기 쉽게 DOM `class` 문자열을 다룹니다.
 
 밑에 있는 애드온은 React 개발 (압축되지 않은) 버전에서만 사용가능 합니다.
 

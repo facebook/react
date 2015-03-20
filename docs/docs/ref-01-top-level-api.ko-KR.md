@@ -145,15 +145,6 @@ DOMElement findDOMNode(ReactComponent component)
 `React.PropTypes`는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있는 컴포넌트의 `propTypes` 객체에 들어가는 타입을 가집니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html)를 참고하세요.
 
 
-### React.initializeTouchEvents
-
-```javascript
-initializeTouchEvents(boolean shouldUseTouch)
-```
-
-React의 이벤트 시스템이 모바일 기기의 터치 이벤트를 처리하도록 설정합니다.
-
-
 ### React.Children
 
 `React.Children`은 불투명한 자료 구조인 `this.props.children`를 다룰 수 있는 유틸리티를 제공합니다.
