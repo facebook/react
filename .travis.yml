@@ -49,7 +49,6 @@ matrix:
   fast_finish: true
   allow_failures:
     - env: TEST_TYPE=test:coverage
-    - env: TEST_TYPE=perf:full
     - env: TEST_TYPE=test:webdriver:saucelabs:modern
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie11
     - env: TEST_TYPE=test:webdriver:saucelabs BROWSER_NAME=ie10

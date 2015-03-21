@@ -150,15 +150,6 @@ If this component has been mounted into the DOM, this returns the corresponding 
 `React.PropTypes` includes types that can be used with a component's `propTypes` object to validate props being passed to your components. For more information about `propTypes`, see [Reusable Components](/react/docs/reusable-components.html).
 
 
-### React.initializeTouchEvents
-
-```javascript
-initializeTouchEvents(boolean shouldUseTouch)
-```
-
-Configure React's event system to handle touch events on mobile devices.
-
-
 ### React.Children
 
 `React.Children` provides utilities for dealing with the `this.props.children` opaque data structure.
