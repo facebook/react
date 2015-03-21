@@ -22,7 +22,7 @@ var QuadraticCalculator = React.createClass({
   render: function() {
     var a = this.state.a;
     var b = this.state.b;
-    var c = this.state.c
+    var c = this.state.c;
     var x1 = (-b + Math.sqrt(Math.pow(b, 2) - 4 * a * c)) / (2 * a);
     var x2 = (-b - Math.sqrt(Math.pow(b, 2) - 4 * a * c)) / (2 * a);
     return (
