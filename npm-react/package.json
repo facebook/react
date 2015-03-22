@@ -6,10 +6,9 @@
     "react"
   ],
   "homepage": "https://github.com/facebook/react/tree/master/npm-react",
-  "bugs": "https://github.com/facebook/react/issues?labels=react-core",
+  "bugs": "https://github.com/facebook/react/issues",
   "license": "BSD-3-Clause",
   "files": [
-    "README.md",
     "addons.js",
     "react.js",
     "dist/",
