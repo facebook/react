@@ -38,7 +38,7 @@ When you name your file with `myfile.js.jsx`, `react-rails` will automatically t
 
 ```js
 /** @jsx React.DOM */
-React.renderComponent(<MyComponent/>, document.body)
+React.renderComponent(<MyComponent/>, document.getElementById('example'))
 ```
 
 

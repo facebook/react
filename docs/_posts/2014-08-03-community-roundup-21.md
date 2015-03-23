@@ -16,7 +16,7 @@ React.renderComponent((
       </Route>
     </Route>
   </Routes>
-), document.body);
+), document.getElementById('example'));
 ```
 
 ## Going Big with React
