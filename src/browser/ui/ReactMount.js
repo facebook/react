@@ -844,9 +844,9 @@ var ReactMount = {
         );
 
         var diffIndex = firstDifferenceIndex(markup, rootMarkup);
-        var difference = ' (client) ' +
+        var difference = ' (server) ' +
           markup.substring(diffIndex - 20, diffIndex + 20) +
-          '\n (server) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
+          '\n (client) ' + rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(
           container.nodeType !== DOC_NODE_TYPE,
