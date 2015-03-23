@@ -60,7 +60,7 @@ React.renderComponent(
     <option value="Facebook">Facebook</option>
     <option value="Harvest">Harvest</option>
   </Chosen>
-, document.body);
+, document.getElementById('example'));
 ```
 
 
