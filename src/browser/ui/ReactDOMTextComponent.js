@@ -75,10 +75,13 @@ assign(ReactDOMTextComponent.prototype, {
       return escapedText;
     }
 
+    // SVG <text> elements use <tspan> rather than <span>
+    var tag = context._svgTextDecendant ? 'tspan' : 'span';
+
     return (
-      '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
+      '<' + tag + ' ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
         escapedText +
-      '</span>'
+      '</' + tag + '>'
     );
   },
 
