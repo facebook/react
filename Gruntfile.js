@@ -232,7 +232,6 @@ module.exports = function(grunt) {
   ]);
 
   grunt.registerTask('test:coverage', [
-    'build:test',
     'build:withCodeCoverageLogging',
     'test:webdriver:phantomjs',
     'coverage:parse'
