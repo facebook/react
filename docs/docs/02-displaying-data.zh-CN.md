@@ -104,7 +104,7 @@ JSX 类似于 HTML，但不是完全一样。参考 [JSX 陷阱](/react/docs/jsx
 ```javascript
 var child = React.createElement('li', null, 'Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child);
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 方便起见，你可以创建基于自定义组件的速记工厂方法。
@@ -113,7 +113,7 @@ React.render(root, document.body);
 var Factory = React.createFactory(ComponentClass);
 ...
 var root = Factory({ custom: 'prop' });
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 React 已经为 HTML 标签提供内置工厂方法。

@@ -24,7 +24,7 @@ var root = React.createElement('div');
 To render a new tree into the DOM, you create `ReactElement`s and pass them to `React.render` along with a regular DOM `Element` (`HTMLElement` or `SVGElement`). `ReactElement`s are not to be confused with DOM `Element`s. A `ReactElement` is a light, stateless, immutable, virtual representation of a DOM `Element`. It is a virtual DOM.
 
 ```javascript
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 To add properties to a DOM element, pass a properties object as the second argument and children to the third argument.
@@ -32,7 +32,7 @@ To add properties to a DOM element, pass a properties object as the second argum
 ```javascript
 var child = React.createElement('li', null, 'Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child);
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 If you use React JSX, then these `ReactElement`s are created for you. So this is equivalent:
@@ -41,7 +41,7 @@ If you use React JSX, then these `ReactElement`s are created for you. So this is
 var root = <ul className="my-list">
              <li>Text Content</li>
            </ul>;
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 __Factories__
@@ -59,7 +59,7 @@ It allows you to create a convenient short-hand instead of typing out `React.cre
 ```javascript
 var div = React.createFactory('div');
 var root = div({ className: 'my-div' });
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 React already has built-in factories for common HTML tags:
@@ -122,14 +122,14 @@ var element = <MyComponent />;
 When this is passed to `React.render`, React will call the constructor for you and create a `ReactComponent`, which returned.
 
 ```javascript
-var component = React.render(element, document.body);
+var component = React.render(element, document.getElementById('example'));
 ```
 
 If you keep calling `React.render` with the same type of `ReactElement` and the same container DOM `Element` it always returns the same instance. This instance is stateful.
 
 ```javascript
-var componentA = React.render(<MyComponent />, document.body);
-var componentB = React.render(<MyComponent />, document.body);
+var componentA = React.render(<MyComponent />, document.getElementById('example'));
+var componentB = React.render(<MyComponent />, document.getElementById('example'));
 componentA === componentB; // true
 ```
 
