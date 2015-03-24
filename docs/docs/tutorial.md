@@ -40,7 +40,7 @@ For this tutorial, we'll use prebuilt JavaScript files on a CDN. Open up your fa
     <title>Hello React</title>
     <script src="https://fb.me/react-{{site.react_version}}.js"></script>
     <script src="https://fb.me/JSXTransformer-{{site.react_version}}.js"></script>
-    <script src="https://code.jquery.com/jquery-1.10.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
   </head>
   <body>
     <div id="content"></div>
