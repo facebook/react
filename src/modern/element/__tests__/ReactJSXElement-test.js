@@ -86,37 +86,37 @@ describe('ReactJSXElement', function() {
   });
 
   it('merges JSX children onto the children prop', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var a = 1;
     var element = <Component children="text">{a}</Component>;
     expect(element.props.children).toBe(a);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('does not override children if no JSX children are provided', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var element = <Component children="text" />;
     expect(element.props.children).toBe('text');
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('overrides children if null is provided as a JSX child', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('merges JSX children onto the children prop in an array', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var a = 1, b = 2, c = 3;
     var element = <Component>{a}{b}{c}</Component>;
     expect(element.props.children).toEqual([1, 2, 3]);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('allows static methods to be called using the type property', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     class Component {
       static someStaticMethod() {
@@ -129,7 +129,7 @@ describe('ReactJSXElement', function() {
 
     var element = <Component />;
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('identifies valid elements', function() {

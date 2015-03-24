@@ -396,7 +396,7 @@ describe('traverseAllChildren', function() {
   });
 
   it('should use keys from entry iterables', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var threeDivEntryIterable = {
       '@@iterator': function() {
@@ -448,8 +448,8 @@ describe('traverseAllChildren', function() {
       2
     );
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Warning: Using Maps as children is not yet fully supported. It is an ' +
       'experimental feature that might be removed. Convert it to a sequence ' +
       '/ iterable of keyed ReactElements instead.'

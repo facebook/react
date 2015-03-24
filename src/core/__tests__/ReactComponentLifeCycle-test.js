@@ -239,7 +239,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should not allow update state inside of getInitialState', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var StatefulComponent = React.createClass({
       getInitialState: function() {
         this.setState({stateField: 'something'});
@@ -253,8 +253,8 @@ describe('ReactComponentLifeCycle', function() {
       }
     });
     ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
       'unmounted component. This is a no-op.'
@@ -262,7 +262,7 @@ describe('ReactComponentLifeCycle', function() {
   });
 
   it('should correctly determine if a component is mounted', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var Component = React.createClass({
       componentWillMount: function() {
         expect(this.isMounted()).toBeFalsy();
@@ -281,14 +281,14 @@ describe('ReactComponentLifeCycle', function() {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance.isMounted()).toBeTruthy();
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Component is accessing isMounted inside its render()'
     );
   });
 
   it('warns if findDOMNode is used inside render', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var Component = React.createClass({
       getInitialState: function() {
         return {isMounted: false};
@@ -305,8 +305,8 @@ describe('ReactComponentLifeCycle', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Component />);
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Component is accessing getDOMNode or findDOMNode inside its render()'
     );
   });

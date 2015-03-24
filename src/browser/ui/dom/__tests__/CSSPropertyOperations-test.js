@@ -109,18 +109,18 @@ describe('CSSPropertyOperations', function() {
   });
 
   it('should warn when using hyphenated style names', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     expect(CSSPropertyOperations.createMarkupForStyles({
       'background-color': 'crimson'
     })).toBe('background-color:crimson;');
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain('backgroundColor');
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain('backgroundColor');
   });
 
   it('should warn when updating hyphenated style names', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var root = document.createElement('div');
     var styles = {
@@ -131,13 +131,13 @@ describe('CSSPropertyOperations', function() {
     React.render(<div />, root);
     React.render(<div style={styles} />, root);
 
-    expect(console.warn.argsForCall.length).toBe(2);
-    expect(console.warn.argsForCall[0][0]).toContain('msTransform');
-    expect(console.warn.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain('msTransform');
+    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
   });
 
   it('warns when miscapitalizing vendored style names', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     CSSPropertyOperations.createMarkupForStyles({
       msTransform: 'translate3d(0, 0, 0)',
@@ -146,15 +146,15 @@ describe('CSSPropertyOperations', function() {
     });
 
     // msTransform is correct already and shouldn't warn
-    expect(console.warn.argsForCall.length).toBe(2);
-    expect(console.warn.argsForCall[0][0]).toContain('oTransform');
-    expect(console.warn.argsForCall[0][0]).toContain('OTransform');
-    expect(console.warn.argsForCall[1][0]).toContain('webkitTransform');
-    expect(console.warn.argsForCall[1][0]).toContain('WebkitTransform');
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain('oTransform');
+    expect(console.error.argsForCall[0][0]).toContain('OTransform');
+    expect(console.error.argsForCall[1][0]).toContain('webkitTransform');
+    expect(console.error.argsForCall[1][0]).toContain('WebkitTransform');
   });
 
   it('should warn about style having a trailing semicolon', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     CSSPropertyOperations.createMarkupForStyles({
       fontFamily: 'Helvetica, arial',
@@ -163,8 +163,8 @@ describe('CSSPropertyOperations', function() {
       color: 'red;   '
     });
 
-    expect(console.warn.calls.length).toBe(2);
-    expect(console.warn.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
-    expect(console.warn.argsForCall[1][0]).toContain('Try "color: red" instead');
+    expect(console.error.calls.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toContain('Try "backgroundColor: blue" instead');
+    expect(console.error.argsForCall[1][0]).toContain('Try "color: red" instead');
   });
 });

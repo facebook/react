@@ -129,43 +129,43 @@ describe('ReactElement', function() {
   });
 
   it('merges an additional argument onto the children prop', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var a = 1;
     var element = React.createFactory(ComponentClass)({
       children: 'text'
     }, a);
     expect(element.props.children).toBe(a);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('does not override children if no rest args are provided', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var element = React.createFactory(ComponentClass)({
       children: 'text'
     });
     expect(element.props.children).toBe('text');
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('overrides children if null is provided as an argument', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var element = React.createFactory(ComponentClass)({
       children: 'text'
     }, null);
     expect(element.props.children).toBe(null);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('merges rest arguments onto the children prop in an array', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var a = 1, b = 2, c = 3;
     var element = React.createFactory(ComponentClass)(null, a, b, c);
     expect(element.props.children).toEqual([1, 2, 3]);
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('allows static methods to be called using the type property', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var ComponentClass = React.createClass({
       statics: {
@@ -183,7 +183,7 @@ describe('ReactElement', function() {
 
     var element = React.createElement(ComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('identifies valid elements', function() {
@@ -270,7 +270,7 @@ describe('ReactElement', function() {
   });
 
   it('warns when changing a prop after element creation', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var Outer = React.createClass({
       render: function() {
         var el = <div className="moo" />;
@@ -285,15 +285,15 @@ describe('ReactElement', function() {
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
     expect(React.findDOMNode(outer).className).toBe('quack');
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Don\'t set .props.className of the React component <div />.'
     );
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'The element was created by Outer.'
     );
 
-    console.warn.reset();
+    console.error.reset();
 
     // This also warns (just once per key/type pair)
     outer.props.color = 'green';
@@ -301,14 +301,14 @@ describe('ReactElement', function() {
     outer.props.color = 'purple';
     outer.forceUpdate();
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Don\'t set .props.color of the React component <Outer />.'
     );
   });
 
   it('warns when adding a prop after element creation', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var el = document.createElement('div');
     var Outer = React.createClass({
       getDefaultProps: () => ({sound: 'meow'}),
@@ -327,15 +327,15 @@ describe('ReactElement', function() {
     expect(React.findDOMNode(outer).textContent).toBe('meow');
     expect(React.findDOMNode(outer).className).toBe('quack');
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Don\'t set .props.className of the React component <div />.'
     );
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall[0][0]).toContain(
       'The element was created by Outer.'
     );
 
-    console.warn.reset();
+    console.error.reset();
 
     var newOuterEl = <Outer />;
     newOuterEl.props.sound = 'oink';
@@ -343,14 +343,14 @@ describe('ReactElement', function() {
     expect(React.findDOMNode(outer).textContent).toBe('oink');
     expect(React.findDOMNode(outer).className).toBe('quack');
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Don\'t set .props.sound of the React component <Outer />.'
     );
   });
 
   it('does not warn for NaN props', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var Test = React.createClass({
       render: function() {
         return <div />;
@@ -358,7 +358,7 @@ describe('ReactElement', function() {
     });
     var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
 });

@@ -199,42 +199,42 @@ describe('ReactElementClone', function() {
   });
 
   it('warns for keys for arrays of elements in rest args', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toContain(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toContain(
       'Each child in an array or iterator should have a unique "key" prop.'
     );
   });
 
   it('does not warns for arrays of elements with keys', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     React.cloneElement(<div />, null, <div />, <div />);
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     React.cloneElement(<div />, null, [{}, {}]);
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
   it('should check declared prop types after clone', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var Component = React.createClass({
       propTypes: {
         color: React.PropTypes.string.isRequired
@@ -257,8 +257,8 @@ describe('ReactElementClone', function() {
       }
     });
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toBe(
       'Warning: Failed propType: ' +
       'Invalid prop `color` of type `number` supplied to `Component`, ' +
       'expected `string`. Check the render method of `Parent`.'

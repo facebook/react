@@ -408,7 +408,7 @@ describe('ReactTypeScriptClass', function() {
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
     var warn = jest.genMockFn();
-    console.warn = warn;
+    console.error = warn;
     getInitialStateWasCalled = false;
     test(React.createElement(ClassicProperties), 'SPAN', 'foo');
     expect(getInitialStateWasCalled).toBe(false);
@@ -427,7 +427,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('should warn when mispelling shouldComponentUpdate', function() {
     var warn = jest.genMockFn();
-    console.warn = warn;
+    console.error = warn;
 
     test(React.createElement(NamedComponent), 'SPAN', 'foo');
 
@@ -442,7 +442,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('should throw AND warn when trying to access classic APIs', function() {
     var warn = jest.genMockFn();
-    console.warn = warn;
+    console.error = warn;
     var instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'

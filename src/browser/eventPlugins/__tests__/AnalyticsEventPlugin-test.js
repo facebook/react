@@ -53,7 +53,7 @@ describe('AnalyticsEventPlugin', function() {
       'ChangeEventPlugin': ChangeEventPlugin
     });
 
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
   });
 
   it('should count events correctly', function() {
@@ -107,8 +107,8 @@ describe('AnalyticsEventPlugin', function() {
 
   it('warn on no callback', function() {
     AnalyticsEventPluginFactory.createAnalyticsPlugin(null);
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: createAnalyticsPlugin(...): You must provide a callback.'
     );
   });
@@ -138,8 +138,8 @@ describe('AnalyticsEventPlugin', function() {
 
     ReactTestUtils.SimulateNative.click(renderedComponent.refs.testDiv);
 
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Invalid analyticsEvent:123 for analyticsID:test_invalid_events'
     );
   });

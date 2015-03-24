@@ -113,10 +113,10 @@ describe('ReactDOM', function() {
   });
 
   it('allow React.DOM factories to be called without warnings', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
     var element = React.DOM.div();
     expect(element.type).toBe('div');
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
   });
 
 });

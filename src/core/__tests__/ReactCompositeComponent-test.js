@@ -74,10 +74,10 @@ describe('ReactCompositeComponent', function() {
     // Ignore the first warning which is fired by using withContext at all.
     // That way we don't have to reset and assert it on every subsequent test.
     // This will be killed soon anyway.
-    console.warn = mocks.getMockFunction();
+    console.error = mocks.getMockFunction();
     React.withContext({}, function() { });
 
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
   });
 
   it('should support rendering to different child types over time', function() {
@@ -116,7 +116,7 @@ describe('ReactCompositeComponent', function() {
     container.innerHTML = markup;
 
     React.render(<Parent />, container);
-    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
   });
 
   it('should react to state changes from callbacks', function() {
@@ -191,11 +191,11 @@ describe('ReactCompositeComponent', function() {
       mountedInstance.methodExplicitlyNotBound();
     }).not.toThrow();
 
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
     var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
       mountedInstance
     );
-    expect(console.warn.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall.length).toBe(2);
     var autoBound = mountedInstance.methodAutoBound;
     var explicitlyNotBound = mountedInstance.methodExplicitlyNotBound;
 
@@ -283,13 +283,13 @@ describe('ReactCompositeComponent', function() {
     instance = React.render(instance, container);
     instance.forceUpdate();
 
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
 
     instance.forceUpdate();
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounted or ' +
       'mounting component. This usually means you called forceUpdate() on ' +
       'an unmounted component. This is a no-op.'
@@ -315,12 +315,12 @@ describe('ReactCompositeComponent', function() {
     instance = React.render(instance, container);
     instance.setState({value: 1});
 
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
     instance.setState({value: 2});
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setState(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setState() on an ' +
       'unmounted component. This is a no-op.'
@@ -352,10 +352,10 @@ describe('ReactCompositeComponent', function() {
     var instance = React.render(<Component />, container);
 
     instance.setState({value: 1});
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
     expect(cbCalled).toBe(false);
   });
 
@@ -376,15 +376,15 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       instance.setProps({value: 1});
     }).not.toThrow();
-    expect(console.warn.calls.length).toBe(0);
+    expect(console.error.calls.length).toBe(0);
 
     React.unmountComponentAtNode(container);
     expect(function() {
       instance.setProps({value: 2});
     }).not.toThrow();
 
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: setProps(...): Can only update a mounted or ' +
       'mounting component. This usually means you called setProps() on an ' +
       'unmounted component. This is a no-op.'
@@ -493,8 +493,8 @@ describe('ReactCompositeComponent', function() {
     var instance = ReactTestUtils.renderIntoDocument(<Component />);
     instance.setState({bogus: true});
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Component.shouldComponentUpdate(): Returned undefined instead of a ' +
       'boolean value. Make sure to return true or false.'
     );
@@ -576,8 +576,8 @@ describe('ReactCompositeComponent', function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     });
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `bar` vs `undefined`) for key (foo) ' +
       'while mounting Component (see: http://fb.me/react-context-by-parent)'
@@ -619,8 +619,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -662,7 +662,7 @@ describe('ReactCompositeComponent', function() {
     });
     React.render(<Parent>{componentWithSameContext}</Parent>, div);
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
 
     var componentWithDifferentContext = React.withContext({foo: 'noise'}, function() {
       return <Component />;
@@ -671,8 +671,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -725,8 +725,8 @@ describe('ReactCompositeComponent', function() {
 
     // Two warnings, one for the component and one for the div
     // We may want to make this expect one warning in the future
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: owner-based and parent-based contexts differ ' +
       '(values: `noise` vs `bar`) for key (foo) while mounting Component ' +
       '(see: http://fb.me/react-context-by-parent)'
@@ -820,8 +820,8 @@ describe('ReactCompositeComponent', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Outer />);
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: _renderNewRootComponent(): Render methods should ' +
       'be a pure function of props and state; triggering nested component ' +
       'updates from render is not allowed. If necessary, trigger nested ' +
@@ -930,8 +930,8 @@ describe('ReactCompositeComponent', function() {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
     }).toThrow();  // has no method 'render'
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toContain(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
       'NotAComponent(...): No `render` method found'
     );
   });

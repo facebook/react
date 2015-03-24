@@ -233,7 +233,7 @@ describe('ReactPropTypes', function() {
           return <div>{this.props.label}</div>;
         }
       });
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
     });
 
     it('should support components', () => {
@@ -253,14 +253,14 @@ describe('ReactPropTypes', function() {
       var instance = <Component label={<div />} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.warn.argsForCall.length).toBe(0);
+      expect(console.error.argsForCall.length).toBe(0);
     });
 
     it('should warn when passing no label and isRequired is set', () => {
       var instance = <Component />;
       instance = ReactTestUtils.renderIntoDocument(instance);
 
-      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall.length).toBe(1);
     });
 
     it("should be implicitly optional and not warn without values", function() {
@@ -358,7 +358,7 @@ describe('ReactPropTypes', function() {
     });
 
     it('should not warn for valid values', function() {
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
       typeCheckPass(PropTypes.node, <div />);
       typeCheckPass(PropTypes.node, false);
       typeCheckPass(PropTypes.node, <MyComponent />);
@@ -388,7 +388,7 @@ describe('ReactPropTypes', function() {
         k4: null,
         k5: undefined
       }));
-      expect(console.warn.calls).toEqual([]);
+      expect(console.error.calls).toEqual([]);
 
       // This should also pass, though it warns
       typeCheckPass(PropTypes.node, {
@@ -717,7 +717,7 @@ describe('ReactPropTypes', function() {
   describe('Custom validator', function() {
     beforeEach(function() {
       require('mock-modules').dumpCache();
-      spyOn(console, 'warn');
+      spyOn(console, 'error');
     });
 
     it('should have been called with the right params', function() {
@@ -772,8 +772,8 @@ describe('ReactPropTypes', function() {
 
       var instance = <Component num={6} />;
       instance = ReactTestUtils.renderIntoDocument(instance);
-      expect(console.warn.argsForCall.length).toBe(1);
-      expect(console.warn.argsForCall[0][0]).toBe(
+      expect(console.error.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed propType: num must be 5!');
     });
 
@@ -794,7 +794,7 @@ describe('ReactPropTypes', function() {
 
         var instance = <Component num={5} />;
         instance = ReactTestUtils.renderIntoDocument(instance);
-        expect(console.warn.argsForCall.length).toBe(0);
+        expect(console.error.argsForCall.length).toBe(0);
       }
     );
   });

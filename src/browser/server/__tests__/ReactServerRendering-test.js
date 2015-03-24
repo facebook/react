@@ -48,7 +48,7 @@ describe('ReactServerRendering', function() {
 
     var DOMProperty = require('DOMProperty');
     ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
   });
 
   describe('renderToString', function() {
@@ -219,7 +219,7 @@ describe('ReactServerRendering', function() {
       element.innerHTML = lastMarkup;
       var instance = React.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expect(console.warn.argsForCall.length).toBe(1);
+      expect(console.error.argsForCall.length).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 

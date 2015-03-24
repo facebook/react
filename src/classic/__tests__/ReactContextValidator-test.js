@@ -32,7 +32,7 @@ describe('ReactContextValidator', function() {
     reactComponentExpect = require('reactComponentExpect');
     mocks = require('mocks');
 
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
@@ -145,8 +145,8 @@ describe('ReactContextValidator', function() {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expect(console.warn.argsForCall.length).toBe(1);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Required context `foo` was not specified in `Component`.'
     );
@@ -172,7 +172,7 @@ describe('ReactContextValidator', function() {
     );
 
     // Previous call should not error
-    expect(console.warn.argsForCall.length).toBe(1);
+    expect(console.error.argsForCall.length).toBe(1);
 
     var ComponentInFooNumberContext = React.createClass({
       childContextTypes: {
@@ -192,8 +192,8 @@ describe('ReactContextValidator', function() {
 
     ReactTestUtils.renderIntoDocument(<ComponentInFooNumberContext fooValue={123} />);
 
-    expect(console.warn.argsForCall.length).toBe(2);
-    expect(console.warn.argsForCall[1][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Invalid context `foo` of type `number` supplied ' +
       'to `Component`, expected `string`.' +
@@ -218,20 +218,20 @@ describe('ReactContextValidator', function() {
     });
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    expect(console.warn.argsForCall.length).toBe(2);
-    expect(console.warn.argsForCall[0][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(2);
+    expect(console.error.argsForCall[0][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Required child context `foo` was not specified in `Component`.'
     );
-    expect(console.warn.argsForCall[1][0]).toBe(
+    expect(console.error.argsForCall[1][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Required child context `foo` was not specified in `Component`.'
     );
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expect(console.warn.argsForCall.length).toBe(4);
-    expect(console.warn.argsForCall[3][0]).toBe(
+    expect(console.error.argsForCall.length).toBe(4);
+    expect(console.error.argsForCall[3][0]).toBe(
       'Warning: Failed Context Types: ' +
       'Invalid child context `foo` of type `number` ' +
       'supplied to `Component`, expected `string`.'
@@ -246,7 +246,7 @@ describe('ReactContextValidator', function() {
     );
 
     // Previous calls should not log errors
-    expect(console.warn.argsForCall.length).toBe(4);
+    expect(console.error.argsForCall.length).toBe(4);
   });
 
 });
