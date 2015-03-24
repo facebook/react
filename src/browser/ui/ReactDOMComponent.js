@@ -29,6 +29,7 @@ var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var invariant = require('invariant');
 var isEventSupported = require('isEventSupported');
 var keyOf = require('keyOf');
+var validateDOMNesting = require('validateDOMNesting');
 var warning = require('warning');
 
 var deleteListener = ReactBrowserEventEmitter.deleteListener;
@@ -172,6 +173,15 @@ function validateDangerousTag(tag) {
   }
 }
 
+function processChildContext(context, tagName) {
+  if (__DEV__) {
+    // Pass down our tag name to child components for validation purposes
+    context = assign({}, context);
+    context[validateDOMNesting.parentTagContextKey] = tagName;
+  }
+  return context;
+}
+
 /**
  * Creates a new React class that is idempotent and capable of containing other
  * React components. It accepts event listeners and DOM properties that are
@@ -214,7 +224,18 @@ ReactDOMComponent.Mixin = {
    */
   mountComponent: function(rootID, transaction, context) {
     this._rootNodeID = rootID;
+
     assertValidProps(this, this._currentElement.props);
+    if (__DEV__) {
+      if (context[validateDOMNesting.parentTagContextKey]) {
+        validateDOMNesting(
+          context[validateDOMNesting.parentTagContextKey],
+          this._tag,
+          this._currentElement
+        );
+      }
+    }
+
     var tagOpen = this._createOpenTagMarkupAndPutListeners(transaction);
     var tagContent = this._createContentMarkup(transaction, context);
     if (!tagContent && omittedCloseTags[this._tag]) {
@@ -302,7 +323,7 @@ ReactDOMComponent.Mixin = {
         var mountImages = this.mountChildren(
           childrenToUse,
           transaction,
-          context
+          processChildContext(context, this._tag)
         );
         ret = mountImages.join('');
       }
@@ -351,7 +372,11 @@ ReactDOMComponent.Mixin = {
   updateComponent: function(transaction, prevElement, nextElement, context) {
     assertValidProps(this, this._currentElement.props);
     this._updateDOMProperties(prevElement.props, transaction);
-    this._updateDOMChildren(prevElement.props, transaction, context);
+    this._updateDOMChildren(
+      prevElement.props,
+      transaction,
+      processChildContext(context, this._tag)
+    );
   },
 
   /**

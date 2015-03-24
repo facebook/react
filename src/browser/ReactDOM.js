@@ -84,6 +84,7 @@ var ReactDOM = mapObject({
   h6: 'h6',
   head: 'head',
   header: 'header',
+  hgroup: 'hgroup',
   hr: 'hr',
   html: 'html',
   i: 'i',

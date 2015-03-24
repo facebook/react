@@ -19,6 +19,7 @@ var ReactDOMComponent = require('ReactDOMComponent');
 
 var assign = require('Object.assign');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var validateDOMNesting = require('validateDOMNesting');
 
 /**
  * Text nodes violate a couple assumptions that React makes about components:
@@ -65,6 +66,16 @@ assign(ReactDOMTextComponent.prototype, {
    * @internal
    */
   mountComponent: function(rootID, transaction, context) {
+    if (__DEV__) {
+      if (context[validateDOMNesting.parentTagContextKey]) {
+        validateDOMNesting(
+          context[validateDOMNesting.parentTagContextKey],
+          'span',
+          null
+        );
+      }
+    }
+
     this._rootNodeID = rootID;
     var escapedText = escapeTextContentForBrowser(this._stringText);
 

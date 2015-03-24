@@ -38,6 +38,7 @@ var ReactElement = require('ReactElement');
 var ReactEventListener = require('ReactEventListener');
 var ReactInjection = require('ReactInjection');
 var ReactInstanceHandles = require('ReactInstanceHandles');
+var ReactInstanceMap = require('ReactInstanceMap');
 var ReactMount = require('ReactMount');
 var ReactReconcileTransaction = require('ReactReconcileTransaction');
 var SelectEventPlugin = require('SelectEventPlugin');
@@ -51,12 +52,14 @@ function autoGenerateWrapperClass(type) {
   return ReactClass.createClass({
     tagName: type.toUpperCase(),
     render: function() {
+      // Copy owner down for debugging info
+      var internalInstance = ReactInstanceMap.get(this);
       return new ReactElement(
         type,
-        null,
-        null,
-        null,
-        null,
+        null,  // key
+        null,  // ref
+        internalInstance._currentElement._owner,  // owner
+        null,  // context
         this.props
       );
     }
