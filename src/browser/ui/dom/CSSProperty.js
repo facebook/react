@@ -34,7 +34,8 @@ var isUnitlessNumber = {
   // SVG-related properties
   fillOpacity: true,
   strokeOpacity: true,
-  strokeWidth: true
+  strokeWidth: true,
+  strokeDashoffset: true
 };
 
 /**
