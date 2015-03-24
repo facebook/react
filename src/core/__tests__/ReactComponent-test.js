@@ -266,15 +266,15 @@ describe('ReactComponent', function() {
   });
 
   it('warns when calling getDOMNode', function() {
-    spyOn(console, 'warn');
+    spyOn(console, 'error');
 
     var container = document.createElement('div');
     var instance = React.render(<div />, container);
 
     instance.getDOMNode();
 
-    expect(console.warn.calls.length).toBe(1);
-    expect(console.warn.calls[0].args[0]).toContain(
+    expect(console.error.calls.length).toBe(1);
+    expect(console.error.calls[0].args[0]).toContain(
       'DIV.getDOMNode(...) is deprecated. Please use ' +
       'React.findDOMNode(instance) instead.'
     );
