@@ -14,7 +14,6 @@ next: animation.html
 - [`createFragment`](create-fragment.html), to create a set of externally-keyed children.
 - [`update`](update.html), a helper function that makes dealing with immutable data in JavaScript easier.
 - [`PureRenderMixin`](pure-render-mixin.html), a performance booster under certain situations.
-- (DEPRECATED) [`classSet`](class-name-manipulation.html), for manipulating the DOM `class` string a bit more cleanly.
 
 The add-ons below are in the development (unminified) version of React only:
 
