@@ -50,5 +50,14 @@ describe('Transform Tests', () => {
     });
   });
 
+  it('transforms the "class" tests correctly', () => {
+    test('class', 'class-test');
+
+    test('class', 'class-test2', {
+      'no-super-class': true,
+    });
+
+    test('class', 'class-test3');
+  });
 
 });
