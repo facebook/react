@@ -34,6 +34,9 @@ function test(transformName, testFileName, options) {
 
 describe('Transform Tests', () => {
 
+  it('transforms the "findDOMNode" tests correctly', () => {
+    test('findDOMNode', 'findDOMNode-test');
+  });
 
 
 });
