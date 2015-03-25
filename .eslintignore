@@ -19,4 +19,8 @@ docs/js/
 examples/
 # Ignore built files.
 build/
-
+# react-codemod
+npm-react-codemod/test/
+npm-react-codemod/scripts/
+npm-react-codemod/build/
+npm-react-codemod/node_modules/
