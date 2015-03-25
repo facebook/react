@@ -38,5 +38,17 @@ describe('Transform Tests', () => {
     test('findDOMNode', 'findDOMNode-test');
   });
 
+  it('transforms the "pure-render-mixin" tests correctly', () => {
+    test('pure-render-mixin', 'pure-render-mixin-test');
+
+    test('pure-render-mixin', 'pure-render-mixin-test2');
+
+    test('pure-render-mixin', 'pure-render-mixin-test3');
+
+    test('pure-render-mixin', 'pure-render-mixin-test4', {
+      'mixin-name': 'ReactComponentWithPureRenderMixin',
+    });
+  });
+
 
 });

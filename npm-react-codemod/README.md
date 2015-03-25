@@ -22,6 +22,18 @@ calls.
 
   * `react-codemod findDOMNode <file>`
 
+`pure-render-mixin.js` removes `PureRenderMixin` and inlines
+`shouldComponentUpdate` so that the ES6 class transform can pick up the React
+component and turn it into an ES6 class. NOTE: This currently only works if you
+are using the master version (>0.13.1) of React as it is using
+`React.addons.shallowCompare`
+
+ * `react-codemod pure-render-mixin <file>`
+ * If `--mixin-name=<name>` is specified it will look for the specified name
+   instead of `PureRenderMixin`. Note that it is not possible to use a
+   namespaced name for the mixin. `mixins: [React.addons.PureRenderMixin]` will
+   not currently work.
+
 ### Recast Options
 
 Options to [recast](https://github.com/benjamn/recast)'s printer can be provided
