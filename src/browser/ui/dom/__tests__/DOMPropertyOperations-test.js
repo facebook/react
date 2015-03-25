@@ -89,6 +89,11 @@ describe('DOMPropertyOperations', function() {
         'checked',
         false
       )).toBe('');
+
+      expect(DOMPropertyOperations.createMarkupForProperty(
+        'scoped',
+        true
+      )).toBe('scoped=""');
     });
 
     it('should create markup for booleanish properties', function() {
