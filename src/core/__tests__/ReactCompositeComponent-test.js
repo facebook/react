@@ -20,6 +20,7 @@ var ReactMount;
 var ReactPropTypes;
 var ReactServerRendering;
 var ReactTestUtils;
+var ReactUpdates;
 
 var reactComponentExpect;
 var mocks;
@@ -37,6 +38,7 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils = require('ReactTestUtils');
     ReactMount = require('ReactMount');
     ReactServerRendering = require('ReactServerRendering');
+    ReactUpdates = require('ReactUpdates');
 
     MorphingComponent = React.createClass({
       getInitialState: function() {
@@ -559,6 +561,64 @@ describe('ReactCompositeComponent', function() {
     ReactTestUtils.renderIntoDocument(<Parent />);
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
+  });
+
+  it('should pass context when re-rendered', function() {
+    var parentInstance = null;
+    var childInstance = null;
+
+    var Parent = React.createClass({
+      childContextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
+
+      getChildContext: function() {
+        return {
+          foo: 'bar',
+          depth: 0
+        };
+      },
+
+      getInitialState: function() {
+        return {
+          flag: false
+        }
+      },
+
+      render: function() {
+        var output = <Child />;
+        if (!this.state.flag) {
+          output = <span>Child</span>;
+        }
+        return output;
+      }
+    });
+
+    var Child = React.createClass({
+      contextTypes: {
+        foo: ReactPropTypes.string,
+        depth: ReactPropTypes.number
+      },
+
+      render: function() {
+        childInstance = this;
+        return <span>Child</span>;
+      }
+    });
+
+    parentInstance = ReactTestUtils.renderIntoDocument(<Parent />);
+    expect(childInstance).toBeNull();
+
+    expect(parentInstance.state.flag).toBe(false);
+    ReactUpdates.batchedUpdates(function() {
+        parentInstance.setState({flag: true});
+    });
+    expect(parentInstance.state.flag).toBe(true);
+
+    expect(console.warn.argsForCall.length).toBe(0);
+
+    reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
 
   it('warn if context keys differ', function() {
