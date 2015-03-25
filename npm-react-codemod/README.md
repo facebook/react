@@ -13,7 +13,7 @@ APIs.
 
 ### Included Scripts
 
-`findDOMNode.js` updates `this.getDOMNode()` or `this.refs.foo.getDOMNode()`
+`findDOMNode` updates `this.getDOMNode()` or `this.refs.foo.getDOMNode()`
 calls inside of `React.createClass` components to `React.findDOMNode(foo)`. Note
 that it will only look at code inside of `React.createClass` calls and only
 update calls on the component instance or its refs. You can use this script to
@@ -22,7 +22,7 @@ calls.
 
   * `react-codemod findDOMNode <file>`
 
-`pure-render-mixin.js` removes `PureRenderMixin` and inlines
+`pure-render-mixin` removes `PureRenderMixin` and inlines
 `shouldComponentUpdate` so that the ES6 class transform can pick up the React
 component and turn it into an ES6 class. NOTE: This currently only works if you
 are using the master version (>0.13.1) of React as it is using
@@ -34,7 +34,7 @@ are using the master version (>0.13.1) of React as it is using
    namespaced name for the mixin. `mixins: [React.addons.PureRenderMixin]` will
    not currently work.
 
-`class.js` transforms `React.createClass` calls into ES6 classes.
+`class` transforms `React.createClass` calls into ES6 classes.
 
   * `react-codemod class <file>`
   * If `--no-super-class=true` is specified it will not extend
