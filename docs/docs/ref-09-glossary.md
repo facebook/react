@@ -49,7 +49,7 @@ __Factories__
 A `ReactElement`-factory is simply a function that generates a `ReactElement` with a particular `type` property. React has a built-in helper for you to create factories. It's effectively just:
 
 ```javascript
-function createFactory(type){
+function createFactory(type) {
   return React.createElement.bind(null, type);
 }
 ```
