@@ -1,8 +1,8 @@
 ---
-id: tutorial
+id: tutorial-ja-JP
 title: チュートリアル
-prev: getting-started-ja.html
-next: thinking-in-react-ja.html
+prev: getting-started-ja-JP.html
+next: thinking-in-react-ja-JP.html
 ---
 
 これから、シンプルながらも現実的なコメントボックスを作ってみましょう。ブログにも設置できるようなもので、Disqus や LiveFyre、Facebook comments が採用しているリアルタイムコメントの基本機能を備えたものを想定しています。

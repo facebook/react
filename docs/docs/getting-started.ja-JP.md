@@ -1,8 +1,8 @@
 ---
-id: getting-started-ja
+id: getting-started-ja-JP
 title: 始めてみましょう
-next: tutorial-ja.html
-redirect_from: "docs/index-ja.html"
+next: tutorial-ja-JP.html
+redirect_from: "docs/index-ja-JP.html"
 ---
 
 ## JSFiddle
