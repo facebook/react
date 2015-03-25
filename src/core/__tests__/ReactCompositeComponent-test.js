@@ -616,7 +616,7 @@ describe('ReactCompositeComponent', function() {
     });
     expect(parentInstance.state.flag).toBe(true);
 
-    expect(console.warn.argsForCall.length).toBe(0);
+    expect(console.error.argsForCall.length).toBe(0);
 
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
   });
