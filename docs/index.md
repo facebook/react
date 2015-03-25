@@ -77,6 +77,11 @@ id: home
         Markdown library, to convert the textarea's value in real-time.
       </p>
       <div id="markdownExample"></div>
+      <h4>A Note About Markdown &amp; XSS Attacks</h4>
+      <p>
+        Keep in mind that Markdown's output is not XSS-safe, as it does not
+        process any HTML or JavaScript input; it simply passes it on.
+      </p>
     </div>
   </div>
   <script type="text/javascript" src="js/examples/hello.js"></script>
