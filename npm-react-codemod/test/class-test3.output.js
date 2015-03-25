@@ -3,7 +3,7 @@
 var React = require('React');
 
 // Comment
-module.exports = class __exports extends React.Component {
+module.exports = class extends React.Component {
   constructor(props, context) {
     super(props, context);
 

@@ -338,9 +338,7 @@ function updateReactCreateClassToES6(file, api, options) {
     shouldAddSuperClass
   ) =>
     withComments(j.classDeclaration(
-      // ast-types does not yet support empty class names
-      // See: https://github.com/benjamn/ast-types/pull/102
-      name ? j.identifier(name) : j.identifier('__exports'),
+      name ? j.identifier(name) : null,
       j.classBody(
         [].concat(
           createConstructor(
