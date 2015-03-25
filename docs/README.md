@@ -21,7 +21,7 @@ Once you have RubyGems and installed Bundler (via `gem install bundler`), use it
 ```sh
 $ cd react/docs
 $ bundle install # Might need sudo.
-$ npm install # Might need sudo.
+$ npm install
 ```
 
 ### Instructions
