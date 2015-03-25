@@ -94,9 +94,9 @@
       "/node_modules/",
       "/.module-cache/"
     ],
-    "testPathIgnorePatterns": [
-      "/build/",
-      "/node_modules/"
+    "testPathDirs": [
+      "<rootDir>/src",
+      "<rootDir>/vendor/fbtransform"
     ],
     "unmockedModulePathPatterns": [
       ""
