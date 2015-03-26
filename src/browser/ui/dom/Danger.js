@@ -165,7 +165,10 @@ var Danger = {
       'globally before requiring React when unit testing or use ' +
       'React.renderToString for server rendering.'
     );
-    invariant(markup, 'dangerouslyReplaceNodeWithMarkup(...): Missing markup.');
+    invariant(
+      markup,
+      'dangerouslyReplaceNodeWithMarkup(...): Missing markup.'
+    );
     invariant(
       oldChild.tagName.toLowerCase() !== 'html',
       'dangerouslyReplaceNodeWithMarkup(...): Cannot replace markup of the ' +

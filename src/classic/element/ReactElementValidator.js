@@ -265,7 +265,12 @@ function checkPropTypes(componentName, propTypes, props, location) {
         loggedTypeFailures[error.message] = true;
 
         var addendum = getDeclarationErrorAddendum();
-        warning(false, 'Failed propType: %s%s', error.message, addendum);
+        warning(
+          false,
+          'Failed propType: %s%s',
+          error.message,
+          addendum
+        );
       }
     }
   }
@@ -399,7 +404,8 @@ var ReactElementValidator = {
   createElement: function(type, props, children) {
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(typeof type === 'string' || typeof type === 'function',
+    warning(
+      typeof type === 'string' || typeof type === 'function',
       'React.createElement: type should not be null, undefined, boolean, or ' +
         'number. It should be a string (for DOM elements) or a ReactClass ' +
         '(for composite components).%s',

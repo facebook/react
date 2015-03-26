@@ -94,7 +94,10 @@ var markupWrap = {
  * @return {?array} Markup wrap configuration, if applicable.
  */
 function getMarkupWrap(nodeName) {
-  invariant(!!dummyNode, 'Markup wrapping node not initialized');
+  invariant(
+    !!dummyNode,
+    'Markup wrapping node not initialized'
+  );
   if (!markupWrap.hasOwnProperty(nodeName)) {
     nodeName = '*';
   }

@@ -168,7 +168,11 @@ var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
   if (!hasOwnProperty.call(validatedTagCache, tag)) {
-    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    invariant(
+      VALID_TAG_REGEX.test(tag),
+      'Invalid tag: %s',
+      tag
+    );
     validatedTagCache[tag] = true;
   }
 }
