@@ -52,7 +52,10 @@ function getNodeName(markup) {
  */
 function createNodesFromMarkup(markup, handleScript) {
   var node = dummyNode;
-  invariant(!!dummyNode, 'createNodesFromMarkup dummy not initialized');
+  invariant(
+    !!dummyNode,
+    'createNodesFromMarkup dummy not initialized'
+  );
   var nodeName = getNodeName(markup);
 
   var wrap = nodeName && getMarkupWrap(nodeName);
