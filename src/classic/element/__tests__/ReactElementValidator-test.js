@@ -258,26 +258,32 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('gives a helpful error when passing null or undefined', function() {
+  it('gives a helpful error when passing null, undefined, or boolean', () => {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
-    expect(console.error.calls.length).toBe(2);
+    React.createElement(true);
+    expect(console.error.calls.length).toBe(3);
     expect(console.error.calls[0].args[0]).toBe(
-      'Warning: React.createElement: type should not be null or undefined. ' +
-      'It should be a string (for DOM elements) or a ReactClass (for ' +
-      'composite components).'
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
+      '(for composite components).'
     );
     expect(console.error.calls[1].args[0]).toBe(
-      'Warning: React.createElement: type should not be null or undefined. ' +
-      'It should be a string (for DOM elements) or a ReactClass (for ' +
-      'composite components).'
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
+      '(for composite components).'
+    );
+    expect(console.error.calls[2].args[0]).toBe(
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
+      '(for composite components).'
     );
     React.createElement('div');
-    expect(console.error.calls.length).toBe(2);
+    expect(console.error.calls.length).toBe(3);
   });
 
-  it('includes the owner name when passing null or undefined', function() {
+  it('includes the owner name when passing null, undefined, or boolean', () => {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {
@@ -289,9 +295,9 @@ describe('ReactElementValidator', function() {
     }).toThrow();
     expect(console.error.calls.length).toBe(2);
     expect(console.error.calls[0].args[0]).toBe(
-      'Warning: React.createElement: type should not be null or undefined. ' +
-      'It should be a string (for DOM elements) or a ReactClass (for ' +
-      'composite components). Check the render method of `ParentComp`.'
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
+      '(for composite components). Check the render method of `ParentComp`.'
     );
     expect(console.error.calls[1].args[0]).toBe(
       'Warning: Only functions or strings can be mounted as React components.'
