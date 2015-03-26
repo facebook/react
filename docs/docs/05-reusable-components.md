@@ -26,7 +26,7 @@ React.createClass({
     optionalString: React.PropTypes.string,
 
     // Anything that can be rendered: numbers, strings, elements or an array
-    // containing these types.
+    // (or fragment) containing these types.
     optionalNode: React.PropTypes.node,
 
     // A React element.
