@@ -67,9 +67,9 @@ assign(ReactDOMTextComponent.prototype, {
    */
   mountComponent: function(rootID, transaction, context) {
     if (__DEV__) {
-      if (context[validateDOMNesting.parentTagContextKey]) {
+      if (context[validateDOMNesting.tagStackContextKey]) {
         validateDOMNesting(
-          context[validateDOMNesting.parentTagContextKey],
+          context[validateDOMNesting.tagStackContextKey],
           'span',
           null
         );

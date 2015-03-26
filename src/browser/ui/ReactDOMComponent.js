@@ -177,7 +177,8 @@ function processChildContext(context, tagName) {
   if (__DEV__) {
     // Pass down our tag name to child components for validation purposes
     context = assign({}, context);
-    context[validateDOMNesting.parentTagContextKey] = tagName;
+    var stack = context[validateDOMNesting.tagStackContextKey] || [];
+    context[validateDOMNesting.tagStackContextKey] = stack.concat([tagName]);
   }
   return context;
 }
@@ -227,9 +228,9 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, this._currentElement.props);
     if (__DEV__) {
-      if (context[validateDOMNesting.parentTagContextKey]) {
+      if (context[validateDOMNesting.tagStackContextKey]) {
         validateDOMNesting(
-          context[validateDOMNesting.parentTagContextKey],
+          context[validateDOMNesting.tagStackContextKey],
           this._tag,
           this._currentElement
         );
@@ -318,6 +319,7 @@ ReactDOMComponent.Mixin = {
         CONTENT_TYPES[typeof props.children] ? props.children : null;
       var childrenToUse = contentToUse != null ? null : props.children;
       if (contentToUse != null) {
+        // TODO: Validate that text is allowed as a child of this node
         ret = escapeTextContentForBrowser(contentToUse);
       } else if (childrenToUse != null) {
         var mountImages = this.mountChildren(
