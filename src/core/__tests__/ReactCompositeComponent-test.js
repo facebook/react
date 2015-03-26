@@ -583,7 +583,7 @@ describe('ReactCompositeComponent', function() {
       getInitialState: function() {
         return {
           flag: false
-        }
+        };
       },
 
       render: function() {
