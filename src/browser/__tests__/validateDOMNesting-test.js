@@ -36,7 +36,6 @@ var formattingTags = [
 function isTagStackValid(stack) {
   for (var i = 0; i < stack.length; i++) {
     if (!isTagValidInContext(stack[i], stack.slice(0, i))) {
-      //console.log('invalid', stack[i], stack.slice(0, i));
       return false;
     }
   }
