@@ -111,25 +111,30 @@ h1, h2, h3, h4, h5, h6 {
     text-decoration: none;
   }
 
-  .nav-site {
+  .nav-site-internal {
+    margin: 0 0 0 20px;
+  }
+
+  .nav-site-external {
     float: right;
     margin: 0;
+  }
 
+  .nav-site {
     li {
       margin: 0;
     }
 
     a {
-      padding: 0 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
+      box-sizing: content-box;
+      padding: 0 10px;
       line-height: $navHeight;
       display: inline-block;
       height: $navHeight;
-      color: $mediumTextColor;
+      color: #ddd;
 
       &:hover {
-        color: $lightTextColor;
+        color: #fff;
       }
 
       &.active {
@@ -154,7 +159,8 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   ul {
-    display: inline;
+    display: inline-block;
+    vertical-align: top;
   }
 
   li {
