@@ -176,6 +176,10 @@ if (__DEV__) {
           tag === 'noscript' || tag === 'noframes' || tag === 'style' ||
           tag === 'script' || tag === 'template'
         );
+
+      // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
+      case 'html':
+        return tag === 'head' || tag === 'body';
     }
 
     // Probably in the "in body" parsing mode, so we outlaw only tag combos
@@ -292,9 +296,11 @@ if (__DEV__) {
 
       warning(
         false,
-        'validateDOMNesting(...): <%s> cannot contain a <%s> node.%s',
-        parentTag,
+        'validateDOMNesting(...): <%s> cannot appear as a child of <%s> ' +
+        'in this context (%s).%s',
         childTag,
+        parentTag,
+        parentStack.join(' > '),
         info
       );
     }
