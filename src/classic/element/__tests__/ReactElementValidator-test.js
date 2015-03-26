@@ -258,32 +258,40 @@ describe('ReactElementValidator', function() {
     );
   });
 
-  it('gives a helpful error when passing null, undefined, or boolean', () => {
+  it('gives a helpful error when passing null, undefined, boolean, or number',
+      () => {
     spyOn(console, 'error');
     React.createElement(undefined);
     React.createElement(null);
     React.createElement(true);
-    expect(console.error.calls.length).toBe(3);
+    React.createElement(123);
+    expect(console.error.calls.length).toBe(4);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
-      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
-      '(for composite components).'
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
     );
     expect(console.error.calls[1].args[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
-      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
-      '(for composite components).'
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
     );
     expect(console.error.calls[2].args[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
-      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
-      '(for composite components).'
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
+    );
+    expect(console.error.calls[3].args[0]).toBe(
+      'Warning: React.createElement: type should not be null, undefined, ' +
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components).'
     );
     React.createElement('div');
-    expect(console.error.calls.length).toBe(3);
+    expect(console.error.calls.length).toBe(4);
   });
 
-  it('includes the owner name when passing null, undefined, or boolean', () => {
+  it('includes the owner name when passing null, undefined, boolean, or number',
+      () => {
     spyOn(console, 'error');
     var ParentComp = React.createClass({
       render: function() {
@@ -296,8 +304,9 @@ describe('ReactElementValidator', function() {
     expect(console.error.calls.length).toBe(2);
     expect(console.error.calls[0].args[0]).toBe(
       'Warning: React.createElement: type should not be null, undefined, ' +
-      'or boolean. It should be a string (for DOM elements) or a ReactClass ' +
-      '(for composite components). Check the render method of `ParentComp`.'
+      'boolean, or number. It should be a string (for DOM elements) or a ' +
+      'ReactClass (for composite components). Check the render method of ' +
+      '`ParentComp`.'
     );
     expect(console.error.calls[1].args[0]).toBe(
       'Warning: Only functions or strings can be mounted as React components.'

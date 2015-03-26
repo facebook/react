@@ -211,23 +211,33 @@ describe('ReactJSXElementValidator', function() {
   it('gives a helpful error when passing null, undefined, or boolean', () => {
     var Undefined = undefined;
     var Null = null;
-    var Div = 'div';
     var True = true;
+    var Num = 123;
+    var Div = 'div';
     spyOn(console, 'error');
     <Undefined />;
     <Null />;
     <True />;
-    expect(console.error.calls.length).toBe(3);
+    <Num />;
+    expect(console.error.calls.length).toBe(4);
     expect(console.error.calls[0].args[0]).toContain(
-      'type should not be null, undefined, or boolean. It should be a ' +
-      'string (for DOM elements) or a ReactClass (for composite components).'
+      'type should not be null, undefined, boolean, or number. It should be ' +
+      'a string (for DOM elements) or a ReactClass (for composite components).'
     );
     expect(console.error.calls[1].args[0]).toContain(
-      'type should not be null, undefined, or boolean. It should be a ' +
-      'string (for DOM elements) or a ReactClass (for composite components).'
+      'type should not be null, undefined, boolean, or number. It should be ' +
+      'a string (for DOM elements) or a ReactClass (for composite components).'
+    );
+    expect(console.error.calls[2].args[0]).toContain(
+      'type should not be null, undefined, boolean, or number. It should be ' +
+      'a string (for DOM elements) or a ReactClass (for composite components).'
+    );
+    expect(console.error.calls[3].args[0]).toContain(
+      'type should not be null, undefined, boolean, or number. It should be ' +
+      'a string (for DOM elements) or a ReactClass (for composite components).'
     );
     <Div />;
-    expect(console.error.calls.length).toBe(3);
+    expect(console.error.calls.length).toBe(4);
   });
 
   it('should check default prop values', function() {

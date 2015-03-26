@@ -362,7 +362,7 @@ function checkAndWarnForMutatedProps(element) {
  * @param {ReactElement} element
  */
 function validatePropTypes(element) {
-  if (element.type == null || !(typeof element.type === 'string' ||
+  if (!(typeof element.type === 'string' ||
       typeof element.type === 'function')) {
     // This has already warned. Don't throw.
     return;
@@ -399,10 +399,9 @@ var ReactElementValidator = {
   createElement: function(type, props, children) {
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(
-      type != null && (typeof type === 'string' || typeof type === 'function'),
-      'React.createElement: type should not be null, undefined, or boolean. ' +
-        'It should be a string (for DOM elements) or a ReactClass ' +
+    warning(typeof type === 'string' || typeof type === 'function',
+      'React.createElement: type should not be null, undefined, boolean, or ' +
+        'number. It should be a string (for DOM elements) or a ReactClass ' +
         '(for composite components).%s',
       getDeclarationErrorAddendum()
     );
