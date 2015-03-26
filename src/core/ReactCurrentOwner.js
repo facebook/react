@@ -16,8 +16,6 @@
  *
  * The current owner is the component who should own any components that are
  * currently being constructed.
- *
- * The depth indicate how many composite components are above this render level.
  */
 var ReactCurrentOwner = {
 
