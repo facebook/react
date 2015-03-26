@@ -17,7 +17,7 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node and can power native apps using <a href="http://facebook.github.io/react-native/">React Native</a>.
+        React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node, and it can power native apps using <a href="http://facebook.github.io/react-native/">React Native</a>.
       </p>
     </div>
     <div class="marketing-col">
