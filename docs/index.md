@@ -17,8 +17,7 @@ id: home
     <div class="marketing-col">
       <h3>Virtual DOM</h3>
       <p>
-        React uses a <i>virtual DOM</i> diff implementation for ultra-high performance. It can also
-        render on the server using Node.js &mdash; no heavy browser DOM required.
+        React abstracts away the DOM from you, giving a simpler programming model and better performance. React can also render on the server using Node and can power native apps using <a href="http://facebook.github.io/react-native/">React Native</a>.
       </p>
     </div>
     <div class="marketing-col">
