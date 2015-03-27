@@ -35,7 +35,7 @@
 
       var AnimateDemo = React.createClass({
         getInitialState: function() {
-          return {start: 0};
+          return {current: 0};
         },
 
         componentDidMount: function() {
@@ -47,14 +47,14 @@
         },
 
         tick: function() {
-          this.setState({start: this.state.start + 1});
+          this.setState({current: this.state.current + 1});
         },
 
         render: function() {
           var children = [];
           var pos = 0;
           var colors = ['red', 'gray', 'blue'];
-          for (var i = this.state.start; i < this.state.start + 3; i++) {
+          for (var i = this.state.current; i < this.state.current + 3; i++) {
             var style = {
               left: pos * 128,
               background: colors[i % 3]
