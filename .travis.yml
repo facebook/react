@@ -5,16 +5,43 @@ node_js:
 sudo: false
 cache:
   directories:
+  - docs/vendor/bundle
   - node_modules
 before_install:
 - |
-    git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/' || {
+    if [ "$TEST_TYPE" != build_website ] && \
+      git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
+    then
       echo "Only docs were updated, stopping build process."
       exit
-    }
+    fi
 script:
 - |
-    grunt $TEST_TYPE
+    if [ "$TEST_TYPE" = build_website ]; then
+      if [ "$TRAVIS_BRANCH" = "$REACT_WEBSITE_BRANCH" ] && [ "$TRAVIS_PULL_REQUEST" = false ]; then
+        set -e
+
+        GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
+        echo "machine github.com login reactjs-bot password $GITHUB_TOKEN" >~/.netrc
+
+        git clone --branch gh-pages --depth=50 \
+          https://reactjs-bot@github.com/facebook/react.git \
+          $GH_PAGES_DIR
+        pushd docs
+        bundle install --jobs=3 --retry=3 --path=vendor/bundle
+        bundle exec rake release
+        cd $GH_PAGES_DIR
+        git status
+        if ! git diff-index --quiet HEAD --; then
+          git add -A .
+          git commit -m "Rebuild website"
+          git push
+        fi
+        popd
+      fi
+    else
+      grunt $TEST_TYPE
+    fi
 after_script:
 - |
     if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
@@ -39,12 +66,15 @@ env:
   - TEST_TYPE=test
   - TEST_TYPE=jest
   - TEST_TYPE=lint
+  - TEST_TYPE=build_website
   - TEST_TYPE=test:webdriver:saucelabs:modern
   global:
   # SERVER
   - secure: qPvsJ46XzGrdIuPA70b55xQNGF8jcK7N1LN5CCQYYocXLa+fBrl+fTE77QvehOPhqwJXcj6kOxI+sY0KrVwV7gmq2XY2HZGWUSCxTN0SZlNIzqPA80Y7G/yOjA4PUt8LKgP+8tptyhTAY56qf+hgW8BoLiKOdztYF2p+3zXOLuA=
   # SECRET_TOKEN
   - secure: dkpPW+VnoqC/okhRdV90m36NcyBFhcwEKL3bNFExAwi0dXnFao8RoFlvnwiPlA23h2faROkMIetXlti6Aju08BgUFV+f9aL6vLyU7gUent4Nd3413zf2fwDtXIWIETg6uLnOpSykGKgCAT/hY3Q2oPLqOoY0OxfgnbqwxkxljrE=
+  # GITHUB_TOKEN
+  - secure: EHCyCSKMwKlLHNtcj9nmkRzmiiPE3aDGlPcnEyrDJeRI0SeN/iCXHXfFivR0vFq3vr+9naMBczAR2AEidtps5KbJrKqdZnjPFRbmfVtzWr/LlvVCub3u13Pub6TdKIVBTny1PuZ5X8GvdxMNVig89jGjvzhhWuQRaz3VhJnTra4=
 matrix:
   fast_finish: true
   allow_failures:

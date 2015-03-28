@@ -14,6 +14,8 @@ vendor/jasmine-jsreporter/
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/
+# gems
+docs/vendor/bundle/
 # This should be more like examples/**/thirdparty/** but
 # we should fix https://github.com/facebook/esprima/pull/85 first
 examples/
