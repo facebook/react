@@ -9,11 +9,13 @@ __benchmarks__
 build/
 .module-cache
 *.gem
+docs/.bundle
 docs/code
 docs/_site
 docs/.sass-cache
 docs/js/*
 docs/downloads
+docs/vendor/bundle
 examples/shared/*.js
 test/the-files-to-test.generated.js
 *.log*
