@@ -18,7 +18,6 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
-    copy: require('./grunt/config/copy'),
     jsx: require('./grunt/config/jsx'),
     browserify: require('./grunt/config/browserify'),
     populist: require('./grunt/config/populist')(grunt),
@@ -236,7 +235,6 @@ module.exports = function(grunt) {
     'npm-react:pack',
     'npm-react-tools:release',
     'npm-react-tools:pack',
-    'copy:react_docs',
     'compare_size'
   ]);
 
