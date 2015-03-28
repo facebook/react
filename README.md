@@ -6,7 +6,9 @@ React is a JavaScript library for building user interfaces.
 * **Virtual DOM:** React uses a *virtual DOM* diff implementation for ultra-high performance. It can also render on the server using Node.js — no heavy browser DOM required.
 * **Data flow:** React implements one-way reactive data flow which reduces boilerplate and is easier to reason about than traditional data binding.
 
-[Learn how to use React in your own project.](http://facebook.github.io/react/docs/getting-started.html)
+**NEW**: Check out our newest project [React Native](https://github.com/facebook/react-native), which uses React and JavaScript to create native mobile applications.
+
+[Learn how to use React in your own project.](http://facebook.github.io/react/docs/getting-started.html).
 
 ## Examples
 
