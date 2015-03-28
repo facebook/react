@@ -25,6 +25,7 @@ exclude:
 - Gemfile.lock
 - README.md
 - Rakefile
+- vendor/bundle
 markdown: redcarpet
 redcarpet:
   extensions:

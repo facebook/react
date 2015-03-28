@@ -5,16 +5,32 @@ node_js:
 sudo: false
 cache:
   directories:
+  - docs/vendor/bundle
   - node_modules
 before_install:
 - |
-    git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/' || {
+    if [ "$TEST_TYPE" != build_website ] && \
+      git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
+    then
       echo "Only docs were updated, stopping build process."
       exit
-    }
+    fi
 script:
 - |
-    grunt $TEST_TYPE
+    if [ "$TEST_TYPE" = build_website ]; then
+      GH_PAGES_DIR="$TRAVIS_BUILD_DIR"/../react-gh-pages
+      git clone --branch gh-pages --depth=50 \
+        https://reactjs-bot@github.com/facebook/react.git \
+        $GH_PAGES_DIR
+      cd docs
+      bundle install --jobs=3 --retry=3 --path=vendor/bundle
+      bundle exec rake release
+      cd $GH_PAGES_DIR
+      git status
+      git diff
+    else
+      grunt $TEST_TYPE
+    fi
 after_script:
 - |
     if [ "$TEST_TYPE" = test ] && [ "$SERVER" ]; then
@@ -39,6 +55,7 @@ env:
   - TEST_TYPE=test
   - TEST_TYPE=jest
   - TEST_TYPE=lint
+  - TEST_TYPE=build_website
   - TEST_TYPE=test:webdriver:saucelabs:modern
   global:
   # SERVER
