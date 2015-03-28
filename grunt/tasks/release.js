@@ -111,12 +111,14 @@ function bower() {
 function docs() {
   var done = this.async();
 
+  grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
+  grunt.file.copy('build/react.js', 'docs/js/react.js');
+  grunt.file.copy('build/JSXTransformer.js', 'docs/js/JSXTransformer.js');
+
   var files = grunt.file.expand(GH_PAGES_GLOB);
   files.forEach(function(file) {
     grunt.file.delete(file, {force: true});
   });
-
-  grunt.file.copy('build/react-' + VERSION + '.zip', 'docs/downloads/react-' + VERSION + '.zip');
 
   // Build the docs with `rake release`, which will compile the CSS & JS, then
   // build jekyll into GH_PAGES_PATH
