@@ -37,7 +37,7 @@ script:
         if ! git diff-index --quiet HEAD --; then
           git add -A .
           git commit -m "Rebuild website"
-          git push
+          git push origin gh-pages
         fi
         popd
       fi
