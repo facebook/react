@@ -11,25 +11,25 @@ We open sourced React Native last week and the community reception blew away all
 
 ## When is React Native Android coming?
 
-**Give us 6 months**. At Facebook, we strive to only open source projects that we are using in production. While Android backend for React Native is starting to work (see video below at 37min), it's not shipped to any user yet. There's a lot of work that goes into open sourcing a project and we want to do it right such that you have a great experience when using it.
+**Give us 6 months**. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn't been shipped to any users yet. There's a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.
 
 <iframe width="560" height="315" src="https://www.youtube.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
 
 
 ## Ray Wenderlich - Property Finder
 
-If you are getting started with React Native, you absolutely should [use this tutorial](http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript) from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.
+If you are getting started with React Native, you should absolutely [use this tutorial](http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript) from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.
 
 <center>
 [![](/react/img/blog/property-finder.png)](http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript)
 </center>
 
-Colin also [blogged about his experience using React Native](http://blog.scottlogic.com/2015/03/26/react-native-retrospective.html) for a few weeks and gives his thoughts on why you would or would not use it.
+Colin also [blogged about his experience using React Native](http://blog.scottlogic.com/2015/03/26/react-native-retrospective.html) for a few weeks and gives his thoughts on why you would or wouldn't use it.
 
 
 ## The Changelog
 
-Spencer Ahrens and myself had the great pleasure to talk about React Native on [The Changelog](https://thechangelog.com/149/) podcast. It was really fun to chat for an hour, I hope that you'll enjoy listening to it :)
+Spencer Ahrens and I had the great pleasure to talk about React Native on [The Changelog](https://thechangelog.com/149/) podcast. It was really fun to chat for an hour, I hope that you'll enjoy listening to it. :)
 
 <audio src="http://fdlyr.co/d/changelog/cdn.5by5.tv/audio/broadcasts/changelog/2015/changelog-149.mp3" controls="controls" style="width: 100%"></audio>
 
@@ -45,7 +45,7 @@ Less than 24 hours after React Native was open sourced, Simarpreet Singh built a
 
 ## Parse + React
 
-There's a huge ecosystem of JavaScript modules on npm and React Native was designed to work well with the ones that don't have DOM dependencies. Parse is a great example, you can `npm install parse` on your React Native project and it'll work as is :) We still have [a](https://github.com/facebook/react-native/issues/406) [few](https://github.com/facebook/react-native/issues/370) [issues](https://github.com/facebook/react-native/issues/316) to solve, please create an issue if your favorite library doesn't work out of the box.
+There's a huge ecosystem of JavaScript modules on npm and React Native was designed to work well with the ones that don't have DOM dependencies. Parse is a great example; you can `npm install parse` on your React Native project and it'll work as is. :) We still have [a](https://github.com/facebook/react-native/issues/406) [few](https://github.com/facebook/react-native/issues/370) [issues](https://github.com/facebook/react-native/issues/316) to solve; please create an issue if your favorite library doesn't work out of the box.
 
 <center>
 [![](/react/img/blog/parse-react.jpg)](http://blog.parse.com/2015/03/25/parse-and-react-shared-chemistry/)
@@ -77,7 +77,7 @@ Jay Garcia spent a lot of time during the beta working on a NES music player wit
 
 ## React Native with Babel and Webpack
 
-React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance, we couldn't get those tools to have sub-second reload time on a large codebase.
+React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance – we couldn't get those tools to have sub-second reload time on a large codebase.
 
 Roman Liutikov found a way to [use Webpack and Babel to run on React Native](https://github.com/roman01la/react-native-babel)! In the future, we want to work with those projects to provide cleaner extension mechanisms.
 
