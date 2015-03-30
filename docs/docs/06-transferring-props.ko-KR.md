@@ -41,7 +41,7 @@ React.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 
@@ -78,7 +78,7 @@ React.render(
   <FancyCheckbox checked={true} onClick={console.log.bind(console)}>
     세상아 안녕!
   </FancyCheckbox>,
-  document.body
+  document.getElementById('example')
 );
 ```
 

@@ -132,7 +132,7 @@ boolean isValidElement(* object)
 ```javascript
 DOMElement findDOMNode(ReactComponent component)
 ```
-이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴할 때 `React.findDOMNode()`는 `null`을 리턴합니다.
+이 컴포넌트가 DOM에 마운트된 경우 해당하는 네이티브 브라우저 DOM 엘리먼트를 리턴합니다. 이 메소드는 폼 필드의 값이나 DOM의 크기/위치 등 DOM에서 정보를 읽을 때 유용합니다. `render`가 `null`이나 `false`를 리턴할 때 `findDOMNode()`는 `null`을 리턴합니다.
 
 
 ### React.DOM
@@ -143,15 +143,6 @@ DOMElement findDOMNode(ReactComponent component)
 ### React.PropTypes
 
 `React.PropTypes`는 컴포넌트에 넘어오는 props가 올바른지 검사할 수 있는 컴포넌트의 `propTypes` 객체에 들어가는 타입을 가집니다. `propTypes`에 대한 자세한 정보는 [재사용 가능한 컴포넌트](/react/docs/reusable-components-ko-KR.html)를 참고하세요.
-
-
-### React.initializeTouchEvents
-
-```javascript
-initializeTouchEvents(boolean shouldUseTouch)
-```
-
-React의 이벤트 시스템이 모바일 기기의 터치 이벤트를 처리하도록 설정합니다.
 
 
 ### React.Children

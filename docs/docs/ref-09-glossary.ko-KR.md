@@ -24,7 +24,7 @@ var root = React.createElement('div');
 DOM에 새로운 트리를 렌더링하기 위해서는 `ReactElement`를 만들고 일반적인 DOM `Element` (`HTMLElement` 또는 `SVGElement`)와 함께 `React.render`에 넘깁니다. `ReactElement`를 DOM `Element`와 혼동해서는 안됩니다. `ReactElement`는 가볍고, 상태를 갖지 않으며, 변경 불가능한, DOM `Element`의 가상 표현입니다. 즉 가상 DOM입니다.
 
 ```javascript
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 DOM 엘리먼트에 프로퍼티를 추가하려면 두번째 인자로 프로퍼티 객체를, 세번째 인자로 자식을 넘깁니다.
@@ -32,7 +32,7 @@ DOM 엘리먼트에 프로퍼티를 추가하려면 두번째 인자로 프로�
 ```javascript
 var child = React.createElement('li', null, 'Text Content');
 var root = React.createElement('ul', { className: 'my-list' }, child);
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 React JSX를 사용하면 `ReactElement`가 알아서 만들어집니다. 따라서 다음 코드는 앞의 코드와 같습니다:
@@ -41,7 +41,7 @@ React JSX를 사용하면 `ReactElement`가 알아서 만들어집니다. 따라
 var root = <ul className="my-list">
              <li>Text Content</li>
            </ul>;
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 __팩토리__
@@ -49,7 +49,7 @@ __팩토리__
 `ReactElement` 팩토리는 그저 특정한 `type` 프로퍼티를 가지는 `ReactElement`를 만들어주는 함수입니다. React에는 팩토리를 만드는 헬퍼가 내장되어 있습니다. 그 함수는 사실상 다음과 같습니다:
 
 ```javascript
-function createFactory(type){
+function createFactory(type) {
   return React.createElement.bind(null, type);
 }
 ```
@@ -59,7 +59,7 @@ function createFactory(type){
 ```javascript
 var div = React.createFactory('div');
 var root = div({ className: 'my-div' });
-React.render(root, document.body);
+React.render(root, document.getElementById('example'));
 ```
 
 React에는 이미 보통의 HTML 태그를 위한 팩토리가 내장되어 있습니다:
@@ -122,14 +122,14 @@ var element = <MyComponent />;
 이것이 `React.render`에 넘겨지면 React가 알아서 생성자를 호출하여 `ReactComponent`를 만들고 리턴합니다.
 
 ```javascript
-var component = React.render(element, document.body);
+var component = React.render(element, document.getElementById('example'));
 ```
 
 같은 타입의 `ReactElement`와 같은 컨테이너 DOM `Element`를 가지고 `React.render`를 계속 호출하면 항상 같은 인스턴스를 리턴합니다. 이 인스턴스는 상태를 가집니다.
 
 ```javascript
-var componentA = React.render(<MyComponent />, document.body);
-var componentB = React.render(<MyComponent />, document.body);
+var componentA = React.render(<MyComponent />, document.getElementById('example'));
+var componentB = React.render(<MyComponent />, document.getElementById('example'));
 componentA === componentB; // true
 ```
 
