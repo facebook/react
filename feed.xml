@@ -12,19 +12,19 @@
 
 &lt;blockquote class=&quot;twitter-tweet&quot; lang=&quot;en&quot;&gt;&lt;p&gt;&lt;a href=&quot;https://twitter.com/hashtag/reactnative?src=hash&quot;&gt;#reactnative&lt;/a&gt; is like when you get a new expansion pack, and everybody is running around clueless about which NPC to talk to for the quests&lt;/p&gt;&amp;mdash; Ryan Florence (@ryanflorence) &lt;a href=&quot;https://twitter.com/ryanflorence/status/581810423554543616&quot;&gt;March 28, 2015&lt;/a&gt;&lt;/blockquote&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;when-is-react-native-android-coming&quot;&gt;&lt;/a&gt;When is React Native Android coming? &lt;a class=&quot;hash-link&quot; href=&quot;#when-is-react-native-android-coming&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;&lt;strong&gt;Give us 6 months&lt;/strong&gt;. At Facebook, we strive to only open source projects that we are using in production. While Android backend for React Native is starting to work (see video below at 37min), it&amp;#39;s not shipped to any user yet. There&amp;#39;s a lot of work that goes into open sourcing a project and we want to do it right such that you have a great experience when using it.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Give us 6 months&lt;/strong&gt;. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn&amp;#39;t been shipped to any users yet. There&amp;#39;s a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.&lt;/p&gt;
 
 &lt;iframe width=&quot;560&quot; height=&quot;315&quot; src=&quot;https://www.youtube.com/embed/X6YbAKiLCLU?start=2220&quot; frameborder=&quot;0&quot; allowfullscreen&gt;&lt;/iframe&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;ray-wenderlich---property-finder&quot;&gt;&lt;/a&gt;Ray Wenderlich - Property Finder &lt;a class=&quot;hash-link&quot; href=&quot;#ray-wenderlich---property-finder&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;If you are getting started with React Native, you absolutely should &lt;a href=&quot;http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript&quot;&gt;use this tutorial&lt;/a&gt; from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.&lt;/p&gt;
+&lt;p&gt;If you are getting started with React Native, you should absolutely &lt;a href=&quot;http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript&quot;&gt;use this tutorial&lt;/a&gt; from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.&lt;/p&gt;
 
 &lt;p&gt;&lt;center&gt;
 &lt;a href=&quot;http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript&quot;&gt;&lt;img src=&quot;/react/img/blog/property-finder.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;
 &lt;/center&gt;&lt;/p&gt;
 
-&lt;p&gt;Colin also &lt;a href=&quot;http://blog.scottlogic.com/2015/03/26/react-native-retrospective.html&quot;&gt;blogged about his experience using React Native&lt;/a&gt; for a few weeks and gives his thoughts on why you would or would not use it.&lt;/p&gt;
+&lt;p&gt;Colin also &lt;a href=&quot;http://blog.scottlogic.com/2015/03/26/react-native-retrospective.html&quot;&gt;blogged about his experience using React Native&lt;/a&gt; for a few weeks and gives his thoughts on why you would or wouldn&amp;#39;t use it.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;the-changelog&quot;&gt;&lt;/a&gt;The Changelog &lt;a class=&quot;hash-link&quot; href=&quot;#the-changelog&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;Spencer Ahrens and myself had the great pleasure to talk about React Native on &lt;a href=&quot;https://thechangelog.com/149/&quot;&gt;The Changelog&lt;/a&gt; podcast. It was really fun to chat for an hour, I hope that you&amp;#39;ll enjoy listening to it :)&lt;/p&gt;
+&lt;p&gt;Spencer Ahrens and I had the great pleasure to talk about React Native on &lt;a href=&quot;https://thechangelog.com/149/&quot;&gt;The Changelog&lt;/a&gt; podcast. It was really fun to chat for an hour, I hope that you&amp;#39;ll enjoy listening to it. :)&lt;/p&gt;
 
 &lt;p&gt;&lt;audio src=&quot;http://fdlyr.co/d/changelog/cdn.5by5.tv/audio/broadcasts/changelog/2015/changelog-149.mp3&quot; controls=&quot;controls&quot; style=&quot;width: 100%&quot;&gt;&lt;/audio&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;hacker-news&quot;&gt;&lt;/a&gt;Hacker News &lt;a class=&quot;hash-link&quot; href=&quot;#hacker-news&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
@@ -34,7 +34,7 @@
 &lt;a href=&quot;https://github.com/iSimar/HackerNews-React-Native&quot;&gt;&lt;img src=&quot;/react/img/blog/hacker-news-react-native.png&quot; alt=&quot;&quot;&gt;&lt;/a&gt;
 &lt;/center&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;parse--react&quot;&gt;&lt;/a&gt;Parse + React &lt;a class=&quot;hash-link&quot; href=&quot;#parse--react&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;There&amp;#39;s a huge ecosystem of JavaScript modules on npm and React Native was designed to work well with the ones that don&amp;#39;t have DOM dependencies. Parse is a great example, you can &lt;code&gt;npm install parse&lt;/code&gt; on your React Native project and it&amp;#39;ll work as is :) We still have &lt;a href=&quot;https://github.com/facebook/react-native/issues/406&quot;&gt;a&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react-native/issues/370&quot;&gt;few&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react-native/issues/316&quot;&gt;issues&lt;/a&gt; to solve, please create an issue if your favorite library doesn&amp;#39;t work out of the box.&lt;/p&gt;
+&lt;p&gt;There&amp;#39;s a huge ecosystem of JavaScript modules on npm and React Native was designed to work well with the ones that don&amp;#39;t have DOM dependencies. Parse is a great example; you can &lt;code&gt;npm install parse&lt;/code&gt; on your React Native project and it&amp;#39;ll work as is. :) We still have &lt;a href=&quot;https://github.com/facebook/react-native/issues/406&quot;&gt;a&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react-native/issues/370&quot;&gt;few&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react-native/issues/316&quot;&gt;issues&lt;/a&gt; to solve; please create an issue if your favorite library doesn&amp;#39;t work out of the box.&lt;/p&gt;
 
 &lt;p&gt;&lt;center&gt;
 &lt;a href=&quot;http://blog.parse.com/2015/03/25/parse-and-react-shared-chemistry/&quot;&gt;&lt;img src=&quot;/react/img/blog/parse-react.jpg&quot; alt=&quot;&quot;&gt;&lt;/a&gt;
@@ -54,7 +54,7 @@
 &lt;a href=&quot;http://moduscreate.com/react-native-has-landed/&quot;&gt;&lt;img src=&quot;/react/img/blog/modus-create.gif&quot; alt=&quot;&quot;&gt;&lt;/a&gt;
 &lt;/center&gt;&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;react-native-with-babel-and-webpack&quot;&gt;&lt;/a&gt;React Native with Babel and Webpack &lt;a class=&quot;hash-link&quot; href=&quot;#react-native-with-babel-and-webpack&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
-&lt;p&gt;React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance, we couldn&amp;#39;t get those tools to have sub-second reload time on a large codebase.&lt;/p&gt;
+&lt;p&gt;React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance – we couldn&amp;#39;t get those tools to have sub-second reload time on a large codebase.&lt;/p&gt;
 
 &lt;p&gt;Roman Liutikov found a way to &lt;a href=&quot;https://github.com/roman01la/react-native-babel&quot;&gt;use Webpack and Babel to run on React Native&lt;/a&gt;! In the future, we want to work with those projects to provide cleaner extension mechanisms.&lt;/p&gt;
 &lt;h2&gt;&lt;a class=&quot;anchor&quot; name=&quot;a-dynamic-crazy-native-mobile-futurepowered-by-javascript&quot;&gt;&lt;/a&gt;A Dynamic, Crazy, Native Mobile Future—Powered by JavaScript &lt;a class=&quot;hash-link&quot; href=&quot;#a-dynamic-crazy-native-mobile-futurepowered-by-javascript&quot;&gt;#&lt;/a&gt;&lt;/h2&gt;
