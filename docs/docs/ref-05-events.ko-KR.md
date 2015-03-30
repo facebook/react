@@ -140,9 +140,6 @@ boolean shiftKey
 
 ### 터치 이벤트
 
-터치 이벤트를 활성화 하려면, 컴포넌트를 렌더하기 전에
-`React.initializeTouchEvents(true)`를 호출하세요.
-
 이벤트 이름:
 
 ```
