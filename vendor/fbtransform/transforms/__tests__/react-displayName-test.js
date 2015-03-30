@@ -88,6 +88,47 @@ describe('react displayName jsx', function() {
 
   it('should inject displayName in property assignment', () => {
     var code = [
+      'ns.Component = React.createClass({',
+      '  render: function() {',
+      '    return null;',
+      '  }',
+      '});'
+    ].join('\n');
+
+    var result = [
+      'ns.Component = React.createClass({displayName: "ns.Component",',
+      '  render: function() {',
+      '    return null;',
+      '  }',
+      '});'
+    ].join('\n');
+
+    expect(transform(code).code).toEqual(result);
+  });
+
+  it('should inject displayName in chained property assignment', () => {
+    var code = [
+      'ns.ns1.Component = React.createClass({',
+      '  render: function() {',
+      '    return null;',
+      '  }',
+      '});'
+    ].join('\n');
+
+    var result = [
+      'ns.ns1.Component = React.createClass({displayName: "ns.ns1.Component",',
+      '  render: function() {',
+      '    return null;',
+      '  }',
+      '});'
+    ].join('\n');
+
+    expect(transform(code).code).toEqual(result);
+  });
+
+
+  it('should inject displayName in exports property assignment', () => {
+    var code = [
       'exports.Component = React.createClass({',
       '  render: function() {',
       '    return null;',
