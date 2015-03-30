@@ -15,7 +15,7 @@ require('mock-modules').autoMockOff();
 var transformAll = require('../../syntax.js').transformAll;
 
 function transform(source) {
-  return transformAll(source, {}, ['allocate']);
+  return transformAll(source, {}, ['sourcemeta']);
 }
 
 describe('react displayName jsx', function() {

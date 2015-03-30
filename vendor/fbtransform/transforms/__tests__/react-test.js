@@ -22,7 +22,7 @@ describe('react jsx', function() {
     return transformAll(
       code,
       options,
-      (excludes || []).concat(['sourcemeta', 'allocate'])
+      (excludes || []).concat(['sourcemeta'])
     );
   };
 

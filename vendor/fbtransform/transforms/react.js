@@ -6,14 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  */
-/*global exports:true*/
 'use strict';
+
+/*global exports:true*/
 
 var Syntax = require('jstransform').Syntax;
 var utils = require('jstransform/src/utils');
 
-var renderJSXExpressionContainer =
-  require('./jsx').renderJSXExpressionContainer;
+var renderJSXExpressionContainer = require('./jsx').renderJSXExpressionContainer;
 var renderJSXLiteral = require('./jsx').renderJSXLiteral;
 var quoteAttrName = require('./jsx').quoteAttrName;
 
@@ -163,7 +163,6 @@ function visitReactTag(traverse, object, path, state) {
     utils.catchup(attr.range[1], state, trimLeft);
 
     previousWasSpread = false;
-
   });
 
   if (!openingElement.selfClosing) {
