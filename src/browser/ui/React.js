@@ -140,7 +140,7 @@ if (__DEV__) {
       Object.freeze
     ];
 
-    for (var i = 0; i < expectedFeatures.length; i++) {
+    for (var i = 0, l = expectedFeatures.length; i < l; i++) {
       if (!expectedFeatures[i]) {
         console.error(
           'One or more ES5 shim/shams expected by React are not available: ' +

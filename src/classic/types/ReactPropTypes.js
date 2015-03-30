@@ -144,7 +144,7 @@ function createArrayOfTypeChecker(typeChecker) {
         `\`${propType}\` supplied to \`${componentName}\`, expected an array.`
       );
     }
-    for (var i = 0; i < propValue.length; i++) {
+    for (var i = 0, l = propValue.length; i < l; i++) {
       var error = typeChecker(propValue, i, componentName, location);
       if (error instanceof Error) {
         return error;
@@ -187,7 +187,7 @@ function createInstanceTypeChecker(expectedClass) {
 function createEnumTypeChecker(expectedValues) {
   function validate(props, propName, componentName, location) {
     var propValue = props[propName];
-    for (var i = 0; i < expectedValues.length; i++) {
+    for (var i = 0, l = expectedValues.length; i < l; i++) {
       if (propValue === expectedValues[i]) {
         return null;
       }
@@ -229,7 +229,7 @@ function createObjectOfTypeChecker(typeChecker) {
 
 function createUnionTypeChecker(arrayOfTypeCheckers) {
   function validate(props, propName, componentName, location) {
-    for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
+    for (var i = 0, l = arrayOfTypeCheckers.length; i < l; i++) {
       var checker = arrayOfTypeCheckers[i];
       if (checker(props, propName, componentName, location) == null) {
         return null;

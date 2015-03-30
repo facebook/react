@@ -25,7 +25,7 @@ var frag = ReactFragment.create;
 
 // Helpers
 var testAllPermutations = function(testCases) {
-  for (var i = 0; i < testCases.length; i += 2) {
+  for (var i = 0, l = testCases.length; i < l; i += 2) {
     var renderWithChildren = testCases[i];
     var expectedResultAfterRender = testCases[i + 1];
 
@@ -67,7 +67,7 @@ var expectChildren = function(d, children) {
   } else {
     expect(React.findDOMNode(d).childNodes.length).toBe(children.length);
 
-    for (var i = 0; i < children.length; i++) {
+    for (var i = 0, l = children.length; i < l; i++) {
       var child = children[i];
 
       if (typeof child === 'string') {

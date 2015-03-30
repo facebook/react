@@ -321,7 +321,7 @@ var RESERVED_SPEC_KEYS = {
   },
   mixins: function(Constructor, mixins) {
     if (mixins) {
-      for (var i = 0; i < mixins.length; i++) {
+      for (var i = 0, l = mixins.length; i < l; i++) {
         mixSpecIntoComponent(Constructor, mixins[i]);
       }
     }

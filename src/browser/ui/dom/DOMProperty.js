@@ -255,7 +255,7 @@ var DOMProperty = {
    * @method
    */
   isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
+    for (var i = 0, l = DOMProperty._isCustomAttributeFunctions.length; i < l; i++) {
       var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
       if (isCustomAttributeFn(attributeName)) {
         return true;

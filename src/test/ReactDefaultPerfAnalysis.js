@@ -32,7 +32,7 @@ function getTotalTime(measurements) {
   // TODO: log total time of each reconcile and the top-level component
   // class that triggered it.
   var totalTime = 0;
-  for (var i = 0; i < measurements.length; i++) {
+  for (var i = 0, l = measurements.length; i < l; i++) {
     var measurement = measurements[i];
     totalTime += measurement.totalTime;
   }
@@ -41,7 +41,7 @@ function getTotalTime(measurements) {
 
 function getDOMSummary(measurements) {
   var items = [];
-  for (var i = 0; i < measurements.length; i++) {
+  for (var i = 0, l = measurements.length; i < l; i++) {
     var measurement = measurements[i];
     var id;
 
@@ -62,7 +62,7 @@ function getExclusiveSummary(measurements) {
   var candidates = {};
   var displayName;
 
-  for (var i = 0; i < measurements.length; i++) {
+  for (var i = 0, l = measurements.length; i < l; i++) {
     var measurement = measurements[i];
     var allIDs = assign(
       {},
@@ -114,7 +114,7 @@ function getInclusiveSummary(measurements, onlyClean) {
   var candidates = {};
   var inclusiveKey;
 
-  for (var i = 0; i < measurements.length; i++) {
+  for (var i = 0, l = measurements.length; i < l; i++) {
     var measurement = measurements[i];
     var allIDs = assign(
       {},
@@ -181,7 +181,7 @@ function getUnchangedComponents(measurement) {
     var isDirty = false;
     // For each component that rendered, see if a component that triggered
     // a DOM op is in its subtree.
-    for (var i = 0; i < dirtyLeafIDs.length; i++) {
+    for (var i = 0, l = dirtyLeafIDs.length; i < l; i++) {
       if (dirtyLeafIDs[i].indexOf(id) === 0) {
         isDirty = true;
         break;
