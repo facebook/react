@@ -115,8 +115,7 @@ function getNextDescendantID(ancestorID, destinationID) {
   // Skip over the ancestor and the immediate separator. Traverse until we hit
   // another separator or we reach the end of `destinationID`.
   var start = ancestorID.length + SEPARATOR_LENGTH;
-  var i;
-  for (i = start; i < destinationID.length; i++) {
+  for (var i = start; i < destinationID.length; i++) {
     if (isBoundary(destinationID, i)) {
       break;
     }
@@ -292,6 +291,16 @@ var ReactInstanceHandles = {
     if (targetID) {
       traverseParentPath('', targetID, cb, arg, true, false);
       traverseParentPath(targetID, '', cb, arg, false, true);
+    }
+  },
+
+  /**
+   * Same as `traverseTwoPhase` but skips the `targetID`.
+   */
+  traverseTwoPhaseSkipTarget: function(targetID, cb, arg) {
+    if (targetID) {
+      traverseParentPath('', targetID, cb, arg, true, true);
+      traverseParentPath(targetID, '', cb, arg, true, true);
     }
   },
 

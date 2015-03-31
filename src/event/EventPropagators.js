@@ -14,8 +14,6 @@
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 
-var warning = require('warning');
-
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 
@@ -40,10 +38,9 @@ function listenerAtPhase(id, event, propagationPhase) {
  */
 function accumulateDirectionalDispatches(domID, upwards, event) {
   if (__DEV__) {
-    warning(
-      domID,
-      'Dispatching id must not be null'
-    );
+    if (!domID) {
+      throw new Error('Dispatching id must not be null');
+    }
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
   var listener = listenerAtPhase(domID, event, phase);
@@ -64,6 +61,19 @@ function accumulateDirectionalDispatches(domID, upwards, event) {
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     EventPluginHub.injection.getInstanceHandle().traverseTwoPhase(
+      event.dispatchMarker,
+      accumulateDirectionalDispatches,
+      event
+    );
+  }
+}
+
+/**
+ * Same as `accumulateTwoPhaseDispatchesSingle`, but skips over the targetID.
+ */
+function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
+  if (event && event.dispatchConfig.phasedRegistrationNames) {
+    EventPluginHub.injection.getInstanceHandle().traverseTwoPhaseSkipTarget(
       event.dispatchMarker,
       accumulateDirectionalDispatches,
       event
@@ -104,6 +114,10 @@ function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
+function accumulateTwoPhaseDispatchesSkipTarget(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
+}
+
 function accumulateEnterLeaveDispatches(leave, enter, fromID, toID) {
   EventPluginHub.injection.getInstanceHandle().traverseEnterLeave(
     fromID,
@@ -134,6 +148,7 @@ function accumulateDirectDispatches(events) {
  */
 var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
+  accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
   accumulateDirectDispatches: accumulateDirectDispatches,
   accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches
 };
