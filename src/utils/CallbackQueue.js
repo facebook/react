@@ -64,7 +64,7 @@ assign(CallbackQueue.prototype, {
       );
       this._callbacks = null;
       this._contexts = null;
-      for (var i = 0, l = callbacks.length; i < l; i++) {
+      for (var i = 0; i < callbacks.length; i++) {
         callbacks[i].call(contexts[i]);
       }
       callbacks.length = 0;

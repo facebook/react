@@ -74,7 +74,7 @@ function handleTopLevelImpl(bookKeeping) {
     ancestor = findParent(ancestor);
   }
 
-  for (var i = 0, l = bookKeeping.ancestors.length; i < l; i++) {
+  for (var i = 0; i < bookKeeping.ancestors.length; i++) {
     topLevelTarget = bookKeeping.ancestors[i];
     var topLevelTargetID = ReactMount.getID(topLevelTarget) || '';
     ReactEventListener._handleTopLevel(
