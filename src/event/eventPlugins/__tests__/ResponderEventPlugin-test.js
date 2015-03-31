@@ -11,12 +11,9 @@
 
 'use strict';
 
-jest.autoMockOff();
-
 var EventPluginHub;
 var EventConstants;
 var EventPropagators;
-var NodeHandle;
 var ReactInstanceHandles;
 var ResponderEventPlugin;
 var SyntheticEvent;
@@ -29,8 +26,6 @@ var CHILD_ID2 = '.0.0.1';
 
 var topLevelTypes;
 var responderEventTypes;
-
-var eachKeyVal = require('eachKeyVal');
 
 var touch = function(nodeHandle, i) {
   return {target: nodeHandle, identifier: i};
@@ -92,7 +87,7 @@ var _touchConfig =
       changedTouchObjects
     ),
     topLevelType: topType,
-    target: targetNodeHandle,  // Because of our injected `NodeHandle` impl.
+    target: targetNodeHandle,
     targetID: targetNodeHandle,
   };
 };
@@ -240,7 +235,8 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
       EventPluginHub.putListener(id, registrationName, handler);
     }
   };
-  eachKeyVal(eventTestConfig, function(eventName, oneEventTypeTestConfig) {
+  for (var eventName in eventTestConfig) {
+    var oneEventTypeTestConfig = eventTestConfig[eventName];
     var hasTwoPhase = !!oneEventTypeTestConfig.bubbled;
     if (hasTwoPhase) {
       registerOneEventType(
@@ -257,7 +253,7 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
         oneEventTypeTestConfig
       );
     }
-  });
+  }
   return runs;
 };
 
@@ -321,36 +317,25 @@ var siblings = {
 
 describe('ResponderEventPlugin', function() {
   beforeEach(function() {
-    jest.resetModuleRegistry();
+    require('mock-modules').dumpCache();
 
     EventConstants = require('EventConstants');
     EventPluginHub = require('EventPluginHub');
     EventPluginUtils = require('EventPluginUtils');
     EventPropagators = require('EventPropagators');
-    NodeHandle = require('NodeHandle');
     ReactInstanceHandles = require('ReactInstanceHandles');
     ResponderEventPlugin = require('ResponderEventPlugin');
     SyntheticEvent = require('SyntheticEvent');
 
     EventPluginHub.injection.injectInstanceHandle(ReactInstanceHandles);
 
-    // dumpCache, in open-source tests, only resets existing mocks. It does not
-    // reset module-state though -- so we need to do this explicitly in the test
-    // for now. Once that's no longer the case, we can delete this line.
-    EventPluginHub.__purge();
     // Only needed because SyntheticEvent supports the `currentTarget`
     // property.
     EventPluginUtils.injection.injectMount({
       getNode: function(id) {
-        return id + '_thisDoesntReallyMatterForThisTestCase';
-      }
-    });
-
-    // Raw event stream event `.target`s must be `NodeHandle`s. For these test
-    // cases, we'll assume that we create the node handles as the exact IDs
-    // they represent.
-    NodeHandle.injection.injectImplementation({
-      getRootNodeID: function(nodeHandle) {
+        return id;
+      },
+      getID: function(nodeHandle) {
         return nodeHandle;
       }
     });

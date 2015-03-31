@@ -14,7 +14,6 @@
 var EventConstants = require('EventConstants');
 var EventPluginUtils = require('EventPluginUtils');
 var EventPropagators = require('EventPropagators');
-var NodeHandle = require('NodeHandle');
 var ReactInstanceHandles = require('ReactInstanceHandles');
 var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
@@ -133,7 +132,7 @@ var eventTypes = {
  * ----------------
  *
  * - A global, solitary "interaction lock" on a view.
- * - If a `NodeHandle` becomes the responder, it should convey visual feedback
+ * - If a node becomes the responder, it should convey visual feedback
  *   immediately to indicate so, either by highlighting or moving accordingly.
  * - To be the responder means, that touches are exclusively important to that
  *   responder view, and no other view.
@@ -337,7 +336,7 @@ function setResponderAndExtractTransfer(
   // TODO: stop one short of the the current responder.
   var bubbleShouldSetFrom = !responderID ?
     topLevelTargetID :
-    ReactInstanceHandles._getFirstCommonAncestorID(responderID, topLevelTargetID);
+    ReactInstanceHandles.getFirstCommonAncestorID(responderID, topLevelTargetID);
 
   // When capturing/bubbling the "shouldSet" event, we want to skip the target
   // (deepest ID) if it happens to be the current responder. The reasoning:
@@ -450,12 +449,12 @@ function noResponderTouches(nativeEvent) {
     var target = activeTouch.target;
     if (target !== null && target !== undefined && target !== 0) {
       // Is the original touch location inside of the current responder?
-      var commonAncestor =
-        ReactInstanceHandles._getFirstCommonAncestorID(
+      var isAncestor =
+        ReactInstanceHandles.isAncestorIDOf(
           responderID,
-          NodeHandle.getRootNodeID(target)
+          EventPluginUtils.getID(target)
         );
-      if (commonAncestor === responderID) {
+      if (isAncestor) {
         return false;
       }
     }
@@ -585,7 +584,7 @@ var ResponderEventPlugin = {
      */
     injectGlobalInteractionHandler: function(GlobalInteractionHandler) {
       ResponderEventPlugin.GlobalInteractionHandler = GlobalInteractionHandler;
-    },
+    }
   }
 };
 

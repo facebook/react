@@ -14,6 +14,8 @@
 var EventConstants = require('EventConstants');
 var EventPluginHub = require('EventPluginHub');
 
+var warning = require('warning');
+
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
 
@@ -38,9 +40,10 @@ function listenerAtPhase(id, event, propagationPhase) {
  */
 function accumulateDirectionalDispatches(domID, upwards, event) {
   if (__DEV__) {
-    if (!domID) {
-      throw new Error('Dispatching id must not be null');
-    }
+    warning(
+      domID,
+      'Dispatching id must not be null'
+    );
   }
   var phase = upwards ? PropagationPhases.bubbled : PropagationPhases.captured;
   var listener = listenerAtPhase(domID, event, phase);

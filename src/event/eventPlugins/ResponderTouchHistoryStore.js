@@ -9,7 +9,7 @@
  * @providesModule ResponderTouchHistoryStore
  */
 
-"use strict";
+'use strict';
 
 var EventPluginUtils = require('EventPluginUtils');
 
@@ -43,7 +43,7 @@ var touchHistory = {
   // us having to loop through all of the touches all the time in the most
   // common case.
   indexOfSingleActiveTouch: -1,
-  mostRecentTimeStamp: 0,
+  mostRecentTimeStamp: 0
 };
 
 var timestampForTouch = function(touch) {
@@ -69,7 +69,7 @@ var initializeTouchData = function(touch) {
     currentTimeStamp: timestampForTouch(touch),
     previousPageX: touch.pageX,
     previousPageY: touch.pageY,
-    previousTimeStamp: timestampForTouch(touch),
+    previousTimeStamp: timestampForTouch(touch)
   };
 };
 
@@ -178,7 +178,7 @@ var ResponderTouchHistoryStore = {
     }
   },
 
-  touchHistory: touchHistory,
+  touchHistory: touchHistory
 };
 
 

@@ -408,7 +408,7 @@ describe('ReactInstanceHandles', function() {
       var i;
       for (i = 0; i < ancestors.length; i++) {
         var plan = ancestors[i];
-        var firstCommon = ReactInstanceHandles._getFirstCommonAncestorID(
+        var firstCommon = ReactInstanceHandles.getFirstCommonAncestorID(
           getNodeID(plan.one),
           getNodeID(plan.two)
         );

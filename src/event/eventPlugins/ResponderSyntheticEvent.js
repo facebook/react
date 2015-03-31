@@ -10,7 +10,7 @@
  * @typechecks static-only
  */
 
-"use strict";
+'use strict';
 
 var SyntheticEvent = require('SyntheticEvent');
 
@@ -22,7 +22,7 @@ var SyntheticEvent = require('SyntheticEvent');
 var ResponderEventInterface = {
   touchHistory: function(nativeEvent) {
     return null; // Actually doesn't even look at the native event.
-  },
+  }
 };
 
 /**

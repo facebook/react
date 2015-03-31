@@ -30,9 +30,9 @@ var injection = {
     injection.Mount = InjectedMount;
     if (__DEV__) {
       warning(
-        InjectedMount && InjectedMount.getNode,
+        InjectedMount && InjectedMount.getNode && InjectedMount.getID,
         'EventPluginUtils.injection.injectMount(...): Injected Mount ' +
-        'module is missing getNode.'
+        'module is missing getNode or getID.'
       );
     }
   }
@@ -211,6 +211,14 @@ var EventPluginUtils = {
   executeDispatchesInOrder: executeDispatchesInOrder,
   executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
   hasDispatches: hasDispatches,
+
+  getNode: function(id) {
+    return injection.Mount.getNode(id);
+  },
+  getID: function(node) {
+    return injection.Mount.getID(node);
+  },
+
   injection: injection
 };
 
