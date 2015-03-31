@@ -70,10 +70,10 @@ function updateOptions(component, propValue) {
 
   if (component.props.multiple) {
     selectedValue = {};
-    for (i = 0, l = propValue.length; i < l; i++) {
+    for (i = 0; i < propValue.length; i++) {
       selectedValue['' + propValue[i]] = true;
     }
-    for (i = 0, l = options.length; i < l; i++) {
+    for (i = 0; i < options.length; i++) {
       var selected = selectedValue.hasOwnProperty(options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
@@ -83,7 +83,7 @@ function updateOptions(component, propValue) {
     // Do not set `select.value` as exact behavior isn't consistent across all
     // browsers for all cases.
     selectedValue = '' + propValue;
-    for (i = 0, l = options.length; i < l; i++) {
+    for (i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
         return;

@@ -397,10 +397,10 @@ describe('ReactBrowserEventEmitter', function() {
     var setEventListeners = [];
     var listenCalls = EventListener.listen.argsForCall;
     var captureCalls = EventListener.capture.argsForCall;
-    for (var i = 0, l = listenCalls.length; i < l; i++) {
+    for (var i = 0; i < listenCalls.length; i++) {
       setEventListeners.push(listenCalls[i][1]);
     }
-    for (i = 0, l = captureCalls.length; i < l; i++) {
+    for (i = 0; i < captureCalls.length; i++) {
       setEventListeners.push(captureCalls[i][1]);
     }
 
@@ -409,7 +409,7 @@ describe('ReactBrowserEventEmitter', function() {
     var dependencies = module.eventTypes.change.dependencies;
     expect(setEventListeners.length).toEqual(dependencies.length);
 
-    for (i = 0, l = setEventListeners.length; i < l; i++) {
+    for (i = 0; i < setEventListeners.length; i++) {
       expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
     }
   });

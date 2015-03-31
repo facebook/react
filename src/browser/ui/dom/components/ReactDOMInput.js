@@ -141,7 +141,7 @@ var ReactDOMInput = ReactClass.createClass({
       var group = queryRoot.querySelectorAll(
         'input[name=' + JSON.stringify('' + name) + '][type="radio"]');
 
-      for (var i = 0, groupLen = group.length; i < groupLen; i++) {
+      for (var i = 0; i < group.length; i++) {
         var otherNode = group[i];
         if (otherNode === rootNode ||
             otherNode.form !== rootNode.form) {

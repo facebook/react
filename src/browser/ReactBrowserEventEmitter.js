@@ -216,7 +216,7 @@ var ReactBrowserEventEmitter = assign({}, ReactEventEmitterMixin, {
       registrationNameDependencies[registrationName];
 
     var topLevelTypes = EventConstants.topLevelTypes;
-    for (var i = 0, l = dependencies.length; i < l; i++) {
+    for (var i = 0; i < dependencies.length; i++) {
       var dependency = dependencies[i];
       if (!(
             isListening.hasOwnProperty(dependency) &&
