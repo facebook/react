@@ -144,7 +144,7 @@ var ReactDOMIDOperations = {
    * @internal
    */
   dangerouslyProcessChildrenUpdates: function(updates, markup) {
-    for (var i = 0; i < updates.length; i++) {
+    for (var i = 0, l = updates.length; i < l; i++) {
       updates[i].parentNode = ReactMount.getNode(updates[i].parentID);
     }
     DOMChildrenOperations.processUpdates(updates, markup);

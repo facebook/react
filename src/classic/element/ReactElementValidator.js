@@ -183,7 +183,7 @@ function warnAndMonitorForKeyUse(message, element, parentType) {
  */
 function validateChildKeys(node, parentType) {
   if (Array.isArray(node)) {
-    for (var i = 0; i < node.length; i++) {
+    for (var i = 0, l = node.length; i < l; i++) {
       var child = node[i];
       if (ReactElement.isValidElement(child)) {
         validateExplicitKey(child, parentType);
@@ -414,7 +414,7 @@ var ReactElementValidator = {
       return element;
     }
 
-    for (var i = 2; i < arguments.length; i++) {
+    for (var i = 2, l = arguments.length; i < l; i++) {
       validateChildKeys(arguments[i], type);
     }
 
@@ -462,7 +462,7 @@ var ReactElementValidator = {
 
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
-    for (var i = 2; i < arguments.length; i++) {
+    for (var i = 2, l = arguments.length; i < l; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);

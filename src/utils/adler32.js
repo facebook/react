@@ -22,7 +22,7 @@ var MOD = 65521;
 function adler32(data) {
   var a = 1;
   var b = 0;
-  for (var i = 0; i < data.length; i++) {
+  for (var i = 0, l = data.length; i < l; i++) {
     a = (a + data.charCodeAt(i)) % MOD;
     b = (b + a) % MOD;
   }

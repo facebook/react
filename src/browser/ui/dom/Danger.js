@@ -61,7 +61,7 @@ var Danger = {
     var nodeName;
     var markupByNodeName = {};
     // Group markup by `nodeName` if a wrap is necessary, else by '*'.
-    for (var i = 0; i < markupList.length; i++) {
+    for (var i = 0, l = markupList.length; i < l; i++) {
       invariant(
         markupList[i],
         'dangerouslyRenderMarkup(...): Missing markup.'

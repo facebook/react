@@ -538,7 +538,7 @@ var ReactCompositeComponentMixin = {
     parentBasedContext = this._maskContext(parentBasedContext);
     var parentKeys = Object.keys(parentBasedContext).sort();
     var displayName = this.getName() || 'ReactCompositeComponent';
-    for (var i = 0; i < parentKeys.length; i++) {
+    for (var i = 0, l = parentKeys.length; i < l; i++) {
       var key = parentKeys[i];
       warning(
         ownerBasedContext[key] === parentBasedContext[key],
@@ -653,7 +653,7 @@ var ReactCompositeComponentMixin = {
     }
 
     var nextState = assign({}, replace ? queue[0] : inst.state);
-    for (var i = replace ? 1 : 0; i < queue.length; i++) {
+    for (var i = replace ? 1 : 0, l = queue.length; i < l; i++) {
       var partial = queue[i];
       assign(
         nextState,

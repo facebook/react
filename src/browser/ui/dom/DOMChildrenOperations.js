@@ -61,7 +61,7 @@ var DOMChildrenOperations = {
     // List of children that will be moved or removed.
     var updatedChildren = null;
 
-    for (var i = 0; i < updates.length; i++) {
+    for (var i = 0, l = updates.length; i < l; i++) {
       update = updates[i];
       if (update.type === ReactMultiChildUpdateTypes.MOVE_EXISTING ||
           update.type === ReactMultiChildUpdateTypes.REMOVE_NODE) {

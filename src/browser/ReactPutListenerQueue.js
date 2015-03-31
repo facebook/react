@@ -30,7 +30,7 @@ assign(ReactPutListenerQueue.prototype, {
   },
 
   putListeners: function() {
-    for (var i = 0; i < this.listenersToPut.length; i++) {
+    for (var i = 0, l = this.listenersToPut.length; i < l; i++) {
       var listenerToPut = this.listenersToPut[i];
       ReactBrowserEventEmitter.putListener(
         listenerToPut.rootNodeID,

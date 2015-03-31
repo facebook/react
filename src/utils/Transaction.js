@@ -156,7 +156,7 @@ var Mixin = {
 
   initializeAll: function(startIndex) {
     var transactionWrappers = this.transactionWrappers;
-    for (var i = startIndex; i < transactionWrappers.length; i++) {
+    for (var i = startIndex, l = transactionWrappers.length; i < l; i++) {
       var wrapper = transactionWrappers[i];
       try {
         // Catching errors makes debugging more difficult, so we start with the
@@ -193,7 +193,7 @@ var Mixin = {
       'Transaction.closeAll(): Cannot close transaction when none are open.'
     );
     var transactionWrappers = this.transactionWrappers;
-    for (var i = startIndex; i < transactionWrappers.length; i++) {
+    for (var i = startIndex, l = transactionWrappers.length; i < l; i++) {
       var wrapper = transactionWrappers[i];
       var initData = this.wrapperInitData[i];
       var errorThrown;

@@ -88,7 +88,7 @@ function forEachEventDispatch(event, cb) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (var i = 0; i < dispatchListeners.length; i++) {
+    for (var i = 0, l = dispatchListeners.length; i < l; i++) {
       if (event.isPropagationStopped()) {
         break;
       }
@@ -136,7 +136,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (var i = 0; i < dispatchListeners.length; i++) {
+    for (var i = 0, l = dispatchListeners.length; i < l; i++) {
       if (event.isPropagationStopped()) {
         break;
       }

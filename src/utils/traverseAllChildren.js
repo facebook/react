@@ -123,7 +123,7 @@ function traverseAllChildrenImpl(
   var subtreeCount = 0; // Count of children found in the current subtree.
 
   if (Array.isArray(children)) {
-    for (var i = 0; i < children.length; i++) {
+    for (var i = 0, l = children.length; i < l; i++) {
       child = children[i];
       nextName = (
         (nameSoFar !== '' ? nameSoFar + SUBSEPARATOR : SEPARATOR) +

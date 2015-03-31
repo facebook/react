@@ -143,7 +143,7 @@ var onGrantGrandParent;
 
 var existsInExtraction = function(extracted, test) {
   if (Array.isArray(extracted)) {
-    for (var i = 0; i < extracted.length; i++) {
+    for (var i = 0, l = extracted.length; i < l; i++) {
       if (test(extracted[i])) {
         return true;
       }

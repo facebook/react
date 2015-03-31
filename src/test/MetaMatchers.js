@@ -54,7 +54,7 @@ function compareSpec(actual, expected) {
 }
 
 function includesDescription(specs, description, startIndex) {
-  for (var i = startIndex; i < specs.length; i++) {
+  for (var i = startIndex, l = specs.length; i < l; i++) {
     if (specs[i].description === description) {
       return true;
     }
