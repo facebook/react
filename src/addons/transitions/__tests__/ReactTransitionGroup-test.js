@@ -208,4 +208,65 @@ describe('ReactTransitionGroup', function() {
       'didMount', 'didMount', 'willEnter', 'didEnter'
     ]);
   });
+
+  it('should handle entering/leaving several elements at once', function() {
+    var log = [];
+    var cb;
+
+    var Child = React.createClass({
+      componentDidMount: function() {
+        log.push('didMount'+this.props.id);
+      },
+      componentWillEnter: function(cb) {
+        log.push('willEnter'+this.props.id);
+        cb();
+      },
+      componentDidEnter: function() {
+        log.push('didEnter'+this.props.id);
+      },
+      componentWillLeave: function(cb) {
+        log.push('willLeave'+this.props.id);
+        cb();
+      },
+      componentDidLeave: function() {
+        log.push('didLeave'+this.props.id);
+      },
+      componentWillUnmount: function() {
+        log.push('willUnmount'+this.props.id);
+      },
+      render: function() {
+        return <span />;
+      }
+    });
+
+    var Component = React.createClass({
+      getInitialState: function() {
+        return {count: 1};
+      },
+      render: function() {
+        var children = [];
+        for (var i = 0; i < this.state.count; i++) {
+          children.push(<Child key={i} id={i} />);
+        }
+        return <ReactTransitionGroup>{children}</ReactTransitionGroup>;
+      }
+    });
+
+    var instance = React.render(<Component />, container);
+    expect(log).toEqual(['didMount0']);
+    log = [];
+
+    instance.setState({count: 3});
+    expect(log).toEqual([
+      'didMount1', 'didMount2', 'willEnter1', 'didEnter1', 
+      'willEnter2', 'didEnter2'
+    ]);
+    log = [];
+
+    instance.setState({count: 0});
+    expect(log).toEqual([
+      'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1', 
+      'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2'
+    ]);
+  });
 });
