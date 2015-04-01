@@ -31,10 +31,20 @@ function insertChildAt(parentNode, childNode, index) {
   // rely exclusively on `insertBefore(node, null)` instead of also using
   // `appendChild(node)`. However, using `undefined` is not allowed by all
   // browsers so we must replace it with `null`.
-  parentNode.insertBefore(
-    childNode,
-    parentNode.childNodes[index] || null
-  );
+
+  // fix render order error in safari
+  try {
+    parentNode.insertBefore(
+      childNode,
+      parentNode.childNodes.item(index) || null
+    );
+  } catch (e) {
+    //IE8 can't use `item` when childNodes is empty.
+    parentNode.insertBefore(
+      childNode,
+      parentNode.childNodes[index] || null
+    );  
+  }
 }
 
 /**
