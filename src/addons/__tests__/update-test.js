@@ -93,4 +93,10 @@ describe('update', function() {
       '$apply. Did you forget to include {$set: ...}?'
     );
   });
+
+  it('should perform safe hasOwnProperty check', function() {
+    expect(update({}, {'hasOwnProperty': {$set: 'a'}})).toEqual({
+      'hasOwnProperty': 'a'
+    });
+  });
 });
