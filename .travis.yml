@@ -10,7 +10,7 @@ cache:
 before_install:
 - |
     if [ "$TEST_TYPE" != build_website ] && \
-      git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
+      ! git diff --name-only $TRAVIS_COMMIT_RANGE | grep -qvE '(\.md$)|(^(docs|examples))/'
     then
       echo "Only docs were updated, stopping build process."
       exit
