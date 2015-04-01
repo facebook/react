@@ -428,7 +428,7 @@
 
 <figure><img src="/react/img/docs/should-component-update.png" /></figure>
 
-<p>In the example above, since <code>shouldComponentUpdate</code> returned <code>false</code> for the subtree rooted at C2, React had no need to generate the new virtual DOM, and therefore, it neither needed to reconcile the DOM. Note that React didn&#39;t even had to invoke <code>shouldComponentUpdate</code> on C4 and C5.</p>
+<p>In the example above, since <code>shouldComponentUpdate</code> returned <code>false</code> for the subtree rooted at C2, React had no need to generate the new virtual DOM, and therefore, it neither needed to reconcile the DOM. Note that React didn&#39;t even have to invoke <code>shouldComponentUpdate</code> on C4 and C5.</p>
 
 <p>For C1 and C3 <code>shouldComponentUpdate</code> returned <code>true</code>, so React had to go down to the leaves and check them. For C6 it returned <code>true</code>; since the virtual DOMs weren&#39;t equivalent it had to reconcile the DOM.
 The last interesting case is C8. For this node React had to compute the virtual DOM, but since it was equal to the old one, it didn&#39;t have to reconcile it&#39;s DOM.</p>
