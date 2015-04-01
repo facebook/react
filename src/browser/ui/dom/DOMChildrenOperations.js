@@ -33,13 +33,14 @@ function insertChildAt(parentNode, childNode, index) {
   // browsers so we must replace it with `null`.
 
   // fix render order error in safari
-  try {
+  if (!(document.all && !document.addEventListener)) {
     parentNode.insertBefore(
       childNode,
       parentNode.childNodes.item(index) || null
     );
-  } catch (e) {
-    //IE8 can't use `item` when childNodes is empty.
+  } else {
+    //IE8 can't use `item` when childNodes is empty or dynamic insert.
+    //But read is well after insert.
     parentNode.insertBefore(
       childNode,
       parentNode.childNodes[index] || null
