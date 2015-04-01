@@ -65,7 +65,7 @@ function selectValueType(props, propName, componentName) {
  * @private
  */
 function updateOptions(component, propValue) {
-  var selectedValue, i, l;
+  var selectedValue, i;
   var options = findDOMNode(component).options;
 
   if (component.props.multiple) {
