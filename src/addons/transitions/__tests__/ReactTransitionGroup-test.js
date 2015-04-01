@@ -215,24 +215,24 @@ describe('ReactTransitionGroup', function() {
 
     var Child = React.createClass({
       componentDidMount: function() {
-        log.push('didMount'+this.props.id);
+        log.push('didMount' + this.props.id);
       },
       componentWillEnter: function(cb) {
-        log.push('willEnter'+this.props.id);
+        log.push('willEnter' + this.props.id);
         cb();
       },
       componentDidEnter: function() {
-        log.push('didEnter'+this.props.id);
+        log.push('didEnter' + this.props.id);
       },
       componentWillLeave: function(cb) {
-        log.push('willLeave'+this.props.id);
+        log.push('willLeave' + this.props.id);
         cb();
       },
       componentDidLeave: function() {
-        log.push('didLeave'+this.props.id);
+        log.push('didLeave' + this.props.id);
       },
       componentWillUnmount: function() {
-        log.push('willUnmount'+this.props.id);
+        log.push('willUnmount' + this.props.id);
       },
       render: function() {
         return <span />;
@@ -258,14 +258,14 @@ describe('ReactTransitionGroup', function() {
 
     instance.setState({count: 3});
     expect(log).toEqual([
-      'didMount1', 'didMount2', 'willEnter1', 'didEnter1', 
+      'didMount1', 'didMount2', 'willEnter1', 'didEnter1',
       'willEnter2', 'didEnter2'
     ]);
     log = [];
 
     instance.setState({count: 0});
     expect(log).toEqual([
-      'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1', 
+      'willLeave0', 'didLeave0', 'willLeave1', 'didLeave1',
       'willLeave2', 'didLeave2', 'willUnmount0', 'willUnmount1', 'willUnmount2'
     ]);
   });
