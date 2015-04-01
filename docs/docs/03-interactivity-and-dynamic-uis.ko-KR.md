@@ -42,6 +42,7 @@ React에서의 이벤트 핸들러는 HTML에서 그러던 것처럼 간단히 �
 
 
 ## 기본 구현: 오토바인딩과 이벤트 델리게이션
+<a name="under-the-hood-autobinding-and-event-delegation"></a>
 
 코드를 고성능으로 유지하고 이해하기 쉽게 하기 위해, React는 보이지 않는 곳에서 몇 가지 일을 수행합니다.
 
