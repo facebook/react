@@ -33,9 +33,7 @@ function insertChildAt(parentNode, childNode, index) {
   // browsers so we must replace it with `null`.
 
   // fix render order error in safari
-  // IE8 can't use `item` when childNodes is empty or dynamic insert.
-  // Because index out of list
-  // But read is well after insert.
+  // IE8 will throw error when index out of list size.
   var beforeChild = index >= parentNode.childNodes.length ?
                     null :
                     parentNode.childNodes.item(index);
