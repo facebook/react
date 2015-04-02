@@ -597,7 +597,7 @@ describe('ReactDOMComponent', function() {
       expect(
         ReactBrowserEventEmitter.getListener(rootNodeID, 'onClick')
       ).toBe(callback);
-      expect(rootNode).toBe(instance.getDOMNode());
+      expect(rootNode).toBe(React.findDOMNode(instance));
 
       React.unmountComponentAtNode(container);
 
