@@ -164,6 +164,11 @@ var ReactEventListener = {
       return;
     }
 
+    var targetDocument = getEventTarget(nativeEvent).ownerDocument;
+    if (targetDocument !== window.document) {
+      return;
+    }
+
     var bookKeeping = TopLevelCallbackBookKeeping.getPooled(
       topLevelType,
       nativeEvent
