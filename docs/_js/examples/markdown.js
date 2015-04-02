@@ -6,7 +6,7 @@ var MarkdownEditor = React.createClass({
     return {value: 'Type some *markdown* here!'};
   },
   handleChange: function() {
-    this.setState({value: this.refs.textarea.getDOMNode().value});
+    this.setState({value: React.findDOMNode(this.refs.textarea).value});
   },
   render: function() {
     return (
