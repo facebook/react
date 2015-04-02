@@ -58,6 +58,7 @@ var React = {
   },
   Component: ReactComponent,
   DOM: ReactDOM,
+  Mount: ReactMount,
   PropTypes: ReactPropTypes,
   createClass: ReactClass.createClass,
   createElement: createElement,
