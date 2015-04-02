@@ -296,6 +296,16 @@ var ReactInstanceHandles = {
   },
 
   /**
+   * Same as `traverseTwoPhase` but skips the `targetID`.
+   */
+  traverseTwoPhaseSkipTarget: function(targetID, cb, arg) {
+    if (targetID) {
+      traverseParentPath('', targetID, cb, arg, true, true);
+      traverseParentPath(targetID, '', cb, arg, true, true);
+    }
+  },
+
+  /**
    * Traverse a node ID, calling the supplied `cb` for each ancestor ID. For
    * example, passing `.0.$row-0.1` would result in `cb` getting called
    * with `.0`, `.0.$row-0`, and `.0.$row-0.1`.
@@ -311,11 +321,7 @@ var ReactInstanceHandles = {
     traverseParentPath('', targetID, cb, arg, true, false);
   },
 
-  /**
-   * Exposed for unit testing.
-   * @private
-   */
-  _getFirstCommonAncestorID: getFirstCommonAncestorID,
+  getFirstCommonAncestorID: getFirstCommonAncestorID,
 
   /**
    * Exposed for unit testing.
