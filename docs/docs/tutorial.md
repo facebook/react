@@ -81,7 +81,7 @@ var CommentBox = React.createClass({
     );
   }
 });
-React.render(
+React.renderComponent(
   <CommentBox />,
   document.getElementById('content')
 );
@@ -102,7 +102,7 @@ var CommentBox = React.createClass({displayName: 'CommentBox',
     );
   }
 });
-React.render(
+React.renderComponent(
   React.createElement(CommentBox, null),
   document.getElementById('content')
 );
@@ -300,7 +300,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+React.renderComponent(
   <CommentBox data={data} />,
   document.getElementById('content')
 );
@@ -336,7 +336,7 @@ Let's replace the hard-coded data with some dynamic data from the server. We wil
 
 ```javascript{3}
 // tutorial11.js
-React.render(
+React.renderComponent(
   <CommentBox url="comments.json" />,
   document.getElementById('content')
 );
@@ -348,7 +348,7 @@ This component is different from the prior components because it will have to re
 
 So far, each component has rendered itself once based on its props. `props` are immutable: they are passed from the parent and are "owned" by the parent. To implement interactions, we introduce mutable **state** to the component. `this.state` is private to the component and can be changed by calling `this.setState()`. When the state is updated, the component re-renders itself.
 
-`render()` methods are written declaratively as functions of `this.props` and `this.state`. The framework guarantees the UI is always consistent with the inputs.
+`renderComponent()` methods are written declaratively as functions of `this.props` and `this.state`. The framework guarantees the UI is always consistent with the inputs.
 
 When the server fetches data, we will be changing the comment data we have. Let's add an array of comment data to the `CommentBox` component as its state:
 
@@ -452,7 +452,7 @@ var CommentBox = React.createClass({
   }
 });
 
-React.render(
+React.renderComponent(
   <CommentBox url="comments.json" pollInterval={2000} />,
   document.getElementById('content')
 );
