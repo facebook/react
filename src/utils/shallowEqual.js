@@ -23,28 +23,26 @@ function shallowEqual(objA, objB) {
     return true;
   }
 
-  if (!objA || !objB) {
+  if (typeof objA !== 'object' || objA === null
+      || typeof objB !== 'object' || objB === null) {
     return false;
   }
-
-  if (typeof objA !== 'object' || typeof objB !== 'object') {
+  
+  var keysA = Object.keys(objA),
+      keysB = Object.keys(objB);
+      
+  if(keysA.length !== keysB.length) {
     return false;
   }
-
-  var key;
+  
   // Test for A's keys different from B.
-  for (key in objA) {
-    if (objA.hasOwnProperty(key) &&
-        (!objB.hasOwnProperty(key) || objA[key] !== objB[key])) {
+  var bHasOwnProperty = objB.hasOwnProperty.bind(objB);
+  for(var i = 0, length = keysA.length; i < length; i++) {
+    if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]] ) {
       return false;
     }
   }
-  // Test for B's keys missing from A.
-  for (key in objB) {
-    if (objB.hasOwnProperty(key) && !objA.hasOwnProperty(key)) {
-      return false;
-    }
-  }
+
   return true;
 }
 
