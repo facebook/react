@@ -155,7 +155,7 @@ var SetIntervalMixin = {
     this.intervals.push(setInterval.apply(null, arguments));
   },
   componentWillUnmount: function() {
-    this.intervals.map(clearInterval);
+    this.intervals.forEach(clearInterval);
   }
 };
 
