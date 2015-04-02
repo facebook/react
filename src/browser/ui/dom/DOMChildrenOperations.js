@@ -31,9 +31,16 @@ function insertChildAt(parentNode, childNode, index) {
   // rely exclusively on `insertBefore(node, null)` instead of also using
   // `appendChild(node)`. However, using `undefined` is not allowed by all
   // browsers so we must replace it with `null`.
+
+  // fix render order error in safari
+  // IE8 will throw error when index out of list size.
+  var beforeChild = index >= parentNode.childNodes.length ?
+                    null :
+                    parentNode.childNodes.item(index);
+
   parentNode.insertBefore(
     childNode,
-    parentNode.childNodes[index] || null
+    beforeChild
   );
 }
 
