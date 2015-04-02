@@ -27,18 +27,17 @@ function shallowEqual(objA, objB) {
       || typeof objB !== 'object' || objB === null) {
     return false;
   }
-  
-  var keysA = Object.keys(objA),
-      keysB = Object.keys(objB);
-      
-  if(keysA.length !== keysB.length) {
+
+  var keysA = Object.keys(objA), keysB = Object.keys(objB);
+
+  if (keysA.length !== keysB.length) {
     return false;
   }
-  
+
   // Test for A's keys different from B.
   var bHasOwnProperty = objB.hasOwnProperty.bind(objB);
-  for(var i = 0, length = keysA.length; i < length; i++) {
-    if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]] ) {
+  for (var i = 0, length = keysA.length; i < length; i++) {
+    if (!bHasOwnProperty(keysA[i]) || objA[keysA[i]] !== objB[keysA[i]]) {
       return false;
     }
   }
