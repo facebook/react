@@ -76,6 +76,9 @@ var React = {
   unmountComponentAtNode: ReactMount.unmountComponentAtNode,
   isValidElement: ReactElement.isValidElement,
   withContext: ReactContext.withContext,
+  getSourceID: ReactElement.getSourceID,
+  trustSource: ReactElement.trustSource,
+  dangerouslyTrustAllSources: ReactElement.dangerouslyTrustAllSources,
 
   // Hook for JSX spread, don't use this for anything else.
   __spread: assign

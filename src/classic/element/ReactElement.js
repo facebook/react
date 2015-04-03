@@ -61,6 +61,35 @@ function defineWarningProperty(object, key) {
 var useMutationMembrane = false;
 
 /**
+ * React instances own source ID is a randomly generated string. It does not
+ * have to be globally unique, just difficult to guess.
+ */
+var ownSourceID =
+  (typeof crypto === 'object' && crypto.getRandomValues ?
+    crypto.getRandomValues(new Uint32Array(1))[0] :
+    ~(Math.random() * (1 << 31))
+  ).toString(36);
+
+/**
+ * If trustSource() is called, becomes an mapping of sourceIDs we trust as
+ * valid React Elements.
+ */
+var trustedSourceIDs; // ?{ [sourceID: string]: true }
+
+/**
+ * If true, dangerously trust all sources. If false, only trust explicit
+ * sources.
+ *
+ * If null, trust all sources but warn if not explicitly trusted.
+ */
+var trustAllSources = null; // ?Boolean
+
+/**
+ * Updated to true if a warning is logged so we don't spam console.
+ */
+var hasWarnedAboutUntrustedSource;
+
+/**
  * Warn for mutations.
  *
  * @internal
@@ -139,12 +168,54 @@ var ReactElement = function(type, key, ref, owner, context, props) {
 // We intentionally don't expose the function on the constructor property.
 // ReactElement should be indistinguishable from a plain object.
 ReactElement.prototype = {
+  _source: ownSourceID,
   _isReactElement: true
 };
 
 if (__DEV__) {
   defineMutationMembrane(ReactElement.prototype);
 }
+
+
+/**
+ * Return this React module's source ID.
+ */
+ReactElement.getSourceID = function() {
+  return ownSourceID;
+};
+
+/**
+ * Allows this React module to trust React elements produced from another React
+ * module, potentially from a Server or from another Realm (iframe, webworker).
+ */
+ReactElement.trustSource = function(sourceID) {
+  if (!trustedSourceIDs) {
+    trustedSourceIDs = {};
+  }
+  trustedSourceIDs[sourceID] = true;
+  // Calling trustSource implies using React's trusted source.
+  // TODO: remove in a future version when security is on by default and
+  // trustAllSources is no longer a ?Boolean.
+  if (trustAllSources === null) {
+    trustAllSources = false;
+  }
+};
+
+/**
+ * Trust React elements regardless of their source, or even if they have an
+ * unknown source. Using this method may be helpful during a refactor to support
+ * React's security model, but should be avoided as it could allow XSS attacks
+ * in certain conditions.
+ *
+ * For backwards compatibility, the default behavior is to trust all sources,
+ * but to warn in __DEV__ when rendering a React component from an unknown
+ * source. In a future version of React only explicitly trusted sources may
+ * provide React components.
+ */
+ReactElement.dangerouslyTrustAllSources = function(acceptPossibleXSSHoles) {
+  trustAllSources =
+    acceptPossibleXSSHoles === undefined ? true : acceptPossibleXSSHoles;
+};
 
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -298,7 +369,36 @@ ReactElement.isValidElement = function(object) {
   // same time. This will screw with ownership and stuff. Fix it, please.
   // TODO: We could possibly warn here.
   // }
-  return isElement;
+  if (!isElement) {
+    return false;
+  }
+
+  var sourceID = object && object._source;
+
+  // TODO: remove in a future version when security is on by default and
+  // trustAllSources is no longer a ?Boolean.
+  if (__DEV__) {
+    if (trustAllSources === null &&
+        !hasWarnedAboutUntrustedSource &&
+        !(sourceID && sourceID === ownSourceID)) {
+      hasWarnedAboutUntrustedSource = true;
+      warning(
+        false,
+        'React is rendering an element from an unknown or foreign source. ' +
+        'This is potentially malicious and a future version of React will ' +
+        'not render this element. Call ' +
+        'React.dangerouslyTrustAllSources(false) to disable rendering from ' +
+        'unknown and foriegn sources.'
+      );
+    }
+  }
+
+  // Determine if we trust the source of this particular React Element.
+  return trustAllSources !== false ||
+         sourceID && (
+           sourceID === ownSourceID ||
+           trustedSourceIDs && trustedSourceIDs.hasOwnProperty(sourceID)
+         );
 };
 
 module.exports = ReactElement;
