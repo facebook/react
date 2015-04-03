@@ -28,14 +28,26 @@ var ReactReconciler = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {ReactComponent} internalInstance
+   * @param {?ReactComponent} parentComponent
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
    */
-  mountComponent: function(internalInstance, rootID, transaction, context) {
-    var markup = internalInstance.mountComponent(rootID, transaction, context);
+  mountComponent: function(
+      internalInstance,
+      parentComponent,
+      rootID,
+      transaction,
+      context) {
+    transaction.getReactMountReady();
+    var markup = internalInstance.mountComponent(
+      parentComponent,
+      rootID,
+      transaction,
+      context
+    );
     if (__DEV__) {
       ReactElementValidator.checkAndWarnForMutatedProps(
         internalInstance._currentElement

@@ -91,6 +91,7 @@ var ReactCompositeComponentMixin = {
    */
   construct: function(element) {
     this._currentElement = element;
+    this._parentComponent = null;
     this._rootNodeID = null;
     this._instance = null;
 
@@ -113,16 +114,18 @@ var ReactCompositeComponentMixin = {
   /**
    * Initializes the component, renders markup, and registers event listeners.
    *
+   * @param {?ReactComponent} parentComponent
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(parentComponent, rootID, transaction, context) {
+    this._parentComponent = parentComponent;
+    this._rootNodeID = rootID;
     this._context = context;
     this._mountOrder = nextMountID++;
-    this._rootNodeID = rootID;
 
     var publicProps = this._processProps(this._currentElement.props);
     var publicContext = this._processContext(this._currentElement._context);
@@ -236,6 +239,7 @@ var ReactCompositeComponentMixin = {
 
     var markup = ReactReconciler.mountComponent(
       this._renderedComponent,
+      this,
       rootID,
       transaction,
       this._processChildContext(context)
@@ -741,6 +745,7 @@ var ReactCompositeComponentMixin = {
       );
       var nextMarkup = ReactReconciler.mountComponent(
         this._renderedComponent,
+        this,
         thisID,
         transaction,
         this._processChildContext(context)

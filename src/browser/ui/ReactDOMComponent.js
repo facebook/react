@@ -202,6 +202,7 @@ function ReactDOMComponent(tag) {
   this._tag = tag;
   this._renderedChildren = null;
   this._previousStyleCopy = null;
+  this._parentComponent = null;
   this._rootNodeID = null;
 }
 
@@ -213,17 +214,23 @@ ReactDOMComponent.Mixin = {
     this._currentElement = element;
   },
 
+  getName: function() {
+    return this._tag;
+  },
+
   /**
    * Generates root tag markup then recurses. This method has side effects and
    * is not idempotent.
    *
    * @internal
+   * @param {?ReactComponent} parentComponent
    * @param {string} rootID The root DOM ID for this node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {object} context
    * @return {string} The computed markup.
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(parentComponent, rootID, transaction, context) {
+    this._parentComponent = parentComponent;
     this._rootNodeID = rootID;
 
     assertValidProps(this, this._currentElement.props);
@@ -232,7 +239,7 @@ ReactDOMComponent.Mixin = {
         validateDOMNesting(
           context[validateDOMNesting.tagStackContextKey],
           this._tag,
-          this._currentElement
+          this
         );
       }
     }

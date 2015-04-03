@@ -52,6 +52,7 @@ assign(ReactDOMTextComponent.prototype, {
     this._stringText = '' + text;
 
     // Properties
+    this._parentComponent = null;
     this._rootNodeID = null;
     this._mountIndex = 0;
   },
@@ -60,22 +61,24 @@ assign(ReactDOMTextComponent.prototype, {
    * Creates the markup for this text node. This node is not intended to have
    * any features besides containing text content.
    *
+   * @param {?ReactComponent} parentComponent
    * @param {string} rootID DOM ID of the root node.
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @return {string} Markup for this text node.
    * @internal
    */
-  mountComponent: function(rootID, transaction, context) {
+  mountComponent: function(parentComponent, rootID, transaction, context) {
     if (__DEV__) {
       if (context[validateDOMNesting.tagStackContextKey]) {
         validateDOMNesting(
           context[validateDOMNesting.tagStackContextKey],
           'span',
-          null
+          this
         );
       }
     }
 
+    this._parentComponent = parentComponent;
     this._rootNodeID = rootID;
     var escapedText = escapeTextContentForBrowser(this._stringText);
 
