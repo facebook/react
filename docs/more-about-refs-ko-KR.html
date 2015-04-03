@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>refs 심화 | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="refs 심화 | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/more-about-refs-ko-KR.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site nav-site-internal">
+          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
+          <li><a href="/react/support.html">Support</a></li>
+          <li><a href="/react/downloads.html">Download</a></li>
+          <li><a href="/react/blog/">Blog</a></li>
+        </ul>
+
+        <ul class="nav-site nav-site-external">
+          <li><a href="https://github.com/facebook/react">GitHub</a>
+          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">Tutorial</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/videos.html">Videos</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">Examples</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">Why React?</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">Multiple Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">Top-Level API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">Component API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">Event System</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">DOM Differences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Flux</h3>
+      <ul>
+        
+          <li>
+            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>
+      refs 심화
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/08.1-more-about-refs.ko-KR.md" target="_blank">Edit on GitHub</a>
+    </h1>
+    <div class="subHeader"></div>
+
+    <p>render 메소드를 통해 UI 구조를 얻은 다음, 반환된 컴포넌트 인스턴스에 접근하거나 메소드를 호출할 방법이 필요할 수도 있습니다. 반응적 데이터 플로우가 <code>render()</code>의 결과물에서 최신의 <code>props</code>가 각각의 자식으로 보내진 것을 항상 보장하기 때문에 애플리케이션의 데이터 플로우를 만드는데 대체로 이런 작업은 필요가 없지만, 여전히 이런 작업이 필요하거나 유리한 경우가 있긴 합니다.</p>
+
+<p>인스턴스의 하위 계층구조에 존재하는 <code>&lt;input /&gt;</code> 엘리먼트의 value를 빈 문자열(<code>&#39;&#39;</code>)로 업데이트한 후 포커스 하는 경우를 생각해 봅시다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+    <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+    <span class="p">},</span>
+    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">});</span> <span class="c1">// 입력내용을 지워줍니다</span>
+      <span class="c1">// 이제 &lt;input /&gt;에 포커스를 주길 원합니다!</span>
+    <span class="p">},</span>
+    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">clearAndFocusInput</span><span class="p">}</span><span class="o">&gt;</span>
+            <span class="err">클릭해서</span> <span class="err">초기화하고</span> <span class="err">포커스주기</span>
+          <span class="o">&lt;</span><span class="err">/div&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">userInput</span><span class="p">}</span>
+            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+          <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+</code></pre></div>
+<p>한번 살펴보죠. 이 예제에서 우리는 시간이 지남에 따라 props에서 추론할 수 없는 무언가를 입력하도록 &quot;알려주길&quot; 원했습니다. 이 사례에서 우리는 이제 포커스 되도록 &quot;알려주길&quot; 원합니다. 그러나 몇 가지 문제가 있습니다. <code>render()</code>에서 반환된 것은 &quot;자식&quot; 컴포넌트의 실제 구성이 아니고, 단지 특정 시점의 인스턴스의 자식에 대한 <em>서술</em>일 뿐입니다. - 말하자면 스냅샷인 것이지요.</p>
+
+<blockquote>
+<p>주의:</p>
+
+<p>기억하세요, <code>render()</code>에서 반환된 것은 <em>실제</em> 자식 인스턴스가 아닙니다. 단지 특정 시점의 컴포넌트의 하위 계층구조에 있는 자식 인스턴스의 <em>서술</em>일 뿐입니다.</p>
+</blockquote>
+
+<p>이는 <code>render()</code>에서 반환된 무언가를 &quot;계속 유지할 수&quot; 없으며 아무런 의미도 없을 것이라는 뜻입니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="c1">// 반례: 이렇게 하면 안됩니다!</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">myInput</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="o">/&gt;</span><span class="p">;</span>          <span class="c1">// 여기서 메소드를 호출할 겁니다.</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">rememberThisInput</span> <span class="o">=</span> <span class="nx">myInput</span><span class="p">;</span> <span class="c1">// 언젠가 미래의 특정 시점에 입력할 거에요! YAY!</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">...</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+        <span class="p">{</span><span class="nx">myInput</span><span class="p">}</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+</code></pre></div>
+<p>이 반례에서 <code>&lt;input /&gt;</code>은 단지 <code>&lt;input /&gt;</code>의 <em>서술</em>일 뿐입니다. 이 서술은 <code>&lt;input /&gt;</code>에 대한 <em>진짜</em> <strong>지원 인스턴스(backing instance)</strong>를 생성하는 데 사용됩니다.</p>
+
+<p>자 그럼 어떻게 <em>진짜</em> input의 지원 인스턴스를 다룰까요?</p>
+<h2><a class="anchor" name="ref--"></a>ref 문자열 어트리뷰트 <a class="hash-link" href="#ref--">#</a></h2>
+<p>React는 <code>render()</code>로 출력된 컴포넌트에 추가할 수 있는 아주 특별한 프로퍼티를 지원합니다. 이 특별한 프로퍼티는 <code>render()</code>에서 반환한 모든 것들에 대해 각각에 대응하는 <strong>지원 인스턴스</strong>를 참조할 수 있습니다. 이는 항상 어떤 시점에서든 올바른 인스턴스를 보장합니다.</p>
+
+<p>간단합니다:</p>
+
+<ol>
+<li><code>render</code>에서 반환된 값을 <code>ref</code> 어트리뷰트에 할당합니다:</li>
+</ol>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">&quot;myInput&quot;</span> <span class="nt">/&gt;</span>
+</code></pre></div>
+<ol>
+<li>다른 코드(일반적으로는 이벤트 핸들러 코드)에서 <code>this.refs</code>를 통해 <strong>지원 인스턴스</strong>에 접근 합니다:</li>
+</ol>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">myInput</span>
+</code></pre></div>
+<p><code>React.findDOMNode(this.refs.myInput)</code>를 호출해 컴포넌트의 DOM 노드에 접근할 수 있습니다.</p>
+<h2><a class="anchor" name="ref--"></a>ref 콜백 어트리뷰트 <a class="hash-link" href="#ref--">#</a></h2>
+<p><code>ref</code> 어트리뷰트는 이름 대신 콜백 함수가 될 수도 있습니다. 이 콜백은 컴포넌트가 마운트 된 뒤 즉시 실행될 것입니다. 참조된 컴포넌트는 매개 변수로 전달되며 콜백은 이를 즉시 사용하거나, 앞으로 사용하기 위해 참조를 저장해 놓거나, 혹은 둘 다 할 것입니다.</p>
+
+<p><code>render</code>에서 반환한 모든 것에 간단하게 <code>ref</code> 어트리뷰트를 할당할 수 있습니다:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html">  <span class="nt">&lt;input</span> <span class="na">ref=</span><span class="s">{</span> <span class="na">function</span><span class="err">(</span><span class="na">component</span><span class="err">){</span> <span class="na">React</span><span class="err">.</span><span class="na">findDOMNode</span><span class="err">(</span><span class="na">component</span><span class="err">).</span><span class="na">focus</span><span class="err">();}</span> <span class="err">}</span> <span class="nt">/&gt;</span>
+</code></pre></div><h2><a class="anchor" name="-"></a>예제 완성하기 <a class="hash-link" href="#-">#</a></h2><div class="highlight"><pre><code class="language-javascript" data-lang="javascript">  <span class="kd">var</span> <span class="nx">App</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+    <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">};</span>
+    <span class="p">},</span>
+    <span class="nx">handleChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="nx">e</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">clearAndFocusInput</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="c1">// input을 비워준다</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">userInput</span><span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">},</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+        <span class="c1">// 이 코드는 컴포넌트가 다시 렌더 된 다음 실행됩니다</span>
+        <span class="nx">React</span><span class="p">.</span><span class="nx">findDOMNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">theInput</span><span class="p">).</span><span class="nx">focus</span><span class="p">();</span>   <span class="c1">// 짠! 포커스 됨!</span>
+      <span class="p">});</span>
+    <span class="p">},</span>
+    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">(</span>
+        <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+          <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">clearAndFocusInput</span><span class="p">}</span><span class="o">&gt;</span>
+            <span class="err">클릭해서</span> <span class="err">초기화하고</span> <span class="err">포커스주기</span>
+          <span class="o">&lt;</span><span class="err">/div&gt;</span>
+          <span class="o">&lt;</span><span class="nx">input</span>
+            <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;theInput&quot;</span>
+            <span class="nx">value</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">userInput</span><span class="p">}</span>
+            <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">handleChange</span><span class="p">}</span>
+          <span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="err">/div&gt;</span>
+      <span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">});</span>
+</code></pre></div>
+<p>이 예제에서 render 함수는 <code>&lt;input /&gt;</code> 인스턴스의 서술을 반환했지만, 진짜 인스턴스는 <code>this.refs.theInput</code>을 통해 접근할 수 있었습니다. render에서 <code>ref=&quot;theInput&quot;</code>을 가진 컴포넌트가 반환된 동안, <code>this.refs.theInput</code>은 적절한 인스턴스에 접근합니다. 이는 <code>&lt;Typeahead ref=&quot;myTypeahead&quot; /&gt;</code>처럼 DOM이 아닌 고수준의 컴포넌트에서도 동작합니다.</p>
+<h2><a class="anchor" name=""></a>요약 <a class="hash-link" href="#">#</a></h2>
+<p>Refs는 반응적인 <code>props</code>와 <code>state</code> 스트리밍을 통해서는 불편했던 특정한 자식 인스턴스에 메시지 보내기를 수행하는 좋은 방법입니다. 하지만 애플리케이션의 데이터 플로우 전반에 사용해도 되는 go-to 같은 개념은 아닙니다. 기본적으로는 반응적인 데이터 플로우를 사용하고, <code>ref</code>는 근본적으로 반응적이지 않은 경우에만 사용하세요.</p>
+<h3><a class="anchor" name=""></a>이점: <a class="hash-link" href="#">#</a></h3>
+<ul>
+<li>컴포넌트 클래스에 public 메소드(ex. Typeahead의 reset)를 선언할 수 있으며 refs를 통해 그를 호출할 수 있습니다. (ex. <code>this.refs.myTypeahead.reset()</code>)</li>
+<li>DOM을 측정하기 위해서는 거의 항상 <code>&lt;input /&gt;</code> 같은 &quot;기본&quot; 컴포넌트를 다루고 <code>React.findDOMNode(this.refs.myInput)</code>를 통해 그 기저의 DOM 노드에 접근해야 합니다. Refs는 이 일을 확실하게 수행하는 몇 안 되는 실용적인 방법의 하나입니다.</li>
+<li>Refs는 자동으로 기록을 관리합니다! 자식이 파괴되면, 그의 ref도 마찬가지로 파괴됩니다. 참조를 유지하기 위해 뭔가 미친 짓을 하지 않는 한, 메모리 걱정은 하지 않아도 됩니다.</li>
+</ul>
+<h3><a class="anchor" name=""></a>주의: <a class="hash-link" href="#">#</a></h3>
+<ul>
+<li>컴포넌트의 렌더 메소드에서는, 혹은 컴포넌트의 렌더 메소드가 콜스택 어디에서든 실행되는 동안에는 절대 접근하지 마세요.</li>
+<li>Google Closure Compiler에서의 분쇄 복원력 유지(to preserve Crushing resilience)를 위해서는 문자열로 정의한 것을 절대 프로퍼티로 접근하지 마세요. ref가 ref=&quot;myRefString&quot;으로 정의되어 있다면 this.refs[&#39;myRefString&#39;]으로만 접근해야 한다는 이야기 입니다.</li>
+<li>React로 앱을 여럿 만들어 본 경험이 없다면, 보통은 처음엔 앱에서 &quot;무언가 일어나도록&quot; 하는데 refs를 사용하게 될 것입니다. 이 경우, 잠시 시간을 내어 <code>state</code>가 컴포넌트 계층구조의 어느 부분에서 관리되어야 할지 비판적으로 생각해 봅시다. 대개는 state가 계층구조의 더 높은 레벨에서 &quot;소유&quot;하는 것이 타당함이 명확해집니다. 그렇게 함으로써 <code>ref</code>를 사용해 &quot;무언가 일어나도록&quot; 하려는 욕망이 대부분 제거됩니다. - 대신에 데이터 플로우를 통해 대개 원하는 바를 달성하게 될 것입니다.</li>
+</ul>
+
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/working-with-the-browser-ko-KR.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/tooling-integration-ko-KR.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2015 Facebook Inc.<br>
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>

@@ -519,6 +519,10 @@
 </blockquote>
 <h2><a class="anchor" name="low-level-api-reacttransitiongroup"></a>Low-level API: <code>ReactTransitionGroup</code> <a class="hash-link" href="#low-level-api-reacttransitiongroup">#</a></h2>
 <p><code>ReactTransitionGroup</code> is the basis for animations. It is accessible as <code>React.addons.TransitionGroup</code>. When children are declaratively added or removed from it (as in the example above) special lifecycle hooks are called on them.</p>
+<h3><a class="anchor" name="componentwillappearcallback"></a><code>componentWillAppear(callback)</code> <a class="hash-link" href="#componentwillappearcallback">#</a></h3>
+<p>This is called at the same time as <code>componentDidMount()</code> for components that are initially mounted in a <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It is only called on the initial render of a <code>TransitionGroup</code>.</p>
+<h3><a class="anchor" name="componentdidappear"></a><code>componentDidAppear()</code> <a class="hash-link" href="#componentdidappear">#</a></h3>
+<p>This is called after the <code>callback</code> function that was passed to <code>componentWillAppear</code> is called.</p>
 <h3><a class="anchor" name="componentwillentercallback"></a><code>componentWillEnter(callback)</code> <a class="hash-link" href="#componentwillentercallback">#</a></h3>
 <p>This is called at the same time as <code>componentDidMount()</code> for components added to an existing <code>TransitionGroup</code>. It will block other animations from occurring until <code>callback</code> is called. It will not be called on the initial render of a <code>TransitionGroup</code>.</p>
 <h3><a class="anchor" name="componentdidenter"></a><code>componentDidEnter()</code> <a class="hash-link" href="#componentdidenter">#</a></h3>

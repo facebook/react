@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>이벤트 시스템 | React</title>
+  <meta name="viewport" content="width=device-width">
+  <meta property="og:title" content="이벤트 시스템 | React">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://facebook.github.io/react/docs/events-ko-KR.html">
+  <meta property="og:image" content="http://facebook.github.io/react/img/logo_og.png">
+  <meta property="og:description" content="A JavaScript library for building user interfaces">
+  <meta property="fb:app_id" content="623268441017527">
+
+  <link rel="shortcut icon" href="/react/favicon.ico">
+  <link rel="alternate" type="application/rss+xml" title="React" href="http://facebook.github.io/react/feed.xml">
+
+  <link rel="stylesheet" href="/react/css/syntax.css">
+  <link rel="stylesheet" href="/react/css/codemirror.css">
+  <link rel="stylesheet" href="/react/css/react.css">
+
+  <script type="text/javascript" src="//use.typekit.net/vqa1hcx.js"></script>
+  <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+
+  <!--[if lte IE 8]>
+  <script type="text/javascript" src="/react/js/html5shiv.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-shim.min.js"></script>
+  <script type="text/javascript" src="/react/js/es5-sham.min.js"></script>
+  <![endif]-->
+  <script type="text/javascript" src="/react/js/codemirror.js"></script>
+  <script type="text/javascript" src="/react/js/javascript.js"></script>
+  <script type="text/javascript" src="/react/js/react.js"></script>
+  <script type="text/javascript" src="/react/js/JSXTransformer.js"></script>
+  <script type="text/javascript" src="/react/js/live_editor.js"></script>
+  <script type="text/javascript" src="/react/js/showdown.js"></script>
+</head>
+<body>
+
+  <div class="container">
+
+    <div class="nav-main">
+      <div class="wrap">
+        <a class="nav-home" href="/react/index.html">
+          <img class="nav-logo" src="/react/img/logo.svg" width="36" height="36">
+          React
+        </a>
+        <ul class="nav-site nav-site-internal">
+          <li><a href="/react/docs/getting-started.html" class="active">Docs</a></li>
+          <li><a href="/react/support.html">Support</a></li>
+          <li><a href="/react/downloads.html">Download</a></li>
+          <li><a href="/react/blog/">Blog</a></li>
+        </ul>
+
+        <ul class="nav-site nav-site-external">
+          <li><a href="https://github.com/facebook/react">GitHub</a>
+          <li><a href="http://facebook.github.io/react-native/">React Native</a>
+        </ul>
+      </div>
+    </div>
+
+    
+
+    <section class="content wrap documentationContent">
+  <div class="nav-docs">
+  <!-- Docs Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Quick Start</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/getting-started.html">Getting Started</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tutorial.html">Tutorial</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/thinking-in-react.html">Thinking in React</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Community Resources</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/conferences.html">Conferences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/videos.html">Videos</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/complementary-tools.html">Complementary Tools</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/examples.html">Examples</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Guides</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/why-react.html">Why React?</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/displaying-data.html">Displaying Data</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/multiple-components.html">Multiple Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reusable-components.html">Reusable Components</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/transferring-props.html">Transferring Props</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/forms.html">Forms</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/more-about-refs.html">More About Refs</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tooling-integration.html">Tooling Integration</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/addons.html">Add-Ons</a>
+            
+              <ul>
+                
+                  <li>
+                    <a href="/react/docs/animation.html">Animation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/two-way-binding-helpers.html">Two-Way Binding Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/class-name-manipulation.html">Class Name Manipulation</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/test-utils.html">Test Utilities</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/clone-with-props.html">Cloning Components</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/create-fragment.html">Keyed Fragments</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/update.html">Immutability Helpers</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/pure-render-mixin.html">PureRenderMixin</a>
+                  </li>
+                
+                  <li>
+                    <a href="/react/docs/perf.html">Performance Tools</a>
+                  </li>
+                
+              </ul>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/advanced-performance.html">Advanced Performance</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Reference</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/docs/top-level-api.html">Top-Level API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-api.html">Component API</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/component-specs.html">Component Specs and Lifecycle</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/tags-and-attributes.html">Supported Tags and Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/events.html">Event System</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/dom-differences.html">DOM Differences</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/special-non-dom-attributes.html">Special Non-DOM Attributes</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/reconciliation.html">Reconciliation</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+    <div class="nav-docs-section">
+      <h3>Flux</h3>
+      <ul>
+        
+          <li>
+            <a href="http://facebook.github.io/flux/docs/overview.html">Flux Overview</a>
+            
+          </li>
+        
+          <li>
+            <a href="http://facebook.github.io/flux/docs/todo-list.html">Flux TodoMVC Tutorial</a>
+            
+          </li>
+        
+      </ul>
+    </div>
+  
+
+  <!-- Tips Nav -->
+  
+    <div class="nav-docs-section">
+      <h3>Tips</h3>
+      <ul>
+        
+          <li>
+            <a href="/react/tips/introduction.html">Introduction</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/inline-styles.html">Inline Styles</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/if-else-in-JSX.html">If-Else in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/self-closing-tag.html">Self-Closing Tag</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/maximum-number-of-jsx-root-nodes.html">Maximum Number of JSX Root Nodes</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/style-props-value-px.html">Shorthand for Specifying Pixel Values in style props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-props-type.html">Type of the Children props</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/controlled-input-null-value.html">Value of null for Controlled Input</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html">componentWillReceiveProps Not Triggered After Mounting</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/props-in-getInitialState-as-anti-pattern.html">Props in getInitialState Is an Anti-Pattern</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dom-event-listeners.html">DOM Event Listeners in a Component</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/initial-ajax.html">Load Initial Data via AJAX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/false-in-jsx.html">False in JSX</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/communicate-between-components.html">Communicate Between Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/expose-component-functions.html">Expose Component Functions</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/references-to-components.html">References to Components</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/children-undefined.html">this.props.children undefined</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/use-react-with-other-libraries.html">Use React with Other Libraries</a>
+          </li>
+        
+          <li>
+            <a href="/react/tips/dangerously-set-inner-html.html">Dangerously Set innerHTML</a>
+          </li>
+        
+      </ul>
+    </div>
+  
+</div>
+
+
+  <div class="inner-content">
+    <h1>
+      이벤트 시스템
+      <a class="edit-page-link" href="https://github.com/facebook/react/tree/master/docs/docs/ref-05-events.ko-KR.md" target="_blank">Edit on GitHub</a>
+    </h1>
+    <div class="subHeader"></div>
+
+    <h2><a class="anchor" name="synthetic-"></a>통합적인(Synthetic) 이벤트 <a class="hash-link" href="#synthetic-">#</a></h2>
+<p>이벤트 핸들러는 브라우저의 네이티브 이벤트의 크로스 브라우저 래퍼(wrapper)인<code>SyntheticEvent</code>의 인스턴스에 전달됩니다. 모든 브라우저에서 동작한다는 점을 제외하면, <code>SyntheticEvent</code>는 <code>stopPropagation()</code>나 <code>preventDefault()</code>를 포함해, 브라우저의 네이티브 이벤트와 같은 인터페이스를 가지고 있습니다.</p>
+
+<p>어떤 이유로 기본 브라우저 이벤트가 필요하다면, 그냥 <code>nativeEvent</code>를 사용해 할 수 있습니다. 모든 <code>SyntheticEvent</code> 객체는 이런 어트리뷰트를 가집니다.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">bubbles</span>
+<span class="kr">boolean</span> <span class="nx">cancelable</span>
+<span class="nx">DOMEventTarget</span> <span class="nx">currentTarget</span>
+<span class="kr">boolean</span> <span class="nx">defaultPrevented</span>
+<span class="nx">number</span> <span class="nx">eventPhase</span>
+<span class="kr">boolean</span> <span class="nx">isTrusted</span>
+<span class="nx">DOMEvent</span> <span class="nx">nativeEvent</span>
+<span class="k">void</span> <span class="nx">preventDefault</span><span class="p">()</span>
+<span class="k">void</span> <span class="nx">stopPropagation</span><span class="p">()</span>
+<span class="nx">DOMEventTarget</span> <span class="nx">target</span>
+<span class="nx">number</span> <span class="nx">timeStamp</span>
+<span class="nx">string</span> <span class="nx">type</span>
+</code></pre></div>
+<blockquote>
+<p>주의:</p>
+
+<p>v0.12 시점에서, 이벤트 핸들러에서 <code>false</code> 를 리턴하는 것은 더 이상 이벤트의 전달(propagation)을 멈추지 않습니다. 대신, <code>e.stopPropagation()</code>나 <code>e.preventDefault()</code>로 적절히 수동으로 트리거해야 합니다.</p>
+</blockquote>
+<h2><a class="anchor" name="-"></a>지원되는 이벤트 <a class="hash-link" href="#-">#</a></h2>
+<p>React는 다른 브라우저에서 일관된 특성을 가지도록 이벤트를 일반화합니다.</p>
+
+<p>밑에 있는 이벤트 핸들러들은 일으키는(bubbling) 단계에서 이벤트를 트리거합니다. 이벤트 핸들러를 캡처 단계로 등록하려면, 이벤트 이름에 <code>Capture</code>를 붙이면 됩니다.  예를 들어, 캡처 단계의 클릭 이벤트를 다루려면 <code>onClick</code>를 사용하는 대신에 <code>onClickCapture</code>를 사용해야 합니다.</p>
+<h3><a class="anchor" name="-"></a>클립보드 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onCopy onCut onPaste
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMDataTransfer</span> <span class="nx">clipboardData</span>
+</code></pre></div><h3><a class="anchor" name="-"></a>키보드 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onKeyDown onKeyPress onKeyUp
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
+<span class="nb">Number</span> <span class="nx">charCode</span>
+<span class="kr">boolean</span> <span class="nx">ctrlKey</span>
+<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="nb">String</span> <span class="nx">key</span>
+<span class="nb">Number</span> <span class="nx">keyCode</span>
+<span class="nb">String</span> <span class="nx">locale</span>
+<span class="nb">Number</span> <span class="nx">location</span>
+<span class="kr">boolean</span> <span class="nx">metaKey</span>
+<span class="kr">boolean</span> <span class="nx">repeat</span>
+<span class="kr">boolean</span> <span class="nx">shiftKey</span>
+<span class="nb">Number</span> <span class="nx">which</span>
+</code></pre></div><h3><a class="anchor" name="-"></a>포커스 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onFocus onBlur
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
+</code></pre></div>
+<p><a name="form-events"></a></p>
+<h3><a class="anchor" name="-"></a>폼 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onChange onInput onSubmit
+</code></pre></div>
+<p>onChange 이벤트에 대한 더 자세한 정보는 <a href="/react/docs/forms-ko-KR.html">폼</a>에서 확인하세요.</p>
+<h3><a class="anchor" name="-"></a>마우스 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onClick onContextMenu onDoubleClick onDrag onDragEnd onDragEnter onDragExit onDragLeave onDragOver onDragStart onDrop onMouseDown onMouseEnter onMouseLeave
+onMouseMove onMouseOut onMouseOver onMouseUp
+</code></pre></div>
+<p><code>onMouseEnter</code>와 <code>onMouseLeave</code> 이벤트는 평범하게 일어나는(bubbling) 대신 입력된 컴포넌트에 남겨지도록 컴포넌트에서 전달되고 캡쳐 단계가 없습니다.</p>
+
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
+<span class="nb">Number</span> <span class="nx">button</span>
+<span class="nb">Number</span> <span class="nx">buttons</span>
+<span class="nb">Number</span> <span class="nx">clientX</span>
+<span class="nb">Number</span> <span class="nx">clientY</span>
+<span class="kr">boolean</span> <span class="nx">ctrlKey</span>
+<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="kr">boolean</span> <span class="nx">metaKey</span>
+<span class="nb">Number</span> <span class="nx">pageX</span>
+<span class="nb">Number</span> <span class="nx">pageY</span>
+<span class="nx">DOMEventTarget</span> <span class="nx">relatedTarget</span>
+<span class="nb">Number</span> <span class="nx">screenX</span>
+<span class="nb">Number</span> <span class="nx">screenY</span>
+<span class="kr">boolean</span> <span class="nx">shiftKey</span>
+</code></pre></div><h3><a class="anchor" name="-"></a>터치 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onTouchCancel onTouchEnd onTouchMove onTouchStart
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">boolean</span> <span class="nx">altKey</span>
+<span class="nx">DOMTouchList</span> <span class="nx">changedTouches</span>
+<span class="kr">boolean</span> <span class="nx">ctrlKey</span>
+<span class="kd">function</span> <span class="nx">getModifierState</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+<span class="kr">boolean</span> <span class="nx">metaKey</span>
+<span class="kr">boolean</span> <span class="nx">shiftKey</span>
+<span class="nx">DOMTouchList</span> <span class="nx">targetTouches</span>
+<span class="nx">DOMTouchList</span> <span class="nx">touches</span>
+</code></pre></div><h3><a class="anchor" name="ui-"></a>UI 이벤트 <a class="hash-link" href="#ui-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onScroll
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">Number</span> <span class="nx">detail</span>
+<span class="nx">DOMAbstractView</span> <span class="nx">view</span>
+</code></pre></div><h3><a class="anchor" name="-"></a>휠 이벤트 <a class="hash-link" href="#-">#</a></h3>
+<p>이벤트 이름:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">onWheel
+</code></pre></div>
+<p>프로퍼티:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nb">Number</span> <span class="nx">deltaMode</span>
+<span class="nb">Number</span> <span class="nx">deltaX</span>
+<span class="nb">Number</span> <span class="nx">deltaY</span>
+<span class="nb">Number</span> <span class="nx">deltaZ</span>
+</code></pre></div>
+
+    <div class="docs-prevnext">
+      
+        <a class="docs-prev" href="/react/docs/tags-and-attributes-ko-KR.html">&larr; Prev</a>
+      
+      
+        <a class="docs-next" href="/react/docs/dom-differences-ko-KR.html">Next &rarr;</a>
+      
+    </div>
+  </div>
+</section>
+
+
+    <footer class="wrap">
+      <div class="left">
+        A Facebook &amp; Instagram collaboration.<br>
+        <a href="/react/acknowledgements.html">Acknowledgements</a>
+      </div>
+      <div class="right">
+        &copy; 2013&ndash;2015 Facebook Inc.<br>
+        Documentation licensed under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      </div>
+    </footer>
+  </div>
+  <div id="fb-root"></div>
+
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    ga('create', 'UA-41298772-1', 'facebook.github.io');
+    ga('send', 'pageview');
+
+    !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=623268441017527";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+</body>
+</html>
