@@ -12,6 +12,7 @@
 'use strict';
 
 var ReactRef = require('ReactRef');
+var ReactElement = require('ReactElement');
 var ReactElementValidator = require('ReactElementValidator');
 
 /**
@@ -35,7 +36,20 @@ var ReactReconciler = {
    * @internal
    */
   mountComponent: function(internalInstance, rootID, transaction, context) {
-    var markup = internalInstance.mountComponent(rootID, transaction, context);
+    var markup;
+    if (__DEV__) {
+      var el = internalInstance._currentElement;
+      if (el._store && el._store.stackHelper) {
+        el._store.stackHelper(function() {
+          markup =
+            internalInstance.mountComponent(rootID, transaction, context);
+        });
+      } else {
+        markup = internalInstance.mountComponent(rootID, transaction, context);
+      }
+    } else {
+      markup = internalInstance.mountComponent(rootID, transaction, context);
+    }
     if (__DEV__) {
       ReactElementValidator.checkAndWarnForMutatedProps(
         internalInstance._currentElement

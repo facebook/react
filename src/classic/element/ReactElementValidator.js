@@ -423,6 +423,12 @@ var ReactElementValidator = {
     return element;
   },
 
+  createElementDebug: function(stackHelper, ...args) {
+    var element = ReactElementValidator.createElement.apply(null, args);
+    element._store.stackHelper = stackHelper;
+    return element;
+  },
+
   createFactory: function(type) {
     var validatedFactory = ReactElementValidator.createElement.bind(
       null,

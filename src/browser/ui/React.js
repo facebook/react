@@ -38,11 +38,15 @@ var warning = require('warning');
 ReactDefaultInjection.inject();
 
 var createElement = ReactElement.createElement;
+var createElementDebug = function(stackHelper, ...args) {
+  return ReactElement.createElement.apply(ReactElement, args);
+};
 var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
   createElement = ReactElementValidator.createElement;
+  createElementDebug = ReactElementValidator.createElementDebug;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
 }
@@ -61,6 +65,7 @@ var React = {
   PropTypes: ReactPropTypes,
   createClass: ReactClass.createClass,
   createElement: createElement,
+  createElementDebug: createElementDebug,
   cloneElement: cloneElement,
   createFactory: createFactory,
   createMixin: function(mixin) {
