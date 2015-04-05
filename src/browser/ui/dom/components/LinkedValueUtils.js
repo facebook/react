@@ -28,9 +28,11 @@ var hasReadOnlyValue = {
 
 function _assertSingleLink(input) {
   invariant(
-    input.props.checkedLink == null || input.props.valueLink == null,
-    'Cannot provide a checkedLink and a valueLink. If you want to use ' +
-    'checkedLink, you probably don\'t want to use valueLink and vice versa.'
+    input.props.checkedLink == null || input.props.valueLink == null ||
+    input.props.radioLink,
+    'Cannot provide more than one out of checkedLink, valueLink, and ' +
+    'radioLink. If you want to use checkedLink, you probably don\'t want to ' +
+    'use valueLink or radioLink. There can be only one.'
   );
 }
 function _assertValueLink(input) {
@@ -52,6 +54,16 @@ function _assertCheckedLink(input) {
   );
 }
 
+function _assertRadioLink(input) {
+  _assertSingleLink(input);
+  invariant(
+    input.props.checked == null && input.props.onChange == null,
+    'Cannot provide a radioLink and a checked property or onChange event. ' +
+    'If you want to use checked or onChange, you probably don\'t want to ' +
+    'use radioLink'
+  );
+}
+
 /**
  * @param {SyntheticEvent} e change event to handle
  */
@@ -66,6 +78,14 @@ function _handleLinkedValueChange(e) {
 function _handleLinkedCheckChange(e) {
   /*jshint validthis:true */
   this.props.checkedLink.requestChange(e.target.checked);
+}
+
+/**
+  * @param {SyntheticEvent} e change event to handle
+  */
+function _handleLinkedRadioChange(e) {
+  /*jshint validthis:true */
+  this.props.radioLink.requestChange(e.target.id);
 }
 
 /**
@@ -129,6 +149,9 @@ var LinkedValueUtils = {
     if (input.props.checkedLink) {
       _assertCheckedLink(input);
       return input.props.checkedLink.value;
+    } else if (input.props.radioLink) {
+      _assertRadioLink(input);
+      return input.props.radioLink.value === input.props.id;
     }
     return input.props.checked;
   },
@@ -144,6 +167,9 @@ var LinkedValueUtils = {
     } else if (input.props.checkedLink) {
       _assertCheckedLink(input);
       return _handleLinkedCheckChange;
+    } else if (input.props.radioLink) {
+      _assertRadioLink(input);
+      return _handleLinkedRadioChange;
     }
     return input.props.onChange;
   }
