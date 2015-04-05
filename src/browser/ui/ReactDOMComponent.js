@@ -100,7 +100,7 @@ function assertValidProps(component, props) {
   );
 }
 
-function putListener(id, registrationName, listener, transaction) {
+function enqueuePutListener(id, registrationName, listener, transaction) {
   if (__DEV__) {
     // IE8 has no API for event capturing and the `onScroll` event doesn't
     // bubble.
@@ -116,10 +116,19 @@ function putListener(id, registrationName, listener, transaction) {
       container;
     listenTo(registrationName, doc);
   }
-  transaction.getPutListenerQueue().enqueuePutListener(
-    id,
-    registrationName,
-    listener
+  transaction.getReactMountReady().enqueue(putListener, {
+    id: id,
+    registrationName: registrationName,
+    listener: listener
+  });
+}
+
+function putListener() {
+  var listenerToPut = this;
+  ReactBrowserEventEmitter.putListener(
+    listenerToPut.id,
+    listenerToPut.registrationName,
+    listenerToPut.listener
   );
 }
 
@@ -270,7 +279,7 @@ ReactDOMComponent.Mixin = {
         continue;
       }
       if (registrationNameModules.hasOwnProperty(propKey)) {
-        putListener(this._rootNodeID, propKey, propValue, transaction);
+        enqueuePutListener(this._rootNodeID, propKey, propValue, transaction);
       } else {
         if (propKey === STYLE) {
           if (propValue) {
@@ -466,7 +475,7 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
-          putListener(this._rootNodeID, propKey, nextProp, transaction);
+          enqueuePutListener(this._rootNodeID, propKey, nextProp, transaction);
         } else if (lastProp) {
           deleteListener(this._rootNodeID, propKey);
         }
