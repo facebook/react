@@ -27,9 +27,12 @@ var hasReadOnlyValue = {
 };
 
 function _assertSingleLink(input) {
+  var trueCount =
+    (input.props.checkedLink == null ? 0 : 1) +
+    (input.props.valueLink == null ? 0 : 1) +
+    (input.props.radioLink == null ? 0 : 1);
   invariant(
-    input.props.checkedLink == null || input.props.valueLink == null ||
-    input.props.radioLink,
+    trueCount == 1,
     'Cannot provide more than one out of checkedLink, valueLink, and ' +
     'radioLink. If you want to use checkedLink, you probably don\'t want to ' +
     'use valueLink or radioLink. There can be only one.'
