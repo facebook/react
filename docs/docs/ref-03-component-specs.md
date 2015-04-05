@@ -14,12 +14,12 @@ When creating a component class by invoking `React.createClass()`, you should pr
 ### render
 
 ```javascript
-ReactComponent render()
+ReactElement render()
 ```
 
 The `render()` method is required.
 
-When called, it should examine `this.props` and `this.state` and return a single child component. This child component can be either a virtual representation of a native DOM component (such as `<div />` or `React.DOM.div()`) or another composite component that you've defined yourself.
+When called, it should examine `this.props` and `this.state` and return a single child element. This child element can be either a virtual representation of a native DOM component (such as `<div />` or `React.DOM.div()`) or another composite component that you've defined yourself.
 
 You can also return `null` or `false` to indicate that you don't want anything rendered. Behind the scenes, React renders a `<noscript>` tag to work with our current diffing algorithm. When returning `null` or `false`, `React.findDOMNode(this)` will return `null`.
 
