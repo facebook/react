@@ -315,4 +315,85 @@ describe('ReactDOMSelect', function() {
     expect(link.requestChange.mock.calls[0][0]).toEqual('gorilla');
 
   });
+
+  it('should support server-side rendering', function() {
+    var stub =
+      <select value="giraffe">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    var markup = React.renderToString(stub);
+    expect(markup).toContain('<option value="giraffe" selected=');
+    expect(markup).not.toContain('<option value="monkey" selected=');
+    expect(markup).not.toContain('<option value="gorilla" selected=');
+  });
+
+  it('should support server-side rendering with defaultValue', function() {
+    var stub =
+      <select defaultValue="giraffe">
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    var markup = React.renderToString(stub);
+    expect(markup).toContain('<option value="giraffe" selected=');
+    expect(markup).not.toContain('<option value="monkey" selected=');
+    expect(markup).not.toContain('<option value="gorilla" selected=');
+  });
+
+  it('should support server-side rendering with multiple', function() {
+    var stub =
+      <select multiple={true} value={['giraffe', 'gorilla']}>
+        <option value="monkey">A monkey!</option>
+        <option value="giraffe">A giraffe!</option>
+        <option value="gorilla">A gorilla!</option>
+      </select>;
+    var markup = React.renderToString(stub);
+    expect(markup).toContain('<option value="giraffe" selected=');
+    expect(markup).toContain('<option value="gorilla" selected=');
+    expect(markup).not.toContain('<option value="monkey" selected=');
+  });
+
+  it('should not control defaultValue if readding options', function() {
+    var container = document.createElement('div');
+
+    var select = React.render(
+      <select multiple={true} defaultValue={['giraffe']}>
+        <option key="monkey" value="monkey">A monkey!</option>
+        <option key="giraffe" value="giraffe">A giraffe!</option>
+        <option key="gorilla" value="gorilla">A gorilla!</option>
+      </select>,
+      container
+    );
+    var node = React.findDOMNode(select);
+
+    expect(node.options[0].selected).toBe(false);  // monkey
+    expect(node.options[1].selected).toBe(true);  // giraffe
+    expect(node.options[2].selected).toBe(false);  // gorilla
+
+    React.render(
+      <select multiple={true} defaultValue={['giraffe']}>
+        <option key="monkey" value="monkey">A monkey!</option>
+        <option key="gorilla" value="gorilla">A gorilla!</option>
+      </select>,
+      container
+    );
+
+    expect(node.options[0].selected).toBe(false);  // monkey
+    expect(node.options[1].selected).toBe(false);  // gorilla
+
+    React.render(
+      <select multiple={true} defaultValue={['giraffe']}>
+        <option key="monkey" value="monkey">A monkey!</option>
+        <option key="giraffe" value="giraffe">A giraffe!</option>
+        <option key="gorilla" value="gorilla">A gorilla!</option>
+      </select>,
+      container
+    );
+
+    expect(node.options[0].selected).toBe(false);  // monkey
+    expect(node.options[1].selected).toBe(false);  // giraffe
+    expect(node.options[2].selected).toBe(false);  // gorilla
+  });
 });

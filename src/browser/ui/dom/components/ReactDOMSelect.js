@@ -17,17 +17,21 @@ var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactClass = require('ReactClass');
 var ReactElement = require('ReactElement');
 var ReactUpdates = require('ReactUpdates');
+var ReactPropTypes = require('ReactPropTypes');
 
 var assign = require('Object.assign');
 var findDOMNode = require('findDOMNode');
 
 var select = ReactElement.createFactory('select');
 
+var valueContextKey =
+  '__ReactDOMSelect_value$' + Math.random().toString(36).slice(2);
+
 function updateOptionsIfPendingUpdateAndMounted() {
   /*jshint validthis:true */
   if (this._pendingUpdate) {
     this._pendingUpdate = false;
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     if (value != null && this.isMounted()) {
       updateOptions(this, value);
     }
@@ -116,9 +120,36 @@ var ReactDOMSelect = ReactClass.createClass({
 
   mixins: [AutoFocusMixin, LinkedValueUtils.Mixin, ReactBrowserComponentMixin],
 
+  statics: {
+    valueContextKey: valueContextKey
+  },
+
   propTypes: {
     defaultValue: selectValueType,
     value: selectValueType
+  },
+
+  getInitialState: function() {
+    // Pass down initial value so initial generated markup has correct
+    // `selected` attributes
+    var value = LinkedValueUtils.getValue(this.props);
+    if (value != null) {
+      return {initialValue: value};
+    } else {
+      return {initialValue: this.props.defaultValue};
+    }
+  },
+
+  childContextTypes: (function() {
+    var obj = {};
+    obj[valueContextKey] = ReactPropTypes.any;
+    return obj;
+  })(),
+
+  getChildContext: function() {
+    var obj = {};
+    obj[valueContextKey] = this.state.initialValue;
+    return obj;
   },
 
   render: function() {
@@ -135,17 +166,14 @@ var ReactDOMSelect = ReactClass.createClass({
     this._pendingUpdate = false;
   },
 
-  componentDidMount: function() {
-    var value = LinkedValueUtils.getValue(this);
-    if (value != null) {
-      updateOptions(this, value);
-    } else if (this.props.defaultValue != null) {
-      updateOptions(this, this.props.defaultValue);
-    }
+  componentWillReceiveProps: function(nextProps) {
+    // After the initial mount, we control selected-ness manually so don't pass
+    // the context value down
+    this.setState({initialValue: null});
   },
 
   componentDidUpdate: function(prevProps) {
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     if (value != null) {
       this._pendingUpdate = false;
       updateOptions(this, value);
@@ -162,7 +190,7 @@ var ReactDOMSelect = ReactClass.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this);
+    var onChange = LinkedValueUtils.getOnChange(this.props);
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
