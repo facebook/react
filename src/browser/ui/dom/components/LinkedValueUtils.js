@@ -85,7 +85,7 @@ function _handleLinkedCheckChange(e) {
   */
 function _handleLinkedRadioChange(e) {
   /*jshint validthis:true */
-  this.props.radioLink.requestChange(e.target.id);
+  this.props.radioLink.requestChange(e.target.value);
 }
 
 /**
@@ -151,7 +151,7 @@ var LinkedValueUtils = {
       return input.props.checkedLink.value;
     } else if (input.props.radioLink) {
       _assertRadioLink(input);
-      return input.props.radioLink.value === input.props.id;
+      return input.props.radioLink.value === input.props.value;
     }
     return input.props.checked;
   },
