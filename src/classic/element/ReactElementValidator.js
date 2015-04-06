@@ -333,7 +333,7 @@ function is(a, b) {
  * @param {ReactElement} element
  */
 function checkAndWarnForMutatedProps(element) {
-  if (!element._store) {
+  if (!element._store || typeof originalProps === 'undefined') {
     // Element was created using `new ReactElement` directly or with
     // `ReactElement.createElement`; skip mutation checking
     return;
