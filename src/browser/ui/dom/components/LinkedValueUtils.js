@@ -32,7 +32,7 @@ function _assertSingleLink(input) {
     (input.props.valueLink == null ? 0 : 1) +
     (input.props.radioLink == null ? 0 : 1);
   invariant(
-    trueCount == 1,
+    trueCount === 1,
     'Cannot provide more than one out of checkedLink, valueLink, and ' +
     'radioLink. If you want to use checkedLink, you probably don\'t want to ' +
     'use valueLink or radioLink. There can be only one.'
