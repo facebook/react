@@ -865,7 +865,7 @@ var ReactCompositeComponentMixin = {
 
 };
 
-ReactPerf.measureMethods(
+ReactPerf.lazyMeasureMethods(
   ReactCompositeComponentMixin,
   'ReactCompositeComponent',
   {
