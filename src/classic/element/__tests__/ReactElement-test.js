@@ -86,30 +86,6 @@ describe('ReactElement', function() {
     expect(element.props).toEqual({foo:'56'});
   });
 
-  it('preserves the legacy context on the element', function() {
-    var Component = React.createFactory(ComponentClass);
-    var element;
-
-    var Wrapper = React.createClass({
-      childContextTypes: {
-        foo: React.PropTypes.string
-      },
-      getChildContext: function() {
-        return {foo: 'bar'};
-      },
-      render: function() {
-        element = Component();
-        return element;
-      }
-    });
-
-    ReactTestUtils.renderIntoDocument(
-      React.createElement(Wrapper)
-    );
-
-    expect(element._context).toEqual({foo: 'bar'});
-  });
-
   it('preserves the owner on the element', function() {
     var Component = React.createFactory(ComponentClass);
     var element;
