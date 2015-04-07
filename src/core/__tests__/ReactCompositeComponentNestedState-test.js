@@ -84,7 +84,7 @@ describe('ReactCompositeComponentNestedState-state', function() {
     });
 
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var logger = mocks.getMockFunction();
 

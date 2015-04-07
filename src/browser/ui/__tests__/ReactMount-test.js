@@ -76,7 +76,7 @@ describe('ReactMount', function() {
 
   it('should render different components in same root', function() {
     var container = document.createElement('container');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     ReactMount.render(<div></div>, container);
     expect(container.firstChild.nodeName).toBe('DIV');
