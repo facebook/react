@@ -84,7 +84,7 @@ var ReactDOMTextarea = ReactClass.createClass({
     if (defaultValue == null) {
       defaultValue = '';
     }
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     return {
       // We save the initial value so that `ReactDOMComponent` doesn't update
       // `textContent` (unnecessary since we update value).
@@ -113,7 +113,7 @@ var ReactDOMTextarea = ReactClass.createClass({
   },
 
   componentDidUpdate: function(prevProps, prevState, prevContext) {
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     if (value != null) {
       var rootNode = findDOMNode(this);
       // Cast `value` to a string to ensure the value is set correctly. While
@@ -124,7 +124,7 @@ var ReactDOMTextarea = ReactClass.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this);
+    var onChange = LinkedValueUtils.getOnChange(this.props);
     if (onChange) {
       returnValue = onChange.call(this, event);
     }

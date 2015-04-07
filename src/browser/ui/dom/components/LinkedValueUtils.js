@@ -26,26 +26,26 @@ var hasReadOnlyValue = {
   'submit': true
 };
 
-function _assertSingleLink(input) {
+function _assertSingleLink(inputProps) {
   invariant(
-    input.props.checkedLink == null || input.props.valueLink == null,
+    inputProps.checkedLink == null || inputProps.valueLink == null,
     'Cannot provide a checkedLink and a valueLink. If you want to use ' +
     'checkedLink, you probably don\'t want to use valueLink and vice versa.'
   );
 }
-function _assertValueLink(input) {
-  _assertSingleLink(input);
+function _assertValueLink(inputProps) {
+  _assertSingleLink(inputProps);
   invariant(
-    input.props.value == null && input.props.onChange == null,
+    inputProps.value == null && inputProps.onChange == null,
     'Cannot provide a valueLink and a value or onChange event. If you want ' +
     'to use value or onChange, you probably don\'t want to use valueLink.'
   );
 }
 
-function _assertCheckedLink(input) {
-  _assertSingleLink(input);
+function _assertCheckedLink(inputProps) {
+  _assertSingleLink(inputProps);
   invariant(
-    input.props.checked == null && input.props.onChange == null,
+    inputProps.checked == null && inputProps.onChange == null,
     'Cannot provide a checkedLink and a checked property or onChange event. ' +
     'If you want to use checked or onChange, you probably don\'t want to ' +
     'use checkedLink'
@@ -109,43 +109,43 @@ var LinkedValueUtils = {
   },
 
   /**
-   * @param {ReactComponent} input Form component
+   * @param {object} inputProps Props for form component
    * @return {*} current value of the input either from value prop or link.
    */
-  getValue: function(input) {
-    if (input.props.valueLink) {
-      _assertValueLink(input);
-      return input.props.valueLink.value;
+  getValue: function(inputProps) {
+    if (inputProps.valueLink) {
+      _assertValueLink(inputProps);
+      return inputProps.valueLink.value;
     }
-    return input.props.value;
+    return inputProps.value;
   },
 
   /**
-   * @param {ReactComponent} input Form component
+   * @param {object} inputProps Props for form component
    * @return {*} current checked status of the input either from checked prop
    *             or link.
    */
-  getChecked: function(input) {
-    if (input.props.checkedLink) {
-      _assertCheckedLink(input);
-      return input.props.checkedLink.value;
+  getChecked: function(inputProps) {
+    if (inputProps.checkedLink) {
+      _assertCheckedLink(inputProps);
+      return inputProps.checkedLink.value;
     }
-    return input.props.checked;
+    return inputProps.checked;
   },
 
   /**
-   * @param {ReactComponent} input Form component
+   * @param {object} inputProps Props for form component
    * @return {function} change callback either from onChange prop or link.
    */
-  getOnChange: function(input) {
-    if (input.props.valueLink) {
-      _assertValueLink(input);
+  getOnChange: function(inputProps) {
+    if (inputProps.valueLink) {
+      _assertValueLink(inputProps);
       return _handleLinkedValueChange;
-    } else if (input.props.checkedLink) {
-      _assertCheckedLink(input);
+    } else if (inputProps.checkedLink) {
+      _assertCheckedLink(inputProps);
       return _handleLinkedCheckChange;
     }
-    return input.props.onChange;
+    return inputProps.onChange;
   }
 };
 

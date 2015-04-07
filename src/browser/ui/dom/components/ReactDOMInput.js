@@ -72,10 +72,10 @@ var ReactDOMInput = ReactClass.createClass({
     props.defaultChecked = null;
     props.defaultValue = null;
 
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     props.value = value != null ? value : this.state.initialValue;
 
-    var checked = LinkedValueUtils.getChecked(this);
+    var checked = LinkedValueUtils.getChecked(this.props);
     props.checked = checked != null ? checked : this.state.initialChecked;
 
     props.onChange = this._handleChange;
@@ -104,7 +104,7 @@ var ReactDOMInput = ReactClass.createClass({
       );
     }
 
-    var value = LinkedValueUtils.getValue(this);
+    var value = LinkedValueUtils.getValue(this.props);
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
@@ -114,7 +114,7 @@ var ReactDOMInput = ReactClass.createClass({
 
   _handleChange: function(event) {
     var returnValue;
-    var onChange = LinkedValueUtils.getOnChange(this);
+    var onChange = LinkedValueUtils.getOnChange(this.props);
     if (onChange) {
       returnValue = onChange.call(this, event);
     }
