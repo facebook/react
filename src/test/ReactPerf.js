@@ -12,16 +12,31 @@
 
 'use strict';
 
+var measurementEnabled = false;
+
+var lazyObjectsToMeasure = [];
+
 /**
  * ReactPerf is a general AOP system designed to measure performance. This
  * module only has the hooks: see ReactDefaultPerf for the analysis tool.
  */
 var ReactPerf = {
-  /**
-   * Boolean to enable/disable measurement. Set to false by default to prevent
-   * accidental logging and perf loss.
-   */
-  enableMeasure: false,
+  enableMeasure: function() {
+    measurementEnabled = true;
+
+    lazyObjectsToMeasure.forEach(function(info) {
+      ReactPerf.measureMethods(
+        info.object,
+        info.objectName,
+        info.methodNames
+      );
+    });
+    lazyObjectsToMeasure.length = 0;
+  },
+
+  disableMeasure: function() {
+    measurementEnabled = false;
+  },
 
   /**
    * Holds onto the measure function in use. By default, don't measure
@@ -46,6 +61,22 @@ var ReactPerf = {
           object[key]
         );
       }
+    }
+  },
+
+  /**
+   * Version of measureMethods that doesn't mutate the object until perf
+   * measurement starts, which makes stack traces cleaner if we never start
+   * perf. Be careful to make sure that you don't accidentally call a copy of
+   * the un-instrumented function.
+   */
+  lazyMeasureMethods: function(object, objectName, methodNames) {
+    if (__DEV__) {
+      lazyObjectsToMeasure.push({
+        object: object,
+        objectName: objectName,
+        methodNames: methodNames
+      });
     }
   },
 

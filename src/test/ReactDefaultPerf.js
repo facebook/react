@@ -38,11 +38,11 @@ var ReactDefaultPerf = {
     }
 
     ReactDefaultPerf._allMeasurements.length = 0;
-    ReactPerf.enableMeasure = true;
+    ReactPerf.enableMeasure();
   },
 
   stop: function() {
-    ReactPerf.enableMeasure = false;
+    ReactPerf.disableMeasure();
   },
 
   getLastMeasurements: function() {
