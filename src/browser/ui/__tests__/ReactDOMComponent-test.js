@@ -109,6 +109,27 @@ describe('ReactDOMComponent', function() {
       expect(stubStyle.display).toEqual('block');
     });
 
+    it("should update styles if updated to null multiple times", function() {
+      var styles = null;
+      var container = document.createElement('div');
+      React.render(<div style={styles} />, container);
+
+      styles = {display: 'block'};
+      var stubStyle = container.firstChild.style;
+
+      React.render(<div style={styles} />, container);
+      expect(stubStyle.display).toEqual('block');
+
+      React.render(<div style={null} />, container);
+      expect(stubStyle.display).toEqual('');
+
+      React.render(<div style={styles} />, container);
+      expect(stubStyle.display).toEqual('block');
+
+      React.render(<div style={null} />, container);
+      expect(stubStyle.display).toEqual('');
+    });
+
     it("should remove attributes", function() {
       var container = document.createElement('div');
       React.render(<img height='17' />, container);
