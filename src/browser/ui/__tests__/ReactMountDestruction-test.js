@@ -16,7 +16,7 @@ var React = require('React');
 describe('ReactMount', function() {
   it("should destroy a react root upon request", function() {
     var mainContainerDiv = document.createElement('div');
-    document.documentElement.appendChild(mainContainerDiv);
+    document.body.appendChild(mainContainerDiv);
 
     var instanceOne = (
       <div className="firstReactDiv">

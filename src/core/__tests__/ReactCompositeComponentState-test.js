@@ -134,7 +134,7 @@ describe('ReactCompositeComponent-state', function() {
 
   it('should support setting state', function() {
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var stateListener = mocks.getMockFunction();
     var instance = React.render(

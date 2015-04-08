@@ -271,7 +271,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should warn about `forceUpdate` on unmounted components', function() {
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var Component = React.createClass({
       render: function() {
@@ -300,7 +300,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should warn about `setState` on unmounted components', function() {
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var Component = React.createClass({
       getInitialState: function() {
@@ -333,7 +333,7 @@ describe('ReactCompositeComponent', function() {
      function() {
     var cbCalled = false;
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var Component = React.createClass({
       getInitialState: function() {
@@ -363,7 +363,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should not allow `setProps` on unmounted components', function() {
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var Component = React.createClass({
       render: function() {
@@ -395,7 +395,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should only allow `setProps` on top-level components', function() {
     var container = document.createElement('div');
-    document.documentElement.appendChild(container);
+    document.body.appendChild(container);
 
     var innerInstance;
 

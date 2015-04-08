@@ -607,7 +607,7 @@ describe('ReactDOMComponent', function() {
       var ReactMount = require('ReactMount');
 
       var container = document.createElement('div');
-      document.documentElement.appendChild(container);
+      document.body.appendChild(container);
 
       var callback = function() {};
       var instance = <div onClick={callback} />;
