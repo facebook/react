@@ -13,7 +13,6 @@
 
 var mocks = require('mocks');
 var React = require('React');
-var ReactDoNotBindDeprecated = require('ReactDoNotBindDeprecated');
 var ReactTestUtils = require('ReactTestUtils');
 var reactComponentExpect = require('reactComponentExpect');
 
@@ -30,8 +29,8 @@ describe('autobinding', function() {
       getInitialState: function() {
         return {something: 'hi'};
       },
-      onMouseEnter: ReactDoNotBindDeprecated.doNotBind(mouseDidEnter),
-      onMouseLeave: ReactDoNotBindDeprecated.doNotBind(mouseDidLeave),
+      onMouseEnter: mouseDidEnter,
+      onMouseLeave: mouseDidLeave,
       onClick: mouseDidClick,
 
       // auto binding only occurs on top level functions in class defs.
@@ -44,7 +43,7 @@ describe('autobinding', function() {
       render: function() {
         return (
           <div
-            onMouseOver={this.onMouseEnter.bind(this)}
+            onMouseOver={this.onMouseEnter}
             onMouseOut={this.onMouseLeave}
             onClick={this.onClick}
           />
@@ -69,8 +68,6 @@ describe('autobinding', function() {
       badIdea();
     }).toThrow();
 
-    expect(mountedInstance1.onMouseEnter).toBe(mountedInstance2.onMouseEnter);
-    expect(mountedInstance1.onMouseLeave).toBe(mountedInstance2.onMouseLeave);
     expect(mountedInstance1.onClick).not.toBe(mountedInstance2.onClick);
 
     ReactTestUtils.Simulate.click(rendered1);
@@ -91,11 +88,11 @@ describe('autobinding', function() {
 
     ReactTestUtils.Simulate.mouseOut(rendered1);
     expect(mouseDidLeave.mock.instances.length).toBe(1);
-    expect(mouseDidLeave.mock.instances[0]).toBe(global);
+    expect(mouseDidLeave.mock.instances[0]).toBe(mountedInstance1);
 
     ReactTestUtils.Simulate.mouseOut(rendered2);
     expect(mouseDidLeave.mock.instances.length).toBe(2);
-    expect(mouseDidLeave.mock.instances[1]).toBe(global);
+    expect(mouseDidLeave.mock.instances[1]).toBe(mountedInstance2);
   });
 
   it('works with mixins', function() {
