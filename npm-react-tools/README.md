@@ -30,6 +30,8 @@ By default JSX files with a `.js` extension are transformed. Use the `-x` option
       --harmony                                Turns on JS transformations such as ES6 Classes etc.
       --source-map-inline                      Embed inline sourcemap in transformed source
       --strip-types                            Strips out type annotations
+      --es6module                              Parses the file as a valid ES6 module
+      --non-strict-es6module                   Parses the file as an ES6 module, except disables implicit strict-mode (i.e. CommonJS modules et al are allowed)
 
 ## API
 
@@ -41,6 +43,8 @@ option | values | default
 `harmony` | `true`: enable ES6 features | `false`
 `sourceFilename` | the output filename for the source map | `"source.js"`
 `stripTypes` | `true`: strips out type annotations | `false`
+`es6module` | `true`: parses the file as an ES6 module | `false`
+`nonStrictEs6module` | `true`: parses the file as an ES6 module, except disables implicit strict-mode (i.e. CommonJS modules et al are allowed) | `false`
 
 ```js
 var reactTools = require('react-tools');
