@@ -525,7 +525,7 @@
     <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="nx">setInterval</span><span class="p">.</span><span class="nx">apply</span><span class="p">(</span><span class="kc">null</span><span class="p">,</span> <span class="nx">arguments</span><span class="p">));</span>
   <span class="p">},</span>
   <span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">clearInterval</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">intervals</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">clearInterval</span><span class="p">);</span>
   <span class="p">}</span>
 <span class="p">};</span>
 

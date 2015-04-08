@@ -407,11 +407,11 @@
 
     <h2><a class="anchor" name="component-specifications"></a>Component Specifications <a class="hash-link" href="#component-specifications">#</a></h2>
 <p>When creating a component class by invoking <code>React.createClass()</code>, you should provide a specification object that contains a <code>render</code> method and can optionally contain other lifecycle methods described here.</p>
-<h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactComponent</span> <span class="nx">render</span><span class="p">()</span>
+<h3><a class="anchor" name="render"></a>render <a class="hash-link" href="#render">#</a></h3><div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactElement</span> <span class="nx">render</span><span class="p">()</span>
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
 
-<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child component. This child component can be either a virtual representation of a native DOM component (such as <code>&lt;div /&gt;</code> or <code>React.DOM.div()</code>) or another composite component that you&#39;ve defined yourself.</p>
+<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single child element. This child element can be either a virtual representation of a native DOM component (such as <code>&lt;div /&gt;</code> or <code>React.DOM.div()</code>) or another composite component that you&#39;ve defined yourself.</p>
 
 <p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. Behind the scenes, React renders a <code>&lt;noscript&gt;</code> tag to work with our current diffing algorithm. When returning <code>null</code> or <code>false</code>, <code>React.findDOMNode(this)</code> will return <code>null</code>.</p>
 

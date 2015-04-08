@@ -429,7 +429,7 @@ Say your <code>GroceryList</code> component has a list of items generated throug
 </code></pre></div>
 <p>Notice the use of <code>bind(this, arg1, arg2, ...)</code>: we&#39;re simply passing more arguments to <code>handleClick</code>. This is not a new React concept; it&#39;s just JavaScript.</p>
 
-<p>For communication between two components that don&#39;t have a parent-child relationship, you can set up your own global event system. Subscribe to events in <code>componentDidMount()</code>, unsubscribe in <code>componentWillUnmount()</code>, and call <code>setState()</code> when you receive an event.</p>
+<p>For communication between two components that don&#39;t have a parent-child relationship, you can set up your own global event system. Subscribe to events in <code>componentDidMount()</code>, unsubscribe in <code>componentWillUnmount()</code>, and call <code>setState()</code> when you receive an event. <a href="https://facebook.github.io/flux/">Flux</a> pattern is one of the possible ways to arrange this.</p>
 
 
     <div class="docs-prevnext">
